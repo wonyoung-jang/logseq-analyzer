@@ -176,121 +176,111 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
             - content_data: Dictionary of content-based metrics for each file.
             - alphanum_dict: Dictionary for quick lookup of linked references.
     '''
-    content_data = defaultdict(lambda: defaultdict(int))
+    content_data = defaultdict(lambda: defaultdict(list))
     alphanum_dict = defaultdict(set)
     unique_linked_references = set()
+    
     for name, text in content.items():
-        content_data[name]['page_references'] = []
-        content_data[name]['tags'] = []
-        content_data[name]['tagged_backlinks'] = []
-        content_data[name]['properties_page_builtin'] = []
-        content_data[name]['properties_page_user'] = []
-        content_data[name]['properties_block_builtin'] = []
-        content_data[name]['properties_block_user'] = []
-        content_data[name]['assets'] = []
-        content_data[name]['draws'] = []
-        content_data[name]['namespace_root'] = ''
-        content_data[name]['namespace_parent'] = ''
-        content_data[name]['namespace_level'] = -1
-        content_data[name]['external_links_internet'] = []
-        content_data[name]['external_links_alias'] = []
-        content_data[name]['embedded_links_internet'] = []
-        content_data[name]['embedded_links_asset'] = []
-        if text:
-            # Page references
-            page_references = [page_ref.lower() for page_ref in patterns['page_reference'].findall(text)]
-            if page_references:
-                content_data[name]['page_references'] = page_references
-                unique_linked_references.update(page_references)
+        if not text:
+            logging.debug(f'Skipping content processing for "{name}" due to empty content.')
+            content_data[name]['page_references'] = []
+            content_data[name]['tags'] = []
+            content_data[name]['tagged_backlinks'] = []
+            content_data[name]['properties_page_builtin'] = []
+            content_data[name]['properties_page_user'] = []
+            content_data[name]['properties_block_builtin'] = []
+            content_data[name]['properties_block_user'] = []
+            content_data[name]['assets'] = []
+            content_data[name]['draws'] = []
+            content_data[name]['namespace_root'] = ''
+            content_data[name]['namespace_parent'] = ''
+            content_data[name]['namespace_level'] = -1
+            content_data[name]['external_links_internet'] = []
+            content_data[name]['external_links_alias'] = []
+            content_data[name]['embedded_links_internet'] = []
+            content_data[name]['embedded_links_asset'] = []
+            continue
+        
+        # Page references
+        page_references = [page_ref.lower() for page_ref in patterns['page_reference'].findall(text)]
+        tags = [tag.lower() for tag in patterns['tag'].findall(text)]
+        tagged_backlinks = [tag.lower() for tag in patterns['tagged_backlink'].findall(text)]
+        heading_match = re.search(r'^\s*#+\s', text, re.MULTILINE)
+        bullet_match = re.search(r'^\s*-\s', text, re.MULTILINE)
+        assets = [asset.lower() for asset in patterns['asset'].findall(text)]
+        draws = [draw.lower() for draw in patterns['draw'].findall(text)]
+        external_links = [link.lower() for link in patterns['external_link'].findall(text)]
+        embedded_links = [link.lower() for link in patterns['embedded_link'].findall(text)]
+        
+        content_data[name]['page_references'] = page_references
+        content_data[name]['tags'] = tags
+        content_data[name]['tagged_backlinks'] = tagged_backlinks
+        content_data[name]['assets'] = assets
+        content_data[name]['draws'] = draws
+        
+        # Properties
+        if heading_match:
+            page_text = text[: heading_match.start()]
+            block_text = text[heading_match.start() :]
+        elif bullet_match:
+            page_text = text[: bullet_match.start()]
+            block_text = text[bullet_match.start() :]
+        else:
+            page_text = text
+            block_text = ''
+        page_properties = [prop.lower() for prop in patterns['property'].findall(page_text)]
+        block_properties = [prop.lower() for prop in patterns['property'].findall(block_text)]
+        if page_properties:
+            properties_page_builtin = [prop for prop in page_properties if prop in props]
+            if properties_page_builtin:
+                content_data[name]['properties_page_builtin'] = properties_page_builtin
+            properties_page_user = [prop for prop in page_properties if prop not in props]
+            if properties_page_user:
+                content_data[name]['properties_page_user'] = properties_page_user
+        if block_properties:
+            properties_block_builtin = [prop for prop in block_properties if prop in props]
+            if properties_block_builtin:
+                content_data[name]['properties_block_builtin'] = properties_block_builtin
+            properties_block_user = [prop for prop in block_properties if prop not in props]
+            if properties_block_user:
+                content_data[name]['properties_block_user'] = properties_block_user
 
-            # Tags
-            tags = [tag.lower() for tag in patterns['tag'].findall(text)]
-            if tags:
-                content_data[name]['tags'] = tags
-                unique_linked_references.update(tags)
-            tagged_backlinks = [tag.lower() for tag in patterns['tagged_backlink'].findall(text)]
-            if tagged_backlinks:
-                content_data[name]['tagged_backlinks'] = tagged_backlinks
-                unique_linked_references.update(tagged_backlinks)
-
-            # Properties
-            heading_match = re.search(r'^\s*#+\s', text, re.MULTILINE)
-            bullet_match = re.search(r'^\s*-\s', text, re.MULTILINE)
-            if heading_match:
-                page_text = text[: heading_match.start()]
-                block_text = text[heading_match.start() :]
-            elif bullet_match:
-                page_text = text[: bullet_match.start()]
-                block_text = text[bullet_match.start() :]
-            else:
-                page_text = text
-                block_text = ''
-            page_properties = [prop.lower() for prop in patterns['property'].findall(page_text)]
-            if page_properties:
-                properties_page_builtin = [prop for prop in page_properties if prop in props]
-                if properties_page_builtin:
-                    content_data[name]['properties_page_builtin'] = properties_page_builtin
-                properties_page_user = [prop for prop in page_properties if prop not in props]
-                if properties_page_user:
-                    content_data[name]['properties_page_user'] = properties_page_user
-                unique_linked_references.update(page_properties)
-            block_properties = [prop.lower() for prop in patterns['property'].findall(block_text)]
-            if block_properties:
-                properties_block_builtin = [prop for prop in block_properties if prop in props]
-                if properties_block_builtin:
-                    content_data[name]['properties_block_builtin'] = properties_block_builtin
-                properties_block_user = [prop for prop in block_properties if prop not in props]
-                if properties_block_user:
-                    content_data[name]['properties_block_user'] = properties_block_user
-                unique_linked_references.update(block_properties)
-
-            # Assets (general)
-            assets = [asset.lower() for asset in patterns['asset'].findall(text)]
-            if assets:
-                content_data[name]['assets'] = assets
-                
-            # Draws (Excalidraw)
-            draws = [draw.lower() for draw in patterns['draw'].findall(text)]
-            if draws:
-                content_data[name]['draws'] = draws
+        # Namespace
+        if '/' in name:
+            namespace_parts = name.split('/')
+            namespace_level = len(namespace_parts)
+            namespace_root = namespace_parts[0]
+            namespace_parent = '/'.join(namespace_parts[:-1])
+            content_data[name]['namespace_root'] = namespace_root
+            content_data[name]['namespace_parent'] = namespace_parent
+            content_data[name]['namespace_level'] = namespace_level
+            unique_linked_references.update([namespace_root, name])
             
-            # Namespace
-            if '/' in name:
-                namespace_parts = name.split('/')
-                namespace_level = len(namespace_parts)
-                namespace_root = namespace_parts[0]
-                namespace_parent = '/'.join(namespace_parts[:-1])
-                content_data[name]['namespace_root'] = namespace_root
-                content_data[name]['namespace_parent'] = namespace_parent
-                content_data[name]['namespace_level'] = namespace_level
-                unique_linked_references.add(namespace_root)
-                unique_linked_references.add(name)
+        unique_linked_references.update(page_references, tags, tagged_backlinks, page_properties, block_properties)
 
-            # External links
-            external_links = [link.lower() for link in patterns['external_link'].findall(text)]
-            if external_links:
-                external_links_internet = [link.lower() for link in patterns['external_link_internet'].findall(text)]
-                if external_links_internet:
-                    content_data[name]['external_links_internet'] = external_links_internet
-                external_links_alias = [link.lower() for link in patterns['external_link_alias'].findall(text)]
-                if external_links_alias:
-                    content_data[name]['external_links_alias'] = external_links_alias
+        # External links
+        if external_links:
+            external_links_internet = [link.lower() for link in patterns['external_link_internet'].findall(text)]
+            if external_links_internet:
+                content_data[name]['external_links_internet'] = external_links_internet
+            external_links_alias = [link.lower() for link in patterns['external_link_alias'].findall(text)]
+            if external_links_alias:
+                content_data[name]['external_links_alias'] = external_links_alias
 
-            # Embedded links
-            embedded_links = [link.lower() for link in patterns['embedded_link'].findall(text)]
-            if embedded_links:
-                embedded_links_internet = [link.lower() for link in patterns['embedded_link_internet'].findall(text)]
-                if embedded_links_internet:
-                    content_data[name]['embedded_links_internet'] = embedded_links_internet
-                embedded_links_asset = [link.lower() for link in patterns['embedded_link_asset'].findall(text)]
-                if embedded_links_asset:
-                    content_data[name]['embedded_links_asset'] = embedded_links_asset
+        # Embedded links
+        if embedded_links:
+            embedded_links_internet = [link.lower() for link in patterns['embedded_link_internet'].findall(text)]
+            if embedded_links_internet:
+                content_data[name]['embedded_links_internet'] = embedded_links_internet
+            embedded_links_asset = [link.lower() for link in patterns['embedded_link_asset'].findall(text)]
+            if embedded_links_asset:
+                content_data[name]['embedded_links_asset'] = embedded_links_asset
 
     # Create alphanum dictionary
     for linked_reference in unique_linked_references:
         if linked_reference:
-            first_char = linked_reference[:2] if len(linked_reference) > 1 else f'!{linked_reference[0]}'
-            alphanum_dict[first_char].add(linked_reference)
+            first_char_id = linked_reference[:2] if len(linked_reference) > 1 else f'!{linked_reference[0]}'
+            alphanum_dict[first_char_id].add(linked_reference)
             
     alphanum_dict = dict(sorted(alphanum_dict.items()))
     return content_data, alphanum_dict
