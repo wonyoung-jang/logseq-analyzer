@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from __init__ import init_logging, init_output_directory
 from compile_re import compile_regex_patterns
 from reporting import write_output
-import built_in_logseq
+import logseq_config
 
 
 def process_key_name(key: str, parent: str) -> str:
@@ -419,13 +419,13 @@ def main():
 
     logseq_graph_folder = Path('C:/Logseq')  # folder = input('Enter folder path: ') or 'C:/Logseq'
     
-    target_dirs = built_in_logseq.TARGET_DIRS
+    target_dirs = logseq_config.TARGET_DIRS
     target_dirs_dict = {
-        'assets_path': built_in_logseq.ASSETS_PATH_NAME,
-        'draws_path': built_in_logseq.DRAWS_PATH_NAME,
-        'journals_path': built_in_logseq.JOURNALS_PATH_NAME,
-        'pages_path': built_in_logseq.PAGES_PATH_NAME,
-        'whiteboards_path': built_in_logseq.WHITEBOARDS_PATH_NAME
+        'assets_path': logseq_config.ASSETS_PATH_NAME,
+        'draws_path': logseq_config.DRAWS_PATH_NAME,
+        'journals_path': logseq_config.JOURNALS_PATH_NAME,
+        'pages_path': logseq_config.PAGES_PATH_NAME,
+        'whiteboards_path': logseq_config.WHITEBOARDS_PATH_NAME
     }
     
     # Outputs
@@ -443,7 +443,7 @@ def main():
         graph_meta_data[name] = meta_data
         meta_graph_content[name] = graph_content
     
-    built_in_properties = built_in_logseq.BUILT_IN_PROPERTIES
+    built_in_properties = logseq_config.BUILT_IN_PROPERTIES
     graph_content_data, meta_alphanum_dictionary = process_content_data(meta_graph_content, patterns, built_in_properties)
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary, target_dirs_dict)
     
