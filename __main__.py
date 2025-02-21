@@ -163,6 +163,19 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
 
 
 def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], props) -> Dict[str, Any]:
+    '''
+    Process file content to extract links, tags, properties, and namespace information.
+
+    Args:
+        content (Dict[str, str]): Dictionary of file names to content.
+        patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
+        props (Set[str]): Set of built-in properties.
+
+    Returns:
+        Tuple[Dict[str, Any], Dict[str, Set[str]]]:
+            - content_data: Dictionary of content-based metrics for each file.
+            - alphanum_dict: Dictionary for quick lookup of linked references.
+    '''
     content_data = defaultdict(lambda: defaultdict(int))
     alphanum_dict = defaultdict(set)
     unique_linked_references = set()
