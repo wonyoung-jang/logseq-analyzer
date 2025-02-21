@@ -283,9 +283,20 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
     return content_data, alphanum_dict
 
 
-def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Dict[str, str], alphanum_dict: Dict[str, Set], target_dirs_dict: Dict[str, str]) -> Dict[str, Any]:
+def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], target_dirs_dict: Dict[str, str]) -> Dict[str, Any]:
     '''
-    Process summary data.
+    Process summary data for each file based on metadata and content analysis.
+
+    Categorizes files and determines node types (root, leaf, branch, orphan).
+
+    Args:
+        graph_meta_data (Dict[str, Any]): Metadata for each file.
+        graph_content_data (Dict[str, Any]): Content-based data for each file.
+        alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
+        target_dirs_dict (Dict[str, str]): Dictionary of target directory names.
+
+    Returns:
+        Dict[str, Any]: Summary data for each file.
     '''
     graph_summary_data = defaultdict(lambda: defaultdict(int))
     for name, meta_data in graph_meta_data.items():
