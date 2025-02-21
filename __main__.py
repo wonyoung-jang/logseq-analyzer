@@ -447,78 +447,68 @@ def main():
     graph_content_data, meta_alphanum_dictionary = process_content_data(meta_graph_content, patterns, built_in_properties)
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary, target_dirs_dict)
     
-    output_dir = Path('output')
     write_output(output_dir, '___meta_alphanum_dictionary', meta_alphanum_dictionary)
     write_output(output_dir, '___meta_graph_content', meta_graph_content)
     write_output(output_dir, '__graph_content_data', graph_content_data)
     write_output(output_dir, '__graph_meta_data', graph_meta_data)
     write_output(output_dir, '__graph_summary_data', graph_summary_data)
     
-    summary_has_content                     = extract_summary_subset(graph_summary_data, has_content=True)    
-    summary_has_links                       = extract_summary_subset(graph_summary_data, has_links=True)
-    summary_has_external_links              = extract_summary_subset(graph_summary_data, has_external_links=True)
-    summary_has_embedded_links              = extract_summary_subset(graph_summary_data, has_embedded_links=True)
-    summary_is_markdown                     = extract_summary_subset(graph_summary_data, is_markdown=True)
-    summary_is_asset                        = extract_summary_subset(graph_summary_data, is_asset=True)
-    summary_is_draw                         = extract_summary_subset(graph_summary_data, is_draw=True)
-    summary_is_journal                      = extract_summary_subset(graph_summary_data, is_journal=True)
-    summary_is_page                         = extract_summary_subset(graph_summary_data, is_page=True)
-    summary_is_whiteboard                   = extract_summary_subset(graph_summary_data, is_whiteboard=True)
-    summary_is_other                        = extract_summary_subset(graph_summary_data, is_other=True)
-    summary_is_backlinked                   = extract_summary_subset(graph_summary_data, is_backlinked=True)
-    summary_is_orphan_true                  = extract_summary_subset(graph_summary_data, is_orphan_true=True)
-    summary_is_orphan_graph                 = extract_summary_subset(graph_summary_data, is_orphan_graph=True)
-    summary_is_node_root                    = extract_summary_subset(graph_summary_data, is_node_root=True)
-    summary_is_node_leaf                    = extract_summary_subset(graph_summary_data, is_node_leaf=True)
-    summary_is_node_branch                  = extract_summary_subset(graph_summary_data, is_node_branch=True)
+    summary_categories = {
+        "_summary_has_content":         {"has_content": True},
+        "_summary_has_links":           {"has_links": True},
+        "_summary_has_external_links":  {"has_external_links": True},
+        "_summary_has_embedded_links":  {"has_embedded_links": True},
+        "_summary_is_markdown":         {"is_markdown": True},
+        "_summary_is_asset":            {"is_asset": True},
+        "_summary_is_draw":             {"is_draw": True},
+        "_summary_is_journal":          {"is_journal": True},
+        "_summary_is_page":             {"is_page": True},
+        "_summary_is_whiteboard":       {"is_whiteboard": True},
+        "_summary_is_other":            {"is_other": True},
+        "_summary_is_backlinked":       {"is_backlinked": True},
+        "_summary_is_orphan_true":      {"is_orphan_true": True},
+        "_summary_is_orphan_graph":     {"is_orphan_graph": True},
+        "_summary_is_node_root":        {"is_node_root": True},
+        "_summary_is_node_leaf":        {"is_node_leaf": True},
+        "_summary_is_node_branch":      {"is_node_branch": True},
+    }
+
+    summary_data_subsets = {}
+    for output_name, criteria in summary_categories.items():
+        summary_subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = summary_subset
+        write_output(output_dir, output_name, summary_subset)
     
-    write_output(output_dir, '_summary_has_content', summary_has_content)
-    write_output(output_dir, '_summary_has_links', summary_has_links)
-    write_output(output_dir, '_summary_has_external_links', summary_has_external_links)
-    write_output(output_dir, '_summary_has_embedded_links', summary_has_embedded_links)
-    write_output(output_dir, '_summary_is_markdown', summary_is_markdown)
-    write_output(output_dir, '_summary_is_journal', summary_is_journal)
-    write_output(output_dir, '_summary_is_page', summary_is_page)
-    write_output(output_dir, '_summary_is_other', summary_is_other)
-    write_output(output_dir, '_summary_is_backlinked', summary_is_backlinked)
-    write_output(output_dir, '_summary_is_orphan_true', summary_is_orphan_true)
-    write_output(output_dir, '_summary_is_orphan_graph', summary_is_orphan_graph)
-    write_output(output_dir, '_summary_is_node_root', summary_is_node_root)
-    write_output(output_dir, '_summary_is_node_leaf', summary_is_node_leaf)
-    write_output(output_dir, '_summary_is_node_branch', summary_is_node_branch)
-    
-    # Handle assets
-    summary_is_asset = extract_summary_subset(graph_summary_data, is_asset=True)
+    # Asset Handling
+    summary_is_asset = summary_data_subsets["_summary_is_asset"]
     not_referenced_assets_keys = list(summary_is_asset.keys())
     for name, content_data in graph_content_data.items():
-        if not content_data['assets']: continue
+        if not content_data['assets']: 
+            continue
         for non_asset in not_referenced_assets_keys:
             non_asset_secondary = graph_meta_data[non_asset]['name']
-            for line in content_data['assets']:
-                if non_asset in line:
-                    graph_summary_data[non_asset]['is_backlinked'] = True
-                    break
-                elif non_asset_secondary in line:
+            for asset_mention in content_data['assets']:
+                if non_asset in asset_mention or non_asset_secondary in asset_mention:
                     graph_summary_data[non_asset]['is_backlinked'] = True
                     break
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=True)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=False)
-    write_output(output_dir, '_summary_is_asset', summary_is_asset)
     write_output(output_dir, '_summary_is_asset_backlinked', summary_is_asset_backlinked)
     write_output(output_dir, '_summary_is_asset_not_backlinked', summary_is_asset_not_backlinked)
     
-    # Handle draws
-    summary_is_draw = extract_summary_subset(graph_summary_data, is_draw=True)
+    # Draws Handling
+    summary_is_draw = summary_data_subsets["_summary_is_draw"]
     for name, content_data in graph_content_data.items():
-        if not content_data['draws']: continue
+        if not content_data['draws']:
+            continue
         for draw in content_data['draws']:
             if draw in summary_is_draw:
                 summary_is_draw[draw]['is_backlinked'] = True    
-    write_output(output_dir, '_summary_is_draw', summary_is_draw)
+    write_output(output_dir, '_summary_is_draw', summary_is_draw) # overwrites
     
-    # Handle whiteboards
-    summary_is_whiteboard = extract_summary_subset(graph_summary_data, is_whiteboard=True)
-    write_output(output_dir, '_summary_is_whiteboard', summary_is_whiteboard)
+    # TODO Whiteboards Handling (content)
+    # summary_is_whiteboard = summary_data_subsets["_summary_is_whiteboard"]
+    # write_output(output_dir, '_summary_is_whiteboard', summary_is_whiteboard)
     
     
 if __name__ == '__main__':
