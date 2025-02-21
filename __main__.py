@@ -162,7 +162,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     return metadata, content
 
 
-def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], props) -> Dict[str, Any]:
+def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], props: Set[str]) -> Tuple[Dict[str, Any], Dict[str, Set[str]]]:
     '''
     Process file content to extract links, tags, properties, and namespace information.
 
@@ -205,12 +205,11 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
         page_references = [page_ref.lower() for page_ref in patterns['page_reference'].findall(text)]
         tags = [tag.lower() for tag in patterns['tag'].findall(text)]
         tagged_backlinks = [tag.lower() for tag in patterns['tagged_backlink'].findall(text)]
-        heading_match = re.search(r'^\s*#+\s', text, re.MULTILINE)
-        bullet_match = re.search(r'^\s*-\s', text, re.MULTILINE)
         assets = [asset.lower() for asset in patterns['asset'].findall(text)]
         draws = [draw.lower() for draw in patterns['draw'].findall(text)]
         external_links = [link.lower() for link in patterns['external_link'].findall(text)]
         embedded_links = [link.lower() for link in patterns['embedded_link'].findall(text)]
+        page_properties, block_properties = extract_page_block_properties(text, patterns)
         
         content_data[name]['page_references'] = page_references
         content_data[name]['tags'] = tags
@@ -218,32 +217,13 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
         content_data[name]['assets'] = assets
         content_data[name]['draws'] = draws
         
-        # Properties
-        if heading_match:
-            page_text = text[: heading_match.start()]
-            block_text = text[heading_match.start() :]
-        elif bullet_match:
-            page_text = text[: bullet_match.start()]
-            block_text = text[bullet_match.start() :]
-        else:
-            page_text = text
-            block_text = ''
-        page_properties = [prop.lower() for prop in patterns['property'].findall(page_text)]
-        block_properties = [prop.lower() for prop in patterns['property'].findall(block_text)]
-        if page_properties:
-            properties_page_builtin = [prop for prop in page_properties if prop in props]
-            if properties_page_builtin:
-                content_data[name]['properties_page_builtin'] = properties_page_builtin
-            properties_page_user = [prop for prop in page_properties if prop not in props]
-            if properties_page_user:
-                content_data[name]['properties_page_user'] = properties_page_user
-        if block_properties:
-            properties_block_builtin = [prop for prop in block_properties if prop in props]
-            if properties_block_builtin:
-                content_data[name]['properties_block_builtin'] = properties_block_builtin
-            properties_block_user = [prop for prop in block_properties if prop not in props]
-            if properties_block_user:
-                content_data[name]['properties_block_user'] = properties_block_user
+        (   content_data[name]["properties_page_builtin"], 
+            content_data[name]["properties_page_user"]
+        ) = split_builtin_user_properties(page_properties, props)
+        
+        (   content_data[name]["properties_block_builtin"], 
+            content_data[name]["properties_block_user"]
+        ) = split_builtin_user_properties(block_properties, props)
 
         # Namespace
         if '/' in name:
@@ -251,9 +231,11 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
             namespace_level = len(namespace_parts)
             namespace_root = namespace_parts[0]
             namespace_parent = '/'.join(namespace_parts[:-1])
+            
             content_data[name]['namespace_root'] = namespace_root
             content_data[name]['namespace_parent'] = namespace_parent
             content_data[name]['namespace_level'] = namespace_level
+            
             unique_linked_references.update([namespace_root, name])
             
         unique_linked_references.update(page_references, tags, tagged_backlinks, page_properties, block_properties)
@@ -284,6 +266,33 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
             
     alphanum_dict = dict(sorted(alphanum_dict.items()))
     return content_data, alphanum_dict
+
+
+def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
+    '''Helper function to extract page and block properties from text.'''
+    heading_match = re.search(r'^\s*#+\s', text, re.MULTILINE)
+    bullet_match = re.search(r'^\s*-\s', text, re.MULTILINE)
+
+    if heading_match:
+        page_text = text[: heading_match.start()]
+        block_text = text[heading_match.start() :]
+    elif bullet_match:
+        page_text = text[: bullet_match.start()]
+        block_text = text[bullet_match.start() :]
+    else:
+        page_text = text
+        block_text = ''
+
+    page_properties = [prop.lower() for prop in patterns['property'].findall(page_text)]
+    block_properties = [prop.lower() for prop in patterns['property'].findall(block_text)]
+    return page_properties, block_properties
+
+
+def split_builtin_user_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
+    '''Helper function to split properties into built-in and user-defined.'''
+    builtin_props = [prop for prop in properties if prop in built_in_props]
+    user_props = [prop for prop in properties if prop not in built_in_props]
+    return builtin_props, user_props
 
 
 def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], target_dirs_dict: Dict[str, str]) -> Dict[str, Any]:
@@ -468,23 +477,23 @@ def main():
     write_output(output_dir, '__graph_summary_data', graph_summary_data)
     
     summary_categories = {
-        "_summary_has_content":         {"has_content": True},
-        "_summary_has_links":           {"has_links": True},
-        "_summary_has_external_links":  {"has_external_links": True},
-        "_summary_has_embedded_links":  {"has_embedded_links": True},
-        "_summary_is_markdown":         {"is_markdown": True},
-        "_summary_is_asset":            {"is_asset": True},
-        "_summary_is_draw":             {"is_draw": True},
-        "_summary_is_journal":          {"is_journal": True},
-        "_summary_is_page":             {"is_page": True},
-        "_summary_is_whiteboard":       {"is_whiteboard": True},
-        "_summary_is_other":            {"is_other": True},
-        "_summary_is_backlinked":       {"is_backlinked": True},
-        "_summary_is_orphan_true":      {"is_orphan_true": True},
-        "_summary_is_orphan_graph":     {"is_orphan_graph": True},
-        "_summary_is_node_root":        {"is_node_root": True},
-        "_summary_is_node_leaf":        {"is_node_leaf": True},
-        "_summary_is_node_branch":      {"is_node_branch": True},
+        '_summary_has_content':         {'has_content': True},
+        '_summary_has_links':           {'has_links': True},
+        '_summary_has_external_links':  {'has_external_links': True},
+        '_summary_has_embedded_links':  {'has_embedded_links': True},
+        '_summary_is_markdown':         {'is_markdown': True},
+        '_summary_is_asset':            {'is_asset': True},
+        '_summary_is_draw':             {'is_draw': True},
+        '_summary_is_journal':          {'is_journal': True},
+        '_summary_is_page':             {'is_page': True},
+        '_summary_is_whiteboard':       {'is_whiteboard': True},
+        '_summary_is_other':            {'is_other': True},
+        '_summary_is_backlinked':       {'is_backlinked': True},
+        '_summary_is_orphan_true':      {'is_orphan_true': True},
+        '_summary_is_orphan_graph':     {'is_orphan_graph': True},
+        '_summary_is_node_root':        {'is_node_root': True},
+        '_summary_is_node_leaf':        {'is_node_leaf': True},
+        '_summary_is_node_branch':      {'is_node_branch': True},
     }
 
     summary_data_subsets = {}
@@ -494,7 +503,7 @@ def main():
         write_output(output_dir, output_name, summary_subset)
     
     # Asset Handling
-    summary_is_asset = summary_data_subsets["_summary_is_asset"]
+    summary_is_asset = summary_data_subsets['_summary_is_asset']
     not_referenced_assets_keys = list(summary_is_asset.keys())
     for name, content_data in graph_content_data.items():
         if not content_data['assets']: 
@@ -511,7 +520,7 @@ def main():
     write_output(output_dir, '_summary_is_asset_not_backlinked', summary_is_asset_not_backlinked)
     
     # Draws Handling
-    summary_is_draw = summary_data_subsets["_summary_is_draw"]
+    summary_is_draw = summary_data_subsets['_summary_is_draw']
     for name, content_data in graph_content_data.items():
         if not content_data['draws']:
             continue
@@ -521,7 +530,7 @@ def main():
     write_output(output_dir, '_summary_is_draw', summary_is_draw) # overwrites
     
     # TODO Whiteboards Handling (content)
-    # summary_is_whiteboard = summary_data_subsets["_summary_is_whiteboard"]
+    # summary_is_whiteboard = summary_data_subsets['_summary_is_whiteboard']
     # write_output(output_dir, '_summary_is_whiteboard', summary_is_whiteboard)
     
     
