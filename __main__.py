@@ -315,6 +315,7 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         Dict[str, Any]: Summary data for each file.
     '''
     graph_summary_data = defaultdict(lambda: defaultdict(bool))
+    
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
         has_content = bool(content_info)
@@ -350,15 +351,7 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         is_whiteboard = file_path_parent_name == target_dirs_dict["whiteboards_path"]
         is_other = not any([is_markdown, is_asset, is_draw, is_journal, is_page, is_whiteboard])
             
-        # TODO is_backlinked helper function
-        id_key = meta_data['id']
-        if id_key in alphanum_dict:
-            for page_ref in alphanum_dict[id_key]:
-                if name == page_ref or str(name + '/') in page_ref:  # Capture root namespaces
-                    graph_summary_data[name]['is_backlinked'] = True
-                    break
-                
-        is_backlinked = graph_summary_data[name]['is_backlinked']
+        is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
         if is_markdown:
             is_orphan_true, is_orphan_graph, is_node_root, is_node_leaf, is_node_branch = determine_node_type(
                 has_content, is_backlinked, has_links
@@ -385,6 +378,16 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         graph_summary_data[name]["is_node_branch"] = is_node_branch
         
     return graph_summary_data
+
+
+def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
+    '''Helper function to check if a file is backlinked.'''
+    id_key = meta_data['id']
+    if id_key in alphanum_dict:
+        for page_ref in alphanum_dict[id_key]:
+            if name == page_ref or str(name + '/') in page_ref:
+                return True
+    return False
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, has_links: bool) -> Tuple[bool, bool, bool, bool, bool]:
