@@ -195,8 +195,10 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
             content_data[name]['namespace_root'] = ''
             content_data[name]['namespace_parent'] = ''
             content_data[name]['namespace_level'] = -1
+            content_data[name]['external_links'] = []
             content_data[name]['external_links_internet'] = []
             content_data[name]['external_links_alias'] = []
+            content_data[name]['embedded_links'] = []
             content_data[name]['embedded_links_internet'] = []
             content_data[name]['embedded_links_asset'] = []
             continue
@@ -242,6 +244,7 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
 
         # External links
         if external_links:
+            content_data[name]['external_links'] = external_links
             external_links_internet = [link.lower() for link in patterns['external_link_internet'].findall(text)]
             if external_links_internet:
                 content_data[name]['external_links_internet'] = external_links_internet
@@ -251,6 +254,7 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
 
         # Embedded links
         if embedded_links:
+            content_data[name]['embedded_links'] = embedded_links
             embedded_links_internet = [link.lower() for link in patterns['embedded_link_internet'].findall(text)]
             if embedded_links_internet:
                 content_data[name]['embedded_links_internet'] = embedded_links_internet
@@ -310,101 +314,105 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
     Returns:
         Dict[str, Any]: Summary data for each file.
     '''
-    graph_summary_data = defaultdict(lambda: defaultdict(int))
+    graph_summary_data = defaultdict(lambda: defaultdict(bool))
     for name, meta_data in graph_meta_data.items():
-        graph_summary_data[name]['has_content'] = False
-        graph_summary_data[name]['has_links'] = False
-        graph_summary_data[name]['has_external_links'] = False
-        graph_summary_data[name]['has_embedded_links'] = False
-        graph_summary_data[name]['is_markdown'] = False
-        graph_summary_data[name]['is_asset'] = False
-        graph_summary_data[name]['is_draw'] = False
-        graph_summary_data[name]['is_journal'] = False
-        graph_summary_data[name]['is_page'] = False
-        graph_summary_data[name]['is_whiteboard'] = False
-        graph_summary_data[name]['is_other'] = False
-        graph_summary_data[name]['is_backlinked'] = False
-        graph_summary_data[name]['is_orphan_true'] = False
-        graph_summary_data[name]['is_orphan_graph'] = False
-        graph_summary_data[name]['is_node_root'] = False
-        graph_summary_data[name]['is_node_leaf'] = False
-        graph_summary_data[name]['is_node_branch'] = False
-        
-        if name in graph_content_data:
-            graph_summary_data[name]['has_content'] = True
-            if graph_content_data[name]['page_references']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['tags']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['tagged_backlinks']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['properties_page_builtin']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['properties_page_user']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['properties_block_builtin']:
-                graph_summary_data[name]['has_links'] = True
-            elif graph_content_data[name]['properties_block_user']:
-                graph_summary_data[name]['has_links'] = True
+        content_info = graph_content_data.get(name, {})
+        has_content = bool(content_info)
+        has_links = any(content_info.get(key) for key in [
+            "page_references", 
+            "tags", 
+            "tagged_backlinks",
+            "properties_page_builtin",
+            "properties_page_user",
+            "properties_block_builtin",
+            "properties_block_user"
+        ])
+        has_external_links = any(content_info.get(key) for key in [
+            "external_links", 
+            "external_links_internet", 
+            "external_links_alias"
+        ])
+        has_embedded_links = any(content_info.get(key) for key in [
+            "embedded_links", 
+            "embedded_links_internet", 
+            "embedded_links_asset"
+        ])
             
-            if graph_content_data[name]['external_links_internet']:
-                graph_summary_data[name]['has_external_links'] = True
-            elif graph_content_data[name]['external_links_alias']:
-                graph_summary_data[name]['has_external_links'] = True
-            
-            if graph_content_data[name]['embedded_links_internet']:
-                graph_summary_data[name]['has_embedded_links'] = True
-            elif graph_content_data[name]['embedded_links_asset']:
-                graph_summary_data[name]['has_embedded_links'] = True
+        file_path_suffix = meta_data['file_path_suffix']
+        file_path_parent_name = meta_data['file_path_parent_name']
+        file_path_parts = meta_data['file_path_parts']
         
+        is_markdown = file_path_suffix == '.md'
+        is_asset = file_path_parent_name == target_dirs_dict['assets_path'] or "assets" in file_path_parts
+        is_draw = file_path_parent_name == target_dirs_dict["draws_path"]
+        is_journal = file_path_parent_name == target_dirs_dict["journals_path"]
+        is_page = file_path_parent_name == target_dirs_dict["pages_path"]
+        is_whiteboard = file_path_parent_name == target_dirs_dict["whiteboards_path"]
+        is_other = not any([is_markdown, is_asset, is_draw, is_journal, is_page, is_whiteboard])
+            
+        # TODO is_backlinked helper function
         id_key = meta_data['id']
         if id_key in alphanum_dict:
             for page_ref in alphanum_dict[id_key]:
                 if name == page_ref or str(name + '/') in page_ref:  # Capture root namespaces
                     graph_summary_data[name]['is_backlinked'] = True
                     break
-            
-        file_path_suffix = meta_data['file_path_suffix']
-        file_path_parent_name = meta_data['file_path_parent_name']
-        file_path_parts = meta_data['file_path_parts']
-        
-        if file_path_suffix == '.md':
-            graph_summary_data[name]['is_markdown'] = True
-            
-        if graph_summary_data[name]['is_markdown']:
-            if graph_summary_data[name]['has_content']:
-                if graph_summary_data[name]['is_backlinked']:
-                    if graph_summary_data[name]['has_links']:
-                        graph_summary_data[name]['is_node_branch'] = True
-                    else:
-                        graph_summary_data[name]['is_node_leaf'] = True
-                else:
-                    if graph_summary_data[name]['has_links']:
-                        graph_summary_data[name]['is_node_root'] = True
-                    else:
-                        graph_summary_data[name]['is_orphan_graph'] = True
-            else:
-                if graph_summary_data[name]['is_backlinked']:
-                    graph_summary_data[name]['is_node_leaf'] = True
-                else:
-                    graph_summary_data[name]['is_orphan_true'] = True
-
-        if file_path_parent_name == target_dirs_dict['assets_path']:
-            graph_summary_data[name]['is_asset'] = True
-        elif 'assets' in file_path_parts:
-            graph_summary_data[name]['is_asset'] = True
-            logging.info(f'Nested asset file found in: {file_path_parts}')
-        elif file_path_parent_name == target_dirs_dict['draws_path']:
-            graph_summary_data[name]['is_draw'] = True
-        elif file_path_parent_name == target_dirs_dict['journals_path']:
-            graph_summary_data[name]['is_journal'] = True
-        elif file_path_parent_name == target_dirs_dict['pages_path']:
-            graph_summary_data[name]['is_page'] = True
-        elif file_path_parent_name == target_dirs_dict['whiteboards_path']:
-            graph_summary_data[name]['is_whiteboard'] = True
+                
+        is_backlinked = graph_summary_data[name]['is_backlinked']
+        if is_markdown:
+            is_orphan_true, is_orphan_graph, is_node_root, is_node_leaf, is_node_branch = determine_node_type(
+                has_content, is_backlinked, has_links
+            )
         else:
-            graph_summary_data[name]['is_other'] = True
+            is_orphan_true = is_orphan_graph = is_node_root = is_node_leaf = is_node_branch = False
+            
+        graph_summary_data[name]["has_content"] = has_content
+        graph_summary_data[name]["has_links"] = has_links
+        graph_summary_data[name]["has_external_links"] = has_external_links
+        graph_summary_data[name]["has_embedded_links"] = has_embedded_links
+        graph_summary_data[name]["is_markdown"] = is_markdown
+        graph_summary_data[name]["is_asset"] = is_asset
+        graph_summary_data[name]["is_draw"] = is_draw
+        graph_summary_data[name]["is_journal"] = is_journal
+        graph_summary_data[name]["is_page"] = is_page
+        graph_summary_data[name]["is_whiteboard"] = is_whiteboard
+        graph_summary_data[name]["is_other"] = is_other
+        graph_summary_data[name]['is_backlinked'] = is_backlinked
+        graph_summary_data[name]["is_orphan_true"] = is_orphan_true
+        graph_summary_data[name]["is_orphan_graph"] = is_orphan_graph
+        graph_summary_data[name]["is_node_root"] = is_node_root
+        graph_summary_data[name]["is_node_leaf"] = is_node_leaf
+        graph_summary_data[name]["is_node_branch"] = is_node_branch
+        
     return graph_summary_data
+
+
+def determine_node_type(has_content: bool, is_backlinked: bool, has_links: bool) -> Tuple[bool, bool, bool, bool, bool]:
+    """Helper function to determine node type based on summary data."""
+    is_orphan_true = False
+    is_orphan_graph = False
+    is_node_root = False
+    is_node_leaf = False
+    is_node_branch = False
+
+    if has_content:
+        if is_backlinked:
+            if has_links:
+                is_node_branch = True
+            else:
+                is_node_leaf = True
+        else:
+            if has_links:
+                is_node_root = True
+            else:
+                is_orphan_graph = True # Orphan within the graph (has content but no backlinks or graph links)
+    else:
+        if not is_backlinked:
+            is_orphan_true = True # Truly orphan (no content, no backlinks)
+        else:
+            is_node_leaf = True # Treat as leaf if backlinked but no content
+
+    return is_orphan_true, is_orphan_graph, is_node_root, is_node_leaf, is_node_branch
 
 
 def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) -> Dict[str, Any]:
