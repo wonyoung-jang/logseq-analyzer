@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Dict, Pattern
 
@@ -8,6 +9,7 @@ def compile_regex_patterns() -> Dict[str, Pattern]:
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
     '''
+    logging.debug('Compiling regex patterns')
     patterns = {
         'bullet'                    : re.compile(r'(?:^|\s)-', re.MULTILINE),
         'page_reference'            : re.compile(r'(?<!#)\[\[(.+?)\]\]'),

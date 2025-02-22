@@ -9,7 +9,7 @@ def write_output(output_dir: Path, filename_prefix: str, items: Any, type_output
         filename_prefix:    Prefix for the output file.
         items:              Dictionary or list of items to write to the output file.
     '''
-    logging.info('Writing %s...', filename_prefix)
+    logging.info(f'Writing {filename_prefix}...')
     
     count = len(items) if isinstance(items, list) else len(items.keys())
     instance_type = str(type(items))

@@ -9,7 +9,8 @@ def init_logging(log_file: Path) -> None:
     '''
     if Path.exists(log_file):
         Path.unlink(log_file)
-    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename=log_file, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.info(f'Logging initialized to {log_file}')
     
 
 def init_output_directory(directory: Path) -> None:
@@ -25,12 +26,12 @@ def init_output_directory(directory: Path) -> None:
     if directory.exists() and directory.is_dir():
         try:
             shutil.rmtree(directory)
-            logging.info('Cleared the existing output directory: %s', directory)
+            logging.info(f'Removed existing output directory: {directory}')
         except Exception as e:
-            logging.exception('Failed to remove directory %s: %s', directory, e)
+            logging.debug(f'Failed to remove directory {directory}: {e}')
     try:
         directory.mkdir(parents=True, exist_ok=True)
-        logging.info('Created output directory: %s', directory)
+        logging.info(f'Created output directory: {directory}')
     except Exception as e:
-        logging.exception('Failed to create output directory %s: %s', directory, e)
+        logging.debug(f'Failed to create output directory {directory}: {e}')
         raise

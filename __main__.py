@@ -98,10 +98,10 @@ def read_file_content(file_path: Path) -> Optional[str]:
     try:
         return file_path.read_text(encoding='utf-8')
     except FileNotFoundError:
-        logging.error(f'File not found: {file_path}') # More specific logging for file not found
+        logging.warning(f'File not found: {file_path}') # More specific logging for file not found
         return None
     except Exception as e:
-        logging.exception('Failed to read file %s: %s', file_path, e)
+        logging.warning(f'Failed to read file {file_path}: {e}')
         return None
 
 
@@ -393,7 +393,7 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
             graph_summary_data[name]['is_asset'] = True
         elif 'assets' in file_path_parts:
             graph_summary_data[name]['is_asset'] = True
-            logging.info('Nested asset file found in: %s', file_path_parts)
+            logging.info(f'Nested asset file found in: {file_path_parts}')
         elif file_path_parent_name == target_dirs_dict['draws_path']:
             graph_summary_data[name]['is_draw'] = True
         elif file_path_parent_name == target_dirs_dict['journals_path']:
@@ -532,6 +532,8 @@ def main():
     # TODO Whiteboards Handling (content)
     # summary_is_whiteboard = summary_data_subsets['_summary_is_whiteboard']
     # write_output(output_dir, '_summary_is_whiteboard', summary_is_whiteboard)
+    
+    logging.info('Logseq Analyzer completed.')
     
     
 if __name__ == '__main__':
