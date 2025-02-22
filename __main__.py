@@ -59,14 +59,18 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
     original_name = file_path.stem
     name = process_key_name(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
+    now = datetime.now().replace(microsecond=0)
     
     try:
-        date_created = datetime.fromtimestamp(stat.st_birthtime)
+        date_created = datetime.fromtimestamp(stat.st_birthtime).replace(microsecond=0)
     except AttributeError:
-        date_created = datetime.fromtimestamp(stat.st_ctime)
+        date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
         logging.warning(f'File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.')
 
-    date_modified = datetime.fromtimestamp(stat.st_mtime)
+    date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
+    
+    time_existed = now - date_created
+    time_unmodified = now - date_modified
     
     metadata = {
         'id': name[:2].lower() if len(name) > 1 else f'!{name[0].lower()}',
@@ -79,7 +83,8 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
         'file_path_parts': file_path.parts,
         'date_created': date_created,
         'date_modified': date_modified,
-        'time_unmodified': date_modified - date_created,
+        'time_existed': time_existed,
+        'time_unmodified': time_unmodified,
         'size': stat.st_size
     }
     return metadata
