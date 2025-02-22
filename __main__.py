@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, Pattern, Generator, Set, Tuple
+from typing import Optional, Dict, Any, Pattern, Generator, Set, Tuple, List
 from urllib.parse import unquote
 
 from __init__ import init_logging, init_output_directory
@@ -126,7 +126,7 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
     '''
     if not directory.is_dir():
         logging.error(f'Directory not found: {directory}')
-        return  # Stop iteration if directory doesn't exist
+        return 
     
     for path in directory.rglob('*'):
         if path.is_file():
@@ -134,7 +134,7 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
                 if path.parent.name in target_dirs:
                     yield path
                 else:
-                    logging.debug('Skipping file %s outside target directories', path)
+                    logging.info(f'Skipping file {path} outside target directories')
             else:
                 yield path
 
@@ -167,7 +167,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     return metadata, content
 
 
-def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], props: Set[str]) -> Tuple[Dict[str, Any], Dict[str, Set[str]]]:
+def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], props: Set[str]) -> Tuple[Dict[str, Any], Dict[str, Set[str]], List[str]]:
     '''
     Process file content to extract links, tags, properties, and namespace information.
 
@@ -180,6 +180,7 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
         Tuple[Dict[str, Any], Dict[str, Set[str]]]:
             - content_data: Dictionary of content-based metrics for each file.
             - alphanum_dict: Dictionary for quick lookup of linked references.
+            - dangling_links: List of sorted dangling links (linked, but no file).
     '''
     content_data = defaultdict(lambda: defaultdict(list))
     alphanum_dict = defaultdict(set)
@@ -272,9 +273,31 @@ def process_content_data(content: Dict[str, str], patterns: Dict[str, Pattern], 
         if linked_reference:
             first_char_id = linked_reference[:2] if len(linked_reference) > 1 else f'!{linked_reference[0]}'
             alphanum_dict[first_char_id].add(linked_reference)
-            
+        else: 
+            logging.info(f'Empty linked reference: {linked_reference}')
+    
+    # Check for dangling links (linked, but no file)
+    all_filenames = list(content.keys())
+    alphanum_filenames = defaultdict(set)
+    for filename in all_filenames:
+        if filename:
+            first_char_id = filename[:2] if len(filename) > 1 else f'!{filename[0]}'
+            alphanum_filenames[first_char_id].add(filename)
+        else:
+            logging.info(f'Empty filename: {filename}')
     alphanum_dict = dict(sorted(alphanum_dict.items()))
-    return content_data, alphanum_dict
+    alphanum_filenames = dict(sorted(alphanum_filenames.items()))
+    dangling_links = set()
+    for id, reference in alphanum_dict.items():
+        if id not in alphanum_filenames:
+            dangling_links.update(reference)
+        else:
+            for ref in reference:
+                if ref not in alphanum_filenames[id]:
+                    dangling_links.add(ref)
+    dangling_links = sorted(dangling_links)
+            
+    return content_data, alphanum_dict, dangling_links
 
 
 def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
@@ -483,10 +506,11 @@ def main():
         meta_graph_content[name] = graph_content
     
     built_in_properties = logseq_config.BUILT_IN_PROPERTIES
-    graph_content_data, meta_alphanum_dictionary = process_content_data(meta_graph_content, patterns, built_in_properties)
+    graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(meta_graph_content, patterns, built_in_properties)
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary, target_dirs_dict)
     
     write_output(output_dir, '___meta_alphanum_dictionary', meta_alphanum_dictionary)
+    write_output(output_dir, '___meta_dangling_links', meta_dangling_links)
     write_output(output_dir, '___meta_graph_content', meta_graph_content)
     write_output(output_dir, '__graph_content_data', graph_content_data)
     write_output(output_dir, '__graph_meta_data', graph_meta_data)
@@ -554,4 +578,12 @@ def main():
     
 if __name__ == '__main__':
     main()
+    # TODO Implement a GUI
+    # TODO Implement configurable inputs
+        # TODO Implement custom journal date formats
+    # TODO Implement configurable outputs
+    # TODO Implement saving settings
+    # TODO Implement saving logs
+    # TODO Implement saving outputs
+    # TODO Implement more global output measurements
     
