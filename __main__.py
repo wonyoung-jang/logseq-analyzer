@@ -33,7 +33,7 @@ def process_key_name(key: str, parent: str) -> str:
         try:
             date_object = datetime.strptime(key, '%Y_%m_%d')
             day_of_week = date_object.strftime('%A')
-            return f'{key.replace('_', '-').lower()} {day_of_week}'.lower() # Ensure final output is lowercase
+            return f'{key.replace("_", "-").lower()} {day_of_week}'.lower() # Ensure final output is lowercase
         except ValueError:
             logging.warning(f'Could not parse journal key as date: {key}. Returning original key.')
             return key.replace('_', '-').lower() # Still process and lowercase even if parsing fails
