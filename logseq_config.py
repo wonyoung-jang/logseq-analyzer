@@ -2,6 +2,21 @@
 # Constants for default Logseq directories
 # Constants for Logseq built-in properties
 
+JOURNAL_PAGE_TITLE_FORMAT = 'yyyy-MM-dd EEEE'
+JOURNAL_FILE_NAME_FORMAT = 'yyyy_MM_dd'
+TOKEN_MAP = {
+    'yyyy': '%Y',
+    'yy': '%y',
+    'MMMM': '%B',
+    'MMM': '%b',
+    'MM': '%m',
+    'M': '%-m',
+    'dd': '%d',
+    'd': '%-d',
+    'EEEE': '%A',
+    'EEE': '%a',
+}
+
 ASSETS_PATH_NAME        = 'assets'
 DRAWS_PATH_NAME         = 'draws'
 JOURNALS_PATH_NAME      = 'journals'

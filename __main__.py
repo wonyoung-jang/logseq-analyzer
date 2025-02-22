@@ -13,6 +13,49 @@ from reporting import write_output
 import logseq_config
 
 
+def process_journal_key(key: str) -> str:
+    '''
+    Process the journal key by converting it to a page title format.
+    
+    Args:
+        key (str): The journal key (filename stem).
+
+    Returns:
+        str: Processed journal key as a page title.
+    '''
+    page_title_format = getattr(logseq_config, 'JOURNAL_PAGE_TITLE_FORMAT', 'MMM do, yyyy')
+    file_name_format = getattr(logseq_config, 'JOURNAL_FILE_NAME_FORMAT', 'yyyy_MM_dd')
+    py_file_name_format = convert_format(file_name_format)
+    py_page_title_format = convert_format(page_title_format)
+    
+    try: 
+        date_object = datetime.strptime(key, py_file_name_format)
+        page_title = date_object.strftime(py_page_title_format).lower()
+        return page_title
+    except ValueError:
+        logging.warning(f'Could not parse journal key as date: {key}. Returning original key.')
+        return key
+
+
+def convert_format(cljs_format: str) -> str:
+    '''
+    Convert a Clojure-style date format to a Python-style date format.
+    
+    Args:
+        cljs_format (str): Clojure-style date format.
+        
+    Returns:
+        str: Python-style date format.
+    '''
+    token_map = getattr(logseq_config, 'TOKEN_MAP', {})
+    token_pattern = re.compile('|'.join(re.escape(k) for k in sorted(token_map, key=len, reverse=True)))
+    def replace_token(match):
+        token = match.group(0)
+        return token_map.get(token, token)
+    py_format = token_pattern.sub(replace_token, cljs_format)
+    return py_format
+
+
 def process_key_name(key: str, parent: str) -> str:
     '''
     Process the key name by removing the parent name and formatting it.
@@ -31,13 +74,7 @@ def process_key_name(key: str, parent: str) -> str:
         key = key[:-1]
 
     if parent == 'journals':
-        try:
-            date_object = datetime.strptime(key, '%Y_%m_%d')
-            day_of_week = date_object.strftime('%A')
-            return f'{key.replace("_", "-").lower()} {day_of_week}'.lower() # Ensure final output is lowercase
-        except ValueError:
-            logging.warning(f'Could not parse journal key as date: {key}. Returning original key.')
-            return key.replace('_', '-').lower() # Still process and lowercase even if parsing fails
+        return process_journal_key(key)
     else:
         return unquote(key).replace('___', '/').lower()
 
@@ -57,7 +94,6 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
     '''
     stat = file_path.stat()
     parent = file_path.parent.name
-    original_name = file_path.stem
     name = process_key_name(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
     now = datetime.now().replace(microsecond=0)
@@ -76,7 +112,7 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
     metadata = {
         'id': name[:2].lower() if len(name) > 1 else f'!{name[0].lower()}',
         'name': name,
-        'name_secondary': f'{original_name} {parent} + {suffix}'.lower(),
+        'name_secondary': f'{name} {parent} + {suffix}'.lower(),
         'file_path': str(file_path),
         'file_path_parent_name': parent.lower(),
         'file_path_name': name.lower(),
@@ -577,11 +613,13 @@ def main():
 if __name__ == '__main__':
     main()
     # TODO Implement a GUI
+    
     # TODO Implement configurable inputs
-        # TODO Implement custom journal date formats
+    
+    # TODO Implement custom journal date formats
+    
     # TODO Implement configurable outputs
     # TODO Implement saving settings
     # TODO Implement saving logs
     # TODO Implement saving outputs
     # TODO Implement more global output measurements
-    
