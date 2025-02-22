@@ -553,7 +553,5 @@ def main():
     
     
 if __name__ == '__main__':
-    print('Start: Logseq Analyzer')
     main()
-    print('End: Logseq Analyzer')
     
