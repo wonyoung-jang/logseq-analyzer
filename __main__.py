@@ -328,7 +328,7 @@ def split_builtin_user_properties(properties: list, built_in_props: Set[str]) ->
     return builtin_props, user_props
 
 
-def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], target_dirs_dict: Dict[str, str]) -> Dict[str, Any]:
+def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> Dict[str, Any]:
     '''
     Process summary data for each file based on metadata and content analysis.
 
@@ -338,7 +338,6 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         graph_content_data (Dict[str, Any]): Content-based data for each file.
         alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
-        target_dirs_dict (Dict[str, str]): Dictionary of target directory names.
 
     Returns:
         Dict[str, Any]: Summary data for each file.
@@ -349,23 +348,23 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         content_info = graph_content_data.get(name, {})
         has_content = bool(content_info)
         has_links = any(content_info.get(key) for key in [
-            "page_references", 
-            "tags", 
-            "tagged_backlinks",
-            "properties_page_builtin",
-            "properties_page_user",
-            "properties_block_builtin",
-            "properties_block_user"
+            'page_references', 
+            'tags', 
+            'tagged_backlinks',
+            'properties_page_builtin',
+            'properties_page_user',
+            'properties_block_builtin',
+            'properties_block_user'
         ])
         has_external_links = any(content_info.get(key) for key in [
-            "external_links", 
-            "external_links_internet", 
-            "external_links_alias"
+            'external_links', 
+            'external_links_internet', 
+            'external_links_alias'
         ])
         has_embedded_links = any(content_info.get(key) for key in [
-            "embedded_links", 
-            "embedded_links_internet", 
-            "embedded_links_asset"
+            'embedded_links', 
+            'embedded_links_internet', 
+            'embedded_links_asset'
         ])
             
         file_path_suffix = meta_data['file_path_suffix']
@@ -373,11 +372,11 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         file_path_parts = meta_data['file_path_parts']
         
         is_markdown = file_path_suffix == '.md'
-        is_asset = file_path_parent_name == target_dirs_dict['assets_path'] or "assets" in file_path_parts
-        is_draw = file_path_parent_name == target_dirs_dict["draws_path"]
-        is_journal = file_path_parent_name == target_dirs_dict["journals_path"]
-        is_page = file_path_parent_name == target_dirs_dict["pages_path"]
-        is_whiteboard = file_path_parent_name == target_dirs_dict["whiteboards_path"]
+        is_asset = file_path_parent_name == 'assets' or 'assets' in file_path_parts
+        is_draw = file_path_parent_name == 'draws'
+        is_journal = file_path_parent_name == 'journals'
+        is_page = file_path_parent_name == 'pages'
+        is_whiteboard = file_path_parent_name == 'whiteboards'
         is_other = not any([is_markdown, is_asset, is_draw, is_journal, is_page, is_whiteboard])
             
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
@@ -388,23 +387,23 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         else:
             is_orphan_true = is_orphan_graph = is_node_root = is_node_leaf = is_node_branch = False
             
-        graph_summary_data[name]["has_content"] = has_content
-        graph_summary_data[name]["has_links"] = has_links
-        graph_summary_data[name]["has_external_links"] = has_external_links
-        graph_summary_data[name]["has_embedded_links"] = has_embedded_links
-        graph_summary_data[name]["is_markdown"] = is_markdown
-        graph_summary_data[name]["is_asset"] = is_asset
-        graph_summary_data[name]["is_draw"] = is_draw
-        graph_summary_data[name]["is_journal"] = is_journal
-        graph_summary_data[name]["is_page"] = is_page
-        graph_summary_data[name]["is_whiteboard"] = is_whiteboard
-        graph_summary_data[name]["is_other"] = is_other
+        graph_summary_data[name]['has_content'] = has_content
+        graph_summary_data[name]['has_links'] = has_links
+        graph_summary_data[name]['has_external_links'] = has_external_links
+        graph_summary_data[name]['has_embedded_links'] = has_embedded_links
+        graph_summary_data[name]['is_markdown'] = is_markdown
+        graph_summary_data[name]['is_asset'] = is_asset
+        graph_summary_data[name]['is_draw'] = is_draw
+        graph_summary_data[name]['is_journal'] = is_journal
+        graph_summary_data[name]['is_page'] = is_page
+        graph_summary_data[name]['is_whiteboard'] = is_whiteboard
+        graph_summary_data[name]['is_other'] = is_other
         graph_summary_data[name]['is_backlinked'] = is_backlinked
-        graph_summary_data[name]["is_orphan_true"] = is_orphan_true
-        graph_summary_data[name]["is_orphan_graph"] = is_orphan_graph
-        graph_summary_data[name]["is_node_root"] = is_node_root
-        graph_summary_data[name]["is_node_leaf"] = is_node_leaf
-        graph_summary_data[name]["is_node_branch"] = is_node_branch
+        graph_summary_data[name]['is_orphan_true'] = is_orphan_true
+        graph_summary_data[name]['is_orphan_graph'] = is_orphan_graph
+        graph_summary_data[name]['is_node_root'] = is_node_root
+        graph_summary_data[name]['is_node_leaf'] = is_node_leaf
+        graph_summary_data[name]['is_node_branch'] = is_node_branch
         
     return graph_summary_data
 
@@ -420,7 +419,7 @@ def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dic
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, has_links: bool) -> Tuple[bool, bool, bool, bool, bool]:
-    """Helper function to determine node type based on summary data."""
+    '''Helper function to determine node type based on summary data.'''
     is_orphan_true = False
     is_orphan_graph = False
     is_node_root = False
@@ -473,29 +472,21 @@ def main():
     '''
     parser = argparse.ArgumentParser(description='Logseq Analyzer')
     parser.add_argument('-g', '--graph-folder', type=str, help='Path to the Logseq graph folder')
+    parser.add_argument('-o', '--output-folder', type=str, help='Path to the output folder')
+    parser.add_argument('-l', '--log-file', type=str, help='Path to the log file')
+    parser.add_argument('-t', '--target-dirs', type=str, nargs='+', help='Target directories to analyze')
     args = parser.parse_args()
-    if args.graph_folder:
-        logseq_graph_folder = Path(args.graph_folder)
-    else:
-        logseq_graph_folder = Path("C:/Logseq")
-
-    log_file = Path('___logseq_analyzer___.log')
+    
+    logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path('C:/Logseq')
+    output_dir = Path(args.output_folder) if args.output_folder else Path('output')
+    log_file = Path(args.log_file) if args.log_file else Path('___logseq_analyzer___.log')
+    target_dirs = set(args.target_dirs) if args.target_dirs else logseq_config.TARGET_DIRS
+    
     init_logging(log_file)
     logging.info('Starting Logseq Analyzer.')
-    
-    output_dir = Path('output')
     init_output_directory(output_dir)
-    
     patterns = compile_regex_patterns()
-    
     target_dirs = logseq_config.TARGET_DIRS
-    target_dirs_dict = {
-        'assets_path': logseq_config.ASSETS_PATH_NAME,
-        'draws_path': logseq_config.DRAWS_PATH_NAME,
-        'journals_path': logseq_config.JOURNALS_PATH_NAME,
-        'pages_path': logseq_config.PAGES_PATH_NAME,
-        'whiteboards_path': logseq_config.WHITEBOARDS_PATH_NAME
-    }
     
     # Outputs
     meta_alphanum_dictionary    = {}
@@ -514,7 +505,7 @@ def main():
     
     built_in_properties = logseq_config.BUILT_IN_PROPERTIES
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(meta_graph_content, patterns, built_in_properties)
-    graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary, target_dirs_dict)
+    graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
     
     write_output(output_dir, '___meta_alphanum_dictionary', meta_alphanum_dictionary)
     write_output(output_dir, '___meta_dangling_links', meta_dangling_links)
