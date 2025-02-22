@@ -1,3 +1,4 @@
+import argparse
 import logging
 import re
 from collections import defaultdict
@@ -463,13 +464,21 @@ def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) 
     }
 
 
-def main():    
+def main():
     '''
     Main function to run the Logseq analyzer.
 
     Initializes logging, output directory, regex patterns, processes files,
     generates summary data, and writes output to files.
     '''
+    parser = argparse.ArgumentParser(description='Logseq Analyzer')
+    parser.add_argument('-g', '--graph-folder', type=str, help='Path to the Logseq graph folder')
+    args = parser.parse_args()
+    if args.graph_folder:
+        logseq_graph_folder = Path(args.graph_folder)
+    else:
+        logseq_graph_folder = Path("C:/Logseq")
+
     log_file = Path('___logseq_analyzer___.log')
     init_logging(log_file)
     logging.info('Starting Logseq Analyzer.')
@@ -478,8 +487,6 @@ def main():
     init_output_directory(output_dir)
     
     patterns = compile_regex_patterns()
-
-    logseq_graph_folder = Path('C:/Logseq')  # folder = input('Enter folder path: ') or 'C:/Logseq'
     
     target_dirs = logseq_config.TARGET_DIRS
     target_dirs_dict = {
