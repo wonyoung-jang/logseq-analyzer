@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Pattern, Generator, Set, Tuple, List
 from urllib.parse import unquote
 
-from __init__ import init_logging, init_output_directory
-from compile_re import compile_regex_patterns
-from reporting import write_output
-import logseq_config
+from src.compile_re import compile_regex_patterns
+from src.create import init_logging, init_output_directory
+from src.reporting import write_output
+import src.logseq_config as logseq_config
 
 
 def process_journal_key(key: str) -> str:
@@ -575,7 +575,7 @@ def extract_logseq_config_edn(file_path: Path) -> Set[str]:
     return target_dirs
 
 
-def main():
+def run_app():
     '''
     Main function to run the Logseq analyzer.
 
@@ -679,13 +679,4 @@ def main():
             if draw in summary_is_draw:
                 summary_is_draw[draw]['is_backlinked'] = True    
     write_output(output_dir, '_summary_is_draw', summary_is_draw) # overwrites
-    
     logging.info('Logseq Analyzer completed.')
-    
-    
-if __name__ == '__main__':
-    main()
-    # TODO Implement a GUI
-    # TODO Implement configurable outputs
-    # TODO Implement saving settings
-    # TODO Implement more global output measurements
