@@ -1,9 +1,13 @@
-# built_in_logseq.py
-# Constants for default Logseq directories
-# Constants for Logseq built-in properties
+# logseq_config.py
 
-JOURNAL_PAGE_TITLE_FORMAT = 'yyyy-MM-dd EEEE'
-JOURNAL_FILE_NAME_FORMAT = 'yyyy_MM_dd'
+JOURNAL_PAGE_TITLE_FORMAT   = 'MMM do, yyyy'
+JOURNAL_FILE_NAME_FORMAT    = 'yyyy_MM_dd'
+ASSETS_DIRECTORY            = 'assets'  # static
+DRAWS_DIRECTORY             = 'draws'   # static
+JOURNALS_DIRECTORY          = 'journals'
+PAGES_DIRECTORY             = 'pages'
+WHITEBOARDS_DIRECTORY       = 'whiteboards'
+
 TOKEN_MAP = {
     'yyyy': '%Y',
     'yy': '%y',
@@ -15,19 +19,6 @@ TOKEN_MAP = {
     'd': '%-d',
     'EEEE': '%A',
     'EEE': '%a',
-}
-
-ASSETS_PATH_NAME        = 'assets'
-DRAWS_PATH_NAME         = 'draws'
-JOURNALS_PATH_NAME      = 'journals'
-PAGES_PATH_NAME         = 'pages'
-WHITEBOARDS_PATH_NAME   = 'whiteboards'
-TARGET_DIRS = {
-    ASSETS_PATH_NAME,
-    DRAWS_PATH_NAME,
-    JOURNALS_PATH_NAME,
-    PAGES_PATH_NAME,
-    WHITEBOARDS_PATH_NAME
 }
     
 BUILT_IN_PROPERTIES = {

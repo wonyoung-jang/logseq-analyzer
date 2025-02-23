@@ -380,6 +380,12 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
     '''
     graph_summary_data = defaultdict(lambda: defaultdict(bool))
     
+    assets_dir = logseq_config.ASSETS_DIRECTORY
+    draws_dir = logseq_config.DRAWS_DIRECTORY
+    journals_dir = logseq_config.JOURNALS_DIRECTORY
+    pages_dir = logseq_config.PAGES_DIRECTORY
+    whiteboards_dir = logseq_config.WHITEBOARDS_DIRECTORY
+    
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
         has_content = bool(content_info)
@@ -408,11 +414,11 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
         file_path_parts = meta_data['file_path_parts']
         
         is_markdown = file_path_suffix == '.md'
-        is_asset = file_path_parent_name == 'assets' or 'assets' in file_path_parts
-        is_draw = file_path_parent_name == 'draws'
-        is_journal = file_path_parent_name == 'journals'
-        is_page = file_path_parent_name == 'pages'
-        is_whiteboard = file_path_parent_name == 'whiteboards'
+        is_asset = file_path_parent_name == assets_dir or assets_dir in file_path_parts
+        is_draw = file_path_parent_name == draws_dir
+        is_journal = file_path_parent_name == journals_dir
+        is_page = file_path_parent_name == pages_dir
+        is_whiteboard = file_path_parent_name == whiteboards_dir
         is_other = not any([is_markdown, is_asset, is_draw, is_journal, is_page, is_whiteboard])
             
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
@@ -499,6 +505,76 @@ def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) 
     }
 
 
+def extract_logseq_config_edn(file_path: Path) -> Set[str]:
+    '''
+    Extract EDN configuration data from a Logseq configuration file.
+    
+    Args:
+        file_path (Path): The path to the Logseq graph folder.
+        
+    Returns:
+        Set[str]: A set of target directories.
+    '''
+    if not file_path.is_dir():
+        logging.error(f'Directory not found: {file_path}')
+        return {}
+    
+    logseq_folder = file_path / 'logseq'
+    if not logseq_folder.is_dir():
+        logging.error(f'Directory not found: {logseq_folder}')
+        return {}
+    
+    config_edn_file = logseq_folder / 'config.edn'
+    if not config_edn_file.is_file():
+        logging.error(f'File not found: {config_edn_file}')
+        return {}
+    
+    journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
+    journal_file_name_pattern = re.compile(r':journal/file-name-format\s+"([^"]+)"')
+    feature_enable_journals_pattern = re.compile(r':feature/enable-journals\?\s+(true|false)')
+    feature_enable_whiteboards_pattern = re.compile(r':feature/enable-whiteboards\?\s+(true|false)')
+    pages_directory_pattern = re.compile(r':pages-directory\s+"([^"]+)"')
+    journals_directory_pattern = re.compile(r':journals-directory\s+"([^"]+)"')
+    whiteboards_directory_pattern = re.compile(r':whiteboards-directory\s+"([^"]+)"')
+    file_name_format_pattern = re.compile(r':file/name-format\s+(.+)')
+    
+    config_edn_data = {
+        'journal_page_title_format': 'MMM do, yyyy',
+        'journal_file_name_format': 'yyyy_MM_dd',
+        'feature_enable_journals': 'true',
+        'feature_enable_whiteboards': 'true',
+        'pages_directory': 'pages',
+        'journals_directory': 'journals',
+        'whiteboards_directory': 'whiteboards',
+        'file_name_format': ':triple-lowbar'
+    }
+    
+    with config_edn_file.open('r', encoding='utf-8') as f:
+        config_edn_content = f.read()
+        config_edn_data['journal_page_title_format'] = journal_page_title_pattern.search(config_edn_content).group(1)
+        config_edn_data['journal_file_name_format'] = journal_file_name_pattern.search(config_edn_content).group(1)
+        config_edn_data['feature_enable_journals'] = feature_enable_journals_pattern.search(config_edn_content).group(1)
+        config_edn_data['feature_enable_whiteboards'] = feature_enable_whiteboards_pattern.search(config_edn_content).group(1)
+        config_edn_data['pages_directory'] = pages_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data['journals_directory'] = journals_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data['whiteboards_directory'] = whiteboards_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data['file_name_format'] = file_name_format_pattern.search(config_edn_content).group(1)
+    
+    setattr(logseq_config, 'JOURNAL_PAGE_TITLE_FORMAT', config_edn_data['journal_page_title_format'])
+    setattr(logseq_config, 'JOURNAL_FILE_NAME_FORMAT', config_edn_data['journal_file_name_format'])
+    setattr(logseq_config, 'PAGES_DIRECTORY', config_edn_data['pages_directory'])
+    setattr(logseq_config, 'JOURNALS_DIRECTORY', config_edn_data['journals_directory'])
+    setattr(logseq_config, 'WHITEBOARDS_DIRECTORY', config_edn_data['whiteboards_directory'])
+    target_dirs = {
+        logseq_config.ASSETS_DIRECTORY,
+        logseq_config.DRAWS_DIRECTORY,
+        logseq_config.JOURNALS_DIRECTORY,
+        logseq_config.PAGES_DIRECTORY,
+        logseq_config.WHITEBOARDS_DIRECTORY
+    }
+    return target_dirs
+
+
 def main():
     '''
     Main function to run the Logseq analyzer.
@@ -510,20 +586,20 @@ def main():
     parser.add_argument('-g', '--graph-folder', type=str, help='Path to the Logseq graph folder')
     parser.add_argument('-o', '--output-folder', type=str, help='Path to the output folder')
     parser.add_argument('-l', '--log-file', type=str, help='Path to the log file')
-    parser.add_argument('-t', '--target-dirs', type=str, nargs='+', help='Target directories to analyze')
     args = parser.parse_args()
     
     logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path('C:/Logseq')
     output_dir = Path(args.output_folder) if args.output_folder else Path('output')
     log_file = Path(args.log_file) if args.log_file else Path('___logseq_analyzer___.log')
-    target_dirs = set(args.target_dirs) if args.target_dirs else logseq_config.TARGET_DIRS
     
     init_logging(log_file)
     logging.info('Starting Logseq Analyzer.')
     init_output_directory(output_dir)
     patterns = compile_regex_patterns()
-    target_dirs = logseq_config.TARGET_DIRS
     
+    # Extract Logseq configuration data
+    target_dirs = extract_logseq_config_edn(logseq_graph_folder)
+
     # Outputs
     meta_alphanum_dictionary    = {}
     meta_graph_content          = {} 
@@ -588,6 +664,7 @@ def main():
                 if non_asset in asset_mention or non_asset_secondary in asset_mention:
                     graph_summary_data[non_asset]['is_backlinked'] = True
                     break
+                
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=True)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=False)
     write_output(output_dir, '_summary_is_asset_backlinked', summary_is_asset_backlinked)
@@ -603,23 +680,12 @@ def main():
                 summary_is_draw[draw]['is_backlinked'] = True    
     write_output(output_dir, '_summary_is_draw', summary_is_draw) # overwrites
     
-    # TODO Whiteboards Handling (content)
-    # summary_is_whiteboard = summary_data_subsets['_summary_is_whiteboard']
-    # write_output(output_dir, '_summary_is_whiteboard', summary_is_whiteboard)
-    
     logging.info('Logseq Analyzer completed.')
     
     
 if __name__ == '__main__':
     main()
     # TODO Implement a GUI
-    
-    # TODO Implement configurable inputs
-    
-    # TODO Implement custom journal date formats
-    
     # TODO Implement configurable outputs
     # TODO Implement saving settings
-    # TODO Implement saving logs
-    # TODO Implement saving outputs
     # TODO Implement more global output measurements
