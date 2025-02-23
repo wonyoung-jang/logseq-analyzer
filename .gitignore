@@ -1,10 +1,8 @@
 .*/*
 */__pycache__/*
 logseq_api_cache/*
-*.json
-*.log
-main old.py
 output/*
 output*/*
-old.py
-test.py
+unlinked_assets/*
+*.json
+*.log

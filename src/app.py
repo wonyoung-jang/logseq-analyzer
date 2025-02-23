@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+import shutil
 from typing import Optional, Dict, Any, Pattern, Generator, Set, Tuple, List
 from urllib.parse import unquote
 
@@ -575,6 +576,29 @@ def extract_logseq_config_edn(file_path: Path) -> Set[str]:
     return target_dirs
 
 
+def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any]) -> None:
+    '''
+    Move unlinked assets to a separate directory.
+    
+    Args:
+        summary_is_asset_not_backlinked (Dict[str, Any]): Summary data for unlinked assets.
+        graph_meta_data (Dict[str, Any]): Metadata for each file.
+    '''
+    unlinked_assets_dir = Path('unlinked_assets')
+    if not unlinked_assets_dir.exists():
+        unlinked_assets_dir.mkdir()
+        logging.info(f'Created directory: {unlinked_assets_dir}')
+    
+    for name in summary_is_asset_not_backlinked.keys():
+        file_path = Path(graph_meta_data[name]['file_path'])
+        new_path = unlinked_assets_dir / file_path.name
+        try:
+            shutil.move(file_path, new_path)
+            logging.info(f'Moved unlinked asset: {file_path} to {new_path}')
+        except Exception as e:
+            logging.error(f'Failed to move unlinked asset: {file_path} to {new_path}: {e}')
+            
+            
 def run_app():
     '''
     Main function to run the Logseq analyzer.
@@ -586,6 +610,7 @@ def run_app():
     parser.add_argument('-g', '--graph-folder', type=str, help='Path to the Logseq graph folder')
     parser.add_argument('-o', '--output-folder', type=str, help='Path to the output folder')
     parser.add_argument('-l', '--log-file', type=str, help='Path to the log file')
+    parser.add_argument('-ma', '--move-unlinked-assets', action='store_true', help='Move unlinked assets to "unlinked_assets" folder')
     args = parser.parse_args()
     
     logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path('C:/Logseq')
@@ -670,6 +695,10 @@ def run_app():
     write_output(output_dir, '_summary_is_asset_backlinked', summary_is_asset_backlinked)
     write_output(output_dir, '_summary_is_asset_not_backlinked', summary_is_asset_not_backlinked)
     
+    # Optional move unlinked assets
+    if args.move_unlinked_assets:
+        move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data)
+
     # Draws Handling
     summary_is_draw = summary_data_subsets['_summary_is_draw']
     for name, content_data in graph_content_data.items():
