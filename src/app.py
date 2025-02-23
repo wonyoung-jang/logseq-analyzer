@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, Pattern, Generator, Set, Tuple, List
 from urllib.parse import unquote
 
 from src.compile_re import compile_regex_patterns
-from src.create import init_logging, init_output_directory
+from src.create import create_logging, create_output_directory
 from src.reporting import write_output
 import src.logseq_config as logseq_config
 
@@ -592,9 +592,9 @@ def run_app():
     output_dir = Path(args.output_folder) if args.output_folder else Path('output')
     log_file = Path(args.log_file) if args.log_file else Path('___logseq_analyzer___.log')
     
-    init_logging(log_file)
+    create_logging(log_file)
     logging.info('Starting Logseq Analyzer.')
-    init_output_directory(output_dir)
+    create_output_directory(output_dir)
     patterns = compile_regex_patterns()
     
     # Extract Logseq configuration data
