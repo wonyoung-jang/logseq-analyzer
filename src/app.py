@@ -654,12 +654,16 @@ def run_app():
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(meta_graph_content, patterns, built_in_properties)
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
     
-    write_output(output_dir, 'alphanum_dictionary', meta_alphanum_dictionary, '__meta')
-    write_output(output_dir, 'dangling_links', meta_dangling_links, '__meta')
-    write_output(output_dir, 'graph_content', meta_graph_content, '__meta')
-    write_output(output_dir, 'content_data', graph_content_data, 'graph')
-    write_output(output_dir, 'meta_data', graph_meta_data, 'graph')
-    write_output(output_dir, 'summary_data', graph_summary_data, 'graph')
+    meta_subfolder = '__meta'
+    graph_subfolder = 'graph'
+    summary_subfolder = 'summary'
+    
+    write_output(output_dir, 'alphanum_dictionary', meta_alphanum_dictionary, meta_subfolder)
+    write_output(output_dir, 'dangling_links', meta_dangling_links, meta_subfolder)
+    write_output(output_dir, 'graph_content', meta_graph_content, meta_subfolder)
+    write_output(output_dir, 'content_data', graph_content_data, graph_subfolder)
+    write_output(output_dir, 'meta_data', graph_meta_data, graph_subfolder)
+    write_output(output_dir, 'summary_data', graph_summary_data, graph_subfolder)
     
     summary_categories = {
         'has_content':         {'has_content': True},
@@ -685,7 +689,7 @@ def run_app():
     for output_name, criteria in summary_categories.items():
         summary_subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, summary_subset, 'summary')
+        write_output(output_dir, output_name, summary_subset, summary_subfolder)
     
     # Asset Handling
     summary_is_asset = summary_data_subsets['is_asset']
@@ -702,8 +706,8 @@ def run_app():
                 
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=True)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=False)
-    write_output(output_dir, 'is_asset_backlinked', summary_is_asset_backlinked, 'summary')
-    write_output(output_dir, 'is_asset_not_backlinked', summary_is_asset_not_backlinked, 'summary')
+    write_output(output_dir, 'is_asset_backlinked', summary_is_asset_backlinked, summary_subfolder)
+    write_output(output_dir, 'is_asset_not_backlinked', summary_is_asset_not_backlinked, summary_subfolder)
     
     # Optional move unlinked assets
     if args.move_unlinked_assets:
@@ -717,5 +721,5 @@ def run_app():
         for draw in content_data['draws']:
             if draw in summary_is_draw:
                 summary_is_draw[draw]['is_backlinked'] = True    
-    write_output(output_dir, 'is_draw', summary_is_draw, 'summary') # overwrites
+    write_output(output_dir, 'is_draw', summary_is_draw, summary_subfolder) # overwrites
     logging.info('Logseq Analyzer completed.')
