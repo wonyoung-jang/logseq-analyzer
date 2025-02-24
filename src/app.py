@@ -52,13 +52,10 @@ def run_app():
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
 
     # Outputs
-    meta_alphanum_dictionary = {}
-    meta_graph_content = {}
     graph_meta_data = {}
-    graph_content_data = {}
-    graph_summary_data = {}
-
-    for file_path in iter_files(logseq_graph_folder, target_dirs):
+    meta_graph_content = {}
+    graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
+    for file_path in graph_dir_structure:
         meta_data, graph_content = process_single_file(file_path, patterns)
         name = meta_data["name"]
         if name in graph_meta_data:
