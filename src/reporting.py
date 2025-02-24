@@ -18,22 +18,17 @@ def write_output(
     """
     logging.info(f"Writing {filename_prefix}...")
 
-    count = len(items) if isinstance(items, list) else len(items.keys())
     instance_type = str(type(items))
-
+    count = len(items) if isinstance(items, list) else len(items.keys())
+    filename_prefix = f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
+        
     if type_output:
+        out_path = output_dir / type_output / filename_prefix
+        
         if not Path(output_dir / type_output).exists():
             Path(output_dir / type_output).mkdir(parents=True, exist_ok=True)
-
-        if count:
-            out_path = output_dir / type_output / f"{filename_prefix}.txt"
-        else:
-            out_path = output_dir / type_output / f"{filename_prefix}_EMPTY.txt"
     else:
-        if count:
-            out_path = output_dir / f"{filename_prefix}.txt"
-        else:
-            out_path = output_dir / f"{filename_prefix}_EMPTY.txt"
+        out_path = output_dir / filename_prefix
 
     with out_path.open("w", encoding="UTF-8") as f:
         f.write(f"{filename_prefix} | Items: {count} | Type: {instance_type}\n\n")
