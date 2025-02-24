@@ -14,7 +14,12 @@ def write_output(output_dir: Path, filename_prefix: str, items: Any, type_output
     count = len(items) if isinstance(items, list) else len(items.keys())
     instance_type = str(type(items))
     
+    
+    
     if type_output:
+        if not Path(output_dir / type_output).exists():
+            Path(output_dir / type_output).mkdir(parents=True, exist_ok=True)
+            
         if count:
             out_path = output_dir / type_output / f'{filename_prefix}.txt'
         else:

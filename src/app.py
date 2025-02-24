@@ -452,7 +452,17 @@ def process_summary_data(graph_meta_data: Dict[str, Any], graph_content_data: Di
 
 
 def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
-    '''Helper function to check if a file is backlinked.'''
+    '''
+    Helper function to check if a file is backlinked.
+    
+    Args:
+        name (str): The file name.
+        meta_data (Dict[str, Any]): Metadata for the file.
+        alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
+        
+    Returns:
+        bool: True if the file is backlinked; otherwise, False.
+    '''
     id_key = meta_data['id']
     if id_key in alphanum_dict:
         for page_ref in alphanum_dict[id_key]:
@@ -644,41 +654,41 @@ def run_app():
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(meta_graph_content, patterns, built_in_properties)
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
     
-    write_output(output_dir, '___meta_alphanum_dictionary', meta_alphanum_dictionary)
-    write_output(output_dir, '___meta_dangling_links', meta_dangling_links)
-    write_output(output_dir, '___meta_graph_content', meta_graph_content)
-    write_output(output_dir, '__graph_content_data', graph_content_data)
-    write_output(output_dir, '__graph_meta_data', graph_meta_data)
-    write_output(output_dir, '__graph_summary_data', graph_summary_data)
+    write_output(output_dir, 'alphanum_dictionary', meta_alphanum_dictionary, '__meta')
+    write_output(output_dir, 'dangling_links', meta_dangling_links, '__meta')
+    write_output(output_dir, 'graph_content', meta_graph_content, '__meta')
+    write_output(output_dir, 'content_data', graph_content_data, 'graph')
+    write_output(output_dir, 'meta_data', graph_meta_data, 'graph')
+    write_output(output_dir, 'summary_data', graph_summary_data, 'graph')
     
     summary_categories = {
-        '_summary_has_content':         {'has_content': True},
-        '_summary_has_links':           {'has_links': True},
-        '_summary_has_external_links':  {'has_external_links': True},
-        '_summary_has_embedded_links':  {'has_embedded_links': True},
-        '_summary_is_markdown':         {'is_markdown': True},
-        '_summary_is_asset':            {'is_asset': True},
-        '_summary_is_draw':             {'is_draw': True},
-        '_summary_is_journal':          {'is_journal': True},
-        '_summary_is_page':             {'is_page': True},
-        '_summary_is_whiteboard':       {'is_whiteboard': True},
-        '_summary_is_other':            {'is_other': True},
-        '_summary_is_backlinked':       {'is_backlinked': True},
-        '_summary_is_orphan_true':      {'is_orphan_true': True},
-        '_summary_is_orphan_graph':     {'is_orphan_graph': True},
-        '_summary_is_node_root':        {'is_node_root': True},
-        '_summary_is_node_leaf':        {'is_node_leaf': True},
-        '_summary_is_node_branch':      {'is_node_branch': True},
+        'has_content':         {'has_content': True},
+        'has_links':           {'has_links': True},
+        'has_external_links':  {'has_external_links': True},
+        'has_embedded_links':  {'has_embedded_links': True},
+        'is_markdown':         {'is_markdown': True},
+        'is_asset':            {'is_asset': True},
+        'is_draw':             {'is_draw': True},
+        'is_journal':          {'is_journal': True},
+        'is_page':             {'is_page': True},
+        'is_whiteboard':       {'is_whiteboard': True},
+        'is_other':            {'is_other': True},
+        'is_backlinked':       {'is_backlinked': True},
+        'is_orphan_true':      {'is_orphan_true': True},
+        'is_orphan_graph':     {'is_orphan_graph': True},
+        'is_node_root':        {'is_node_root': True},
+        'is_node_leaf':        {'is_node_leaf': True},
+        'is_node_branch':      {'is_node_branch': True},
     }
 
     summary_data_subsets = {}
     for output_name, criteria in summary_categories.items():
         summary_subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, summary_subset)
+        write_output(output_dir, output_name, summary_subset, 'summary')
     
     # Asset Handling
-    summary_is_asset = summary_data_subsets['_summary_is_asset']
+    summary_is_asset = summary_data_subsets['is_asset']
     not_referenced_assets_keys = list(summary_is_asset.keys())
     for name, content_data in graph_content_data.items():
         if not content_data['assets']: 
@@ -692,20 +702,20 @@ def run_app():
                 
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=True)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, is_asset=True, is_backlinked=False)
-    write_output(output_dir, '_summary_is_asset_backlinked', summary_is_asset_backlinked)
-    write_output(output_dir, '_summary_is_asset_not_backlinked', summary_is_asset_not_backlinked)
+    write_output(output_dir, 'is_asset_backlinked', summary_is_asset_backlinked, 'summary')
+    write_output(output_dir, 'is_asset_not_backlinked', summary_is_asset_not_backlinked, 'summary')
     
     # Optional move unlinked assets
     if args.move_unlinked_assets:
         move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data)
 
     # Draws Handling
-    summary_is_draw = summary_data_subsets['_summary_is_draw']
+    summary_is_draw = summary_data_subsets['is_draw']
     for name, content_data in graph_content_data.items():
         if not content_data['draws']:
             continue
         for draw in content_data['draws']:
             if draw in summary_is_draw:
                 summary_is_draw[draw]['is_backlinked'] = True    
-    write_output(output_dir, '_summary_is_draw', summary_is_draw) # overwrites
+    write_output(output_dir, 'is_draw', summary_is_draw, 'summary') # overwrites
     logging.info('Logseq Analyzer completed.')
