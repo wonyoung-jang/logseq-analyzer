@@ -175,24 +175,20 @@ def process_content_data(
 def extract_page_block_properties(
     text: str, patterns: Dict[str, Pattern]
 ) -> Tuple[list, list]:
-    """Helper function to extract page and block properties from text."""
-    heading_match = re.search(r"^\s*#+\s", text, re.MULTILINE)
-    bullet_match = re.search(r"^\s*-\s", text, re.MULTILINE)
+    """Extract page and block properties from text using a combined regex search."""
+    # The regex groups a heading marker or a bullet marker.
+    split_match = re.search(r"^\s*(#+\s|-\s)", text, re.MULTILINE)
 
-    if heading_match:
-        page_text = text[: heading_match.start()]
-        block_text = text[heading_match.start() :]
-    elif bullet_match:
-        page_text = text[: bullet_match.start()]
-        block_text = text[bullet_match.start() :]
+    if split_match:
+        split_point = split_match.start()
+        page_text = text[:split_point]
+        block_text = text[split_point:]
     else:
         page_text = text
         block_text = ""
 
     page_properties = [prop.lower() for prop in patterns["property"].findall(page_text)]
-    block_properties = [
-        prop.lower() for prop in patterns["property"].findall(block_text)
-    ]
+    block_properties = [prop.lower() for prop in patterns["property"].findall(block_text)]
     return page_properties, block_properties
 
 
