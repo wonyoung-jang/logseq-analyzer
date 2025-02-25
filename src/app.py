@@ -33,6 +33,12 @@ def run_app():
         action="store_true",
         help='Move unlinked assets to "unlinked_assets" folder',
     )
+    parser.add_argument(
+        "-wg",
+        "--write-graph",
+        action="store_true",
+        help="Write all graph content to output folder (large)",
+    )
     args = parser.parse_args()
 
     logseq_graph_folder = (
@@ -79,11 +85,13 @@ def run_app():
         output_dir, "alphanum_dictionary", meta_alphanum_dictionary, meta_subfolder
     )
     write_output(output_dir, "dangling_links", meta_dangling_links, meta_subfolder)
-    write_output(output_dir, "graph_content", meta_graph_content, meta_subfolder)
     write_output(output_dir, "content_data", graph_content_data, graph_subfolder)
     write_output(output_dir, "meta_data", graph_meta_data, graph_subfolder)
-    write_output(output_dir, "summary_data", graph_summary_data, graph_subfolder)
-
+    write_output(output_dir, "summary_data", graph_summary_data, graph_subfolder)    
+    if args.write_graph:
+        write_output(output_dir, "graph_content", meta_graph_content, meta_subfolder)
+    
+    # Summary Data
     summary_categories = {
         "has_content": {"has_content": True},
         "has_links": {"has_links": True},
@@ -157,4 +165,53 @@ def run_app():
     write_output(
         output_dir, "is_draw", summary_is_draw, summary_subfolder
     )  # overwrites
+    
+    # TODO Global summaries
+    assets_with_folders = {}
+    for root, folders, filenames in Path.walk(logseq_graph_folder / logseq_config.ASSETS_DIRECTORY):
+        if filenames and root != logseq_graph_folder / logseq_config.ASSETS_DIRECTORY:
+            if root not in assets_with_folders:
+                assets_with_folders[root] = filenames
+            else:
+                input(f"Error: {root} already exists in assets_with_folders.")
+                continue
+    for key in assets_with_folders:
+        look_for = f"hls__{key.stem}".lower()
+        if look_for in summary_data_subsets["is_page"]:
+            pass
+            # print(f"found {look_for} in assets_with_folders has {len(assets_with_folders[key])} assets")
+        else:
+            print(f"not found {look_for} in assets_with_folders has {len(assets_with_folders[key])} assets")
+    
+    count_pages = len(summary_data_subsets["is_page"])
+    count_journals = len(summary_data_subsets["is_journal"])
+    count_markdown = len(summary_data_subsets["is_markdown"])
+    total_pages = count_pages + count_journals
+    percentage_journals = round(count_journals / total_pages, 2) * 100
+    percentage_pages = round(count_pages / total_pages, 2) * 100
+    
+    unique_properties = set()
+    unique_external_links = set()
+    unique_embedded_links = set()
+    for name, content_data in graph_content_data.items():
+        unique_properties.update(content_data["properties"])
+        unique_external_links.update(content_data["external_links"])
+        unique_embedded_links.update(content_data["embedded_links"])    
+    write_output(output_dir, "unique_properties", unique_properties, summary_subfolder)
+    write_output(output_dir, "unique_external_links", unique_external_links, summary_subfolder)
+    write_output(output_dir, "unique_embedded_links", unique_embedded_links, summary_subfolder)
+    
+    global_summary_data = {
+        "unique_properties": len(unique_properties),
+        "unique_external_links": len(unique_external_links),
+        "unique_embedded_links": len(unique_embedded_links),
+        "count_markdown": count_markdown,
+        "total_pages": total_pages,
+        "count_pages": count_pages,
+        "count_journals": count_journals,
+        "percentage_pages": percentage_pages,
+        "percentage_journals": percentage_journals,
+    }
+    write_output(output_dir, "global_summary_data", global_summary_data, summary_subfolder)
+
     logging.info("Logseq Analyzer completed.")

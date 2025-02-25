@@ -19,7 +19,7 @@ def write_output(
     logging.info(f"Writing {filename_prefix}...")
 
     instance_type = str(type(items))
-    count = len(items) if isinstance(items, list) else len(items.keys())
+    count = len(items) if isinstance(items, (list, set)) else len(items.keys())
     filename_prefix = (
         f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
     )
@@ -38,7 +38,7 @@ def write_output(
         if isinstance(items, dict):
             for key, values in items.items():
                 f.write(f"Key: {key}\n")
-                if isinstance(values, list):
+                if isinstance(values, (list, set)):
                     f.write(f"Values ({len(values)}): {values}\n\n")
                 elif isinstance(values, dict):
                     for k, v in values.items():

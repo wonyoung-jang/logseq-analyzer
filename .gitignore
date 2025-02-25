@@ -6,3 +6,4 @@ output*/*
 unlinked_assets/*
 *.json
 *.log
+profile_output*
