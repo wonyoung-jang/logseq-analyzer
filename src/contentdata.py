@@ -26,29 +26,31 @@ def process_content_data(
     unique_linked_references = set()
 
     for name, text in content.items():
+        content_data[name]["page_references"] = []
+        content_data[name]["tags"] = []
+        content_data[name]["tagged_backlinks"] = []
+        content_data[name]["properties"] = []
+        content_data[name]["properties_page_builtin"] = []
+        content_data[name]["properties_page_user"] = []
+        content_data[name]["properties_block_builtin"] = []
+        content_data[name]["properties_block_user"] = []
+        content_data[name]["assets"] = []
+        content_data[name]["draws"] = []
+        content_data[name]["namespace_root"] = ""
+        content_data[name]["namespace_parent"] = ""
+        content_data[name]["namespace_parts"] = {}
+        content_data[name]["namespace_level"] = -1
+        content_data[name]["external_links"] = []
+        content_data[name]["external_links_internet"] = []
+        content_data[name]["external_links_alias"] = []
+        content_data[name]["embedded_links"] = []
+        content_data[name]["embedded_links_internet"] = []
+        content_data[name]["embedded_links_asset"] = []
+
         if not text:
             logging.debug(
                 f'Skipping content processing for "{name}" due to empty content.'
             )
-            content_data[name]["page_references"] = []
-            content_data[name]["tags"] = []
-            content_data[name]["tagged_backlinks"] = []
-            content_data[name]["properties"] = []
-            content_data[name]["properties_page_builtin"] = []
-            content_data[name]["properties_page_user"] = []
-            content_data[name]["properties_block_builtin"] = []
-            content_data[name]["properties_block_user"] = []
-            content_data[name]["assets"] = []
-            content_data[name]["draws"] = []
-            content_data[name]["namespace_root"] = ""
-            content_data[name]["namespace_parent"] = ""
-            content_data[name]["namespace_level"] = -1
-            content_data[name]["external_links"] = []
-            content_data[name]["external_links_internet"] = []
-            content_data[name]["external_links_alias"] = []
-            content_data[name]["embedded_links"] = []
-            content_data[name]["embedded_links_internet"] = []
-            content_data[name]["embedded_links_asset"] = []
             continue
 
         # Page references
@@ -68,6 +70,7 @@ def process_content_data(
             link.lower() for link in patterns["embedded_link"].findall(text)
         ]
         properties = [prop.lower() for prop in patterns["property"].findall(text)]
+
         page_properties, block_properties = extract_page_block_properties(
             text, patterns
         )
@@ -94,12 +97,16 @@ def process_content_data(
             namespace_parts = name.split("/")
             namespace_level = len(namespace_parts)
             namespace_root = namespace_parts[0]
-            namespace_parent = "/".join(namespace_parts[:-1])
-
+            namespace_parent = (
+                namespace_parts[-2] if namespace_level > 1 else namespace_root
+            )
+            namespace_parts = {
+                part: level for level, part in enumerate(namespace_parts)
+            }
             content_data[name]["namespace_root"] = namespace_root
             content_data[name]["namespace_parent"] = namespace_parent
+            content_data[name]["namespace_parts"] = namespace_parts
             content_data[name]["namespace_level"] = namespace_level
-
             unique_linked_references.update([namespace_root, name])
 
         unique_linked_references.update(
@@ -109,14 +116,20 @@ def process_content_data(
         # External links
         if external_links:
             content_data[name]["external_links"] = external_links
+            external_links_str = "\n".join(embedded_links)
+
             external_links_internet = [
                 link.lower()
-                for link in patterns["external_link_internet"].findall(text)
+                for link in patterns["external_link_internet"].findall(
+                    external_links_str
+                )
             ]
             if external_links_internet:
                 content_data[name]["external_links_internet"] = external_links_internet
+
             external_links_alias = [
-                link.lower() for link in patterns["external_link_alias"].findall(text)
+                link.lower()
+                for link in patterns["external_link_alias"].findall(external_links_str)
             ]
             if external_links_alias:
                 content_data[name]["external_links_alias"] = external_links_alias
@@ -124,14 +137,20 @@ def process_content_data(
         # Embedded links
         if embedded_links:
             content_data[name]["embedded_links"] = embedded_links
+            embedded_links_str = "\n".join(embedded_links)
+
             embedded_links_internet = [
                 link.lower()
-                for link in patterns["embedded_link_internet"].findall(text)
+                for link in patterns["embedded_link_internet"].findall(
+                    embedded_links_str
+                )
             ]
             if embedded_links_internet:
                 content_data[name]["embedded_links_internet"] = embedded_links_internet
+
             embedded_links_asset = [
-                link.lower() for link in patterns["embedded_link_asset"].findall(text)
+                link.lower()
+                for link in patterns["embedded_link_asset"].findall(embedded_links_str)
             ]
             if embedded_links_asset:
                 content_data[name]["embedded_links_asset"] = embedded_links_asset
@@ -188,7 +207,9 @@ def extract_page_block_properties(
         block_text = ""
 
     page_properties = [prop.lower() for prop in patterns["property"].findall(page_text)]
-    block_properties = [prop.lower() for prop in patterns["property"].findall(block_text)]
+    block_properties = [
+        prop.lower() for prop in patterns["property"].findall(block_text)
+    ]
     return page_properties, block_properties
 
 

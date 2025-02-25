@@ -1,4 +1,3 @@
-# reporting.py
 import logging
 from pathlib import Path
 from typing import Any
@@ -18,22 +17,19 @@ def write_output(
     """
     logging.info(f"Writing {filename_prefix}...")
 
-    instance_type = str(type(items))
     count = len(items) if isinstance(items, (list, set)) else len(items.keys())
-    filename_prefix = (
-        f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
-    )
+    filename = f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
 
     if type_output:
-        out_path = output_dir / type_output / filename_prefix
+        out_path = output_dir / type_output / filename
 
         if not Path(output_dir / type_output).exists():
             Path(output_dir / type_output).mkdir(parents=True, exist_ok=True)
     else:
-        out_path = output_dir / filename_prefix
+        out_path = output_dir / filename
 
     with out_path.open("w", encoding="UTF-8") as f:
-        f.write(f"{filename_prefix} | Items: {count} | Type: {instance_type}\n\n")
+        f.write(f"{filename} | Items: {count} | Type: {type(items)}\n\n")
 
         if isinstance(items, dict):
             for key, values in items.items():

@@ -32,80 +32,70 @@ def process_summary_data(
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
         has_content = bool(content_info)
-        has_links = any(
-            content_info.get(key)
-            for key in [
-                "page_references",
-                "tags",
-                "tagged_backlinks",
-                "properties_page_builtin",
-                "properties_page_user",
-                "properties_block_builtin",
-                "properties_block_user",
-            ]
-        )
-        has_external_links = any(
-            content_info.get(key)
-            for key in [
-                "external_links",
-                "external_links_internet",
-                "external_links_alias",
-            ]
-        )
-        has_embedded_links = any(
-            content_info.get(key)
-            for key in [
-                "embedded_links",
-                "embedded_links_internet",
-                "embedded_links_asset",
-            ]
-        )
+        has_backlinks = False
+        has_external_links = False
+        has_embedded_links = False
+        if has_content:
+            has_backlinks = any(
+                content_info.get(key)
+                for key in [
+                    "page_references",
+                    "tags",
+                    "tagged_backlinks",
+                    "properties_page_builtin",
+                    "properties_page_user",
+                    "properties_block_builtin",
+                    "properties_block_user",
+                ]
+            )
+            has_external_links = any(
+                content_info.get(key)
+                for key in [
+                    "external_links",
+                    "external_links_internet",
+                    "external_links_alias",
+                ]
+            )
+            has_embedded_links = any(
+                content_info.get(key)
+                for key in [
+                    "embedded_links",
+                    "embedded_links_internet",
+                    "embedded_links_asset",
+                ]
+            )
 
         file_path_suffix = meta_data["file_path_suffix"]
         file_path_parent_name = meta_data["file_path_parent_name"]
         file_path_parts = meta_data["file_path_parts"]
 
         is_markdown = file_path_suffix == ".md"
-        is_asset = file_path_parent_name == assets_dir or assets_dir in file_path_parts
-        is_draw = file_path_parent_name == draws_dir
-        is_journal = file_path_parent_name == journals_dir
-        is_page = file_path_parent_name == pages_dir
-        is_whiteboard = file_path_parent_name == whiteboards_dir
-        is_other = not any(
-            [is_markdown, is_asset, is_draw, is_journal, is_page, is_whiteboard]
-        )
+        if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
+            file_type = "asset"
+        elif file_path_parent_name == draws_dir:
+            file_type = "draw"
+        elif file_path_parent_name == journals_dir:
+            file_type = "journal"
+        elif file_path_parent_name == pages_dir:
+            file_type = "page"
+        elif file_path_parent_name == whiteboards_dir:
+            file_type = "whiteboard"
+        else:
+            file_type = "other"
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
+        node_type = None
         if is_markdown:
-            (
-                is_orphan_true,
-                is_orphan_graph,
-                is_node_root,
-                is_node_leaf,
-                is_node_branch,
-            ) = determine_node_type(has_content, is_backlinked, has_links)
-        else:
-            is_orphan_true = is_orphan_graph = is_node_root = is_node_leaf = (
-                is_node_branch
-            ) = False
+            node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
 
+        graph_summary_data[name]["file_type"] = file_type
+        graph_summary_data[name]["node_type"] = node_type
         graph_summary_data[name]["has_content"] = has_content
-        graph_summary_data[name]["has_links"] = has_links
+        graph_summary_data[name]["has_backlinks"] = has_backlinks
         graph_summary_data[name]["has_external_links"] = has_external_links
         graph_summary_data[name]["has_embedded_links"] = has_embedded_links
         graph_summary_data[name]["is_markdown"] = is_markdown
-        graph_summary_data[name]["is_asset"] = is_asset
-        graph_summary_data[name]["is_draw"] = is_draw
-        graph_summary_data[name]["is_journal"] = is_journal
-        graph_summary_data[name]["is_page"] = is_page
-        graph_summary_data[name]["is_whiteboard"] = is_whiteboard
-        graph_summary_data[name]["is_other"] = is_other
         graph_summary_data[name]["is_backlinked"] = is_backlinked
-        graph_summary_data[name]["is_orphan_true"] = is_orphan_true
-        graph_summary_data[name]["is_orphan_graph"] = is_orphan_graph
-        graph_summary_data[name]["is_node_root"] = is_node_root
-        graph_summary_data[name]["is_node_leaf"] = is_node_leaf
-        graph_summary_data[name]["is_node_branch"] = is_node_branch
 
     return graph_summary_data
 
@@ -132,34 +122,27 @@ def check_is_backlinked(
     return False
 
 
-def determine_node_type(
-    has_content: bool, is_backlinked: bool, has_links: bool
-) -> Tuple[bool, bool, bool, bool, bool]:
+def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
-    is_orphan_true = False
-    is_orphan_graph = False
-    is_node_root = False
-    is_node_leaf = False
-    is_node_branch = False
-
+    node_type = ""
     if has_content:
         if is_backlinked:
-            if has_links:
-                is_node_branch = True
+            if has_backlinks:
+                node_type = "branch"
             else:
-                is_node_leaf = True
+                node_type = "leaf"
         else:
-            if has_links:
-                is_node_root = True
+            if has_backlinks:
+                node_type = "root"
             else:
-                is_orphan_graph = True  # Orphan within the graph (has content but no backlinks or graph links)
+                node_type = "orphan_graph"
     else:
         if not is_backlinked:
-            is_orphan_true = True  # Truly orphan (no content, no backlinks)
+            node_type = "orphan_true"
         else:
-            is_node_leaf = True  # Treat as leaf if backlinked but no content
+            node_type = "leaf"
 
-    return is_orphan_true, is_orphan_graph, is_node_root, is_node_leaf, is_node_branch
+    return node_type
 
 
 def extract_summary_subset(

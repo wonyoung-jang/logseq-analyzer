@@ -5,6 +5,38 @@ from typing import Any, Dict, Optional, Pattern, Tuple
 from src.keynames import process_key_name
 
 
+def process_single_file(
+    file_path: Path, patterns: Dict[str, Pattern]
+) -> Tuple[Dict[str, Any], Optional[str]]:
+    """
+    Process a single file: extract metadata, read content, and compute content-based metrics.
+
+    Metrics computed are character count and bullet count using provided regex patterns.
+
+    Args:
+        file_path (Path): The file path to process.
+        patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
+
+    Returns:
+        Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
+    """
+    metadata = extract_file_metadata(file_path)
+    content = read_file_content(file_path)
+
+    if content:
+        metadata["char_count"] = len(content)
+        bullet_count = len(patterns["bullet"].findall(content))
+        metadata["bullet_count"] = bullet_count
+        metadata["bullet_density"] = (
+            metadata["char_count"] // bullet_count if bullet_count > 0 else 0
+        )
+    else:
+        metadata["char_count"] = 0
+        metadata["bullet_count"] = 0
+        metadata["bullet_density"] = 0
+    return metadata, content
+
+
 def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
     """
     Extract metadata from a file.
@@ -75,35 +107,3 @@ def read_file_content(file_path: Path) -> Optional[str]:
     except Exception as e:
         logging.warning(f"Failed to read file {file_path}: {e}")
         return None
-
-
-def process_single_file(
-    file_path: Path, patterns: Dict[str, Pattern]
-) -> Tuple[Dict[str, Any], Optional[str]]:
-    """
-    Process a single file: extract metadata, read content, and compute content-based metrics.
-
-    Metrics computed are character count and bullet count using provided regex patterns.
-
-    Args:
-        file_path (Path): The file path to process.
-        patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
-
-    Returns:
-        Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
-    """
-    metadata = extract_file_metadata(file_path)
-    content = read_file_content(file_path)
-
-    if content:
-        metadata["char_count"] = len(content)
-        bullet_count = len(patterns["bullet"].findall(content))
-        metadata["bullet_count"] = bullet_count
-        metadata["bullet_density"] = (
-            metadata["char_count"] // bullet_count if bullet_count > 0 else 0
-        )
-    else:
-        metadata["char_count"] = 0
-        metadata["bullet_count"] = 0
-        metadata["bullet_density"] = 0
-    return metadata, content
