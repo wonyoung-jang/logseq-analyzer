@@ -10,11 +10,12 @@ def main():
     run_app()
 
     profiler.disable()
-    stats = pstats.Stats(profiler).sort_stats(SortKey.CUMULATIVE)
-    stats.dump_stats("profile_output.prof")
-    stats.print_stats()
-    # stats.print_callers()
-    # stats.print_callees()
+    
+    with open("profile_output.txt", "w") as f:
+        stats = pstats.Stats(profiler, stream=f)
+        stats.sort_stats(SortKey.CUMULATIVE)
+        stats.print_stats()
+        stats.dump_stats("profile_output.prof")
 
 if __name__ == "__main__":
     main()
