@@ -24,9 +24,9 @@ def run_app():
     logseq_graph_folder, output_dir = configure_logging_and_output(args)
 
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
-    
-    recycle, bak = extract_logseq_bak_recycle(logseq_graph_folder)    
-    
+
+    recycle, bak = extract_logseq_bak_recycle(logseq_graph_folder)
+
     patterns = compile_regex_patterns()
 
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
@@ -81,7 +81,7 @@ def handle_bak_recycle(args: argparse.Namespace, bak: list, recycle: list) -> No
             new_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.rename(new_path)
             logging.info(f"Moved bak file to {new_path}")
-            
+
     if args.move_recycle:
         for file in recycle:
             file_path = Path(file)
@@ -289,12 +289,12 @@ def configure_logging_and_output(args) -> Tuple[Path, Path]:
     Returns:
         Tuple[Path, Path]: The Logseq graph folder and output directory.
     """
-    log_file = Path(args.log_file) if args.log_file else Path("___logseq_analyzer___.log")
+    log_file = Path(args.log_file) if args.log_file else Path(config.DEFAULT_LOG_FILE)
     setup_logging(log_file)
     logging.info("Starting Logseq Analyzer.")
 
-    logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path("C:/Logseq")
-    output_dir = Path(args.output_folder) if args.output_folder else Path("output")
+    logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path(config.DEFAULT_GRAPH_DIR)
+    output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
     setup_output_directory(output_dir)
     return logseq_graph_folder, output_dir
 

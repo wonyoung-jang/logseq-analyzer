@@ -38,39 +38,39 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
 def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]:
     """
     Extract bak and recycle data from a Logseq.
-    
-    
+
+
     """
     if not folder_path.is_dir():
         logging.error(f"Directory not found: {folder_path}")
-        return {} 
-    
+        return {}
+
     logseq_folder = folder_path / "logseq"
     if not logseq_folder.is_dir():
         logging.error(f"Directory not found: {logseq_folder}")
         return {}
-    
+
     recycling_folder = logseq_folder / ".recycle"
     bak_folder = logseq_folder / "bak"
-    
+
     for folder in [recycling_folder, bak_folder]:
         if not folder.is_dir():
             logging.error(f"Directory not found: {folder}")
             return {}
-        
+
     recycle = []
     bak = []
     for root, _, files in Path.walk(recycling_folder):
         for file in files:
             recycle.append(str(Path(root) / file))
-            
+
     for root, _, files in Path.walk(bak_folder):
         for file in files:
             bak.append(str(Path(root) / file))
-            
+
     return recycle, bak
-        
-            
+
+
 def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     """
     Extract EDN configuration data from a Logseq configuration file.

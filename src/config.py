@@ -5,6 +5,10 @@
 # - src/keynames.py
 # - src/summarydata.py
 
+DEFAULT_GRAPH_DIR = "C:/Logseq"
+DEFAULT_OUTPUT_DIR = "output"
+DEFAULT_LOG_FILE = "___logseq_analyzer___.log"
+
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
 ASSETS = "assets"  # static
