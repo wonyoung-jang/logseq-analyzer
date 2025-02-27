@@ -7,18 +7,18 @@
 
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
-ASSETS_DIRECTORY = "assets"  # static
-DRAWS_DIRECTORY = "draws"  # static
-JOURNALS_DIRECTORY = "journals"
-PAGES_DIRECTORY = "pages"
-WHITEBOARDS_DIRECTORY = "whiteboards"
+ASSETS = "assets"  # static
+DRAWS = "draws"  # static
+JOURNALS = "journals"
+PAGES = "pages"
+WHITEBOARDS = "whiteboards"
 
 OUTPUT_DIR_META = "__meta"
 OUTPUT_DIR_GRAPH = "graph"
 OUTPUT_DIR_SUMMARY = "summary"
 OUTPUT_DIR_TEST = "test"
 
-TOKEN_MAP = {
+DATETIME_TOKEN_MAP = {
     "yyyy": "%Y",
     "yy": "%y",
     "MMMM": "%B",

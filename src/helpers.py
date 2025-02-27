@@ -104,11 +104,11 @@ def extract_logseq_config_edn(file_path: Path) -> Set[str]:
     setattr(config, "JOURNALS_DIRECTORY", config_edn_data["journals_directory"])
     setattr(config, "WHITEBOARDS_DIRECTORY", config_edn_data["whiteboards_directory"])
     target_dirs = {
-        config.ASSETS_DIRECTORY,
-        config.DRAWS_DIRECTORY,
-        config.JOURNALS_DIRECTORY,
-        config.PAGES_DIRECTORY,
-        config.WHITEBOARDS_DIRECTORY,
+        config.ASSETS,
+        config.DRAWS,
+        config.JOURNALS,
+        config.PAGES,
+        config.WHITEBOARDS,
     }
     return target_dirs
 
