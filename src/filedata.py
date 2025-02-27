@@ -5,9 +5,7 @@ from typing import Any, Dict, Optional, Pattern, Tuple
 from src.keynames import process_key_name
 
 
-def process_single_file(
-    file_path: Path, patterns: Dict[str, Pattern]
-) -> Tuple[Dict[str, Any], Optional[str]]:
+def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], Optional[str]]:
     """
     Process a single file: extract metadata, read content, and compute content-based metrics.
 
@@ -27,9 +25,7 @@ def process_single_file(
         metadata["char_count"] = len(content)
         bullet_count = len(patterns["bullet"].findall(content))
         metadata["bullet_count"] = bullet_count
-        metadata["bullet_density"] = (
-            metadata["char_count"] // bullet_count if bullet_count > 0 else 0
-        )
+        metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
     else:
         metadata["char_count"] = 0
         metadata["bullet_count"] = 0
@@ -60,9 +56,7 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
         date_created = datetime.fromtimestamp(stat.st_birthtime).replace(microsecond=0)
     except AttributeError:
         date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
-        logging.warning(
-            f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead."
-        )
+        logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
     date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
 
@@ -100,9 +94,7 @@ def read_file_content(file_path: Path) -> Optional[str]:
     try:
         return file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        logging.warning(
-            f"File not found: {file_path}"
-        )  # More specific logging for file not found
+        logging.warning(f"File not found: {file_path}")
         return None
     except Exception as e:
         logging.warning(f"Failed to read file {file_path}: {e}")

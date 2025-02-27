@@ -1,15 +1,12 @@
-from pathlib import Path
-from typing import Optional, Dict, Any, Generator, Set
 import logging
 import re
 import shutil
+import src.config as config
+from pathlib import Path
+from typing import Optional, Dict, Any, Generator, Set
 
-import src.logseq_config as logseq_config
 
-
-def iter_files(
-    directory: Path, target_dirs: Optional[Set[str]] = None
-) -> Generator[Path, None, None]:
+def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Generator[Path, None, None]:
     """
     Recursively iterate over files in the given directory.
 
@@ -64,12 +61,8 @@ def extract_logseq_config_edn(file_path: Path) -> Set[str]:
 
     journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
     journal_file_name_pattern = re.compile(r':journal/file-name-format\s+"([^"]+)"')
-    feature_enable_journals_pattern = re.compile(
-        r":feature/enable-journals\?\s+(true|false)"
-    )
-    feature_enable_whiteboards_pattern = re.compile(
-        r":feature/enable-whiteboards\?\s+(true|false)"
-    )
+    feature_enable_journals_pattern = re.compile(r":feature/enable-journals\?\s+(true|false)")
+    feature_enable_whiteboards_pattern = re.compile(r":feature/enable-whiteboards\?\s+(true|false)")
     pages_directory_pattern = re.compile(r':pages-directory\s+"([^"]+)"')
     journals_directory_pattern = re.compile(r':journals-directory\s+"([^"]+)"')
     whiteboards_directory_pattern = re.compile(r':whiteboards-directory\s+"([^"]+)"')
@@ -88,59 +81,39 @@ def extract_logseq_config_edn(file_path: Path) -> Set[str]:
 
     with config_edn_file.open("r", encoding="utf-8") as f:
         config_edn_content = f.read()
-        config_edn_data["journal_page_title_format"] = (
-            journal_page_title_pattern.search(config_edn_content).group(1)
-        )
-        config_edn_data["journal_file_name_format"] = journal_file_name_pattern.search(
-            config_edn_content
-        ).group(1)
-        config_edn_data["feature_enable_journals"] = (
-            feature_enable_journals_pattern.search(config_edn_content).group(1)
-        )
-        config_edn_data["feature_enable_whiteboards"] = (
-            feature_enable_whiteboards_pattern.search(config_edn_content).group(1)
-        )
-        config_edn_data["pages_directory"] = pages_directory_pattern.search(
-            config_edn_content
-        ).group(1)
-        config_edn_data["journals_directory"] = journals_directory_pattern.search(
-            config_edn_content
-        ).group(1)
-        config_edn_data["whiteboards_directory"] = whiteboards_directory_pattern.search(
-            config_edn_content
-        ).group(1)
-        config_edn_data["file_name_format"] = file_name_format_pattern.search(
-            config_edn_content
-        ).group(1)
+        config_edn_data["journal_page_title_format"] = journal_page_title_pattern.search(config_edn_content).group(1)
+        config_edn_data["journal_file_name_format"] = journal_file_name_pattern.search(config_edn_content).group(1)
+        config_edn_data["feature_enable_journals"] = feature_enable_journals_pattern.search(config_edn_content).group(1)
+        config_edn_data["feature_enable_whiteboards"] = feature_enable_whiteboards_pattern.search(config_edn_content).group(1)
+        config_edn_data["pages_directory"] = pages_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data["journals_directory"] = journals_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data["whiteboards_directory"] = whiteboards_directory_pattern.search(config_edn_content).group(1)
+        config_edn_data["file_name_format"] = file_name_format_pattern.search(config_edn_content).group(1)
 
     setattr(
-        logseq_config,
+        config,
         "JOURNAL_PAGE_TITLE_FORMAT",
         config_edn_data["journal_page_title_format"],
     )
     setattr(
-        logseq_config,
+        config,
         "JOURNAL_FILE_NAME_FORMAT",
         config_edn_data["journal_file_name_format"],
     )
-    setattr(logseq_config, "PAGES_DIRECTORY", config_edn_data["pages_directory"])
-    setattr(logseq_config, "JOURNALS_DIRECTORY", config_edn_data["journals_directory"])
-    setattr(
-        logseq_config, "WHITEBOARDS_DIRECTORY", config_edn_data["whiteboards_directory"]
-    )
+    setattr(config, "PAGES_DIRECTORY", config_edn_data["pages_directory"])
+    setattr(config, "JOURNALS_DIRECTORY", config_edn_data["journals_directory"])
+    setattr(config, "WHITEBOARDS_DIRECTORY", config_edn_data["whiteboards_directory"])
     target_dirs = {
-        logseq_config.ASSETS_DIRECTORY,
-        logseq_config.DRAWS_DIRECTORY,
-        logseq_config.JOURNALS_DIRECTORY,
-        logseq_config.PAGES_DIRECTORY,
-        logseq_config.WHITEBOARDS_DIRECTORY,
+        config.ASSETS_DIRECTORY,
+        config.DRAWS_DIRECTORY,
+        config.JOURNALS_DIRECTORY,
+        config.PAGES_DIRECTORY,
+        config.WHITEBOARDS_DIRECTORY,
     }
     return target_dirs
 
 
-def move_unlinked_assets(
-    summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any]
-) -> None:
+def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any]) -> None:
     """
     Move unlinked assets to a separate directory.
 
@@ -160,6 +133,4 @@ def move_unlinked_assets(
             shutil.move(file_path, new_path)
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
-            logging.error(
-                f"Failed to move unlinked asset: {file_path} to {new_path}: {e}"
-            )
+            logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")

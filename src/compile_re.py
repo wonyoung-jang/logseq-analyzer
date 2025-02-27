@@ -21,9 +21,7 @@ def compile_regex_patterns() -> Dict[str, Pattern]:
         "draw": re.compile(r"(?<!#)\[\[draws/(.+?).excalidraw\]\]"),
         "external_link": re.compile(r"(?<!!)\[.*?\]\(.*?\)"),
         "external_link_internet": re.compile(r"(?<!!)\[.*?\]\(http.*?\)"),
-        "external_link_alias": re.compile(
-            r"(?<!!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)"
-        ),
+        "external_link_alias": re.compile(r"(?<!!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)"),
         "embedded_link": re.compile(r"!\[.*?\]\(.*\)"),
         "embedded_link_internet": re.compile(r"!\[.*?\]\(http.*\)"),
         "embedded_link_asset": re.compile(r"!\[.*?\]\(\.\./assets/.*\)"),
@@ -33,14 +31,10 @@ def compile_regex_patterns() -> Dict[str, Pattern]:
         "calc_block": re.compile(r"```calc.*?```", re.DOTALL),
         "multiline_code_lang": re.compile(r"```\w+.*?```", re.DOTALL),
         "reference": re.compile(r"(?<!\{\{embed )\(\(.*?\)\)"),
-        "block_reference": re.compile(
-            r"(?<!\{\{embed )\(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)"
-        ),
+        "block_reference": re.compile(r"(?<!\{\{embed )\(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)"),
         "embed": re.compile(r"\{\{embed .*?\}\}"),
         "page_embed": re.compile(r"\{\{embed \[\[.*?\]\]\}\}"),
-        "block_embed": re.compile(
-            r"\{\{embed \(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)\}\}"
-        ),
+        "block_embed": re.compile(r"\{\{embed \(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)\}\}"),
         "namespace_queries": re.compile(r"\{\{namespace .*?\}\}"),
         "cloze": re.compile(r"\{\{cloze .*?\}\}"),
         "simple_queries": re.compile(r"\{\{query .*?\}\}"),

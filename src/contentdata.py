@@ -1,7 +1,7 @@
-from typing import Dict, Pattern, Set, Any, Tuple, List
 import re
 import logging
 from collections import defaultdict
+from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
 def process_content_data(
@@ -48,32 +48,20 @@ def process_content_data(
         content_data[name]["embedded_links_asset"] = []
 
         if not text:
-            logging.debug(
-                f'Skipping content processing for "{name}" due to empty content.'
-            )
+            logging.debug(f'Skipping content processing for "{name}" due to empty content.')
             continue
 
         # Page references
-        page_references = [
-            page_ref.lower() for page_ref in patterns["page_reference"].findall(text)
-        ]
+        page_references = [page_ref.lower() for page_ref in patterns["page_reference"].findall(text)]
         tags = [tag.lower() for tag in patterns["tag"].findall(text)]
-        tagged_backlinks = [
-            tag.lower() for tag in patterns["tagged_backlink"].findall(text)
-        ]
+        tagged_backlinks = [tag.lower() for tag in patterns["tagged_backlink"].findall(text)]
         assets = [asset.lower() for asset in patterns["asset"].findall(text)]
         draws = [draw.lower() for draw in patterns["draw"].findall(text)]
-        external_links = [
-            link.lower() for link in patterns["external_link"].findall(text)
-        ]
-        embedded_links = [
-            link.lower() for link in patterns["embedded_link"].findall(text)
-        ]
+        external_links = [link.lower() for link in patterns["external_link"].findall(text)]
+        embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
         properties = [prop.lower() for prop in patterns["property"].findall(text)]
 
-        page_properties, block_properties = extract_page_block_properties(
-            text, patterns
-        )
+        page_properties, block_properties = extract_page_block_properties(text, patterns)
 
         content_data[name]["page_references"] = page_references
         content_data[name]["tags"] = tags
@@ -97,40 +85,26 @@ def process_content_data(
             namespace_parts = name.split("/")
             namespace_level = len(namespace_parts)
             namespace_root = namespace_parts[0]
-            namespace_parent = (
-                namespace_parts[-2] if namespace_level > 1 else namespace_root
-            )
-            namespace_parts = {
-                part: level for level, part in enumerate(namespace_parts)
-            }
+            namespace_parent = namespace_parts[-2] if namespace_level > 1 else namespace_root
+            namespace_parts = {part: level for level, part in enumerate(namespace_parts)}
             content_data[name]["namespace_root"] = namespace_root
             content_data[name]["namespace_parent"] = namespace_parent
             content_data[name]["namespace_parts"] = namespace_parts
             content_data[name]["namespace_level"] = namespace_level
             unique_linked_references.update([namespace_root, name])
 
-        unique_linked_references.update(
-            page_references, tags, tagged_backlinks, page_properties, block_properties
-        )
+        unique_linked_references.update(page_references, tags, tagged_backlinks, page_properties, block_properties)
 
         # External links
         if external_links:
             content_data[name]["external_links"] = external_links
             external_links_str = "\n".join(embedded_links)
 
-            external_links_internet = [
-                link.lower()
-                for link in patterns["external_link_internet"].findall(
-                    external_links_str
-                )
-            ]
+            external_links_internet = [link.lower() for link in patterns["external_link_internet"].findall(external_links_str)]
             if external_links_internet:
                 content_data[name]["external_links_internet"] = external_links_internet
 
-            external_links_alias = [
-                link.lower()
-                for link in patterns["external_link_alias"].findall(external_links_str)
-            ]
+            external_links_alias = [link.lower() for link in patterns["external_link_alias"].findall(external_links_str)]
             if external_links_alias:
                 content_data[name]["external_links_alias"] = external_links_alias
 
@@ -139,30 +113,18 @@ def process_content_data(
             content_data[name]["embedded_links"] = embedded_links
             embedded_links_str = "\n".join(embedded_links)
 
-            embedded_links_internet = [
-                link.lower()
-                for link in patterns["embedded_link_internet"].findall(
-                    embedded_links_str
-                )
-            ]
+            embedded_links_internet = [link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)]
             if embedded_links_internet:
                 content_data[name]["embedded_links_internet"] = embedded_links_internet
 
-            embedded_links_asset = [
-                link.lower()
-                for link in patterns["embedded_link_asset"].findall(embedded_links_str)
-            ]
+            embedded_links_asset = [link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)]
             if embedded_links_asset:
                 content_data[name]["embedded_links_asset"] = embedded_links_asset
 
     # Create alphanum dictionary
     for linked_reference in unique_linked_references:
         if linked_reference:
-            first_char_id = (
-                linked_reference[:2]
-                if len(linked_reference) > 1
-                else f"!{linked_reference[0]}"
-            )
+            first_char_id = linked_reference[:2] if len(linked_reference) > 1 else f"!{linked_reference[0]}"
             alphanum_dict[first_char_id].add(linked_reference)
         else:
             logging.info(f"Empty linked reference: {linked_reference}")
@@ -191,9 +153,7 @@ def process_content_data(
     return content_data, alphanum_dict, dangling_links
 
 
-def extract_page_block_properties(
-    text: str, patterns: Dict[str, Pattern]
-) -> Tuple[list, list]:
+def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
     """Extract page and block properties from text using a combined regex search."""
     # The regex groups a heading marker or a bullet marker.
     split_match = re.search(r"^\s*(#+\s|-\s)", text, re.MULTILINE)
@@ -207,15 +167,11 @@ def extract_page_block_properties(
         block_text = ""
 
     page_properties = [prop.lower() for prop in patterns["property"].findall(page_text)]
-    block_properties = [
-        prop.lower() for prop in patterns["property"].findall(block_text)
-    ]
+    block_properties = [prop.lower() for prop in patterns["property"].findall(block_text)]
     return page_properties, block_properties
 
 
-def split_builtin_user_properties(
-    properties: list, built_in_props: Set[str]
-) -> Tuple[list, list]:
+def split_builtin_user_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
     builtin_props = [prop for prop in properties if prop in built_in_props]
     user_props = [prop for prop in properties if prop not in built_in_props]

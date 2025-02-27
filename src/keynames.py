@@ -1,9 +1,8 @@
 import logging
 import re
+import src.config as config
 from datetime import datetime
 from urllib.parse import unquote
-
-import src.logseq_config as logseq_config
 
 
 def transform_date_format(cljs_format: str) -> str:
@@ -16,10 +15,8 @@ def transform_date_format(cljs_format: str) -> str:
     Returns:
         str: Python-style date format.
     """
-    token_map = getattr(logseq_config, "TOKEN_MAP", {})
-    token_pattern = re.compile(
-        "|".join(re.escape(k) for k in sorted(token_map, key=len, reverse=True))
-    )
+    token_map = getattr(config, "TOKEN_MAP", {})
+    token_pattern = re.compile("|".join(re.escape(k) for k in sorted(token_map, key=len, reverse=True)))
 
     def replace_token(match):
         token = match.group(0)
@@ -39,10 +36,8 @@ def process_journal_key(key: str) -> str:
     Returns:
         str: Processed journal key as a page title.
     """
-    page_title_format = getattr(
-        logseq_config, "JOURNAL_PAGE_TITLE_FORMAT", "MMM do, yyyy"
-    )
-    file_name_format = getattr(logseq_config, "JOURNAL_FILE_NAME_FORMAT", "yyyy_MM_dd")
+    page_title_format = getattr(config, "JOURNAL_PAGE_TITLE_FORMAT", "MMM do, yyyy")
+    file_name_format = getattr(config, "JOURNAL_FILE_NAME_FORMAT", "yyyy_MM_dd")
     py_file_name_format = transform_date_format(file_name_format)
     py_page_title_format = transform_date_format(page_title_format)
 
@@ -51,9 +46,7 @@ def process_journal_key(key: str) -> str:
         page_title = date_object.strftime(py_page_title_format).lower()
         return page_title
     except ValueError:
-        logging.warning(
-            f"Could not parse journal key as date: {key}. Returning original key."
-        )
+        logging.warning(f"Could not parse journal key as date: {key}. Returning original key.")
         return key
 
 

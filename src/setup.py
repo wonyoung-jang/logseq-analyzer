@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 
-def create_logging(log_file: Path) -> None:
+def setup_logging(log_file: Path) -> None:
     """
     Initialize logging to a file.
     """
@@ -17,7 +17,7 @@ def create_logging(log_file: Path) -> None:
     logging.info(f"Logging initialized to {log_file}")
 
 
-def create_output_directory(directory: Path) -> None:
+def setup_output_directory(directory: Path) -> None:
     """
     Ensure that the output directory exists and is empty.
 

@@ -1,4 +1,4 @@
-import src.logseq_config as logseq_config
+import src.config as config
 from typing import Any, Dict, Set, Tuple
 from collections import defaultdict
 
@@ -23,11 +23,11 @@ def process_summary_data(
     """
     graph_summary_data = defaultdict(lambda: defaultdict(bool))
 
-    assets_dir = logseq_config.ASSETS_DIRECTORY
-    draws_dir = logseq_config.DRAWS_DIRECTORY
-    journals_dir = logseq_config.JOURNALS_DIRECTORY
-    pages_dir = logseq_config.PAGES_DIRECTORY
-    whiteboards_dir = logseq_config.WHITEBOARDS_DIRECTORY
+    assets_dir = config.ASSETS_DIRECTORY
+    draws_dir = config.DRAWS_DIRECTORY
+    journals_dir = config.JOURNALS_DIRECTORY
+    pages_dir = config.PAGES_DIRECTORY
+    whiteboards_dir = config.WHITEBOARDS_DIRECTORY
 
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
@@ -65,11 +65,10 @@ def process_summary_data(
                 ]
             )
 
-        file_path_suffix = meta_data["file_path_suffix"]
+        file_extension = meta_data["file_path_suffix"]
         file_path_parent_name = meta_data["file_path_parent_name"]
         file_path_parts = meta_data["file_path_parts"]
 
-        is_markdown = file_path_suffix == ".md"
         if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
             file_type = "asset"
         elif file_path_parent_name == draws_dir:
@@ -84,25 +83,23 @@ def process_summary_data(
             file_type = "other"
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
-        node_type = None
-        if is_markdown:
+        node_type = "other"
+        if file_type not in ["asset", "other"]:
             node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
 
         graph_summary_data[name]["file_type"] = file_type
+        graph_summary_data[name]["file_extension"] = file_extension
         graph_summary_data[name]["node_type"] = node_type
         graph_summary_data[name]["has_content"] = has_content
         graph_summary_data[name]["has_backlinks"] = has_backlinks
         graph_summary_data[name]["has_external_links"] = has_external_links
         graph_summary_data[name]["has_embedded_links"] = has_embedded_links
-        graph_summary_data[name]["is_markdown"] = is_markdown
         graph_summary_data[name]["is_backlinked"] = is_backlinked
 
     return graph_summary_data
 
 
-def check_is_backlinked(
-    name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]
-) -> bool:
+def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
     """
     Helper function to check if a file is backlinked.
 
@@ -145,9 +142,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
     return node_type
 
 
-def extract_summary_subset(
-    graph_summary_data: Dict[str, Any], **criteria: Any
-) -> Dict[str, Any]:
+def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) -> Dict[str, Any]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
 
@@ -158,8 +153,4 @@ def extract_summary_subset(
     Returns:
         Dict[str, Any]: A subset of the summary data matching the criteria.
     """
-    return {
-        k: v
-        for k, v in graph_summary_data.items()
-        if all(v.get(key) == expected for key, expected in criteria.items())
-    }
+    return {k: v for k, v in graph_summary_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}
