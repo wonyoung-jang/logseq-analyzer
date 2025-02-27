@@ -17,7 +17,7 @@ def setup_logging(log_file: Path) -> None:
     logging.info(f"Logging initialized to {log_file}")
 
 
-def setup_output_directory(directory: Path) -> None:
+def setup_output_directory(output_dir: Path) -> None:
     """
     Ensure that the output directory exists and is empty.
 
@@ -25,17 +25,17 @@ def setup_output_directory(directory: Path) -> None:
     then recreates it.
 
     Args:
-        directory (Path): The path of the output directory.
+        output_dir (Path): The path of the output directory.
     """
-    if directory.exists() and directory.is_dir():
+    if output_dir.exists() and output_dir.is_dir():
         try:
-            shutil.rmtree(directory)
-            logging.info(f"Removed existing output directory: {directory}")
+            shutil.rmtree(output_dir)
+            logging.info(f"Removed existing output directory: {output_dir}")
         except Exception as e:
-            logging.debug(f"Failed to remove directory {directory}: {e}")
+            logging.debug(f"Failed to remove directory {output_dir}: {e}")
     try:
-        directory.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created output directory: {directory}")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Created output directory: {output_dir}")
     except Exception as e:
-        logging.debug(f"Failed to create output directory {directory}: {e}")
+        logging.debug(f"Failed to create output directory {output_dir}: {e}")
         raise
