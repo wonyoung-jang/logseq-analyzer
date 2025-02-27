@@ -47,9 +47,62 @@ def run_app():
         graph_summary_data,
     )
 
-    generate_summary_subsets(output_dir, graph_summary_data)
+    summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
+
+    handle_assets(args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets)
 
     logging.info("Logseq Analyzer completed.")
+
+
+def handle_assets(
+    args: argparse.Namespace,
+    output_dir: Path,
+    graph_meta_data: dict,
+    graph_content_data: dict,
+    graph_summary_data: dict,
+    summary_data_subsets: dict,
+) -> None:
+    """
+    Handle assets for the Logseq Analyzer.
+
+    Args:
+        args (argparse.Namespace): The command line arguments.
+        output_dir (Path): The output directory.
+        graph_meta_data (dict): The graph metadata.
+        graph_content_data (dict): The graph content data.
+        graph_summary_data (dict): The graph summary data.
+        summary_data_subsets (dict): The summary data subsets.
+    """
+    summary_is_asset = summary_data_subsets["is_asset"]
+    not_referenced_assets_keys = list(summary_is_asset.keys())
+    for name, content_data in graph_content_data.items():
+        if not content_data["assets"]:
+            continue
+        for non_asset in not_referenced_assets_keys:
+            non_asset_secondary = graph_meta_data[non_asset]["name"]
+            for asset_mention in content_data["assets"]:
+                if non_asset in asset_mention or non_asset_secondary in asset_mention:
+                    graph_summary_data[non_asset]["is_backlinked"] = True
+                    break
+
+    summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=True)
+    summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=False)
+    write_output(
+        output_dir,
+        "is_asset_backlinked",
+        summary_is_asset_backlinked,
+        config.OUTPUT_DIR_SUMMARY,
+    )
+    write_output(
+        output_dir,
+        "is_asset_not_backlinked",
+        summary_is_asset_not_backlinked,
+        config.OUTPUT_DIR_SUMMARY,
+    )
+
+    # Optional move unlinked assets
+    if args.move_unlinked_assets:
+        move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data)
 
 
 def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None:
@@ -85,6 +138,8 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None
         summary_subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = summary_subset
         write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_SUMMARY)
+
+    return summary_data_subsets
 
 
 def write_initial_outputs(
