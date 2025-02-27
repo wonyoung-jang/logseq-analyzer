@@ -2,7 +2,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern
-from src.helpers import iter_files, extract_logseq_config_edn, move_unlinked_assets
+from src.helpers import iter_files, extract_logseq_config_edn, move_unlinked_assets, extract_logseq_bak_recycle
 from src.compile_regex import compile_regex_patterns
 from src.setup import setup_logging, setup_output_directory
 from src.reporting import write_output
@@ -25,6 +25,8 @@ def run_app():
 
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
     
+    recycle, bak = extract_logseq_bak_recycle(logseq_graph_folder)    
+    
     patterns = compile_regex_patterns()
 
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
@@ -39,19 +41,57 @@ def run_app():
     write_initial_outputs(
         args,
         output_dir,
-        graph_meta_data,
-        meta_graph_content,
-        graph_content_data,
         meta_alphanum_dictionary,
         meta_dangling_links,
+        meta_graph_content,
+        graph_meta_data,
+        graph_content_data,
         graph_summary_data,
+        bak,
+        recycle,
     )
 
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
 
     handle_assets(args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets)
 
+    handle_bak_recycle(args, bak, recycle)
+
     logging.info("Logseq Analyzer completed.")
+
+
+def handle_bak_recycle(args: argparse.Namespace, bak: list, recycle: list) -> None:
+    """
+    Handle bak and recycle files for the Logseq Analyzer.
+
+    Args:
+        args (argparse.Namespace): The command line arguments.
+        output_dir (Path): The output directory.
+        bak (list): The list of bak files.
+        recycle (list): The list of recycle files.
+    """
+    move_to_delete = Path("to_delete")
+    if args.move_bak:
+        for file in bak:
+            file_path = Path(file)
+            if not file_path.exists():
+                logging.error(f"File not found: {file_path}")
+                continue
+            new_path = move_to_delete / file_path.name
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.rename(new_path)
+            logging.info(f"Moved bak file to {new_path}")
+            
+    if args.move_recycle:
+        for file in recycle:
+            file_path = Path(file)
+            if not file_path.exists():
+                logging.error(f"File not found: {file_path}")
+                continue
+            new_path = move_to_delete / file_path.name
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.rename(new_path)
+            logging.info(f"Moved recycle file to {new_path}")
 
 
 def handle_assets(
@@ -145,12 +185,14 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None
 def write_initial_outputs(
     args,
     output_dir,
-    graph_meta_data,
-    meta_graph_content,
-    graph_content_data,
     meta_alphanum_dictionary,
     meta_dangling_links,
+    meta_graph_content,
+    graph_meta_data,
+    graph_content_data,
     graph_summary_data,
+    bak,
+    recycle,
 ) -> None:
     """Write initial outputs for graph analysis to specified directories.
 
@@ -163,6 +205,8 @@ def write_initial_outputs(
         meta_alphanum_dictionary (dict): Dictionary of alphanumeric metadata
         meta_dangling_links (list): List of dangling links in the graph
         graph_summary_data (dict): Summary statistics of the graph
+        bak (list): List of files in the Logseq bak directory
+        recycle (list): List of files in the Logseq recycle directory
 
     Returns:
         None
@@ -179,6 +223,8 @@ def write_initial_outputs(
     write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
+    write_output(output_dir, "bak", bak, config.OUTPUT_DIR_META)
+    write_output(output_dir, "recycle", recycle, config.OUTPUT_DIR_META)
 
 
 def core_data_analysis(patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict) -> Tuple[dict, dict, dict, dict]:
@@ -275,5 +321,17 @@ def setup_logseq_analyzer_args() -> argparse.Namespace:
         "--write-graph",
         action="store_true",
         help="Write all graph content to output folder (large)",
+    )
+    parser.add_argument(
+        "-mb",
+        "--move-bak",
+        action="store_true",
+        help="Move bak files to bak folder in output directory",
+    )
+    parser.add_argument(
+        "-mr",
+        "--move-recycle",
+        action="store_true",
+        help="Move recycle files to recycle folder in output directory",
     )
     return parser.parse_args()

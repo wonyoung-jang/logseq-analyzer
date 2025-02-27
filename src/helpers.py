@@ -3,7 +3,7 @@ import re
 import shutil
 import src.config as config
 from pathlib import Path
-from typing import Optional, Dict, Any, Generator, Set
+from typing import Optional, Dict, Any, Generator, Set, List, Tuple
 
 
 def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Generator[Path, None, None]:
@@ -35,21 +35,57 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
                 yield path
 
 
-def extract_logseq_config_edn(file_path: Path) -> Set[str]:
+def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]:
+    """
+    Extract bak and recycle data from a Logseq.
+    
+    
+    """
+    if not folder_path.is_dir():
+        logging.error(f"Directory not found: {folder_path}")
+        return {} 
+    
+    logseq_folder = folder_path / "logseq"
+    if not logseq_folder.is_dir():
+        logging.error(f"Directory not found: {logseq_folder}")
+        return {}
+    
+    recycling_folder = logseq_folder / ".recycle"
+    bak_folder = logseq_folder / "bak"
+    
+    for folder in [recycling_folder, bak_folder]:
+        if not folder.is_dir():
+            logging.error(f"Directory not found: {folder}")
+            return {}
+        
+    recycle = []
+    bak = []
+    for root, _, files in Path.walk(recycling_folder):
+        for file in files:
+            recycle.append(str(Path(root) / file))
+            
+    for root, _, files in Path.walk(bak_folder):
+        for file in files:
+            bak.append(str(Path(root) / file))
+            
+    return recycle, bak
+        
+            
+def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     """
     Extract EDN configuration data from a Logseq configuration file.
 
     Args:
-        file_path (Path): The path to the Logseq graph folder.
+        folder_path (Path): The path to the Logseq graph folder.
 
     Returns:
         Set[str]: A set of target directories.
     """
-    if not file_path.is_dir():
-        logging.error(f"Directory not found: {file_path}")
+    if not folder_path.is_dir():
+        logging.error(f"Directory not found: {folder_path}")
         return {}
 
-    logseq_folder = file_path / "logseq"
+    logseq_folder = folder_path / "logseq"
     if not logseq_folder.is_dir():
         logging.error(f"Directory not found: {logseq_folder}")
         return {}
@@ -121,7 +157,7 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
         summary_is_asset_not_backlinked (Dict[str, Any]): Summary data for unlinked assets.
         graph_meta_data (Dict[str, Any]): Metadata for each file.
     """
-    unlinked_assets_dir = Path("unlinked_assets")
+    unlinked_assets_dir = Path("to_delete")
     if not unlinked_assets_dir.exists():
         unlinked_assets_dir.mkdir()
         logging.info(f"Created directory: {unlinked_assets_dir}")

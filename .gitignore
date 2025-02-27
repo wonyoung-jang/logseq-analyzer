@@ -3,7 +3,7 @@
 logseq_api_cache/*
 output/*
 output*/*
-unlinked_assets/*
+to_delete/*
 *.json
 *.log
 profile_output*
