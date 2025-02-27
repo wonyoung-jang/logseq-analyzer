@@ -157,14 +157,14 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
         summary_is_asset_not_backlinked (Dict[str, Any]): Summary data for unlinked assets.
         graph_meta_data (Dict[str, Any]): Metadata for each file.
     """
-    unlinked_assets_dir = Path("to_delete")
-    if not unlinked_assets_dir.exists():
-        unlinked_assets_dir.mkdir()
-        logging.info(f"Created directory: {unlinked_assets_dir}")
+    to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
+    if not to_delete_dir.exists():
+        to_delete_dir.mkdir()
+        logging.info(f"Created directory: {to_delete_dir}")
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])
-        new_path = unlinked_assets_dir / file_path.name
+        new_path = to_delete_dir / file_path.name
         try:
             shutil.move(file_path, new_path)
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")

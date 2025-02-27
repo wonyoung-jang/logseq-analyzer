@@ -70,14 +70,18 @@ def handle_bak_recycle(args: argparse.Namespace, bak: list, recycle: list) -> No
         bak (list): The list of bak files.
         recycle (list): The list of recycle files.
     """
-    move_to_delete = Path("to_delete")
+    to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
+    if not to_delete_dir.exists():
+        to_delete_dir.mkdir()
+        logging.info(f"Created directory: {to_delete_dir}")
+        
     if args.move_bak:
         for file in bak:
             file_path = Path(file)
             if not file_path.exists():
                 logging.error(f"File not found: {file_path}")
                 continue
-            new_path = move_to_delete / file_path.name
+            new_path = to_delete_dir / file_path.name
             new_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.rename(new_path)
             logging.info(f"Moved bak file to {new_path}")
@@ -88,7 +92,7 @@ def handle_bak_recycle(args: argparse.Namespace, bak: list, recycle: list) -> No
             if not file_path.exists():
                 logging.error(f"File not found: {file_path}")
                 continue
-            new_path = move_to_delete / file_path.name
+            new_path = to_delete_dir / file_path.name
             new_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.rename(new_path)
             logging.info(f"Moved recycle file to {new_path}")
