@@ -136,9 +136,9 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         "JOURNAL_FILE_NAME_FORMAT",
         config_edn_data["journal_file_name_format"],
     )
-    setattr(config, "PAGES_DIRECTORY", config_edn_data["pages_directory"])
-    setattr(config, "JOURNALS_DIRECTORY", config_edn_data["journals_directory"])
-    setattr(config, "WHITEBOARDS_DIRECTORY", config_edn_data["whiteboards_directory"])
+    setattr(config, "PAGES", config_edn_data["pages_directory"])
+    setattr(config, "JOURNALS", config_edn_data["journals_directory"])
+    setattr(config, "WHITEBOARDS", config_edn_data["whiteboards_directory"])
     target_dirs = {
         config.ASSETS,
         config.DRAWS,
