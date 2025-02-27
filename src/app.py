@@ -23,9 +23,9 @@ def run_app():
 
     logseq_graph_folder, output_dir = configure_logging_and_output(args)
 
-    patterns = compile_regex_patterns()
-
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
+    
+    patterns = compile_regex_patterns()
 
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
 
