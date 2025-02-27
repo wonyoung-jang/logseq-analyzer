@@ -93,7 +93,7 @@ def process_content_data(
             content_data[name]["namespace_level"] = namespace_level
             unique_linked_references.update([namespace_root, name])
 
-        unique_linked_references.update(page_references, tags, tagged_backlinks, page_properties, block_properties)
+        unique_linked_references.update(assets, draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
 
         # External links
         if external_links:

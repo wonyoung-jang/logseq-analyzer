@@ -20,15 +20,15 @@ def run_app():
     generates summary data, and writes output to files.
     """
     args = setup_logseq_analyzer_args()
-    
+
     logseq_graph_folder, output_dir = configure_logging_and_output(args)
-    
+
     patterns = compile_regex_patterns()
-    
+
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
-    
+
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
-    
+
     (
         graph_content_data,
         meta_alphanum_dictionary,
@@ -47,7 +47,44 @@ def run_app():
         graph_summary_data,
     )
 
+    generate_summary_subsets(output_dir, graph_summary_data)
+
     logging.info("Logseq Analyzer completed.")
+
+
+def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None:
+    """
+    Generate summary subsets for the Logseq Analyzer.
+
+    Args:
+        output_dir (Path): The output directory.
+        graph_summary_data (dict): The graph summary data.
+    """
+    summary_categories = {
+        "has_content": {"has_content": True},
+        "has_backlinks": {"has_backlinks": True},
+        "has_external_links": {"has_external_links": True},
+        "has_embedded_links": {"has_embedded_links": True},
+        "is_backlinked": {"is_backlinked": True},
+        "is_markdown": {"file_extension": ".md"},
+        "is_asset": {"file_type": "asset"},
+        "is_draw": {"file_type": "draw"},
+        "is_journal": {"file_type": "journal"},
+        "is_page": {"file_type": "page"},
+        "is_whiteboard": {"file_type": "whiteboard"},
+        "is_other": {"file_type": "other"},
+        "is_orphan_true": {"node_type": "orphan_true"},
+        "is_orphan_graph": {"node_type": "orphan_graph"},
+        "is_node_root": {"node_type": "root"},
+        "is_node_leaf": {"node_type": "leaf"},
+        "is_node_branch": {"node_type": "branch"},
+    }
+
+    summary_data_subsets = {}
+    for output_name, criteria in summary_categories.items():
+        summary_subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = summary_subset
+        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_SUMMARY)
 
 
 def write_initial_outputs(

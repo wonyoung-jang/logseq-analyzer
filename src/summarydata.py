@@ -84,7 +84,7 @@ def process_summary_data(
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
         node_type = "other"
-        if file_type not in ["asset", "other"]:
+        if file_type in ["journal", "page"]:
             node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
 
         graph_summary_data[name]["file_type"] = file_type
