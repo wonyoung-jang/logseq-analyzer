@@ -20,10 +20,15 @@ def run_app():
     generates summary data, and writes output to files.
     """
     args = setup_logseq_analyzer_args()
+    
     logseq_graph_folder, output_dir = configure_logging_and_output(args)
+    
     patterns = compile_regex_patterns()
+    
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
+    
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
+    
     (
         graph_content_data,
         meta_alphanum_dictionary,
@@ -31,6 +36,50 @@ def run_app():
         graph_summary_data,
     ) = core_data_analysis(patterns, graph_meta_data, meta_graph_content)
 
+    write_initial_outputs(
+        args,
+        output_dir,
+        graph_meta_data,
+        meta_graph_content,
+        graph_content_data,
+        meta_alphanum_dictionary,
+        meta_dangling_links,
+        graph_summary_data,
+    )
+
+    logging.info("Logseq Analyzer completed.")
+
+
+def write_initial_outputs(
+    args,
+    output_dir,
+    graph_meta_data,
+    meta_graph_content,
+    graph_content_data,
+    meta_alphanum_dictionary,
+    meta_dangling_links,
+    graph_summary_data,
+) -> None:
+    """Write initial outputs for graph analysis to specified directories.
+
+    Args:
+        args: Arguments containing write_graph flag
+        output_dir (str): Base directory for output files
+        graph_meta_data (dict): Metadata about the graph structure
+        meta_graph_content (dict): Content of the graph metadata
+        graph_content_data (dict): Content data for graph nodes
+        meta_alphanum_dictionary (dict): Dictionary of alphanumeric metadata
+        meta_dangling_links (list): List of dangling links in the graph
+        graph_summary_data (dict): Summary statistics of the graph
+
+    Returns:
+        None
+
+    Writes multiple output files to specified subdirectories under output_dir:
+    - alphanum_dictionary and dangling_links to meta subdirectory
+    - content_data, meta_data and summary_data to graph subdirectory
+    - Optionally writes graph_content to meta subdirectory if args.write_graph is True
+    """
     write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
     write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
     write_output(output_dir, "content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
@@ -38,8 +87,6 @@ def run_app():
     write_output(output_dir, "summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
-
-    logging.info("Logseq Analyzer completed.")
 
 
 def core_data_analysis(patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict) -> Tuple[dict, dict, dict, dict]:
