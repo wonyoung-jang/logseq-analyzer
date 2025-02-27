@@ -35,6 +35,37 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
                 yield path
 
 
+def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
+    """
+    Move all folders from one directory to another.
+
+    Args:
+        input_dir (Path): The source directory.
+        target_dir (Path): The destination directory.
+    """
+    if not input_dir.is_dir():
+        logging.error(f"Directory not found: {input_dir}")
+        return
+
+    if not target_dir.is_dir():
+        logging.error(f"Directory not found: {target_dir}")
+        return
+
+    for root, dirs, files in Path.walk(input_dir):
+        for dir in dirs:
+            try:
+                shutil.move(Path(root) / dir, target_dir / dir)
+                logging.info(f"Moved folder: {dir}")
+            except Exception as e:
+                logging.error(f"Failed to move folder: {dir}: {e}")
+        for file in files:
+            try:
+                shutil.move(Path(root) / file, target_dir / file)
+                logging.info(f"Moved file: {file}")
+            except Exception as e:
+                logging.error(f"Failed to move file: {file}: {e}")
+
+
 def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]:
     """
     Extract bak and recycle data from a Logseq.
@@ -58,17 +89,7 @@ def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]
             logging.error(f"Directory not found: {folder}")
             return {}
 
-    recycle = []
-    bak = []
-    for root, _, files in Path.walk(recycling_folder):
-        for file in files:
-            recycle.append(str(Path(root) / file))
-
-    for root, _, files in Path.walk(bak_folder):
-        for file in files:
-            bak.append(str(Path(root) / file))
-
-    return recycle, bak
+    return recycling_folder, bak_folder
 
 
 def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
