@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern
 from src.helpers import iter_files, extract_logseq_config_edn, move_unlinked_assets
-from src.compile_re import compile_regex_patterns
+from src.compile_regex import compile_regex_patterns
 from src.setup import setup_logging, setup_output_directory
 from src.reporting import write_output
 from src.filedata import process_single_file
