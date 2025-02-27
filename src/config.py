@@ -1,3 +1,10 @@
+# import src.config as config
+# Used in
+# - src/app.py
+# - src/helpers.py
+# - src/keynames.py
+# - src/summarydata.py
+
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
 ASSETS_DIRECTORY = "assets"  # static

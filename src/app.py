@@ -82,9 +82,9 @@ def write_initial_outputs(
     """
     write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
     write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
-    write_output(output_dir, "content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
 
