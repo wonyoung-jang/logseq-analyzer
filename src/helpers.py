@@ -20,8 +20,7 @@ def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Gener
     Yields:
         Path: File paths that match the criteria.
     """
-    if not directory.is_dir():
-        logging.error(f"Directory not found: {directory}")
+    if not is_path_exists(directory):
         return
 
     for path in directory.rglob("*"):
@@ -43,13 +42,10 @@ def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
         input_dir (Path): The source directory.
         target_dir (Path): The destination directory.
     """
-    if not input_dir.is_dir():
-        logging.error(f"Directory not found: {input_dir}")
-        return
-
-    if not target_dir.is_dir():
-        logging.error(f"Directory not found: {target_dir}")
-        return
+    folders = [input_dir, target_dir]
+    for folder in folders:
+        if not is_path_exists(folder):
+            return
 
     for root, dirs, files in Path.walk(input_dir):
         for dir in dirs:
@@ -76,21 +72,17 @@ def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
     Returns:
         Tuple[Path, Path]: A tuple containing the bak and recycle folders.
     """
-    if not folder_path.is_dir():
-        logging.error(f"Directory not found: {folder_path}")
-        return ()
-
     logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    if not logseq_folder.is_dir():
-        logging.error(f"Directory not found: {logseq_folder}")
-        return ()
+    folders = [folder_path, logseq_folder]
+    for folder in folders:
+        if not is_path_exists(folder):
+            return ()
 
     recycling_folder = logseq_folder / config.DEFAULT_RECYCLE_DIR
     bak_folder = logseq_folder / config.DEFAULT_BAK_DIR
 
     for folder in [recycling_folder, bak_folder]:
-        if not folder.is_dir():
-            logging.error(f"Directory not found: {folder}")
+        if not is_path_exists(folder):
             return ()
 
     return recycling_folder, bak_folder
@@ -106,17 +98,13 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     Returns:
         Set[str]: A set of target directories.
     """
-    if not is_path_exists(folder_path):
-        return {}
-
     logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    if not is_path_exists(logseq_folder):
-        return {}
-
     config_edn_file = logseq_folder / config.DEFAULT_CONFIG_FILE
-    if not is_path_exists(config_edn_file):
-        return {}
-
+    folders = [folder_path, logseq_folder, config_edn_file]
+    for folder in folders:
+        if not is_path_exists(folder):
+            return {}
+    
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
         "journal_file_name_format": "yyyy_MM_dd",
