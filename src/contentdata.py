@@ -1,5 +1,6 @@
 import re
 import logging
+import src.config as config
 from collections import defaultdict
 from typing import Dict, Pattern, Set, Any, Tuple, List
 
@@ -81,8 +82,8 @@ def process_content_data(
         ) = split_builtin_user_properties(block_properties, props)
 
         # Namespace
-        if "/" in name:
-            namespace_parts = name.split("/")
+        if config.NAMESPACE_SEP in name:
+            namespace_parts = name.split(config.NAMESPACE_SEP)
             namespace_level = len(namespace_parts)
             namespace_root = namespace_parts[0]
             namespace_parent = namespace_parts[-2] if namespace_level > 1 else namespace_root

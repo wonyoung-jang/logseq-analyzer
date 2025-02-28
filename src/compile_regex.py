@@ -12,33 +12,278 @@ def compile_regex_patterns() -> Dict[str, Pattern]:
     """
     logging.info("Compiling regex patterns")
     patterns = {
-        "bullet": re.compile(r"(?:^|\s)-", re.M | re.I),
-        "page_reference": re.compile(r"(?<!#)\[\[(.+?)\]\]", re.I),
-        "tagged_backlink": re.compile(r"\#\[\[([^\]]+)\]\](?=\s+|\])", re.I),
-        "tag": re.compile(r"\#(?!\[\[)(\w+)(?=\s+|\b])", re.I),
-        "property": re.compile(r"^(?!\s*-\s)([A-Za-z0-9_-]+)(?=::)", re.M | re.I),
-        "asset": re.compile(r"\.\./assets/(.*)", re.I),
-        "draw": re.compile(r"(?<!#)\[\[draws/(.+?).excalidraw\]\]", re.I),
-        "external_link": re.compile(r"(?<!!)\[.*?\]\(.*?\)", re.I),
-        "external_link_internet": re.compile(r"(?<!!)\[.*?\]\(http.*?\)", re.I),
-        "external_link_alias": re.compile(r"(?<!!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)", re.I),
-        "embedded_link": re.compile(r"!\[.*?\]\(.*\)", re.I),
-        "embedded_link_internet": re.compile(r"!\[.*?\]\(http.*\)", re.I),
-        "embedded_link_asset": re.compile(r"!\[.*?\]\(\.\./assets/.*\)", re.I),
-        "blockquote": re.compile(r"(?:^|\s)- >.*", re.M | re.I),
-        "flashcard": re.compile(r"(?:^|\s)- .*\#card|\[\[card\]\].*", re.M | re.I),
-        "multiline_code_block": re.compile(r"```.*?```", re.S | re.I),
-        "calc_block": re.compile(r"```calc.*?```", re.S | re.I),
-        "multiline_code_lang": re.compile(r"```\w+.*?```", re.S | re.I),
-        "reference": re.compile(r"(?<!\{\{embed )\(\(.*?\)\)", re.I),
-        "block_reference": re.compile(r"(?<!\{\{embed )\(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)", re.I),
-        "embed": re.compile(r"\{\{embed .*?\}\}", re.I),
-        "page_embed": re.compile(r"\{\{embed \[\[.*?\]\]\}\}", re.I),
-        "block_embed": re.compile(r"\{\{embed \(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)\}\}", re.I),
-        "namespace_queries": re.compile(r"\{\{namespace .*?\}\}", re.I),
-        "cloze": re.compile(r"\{\{cloze .*?\}\}", re.I),
-        "simple_queries": re.compile(r"\{\{query .*?\}\}", re.I),
-        "query_functions": re.compile(r"\{\{function .*?\}\}", re.I),
-        "advanced_command": re.compile(r"\#\+BEGIN_.*\#\+END_.*", re.S | re.I),
+        "bullet": re.compile(
+            r"""
+            (?:^|\s)    # Beginning of line or whitespace
+            -           # Literal hyphen
+            """,
+            re.M | re.I | re.X,
+        ),
+        "page_reference": re.compile(
+            r"""
+            (?<!\#)      # Negative lookbehind: not preceded by #
+            \[\[        # Opening double brackets
+            (.+?)       # Capture group: the page name (non-greedy)
+            \]\]        # Closing double brackets
+            """,
+            re.I | re.X,
+        ),
+        "tagged_backlink": re.compile(
+            r"""
+            \#          # Hash character
+            \[\[        # Opening double brackets
+            ([^\]]+)    # Capture group: anything except closing bracket
+            \]\]        # Closing double brackets
+            (?=\s+|\])  # Positive lookahead: whitespace or closing bracket
+            """,
+            re.I | re.X,
+        ),
+        "tag": re.compile(
+            r"""
+            \#              # Hash character
+            (?!\[\[)        # Negative lookahead: not followed by [[
+            (\w+)           # Capture group: word characters
+            (?=\s+|\b])     # Positive lookahead: whitespace or word boundary with ]
+            """,
+            re.I | re.X,
+        ),
+        "property": re.compile(
+            r"""
+            ^               # Start of line
+            (?!\s*-\s)      # Negative lookahead: not a bullet
+            ([A-Za-z0-9_-]+)# Capture group: alphanumeric, underscore, or hyphen
+            (?=::)          # Positive lookahead: double colon
+            """,
+            re.M | re.I | re.X,
+        ),
+        "asset": re.compile(
+            r"""
+            \.\./assets/    # ../assets/ literal string
+            (.*)            # Capture group: anything
+            """,
+            re.I | re.X,
+        ),
+        "draw": re.compile(
+            r"""
+            (?<!\#)              # Negative lookbehind: not preceded by #
+            \[\[                # Opening double brackets
+            draws/(.+?)         # Literal "draws/" followed by capture group
+            \.excalidraw        # Literal ".excalidraw"
+            \]\]                # Closing double brackets
+            """,
+            re.I | re.X,
+        ),
+        "external_link": re.compile(
+            r"""
+            (?<!\!)            # Negative lookbehind: not preceded by !
+            \[                 # Opening bracket
+            .*?                # Any characters (non-greedy)
+            \]                 # Closing bracket
+            \(                 # Opening parenthesis
+            .*?                # Any characters (non-greedy)
+            \)                 # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "external_link_internet": re.compile(
+            r"""
+            (?<!\!)            # Negative lookbehind: not preceded by !
+            \[                 # Opening bracket
+            .*?                # Any characters (non-greedy)
+            \]                 # Closing bracket
+            \(                 # Opening parenthesis
+            http.*?            # "http" followed by any characters (non-greedy)
+            \)                 # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "external_link_alias": re.compile(
+            r"""
+            (?<!\!)                # Negative lookbehind: not preceded by !
+            \[                     # Opening bracket
+            .*?                    # Any characters (non-greedy)
+            \]                     # Closing bracket
+            \(                     # Opening parenthesis
+            [\[\[|\(\(]            # Either [[ or ((
+            .*?                    # Any characters (non-greedy)
+            [\]\]|\)\)]            # Either ]] or ))
+            .*?                    # Any characters (non-greedy)
+            \)                     # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "embedded_link": re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            .*                  # Any characters
+            \)                  # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "embedded_link_internet": re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            http.*              # "http" followed by any characters
+            \)                  # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "embedded_link_asset": re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            \.\./assets/.*      # "../assets/" followed by any characters
+            \)                  # Closing parenthesis
+            """,
+            re.I | re.X,
+        ),
+        "blockquote": re.compile(
+            r"""
+            (?:^|\s)            # Start of line or whitespace
+            -\ >                # Hyphen, space, greater than
+            .*                  # Any characters
+            """,
+            re.M | re.I | re.X,
+        ),
+        "flashcard": re.compile(
+            r"""
+            (?:^|\s)            # Start of line or whitespace
+            -\ .*               # Hyphen, space, any characters
+            \#card|\[\[card\]\] # Either "#card" or "[[card]]"
+            .*                  # Any characters
+            """,
+            re.M | re.I | re.X,
+        ),
+        "multiline_code_block": re.compile(
+            r"""
+            ```                 # Three backticks
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.S | re.I | re.X,
+        ),
+        "calc_block": re.compile(
+            r"""
+            ```calc             # Three backticks followed by "calc"
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.S | re.I | re.X,
+        ),
+        "multiline_code_lang": re.compile(
+            r"""
+            ```                 # Three backticks
+            \w+                 # One or more word characters
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.S | re.I | re.X,
+        ),
+        "reference": re.compile(
+            r"""
+            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+            \(\(                # Opening double parentheses
+            .*?                 # Any characters (non-greedy)
+            \)\)                # Closing double parentheses
+            """,
+            re.I | re.X,
+        ),
+        "block_reference": re.compile(
+            r"""
+            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+            \(\(                # Opening double parentheses
+            [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{12}        # 12 hex digits
+            \)\)                # Closing double parentheses
+            """,
+            re.I | re.X,
+        ),
+        "embed": re.compile(
+            r"""
+            \{\{embed\          # "{{embed" followed by space
+            .*?                 # Any characters (non-greedy)
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "page_embed": re.compile(
+            r"""
+            \{\{embed\          # "{{embed" followed by space
+            \[\[                # Opening double brackets
+            .*?                 # Any characters (non-greedy)
+            \]\]                # Closing double brackets
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "block_embed": re.compile(
+            r"""
+            \{\{embed\          # "{{embed" followed by space
+            \(\(                # Opening double parentheses
+            [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{12}        # 12 hex digits
+            \)\)                # Closing double parentheses
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "namespace_queries": re.compile(
+            r"""
+            \{\{namespace\      # "{{namespace" followed by space
+            .*?                 # Any characters (non-greedy)
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "cloze": re.compile(
+            r"""
+            \{\{cloze\          # "{{cloze" followed by space
+            .*?                 # Any characters (non-greedy)
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "simple_queries": re.compile(
+            r"""
+            \{\{query\          # "{{query" followed by space
+            .*?                 # Any characters (non-greedy)
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "query_functions": re.compile(
+            r"""
+            \{\{function\       # "{{function" followed by space
+            .*?                 # Any characters (non-greedy)
+            \}\}                # Closing double braces
+            """,
+            re.I | re.X,
+        ),
+        "advanced_command": re.compile(
+            r"""
+            \#\+BEGIN_          # "#BEGIN_"
+            .*                  # Any characters
+            \#\+END_            # "#END_"
+            .*                  # Any characters
+            """,
+            re.S | re.I | re.X,
+        ),
     }
     return patterns

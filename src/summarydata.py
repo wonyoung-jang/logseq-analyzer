@@ -137,7 +137,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
             return config.NODE_TYPE_ORPHAN_TRUE
         else:
             return config.NODE_TYPE_LEAF
-        
+
 
 def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) -> Dict[str, Any]:
     """

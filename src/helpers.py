@@ -104,7 +104,7 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     for folder in folders:
         if not is_path_exists(folder):
             return {}
-    
+
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
         "journal_file_name_format": "yyyy_MM_dd",
