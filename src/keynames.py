@@ -36,8 +36,8 @@ def process_journal_key(key: str) -> str:
     Returns:
         str: Processed journal key as a page title.
     """
-    page_title_format = getattr(config, "JOURNAL_PAGE_TITLE_FORMAT", "MMM do, yyyy")
-    file_name_format = getattr(config, "JOURNAL_FILE_NAME_FORMAT", "yyyy_MM_dd")
+    page_title_format = config.JOURNAL_PAGE_TITLE_FORMAT
+    file_name_format = config.JOURNAL_FILE_NAME_FORMAT
     py_file_name_format = transform_date_format(file_name_format)
     py_page_title_format = transform_date_format(page_title_format)
 
@@ -70,4 +70,4 @@ def process_key_name(key: str, parent: str) -> str:
     if parent == config.JOURNALS:
         return process_journal_key(key)
     else:
-        return unquote(key).replace("___", config.NAMESPACE_SEP).lower()
+        return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()

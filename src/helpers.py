@@ -125,7 +125,7 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         "pages_directory": "pages",
         "journals_directory": "journals",
         "whiteboards_directory": "whiteboards",
-        "file_name_format": ":triple-lowbar",
+        "file_name_format": "",
     }
 
     journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
@@ -158,6 +158,13 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         "JOURNAL_FILE_NAME_FORMAT",
         config_edn_data["journal_file_name_format"],
     )
+    setattr(
+        config,
+        "NAMESPACE_FORMAT",
+        config_edn_data["file_name_format"],
+    )
+    if config.NAMESPACE_FORMAT == ":triple-lowbar":
+        config.NAMESPACE_FILE_SEP = "___"
     setattr(config, "PAGES", config_edn_data["pages_directory"])
     setattr(config, "JOURNALS", config_edn_data["journals_directory"])
     setattr(config, "WHITEBOARDS", config_edn_data["whiteboards_directory"])
