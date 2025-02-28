@@ -3,7 +3,7 @@ import re
 from typing import Dict, Pattern
 
 
-def compile_regex_patterns() -> Dict[str, Pattern]:
+def compile_re_content() -> Dict[str, Pattern]:
     """
     Compile and return a dictionary of frequently used regex patterns.
 
@@ -285,5 +285,75 @@ def compile_regex_patterns() -> Dict[str, Pattern]:
             """,
             re.S | re.I | re.X,
         ),
+    }
+    return patterns
+
+
+def compile_re_config() -> Dict[str, Pattern]:
+    patterns = {
+        # Pattern to match journal page title format in verbose mode.
+        "journal_page_title_pattern": re.compile(
+            r"""
+            :journal/page-title-format   # Literal text for journal page title format.
+            \s+                          # One or more whitespace characters.
+            "([^"]+)"                    # Capture group for any characters except double quotes.
+            """, re.VERBOSE
+        ),
+        # Pattern to match journal file name format.
+        "journal_file_name_pattern": re.compile(
+            r"""
+            :journal/file-name-format    # Literal text for journal file name format.
+            \s+                          # One or more whitespace characters.
+            "([^"]+)"                    # Capture group for file name format.
+            """, re.VERBOSE
+        ),
+        # Pattern to match whether journals feature is enabled (true or false).
+        "feature_enable_journals_pattern": re.compile(
+            r"""
+            :feature/enable-journals\?   # Literal text for enabling journals feature.
+            \s+                          # One or more whitespace characters.
+            (true|false)                 # Capture group for 'true' or 'false'.
+            """, re.VERBOSE
+        ),
+        # Pattern to match whether whiteboards feature is enabled (true or false).
+        "feature_enable_whiteboards_pattern": re.compile(
+            r"""
+            :feature/enable-whiteboards\?  # Literal text for enabling whiteboards feature.
+            \s+                           # One or more whitespace characters.
+            (true|false)                  # Capture group for 'true' or 'false'.
+            """, re.VERBOSE
+        ),
+        # Pattern to match the pages directory.
+        "pages_directory_pattern": re.compile(
+            r"""
+            :pages-directory             # Literal text for pages directory.
+            \s+                         # One or more whitespace characters.
+            "([^"]+)"                   # Capture group for the directory path.
+            """, re.VERBOSE
+        ),
+        # Pattern to match the journals directory.
+        "journals_directory_pattern": re.compile(
+            r"""
+            :journals-directory          # Literal text for journals directory.
+            \s+                         # One or more whitespace characters.
+            "([^"]+)"                   # Capture group for the directory path.
+            """, re.VERBOSE
+        ),
+        # Pattern to match the whiteboards directory.
+        "whiteboards_directory_pattern": re.compile(
+            r"""
+            :whiteboards-directory       # Literal text for whiteboards directory.
+            \s+                         # One or more whitespace characters.
+            "([^"]+)"                   # Capture group for the directory path.
+            """, re.VERBOSE
+        ),
+        # Pattern to match file name format.
+        "file_name_format_pattern": re.compile(
+            r"""
+            :file/name-format            # Literal text for file name format.
+            \s+                          # One or more whitespace characters.
+            (.+)                         # Capture group for the file name format.
+            """, re.VERBOSE
+        )
     }
     return patterns

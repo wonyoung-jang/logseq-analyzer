@@ -1,9 +1,8 @@
 import logging
-import re
 import shutil
 import src.config as config
 from pathlib import Path
-from typing import Optional, Dict, Any, Generator, Set, Tuple
+from typing import Optional, Dict, Any, Generator, Set
 
 
 def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Generator[Path, None, None]:
@@ -60,98 +59,6 @@ def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
                 logging.info(f"Moved file: {file}")
             except Exception as e:
                 logging.error(f"Failed to move file: {file}: {e}")
-
-
-def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
-    """
-    Extract bak and recycle data from a Logseq.
-
-    Args:
-        folder_path (Path): The path to the Logseq graph folder.
-
-    Returns:
-        Tuple[Path, Path]: A tuple containing the bak and recycle folders.
-    """
-    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    folders = [folder_path, logseq_folder]
-    for folder in folders:
-        if not is_path_exists(folder):
-            return ()
-
-    recycling_folder = logseq_folder / config.DEFAULT_RECYCLE_DIR
-    bak_folder = logseq_folder / config.DEFAULT_BAK_DIR
-
-    for folder in [recycling_folder, bak_folder]:
-        if not is_path_exists(folder):
-            return ()
-
-    return recycling_folder, bak_folder
-
-
-def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
-    """
-    Extract EDN configuration data from a Logseq configuration file.
-
-    Args:
-        folder_path (Path): The path to the Logseq graph folder.
-
-    Returns:
-        Set[str]: A set of target directories.
-    """
-    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    config_edn_file = logseq_folder / config.DEFAULT_CONFIG_FILE
-    folders = [folder_path, logseq_folder, config_edn_file]
-    for folder in folders:
-        if not is_path_exists(folder):
-            return {}
-
-    config_edn_data = {
-        "journal_page_title_format": "MMM do, yyyy",
-        "journal_file_name_format": "yyyy_MM_dd",
-        "feature_enable_journals": "true",
-        "feature_enable_whiteboards": "true",
-        "pages_directory": "pages",
-        "journals_directory": "journals",
-        "whiteboards_directory": "whiteboards",
-        "file_name_format": "",
-    }
-
-    journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
-    journal_file_name_pattern = re.compile(r':journal/file-name-format\s+"([^"]+)"')
-    feature_enable_journals_pattern = re.compile(r":feature/enable-journals\?\s+(true|false)")
-    feature_enable_whiteboards_pattern = re.compile(r":feature/enable-whiteboards\?\s+(true|false)")
-    pages_directory_pattern = re.compile(r':pages-directory\s+"([^"]+)"')
-    journals_directory_pattern = re.compile(r':journals-directory\s+"([^"]+)"')
-    whiteboards_directory_pattern = re.compile(r':whiteboards-directory\s+"([^"]+)"')
-    file_name_format_pattern = re.compile(r":file/name-format\s+(.+)")
-
-    with config_edn_file.open("r", encoding="utf-8") as f:
-        config_edn_content = f.read()
-        config_edn_data["journal_page_title_format"] = journal_page_title_pattern.search(config_edn_content).group(1)
-        config_edn_data["journal_file_name_format"] = journal_file_name_pattern.search(config_edn_content).group(1)
-        config_edn_data["feature_enable_journals"] = feature_enable_journals_pattern.search(config_edn_content).group(1)
-        config_edn_data["feature_enable_whiteboards"] = feature_enable_whiteboards_pattern.search(config_edn_content).group(1)
-        config_edn_data["pages_directory"] = pages_directory_pattern.search(config_edn_content).group(1)
-        config_edn_data["journals_directory"] = journals_directory_pattern.search(config_edn_content).group(1)
-        config_edn_data["whiteboards_directory"] = whiteboards_directory_pattern.search(config_edn_content).group(1)
-        config_edn_data["file_name_format"] = file_name_format_pattern.search(config_edn_content).group(1)
-
-    config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
-    config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
-    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
-    if config.NAMESPACE_FORMAT == ":triple-lowbar":
-        config.NAMESPACE_FILE_SEP = "___"
-    config.PAGES = config_edn_data["pages_directory"]
-    config.JOURNALS = config_edn_data["journals_directory"]
-    config.WHITEBOARDS = config_edn_data["whiteboards_directory"]
-    target_dirs = {
-        config.ASSETS,
-        config.DRAWS,
-        config.JOURNALS,
-        config.PAGES,
-        config.WHITEBOARDS,
-    }
-    return target_dirs
 
 
 def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any]) -> None:
