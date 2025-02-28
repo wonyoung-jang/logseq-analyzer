@@ -268,7 +268,7 @@ def setup_logging_and_output(args) -> Tuple[Path, Path]:
     setup_logging(log_file)
     logging.info("Starting Logseq Analyzer.")
 
-    logseq_graph_folder = Path(args.graph_folder) if args.graph_folder else Path(config.DEFAULT_GRAPH_DIR)
+    logseq_graph_folder = Path(args.graph_folder)
     output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
     setup_output_directory(output_dir)
     return logseq_graph_folder, output_dir
@@ -282,31 +282,39 @@ def setup_logseq_analyzer_args() -> argparse.Namespace:
         argparse.Namespace: The command line arguments.
     """
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
-    parser.add_argument("-g", "--graph-folder", type=str, help="Path to the Logseq graph folder")
-    parser.add_argument("-o", "--output-folder", type=str, help="Path to the output folder")
-    parser.add_argument("-l", "--log-file", type=str, help="Path to the log file")
-    parser.add_argument(
-        "-ma",
-        "--move-unlinked-assets",
-        action="store_true",
-        help='Move unlinked assets to "unlinked_assets" folder',
-    )
+
+    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
+
+    parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
+
+    parser.add_argument("-l", "--log-file", action="store", help="path to log file")
+
     parser.add_argument(
         "-wg",
         "--write-graph",
         action="store_true",
-        help="Write all graph content to output folder (large)",
+        help="write all graph content to output folder (warning: may result in large file)",
     )
+
+    parser.add_argument(
+        "-ma",
+        "--move-unlinked-assets",
+        action="store_true",
+        help='move unlinked assets to "unlinked_assets" folder',
+    )
+
     parser.add_argument(
         "-mb",
         "--move-bak",
         action="store_true",
-        help="Move bak files to bak folder in output directory",
+        help="move bak files to bak folder in output directory",
     )
+
     parser.add_argument(
         "-mr",
         "--move-recycle",
         action="store_true",
-        help="Move recycle files to recycle folder in output directory",
+        help="move recycle files to recycle folder in output directory",
     )
+
     return parser.parse_args()

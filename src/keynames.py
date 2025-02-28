@@ -69,5 +69,4 @@ def process_key_name(key: str, parent: str) -> str:
 
     if parent == config.JOURNALS:
         return process_journal_key(key)
-    else:
-        return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()
+    return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()

@@ -5,7 +5,6 @@
 # - src/keynames.py
 # - src/summarydata.py
 
-DEFAULT_GRAPH_DIR = "C:/Logseq"
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_TO_DELETE_DIR = "to_delete"
 DEFAULT_LOG_FILE = "___logseq_analyzer___.log"
