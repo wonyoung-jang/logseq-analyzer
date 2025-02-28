@@ -15,7 +15,7 @@ def transform_date_format(cljs_format: str) -> str:
     Returns:
         str: Python-style date format.
     """
-    token_map = getattr(config, "DATETIME_TOKEN_MAP", {})
+    token_map = config.DATETIME_TOKEN_MAP
     token_pattern = re.compile("|".join(re.escape(k) for k in sorted(token_map, key=len, reverse=True)))
 
     def replace_token(match):
@@ -64,10 +64,10 @@ def process_key_name(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    if key.endswith("/"):
+    if key.endswith(config.NAMESPACE_SEP):
         key = key[:-1]
 
-    if parent == "journals":
+    if parent == config.JOURNALS:
         return process_journal_key(key)
     else:
-        return unquote(key).replace("___", "/").lower()
+        return unquote(key).replace("___", config.NAMESPACE_SEP).lower()

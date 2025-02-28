@@ -13,6 +13,7 @@ DEFAULT_LOGSEQ_DIR = "logseq"  # static
 DEFAULT_CONFIG_FILE = "config.edn"  # static
 DEFAULT_BAK_DIR = "bak"  # static
 DEFAULT_RECYCLE_DIR = ".recycle"  # static
+NAMESPACE_SEP = "/"
 
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"

@@ -3,7 +3,7 @@ import re
 import shutil
 import src.config as config
 from pathlib import Path
-from typing import Optional, Dict, Any, Generator, Set, List, Tuple
+from typing import Optional, Dict, Any, Generator, Set, Tuple
 
 
 def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Generator[Path, None, None]:
