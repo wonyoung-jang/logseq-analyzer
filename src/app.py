@@ -374,6 +374,9 @@ def handle_assets(
         for non_asset in not_referenced_assets_keys:
             non_asset_secondary = graph_meta_data[non_asset]["name"]
             for asset_mention in content_data["assets"]:
+                if graph_summary_data[non_asset]["is_backlinked"]:
+                    continue
+                
                 if non_asset in asset_mention or non_asset_secondary in asset_mention:
                     graph_summary_data[non_asset]["is_backlinked"] = True
                     break
