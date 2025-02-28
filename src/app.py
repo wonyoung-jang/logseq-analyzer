@@ -1,6 +1,5 @@
 import argparse
 import logging
-import re
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern, Set
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content, is_path_exists

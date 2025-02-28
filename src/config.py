@@ -3,6 +3,7 @@
 # - src/app.py
 # - src/helpers.py
 # - src/keynames.py
+# - src/contentdata.py
 # - src/summarydata.py
 
 DEFAULT_OUTPUT_DIR = "output"
