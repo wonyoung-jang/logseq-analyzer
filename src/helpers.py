@@ -66,20 +66,24 @@ def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
                 logging.error(f"Failed to move file: {file}: {e}")
 
 
-def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]:
+def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
     """
     Extract bak and recycle data from a Logseq.
+    
+    Args:
+        folder_path (Path): The path to the Logseq graph folder.
 
-
+    Returns:
+        Tuple[Path, Path]: A tuple containing the bak and recycle folders.
     """
     if not folder_path.is_dir():
         logging.error(f"Directory not found: {folder_path}")
-        return {}
+        return ()
 
     logseq_folder = folder_path / "logseq"
     if not logseq_folder.is_dir():
         logging.error(f"Directory not found: {logseq_folder}")
-        return {}
+        return ()
 
     recycling_folder = logseq_folder / ".recycle"
     bak_folder = logseq_folder / "bak"
@@ -87,7 +91,7 @@ def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[List[str], List[str]]
     for folder in [recycling_folder, bak_folder]:
         if not folder.is_dir():
             logging.error(f"Directory not found: {folder}")
-            return {}
+            return ()
 
     return recycling_folder, bak_folder
 

@@ -15,9 +15,6 @@ import src.config as config
 def run_app():
     """
     Main function to run the Logseq analyzer.
-
-    Initializes logging, output directory, regex patterns, processes files,
-    generates summary data, and writes output to files.
     """
     args = setup_logseq_analyzer_args()
 
@@ -64,7 +61,6 @@ def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> No
 
     Args:
         args (argparse.Namespace): The command line arguments.
-        output_dir (Path): The output directory.
         bak (Path): The bak directory.
         recycle (Path): The recycle directory.
     """

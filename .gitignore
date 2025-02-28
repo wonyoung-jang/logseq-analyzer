@@ -4,6 +4,8 @@ logseq_api_cache/*
 output/*
 output*/*
 to_delete/*
+profile_output*
 *.json
 *.log
-profile_output*
+*.prof
+*.txt
