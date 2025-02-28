@@ -1,5 +1,5 @@
 import src.config as config
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict, Set
 from collections import defaultdict
 
 
@@ -70,21 +70,21 @@ def process_summary_data(
         file_path_parts = meta_data["file_path_parts"]
 
         if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
-            file_type = "asset"
+            file_type = config.FILE_TYPE_ASSET
         elif file_path_parent_name == draws_dir:
-            file_type = "draw"
+            file_type = config.FILE_TYPE_DRAW
         elif file_path_parent_name == journals_dir:
-            file_type = "journal"
+            file_type = config.FILE_TYPE_JOURNAL
         elif file_path_parent_name == pages_dir:
-            file_type = "page"
+            file_type = config.FILE_TYPE_PAGE
         elif file_path_parent_name == whiteboards_dir:
-            file_type = "whiteboard"
+            file_type = config.FILE_TYPE_WHITEBOARD
         else:
-            file_type = "other"
+            file_type = config.FILE_TYPE_OTHER
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
-        node_type = "other"
-        if file_type in ["journal", "page"]:
+        node_type = config.NODE_TYPE_OTHER
+        if file_type in [config.FILE_TYPE_JOURNAL, config.FILE_TYPE_PAGE]:
             node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
 
         graph_summary_data[name]["file_type"] = file_type
@@ -114,33 +114,30 @@ def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dic
     id_key = meta_data["id"]
     if id_key in alphanum_dict:
         for page_ref in alphanum_dict[id_key]:
-            if name == page_ref or str(name + "/") in page_ref:
+            if name == page_ref or str(name + config.NAMESPACE_SEP) in page_ref:
                 return True
     return False
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
-    node_type = ""
     if has_content:
         if is_backlinked:
             if has_backlinks:
-                node_type = "branch"
+                return config.NODE_TYPE_BRANCH
             else:
-                node_type = "leaf"
+                return config.NODE_TYPE_LEAF
         else:
             if has_backlinks:
-                node_type = "root"
+                return config.NODE_TYPE_ROOT
             else:
-                node_type = "orphan_graph"
+                return config.NODE_TYPE_ORPHAN_GRAPH
     else:
         if not is_backlinked:
-            node_type = "orphan_true"
+            return config.NODE_TYPE_ORPHAN_TRUE
         else:
-            node_type = "leaf"
-
-    return node_type
-
+            return config.NODE_TYPE_LEAF
+        
 
 def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) -> Dict[str, Any]:
     """

@@ -13,17 +13,33 @@ DEFAULT_LOGSEQ_DIR = "logseq"  # static
 DEFAULT_CONFIG_FILE = "config.edn"  # static
 DEFAULT_BAK_DIR = "bak"  # static
 DEFAULT_RECYCLE_DIR = ".recycle"  # static
+
 NAMESPACE_FORMAT = ""  # or ":triple-lowbar"
 NAMESPACE_SEP = "/"  # static
 NAMESPACE_FILE_SEP = "%2F"  # or "___"
 
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
+
 ASSETS = "assets"  # static
 DRAWS = "draws"  # static
 JOURNALS = "journals"
 PAGES = "pages"
 WHITEBOARDS = "whiteboards"
+
+FILE_TYPE_ASSET = "asset"
+FILE_TYPE_DRAW = "draw"
+FILE_TYPE_JOURNAL = "journal"
+FILE_TYPE_PAGE = "page"
+FILE_TYPE_WHITEBOARD = "whiteboard"
+FILE_TYPE_OTHER = "other"
+
+NODE_TYPE_BRANCH = "branch"
+NODE_TYPE_LEAF = "leaf"
+NODE_TYPE_ROOT = "root"
+NODE_TYPE_OTHER = "other-node"
+NODE_TYPE_ORPHAN_GRAPH = "orphan-graph"
+NODE_TYPE_ORPHAN_TRUE = "orphan-true"
 
 OUTPUT_DIR_META = "__meta"
 OUTPUT_DIR_GRAPH = "graph"
