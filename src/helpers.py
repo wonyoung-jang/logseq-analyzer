@@ -148,26 +148,14 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         config_edn_data["whiteboards_directory"] = whiteboards_directory_pattern.search(config_edn_content).group(1)
         config_edn_data["file_name_format"] = file_name_format_pattern.search(config_edn_content).group(1)
 
-    setattr(
-        config,
-        "JOURNAL_PAGE_TITLE_FORMAT",
-        config_edn_data["journal_page_title_format"],
-    )
-    setattr(
-        config,
-        "JOURNAL_FILE_NAME_FORMAT",
-        config_edn_data["journal_file_name_format"],
-    )
-    setattr(
-        config,
-        "NAMESPACE_FORMAT",
-        config_edn_data["file_name_format"],
-    )
+    config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
+    config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
+    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
     if config.NAMESPACE_FORMAT == ":triple-lowbar":
         config.NAMESPACE_FILE_SEP = "___"
-    setattr(config, "PAGES", config_edn_data["pages_directory"])
-    setattr(config, "JOURNALS", config_edn_data["journals_directory"])
-    setattr(config, "WHITEBOARDS", config_edn_data["whiteboards_directory"])
+    config.PAGES = config_edn_data["pages_directory"]
+    config.JOURNALS = config_edn_data["journals_directory"]
+    config.WHITEBOARDS = config_edn_data["whiteboards_directory"]
     target_dirs = {
         config.ASSETS,
         config.DRAWS,
