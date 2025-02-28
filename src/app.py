@@ -168,12 +168,14 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
         config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
         config_edn_data["feature_enable_journals"] = config_patterns["feature_enable_journals_pattern"].search(config_edn_content).group(1)
-        config_edn_data["feature_enable_whiteboards"] = config_patterns["feature_enable_whiteboards_pattern"].search(config_edn_content).group(1)
+        config_edn_data["feature_enable_whiteboards"] = (
+            config_patterns["feature_enable_whiteboards_pattern"].search(config_edn_content).group(1)
+        )
         config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
-        
+
     config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
     config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
     config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
