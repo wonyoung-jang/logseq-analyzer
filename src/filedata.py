@@ -83,7 +83,7 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
 
 def read_file_content(file_path: Path) -> Optional[str]:
     """
-    Read the text content of a file using UTF-8 encoding.
+    Read the text content of a file using utf-8 encoding.
 
     Args:
         file_path (Path): The path to the file.

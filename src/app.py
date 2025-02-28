@@ -18,7 +18,7 @@ def run_app():
     """
     args = setup_logseq_analyzer_args()
 
-    logseq_graph_folder, output_dir = configure_logging_and_output(args)
+    logseq_graph_folder, output_dir = setup_logging_and_output(args)
 
     target_dirs = extract_logseq_config_edn(logseq_graph_folder)
 
@@ -29,9 +29,9 @@ def run_app():
     graph_meta_data, meta_graph_content = process_graph_files(logseq_graph_folder, patterns, target_dirs)
 
     (
-        graph_content_data,
         meta_alphanum_dictionary,
         meta_dangling_links,
+        graph_content_data,
         graph_summary_data,
     ) = core_data_analysis(patterns, graph_meta_data, meta_graph_content)
 
@@ -213,8 +213,7 @@ def core_data_analysis(patterns: Dict[str, Pattern], graph_meta_data: dict, meta
         meta_graph_content (dict): The graph content data.
 
     Returns:
-        Tuple[dict, dict, dict, dict]: The graph content data, alphanum dictionary,
-            dangling links, and graph summary data.
+        Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
     built_in_properties = config.BUILT_IN_PROPERTIES
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(
@@ -223,9 +222,9 @@ def core_data_analysis(patterns: Dict[str, Pattern], graph_meta_data: dict, meta
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
 
     return (
-        graph_content_data,
         meta_alphanum_dictionary,
         meta_dangling_links,
+        graph_content_data,
         graph_summary_data,
     )
 
@@ -255,7 +254,7 @@ def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern],
     return graph_meta_data, meta_graph_content
 
 
-def configure_logging_and_output(args) -> Tuple[Path, Path]:
+def setup_logging_and_output(args) -> Tuple[Path, Path]:
     """
     Configure logging and output directory for the Logseq Analyzer.
 

@@ -69,7 +69,7 @@ def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
 def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
     """
     Extract bak and recycle data from a Logseq.
-    
+
     Args:
         folder_path (Path): The path to the Logseq graph folder.
 
@@ -80,13 +80,13 @@ def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
         logging.error(f"Directory not found: {folder_path}")
         return ()
 
-    logseq_folder = folder_path / "logseq"
+    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
     if not logseq_folder.is_dir():
         logging.error(f"Directory not found: {logseq_folder}")
         return ()
 
-    recycling_folder = logseq_folder / ".recycle"
-    bak_folder = logseq_folder / "bak"
+    recycling_folder = logseq_folder / config.DEFAULT_RECYCLE_DIR
+    bak_folder = logseq_folder / config.DEFAULT_BAK_DIR
 
     for folder in [recycling_folder, bak_folder]:
         if not folder.is_dir():
@@ -106,28 +106,16 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     Returns:
         Set[str]: A set of target directories.
     """
-    if not folder_path.is_dir():
-        logging.error(f"Directory not found: {folder_path}")
+    if not is_path_exists(folder_path):
         return {}
 
-    logseq_folder = folder_path / "logseq"
-    if not logseq_folder.is_dir():
-        logging.error(f"Directory not found: {logseq_folder}")
+    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
+    if not is_path_exists(logseq_folder):
         return {}
 
-    config_edn_file = logseq_folder / "config.edn"
-    if not config_edn_file.is_file():
-        logging.error(f"File not found: {config_edn_file}")
+    config_edn_file = logseq_folder / config.DEFAULT_CONFIG_FILE
+    if not is_path_exists(config_edn_file):
         return {}
-
-    journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
-    journal_file_name_pattern = re.compile(r':journal/file-name-format\s+"([^"]+)"')
-    feature_enable_journals_pattern = re.compile(r":feature/enable-journals\?\s+(true|false)")
-    feature_enable_whiteboards_pattern = re.compile(r":feature/enable-whiteboards\?\s+(true|false)")
-    pages_directory_pattern = re.compile(r':pages-directory\s+"([^"]+)"')
-    journals_directory_pattern = re.compile(r':journals-directory\s+"([^"]+)"')
-    whiteboards_directory_pattern = re.compile(r':whiteboards-directory\s+"([^"]+)"')
-    file_name_format_pattern = re.compile(r":file/name-format\s+(.+)")
 
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
@@ -139,6 +127,15 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         "whiteboards_directory": "whiteboards",
         "file_name_format": ":triple-lowbar",
     }
+
+    journal_page_title_pattern = re.compile(r':journal/page-title-format\s+"([^"]+)"')
+    journal_file_name_pattern = re.compile(r':journal/file-name-format\s+"([^"]+)"')
+    feature_enable_journals_pattern = re.compile(r":feature/enable-journals\?\s+(true|false)")
+    feature_enable_whiteboards_pattern = re.compile(r":feature/enable-whiteboards\?\s+(true|false)")
+    pages_directory_pattern = re.compile(r':pages-directory\s+"([^"]+)"')
+    journals_directory_pattern = re.compile(r':journals-directory\s+"([^"]+)"')
+    whiteboards_directory_pattern = re.compile(r':whiteboards-directory\s+"([^"]+)"')
+    file_name_format_pattern = re.compile(r":file/name-format\s+(.+)")
 
     with config_edn_file.open("r", encoding="utf-8") as f:
         config_edn_content = f.read()
@@ -183,9 +180,8 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
         graph_meta_data (Dict[str, Any]): Metadata for each file.
     """
     to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not to_delete_dir.exists():
-        to_delete_dir.mkdir()
-        logging.info(f"Created directory: {to_delete_dir}")
+    if not is_path_exists(to_delete_dir):
+        create_directory(to_delete_dir)
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])
@@ -195,3 +191,30 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
+
+
+def is_path_exists(path: Path) -> bool:
+    """
+    Check if a directory exists.
+
+    Args:
+        directory (Path): The directory to check.
+
+    Returns:
+        bool: True if the path exists, False otherwise.
+    """
+    if not path.exists():
+        logging.error(f"Path not found: {path}")
+        return False
+    return True
+
+
+def create_directory(directory: Path) -> None:
+    """
+    Create a directory if it does not exist.
+
+    Args:
+        directory (Path): The directory to create.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    logging.info(f"Created directory: {directory}")

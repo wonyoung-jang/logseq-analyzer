@@ -28,7 +28,7 @@ def write_output(
     else:
         out_path = output_dir / filename
 
-    with out_path.open("w", encoding="UTF-8") as f:
+    with out_path.open("w", encoding="utf-8") as f:
         f.write(f"{filename} | Items: {count} | Type: {type(items)}\n\n")
 
         if isinstance(items, dict):
