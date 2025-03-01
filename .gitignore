@@ -9,3 +9,4 @@ profile_output*
 *.log
 *.prof
 *.txt
+*.dat
