@@ -64,8 +64,8 @@ def process_key_name(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    if key.endswith(config.NAMESPACE_SEP):
-        key = key[:-1]
+    if key.endswith(config.NAMESPACE_FILE_SEP):
+        key = key.rstrip(config.NAMESPACE_FILE_SEP)
 
     if parent == config.JOURNALS:
         return process_journal_key(key)
