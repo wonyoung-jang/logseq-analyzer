@@ -86,33 +86,9 @@ def analyze_namespace_frequency(namespace_parts: Dict[str, Dict[str, int]]) -> D
     return frequency, frequency_list
 
 
-def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, Any]]:
-    """
-    Identify namespace parts that appear at different depths (levels) across entries.
-
-    Returns:
-        dict: Mapping of conflicting namespace parts to details including
-              the levels they appear at and the entries in which they occur.
-    """
-    # A mapping from namespace part to a set of levels
-    part_levels = defaultdict(set)
-    # A mapping from namespace part to the list of entries with their level
-    part_entries = defaultdict(list)
-
-    for entry, parts in namespace_parts.items():
-        for part, level in parts.items():
-            part_levels[part].add(level)
-            part_entries[part].append({"entry": entry, "level": level})
-
-    # Filter out those parts that only occur at a single level.
-    conflicts = {}
-    for part, levels in part_levels.items():
-        if len(levels) > 1:
-            conflicts[part] = {"levels": sorted(list(levels)), "entries": part_entries[part]}
-    return conflicts
-
-
-def detect_non_namespace_conflicts(namespace_parts: Dict[str, Dict[str, int]], non_namespace: Set[str], dangling: List[str]) -> Dict[str, List[str]]:
+def detect_non_namespace_conflicts(
+    namespace_parts: Dict[str, Dict[str, int]], non_namespace: Set[str], dangling: List[str]
+) -> Dict[str, List[str]]:
     """
     Check for conflicts between split namespace parts and existing non-namespace page names.
 
@@ -130,11 +106,46 @@ def detect_non_namespace_conflicts(namespace_parts: Dict[str, Dict[str, int]], n
         for part in parts.keys():
             if part in non_namespace:
                 conflicts_non_namespace[part].append(entry)
-            
+
             if part in dangling:
                 conflicts_dangling[part].append(entry)
-                
+
     return conflicts_non_namespace, conflicts_dangling
+
+
+def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, Any]]:
+    """
+    Identify namespace parts that appear at different depths (levels) across entries.
+
+    For each namespace part, we collect the levels at which it appears as well as
+    the associated entries. Parts that occur at more than one depth are flagged
+    as potential conflicts.
+
+    Returns:
+        dict: Mapping of conflicting namespace parts to details including
+              the sorted levels they appear at and the list of entries with their level.
+    """
+    # Mapping from namespace part to a set of levels and associated entries
+    part_levels = defaultdict(set)
+    part_entries = defaultdict(list)
+
+    for entry, parts in namespace_parts.items():
+        for part, level in parts.items():
+            part_levels[part].add(level)
+            part_entries[part].append({"entry": entry, "level": level})
+
+    # Filter out parts that only occur at a single depth.
+    conflicts = {}
+    for part, levels in part_levels.items():
+        if len(levels) > 1:
+            conflicts[part] = {"levels": sorted(list(levels)), "entries": part_entries[part]}
+
+    # Split so it's dict[part level] = [list of parts]
+    output_conflicts = {}
+    for part, details in conflicts.items():
+        for level in details["levels"]:
+            output_conflicts[f"{part} ({level})"] = [i["entry"] for i in details["entries"] if i["level"] == level]
+    return output_conflicts
 
 
 def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
@@ -144,29 +155,23 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     Args:
         output_dir (Path): The output directory.
         graph_content_data (dict): The graph content data.
+        meta_dangling_links (list): The list of dangling links.
     """
-    
-    """
-    01 Conflicts With Existing Pages
-    Namespace parts = part/part/part
-    If any part exists in graph_content and is not a namespace, it is a conflict.
-    Potential issues:
-        Namespace parts that do not have files
-            Can be orphaned or dangling links
-            Can occur as it's not required to have a file for a namespace part
-    """
+    output_dir_ns = config.OUTPUT_DIR_NAMESPACE
+
+    # 01 Conflicts With Existing Pages
     # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
-    write_output(output_dir, "__namespace_parts", namespace_parts, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "__namespace_parts", namespace_parts, output_dir_ns)
 
     # Split content data by namespaces and non-namespaces
     content_data_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] >= 0}
     unique_names_namespace = set(content_data_namespaces.keys())
-    write_output(output_dir, "unique_names_namespace", unique_names_namespace, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "unique_names_namespace", unique_names_namespace, output_dir_ns)
 
     content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
     unique_names_not_namespace = set(content_data_not_namespaces.keys())
-    write_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, output_dir_ns)
 
     # Existing analysis: group by levels
     namespace_part_levels = {}
@@ -175,36 +180,34 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
         for k, v in parts.items():
             namespace_part_levels.setdefault(k, set()).add(v)
             unique_namespace_parts.add(k)
-    
-    potential_non_namespace = unique_names_not_namespace.intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_non_namespace", potential_non_namespace, config.OUTPUT_DIR_TEST)
-    
-    potential_dangling = set(meta_dangling_links).intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_dangling", potential_dangling, config.OUTPUT_DIR_TEST)
-            
-    # Detecting conflicts with non-namespace pages
-    conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(namespace_parts, potential_non_namespace, potential_dangling)
-    write_output(output_dir, "conflicts_non_namespace", conflicts_non_namespace, config.OUTPUT_DIR_TEST)
-    write_output(output_dir, "conflicts_dangling", conflicts_dangling, config.OUTPUT_DIR_TEST)
-
-    # TODO Other
-    # Extract unique namespace roots
-    unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
-    write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, config.OUTPUT_DIR_TEST)
-
     namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
-    write_output(output_dir, "namespace_part_levels", namespace_part_levels, config.OUTPUT_DIR_TEST)
-    write_output(output_dir, "unique_namespace_parts", unique_namespace_parts, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
+    write_output(output_dir, "unique_namespace_parts", unique_namespace_parts, output_dir_ns)
 
-    # Extended analysis on namespace details
+    potential_non_namespace = unique_names_not_namespace.intersection(unique_namespace_parts)
+    write_output(output_dir, "potential_non_namespace", potential_non_namespace, output_dir_ns)
+
+    potential_dangling = set(meta_dangling_links).intersection(unique_namespace_parts)
+    write_output(output_dir, "potential_dangling", potential_dangling, output_dir_ns)
+
+    # Detecting conflicts with non-namespace pages
+    conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
+        namespace_parts, potential_non_namespace, potential_dangling
+    )
+    write_output(output_dir, "conflicts_non_namespace", conflicts_non_namespace, output_dir_ns)
+    write_output(output_dir, "conflicts_dangling", conflicts_dangling, output_dir_ns)
+
+    # 02 Parts that Appear at Multiple Depths
+    conflicts_parent_depth = detect_parent_depth_conflicts(namespace_parts)
+    write_output(output_dir, "conflicts_parent_depth", conflicts_parent_depth, output_dir_ns)
+
+    # 03 General Namespace Data
+    unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
+    write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
+
     namespace_details = analyze_namespace_details(namespace_parts)
-    write_output(output_dir, "namespace_details", namespace_details, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "namespace_details", namespace_details, output_dir_ns)
 
-    # Frequency of each namespace part and their levels
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
-    write_output(output_dir, "namespace_frequency", namespace_frequency, config.OUTPUT_DIR_TEST)
-    write_output(output_dir, "namespace_freq_list", namespace_freq_list, config.OUTPUT_DIR_TEST)
-
-    # Detecting parent depth conflicts
-    parent_depth_conflicts = detect_parent_depth_conflicts(namespace_parts)
-    write_output(output_dir, "parent_depth_conflicts", parent_depth_conflicts, config.OUTPUT_DIR_TEST)
+    write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
+    write_output(output_dir, "namespace_freq_list", namespace_freq_list, output_dir_ns)

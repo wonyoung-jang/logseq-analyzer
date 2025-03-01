@@ -44,6 +44,7 @@ NODE_TYPE_ORPHAN_TRUE = "orphan-true"
 OUTPUT_DIR_META = "__meta"
 OUTPUT_DIR_GRAPH = "graph"
 OUTPUT_DIR_SUMMARY = "summary"
+OUTPUT_DIR_NAMESPACE = "namespace"
 OUTPUT_DIR_TEST = "test"
 
 DATETIME_TOKEN_MAP = {
