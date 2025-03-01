@@ -62,8 +62,34 @@ def run_app():
 
     # Handle bak and recycle files
     handle_bak_recycle(args, bak, recycle)
-
+    
+    # TODO Namespaces analysis
+    process_namespace_data(output_dir, graph_content_data)
+    
     logging.info("Logseq Analyzer completed.")
+
+
+def process_namespace_data(output_dir: Path, graph_content_data: dict) -> None:
+    """
+    TODO Process namespace data for the Logseq Analyzer.
+    
+    Args:
+        output_dir (Path): The output directory.
+        graph_content_data (dict): The graph content data.
+    """
+    namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v["namespace_parts"]}
+    write_output(output_dir, "namespace_parts", namespace_parts, config.OUTPUT_DIR_TEST)
+
+    namespace_part_levels = {}
+    for name, parts in namespace_parts.items():
+        for k, v in parts.items():
+            if k not in namespace_part_levels:
+                namespace_part_levels[k] = {v}
+            else:
+                namespace_part_levels[k].add(v)
+    # Sort by size of sets
+    namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
+    write_output(output_dir, "namespace_part_levels", namespace_part_levels, config.OUTPUT_DIR_TEST)
 
 
 def setup_logseq_analyzer_args() -> argparse.Namespace:
