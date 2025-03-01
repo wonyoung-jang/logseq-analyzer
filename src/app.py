@@ -9,6 +9,7 @@ from src.reporting import write_output
 from src.filedata import process_single_file
 from src.contentdata import process_content_data
 from src.summarydata import process_summary_data, extract_summary_subset
+from src.namespace import process_namespace_data
 import src.config as config
 
 
@@ -62,34 +63,11 @@ def run_app():
 
     # Handle bak and recycle files
     handle_bak_recycle(args, bak, recycle)
-    
-    # TODO Namespaces analysis
+
+    # Namespaces analysis
     process_namespace_data(output_dir, graph_content_data)
-    
+
     logging.info("Logseq Analyzer completed.")
-
-
-def process_namespace_data(output_dir: Path, graph_content_data: dict) -> None:
-    """
-    TODO Process namespace data for the Logseq Analyzer.
-    
-    Args:
-        output_dir (Path): The output directory.
-        graph_content_data (dict): The graph content data.
-    """
-    namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v["namespace_parts"]}
-    write_output(output_dir, "namespace_parts", namespace_parts, config.OUTPUT_DIR_TEST)
-
-    namespace_part_levels = {}
-    for name, parts in namespace_parts.items():
-        for k, v in parts.items():
-            if k not in namespace_part_levels:
-                namespace_part_levels[k] = {v}
-            else:
-                namespace_part_levels[k].add(v)
-    # Sort by size of sets
-    namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
-    write_output(output_dir, "namespace_part_levels", namespace_part_levels, config.OUTPUT_DIR_TEST)
 
 
 def setup_logseq_analyzer_args() -> argparse.Namespace:
@@ -401,7 +379,7 @@ def handle_assets(
             for asset_mention in content_data["assets"]:
                 if graph_summary_data[non_asset]["is_backlinked"]:
                     continue
-                
+
                 if non_asset in asset_mention or non_asset_secondary in asset_mention:
                     graph_summary_data[non_asset]["is_backlinked"] = True
                     break

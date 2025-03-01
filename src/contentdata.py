@@ -80,16 +80,21 @@ def process_content_data(
 
         # Namespace
         if config.NAMESPACE_SEP in name:
-            namespace_parts = name.split(config.NAMESPACE_SEP)
-            namespace_level = len(namespace_parts)
-            namespace_root = namespace_parts[0]
-            namespace_parent = namespace_parts[-2] if namespace_level > 1 else namespace_root
-            namespace_parts = {part: level for level, part in enumerate(namespace_parts)}
+            namespace_parts_list = name.split(config.NAMESPACE_SEP)
+            namespace_level = len(namespace_parts_list) - 1
+            namespace_root = namespace_parts_list[0]
+            namespace_parent = namespace_parts_list[-2] if namespace_level > 1 else namespace_root
+            namespace_parts = {part: level for level, part in enumerate(namespace_parts_list)}
             content_data[name]["namespace_root"] = namespace_root
             content_data[name]["namespace_parent"] = namespace_parent
             content_data[name]["namespace_parts"] = namespace_parts
             content_data[name]["namespace_level"] = namespace_level
             unique_linked_references.update([namespace_root, name])
+
+            parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
+            if parent_joined in content_data:
+                parent_level = content_data[parent_joined]["namespace_level"]
+                content_data[parent_joined]["namespace_level"] = 0 if parent_level < 1 else parent_level
 
         unique_linked_references.update(draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
 
