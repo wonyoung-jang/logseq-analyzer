@@ -35,10 +35,13 @@ def write_output(
             for key, values in items.items():
                 f.write(f"Key: {key}\n")
                 if isinstance(values, (list, set)):
-                    f.write(f"Values ({len(values)}): {values}\n\n")
+                    f.write(f"Values ({len(values)}):\n")
+                    for index, value in enumerate(values):
+                        f.write(f"\t{index:02d}\t-\t{value}\n")
+                    f.write("\n")
                 elif isinstance(values, dict):
                     for k, v in values.items():
-                        f.write(f"\t{k:<40}: {v}\n")
+                        f.write(f"\t{k:<60}: {v}\n")
                     f.write("\n")
                 else:
                     f.write(f"Value: {values}\n\n")
@@ -46,4 +49,4 @@ def write_output(
             if not dont_sort:
                 items = sorted(items)
             for index, item in enumerate(items):
-                f.write(f"{index:05d}\t-\t{item}\n")
+                f.write(f"{index:02d}\t-\t{item}\n")

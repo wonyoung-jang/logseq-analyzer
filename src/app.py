@@ -65,7 +65,7 @@ def run_app():
     handle_bak_recycle(args, bak, recycle)
 
     # Namespaces analysis
-    process_namespace_data(output_dir, graph_content_data)
+    process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     logging.info("Logseq Analyzer completed.")
 
@@ -289,11 +289,11 @@ def write_initial_outputs(
     Args:
         args: Arguments containing write_graph flag
         output_dir (str): Base directory for output files
-        graph_meta_data (dict): Metadata about the graph structure
-        meta_graph_content (dict): Content of the graph metadata
-        graph_content_data (dict): Content data for graph nodes
         meta_alphanum_dictionary (dict): Dictionary of alphanumeric metadata
         meta_dangling_links (list): List of dangling links in the graph
+        meta_graph_content (dict): Content of the graph metadata
+        graph_meta_data (dict): Metadata about the graph structure
+        graph_content_data (dict): Content data for graph nodes
         graph_summary_data (dict): Summary statistics of the graph
 
     Returns:

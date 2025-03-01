@@ -143,6 +143,7 @@ def process_content_data(
             logging.info(f"Empty filename: {filename}")
     alphanum_dict = dict(sorted(alphanum_dict.items()))
     alphanum_filenames = dict(sorted(alphanum_filenames.items()))
+    
     dangling_links = set()
     for id, reference in alphanum_dict.items():
         if id not in alphanum_filenames:
