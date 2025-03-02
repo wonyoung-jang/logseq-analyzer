@@ -156,10 +156,8 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
         "journal_file_name_format": "yyyy_MM_dd",
-        "feature_enable_journals": "true",
-        "feature_enable_whiteboards": "true",
-        "pages_directory": "pages",
         "journals_directory": "journals",
+        "pages_directory": "pages",
         "whiteboards_directory": "whiteboards",
         "file_name_format": ":legacy",
     }
@@ -170,10 +168,6 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         config_edn_content = f.read()
         config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
         config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
-        config_edn_data["feature_enable_journals"] = config_patterns["feature_enable_journals_pattern"].search(config_edn_content).group(1)
-        config_edn_data["feature_enable_whiteboards"] = (
-            config_patterns["feature_enable_whiteboards_pattern"].search(config_edn_content).group(1)
-        )
         config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
@@ -187,6 +181,7 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
     config.PAGES = config_edn_data["pages_directory"]
     config.JOURNALS = config_edn_data["journals_directory"]
     config.WHITEBOARDS = config_edn_data["whiteboards_directory"]
+
     target_dirs = {
         config.ASSETS,
         config.DRAWS,
@@ -194,6 +189,7 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         config.PAGES,
         config.WHITEBOARDS,
     }
+
     return target_dirs
 
 
