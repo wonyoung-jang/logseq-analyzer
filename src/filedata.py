@@ -77,6 +77,7 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
         "time_existed": time_existed,
         "time_unmodified": time_unmodified,
         "size": stat.st_size,
+        "uri": file_path.as_uri(),
     }
     return metadata
 
