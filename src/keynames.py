@@ -15,14 +15,11 @@ def transform_date_format(cljs_format: str) -> str:
     Returns:
         str: Python-style date format.
     """
-    token_map = config.DATETIME_TOKEN_MAP
-    token_pattern = re.compile("|".join(re.escape(k) for k in sorted(token_map, key=len, reverse=True)))
-
     def replace_token(match):
         token = match.group(0)
-        return token_map.get(token, token)
+        return config.DATETIME_TOKEN_MAP.get(token, token)
 
-    py_format = token_pattern.sub(replace_token, cljs_format)
+    py_format = config.DATETIME_TOKEN_PATTERN.sub(replace_token, cljs_format)
     return py_format
 
 

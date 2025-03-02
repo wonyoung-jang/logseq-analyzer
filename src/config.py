@@ -60,6 +60,8 @@ DATETIME_TOKEN_MAP = {
     "EEE": "%a",
 }
 
+DATETIME_TOKEN_PATTERN = ""
+
 BUILT_IN_PROPERTIES = {
     "alias",
     "aliases",

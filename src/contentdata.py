@@ -20,7 +20,7 @@ def process_content_data(
         Tuple[Dict[str, Any], Dict[str, Set[str]]]:
             - content_data: Dictionary of content-based metrics for each file.
             - alphanum_dict: Dictionary for quick lookup of linked references.
-            - dangling_links: List of sorted dangling links (linked, but no file).
+            - dangling_links: List of dangling links (linked, but no file).
     """
     content_data = defaultdict(lambda: defaultdict(list))
     alphanum_dict = defaultdict(set)
@@ -145,18 +145,15 @@ def process_content_data(
             alphanum_filenames[first_char_id].add(filename)
         else:
             logging.info(f"Empty filename: {filename}")
-    alphanum_dict = dict(sorted(alphanum_dict.items()))
-    alphanum_filenames = dict(sorted(alphanum_filenames.items()))
 
     dangling_links = set()
-    for id, reference in alphanum_dict.items():
+    for id, references in alphanum_dict.items():
         if id not in alphanum_filenames:
-            dangling_links.update(reference)
+            dangling_links.update(references)
         else:
-            for ref in reference:
+            for ref in references:
                 if ref not in alphanum_filenames[id]:
                     dangling_links.add(ref)
-    dangling_links = sorted(dangling_links)
 
     return content_data, alphanum_dict, dangling_links
 

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern, Set
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content, is_path_exists
-from src.compile_regex import compile_re_content, compile_re_config
+from src.compile_regex import compile_re_content, compile_re_config, compile_re_date
 from src.setup import setup_logging, setup_output_directory
 from src.reporting import write_output
 from src.filedata import process_single_file
@@ -58,6 +58,9 @@ def run_app():
     # Generate summary subsets
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
 
+    # Generate global summary
+    generate_global_summary(output_dir, summary_data_subsets)
+    
     # Handle assets
     handle_assets(args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets)
 
@@ -231,6 +234,7 @@ def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern],
     Returns:
         Tuple[dict, dict]: The graph metadata and content data.
     """
+    config.DATETIME_TOKEN_PATTERN = compile_re_date(config.DATETIME_TOKEN_MAP)
     graph_meta_data = {}
     meta_graph_content = {}
     graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
@@ -344,6 +348,35 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None
         write_output(output_dir, output_name, list(summary_subset.keys()), config.OUTPUT_DIR_SUMMARY)
 
     return summary_data_subsets
+
+
+def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> None:
+    """
+    Generate a global summary for the Logseq Analyzer.
+
+    Args:
+        output_dir (Path): The output directory.
+        summary_data_subsets (dict): The summary data subsets.
+    """
+    global_summary = {}
+    for subset_name, subset in summary_data_subsets.items():
+        global_summary[subset_name] = len(subset)
+    
+    count_journals = global_summary["is_journal"] 
+    count_pages = global_summary["is_page"]
+    sum_journals_pages = count_journals + count_pages
+    markdown_files = global_summary["is_markdown"]
+    print(f"Journals and Pages: {sum_journals_pages}")
+    print(f"Markdown Files: {markdown_files}")
+    if sum_journals_pages != markdown_files:
+        print("Journals and Pages do not match Markdown Files")
+    else:
+        print("Journals and Pages match Markdown Files")
+    percent_journals = (count_journals / sum_journals_pages) * 100
+    percent_pages = (count_pages / sum_journals_pages) * 100
+    print(f"Journals: {count_journals} ({percent_journals:.2f}%)")
+    print(f"Pages: {count_pages} ({percent_pages:.2f}%)")
+    write_output(output_dir, "global_summary", global_summary, config.OUTPUT_DIR_SUMMARY)
 
 
 def handle_assets(
