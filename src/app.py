@@ -161,7 +161,7 @@ def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
         "pages_directory": "pages",
         "journals_directory": "journals",
         "whiteboards_directory": "whiteboards",
-        "file_name_format": "",
+        "file_name_format": ":legacy",
     }
 
     config_patterns = compile_re_config()

@@ -1,6 +1,6 @@
 from pathlib import Path
 from collections import Counter, defaultdict
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 from src.reporting import write_output
 import src.config as config
 
@@ -32,13 +32,10 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         dict: A dictionary containing various statistics about namespaces.
     """
     level_distribution = Counter()
-    namespace_lengths = []
-    prefix_counter = Counter()
+    root_counter = Counter()
     part_level_details = defaultdict(list)
 
     for entry, parts in namespace_parts.items():
-        namespace_lengths.append(len(parts))
-
         for part, level in parts.items():
             level_distribution[level] += 1
             part_level_details[part].append(level)
@@ -46,15 +43,15 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         sorted_parts = sorted(parts.items(), key=lambda x: x[1])
         if sorted_parts:
             prefix, _ = sorted_parts[0]
-            prefix_counter[prefix] += 1
+            root_counter[prefix] += 1
 
     max_depth = max(level_distribution) if level_distribution else 0
+    root_counter = {k: v for k, v in sorted(root_counter.items(), key=lambda item: item[1], reverse=True)}
 
     details = {
         "level_distribution": dict(level_distribution),
         "max_depth": max_depth,
-        "prefix_frequency": dict(prefix_counter),
-        "namespace_lengths": namespace_lengths,
+        "namespace_size": root_counter,
     }
 
     return details
@@ -159,6 +156,27 @@ def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) ->
     return output_conflicts, unique_conflicts
 
 
+def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) -> Tuple[Dict[str, List[int]], Set[str]]:
+    """
+    Analyze the levels of namespace parts across all entries.
+    
+    Args:
+        namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
+
+    Returns:
+        dict: Mapping of namespace parts to a sorted list of levels they appear at.
+        set: Set all of unique namespace parts.
+    """
+    namespace_part_levels = {}
+    unique_namespace_parts = set()
+    for name, parts in namespace_parts.items():
+        for k, v in parts.items():
+            namespace_part_levels.setdefault(k, set()).add(v)
+            unique_namespace_parts.add(k)
+    namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
+    return namespace_part_levels,unique_namespace_parts
+
+
 def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
@@ -191,13 +209,7 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     write_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, output_dir_ns)
 
     # Existing analysis: group by levels
-    namespace_part_levels = {}
-    unique_namespace_parts = set()
-    for name, parts in namespace_parts.items():
-        for k, v in parts.items():
-            namespace_part_levels.setdefault(k, set()).add(v)
-            unique_namespace_parts.add(k)
-    namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
+    namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
     write_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
     write_output(output_dir, "unique_namespace_parts", unique_namespace_parts, output_dir_ns)
 
@@ -222,9 +234,9 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     # 03 General Namespace Data
     unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
     write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
-
+    
     namespace_details = analyze_namespace_details(namespace_parts)
-    write_output(output_dir, "namespace_details", namespace_details, output_dir_ns)
+    write_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
     write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
