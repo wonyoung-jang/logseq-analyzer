@@ -345,7 +345,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None
     for output_name, criteria in summary_categories.items():
         summary_subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_SUMMARY)
+        write_output(output_dir, output_name, list(summary_subset.keys()), config.OUTPUT_DIR_SUMMARY)
 
     return summary_data_subsets
 
@@ -389,13 +389,13 @@ def handle_assets(
     write_output(
         output_dir,
         "is_asset_backlinked",
-        summary_is_asset_backlinked,
+        list(summary_is_asset_backlinked.keys()),
         config.OUTPUT_DIR_SUMMARY,
     )
     write_output(
         output_dir,
         "is_asset_not_backlinked",
-        summary_is_asset_not_backlinked,
+        list(summary_is_asset_not_backlinked.keys()),
         config.OUTPUT_DIR_SUMMARY,
     )
 
@@ -414,9 +414,8 @@ def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> No
         recycle (Path): The recycle directory.
     """
     to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not to_delete_dir.exists():
+    if not is_path_exists(to_delete_dir):
         to_delete_dir.mkdir()
-        logging.info(f"Created directory: {to_delete_dir}")
 
     if args.move_bak:
         move_all_folder_content(bak, to_delete_dir)

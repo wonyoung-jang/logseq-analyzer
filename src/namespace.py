@@ -144,8 +144,19 @@ def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) ->
     output_conflicts = {}
     for part, details in conflicts.items():
         for level in details["levels"]:
-            output_conflicts[f"{part} ({level})"] = [i["entry"] for i in details["entries"] if i["level"] == level]
-    return output_conflicts
+            output_conflicts[f"{part} {level}"] = [i["entry"] for i in details["entries"] if i["level"] == level]
+    
+    unique_conflicts = {}
+    for part, details in output_conflicts.items():
+        level = int(part.split(" ")[-1]) + 1
+        unique_pages = set()
+        for page in details:
+            parts = page.split(config.NAMESPACE_SEP)
+            up_to_level = parts[:level]
+            unique_pages.add(config.NAMESPACE_SEP.join(up_to_level))
+        unique_conflicts[part] = unique_pages
+
+    return output_conflicts, unique_conflicts
 
 
 def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
@@ -156,6 +167,12 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
         output_dir (Path): The output directory.
         graph_content_data (dict): The graph content data.
         meta_dangling_links (list): The list of dangling links.
+        
+    Main outputs:
+        conflicts_non_namespace
+        conflicts_dangling
+        conflicts_parent_depth
+        conflicts_parents_unique
     """
     output_dir_ns = config.OUTPUT_DIR_NAMESPACE
 
@@ -198,8 +215,9 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     write_output(output_dir, "conflicts_dangling", conflicts_dangling, output_dir_ns)
 
     # 02 Parts that Appear at Multiple Depths
-    conflicts_parent_depth = detect_parent_depth_conflicts(namespace_parts)
+    conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
     write_output(output_dir, "conflicts_parent_depth", conflicts_parent_depth, output_dir_ns)
+    write_output(output_dir, "conflicts_parents_unique", conflicts_parents_unique, output_dir_ns)
 
     # 03 General Namespace Data
     unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))

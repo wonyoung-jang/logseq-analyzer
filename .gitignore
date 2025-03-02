@@ -10,3 +10,4 @@ profile_output*
 *.prof
 *.txt
 *.dat
+*.code-workspace
