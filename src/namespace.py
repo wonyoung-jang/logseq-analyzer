@@ -78,8 +78,6 @@ def analyze_namespace_frequency(namespace_parts: Dict[str, Dict[str, int]]) -> D
             if combine_name not in frequency_list:
                 frequency_list[combine_name] = ""
             frequency_list[combine_name] += f"\n\t{name}"
-
-    frequency_list = {k: v for k, v in sorted(frequency_list.items())}
     return frequency, frequency_list
 
 

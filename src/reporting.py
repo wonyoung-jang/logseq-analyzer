@@ -29,7 +29,7 @@ def write_output(
         out_path = output_dir / filename
 
     with out_path.open("w", encoding="utf-8") as f:
-        f.write(f"{filename} | Items: {count} | Type: {type(items)}\n\n")
+        f.write(f"{filename} | Items: {count}\n\n")
 
         if isinstance(items, dict):
             for key, values in items.items():
