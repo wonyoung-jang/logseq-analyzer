@@ -40,6 +40,7 @@ def process_content_data(
         content_data[name]["namespace_parent"] = ""
         content_data[name]["namespace_parts"] = {}
         content_data[name]["namespace_level"] = -1
+        content_data[name]["namespace_query"] = []
         content_data[name]["external_links"] = []
         content_data[name]["external_links_internet"] = []
         content_data[name]["external_links_alias"] = []
@@ -59,6 +60,7 @@ def process_content_data(
         draws = [draw.lower() for draw in patterns["draw"].findall(text)]
         external_links = [link.lower() for link in patterns["external_link"].findall(text)]
         embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
+        namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]    
 
         page_properties, block_properties = extract_page_block_properties(text, patterns)
 
@@ -95,6 +97,8 @@ def process_content_data(
             if parent_joined in content_data:
                 parent_level = content_data[parent_joined]["namespace_level"]
                 content_data[parent_joined]["namespace_level"] = 0 if parent_level < 1 else parent_level
+        
+        content_data[name]["namespace_query"] = namespace_queries
 
         unique_linked_references.update(draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
 

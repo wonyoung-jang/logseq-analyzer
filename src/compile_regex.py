@@ -244,7 +244,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.I | re.X,
         ),
-        "namespace_queries": re.compile(
+        "namespace_query": re.compile(
             r"""
             \{\{namespace\      # "{{namespace" followed by space
             .*?                 # Any characters (non-greedy)
