@@ -1,10 +1,10 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Tuple, Dict, List, Pattern, Set
+from typing import Tuple, Dict, List, Pattern
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content, is_path_exists
-from src.compile_regex import compile_re_content, compile_re_config, compile_re_date
-from src.setup import setup_logging, setup_output_directory
+from src.compile_regex import compile_re_content, compile_re_date
+from src.setup import setup_logseq_analyzer_args, setup_logging_and_output, get_logseq_config_edn, get_logseq_bak_recycle
 from src.reporting import write_output
 from src.filedata import process_single_file
 from src.contentdata import process_content_data
@@ -24,10 +24,10 @@ def run_app():
     logseq_graph_folder, output_dir = setup_logging_and_output(args)
 
     # Extract Logseq configuration and directories
-    target_dirs = extract_logseq_config_edn(logseq_graph_folder)
+    target_dirs = get_logseq_config_edn(logseq_graph_folder)
 
     # Extract bak and recycle folders
-    recycle, bak = extract_logseq_bak_recycle(logseq_graph_folder)
+    recycle, bak = get_logseq_bak_recycle(logseq_graph_folder)
 
     # Compile regex patterns
     patterns = compile_re_content()
@@ -60,7 +60,7 @@ def run_app():
 
     # Generate global summary
     generate_global_summary(output_dir, summary_data_subsets)
-    
+
     # Handle assets
     handle_assets(args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets)
 
@@ -71,155 +71,6 @@ def run_app():
     process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     logging.info("Logseq Analyzer completed.")
-
-
-def setup_logseq_analyzer_args() -> argparse.Namespace:
-    """
-    Setup the command line arguments for the Logseq Analyzer.
-
-    Returns:
-        argparse.Namespace: The command line arguments.
-    """
-    parser = argparse.ArgumentParser(description="Logseq Analyzer")
-
-    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
-
-    parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
-
-    parser.add_argument("-l", "--log-file", action="store", help="path to log file")
-
-    parser.add_argument(
-        "-wg",
-        "--write-graph",
-        action="store_true",
-        help="write all graph content to output folder (warning: may result in large file)",
-    )
-
-    parser.add_argument(
-        "-ma",
-        "--move-unlinked-assets",
-        action="store_true",
-        help='move unlinked assets to "unlinked_assets" folder',
-    )
-
-    parser.add_argument(
-        "-mb",
-        "--move-bak",
-        action="store_true",
-        help="move bak files to bak folder in output directory",
-    )
-
-    parser.add_argument(
-        "-mr",
-        "--move-recycle",
-        action="store_true",
-        help="move recycle files to recycle folder in output directory",
-    )
-
-    return parser.parse_args()
-
-
-def setup_logging_and_output(args) -> Tuple[Path, Path]:
-    """
-    Configure logging and output directory for the Logseq Analyzer.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-
-    Returns:
-        Tuple[Path, Path]: The Logseq graph folder and output directory.
-    """
-    log_file = Path(args.log_file) if args.log_file else Path(config.DEFAULT_LOG_FILE)
-    setup_logging(log_file)
-    logging.info("Starting Logseq Analyzer.")
-
-    logseq_graph_folder = Path(args.graph_folder)
-    output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
-    setup_output_directory(output_dir)
-    return logseq_graph_folder, output_dir
-
-
-def extract_logseq_config_edn(folder_path: Path) -> Set[str]:
-    """
-    Extract EDN configuration data from a Logseq configuration file.
-
-    Args:
-        folder_path (Path): The path to the Logseq graph folder.
-
-    Returns:
-        Set[str]: A set of target directories.
-    """
-    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    config_edn_file = logseq_folder / config.DEFAULT_CONFIG_FILE
-    folders = [folder_path, logseq_folder, config_edn_file]
-    for folder in folders:
-        if not is_path_exists(folder):
-            return {}
-
-    config_edn_data = {
-        "journal_page_title_format": "MMM do, yyyy",
-        "journal_file_name_format": "yyyy_MM_dd",
-        "journals_directory": "journals",
-        "pages_directory": "pages",
-        "whiteboards_directory": "whiteboards",
-        "file_name_format": ":legacy",
-    }
-
-    config_patterns = compile_re_config()
-
-    with config_edn_file.open("r", encoding="utf-8") as f:
-        config_edn_content = f.read()
-        config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
-        config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
-
-    config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
-    config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
-    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
-    if config.NAMESPACE_FORMAT == ":triple-lowbar":
-        config.NAMESPACE_FILE_SEP = "___"
-    config.PAGES = config_edn_data["pages_directory"]
-    config.JOURNALS = config_edn_data["journals_directory"]
-    config.WHITEBOARDS = config_edn_data["whiteboards_directory"]
-
-    target_dirs = {
-        config.ASSETS,
-        config.DRAWS,
-        config.JOURNALS,
-        config.PAGES,
-        config.WHITEBOARDS,
-    }
-
-    return target_dirs
-
-
-def extract_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
-    """
-    Extract bak and recycle data from a Logseq.
-
-    Args:
-        folder_path (Path): The path to the Logseq graph folder.
-
-    Returns:
-        Tuple[Path, Path]: A tuple containing the bak and recycle folders.
-    """
-    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    folders = [folder_path, logseq_folder]
-    for folder in folders:
-        if not is_path_exists(folder):
-            return ()
-
-    recycling_folder = logseq_folder / config.DEFAULT_RECYCLE_DIR
-    bak_folder = logseq_folder / config.DEFAULT_BAK_DIR
-
-    for folder in [recycling_folder, bak_folder]:
-        if not is_path_exists(folder):
-            return ()
-
-    return recycling_folder, bak_folder
 
 
 def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern], target_dirs: List[str]) -> Tuple[dict, dict]:
@@ -361,8 +212,8 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
     global_summary = {}
     for subset_name, subset in summary_data_subsets.items():
         global_summary[subset_name] = len(subset)
-    
-    count_journals = global_summary["is_journal"] 
+
+    count_journals = global_summary["is_journal"]
     count_pages = global_summary["is_page"]
     sum_journals_pages = count_journals + count_pages
     markdown_files = global_summary["is_markdown"]

@@ -140,7 +140,7 @@ def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) ->
     for part, details in conflicts.items():
         for level in details["levels"]:
             output_conflicts[f"{part} {level}"] = [i["entry"] for i in details["entries"] if i["level"] == level]
-    
+
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1]) + 1
@@ -157,7 +157,7 @@ def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) ->
 def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) -> Tuple[Dict[str, List[int]], Set[str]]:
     """
     Analyze the levels of namespace parts across all entries.
-    
+
     Args:
         namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
 
@@ -172,7 +172,7 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
             namespace_part_levels.setdefault(k, set()).add(v)
             unique_namespace_parts.add(k)
     namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
-    return namespace_part_levels,unique_namespace_parts
+    return namespace_part_levels, unique_namespace_parts
 
 
 def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
@@ -183,7 +183,7 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
         output_dir (Path): The output directory.
         graph_content_data (dict): The graph content data.
         meta_dangling_links (list): The list of dangling links.
-        
+
     Main outputs:
         conflicts_non_namespace
         conflicts_dangling
@@ -232,7 +232,7 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     # 03 General Namespace Data
     unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
     write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
-    
+
     namespace_details = analyze_namespace_details(namespace_parts)
     write_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
 

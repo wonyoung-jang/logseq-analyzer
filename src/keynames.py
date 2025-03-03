@@ -15,6 +15,7 @@ def transform_date_format(cljs_format: str) -> str:
     Returns:
         str: Python-style date format.
     """
+
     def replace_token(match):
         token = match.group(0)
         return config.DATETIME_TOKEN_MAP.get(token, token)
