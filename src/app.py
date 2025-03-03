@@ -24,7 +24,7 @@ def run_app():
     logseq_graph_folder, output_dir = setup_logging_and_output(args)
 
     # Extract Logseq configuration and directories
-    target_dirs = get_logseq_config_edn(logseq_graph_folder)
+    target_dirs = get_logseq_config_edn(logseq_graph_folder, args)
 
     # Extract bak and recycle folders
     recycle, bak = get_logseq_bak_recycle(logseq_graph_folder)

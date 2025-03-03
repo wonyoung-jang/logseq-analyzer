@@ -6,6 +6,9 @@
 # - src/contentdata.py
 # - src/summarydata.py
 
+from pickle import GLOBAL
+
+
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_TO_DELETE_DIR = "to_delete"
 DEFAULT_LOG_FILE = "___logseq_analyzer___.log"
@@ -13,6 +16,7 @@ DEFAULT_LOGSEQ_DIR = "logseq"  # static
 DEFAULT_CONFIG_FILE = "config.edn"  # static
 DEFAULT_BAK_DIR = "bak"  # static
 DEFAULT_RECYCLE_DIR = ".recycle"  # static
+GLOBAL_CONFIG_FILE = ""  # static
 
 NAMESPACE_FORMAT = ":legacy"  # or ":triple-lowbar"
 NAMESPACE_SEP = "/"  # static

@@ -89,6 +89,12 @@ def setup_logseq_analyzer_args() -> argparse.Namespace:
         help="move recycle files to recycle folder in output directory",
     )
 
+    parser.add_argument(
+        "--global-config",
+        action="store",
+        help="path to global configuration file",
+    )
+
     return parser.parse_args()
 
 
@@ -112,7 +118,7 @@ def setup_logging_and_output(args) -> Tuple[Path, Path]:
     return logseq_graph_folder, output_dir
 
 
-def get_logseq_config_edn(folder_path: Path) -> Set[str]:
+def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
     """
     Extract EDN configuration data from a Logseq configuration file.
 
@@ -122,12 +128,20 @@ def get_logseq_config_edn(folder_path: Path) -> Set[str]:
     Returns:
         Set[str]: A set of target directories.
     """
+    global_config_edn_file = None
+    if args.global_config:
+        global_config_edn_file = config.GLOBAL_CONFIG_FILE = Path(args.global_config)
+        if not is_path_exists(global_config_edn_file):
+            return {}
+
     logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
     config_edn_file = logseq_folder / config.DEFAULT_CONFIG_FILE
     folders = [folder_path, logseq_folder, config_edn_file]
     for folder in folders:
         if not is_path_exists(folder):
             return {}
+
+    config_patterns = compile_re_config()
 
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
@@ -138,8 +152,6 @@ def get_logseq_config_edn(folder_path: Path) -> Set[str]:
         "file_name_format": ":legacy",
     }
 
-    config_patterns = compile_re_config()
-
     with config_edn_file.open("r", encoding="utf-8") as f:
         config_edn_content = f.read()
         config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
@@ -148,6 +160,25 @@ def get_logseq_config_edn(folder_path: Path) -> Set[str]:
         config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
         config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
+
+    # Check global config for overwriting configs
+    if global_config_edn_file:
+        with global_config_edn_file.open("r", encoding="utf-8") as f:
+            content = f.read()
+            keys_patterns = {
+                "journal_page_title_format": config_patterns["journal_page_title_pattern"],
+                "journal_file_name_format": config_patterns["journal_file_name_pattern"],
+                "pages_directory": config_patterns["pages_directory_pattern"],
+                "journals_directory": config_patterns["journals_directory_pattern"],
+                "whiteboards_directory": config_patterns["whiteboards_directory_pattern"],
+                "file_name_format": config_patterns["file_name_format_pattern"],
+            }
+
+            for key, pattern in keys_patterns.items():
+                match = pattern.search(content)
+                value = match.group(1) if match else ""
+                if value:
+                    config_edn_data[key] = value
 
     config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
     config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
