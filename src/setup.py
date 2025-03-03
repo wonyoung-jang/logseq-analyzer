@@ -185,16 +185,16 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
     config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
     if config.NAMESPACE_FORMAT == ":triple-lowbar":
         config.NAMESPACE_FILE_SEP = "___"
-    config.PAGES = config_edn_data["pages_directory"]
-    config.JOURNALS = config_edn_data["journals_directory"]
-    config.WHITEBOARDS = config_edn_data["whiteboards_directory"]
+    config.DIR_PAGES = config_edn_data["pages_directory"]
+    config.DIR_JOURNALS = config_edn_data["journals_directory"]
+    config.DIR_WHITEBOARDS = config_edn_data["whiteboards_directory"]
 
     target_dirs = {
-        config.ASSETS,
-        config.DRAWS,
-        config.JOURNALS,
-        config.PAGES,
-        config.WHITEBOARDS,
+        config.DIR_ASSETS,
+        config.DIR_DRAWS,
+        config.DIR_JOURNALS,
+        config.DIR_PAGES,
+        config.DIR_WHITEBOARDS,
     }
 
     return target_dirs

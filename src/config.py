@@ -1,35 +1,9 @@
 # import src.config as config
-# Used in
-# - src/app.py
-# - src/helpers.py
-# - src/keynames.py
-# - src/contentdata.py
-# - src/summarydata.py
 
-from pickle import GLOBAL
-
-
+# Logseq Analyzer configurations
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_TO_DELETE_DIR = "to_delete"
 DEFAULT_LOG_FILE = "___logseq_analyzer___.log"
-DEFAULT_LOGSEQ_DIR = "logseq"  # static
-DEFAULT_CONFIG_FILE = "config.edn"  # static
-DEFAULT_BAK_DIR = "bak"  # static
-DEFAULT_RECYCLE_DIR = ".recycle"  # static
-GLOBAL_CONFIG_FILE = ""  # static
-
-NAMESPACE_FORMAT = ":legacy"  # or ":triple-lowbar"
-NAMESPACE_SEP = "/"  # static
-NAMESPACE_FILE_SEP = "%2F"  # or "___"
-
-JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
-JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
-
-ASSETS = "assets"  # static
-DRAWS = "draws"  # static
-JOURNALS = "journals"
-PAGES = "pages"
-WHITEBOARDS = "whiteboards"
 
 FILE_TYPE_ASSET = "asset"
 FILE_TYPE_DRAW = "draw"
@@ -51,6 +25,29 @@ OUTPUT_DIR_SUMMARY = "summary"
 OUTPUT_DIR_NAMESPACE = "namespace"
 OUTPUT_DIR_TEST = "test"
 
+# Core Logseq folder structure
+DEFAULT_LOGSEQ_DIR = "logseq"  # static
+DEFAULT_BAK_DIR = "bak"  # static
+DEFAULT_RECYCLE_DIR = ".recycle"  # static
+DEFAULT_CONFIG_FILE = "config.edn"  # static
+GLOBAL_CONFIG_FILE = ""
+
+# Logseq's config.edn configurations
+JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
+JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
+
+DIR_ASSETS = "assets"  # static
+DIR_DRAWS = "draws"  # static
+DIR_JOURNALS = "journals"
+DIR_PAGES = "pages"
+DIR_WHITEBOARDS = "whiteboards"
+
+NAMESPACE_FORMAT = ":legacy"  # or ":triple-lowbar"
+NAMESPACE_SEP = "/"  # static
+NAMESPACE_FILE_SEP = "%2F"  # or "___"
+
+# Journal format data
+DATETIME_TOKEN_PATTERN = ""
 DATETIME_TOKEN_MAP = {
     "yyyy": "%Y",
     "yy": "%y",
@@ -64,8 +61,7 @@ DATETIME_TOKEN_MAP = {
     "EEE": "%a",
 }
 
-DATETIME_TOKEN_PATTERN = ""
-
+# Logseq built-in and hidden default properties
 BUILT_IN_PROPERTIES = {
     "alias",
     "aliases",

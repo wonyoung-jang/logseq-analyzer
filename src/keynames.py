@@ -65,6 +65,6 @@ def process_key_name(key: str, parent: str) -> str:
     if key.endswith(config.NAMESPACE_FILE_SEP):
         key = key.rstrip(config.NAMESPACE_FILE_SEP)
 
-    if parent == config.JOURNALS:
+    if parent == config.DIR_JOURNALS:
         return process_journal_key(key)
     return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()

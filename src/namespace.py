@@ -190,8 +190,9 @@ def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, A
         if data.get("namespace_query"):
             queries = data["namespace_query"]
             namespace_queries[entry] = queries
-            
+
     return namespace_queries
+
 
 def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
     """
@@ -257,7 +258,7 @@ def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any],
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
     write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
     write_output(output_dir, "namespace_freq_list", namespace_freq_list, output_dir_ns)
-    
+
     # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_content_data)
     write_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)

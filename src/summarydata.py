@@ -23,11 +23,11 @@ def process_summary_data(
     """
     graph_summary_data = defaultdict(lambda: defaultdict(bool))
 
-    assets_dir = config.ASSETS
-    draws_dir = config.DRAWS
-    journals_dir = config.JOURNALS
-    pages_dir = config.PAGES
-    whiteboards_dir = config.WHITEBOARDS
+    assets_dir = config.DIR_ASSETS
+    draws_dir = config.DIR_DRAWS
+    journals_dir = config.DIR_JOURNALS
+    pages_dir = config.DIR_PAGES
+    whiteboards_dir = config.DIR_WHITEBOARDS
 
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
