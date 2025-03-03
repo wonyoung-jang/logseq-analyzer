@@ -92,11 +92,20 @@ def process_content_data(
             content_data[name]["namespace_parts"] = namespace_parts
             content_data[name]["namespace_level"] = namespace_level
             unique_linked_references.update([namespace_root, name])
-
-            parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
-            if parent_joined in content_data:
-                parent_level = content_data[parent_joined]["namespace_level"]
-                content_data[parent_joined]["namespace_level"] = 0 if parent_level < 1 else parent_level
+            
+            if namespace_level >= 1:
+                if namespace_root in content_data:
+                    root_level = content_data[namespace_root]["namespace_level"]
+                    direct_level = 0
+                    if direct_level > root_level:
+                        content_data[namespace_root]["namespace_level"] = direct_level
+                        
+                parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
+                if parent_joined in content_data:
+                    parent_level = content_data[parent_joined]["namespace_level"]
+                    direct_level = namespace_level - 1
+                    if direct_level > parent_level:
+                        content_data[parent_joined]["namespace_level"] = direct_level
 
         content_data[name]["namespace_query"] = namespace_queries
 
