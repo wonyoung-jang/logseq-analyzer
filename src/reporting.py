@@ -1,9 +1,17 @@
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 
-def write_recursive(f, data, indent_level=0):
+def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
+    """
+    Recursive function to write nested data structures to a file.
+
+    Args:
+        f (TextIO): The file object to write to.
+        data (Any): The data to write.
+        indent_level (int, optional): The current indentation level. Defaults to 0.
+    """
     indent = "\t" * indent_level
     if indent_level == 0 and isinstance(data, dict):
         for key, values in data.items():
