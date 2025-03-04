@@ -137,7 +137,13 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for output_name, criteria in summary_categories.items():
         summary_subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, list(summary_subset.keys()), config.OUTPUT_DIR_SUMMARY)
+        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_SUMMARY)
+
+    file_extensions = {}
+    for name, meta_data in graph_summary_data.items():
+        file_extension = meta_data["file_extension"]
+        file_extensions[file_extension] = file_extensions.get(file_extension, 0) + 1
+    write_output(output_dir, "file_extensions", file_extensions, config.OUTPUT_DIR_SUMMARY)
 
     return summary_data_subsets
 

@@ -25,6 +25,7 @@ def process_content_data(
     content_data = defaultdict(lambda: defaultdict(list))
     alphanum_dict = defaultdict(set)
     unique_linked_references = set()
+    unique_aliases = set()
 
     for name, text in content.items():
         content_data[name]["aliases"] = []
@@ -115,7 +116,8 @@ def process_content_data(
 
         content_data[name]["namespace_query"] = namespace_queries
 
-        unique_linked_references.update(draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
+        unique_linked_references.update(aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
+        unique_aliases.update(aliases)
 
         # External links
         if external_links:
@@ -169,6 +171,7 @@ def process_content_data(
             for ref in references:
                 if ref not in alphanum_filenames[id]:
                     dangling_links.add(ref)
+    dangling_links.update(unique_aliases)
 
     return content_data, alphanum_dict, dangling_links
 
