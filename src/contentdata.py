@@ -67,8 +67,10 @@ def process_content_data(
         properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
         aliases = properties_values.get("alias", [])
+        processed_aliases = []
         if aliases:
-            content_data[name]["aliases"] = process_aliases(aliases)
+            processed_aliases = process_aliases(aliases)
+            content_data[name]["aliases"] = processed_aliases
 
         content_data[name]["page_references"] = page_references
         content_data[name]["tags"] = tags
@@ -116,9 +118,9 @@ def process_content_data(
 
         content_data[name]["namespace_query"] = namespace_queries
 
-        unique_linked_references.update(aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
-        unique_aliases.update(aliases)
-
+        unique_linked_references.update(processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
+        unique_aliases.update(processed_aliases)
+        
         # External links
         if external_links:
             content_data[name]["external_links"] = external_links
@@ -171,7 +173,7 @@ def process_content_data(
             for ref in references:
                 if ref not in alphanum_filenames[id]:
                     dangling_links.add(ref)
-    dangling_links.update(unique_aliases)
+    dangling_links -= unique_aliases
 
     return content_data, alphanum_dict, dangling_links
 

@@ -143,6 +143,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for name, meta_data in graph_summary_data.items():
         file_extension = meta_data["file_extension"]
         file_extensions[file_extension] = file_extensions.get(file_extension, 0) + 1
+    summary_data_subsets["file_extensions"] = file_extensions
     write_output(output_dir, "file_extensions", file_extensions, config.OUTPUT_DIR_SUMMARY)
 
     return summary_data_subsets
