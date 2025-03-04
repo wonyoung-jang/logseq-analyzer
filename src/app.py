@@ -1,9 +1,9 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Tuple, Dict, List, Pattern
+from typing import Tuple, Dict, List, Pattern, Any
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content, is_path_exists
-from src.compile_regex import compile_re_content, compile_re_date
+from src.compile_regex import compile_re_content
 from src.setup import setup_logseq_analyzer_args, setup_logging_and_output, get_logseq_config_edn, get_logseq_bak_recycle
 from src.reporting import write_output
 from src.filedata import process_single_file
@@ -85,7 +85,6 @@ def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern],
     Returns:
         Tuple[dict, dict]: The graph metadata and content data.
     """
-    config.DATETIME_TOKEN_PATTERN = compile_re_date(config.DATETIME_TOKEN_MAP)
     graph_meta_data = {}
     meta_graph_content = {}
     graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
@@ -99,7 +98,9 @@ def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern],
     return graph_meta_data, meta_graph_content
 
 
-def core_data_analysis(patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict) -> Tuple[dict, dict, dict, dict]:
+def core_data_analysis(
+    patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict
+) -> Tuple[Dict[str, set], List[str], dict, dict]:
     """
     Process the core data analysis for the Logseq Analyzer.
 
@@ -157,22 +158,26 @@ def write_initial_outputs(
     """
     write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
     write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
-    write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
 
+    write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
 
-def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> None:
+
+def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict:
     """
     Generate summary subsets for the Logseq Analyzer.
 
     Args:
         output_dir (Path): The output directory.
         graph_summary_data (dict): The graph summary data.
+
+    Returns:
+        dict: The summary data subsets.
     """
-    summary_categories = {
+    summary_categories: Dict[str, Dict[str, Any]] = {
         "has_content": {"has_content": True},
         "has_backlinks": {"has_backlinks": True},
         "has_external_links": {"has_external_links": True},
@@ -209,24 +214,11 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
         output_dir (Path): The output directory.
         summary_data_subsets (dict): The summary data subsets.
     """
-    global_summary = {}
+    global_summary: Dict[str, Dict[str, int]] = {}
     for subset_name, subset in summary_data_subsets.items():
-        global_summary[subset_name] = len(subset)
+        global_summary[subset_name] = {}
+        global_summary[subset_name]["results"] = len(subset)
 
-    count_journals = global_summary["is_journal"]
-    count_pages = global_summary["is_page"]
-    sum_journals_pages = count_journals + count_pages
-    markdown_files = global_summary["is_markdown"]
-    print(f"Journals and Pages: {sum_journals_pages}")
-    print(f"Markdown Files: {markdown_files}")
-    if sum_journals_pages != markdown_files:
-        print("Journals and Pages do not match Markdown Files")
-    else:
-        print("Journals and Pages match Markdown Files")
-    percent_journals = (count_journals / sum_journals_pages) * 100
-    percent_pages = (count_pages / sum_journals_pages) * 100
-    print(f"Journals: {count_journals} ({percent_journals:.2f}%)")
-    print(f"Pages: {count_pages} ({percent_pages:.2f}%)")
     write_output(output_dir, "global_summary", global_summary, config.OUTPUT_DIR_SUMMARY)
 
 
@@ -266,6 +258,7 @@ def handle_assets(
 
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=True)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=False)
+
     write_output(
         output_dir,
         "is_asset_backlinked",

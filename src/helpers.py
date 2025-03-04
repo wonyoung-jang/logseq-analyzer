@@ -2,19 +2,19 @@ import logging
 import shutil
 import src.config as config
 from pathlib import Path
-from typing import Optional, Dict, Any, Generator, Set
+from typing import Optional, Dict, Any, Generator, List
 
 
-def iter_files(directory: Path, target_dirs: Optional[Set[str]] = None) -> Generator[Path, None, None]:
+def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Generator[Path, None, None]:
     """
     Recursively iterate over files in the given directory.
 
     If target_dirs is provided, only yield files that reside within directories
-    whose names are in the target_dirs set.
+    whose names are in the target_dirs list.
 
     Args:
         directory (Path): The root directory to search.
-        target_dirs (Optional[Set[str]]): Set of allowed parent directory names.
+        target_dirs (Optional[List[str]]): List of allowed parent directory names.
 
     Yields:
         Path: File paths that match the criteria.

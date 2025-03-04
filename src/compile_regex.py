@@ -365,7 +365,3 @@ def compile_re_config() -> Dict[str, Pattern]:
         ),
     }
     return patterns
-
-
-def compile_re_date(token_map):
-    return re.compile("|".join(re.escape(k) for k in sorted(token_map, key=len, reverse=True)))

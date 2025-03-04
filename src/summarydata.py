@@ -21,7 +21,7 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    graph_summary_data = defaultdict(lambda: defaultdict(bool))
+    graph_summary_data: Dict[str, Dict[str, Any]] = defaultdict(lambda: defaultdict(bool))
 
     assets_dir = config.DIR_ASSETS
     draws_dir = config.DIR_DRAWS
@@ -139,7 +139,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
             return config.NODE_TYPE_LEAF
 
 
-def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria: Any) -> Dict[str, Any]:
+def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> Dict[str, Any]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
 

@@ -1,3 +1,5 @@
+import re
+
 # import src.config as config
 
 # Logseq Analyzer configurations
@@ -47,7 +49,6 @@ NAMESPACE_SEP = "/"  # static
 NAMESPACE_FILE_SEP = "%2F"  # or "___"
 
 # Journal format data
-DATETIME_TOKEN_PATTERN = ""
 DATETIME_TOKEN_MAP = {
     "yyyy": "%Y",
     "yy": "%y",
@@ -60,6 +61,7 @@ DATETIME_TOKEN_MAP = {
     "EEEE": "%A",
     "EEE": "%a",
 }
+DATETIME_TOKEN_PATTERN = re.compile("|".join(re.escape(k) for k in sorted(DATETIME_TOKEN_MAP, key=len, reverse=True)))
 
 # Logseq built-in and hidden default properties
 BUILT_IN_PROPERTIES = {
