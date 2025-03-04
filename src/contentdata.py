@@ -30,6 +30,7 @@ def process_content_data(
         content_data[name]["page_references"] = []
         content_data[name]["tags"] = []
         content_data[name]["tagged_backlinks"] = []
+        content_data[name]["properties_values"] = []
         content_data[name]["properties_page_builtin"] = []
         content_data[name]["properties_page_user"] = []
         content_data[name]["properties_block_builtin"] = []
@@ -61,7 +62,7 @@ def process_content_data(
         external_links = [link.lower() for link in patterns["external_link"].findall(text)]
         embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
         namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
-
+        properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
 
         content_data[name]["page_references"] = page_references
@@ -69,6 +70,7 @@ def process_content_data(
         content_data[name]["tagged_backlinks"] = tagged_backlinks
         content_data[name]["assets"] = assets
         content_data[name]["draws"] = draws
+        content_data[name]["properties_values"] = properties_values
 
         (
             content_data[name]["properties_page_builtin"],

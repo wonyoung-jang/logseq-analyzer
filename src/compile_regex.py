@@ -56,6 +56,16 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.M | re.I | re.X,
         ),
+        "property_values": re.compile(
+            r"""
+            ^               # Start of line
+            (?!\s*-\s)      # Negative lookahead: not a bullet
+            ([A-Za-z0-9_-]+)# Capture group 1: Alphanumeric, underscore, or hyphen
+            ::              # Literal ::
+            (.*)            # Capture group 2: Any characters
+            """,
+            re.M | re.I | re.X,
+        ),
         "asset": re.compile(
             r"""
             \.\./assets/    # ../assets/ literal string
