@@ -27,6 +27,7 @@ def process_content_data(
     unique_linked_references = set()
 
     for name, text in content.items():
+        content_data[name]["aliases"] = []
         content_data[name]["page_references"] = []
         content_data[name]["tags"] = []
         content_data[name]["tagged_backlinks"] = []
@@ -64,6 +65,9 @@ def process_content_data(
         namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
         properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
+        aliases = properties_values.get("alias", [])
+        if aliases:
+            content_data[name]["aliases"] = process_aliases(aliases)
 
         content_data[name]["page_references"] = page_references
         content_data[name]["tags"] = tags
@@ -192,3 +196,38 @@ def split_builtin_user_properties(properties: list, built_in_props: Set[str]) ->
     builtin_props = [prop for prop in properties if prop in built_in_props]
     user_props = [prop for prop in properties if prop not in built_in_props]
     return builtin_props, user_props
+
+
+def process_aliases(aliases):
+    results = []
+    current = []
+    inside_brackets = False
+    i = 0
+    while i < len(aliases):
+        # Detect the start of a bracketed section.
+        if aliases[i : i + 2] == "[[":
+            inside_brackets = True
+            i += 2
+            continue
+        # Detect the end of a bracketed section.
+        elif aliases[i : i + 2] == "]]":
+            inside_brackets = False
+            i += 2
+            continue
+        # If we hit a comma and are not inside brackets, split.
+        elif aliases[i] == "," and not inside_brackets:
+            part = "".join(current).strip().lower()
+            if part:
+                results.append(part)
+            current = []
+            i += 1
+            continue
+        else:
+            current.append(aliases[i])
+            i += 1
+
+    # Append the last alias if exists.
+    part = "".join(current).strip().lower()
+    if part:
+        results.append(part)
+    return results
