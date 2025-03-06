@@ -155,7 +155,6 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
     config_edn_content = "\n".join(config_split_no_comments)
     count_open_brackets = config_edn_content.count("{")
     count_close_brackets = config_edn_content.count("}")
-    print(f"Open brackets: {count_open_brackets}, Close brackets: {count_close_brackets}")
 
     config_patterns = compile_re_config()
     config_edn_data = {

@@ -12,6 +12,7 @@ from src.core import (
     handle_assets,
     handle_bak_recycle,
 )
+import src.config as config
 
 
 def run():
@@ -31,7 +32,7 @@ def run():
         output_dir,
         "config_edn_data",
         config_edn_data,
-        type_output="config",
+        config.OUTPUT_DIR_TEST,
     )
 
     # Extract bak and recycle directories
@@ -79,3 +80,29 @@ def run():
     process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     logging.info("Logseq Analyzer completed.")
+
+    merge_graph_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
+    write_output(
+        output_dir,
+        "04_merged_graph_data",
+        merge_graph_data,
+        config.OUTPUT_DIR_META,
+    )
+
+
+def merge_dicts(*dicts):
+    """
+    Merge multiple dictionaries into a single dictionary.
+
+    Args:
+        *dicts: Dictionaries to merge.
+    Returns:
+        dict: Merged dictionary.
+    """
+    result = {}
+    for d in dicts:
+        for key, values in d.items():
+            if key not in result:
+                result[key] = {}
+            result[key].update(values)
+    return result
