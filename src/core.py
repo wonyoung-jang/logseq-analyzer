@@ -234,7 +234,7 @@ def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> No
         to_delete_dir.mkdir()
 
     if args.move_bak:
-        move_all_folder_content(bak, to_delete_dir)
+        move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
 
     if args.move_recycle:
-        move_all_folder_content(recycle, to_delete_dir)
+        move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))

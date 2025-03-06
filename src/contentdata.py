@@ -118,9 +118,11 @@ def process_content_data(
 
         content_data[name]["namespace_query"] = namespace_queries
 
-        unique_linked_references.update(processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties)
+        unique_linked_references.update(
+            processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
+        )
         unique_aliases.update(processed_aliases)
-        
+
         # External links
         if external_links:
             content_data[name]["external_links"] = external_links

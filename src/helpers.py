@@ -33,18 +33,25 @@ def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Gene
                 yield path
 
 
-def move_all_folder_content(input_dir: Path, target_dir: Path) -> None:
+def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[Path] = None) -> None:
     """
     Move all folders from one directory to another.
 
     Args:
         input_dir (Path): The source directory.
         target_dir (Path): The destination directory.
+        target_subdir (Path): The subdirectory in the destination directory.
     """
     folders = [input_dir, target_dir]
     for folder in folders:
         if not is_path_exists(folder):
             return
+
+    if target_subdir:
+        target_dir = target_dir / target_subdir
+        if not is_path_exists(target_dir):
+            target_dir.mkdir(parents=True, exist_ok=True)
+            logging.info(f"Created target subdirectory: {target_dir}")
 
     for root, dirs, files in Path.walk(input_dir):
         for dir in dirs:

@@ -17,7 +17,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             (?:^|\s)    # Beginning of line or whitespace
             -           # Literal hyphen
             """,
-            re.M | re.I | re.X,
+            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "page_reference": re.compile(
             r"""
@@ -26,7 +26,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             (.+?)       # Capture group: the page name (non-greedy)
             \]\]        # Closing double brackets
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "tagged_backlink": re.compile(
             r"""
@@ -36,7 +36,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \]\]        # Closing double brackets
             (?=\s+|\])  # Positive lookahead: whitespace or closing bracket
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "tag": re.compile(
             r"""
@@ -45,7 +45,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             (\w+)           # Capture group: word characters
             (?=\s+|\b])     # Positive lookahead: whitespace or word boundary with ]
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "property": re.compile(
             r"""
@@ -54,7 +54,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             ([A-Za-z0-9_-]+)# Capture group: alphanumeric, underscore, or hyphen
             (?=::)          # Positive lookahead: double colon
             """,
-            re.M | re.I | re.X,
+            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "property_values": re.compile(
             r"""
@@ -64,14 +64,14 @@ def compile_re_content() -> Dict[str, Pattern]:
             ::              # Literal ::
             (.*)            # Capture group 2: Any characters
             """,
-            re.M | re.I | re.X,
+            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "asset": re.compile(
             r"""
             \.\./assets/    # ../assets/ literal string
             (.*)            # Capture group: anything
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "draw": re.compile(
             r"""
@@ -81,7 +81,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \.excalidraw        # Literal ".excalidraw"
             \]\]                # Closing double brackets
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "external_link": re.compile(
             r"""
@@ -93,7 +93,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                # Any characters (non-greedy)
             \)                 # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "external_link_internet": re.compile(
             r"""
@@ -105,7 +105,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             http.*?            # "http" followed by any characters (non-greedy)
             \)                 # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "external_link_alias": re.compile(
             r"""
@@ -120,7 +120,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                    # Any characters (non-greedy)
             \)                     # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "embedded_link": re.compile(
             r"""
@@ -132,7 +132,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*                  # Any characters
             \)                  # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "embedded_link_internet": re.compile(
             r"""
@@ -144,7 +144,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             http.*              # "http" followed by any characters
             \)                  # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "embedded_link_asset": re.compile(
             r"""
@@ -156,7 +156,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \.\./assets/.*      # "../assets/" followed by any characters
             \)                  # Closing parenthesis
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "blockquote": re.compile(
             r"""
@@ -164,7 +164,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             -\ >                # Hyphen, space, greater than
             .*                  # Any characters
             """,
-            re.M | re.I | re.X,
+            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "flashcard": re.compile(
             r"""
@@ -173,7 +173,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \#card|\[\[card\]\] # Either "#card" or "[[card]]"
             .*                  # Any characters
             """,
-            re.M | re.I | re.X,
+            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "multiline_code_block": re.compile(
             r"""
@@ -181,7 +181,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             ```                 # Three backticks
             """,
-            re.S | re.I | re.X,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),
         "calc_block": re.compile(
             r"""
@@ -189,7 +189,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             ```                 # Three backticks
             """,
-            re.S | re.I | re.X,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),
         "multiline_code_lang": re.compile(
             r"""
@@ -198,7 +198,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             ```                 # Three backticks
             """,
-            re.S | re.I | re.X,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),
         "reference": re.compile(
             r"""
@@ -207,7 +207,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \)\)                # Closing double parentheses
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "block_reference": re.compile(
             r"""
@@ -220,7 +220,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             [0-9a-f]{12}        # 12 hex digits
             \)\)                # Closing double parentheses
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "embed": re.compile(
             r"""
@@ -228,7 +228,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "page_embed": re.compile(
             r"""
@@ -238,7 +238,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \]\]                # Closing double brackets
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "block_embed": re.compile(
             r"""
@@ -252,7 +252,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \)\)                # Closing double parentheses
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "namespace_query": re.compile(
             r"""
@@ -260,7 +260,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "cloze": re.compile(
             r"""
@@ -268,7 +268,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "simple_queries": re.compile(
             r"""
@@ -276,7 +276,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "query_functions": re.compile(
             r"""
@@ -284,7 +284,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             .*?                 # Any characters (non-greedy)
             \}\}                # Closing double braces
             """,
-            re.I | re.X,
+            re.IGNORECASE | re.VERBOSE,
         ),
         "advanced_command": re.compile(
             r"""
@@ -293,7 +293,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             \#\+END_            # "#END_"
             .*                  # Any characters
             """,
-            re.S | re.I | re.X,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),
     }
     return patterns
