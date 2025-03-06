@@ -27,7 +27,6 @@ def run():
 
     # Extract Logseq configuration and directories
     target_dirs, config_edn_data = get_logseq_config_edn(logseq_graph_folder, args)
-
     write_output(
         output_dir,
         "config_edn_data",
@@ -86,7 +85,7 @@ def run():
         output_dir,
         "04_merged_graph_data",
         merge_graph_data,
-        config.OUTPUT_DIR_META,
+        config.OUTPUT_DIR_GRAPH,
     )
 
 
