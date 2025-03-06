@@ -50,7 +50,9 @@ def process_content_data(
         content_data[name]["embedded_links"] = []
         content_data[name]["embedded_links_internet"] = []
         content_data[name]["embedded_links_asset"] = []
-
+        content_data[name]["blockquotes"] = []
+        content_data[name]["flashcards"] = []
+        
         if not text:
             logging.debug(f'Skipping content processing for "{name}" due to empty content.')
             continue
@@ -65,6 +67,8 @@ def process_content_data(
         embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
         namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
         properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
+        blockquotes = [quote.lower() for quote in patterns["blockquote"].findall(text)]
+        flashcards = [flashcard.lower() for flashcard in patterns["flashcard"].findall(text)]
         page_properties, block_properties = extract_page_block_properties(text, patterns)
         aliases = properties_values.get("alias", [])
         processed_aliases = []
@@ -117,6 +121,8 @@ def process_content_data(
                         content_data[parent_joined]["namespace_level"] = direct_level
 
         content_data[name]["namespace_query"] = namespace_queries
+        content_data[name]["blockquotes"] = blockquotes
+        content_data[name]["flashcards"] = flashcards
 
         unique_linked_references.update(
             processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
