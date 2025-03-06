@@ -1,6 +1,7 @@
 import logging
 from src.compile_regex import compile_re_content
 from src.namespace import process_namespace_data
+from src.reporting import write_output
 from src.setup import setup_logseq_analyzer_args, setup_logging_and_output, get_logseq_config_edn, get_logseq_bak_recycle
 from src.core import (
     process_graph_files,
@@ -13,7 +14,7 @@ from src.core import (
 )
 
 
-def run_app():
+def run():
     """
     Main function to run the Logseq analyzer.
     """
@@ -24,7 +25,14 @@ def run_app():
     logseq_graph_folder, output_dir = setup_logging_and_output(args)
 
     # Extract Logseq configuration and directories
-    target_dirs = get_logseq_config_edn(logseq_graph_folder, args)
+    target_dirs, config_edn_data = get_logseq_config_edn(logseq_graph_folder, args)
+
+    write_output(
+        output_dir,
+        "config_edn_data",
+        config_edn_data,
+        type_output="config",
+    )
 
     # Extract bak and recycle directories
     recycle_dir, bak_dir = get_logseq_bak_recycle(logseq_graph_folder)

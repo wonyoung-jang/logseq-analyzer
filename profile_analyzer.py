@@ -1,14 +1,14 @@
 import cProfile
 import pstats
 from pstats import SortKey
-from src.app import run_app
+from src.app import run
 
 
 def main():
     profiler = cProfile.Profile()
     profiler.enable()
 
-    run_app()
+    run()
 
     profiler.disable()
 

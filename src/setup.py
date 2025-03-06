@@ -141,8 +141,23 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
         if not is_path_exists(folder):
             return {}
 
-    config_patterns = compile_re_config()
+    config_edn_content = config_edn_file.read_text(encoding="utf-8")
+    config_split_lines = config_edn_content.splitlines()
+    config_split_lines = [line.strip() for line in config_split_lines if line.strip()]
+    config_split_lines = [line for line in config_split_lines if not line.startswith(";;")]
+    config_split_no_comments = []
+    for i, line in enumerate(config_split_lines):
+        comment_split = line.split(";")
+        if len(comment_split) > 1:
+            config_split_no_comments.append(comment_split[0].strip())
+        else:
+            config_split_no_comments.append(line.strip())
+    config_edn_content = "\n".join(config_split_no_comments)
+    count_open_brackets = config_edn_content.count("{")
+    count_close_brackets = config_edn_content.count("}")
+    print(f"Open brackets: {count_open_brackets}, Close brackets: {count_close_brackets}")
 
+    config_patterns = compile_re_config()
     config_edn_data = {
         "journal_page_title_format": "MMM do, yyyy",
         "journal_file_name_format": "yyyy_MM_dd",
@@ -151,15 +166,12 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
         "whiteboards_directory": "whiteboards",
         "file_name_format": ":legacy",
     }
-
-    with config_edn_file.open("r", encoding="utf-8") as f:
-        config_edn_content = f.read()
-        config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
-        config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
+    config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
+    config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
+    config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
+    config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
+    config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
+    config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
 
     # Check global config for overwriting configs
     if global_config_edn_file:
@@ -197,7 +209,7 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
         config.DIR_WHITEBOARDS,
     }
 
-    return target_dirs
+    return target_dirs, config_edn_data
 
 
 def get_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:

@@ -9,7 +9,7 @@ def compile_re_content() -> Dict[str, Pattern]:
 
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
-    
+
     Overview of Patterns:
         bullet: Matches bullet points.
         page_reference: Matches internal page references in double brackets.
@@ -52,7 +52,7 @@ def compile_re_content() -> Dict[str, Pattern]:
         ),
         "page_reference": re.compile(
             r"""
-            (?<!\#)      # Negative lookbehind: not preceded by #
+            (?<!\#)     # Negative lookbehind: not preceded by #
             \[\[        # Opening double brackets
             (.+?)       # Capture group: the page name (non-greedy)
             \]\]        # Closing double brackets
@@ -333,10 +333,10 @@ def compile_re_content() -> Dict[str, Pattern]:
 def compile_re_config() -> Dict[str, Pattern]:
     """
     Compile and return a dictionary of regex patterns for Logseq configuration.
-    
+
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
-        
+
     Overview of Patterns:
         journal_page_title_pattern: Matches the journal page title format.
         journal_file_name_pattern: Matches the journal file name format.
@@ -352,15 +352,16 @@ def compile_re_config() -> Dict[str, Pattern]:
         # Pattern to match journal page title format in verbose mode.
         "journal_page_title_pattern": re.compile(
             r"""
-            :journal/page-title-format   # Literal text for journal page title format.
-            \s+                          # One or more whitespace characters.
-            "([^"]+)"                    # Capture group for any characters except double quotes.
+            :journal/page-title-format  # Literal text for journal page title format.
+            \s+                         # One or more whitespace characters.
+            "([^"]+)"                   # Capture group for any characters except double quotes.
             """,
             re.VERBOSE,
         ),
         # Pattern to match journal file name format.
         "journal_file_name_pattern": re.compile(
             r"""
+            
             :journal/file-name-format    # Literal text for journal file name format.
             \s+                          # One or more whitespace characters.
             "([^"]+)"                    # Capture group for file name format.

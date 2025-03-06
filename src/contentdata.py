@@ -52,7 +52,7 @@ def process_content_data(
         content_data[name]["embedded_links_asset"] = []
         content_data[name]["blockquotes"] = []
         content_data[name]["flashcards"] = []
-        
+
         if not text:
             logging.debug(f'Skipping content processing for "{name}" due to empty content.')
             continue
