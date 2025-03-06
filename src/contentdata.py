@@ -23,7 +23,6 @@ def process_content_data(
             - dangling_links: List of dangling links (linked, but no file).
     """
     content_data = defaultdict(lambda: defaultdict(list))
-    alphanum_dict = defaultdict(set)
     unique_linked_references = set()
     unique_aliases = set()
 
@@ -69,7 +68,7 @@ def process_content_data(
         properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
         blockquotes = [quote.lower() for quote in patterns["blockquote"].findall(text)]
         flashcards = [flashcard.lower() for flashcard in patterns["flashcard"].findall(text)]
-        page_properties, block_properties = extract_page_block_properties(text, patterns)
+        page_properties, block_properties = extract_properties(text, patterns)
         aliases = properties_values.get("alias", [])
         processed_aliases = []
         if aliases:
@@ -86,12 +85,12 @@ def process_content_data(
         (
             content_data[name]["properties_page_builtin"],
             content_data[name]["properties_page_user"],
-        ) = split_builtin_user_properties(page_properties, props)
+        ) = categorize_properties(page_properties, props)
 
         (
             content_data[name]["properties_block_builtin"],
             content_data[name]["properties_block_user"],
-        ) = split_builtin_user_properties(block_properties, props)
+        ) = categorize_properties(block_properties, props)
 
         # Namespace
         if config.NAMESPACE_SEP in name:
@@ -156,6 +155,7 @@ def process_content_data(
                 content_data[name]["embedded_links_asset"] = embedded_links_asset
 
     # Create alphanum dictionary
+    alphanum_dict = defaultdict(set)
     for linked_reference in unique_linked_references:
         if linked_reference:
             first_char_id = linked_reference[:2] if len(linked_reference) > 1 else f"!{linked_reference[0]}"
@@ -186,7 +186,7 @@ def process_content_data(
     return content_data, alphanum_dict, dangling_links
 
 
-def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
+def extract_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
     """Extract page and block properties from text using a combined regex search."""
     # The regex groups a heading marker or a bullet marker.
     split_match = re.search(r"^\s*(#+\s|-\s)", text, re.MULTILINE)
@@ -204,7 +204,7 @@ def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tu
     return page_properties, block_properties
 
 
-def split_builtin_user_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
+def categorize_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
     builtin_props = [prop for prop in properties if prop in built_in_props]
     user_props = [prop for prop in properties if prop not in built_in_props]

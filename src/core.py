@@ -71,6 +71,7 @@ def write_initial_outputs(
     graph_meta_data,
     graph_content_data,
     graph_summary_data,
+    graph_merged_data,
 ) -> None:
     """Write initial outputs for graph analysis to specified directories.
 
@@ -100,6 +101,7 @@ def write_initial_outputs(
     write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
     write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
     write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "04_merged_data", graph_merged_data, config.OUTPUT_DIR_GRAPH)
 
 
 def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict:

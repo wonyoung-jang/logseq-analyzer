@@ -3,6 +3,7 @@ from src.compile_regex import compile_re_content
 from src.namespace import process_namespace_data
 from src.reporting import write_output
 from src.setup import setup_logseq_analyzer_args, setup_logging_and_output, get_logseq_config_edn, get_logseq_bak_recycle
+from src.helpers import merge_dicts
 from src.core import (
     process_graph_files,
     core_data_analysis,
@@ -54,6 +55,9 @@ def run():
     # Generate summary subsets
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
 
+    # Merge graph data
+    graph_merged_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
+
     # Write initial outputs
     write_initial_outputs(
         args,
@@ -64,6 +68,7 @@ def run():
         graph_meta_data,
         graph_content_data,
         graph_summary_data,
+        graph_merged_data,
     )
 
     # Generate global summary
@@ -79,29 +84,3 @@ def run():
     process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     logging.info("Logseq Analyzer completed.")
-
-    merge_graph_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
-    write_output(
-        output_dir,
-        "04_merged_graph_data",
-        merge_graph_data,
-        config.OUTPUT_DIR_GRAPH,
-    )
-
-
-def merge_dicts(*dicts):
-    """
-    Merge multiple dictionaries into a single dictionary.
-
-    Args:
-        *dicts: Dictionaries to merge.
-    Returns:
-        dict: Merged dictionary.
-    """
-    result = {}
-    for d in dicts:
-        for key, values in d.items():
-            if key not in result:
-                result[key] = {}
-            result[key].update(values)
-    return result

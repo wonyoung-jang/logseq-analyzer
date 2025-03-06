@@ -78,7 +78,7 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
     """
     to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
     if not is_path_exists(to_delete_dir):
-        create_directory(to_delete_dir)
+        ensure_directory_exists(to_delete_dir)
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])
@@ -106,7 +106,7 @@ def is_path_exists(path: Path) -> bool:
     return True
 
 
-def create_directory(directory: Path) -> None:
+def ensure_directory_exists(directory: Path) -> None:
     """
     Create a directory if it does not exist.
 
@@ -115,3 +115,21 @@ def create_directory(directory: Path) -> None:
     """
     directory.mkdir(parents=True, exist_ok=True)
     logging.info(f"Created directory: {directory}")
+
+
+def merge_dicts(*dicts):
+    """
+    Merge multiple dictionaries into a single dictionary.
+
+    Args:
+        *dicts: Dictionaries to merge.
+    Returns:
+        dict: Merged dictionary.
+    """
+    result = {}
+    for dict_data in dicts:
+        for key, values in dict_data.items():
+            if key not in result:
+                result[key] = {}
+            result[key].update(values)
+    return result
