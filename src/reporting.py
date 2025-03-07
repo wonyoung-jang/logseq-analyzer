@@ -32,7 +32,7 @@ def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
             else:
                 f.write(f"{indent}Value: {values}\n\n")
     else:
-        if isinstance(data, dict):
+        if isinstance(data, (dict)):
             for k, v in data.items():
                 if isinstance(v, (list, set, dict)):
                     f.write(f"{indent}{k}:\n")

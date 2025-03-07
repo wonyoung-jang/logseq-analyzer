@@ -9,12 +9,14 @@ from src.logseq_file import LogseqFile
 class LogseqGraph:
     def __init__(self):
         self.graph = {}
+        self.content_graph = {}
         self.nodes = set()
 
     def add_node(self, logseq_file: LogseqFile):
         name = logseq_file.name
         name_secondary = logseq_file.name_secondary
         self.nodes.add(name)
+        
         if name in self.graph:
             self.graph[name_secondary] = logseq_file
         else:
