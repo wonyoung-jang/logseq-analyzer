@@ -5,7 +5,7 @@ import re
 # Logseq Analyzer configurations
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_TO_DELETE_DIR = "to_delete"
-DEFAULT_LOG_FILE = "___logseq_analyzer___.log"
+DEFAULT_LOG_FILE = "logseq_analyzer.log"
 
 FILE_TYPE_ASSET = "asset"
 FILE_TYPE_DRAW = "draw"
@@ -46,7 +46,7 @@ DIR_WHITEBOARDS = "whiteboards"
 
 NAMESPACE_FORMAT = ":legacy"  # or ":triple-lowbar"
 NAMESPACE_SEP = "/"  # static
-NAMESPACE_FILE_SEP = "%2F"  # or "___"
+NAMESPACE_FILE_SEP = "%2F"  # or ""
 
 # Journal format data
 DATETIME_TOKEN_MAP = {

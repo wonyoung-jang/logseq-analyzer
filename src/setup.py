@@ -8,6 +8,70 @@ from src.helpers import is_path_exists
 from src.compile_regex import compile_re_config
 
 
+def setup_logseq_analyzer_args() -> argparse.Namespace:
+    """
+    Setup the command line arguments for the Logseq Analyzer.
+
+    Returns:
+        argparse.Namespace: The command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Logseq Analyzer")
+    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
+    parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
+    parser.add_argument("-l", "--log-file", action="store", help="path to log file")
+    parser.add_argument(
+        "-wg",
+        "--write-graph",
+        action="store_true",
+        help="write all graph content to output folder (warning: may result in large file)",
+    )
+    parser.add_argument(
+        "-ma",
+        "--move-unlinked-assets",
+        action="store_true",
+        help='move unlinked assets to "unlinked_assets" folder',
+    )
+    parser.add_argument(
+        "-mb",
+        "--move-bak",
+        action="store_true",
+        help="move bak files to bak folder in output directory",
+    )
+    parser.add_argument(
+        "-mr",
+        "--move-recycle",
+        action="store_true",
+        help="move recycle files to recycle folder in output directory",
+    )
+    parser.add_argument(
+        "--global-config",
+        action="store",
+        help="path to global configuration file",
+    )
+
+    return parser.parse_args()
+
+
+def setup_logging_and_output(args) -> Tuple[Path, Path]:
+    """
+    Configure logging and output directory for the Logseq Analyzer.
+
+    Args:
+        args (argparse.Namespace): The command line arguments.
+
+    Returns:
+        Tuple[Path, Path]: The Logseq graph folder and output directory.
+    """
+    log_file = Path(args.log_file) if args.log_file else Path(config.DEFAULT_LOG_FILE)
+    setup_logging(log_file)
+    logging.info("Starting Logseq Analyzer.")
+
+    logseq_graph_folder = Path(args.graph_folder)
+    output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
+    setup_output_directory(output_dir)
+    return logseq_graph_folder, output_dir
+
+
 def setup_logging(log_file: Path) -> None:
     """
     Initialize logging to a file.
@@ -44,78 +108,6 @@ def setup_output_directory(output_dir: Path) -> None:
     except Exception as e:
         logging.debug(f"Failed to create output directory {output_dir}: {e}")
         raise
-
-
-def setup_logseq_analyzer_args() -> argparse.Namespace:
-    """
-    Setup the command line arguments for the Logseq Analyzer.
-
-    Returns:
-        argparse.Namespace: The command line arguments.
-    """
-    parser = argparse.ArgumentParser(description="Logseq Analyzer")
-
-    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
-
-    parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
-
-    parser.add_argument("-l", "--log-file", action="store", help="path to log file")
-
-    parser.add_argument(
-        "-wg",
-        "--write-graph",
-        action="store_true",
-        help="write all graph content to output folder (warning: may result in large file)",
-    )
-
-    parser.add_argument(
-        "-ma",
-        "--move-unlinked-assets",
-        action="store_true",
-        help='move unlinked assets to "unlinked_assets" folder',
-    )
-
-    parser.add_argument(
-        "-mb",
-        "--move-bak",
-        action="store_true",
-        help="move bak files to bak folder in output directory",
-    )
-
-    parser.add_argument(
-        "-mr",
-        "--move-recycle",
-        action="store_true",
-        help="move recycle files to recycle folder in output directory",
-    )
-
-    parser.add_argument(
-        "--global-config",
-        action="store",
-        help="path to global configuration file",
-    )
-
-    return parser.parse_args()
-
-
-def setup_logging_and_output(args) -> Tuple[Path, Path]:
-    """
-    Configure logging and output directory for the Logseq Analyzer.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-
-    Returns:
-        Tuple[Path, Path]: The Logseq graph folder and output directory.
-    """
-    log_file = Path(args.log_file) if args.log_file else Path(config.DEFAULT_LOG_FILE)
-    setup_logging(log_file)
-    logging.info("Starting Logseq Analyzer.")
-
-    logseq_graph_folder = Path(args.graph_folder)
-    output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
-    setup_output_directory(output_dir)
-    return logseq_graph_folder, output_dir
 
 
 def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
