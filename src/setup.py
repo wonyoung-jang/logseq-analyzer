@@ -154,12 +154,35 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
 
     with config_edn_file.open("r", encoding="utf-8") as f:
         config_edn_content = f.read()
-        config_edn_data["journal_page_title_format"] = config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journal_file_name_format"] = config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
-        config_edn_data["pages_directory"] = config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["journals_directory"] = config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["whiteboards_directory"] = config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
-        config_edn_data["file_name_format"] = config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
+
+    config_edn_content = [line.strip() for line in config_edn_content if line.strip()]
+    config_edn_content = [line for line in config_edn_content if not line.startswith(";")]
+    config_edn_content = "\n".join(config_edn_content)
+
+    journal_page_title = config_patterns["journal_page_title_pattern"].search(config_edn_content)
+    journal_file_name = config_patterns["journal_file_name_pattern"].search(config_edn_content)
+    pages_directory = config_patterns["pages_directory_pattern"].search(config_edn_content)
+    journals_directory = config_patterns["journals_directory_pattern"].search(config_edn_content)
+    whiteboards_directory = config_patterns["whiteboards_directory_pattern"].search(config_edn_content)
+    file_name_format = config_patterns["file_name_format_pattern"].search(config_edn_content)
+
+    if journal_page_title:
+        config_edn_data["journal_page_title_format"] = journal_page_title.group(1)
+
+    if journal_file_name:
+        config_edn_data["journal_file_name_format"] = journal_file_name.group(1)
+
+    if pages_directory:
+        config_edn_data["pages_directory"] = pages_directory.group(1)
+
+    if journals_directory:
+        config_edn_data["journals_directory"] = journals_directory.group(1)
+
+    if whiteboards_directory:
+        config_edn_data["whiteboards_directory"] = whiteboards_directory.group(1)
+
+    if file_name_format:
+        config_edn_data["file_name_format"] = file_name_format.group(1)
 
     # Check global config for overwriting configs
     if global_config_edn_file:

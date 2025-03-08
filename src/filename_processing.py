@@ -1,5 +1,4 @@
 import logging
-import re
 import src.config as config
 from datetime import datetime
 from urllib.parse import unquote
@@ -34,10 +33,8 @@ def process_journal_key(key: str) -> str:
     Returns:
         str: Processed journal key as a page title.
     """
-    page_title_format = config.JOURNAL_PAGE_TITLE_FORMAT
-    file_name_format = config.JOURNAL_FILE_NAME_FORMAT
-    py_file_name_format = transform_date_format(file_name_format)
-    py_page_title_format = transform_date_format(page_title_format)
+    py_file_name_format = transform_date_format(config.JOURNAL_FILE_NAME_FORMAT)
+    py_page_title_format = transform_date_format(config.JOURNAL_PAGE_TITLE_FORMAT)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)

@@ -254,7 +254,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.IGNORECASE | re.VERBOSE,
         ),
-        "namespace_query": re.compile(
+        "namespace_queries": re.compile(
             r"""
             \{\{namespace\      # "{{namespace" followed by space
             .*?                 # Any characters (non-greedy)
@@ -302,7 +302,7 @@ def compile_re_content() -> Dict[str, Pattern]:
 def compile_re_config() -> Dict[str, Pattern]:
     """
     Compile and return a dictionary of regex patterns for Logseq configuration.
-    
+
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
     """
