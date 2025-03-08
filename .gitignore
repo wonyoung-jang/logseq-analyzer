@@ -3,6 +3,8 @@
 logseq_api_cache/*
 output/*
 output*/*
+*output/*
+*output*/*
 to_delete/*
 profile_output*
 *.json
