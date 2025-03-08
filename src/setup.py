@@ -202,20 +202,20 @@ def get_logseq_config_edn(folder_path: Path, args: argparse.Namespace) -> Set[st
     return target_dirs, config_edn_data
 
 
-def get_logseq_sub_folder(folder_path: Path, target: str) -> Path:
+def get_sub_folder(parent, child) -> Path:
     """
-    Get the path to a specific Logseq subfolder.
+    Get the path to a specific subfolder.
 
     Args:
-        folder_path (Path): The path to the Logseq graph folder.
-        target (str): The name of the target subfolder (e.g., "recycle", "bak", etc.).
+        parent (Path): The path to the parent folder.
+        child (str): The name of the target subfolder (e.g., "recycle", "bak", etc.).
 
     Returns:
-        Path: The bak folder path or None if not found.
+        Path: The path to the specified subfolder or None if not found.
     """
-    logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    if not is_path_exists(folder_path) or not is_path_exists(logseq_folder):
+    target = parent / child
+    if not is_path_exists(parent) or not is_path_exists(target):
+        logging.warning(f"Subfolder does not exist: {target}")
         return None
-
-    target_dir = logseq_folder / target
-    return target_dir if is_path_exists(target_dir) else None
+    logging.debug(f"Successfully received: {target}")
+    return target

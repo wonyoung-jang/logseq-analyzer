@@ -25,8 +25,9 @@ def run_app():
     target_dirs, config_edn_data = get_logseq_config_edn(logseq_graph_dir, args)
 
     # Extract bak and recycle directories
-    recycle_dir = get_logseq_sub_folder(logseq_graph_dir, config.DEFAULT_RECYCLE_DIR)
-    bak_dir = get_logseq_sub_folder(logseq_graph_dir, config.DEFAULT_BAK_DIR)
+    logseq_dir = get_sub_folder(logseq_graph_dir, config.DEFAULT_LOGSEQ_DIR)
+    recycle_dir = get_sub_folder(logseq_dir, config.DEFAULT_RECYCLE_DIR)
+    bak_dir = get_sub_folder(logseq_dir, config.DEFAULT_BAK_DIR)
 
     # Compile regex patterns
     content_patterns = compile_re_content()
