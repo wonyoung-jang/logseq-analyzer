@@ -9,7 +9,9 @@ from src.summarydata import process_summary_data, extract_summary_subset
 import src.config as config
 
 
-def process_graph_files(logseq_graph_folder: Path, patterns: Dict[str, Pattern], target_dirs: List[str]) -> Tuple[dict, dict]:
+def process_graph_files(
+    logseq_graph_folder: Path, patterns: Dict[str, Pattern], target_dirs: List[str]
+) -> Tuple[dict, dict]:
     """
     Process all files in the Logseq graph folder.
 

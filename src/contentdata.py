@@ -128,11 +128,15 @@ def process_content_data(
             content_data[name]["external_links"] = external_links
             external_links_str = "\n".join(embedded_links)
 
-            external_links_internet = [link.lower() for link in patterns["external_link_internet"].findall(external_links_str)]
+            external_links_internet = [
+                link.lower() for link in patterns["external_link_internet"].findall(external_links_str)
+            ]
             if external_links_internet:
                 content_data[name]["external_links_internet"] = external_links_internet
 
-            external_links_alias = [link.lower() for link in patterns["external_link_alias"].findall(external_links_str)]
+            external_links_alias = [
+                link.lower() for link in patterns["external_link_alias"].findall(external_links_str)
+            ]
             if external_links_alias:
                 content_data[name]["external_links_alias"] = external_links_alias
 
@@ -141,11 +145,15 @@ def process_content_data(
             content_data[name]["embedded_links"] = embedded_links
             embedded_links_str = "\n".join(embedded_links)
 
-            embedded_links_internet = [link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)]
+            embedded_links_internet = [
+                link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)
+            ]
             if embedded_links_internet:
                 content_data[name]["embedded_links_internet"] = embedded_links_internet
 
-            embedded_links_asset = [link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)]
+            embedded_links_asset = [
+                link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)
+            ]
             if embedded_links_asset:
                 content_data[name]["embedded_links_asset"] = embedded_links_asset
 

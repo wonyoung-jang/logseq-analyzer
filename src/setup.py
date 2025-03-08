@@ -163,7 +163,7 @@ def get_logseq_config_edn(folder_path: Path, args: argparse.Namespace) -> Set[st
         global_config_edn_file = config.GLOBAL_CONFIG_FILE = Path(args.global_config)
         if not is_path_exists(global_config_edn_file):
             return {}
-        
+
         if global_config_edn_file:
             with global_config_edn_file.open("r", encoding="utf-8") as f:
                 content = f.read()

@@ -171,7 +171,9 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
         for k, v in parts.items():
             namespace_part_levels.setdefault(k, set()).add(v)
             unique_namespace_parts.add(k)
-    namespace_part_levels = {k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)}
+    namespace_part_levels = {
+        k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)
+    }
     return namespace_part_levels, unique_namespace_parts
 
 
@@ -194,7 +196,9 @@ def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, A
     return namespace_queries
 
 
-def process_namespace_data(output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
+def process_namespace_data(
+    output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]
+) -> None:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
