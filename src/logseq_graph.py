@@ -11,13 +11,13 @@ class LogseqGraph:
         self.graph = {}
         self.content_graph = {}
         self.nodes = set()
-
+        
     def add_node(self, logseq_file: LogseqFile):
         name = logseq_file.name
         name_secondary = logseq_file.name_secondary
         self.nodes.add(name)
         
         if name in self.graph:
-            self.graph[name_secondary] = logseq_file
+            self.graph[name_secondary] = logseq_file.__dict__()
         else:
-            self.graph[name] = logseq_file
+            self.graph[name] = logseq_file.__dict__()

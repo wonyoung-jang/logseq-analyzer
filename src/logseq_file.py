@@ -3,6 +3,7 @@ LogseqFile class to represent a Logseq file.
 This class contains metadata about the file, including its name, path, creation date, modification date, and content.
 """
 
+from collections import defaultdict
 from datetime import datetime
 import logging
 import os
@@ -11,9 +12,10 @@ from pprint import pprint
 import re
 from urllib.parse import unquote
 
+from src.compile_regex import compile_re_content
 import src.config as config
 PROPS = config.BUILT_IN_PROPERTIES
-
+PATTERNS = compile_re_content()
 
 class LogseqFile:
     def __init__(self, file_path: Path):
@@ -40,21 +42,94 @@ class LogseqFile:
         self.bullet_count = None
         self.bullet_density = None
         
-        # Content patterns
-        self.content_patterns = None
+        # Content
+        self.content = None
+        
+        self.aliases = []
+        self.page_references = []
+        self.tags = []
+        self.tagged_backlinks = []
+        self.properties_values = []
+        self.properties_page_builtin = []
+        self.properties_page_user = []
+        self.properties_block_builtin = []
+        self.properties_block_user = []
+        self.assets = []
+        self.draws = []
+        self.namespace_root = ""
+        self.namespace_parent = ""
+        self.namespace_parts = {}
+        self.namespace_level = -1
+        self.namespace_queries = []
+        self.external_links = []
+        self.external_links_internet = []
+        self.external_links_alias = []
+        self.embedded_links = []
+        self.embedded_links_internet = []
+        self.embedded_links_asset = []
+        self.blockquotes = []
+        self.flashcards = []
         
         # Initialize all attributes
         self.initialize_all(file_path)
         
+        # Process content data
+        self.process_content_data()
+        
     def __repr__(self):
-        return f"LogseqFile({self.name})"
+        return f"{self.__class__.__qualname__} - {self.name}"
     
     def __str__(self):
-        return f"LogseqFile({self.name})"
-
+        return f"{self.__class__.__qualname__} - {self.name}"
+   
+    def __dict__(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "name_secondary": self.name_secondary,
+            "file_path": self.file_path,
+            "file_path_parent_name": self.file_path_parent_name,
+            "file_path_name": self.file_path_name,
+            "file_path_suffix": self.file_path_suffix,
+            "file_path_parts": self.file_path_parts,
+            "date_created": self.date_created,
+            "date_modified": self.date_modified,
+            "time_existed": self.time_existed,
+            "time_unmodified": self.time_unmodified,
+            "size": self.size,
+            "uri": self.uri,
+            "char_count": self.char_count,
+            "bullet_count": self.bullet_count,
+            "bullet_density": self.bullet_density,
+            # "content": self.content,
+            "aliases": self.aliases,
+            "page_references": self.page_references,
+            "tags": self.tags,
+            "tagged_backlinks": self.tagged_backlinks,
+            "properties_values": self.properties_values,
+            "properties_page_builtin": self.properties_page_builtin,
+            "properties_page_user": self.properties_page_user,
+            "properties_block_builtin": self.properties_block_builtin,
+            "properties_block_user": self.properties_block_user,
+            "assets": self.assets,
+            "draws": self.draws,
+            "namespace_root": self.namespace_root,
+            "namespace_parent": self.namespace_parent,
+            "namespace_parts": self.namespace_parts,
+            "namespace_level": self.namespace_level,
+            "namespace_queries": self.namespace_queries,
+            "external_links": self.external_links,
+            "external_links_internet": self.external_links_internet,
+            "external_links_alias": self.external_links_alias,
+            "embedded_links": self.embedded_links,
+            "embedded_links_internet": self.embedded_links_internet,
+            "embedded_links_asset": self.embedded_links_asset,
+            "blockquotes": self.blockquotes,
+            "flashcards": self.flashcards
+        }
+        
     def initialize_all(self, file_path: Path):
         stat = file_path.stat()
-        self.compile_re_content()
         self.set_basic_file_attributes(file_path)
         self.set_datetime_attributes(file_path, stat)
         self.set_content_stats(file_path, stat)
@@ -88,345 +163,20 @@ class LogseqFile:
         self.size = stat.st_size
         self.uri = file_path.as_uri()
         
-        content = None
+        self.content = None
         try:
-            content = file_path.read_text(encoding="utf-8")
+            self.content = file_path.read_text(encoding="utf-8")
         except FileNotFoundError:
             logging.warning(f"File not found: {file_path}")
         except Exception as e:
             logging.warning(f"Failed to read file {file_path}: {e}")
 
-        if content:
-            self.char_count = len(content)
-            bullet_count = len(self.content_patterns["bullet"].findall(content))
+        if self.content:
+            self.char_count = len(self.content)
+            bullet_count = len(PATTERNS["bullet"].findall(self.content))
             self.bullet_count = bullet_count
             self.bullet_density = self.char_count // bullet_count if bullet_count > 0 else 0
-
-    def compile_re_content(self):
-        """
-        Compile and return a dictionary of frequently used regex patterns.
-
-        Returns:
-            Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
-
-        Overview of Patterns:
-            bullet: Matches bullet points.
-            page_reference: Matches internal page references in double brackets.
-            tagged_backlink: Matches tagged backlinks.
-            tag: Matches hashtags.
-            property: Matches property keys.
-            property_values: Matches property key-value pairs.
-            asset: Matches references to assets.
-            draw: Matches references to Excalidraw drawings.
-            external_link: Matches markdown external links.
-            external_link_internet: Matches external links to websites.
-            external_link_alias: Matches aliased external links.
-            embedded_link: Matches embedded content links.
-            embedded_link_internet: Matches embedded internet content.
-            embedded_link_asset: Matches embedded asset references.
-            blockquote: Matches blockquote syntax.
-            flashcard: Matches flashcard syntax.
-            multiline_code_block: Matches code blocks.
-            calc_block: Matches calculation blocks.
-            multiline_code_lang: Matches code blocks with language specification.
-            reference: Matches block references.
-            block_reference: Matches UUID block references.
-            embed: Matches embedded content.
-            page_embed: Matches embedded page references.
-            block_embed: Matches embedded block references.
-            namespace_query: Matches namespace queries.
-            cloze: Matches cloze deletions.
-            simple_queries: Matches simple query syntax.
-            query_functions: Matches query functions.
-            advanced_command: Matches advanced org-mode commands.
-        """
-        logging.info("Compiling regex patterns")
-        self.content_patterns = {
-            "bullet": re.compile(
-                r"""
-                (?:^|\s)    # Beginning of line or whitespace
-                -           # Literal hyphen
-                """,
-                re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "page_reference": re.compile(
-                r"""
-                (?<!\#)     # Negative lookbehind: not preceded by #
-                \[\[        # Opening double brackets
-                (.+?)       # Capture group: the page name (non-greedy)
-                \]\]        # Closing double brackets
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "tagged_backlink": re.compile(
-                r"""
-                \#          # Hash character
-                \[\[        # Opening double brackets
-                ([^\]]+)    # Capture group: anything except closing bracket
-                \]\]        # Closing double brackets
-                (?=\s+|\])  # Positive lookahead: whitespace or closing bracket
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "tag": re.compile(
-                r"""
-                \#              # Hash character
-                (?!\[\[)        # Negative lookahead: not followed by [[
-                (\w+)           # Capture group: word characters
-                (?=\s+|\b])     # Positive lookahead: whitespace or word boundary with ]
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "property": re.compile(
-                r"""
-                ^               # Start of line
-                (?!\s*-\s)      # Negative lookahead: not a bullet
-                ([A-Za-z0-9_-]+)# Capture group: alphanumeric, underscore, or hyphen
-                (?=::)          # Positive lookahead: double colon
-                """,
-                re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "property_values": re.compile(
-                r"""
-                ^               # Start of line
-                (?!\s*-\s)      # Negative lookahead: not a bullet
-                ([A-Za-z0-9_-]+)# Capture group 1: Alphanumeric, underscore, or hyphen
-                ::              # Literal ::
-                (.*)            # Capture group 2: Any characters
-                """,
-                re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "asset": re.compile(
-                r"""
-                \.\./assets/    # ../assets/ literal string
-                (.*)            # Capture group: anything
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "draw": re.compile(
-                r"""
-                (?<!\#)              # Negative lookbehind: not preceded by #
-                \[\[                # Opening double brackets
-                draws/(.+?)         # Literal "draws/" followed by capture group
-                \.excalidraw        # Literal ".excalidraw"
-                \]\]                # Closing double brackets
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                .*?                # Any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_internet": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                http.*?            # "http" followed by any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_alias": re.compile(
-                r"""
-                (?<!\!)                # Negative lookbehind: not preceded by !
-                \[                     # Opening bracket
-                .*?                    # Any characters (non-greedy)
-                \]                     # Closing bracket
-                \(                     # Opening parenthesis
-                [\[\[|\(\(]            # Either [[ or ((
-                .*?                    # Any characters (non-greedy)
-                [\]\]|\)\)]            # Either ]] or ))
-                .*?                    # Any characters (non-greedy)
-                \)                     # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                .*                  # Any characters
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_internet": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                http.*              # "http" followed by any characters
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_asset": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                \.\./assets/.*      # "../assets/" followed by any characters
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "blockquote": re.compile(
-                r"""
-                (?:^|\s)            # Start of line or whitespace
-                -\ >                # Hyphen, space, greater than
-                .*                  # Any characters
-                """,
-                re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "flashcard": re.compile(
-                r"""
-                (?:^|\s)            # Start of line or whitespace
-                -\ .*               # Hyphen, space, any characters
-                \#card|\[\[card\]\] # Either "#card" or "[[card]]"
-                .*                  # Any characters
-                """,
-                re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "multiline_code_block": re.compile(
-                r"""
-                ```                 # Three backticks
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "calc_block": re.compile(
-                r"""
-                ```calc             # Three backticks followed by "calc"
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "multiline_code_lang": re.compile(
-                r"""
-                ```                 # Three backticks
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "reference": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                .*?                 # Any characters (non-greedy)
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "block_reference": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{12}        # 12 hex digits
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embed": re.compile(
-                r"""
-                \{\{embed\          # "{{embed" followed by space
-                .*?                 # Any characters (non-greedy)
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "page_embed": re.compile(
-                r"""
-                \{\{embed\          # "{{embed" followed by space
-                \[\[                # Opening double brackets
-                .*?                 # Any characters (non-greedy)
-                \]\]                # Closing double brackets
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "block_embed": re.compile(
-                r"""
-                \{\{embed\          # "{{embed" followed by space
-                \(\(                # Opening double parentheses
-                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{12}        # 12 hex digits
-                \)\)                # Closing double parentheses
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "namespace_query": re.compile(
-                r"""
-                \{\{namespace\      # "{{namespace" followed by space
-                .*?                 # Any characters (non-greedy)
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "cloze": re.compile(
-                r"""
-                \{\{cloze\          # "{{cloze" followed by space
-                .*?                 # Any characters (non-greedy)
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "simple_queries": re.compile(
-                r"""
-                \{\{query\          # "{{query" followed by space
-                .*?                 # Any characters (non-greedy)
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "query_functions": re.compile(
-                r"""
-                \{\{function\       # "{{function" followed by space
-                .*?                 # Any characters (non-greedy)
-                \}\}                # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "advanced_command": re.compile(
-                r"""
-                \#\+BEGIN_          # "#BEGIN_"
-                .*                  # Any characters
-                \#\+END_            # "#END_"
-                .*                  # Any characters
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-        }
-
+ 
     def transform_date_format(self, cljs_format: str) -> str:
         """
         Convert a Clojure-style date format to a Python-style date format.
@@ -489,3 +239,48 @@ class LogseqFile:
             key = key.rstrip(config.NAMESPACE_FILE_SEP)
 
         return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()
+
+    def process_content_data(self):
+        # TODO complete
+        if not self.content:
+            logging.debug(f"File {self.file_path} has no content to process.")
+            return
+        
+        # Process content data
+        self.page_references = [page_ref.lower() for page_ref in PATTERNS["page_reference"].findall(self.content)]
+        self.tags = [tag.lower() for tag in PATTERNS["tag"].findall(self.content)]
+        self.tagged_backlinks = [tag.lower() for tag in PATTERNS["tagged_backlink"].findall(self.content)]
+        self.assets = [asset.lower() for asset in PATTERNS["asset"].findall(self.content)]
+        self.draws = [draw.lower() for draw in PATTERNS["draw"].findall(self.content)]
+        self.namespace_queries = [query.lower() for query in PATTERNS["namespace_query"].findall(self.content)]
+        self.properties_values = {prop: value for prop, value in PATTERNS["property_values"].findall(self.content)}
+        self.blockquotes = [quote.lower() for quote in PATTERNS["blockquote"].findall(self.content)]
+        self.flashcards = [card.lower() for card in PATTERNS["flashcard"].findall(self.content)]
+        
+        external_links = [link.lower() for link in PATTERNS["external_link"].findall(self.content)]
+        embedded_links = [link.lower() for link in PATTERNS["embedded_link"].findall(self.content)]
+        
+    def extract_properties(self):
+        """Extract page and block properties from text using a combined regex search."""
+        # The regex groups a heading marker or a bullet marker.
+        split_match = re.search(r"^\s*(#+\s|-\s)", self.content, re.MULTILINE)
+
+        if split_match:
+            split_point = split_match.start()
+            page_text = self.content[:split_point]
+            block_text = self.content[split_point:]
+        else:
+            page_text = self.content
+            block_text = ""
+
+        page_properties = [prop.lower() for prop in PATTERNS["property"].findall(page_text)]
+        block_properties = [prop.lower() for prop in PATTERNS["property"].findall(block_text)]
+        return page_properties, block_properties
+
+
+    def categorize_properties(self, properties: list, built_in_props):
+        """Helper function to split properties into built-in and user-defined."""
+        builtin_props = [prop for prop in properties if prop in built_in_props]
+        user_props = [prop for prop in properties if prop not in built_in_props]
+        return builtin_props, user_props
+        

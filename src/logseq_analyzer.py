@@ -13,23 +13,28 @@ import json
 from pathlib import Path
 from pprint import pprint
 
+from src.compile_regex import compile_re_config
 import src.config as config
 from src.reporting import write_output
 from src.logseq_graph import LogseqGraph
 from src.logseq_file import LogseqFile
 
+PATTERNS = compile_re_config()
+
 # TODO:
 # filedata.py ✅
 # filename_processing.py ✅
 # setup.py ✅
-# compile_regex.py ✅
+
+# compile_regex.py 🔕
 # config.py 🔕
+# reporting.py 🔕
+
 # app.py
 # contentdata.py
 # core.py
 # helpers.py
 # namespace.py
-# reporting.py
 # summarydata.py
 
 
@@ -47,8 +52,7 @@ class LogseqAnalyzer:
         
         self.logseq_graph = LogseqGraph()
         
-        self.iter_graph = self.iter_files()
-        for file_path in self.iter_graph:
+        for file_path in self.iter_files():
             logseq_file = LogseqFile(file_path)
             self.logseq_graph.add_node(logseq_file)
             
@@ -58,7 +62,8 @@ class LogseqAnalyzer:
         write_output(
             self.output_dir,
             "logseq_graph",
-            self.logseq_graph.graph,)
+            self.logseq_graph.graph,
+        )
         
         pprint(vars(self))
     
@@ -66,7 +71,6 @@ class LogseqAnalyzer:
         self.setup_args()
         self.setup_logging_file()
         self.setup_output_directory()
-        self.compile_re_config()
         self.get_logseq_graph_directory()
         self.get_logseq_bak_recycle_directories()
         self.get_logseq_config_edn_file()
@@ -217,7 +221,6 @@ class LogseqAnalyzer:
         count_open_brackets = config_edn_content.count("{")
         count_close_brackets = config_edn_content.count("}")
 
-        self.config_patterns
         self.config_edn_data = {
             "journal_page_title_format": "MMM do, yyyy",
             "journal_file_name_format": "yyyy_MM_dd",
@@ -227,22 +230,22 @@ class LogseqAnalyzer:
             "file_name_format": ":legacy",
         }
         self.config_edn_data["journal_page_title_format"] = (
-            self.config_patterns["journal_page_title_pattern"].search(config_edn_content).group(1)
+            PATTERNS["journal_page_title_pattern"].search(config_edn_content).group(1)
         )
         self.config_edn_data["journal_file_name_format"] = (
-            self.config_patterns["journal_file_name_pattern"].search(config_edn_content).group(1)
+            PATTERNS["journal_file_name_pattern"].search(config_edn_content).group(1)
         )
         self.config_edn_data["pages_directory"] = (
-            self.config_patterns["pages_directory_pattern"].search(config_edn_content).group(1)
+            PATTERNS["pages_directory_pattern"].search(config_edn_content).group(1)
         )
         self.config_edn_data["journals_directory"] = (
-            self.config_patterns["journals_directory_pattern"].search(config_edn_content).group(1)
+            PATTERNS["journals_directory_pattern"].search(config_edn_content).group(1)
         )
         self.config_edn_data["whiteboards_directory"] = (
-            self.config_patterns["whiteboards_directory_pattern"].search(config_edn_content).group(1)
+            PATTERNS["whiteboards_directory_pattern"].search(config_edn_content).group(1)
         )
         self.config_edn_data["file_name_format"] = (
-            self.config_patterns["file_name_format_pattern"].search(config_edn_content).group(1)
+            PATTERNS["file_name_format_pattern"].search(config_edn_content).group(1)
         )
 
         # Check global config for overwriting configs
@@ -250,12 +253,12 @@ class LogseqAnalyzer:
             with global_config_edn_file.open("r", encoding="utf-8") as f:
                 content = f.read()
                 keys_patterns = {
-                    "journal_page_title_format": self.config_patterns["journal_page_title_pattern"],
-                    "journal_file_name_format": self.config_patterns["journal_file_name_pattern"],
-                    "pages_directory": self.config_patterns["pages_directory_pattern"],
-                    "journals_directory": self.config_patterns["journals_directory_pattern"],
-                    "whiteboards_directory": self.config_patterns["whiteboards_directory_pattern"],
-                    "file_name_format": self.config_patterns["file_name_format_pattern"],
+                    "journal_page_title_format": PATTERNS["journal_page_title_pattern"],
+                    "journal_file_name_format": PATTERNS["journal_file_name_pattern"],
+                    "pages_directory": PATTERNS["pages_directory_pattern"],
+                    "journals_directory": PATTERNS["journals_directory_pattern"],
+                    "whiteboards_directory": PATTERNS["whiteboards_directory_pattern"],
+                    "file_name_format": PATTERNS["file_name_format_pattern"],
                 }
 
                 for key, pattern in keys_patterns.items():
@@ -295,97 +298,3 @@ class LogseqAnalyzer:
                         logging.info(f"Skipping file {path} outside target directories")
                 else:
                     yield path
-
-    def compile_re_config(self):
-        """
-        Compile and return a dictionary of regex patterns for Logseq configuration.
-
-        Returns:
-            Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
-
-        Overview of Patterns:
-            journal_page_title_pattern: Matches the journal page title format.
-            journal_file_name_pattern: Matches the journal file name format.
-            feature_enable_journals_pattern: Matches the enable journals feature setting.
-            feature_enable_whiteboards_pattern: Matches the enable whiteboards feature setting.
-            pages_directory_pattern: Matches the pages directory setting.
-            journals_directory_pattern: Matches the journals directory setting.
-            whiteboards_directory_pattern: Matches the whiteboards directory setting.
-            file_name_format_pattern: Matches the file name format setting.
-        """
-        logging.info("Compiling regex patterns for Logseq configuration")
-        self.config_patterns = {
-            # Pattern to match journal page title format in verbose mode.
-            "journal_page_title_pattern": re.compile(
-                r"""
-                :journal/page-title-format  # Literal text for journal page title format.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for any characters except double quotes.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match journal file name format.
-            "journal_file_name_pattern": re.compile(
-                r"""
-                
-                :journal/file-name-format    # Literal text for journal file name format.
-                \s+                          # One or more whitespace characters.
-                "([^"]+)"                    # Capture group for file name format.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match whether journals feature is enabled (true or false).
-            "feature_enable_journals_pattern": re.compile(
-                r"""
-                :feature/enable-journals\?   # Literal text for enabling journals feature.
-                \s+                          # One or more whitespace characters.
-                (true|false)                 # Capture group for 'true' or 'false'.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match whether whiteboards feature is enabled (true or false).
-            "feature_enable_whiteboards_pattern": re.compile(
-                r"""
-                :feature/enable-whiteboards\?  # Literal text for enabling whiteboards feature.
-                \s+                           # One or more whitespace characters.
-                (true|false)                  # Capture group for 'true' or 'false'.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the pages directory.
-            "pages_directory_pattern": re.compile(
-                r"""
-                :pages-directory             # Literal text for pages directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the journals directory.
-            "journals_directory_pattern": re.compile(
-                r"""
-                :journals-directory          # Literal text for journals directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the whiteboards directory.
-            "whiteboards_directory_pattern": re.compile(
-                r"""
-                :whiteboards-directory       # Literal text for whiteboards directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match file name format.
-            "file_name_format_pattern": re.compile(
-                r"""
-                :file/name-format            # Literal text for file name format.
-                \s+                          # One or more whitespace characters.
-                (.+)                         # Capture group for the file name format.
-                """,
-                re.VERBOSE,
-            ),
-        }
