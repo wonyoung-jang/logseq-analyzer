@@ -34,7 +34,7 @@ DEFAULT_RECYCLE_DIR = ".recycle"  # static
 DEFAULT_CONFIG_FILE = "config.edn"  # static
 GLOBAL_CONFIG_FILE = ""
 
-# Logseq's config.edn configurations
+# Logseq's config.edn configurations (Default values)
 JOURNAL_PAGE_TITLE_FORMAT = "MMM do, yyyy"
 JOURNAL_FILE_NAME_FORMAT = "yyyy_MM_dd"
 

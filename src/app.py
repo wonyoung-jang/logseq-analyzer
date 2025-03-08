@@ -22,7 +22,7 @@ def run_app():
     setup_logging(output_dir)
 
     # Extract Logseq configuration and directories
-    target_dirs = get_logseq_config_edn(logseq_graph_dir, args)
+    target_dirs, config_edn_data = get_logseq_config_edn(logseq_graph_dir, args)
 
     # Extract bak and recycle directories
     recycle_dir = get_logseq_sub_folder(logseq_graph_dir, config.DEFAULT_RECYCLE_DIR)
