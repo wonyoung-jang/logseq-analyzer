@@ -8,30 +8,63 @@ from src.helpers import is_path_exists
 from src.compile_regex import compile_re_config
 
 
-def setup_logging(log_file: Path) -> None:
+def setup_logseq_analyzer_args() -> argparse.Namespace:
     """
-    Initialize logging to a file.
+    Setup the command line arguments for the Logseq Analyzer.
+
+    Returns:
+        argparse.Namespace: The command line arguments.
     """
-    if Path.exists(log_file):
-        Path.unlink(log_file)
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s - %(message)s",
+    parser = argparse.ArgumentParser(description="Logseq Analyzer")
+
+    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
+    # parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
+    # parser.add_argument("-l", "--log-file", action="store", help="path to log file")
+    parser.add_argument(
+        "-wg",
+        "--write-graph",
+        action="store_true",
+        help="write all graph content to output folder (warning: may result in large file)",
     )
-    logging.info(f"Logging initialized to {log_file}")
+    parser.add_argument(
+        "-ma",
+        "--move-unlinked-assets",
+        action="store_true",
+        help='move unlinked assets to "unlinked_assets" folder',
+    )
+    parser.add_argument(
+        "-mb",
+        "--move-bak",
+        action="store_true",
+        help="move bak files to bak folder in output directory",
+    )
+    parser.add_argument(
+        "-mr",
+        "--move-recycle",
+        action="store_true",
+        help="move recycle files to recycle folder in output directory",
+    )
+    parser.add_argument(
+        "--global-config",
+        action="store",
+        help="path to global configuration file",
+    )
+
+    return parser.parse_args()
 
 
-def setup_output_directory(output_dir: Path) -> None:
+def setup_output_directory() -> Path:
     """
-    Ensure that the output directory exists and is empty.
+    Setup the output directory for the Logseq Analyzer.
 
-    This function uses shutil.rmtree to efficiently clear the directory,
-    then recreates it.
+    Raises:
+        Exception: If the output directory cannot be created or removed.
 
-    Args:
-        output_dir (Path): The path of the output directory.
+    Returns:
+        Path: The output directory path.
     """
+    output_dir = Path(config.DEFAULT_OUTPUT_DIR)
+
     if output_dir.exists() and output_dir.is_dir():
         try:
             shutil.rmtree(output_dir)
@@ -45,77 +78,25 @@ def setup_output_directory(output_dir: Path) -> None:
         logging.debug(f"Failed to create output directory {output_dir}: {e}")
         raise
 
+    return output_dir
 
-def setup_logseq_analyzer_args() -> argparse.Namespace:
+
+def setup_logging(parent) -> None:
     """
-    Setup the command line arguments for the Logseq Analyzer.
-
-    Returns:
-        argparse.Namespace: The command line arguments.
+    Setup logging configuration for the Logseq Analyzer.
     """
-    parser = argparse.ArgumentParser(description="Logseq Analyzer")
+    log_file = Path(parent / config.DEFAULT_LOG_FILE)
 
-    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
-
-    parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
-
-    parser.add_argument("-l", "--log-file", action="store", help="path to log file")
-
-    parser.add_argument(
-        "-wg",
-        "--write-graph",
-        action="store_true",
-        help="write all graph content to output folder (warning: may result in large file)",
+    if Path.exists(log_file):
+        Path.unlink(log_file)
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        force=True,
     )
-
-    parser.add_argument(
-        "-ma",
-        "--move-unlinked-assets",
-        action="store_true",
-        help='move unlinked assets to "unlinked_assets" folder',
-    )
-
-    parser.add_argument(
-        "-mb",
-        "--move-bak",
-        action="store_true",
-        help="move bak files to bak folder in output directory",
-    )
-
-    parser.add_argument(
-        "-mr",
-        "--move-recycle",
-        action="store_true",
-        help="move recycle files to recycle folder in output directory",
-    )
-
-    parser.add_argument(
-        "--global-config",
-        action="store",
-        help="path to global configuration file",
-    )
-
-    return parser.parse_args()
-
-
-def setup_logging_and_output(args) -> Tuple[Path, Path]:
-    """
-    Configure logging and output directory for the Logseq Analyzer.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-
-    Returns:
-        Tuple[Path, Path]: The Logseq graph folder and output directory.
-    """
-    log_file = Path(args.log_file) if args.log_file else Path(config.DEFAULT_LOG_FILE)
-    setup_logging(log_file)
-    logging.info("Starting Logseq Analyzer.")
-
-    logseq_graph_folder = Path(args.graph_folder)
-    output_dir = Path(args.output_folder) if args.output_folder else Path(config.DEFAULT_OUTPUT_DIR)
-    setup_output_directory(output_dir)
-    return logseq_graph_folder, output_dir
+    logging.info(f"Logging initialized to {log_file}")
+    logging.debug("Logseq Analyzer started.")
 
 
 def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:

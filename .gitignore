@@ -11,3 +11,4 @@ profile_output*
 *.txt
 *.dat
 *.code-workspace
+main_gui.py
