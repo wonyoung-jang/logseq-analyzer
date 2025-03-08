@@ -3,7 +3,7 @@ import shutil
 import argparse
 import src.config as config
 from pathlib import Path
-from typing import Set, Tuple
+from typing import Set
 from src.helpers import is_path_exists
 from src.compile_regex import compile_re_config
 
@@ -18,8 +18,6 @@ def setup_logseq_analyzer_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
 
     parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
-    # parser.add_argument("-o", "--output-folder", action="store", help="path to output folder")
-    # parser.add_argument("-l", "--log-file", action="store", help="path to log file")
     parser.add_argument(
         "-wg",
         "--write-graph",
@@ -81,11 +79,11 @@ def setup_output_directory() -> Path:
     return output_dir
 
 
-def setup_logging(parent) -> None:
+def setup_logging(output) -> None:
     """
     Setup logging configuration for the Logseq Analyzer.
     """
-    log_file = Path(parent / config.DEFAULT_LOG_FILE)
+    log_file = Path(output / config.DEFAULT_LOG_FILE)
 
     if Path.exists(log_file):
         Path.unlink(log_file)
@@ -204,27 +202,20 @@ def get_logseq_config_edn(folder_path: Path, args) -> Set[str]:
     return target_dirs
 
 
-def get_logseq_bak_recycle(folder_path: Path) -> Tuple[Path, Path]:
+def get_logseq_sub_folder(folder_path: Path, target) -> Path:
     """
-    Extract bak and recycle data from a Logseq.
+    Get the path to a specific Logseq subfolder.
 
     Args:
         folder_path (Path): The path to the Logseq graph folder.
+        target (str): The name of the target subfolder (e.g., "recycle", "bak", etc.).
 
     Returns:
-        Tuple[Path, Path]: A tuple containing the bak and recycle folders.
+        Path: The bak folder path or None if not found.
     """
     logseq_folder = folder_path / config.DEFAULT_LOGSEQ_DIR
-    folders = [folder_path, logseq_folder]
-    for folder in folders:
-        if not is_path_exists(folder):
-            return ()
+    if not is_path_exists(folder_path) or not is_path_exists(logseq_folder):
+        return None
 
-    recycling_folder = logseq_folder / config.DEFAULT_RECYCLE_DIR
-    bak_folder = logseq_folder / config.DEFAULT_BAK_DIR
-
-    for folder in [recycling_folder, bak_folder]:
-        if not is_path_exists(folder):
-            return ()
-
-    return recycling_folder, bak_folder
+    target_dir = logseq_folder / target
+    return target_dir if is_path_exists(target_dir) else None

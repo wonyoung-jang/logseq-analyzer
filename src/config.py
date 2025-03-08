@@ -3,8 +3,8 @@ import re
 # import src.config as config
 
 # Logseq Analyzer configurations
-DEFAULT_OUTPUT_DIR = "logseq-analyzer-output"
-DEFAULT_LOG_FILE = "logseq_analyzer.log"
+DEFAULT_OUTPUT_DIR = "logseq-analyzer-output"  # static
+DEFAULT_LOG_FILE = "logseq_analyzer.log"  # static
 DEFAULT_TO_DELETE_DIR = "to_delete"
 
 FILE_TYPE_ASSET = "asset"
