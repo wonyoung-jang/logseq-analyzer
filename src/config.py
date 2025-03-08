@@ -48,6 +48,15 @@ NAMESPACE_FORMAT = ":legacy"  # or ":triple-lowbar"
 NAMESPACE_SEP = "/"  # static
 NAMESPACE_FILE_SEP = "%2F"  # or "___"
 
+CONFIG_EDN_DATA = {
+    "journal_page_title_format": JOURNAL_PAGE_TITLE_FORMAT,
+    "journal_file_name_format": JOURNAL_FILE_NAME_FORMAT,
+    "journals_directory": DIR_JOURNALS,
+    "pages_directory": DIR_PAGES,
+    "whiteboards_directory": DIR_WHITEBOARDS,
+    "file_name_format": NAMESPACE_FORMAT,
+}
+
 # Journal format data
 DATETIME_TOKEN_MAP = {
     "yyyy": "%Y",

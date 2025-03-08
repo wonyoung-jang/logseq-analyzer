@@ -309,7 +309,7 @@ def compile_re_config() -> Dict[str, Pattern]:
     logging.info("Compiling regex patterns for Logseq configuration")
     patterns = {
         # Pattern to match journal page title format in verbose mode.
-        "journal_page_title_pattern": re.compile(
+        "journal_page_title_format_pattern": re.compile(
             r"""
             :journal/page-title-format   # Literal text for journal page title format.
             \s+                          # One or more whitespace characters.
@@ -318,7 +318,7 @@ def compile_re_config() -> Dict[str, Pattern]:
             re.VERBOSE,
         ),
         # Pattern to match journal file name format.
-        "journal_file_name_pattern": re.compile(
+        "journal_file_name_format_pattern": re.compile(
             r"""
             :journal/file-name-format    # Literal text for journal file name format.
             \s+                          # One or more whitespace characters.
