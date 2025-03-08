@@ -48,7 +48,7 @@ def process_journal_key(key: str) -> str:
         return key
 
 
-def process_key_name(key: str, parent: str) -> str:
+def process_filename_key(key: str, parent: str) -> str:
     """
     Process the key name by removing the parent name and formatting it.
 

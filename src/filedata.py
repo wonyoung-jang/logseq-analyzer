@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Pattern, Tuple
-from src.keynames import process_key_name
+from src.filename_processing import process_filename_key
 
 
 def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], Optional[str]]:
@@ -48,7 +48,7 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
     """
     stat = file_path.stat()
     parent = file_path.parent.name
-    name = process_key_name(file_path.stem, parent)
+    name = process_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
     now = datetime.now().replace(microsecond=0)
 
