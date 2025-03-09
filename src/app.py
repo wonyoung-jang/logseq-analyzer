@@ -38,7 +38,12 @@ def run_app():
     write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
 
     # Process graph files
-    graph_meta_data, logseq_graph_content = process_graph_files(logseq_graph_dir, content_patterns, target_dirs)
+    graph_meta_data, logseq_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
+        logseq_graph_dir, content_patterns, target_dirs
+    )
+
+    write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
+    write_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
 
     # Core data analysis
     (

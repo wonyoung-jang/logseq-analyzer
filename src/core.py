@@ -26,15 +26,19 @@ def process_graph_files(
     """
     graph_meta_data = {}
     meta_graph_content = {}
+    meta_primary_bullet = {}
+    meta_content_bullets = {}
     graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
     for file_path in graph_dir_structure:
-        meta_data, graph_content = process_single_file(file_path, patterns)
+        meta_data, graph_content, primary_bullet, content_bullets = process_single_file(file_path, patterns)
         name = meta_data["name"]
         if name in graph_meta_data:
             name = meta_data["name_secondary"]
         graph_meta_data[name] = meta_data
         meta_graph_content[name] = graph_content
-    return graph_meta_data, meta_graph_content
+        meta_primary_bullet[name] = primary_bullet
+        meta_content_bullets[name] = content_bullets
+    return graph_meta_data, meta_graph_content, meta_primary_bullet, meta_content_bullets
 
 
 def core_data_analysis(

@@ -20,17 +20,22 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     """
     metadata = extract_file_metadata(file_path)
     content = read_file_content(file_path)
+    primary_bullet = []
+    content_bullets = []
 
     if content:
+        bullet_content = patterns["bullet"].split(content)
+        primary_bullet = bullet_content[0]
+        content_bullets = bullet_content[1:]
+        bullet_count = len(content_bullets) if primary_bullet else 0
         metadata["char_count"] = len(content)
-        bullet_count = len(patterns["bullet"].split(content)[1:])
         metadata["bullet_count"] = bullet_count
         metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
     else:
         metadata["char_count"] = 0
         metadata["bullet_count"] = 0
         metadata["bullet_density"] = 0
-    return metadata, content
+    return metadata, content, primary_bullet, content_bullets
 
 
 def extract_file_metadata(file_path: Path) -> Dict[str, Any]:

@@ -143,8 +143,6 @@ def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: d
 
     return config_edn_data
 
-    return config_edn_data
-
 
 def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict:
     """
