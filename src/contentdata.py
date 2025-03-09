@@ -30,21 +30,24 @@ def process_content_data(
     for name, text in content.items():
         content_data[name] = {}
         content_data[name]["aliases"] = []
+        content_data[name]["namespace_root"] = ""
+        content_data[name]["namespace_parent"] = ""
+        content_data[name]["namespace_parts"] = {}
+        content_data[name]["namespace_level"] = -1
+
         content_data[name]["page_references"] = []
-        content_data[name]["tags"] = []
         content_data[name]["tagged_backlinks"] = []
+        content_data[name]["tags"] = []
+
         content_data[name]["properties_values"] = []
         content_data[name]["properties_page_builtin"] = []
         content_data[name]["properties_page_user"] = []
         content_data[name]["properties_block_builtin"] = []
         content_data[name]["properties_block_user"] = []
+
         content_data[name]["assets"] = []
         content_data[name]["draws"] = []
-        content_data[name]["namespace_root"] = ""
-        content_data[name]["namespace_parent"] = ""
-        content_data[name]["namespace_parts"] = {}
-        content_data[name]["namespace_level"] = -1
-        content_data[name]["namespace_queries"] = []
+
         content_data[name]["external_links"] = []
         content_data[name]["external_links_internet"] = []
         content_data[name]["external_links_alias"] = []
@@ -52,28 +55,52 @@ def process_content_data(
         content_data[name]["embedded_links_internet"] = []
         content_data[name]["embedded_links_asset"] = []
 
+        content_data[name]["blockquotes"] = []
+        content_data[name]["flashcards"] = []
+        content_data[name]["multiline_code_block"] = []
+        content_data[name]["calc_block"] = []
+        content_data[name]["multiline_code_lang"] = []
+        content_data[name]["reference"] = []
+        content_data[name]["block_reference"] = []
+        content_data[name]["embed"] = []
+        content_data[name]["page_embed"] = []
+        content_data[name]["block_embed"] = []
+        content_data[name]["namespace_queries"] = []
+        content_data[name]["clozes"] = []
+        content_data[name]["simple_queries"] = []
+        content_data[name]["query_functions"] = []
+        content_data[name]["advanced_commands"] = []
+
         if not text:
             logging.debug(f'Skipping content processing for "{name}" due to empty content.')
             continue
 
         # Page references
         page_references = [page_ref.lower() for page_ref in patterns["page_reference"].findall(text)]
-        tags = [tag.lower() for tag in patterns["tag"].findall(text)]
         tagged_backlinks = [tag.lower() for tag in patterns["tagged_backlink"].findall(text)]
+        tags = [tag.lower() for tag in patterns["tag"].findall(text)]
         assets = [asset.lower() for asset in patterns["asset"].findall(text)]
         draws = [draw.lower() for draw in patterns["draw"].findall(text)]
         external_links = [link.lower() for link in patterns["external_link"].findall(text)]
         embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
 
+        blockquotes = [quote.lower() for quote in patterns["blockquote"].findall(text)]
+        flashcards = [flashcard.lower() for flashcard in patterns["flashcard"].findall(text)]
+        multiline_code_blocks = [code.lower() for code in patterns["multiline_code_block"].findall(text)]
+        calc_blocks = [calc.lower() for calc in patterns["calc_block"].findall(text)]
+        multiline_code_langs = [lang.lower() for lang in patterns["multiline_code_lang"].findall(text)]
+        references_general = [ref.lower() for ref in patterns["reference"].findall(text)]
+        block_references = [block_ref.lower() for block_ref in patterns["block_reference"].findall(text)]
+        embeds = [embed.lower() for embed in patterns["embed"].findall(text)]
+        page_embeds = [page_embed.lower() for page_embed in patterns["page_embed"].findall(text)]
+        block_embeds = [block_embed.lower() for block_embed in patterns["block_embed"].findall(text)]
         namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
         clozes = [cloze.lower() for cloze in patterns["cloze"].findall(text)]
         simple_queries = [simple_query.lower() for simple_query in patterns["simple_query"].findall(text)]
         query_functions = [query_function.lower() for query_function in patterns["query_function"].findall(text)]
-        advanced_commands = [
-            advanced_command.lower() for advanced_command in patterns["advanced_command"].findall(text)
-        ]
+        advanced_commands = [adv_cmd.lower() for adv_cmd in patterns["advanced_command"].findall(text)]
 
-        properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
+        properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
         aliases = properties_values.get("alias", [])
         processed_aliases = []
@@ -82,11 +109,23 @@ def process_content_data(
             content_data[name]["aliases"] = processed_aliases
 
         content_data[name]["page_references"] = page_references
-        content_data[name]["tags"] = tags
+        content_data[name]["properties_values"] = properties_values
+
         content_data[name]["tagged_backlinks"] = tagged_backlinks
+        content_data[name]["tags"] = tags
         content_data[name]["assets"] = assets
         content_data[name]["draws"] = draws
-        content_data[name]["properties_values"] = properties_values
+        content_data[name]["blockquotes"] = blockquotes
+        content_data[name]["flashcards"] = flashcards
+        content_data[name]["multiline_code_block"] = multiline_code_blocks
+        content_data[name]["calc_block"] = calc_blocks
+        content_data[name]["multiline_code_lang"] = multiline_code_langs
+        content_data[name]["reference"] = references_general
+        content_data[name]["block_reference"] = block_references
+        content_data[name]["embed"] = embeds
+        content_data[name]["page_embed"] = page_embeds
+        content_data[name]["block_embed"] = block_embeds
+        content_data[name]["namespace_queries"] = namespace_queries
         content_data[name]["clozes"] = clozes
         content_data[name]["simple_queries"] = simple_queries
         content_data[name]["query_functions"] = query_functions
@@ -128,8 +167,6 @@ def process_content_data(
                     direct_level = namespace_level - 1
                     if direct_level > parent_level:
                         content_data[parent_joined]["namespace_level"] = direct_level
-
-        content_data[name]["namespace_queries"] = namespace_queries
 
         unique_linked_references.update(
             processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties

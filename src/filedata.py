@@ -18,27 +18,25 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     Returns:
         Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
     """
-    metadata = extract_file_metadata(file_path)
+    metadata = get_file_metadata(file_path)
     content = read_file_content(file_path)
     primary_bullet = []
     content_bullets = []
 
     if content:
-        bullet_content = patterns["bullet"].split(content)
-        primary_bullet = bullet_content[0]
-        content_bullets = bullet_content[1:]
-        bullet_count = len(content_bullets) if primary_bullet else 0
         metadata["char_count"] = len(content)
+        bullet_count = 0
+        if metadata["file_path_suffix"] == ".md":
+            bullet_content = patterns["bullet"].split(content)
+            primary_bullet = bullet_content[0]
+            content_bullets = bullet_content[1:]
+            bullet_count = len(content_bullets) if content_bullets else 0
         metadata["bullet_count"] = bullet_count
         metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
-    else:
-        metadata["char_count"] = 0
-        metadata["bullet_count"] = 0
-        metadata["bullet_density"] = 0
     return metadata, content, primary_bullet, content_bullets
 
 
-def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
+def get_file_metadata(file_path: Path) -> Dict[str, Any]:
     """
     Extract metadata from a file.
 
@@ -64,7 +62,6 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
         logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
     date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
-
     time_existed = now - date_created
     time_unmodified = now - date_modified
 
@@ -83,6 +80,9 @@ def extract_file_metadata(file_path: Path) -> Dict[str, Any]:
         "time_unmodified": time_unmodified,
         "size": stat.st_size,
         "uri": file_path.as_uri(),
+        "char_count": 0,
+        "bullet_count": 0,
+        "bullet_density": 0,
     }
     return metadata
 

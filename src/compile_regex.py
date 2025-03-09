@@ -37,8 +37,8 @@ def compile_re_content() -> Dict[str, Pattern]:
         block_embed: Matches embedded block references.
         namespace_query: Matches namespace queries.
         cloze: Matches cloze deletions.
-        simple_queries: Matches simple query syntax.
-        query_functions: Matches query functions.
+        simple_query: Matches simple query syntax.
+        query_function: Matches query functions.
         advanced_command: Matches advanced org-mode commands.
     """
     logging.info("Compiling regex patterns")
@@ -89,7 +89,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
-        "property_values": re.compile(
+        "property_value": re.compile(
             r"""
             ^               # Start of line
             (?!\s*-\s)      # Negative lookahead: not a bullet
