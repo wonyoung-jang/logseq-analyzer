@@ -23,7 +23,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
 
     if content:
         metadata["char_count"] = len(content)
-        bullet_count = len(patterns["bullet"].findall(content))
+        bullet_count = len(patterns["bullet"].split(content)[1:])
         metadata["bullet_count"] = bullet_count
         metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
     else:

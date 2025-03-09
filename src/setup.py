@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Set
 
 
-def setup_logseq_analyzer_args() -> argparse.Namespace:
+def get_logseq_analyzer_args() -> argparse.Namespace:
     """
     Setup the command line arguments for the Logseq Analyzer.
 
@@ -49,7 +49,7 @@ def setup_logseq_analyzer_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def setup_output_directory() -> Path:
+def create_output_directory() -> Path:
     """
     Setup the output directory for the Logseq Analyzer.
 
@@ -77,7 +77,7 @@ def setup_output_directory() -> Path:
     return output_dir
 
 
-def setup_logging(output: Path) -> None:
+def create_log_file(output: Path) -> None:
     """
     Setup logging configuration for the Logseq Analyzer.
     """
@@ -95,7 +95,7 @@ def setup_logging(output: Path) -> None:
     logging.debug("Logseq Analyzer started.")
 
 
-def get_logseq_config_edn_content(config_file: Path) -> str:
+def clean_logseq_config_edn_content(config_file: Path) -> str:
     """
     Extract EDN configuration data from a Logseq configuration file.
 
@@ -144,7 +144,7 @@ def get_logseq_config_edn(config_edn_content: str, config_patterns: dict) -> dic
     return config_edn_data
 
 
-def get_target_dirs(config_edn_data: dict) -> Set[str]:
+def get_logseq_target_dirs(config_edn_data: dict) -> Set[str]:
     """
     Get the target directories based on the configuration data.
 
@@ -156,12 +156,12 @@ def get_target_dirs(config_edn_data: dict) -> Set[str]:
     """
     config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
     config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
-    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
-    if config.NAMESPACE_FORMAT == ":triple-lowbar":
-        config.NAMESPACE_FILE_SEP = "___"
     config.DIR_PAGES = config_edn_data["pages_directory"]
     config.DIR_JOURNALS = config_edn_data["journals_directory"]
     config.DIR_WHITEBOARDS = config_edn_data["whiteboards_directory"]
+    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
+    if config.NAMESPACE_FORMAT == ":triple-lowbar":
+        config.NAMESPACE_FILE_SEP = "___"
 
     target_dirs = {
         config.DIR_ASSETS,

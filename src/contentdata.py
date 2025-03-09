@@ -22,12 +22,13 @@ def process_content_data(
             - alphanum_dict: Dictionary for quick lookup of linked references.
             - dangling_links: List of dangling links (linked, but no file).
     """
-    content_data = defaultdict(lambda: defaultdict(list))
+    content_data = {}
     alphanum_dict = defaultdict(set)
     unique_linked_references = set()
     unique_aliases = set()
 
     for name, text in content.items():
+        content_data[name] = {}
         content_data[name]["aliases"] = []
         content_data[name]["page_references"] = []
         content_data[name]["tags"] = []
@@ -63,7 +64,15 @@ def process_content_data(
         draws = [draw.lower() for draw in patterns["draw"].findall(text)]
         external_links = [link.lower() for link in patterns["external_link"].findall(text)]
         embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
-        namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_queries"].findall(text)]
+
+        namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
+        clozes = [cloze.lower() for cloze in patterns["cloze"].findall(text)]
+        simple_queries = [simple_query.lower() for simple_query in patterns["simple_query"].findall(text)]
+        query_functions = [query_function.lower() for query_function in patterns["query_function"].findall(text)]
+        advanced_commands = [
+            advanced_command.lower() for advanced_command in patterns["advanced_command"].findall(text)
+        ]
+
         properties_values = {prop: value for prop, value in patterns["property_values"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
         aliases = properties_values.get("alias", [])
@@ -78,6 +87,10 @@ def process_content_data(
         content_data[name]["assets"] = assets
         content_data[name]["draws"] = draws
         content_data[name]["properties_values"] = properties_values
+        content_data[name]["clozes"] = clozes
+        content_data[name]["simple_queries"] = simple_queries
+        content_data[name]["query_functions"] = query_functions
+        content_data[name]["advanced_commands"] = advanced_commands
 
         (
             content_data[name]["properties_page_builtin"],

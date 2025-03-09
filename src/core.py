@@ -1,7 +1,8 @@
 import argparse
+import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern, Any
-from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content, is_path_exists
+from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
 from src.reporting import write_output
 from src.filedata import process_single_file
 from src.contentdata import process_content_data
@@ -232,8 +233,9 @@ def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> No
         recycle (Path): The recycle directory.
     """
     to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not is_path_exists(to_delete_dir):
-        to_delete_dir.mkdir()
+    if not to_delete_dir.exists():
+        logging.info(f"Creating directory: {to_delete_dir}")
+        to_delete_dir.mkdir(parents=True, exist_ok=True)
 
     if args.move_bak:
         move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))

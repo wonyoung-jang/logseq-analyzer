@@ -6,6 +6,7 @@ output*/*
 *output/*
 *output*/*
 to_delete/*
+*test/*
 profile_output*
 *.json
 *.log

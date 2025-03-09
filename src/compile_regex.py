@@ -9,19 +9,52 @@ def compile_re_content() -> Dict[str, Pattern]:
 
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
+
+    Overview of Patterns:
+        bullet: Matches bullet points.
+        page_reference: Matches internal page references in double brackets.
+        tagged_backlink: Matches tagged backlinks.
+        tag: Matches hashtags.
+        property: Matches property keys.
+        property_values: Matches property key-value pairs.
+        asset: Matches references to assets.
+        draw: Matches references to Excalidraw drawings.
+        external_link: Matches markdown external links.
+        external_link_internet: Matches external links to websites.
+        external_link_alias: Matches aliased external links.
+        embedded_link: Matches embedded content links.
+        embedded_link_internet: Matches embedded internet content.
+        embedded_link_asset: Matches embedded asset references.
+        blockquote: Matches blockquote syntax.
+        flashcard: Matches flashcard syntax.
+        multiline_code_block: Matches code blocks.
+        calc_block: Matches calculation blocks.
+        multiline_code_lang: Matches code blocks with language specification.
+        reference: Matches block references.
+        block_reference: Matches UUID block references.
+        embed: Matches embedded content.
+        page_embed: Matches embedded page references.
+        block_embed: Matches embedded block references.
+        namespace_query: Matches namespace queries.
+        cloze: Matches cloze deletions.
+        simple_queries: Matches simple query syntax.
+        query_functions: Matches query functions.
+        advanced_command: Matches advanced org-mode commands.
     """
     logging.info("Compiling regex patterns")
     patterns = {
         "bullet": re.compile(
             r"""
-            (?:^|\s)    # Beginning of line or whitespace
+            ^           # Beginning of line
+            \s*         # Optional whitespace
             -           # Literal hyphen
+            \s*         # Optional whitespace
             """,
             re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "page_reference": re.compile(
             r"""
-            (?<!\#)      # Negative lookbehind: not preceded by #
+            (?<!\#)     # Negative lookbehind: not preceded by #
             \[\[        # Opening double brackets
             (.+?)       # Capture group: the page name (non-greedy)
             \]\]        # Closing double brackets
@@ -254,7 +287,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.IGNORECASE | re.VERBOSE,
         ),
-        "namespace_queries": re.compile(
+        "namespace_query": re.compile(
             r"""
             \{\{namespace\      # "{{namespace" followed by space
             .*?                 # Any characters (non-greedy)
@@ -270,7 +303,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.IGNORECASE | re.VERBOSE,
         ),
-        "simple_queries": re.compile(
+        "simple_query": re.compile(
             r"""
             \{\{query\          # "{{query" followed by space
             .*?                 # Any characters (non-greedy)
@@ -278,7 +311,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             """,
             re.IGNORECASE | re.VERBOSE,
         ),
-        "query_functions": re.compile(
+        "query_function": re.compile(
             r"""
             \{\{function\       # "{{function" followed by space
             .*?                 # Any characters (non-greedy)
@@ -305,21 +338,32 @@ def compile_re_config() -> Dict[str, Pattern]:
 
     Returns:
         Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
+
+    Overview of Patterns:
+        journal_page_title_pattern: Matches the journal page title format.
+        journal_file_name_pattern: Matches the journal file name format.
+        feature_enable_journals_pattern: Matches the enable journals feature setting.
+        feature_enable_whiteboards_pattern: Matches the enable whiteboards feature setting.
+        pages_directory_pattern: Matches the pages directory setting.
+        journals_directory_pattern: Matches the journals directory setting.
+        whiteboards_directory_pattern: Matches the whiteboards directory setting.
+        file_name_format_pattern: Matches the file name format setting.
     """
     logging.info("Compiling regex patterns for Logseq configuration")
     patterns = {
         # Pattern to match journal page title format in verbose mode.
-        "journal_page_title_format_pattern": re.compile(
+        "journal_page_title_pattern": re.compile(
             r"""
-            :journal/page-title-format   # Literal text for journal page title format.
-            \s+                          # One or more whitespace characters.
-            "([^"]+)"                    # Capture group for any characters except double quotes.
+            :journal/page-title-format  # Literal text for journal page title format.
+            \s+                         # One or more whitespace characters.
+            "([^"]+)"                   # Capture group for any characters except double quotes.
             """,
             re.VERBOSE,
         ),
         # Pattern to match journal file name format.
-        "journal_file_name_format_pattern": re.compile(
+        "journal_file_name_pattern": re.compile(
             r"""
+            
             :journal/file-name-format    # Literal text for journal file name format.
             \s+                          # One or more whitespace characters.
             "([^"]+)"                    # Capture group for file name format.

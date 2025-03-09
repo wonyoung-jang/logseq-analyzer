@@ -19,7 +19,8 @@ def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Gene
     Yields:
         Path: File paths that match the criteria.
     """
-    if not is_path_exists(directory):
+    if not directory.exists() or not directory.is_dir():
+        logging.error(f"Directory not found: {directory}")
         return
 
     for path in directory.rglob("*"):
@@ -44,12 +45,12 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
     """
     folders = [input_dir, target_dir]
     for folder in folders:
-        if not is_path_exists(folder):
+        if not folder.exists():
             return
 
     if target_subdir:
         target_dir = target_dir / target_subdir
-        if not is_path_exists(target_dir):
+        if not target_dir.exists():
             target_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f"Created target subdirectory: {target_dir}")
 
@@ -77,8 +78,9 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
         graph_meta_data (Dict[str, Any]): Metadata for each file.
     """
     to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not is_path_exists(to_delete_dir):
-        create_directory(to_delete_dir)
+    if not to_delete_dir.exists():
+        logging.info(f"Creating directory: {to_delete_dir}")
+        to_delete_dir.mkdir(parents=True, exist_ok=True)
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])
@@ -88,30 +90,3 @@ def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
-
-
-def is_path_exists(path: Path) -> bool:
-    """
-    Check if a directory exists.
-
-    Args:
-        directory (Path): The directory to check.
-
-    Returns:
-        bool: True if the path exists, False otherwise.
-    """
-    if not path.exists():
-        logging.error(f"Path not found: {path}")
-        return False
-    return True
-
-
-def create_directory(directory: Path) -> None:
-    """
-    Create a directory if it does not exist.
-
-    Args:
-        directory (Path): The directory to create.
-    """
-    directory.mkdir(parents=True, exist_ok=True)
-    logging.info(f"Created directory: {directory}")
