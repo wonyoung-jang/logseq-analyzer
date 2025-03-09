@@ -6,16 +6,29 @@ from pathlib import Path
 from typing import Set
 
 
-def get_logseq_analyzer_args() -> argparse.Namespace:
+def get_logseq_analyzer_args(**kwargs) -> argparse.Namespace:
     """
     Setup the command line arguments for the Logseq Analyzer.
 
     Returns:
         argparse.Namespace: The command line arguments.
     """
+    if kwargs:
+        print("Running in GUI mode.")
+        args = argparse.Namespace(
+            graph_folder=kwargs.get("graph_folder"),
+            global_config=kwargs.get("global_config_file"),
+            move_unlinked_assets=kwargs.get("move_assets", False),
+            move_bak=kwargs.get("move_bak", False),
+            move_recycle=kwargs.get("move_recycle", False),
+            write_graph=kwargs.get("write_graph", False),
+        )
+        return args
+    print("Running in CLI mode.")
+    
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
-
-    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder")
+    
+    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
     parser.add_argument(
         "-wg",
         "--write-graph",
