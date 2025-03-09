@@ -176,7 +176,7 @@ def process_content_data(
         # External links
         if external_links:
             content_data[name]["external_links"] = external_links
-            external_links_str = "\n".join(embedded_links)
+            external_links_str = "\n".join(external_links)
 
             external_links_internet = [
                 link.lower() for link in patterns["external_link_internet"].findall(external_links_str)
