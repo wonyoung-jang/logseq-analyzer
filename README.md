@@ -23,6 +23,8 @@ Command line utility to analyze a Logseq graph for basic information to assist w
 
 - For help: `python main.py -h`
 
+- For a simple GUI (WIP): `python gui.py`
+
 ### Useful flags
 
 - `-ma` or `--move-unlinked-assets` will move unlinked assets out of your graph to this projects folder for review.

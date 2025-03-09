@@ -9,12 +9,28 @@ from src.helpers import *
 from src.reporting import *
 
 
-def run_app():
+def run_app(**kwargs):
     """
     Main function to run the Logseq analyzer.
     """
-    # Setup command line arguments
-    args = get_logseq_analyzer_args()
+    if kwargs:
+        # Running from the GUI: construct a namespace from kwargs.
+        args = argparse.Namespace(
+            graph_folder=kwargs.get("graph_folder"),
+            global_config=kwargs.get("global_config_file"),
+            move_unlinked_assets=kwargs.get("move_assets", False),
+            move_bak=kwargs.get("move_bak", False),
+            move_recycle=kwargs.get("move_recycle", False),
+            write_graph=kwargs.get("write_graph", False),
+        )
+        print("Running in GUI mode.")
+    else:
+        # Running from CLI: parse the command line arguments.
+        print("Running in CLI mode.")
+        args = get_logseq_analyzer_args()
+
+    if not args.graph_folder:
+        raise ValueError("Logseq graph folder is required.")
 
     # Setup output directory and logging
     output_dir = create_output_directory()
