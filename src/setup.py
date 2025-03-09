@@ -117,7 +117,7 @@ def clean_logseq_config_edn_content(config_file: Path) -> str:
     return config_edn_content
 
 
-def get_logseq_config_edn(config_edn_content: str, config_patterns: dict) -> dict:
+def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: dict) -> dict:
     """
     Extract EDN configuration data from a Logseq configuration file.
 
@@ -141,6 +141,32 @@ def get_logseq_config_edn(config_edn_content: str, config_patterns: dict) -> dic
                 config_edn_data[key] = match.group(1)
     config_edn_data = {k: v for k, v in config_edn_data.items() if v is not None}
 
+    return config_edn_data
+
+    return config_edn_data
+
+
+def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict:
+    """
+    Get the configuration data from the Logseq configuration file.
+
+    Args:
+        args (argparse.Namespace): The command line arguments.
+        logseq_dir (Path): The path to the Logseq graph folder.
+        config_patterns (dict): A dictionary of regex patterns for extracting configuration data.
+
+    Returns:
+        dict: A dictionary containing the extracted configuration data.
+    """
+    config_file = get_sub_file_or_folder(logseq_dir, config.DEFAULT_CONFIG_FILE)
+    config_edn_content = clean_logseq_config_edn_content(config_file)
+    config_edn_data = get_config_edn_data_for_analysis(config_edn_content, config_patterns)
+    config_edn_data = {**config.CONFIG_EDN_DATA, **config_edn_data}
+    if args.global_config:
+        global_config_edn_file = config.GLOBAL_CONFIG_FILE = Path(args.global_config)
+        global_config_edn_content = clean_logseq_config_edn_content(global_config_edn_file)
+        global_config_edn_data = get_config_edn_data_for_analysis(global_config_edn_content, config_patterns)
+        config_edn_data = {**config_edn_data, **global_config_edn_data}
     return config_edn_data
 
 

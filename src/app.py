@@ -31,15 +31,7 @@ def run_app():
     config_patterns = compile_re_config()
 
     # Get configs
-    config_file = get_sub_file_or_folder(logseq_dir, config.DEFAULT_CONFIG_FILE)
-    config_edn_content = clean_logseq_config_edn_content(config_file)
-    config_edn_data = get_logseq_config_edn(config_edn_content, config_patterns)
-    config_edn_data = {**config.CONFIG_EDN_DATA, **config_edn_data}
-    if args.global_config:
-        global_config_edn_file = config.GLOBAL_CONFIG_FILE = Path(args.global_config)
-        global_config_edn_content = clean_logseq_config_edn_content(global_config_edn_file)
-        global_config_edn_data = get_logseq_config_edn(global_config_edn_content, config_patterns)
-        config_edn_data = {**config_edn_data, **global_config_edn_data}
+    config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
 
     # Get target directories
     target_dirs = get_logseq_target_dirs(config_edn_data)
