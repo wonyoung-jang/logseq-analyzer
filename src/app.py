@@ -71,6 +71,9 @@ def run_app(**kwargs):
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
+    # Namespaces analysis
+    process_namespace_data(output_dir, graph_content_data, dangling_links)
+
     # Create delete directory
     to_delete_dir = create_delete_directory()
 
@@ -81,8 +84,5 @@ def run_app(**kwargs):
 
     # Handle bak and recycle directories
     handle_bak_recycle(args, bak_dir, recycle_dir, to_delete_dir)
-
-    # Namespaces analysis
-    process_namespace_data(output_dir, graph_content_data, dangling_links)
 
     logging.info("Logseq Analyzer completed.")
