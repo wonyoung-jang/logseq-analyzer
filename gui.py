@@ -99,6 +99,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         success_dialog.setWindowTitle("Success")
         success_dialog.setText("Analysis completed successfully.")
         success_dialog.exec()
+        self.close()
 
     def show_error(self, message):
         error_dialog = QMessageBox(self)

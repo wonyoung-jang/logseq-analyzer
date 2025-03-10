@@ -151,7 +151,15 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
         file_extension = meta_data["file_extension"]
         file_extensions[file_extension] = file_extensions.get(file_extension, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
-    write_output(output_dir, "file_extensions", file_extensions, config.OUTPUT_DIR_META)
+    write_output(output_dir, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
+
+    sum_categories = {}
+    for file_extension in file_extensions.keys():
+        sum_categories.update({f"all_{file_extension}s": {"file_extension": file_extension}})
+    for output_name, criteria in sum_categories.items():
+        summary_subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = summary_subset
+        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_EXTENSIONS)
 
     return summary_data_subsets
 
