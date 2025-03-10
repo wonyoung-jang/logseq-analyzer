@@ -1,6 +1,8 @@
 # Logseq Analyzer
 
-Command line utility to analyze a Logseq graph for basic information to assist with the upcoming database version.
+Simple utility to analyze a Logseq graph for basic information to assist with the upcoming database version.
+
+![Logseq Analyzer's GUI](/images/Logseq%20Analyzer%20Main.png)
 
 > [!WARNING]  
 > Only supports Markdown (.md) graphs.
@@ -13,9 +15,11 @@ Command line utility to analyze a Logseq graph for basic information to assist w
 
 ## Installation 
 
-- Ensure Python 3.12+ is installed
+- Ensure Python 3 is installed
 
-- Only Python Standard Library modules necessary (no prerequesites)
+- If using the GUI, ensure PySide6 is installed and install requirements with:
+
+`pip install -r requirements.txt`
 
 ## Usage
 
@@ -67,6 +71,16 @@ Text files with information in the default `output` folder.
 - **Root Node** - Not backlinked, and has backlinks.
 - **Branch Node** - Backlinked, and has backlinks.
 - **Dangling Link** - Backlinked, and does not exist as a file in the system.
+
+#### A table of the above definitions for clarity
+| Node Type        | Backlinked ✅ | Has Backlinks ✅ | Has Content ✅ | Exists as File ✅ |
+|-----------------|--------------|-----------------|--------------|----------------|
+| **True Orphans**  | ❌           | ❌              | ❌           | ✅             |
+| **Graph Orphans** | ❌           | ❌              | ✅           | ✅             |
+| **Leaf Node**     | ✅           | ❌              | 🟡           | ✅             |
+| **Root Node**     | ❌           | ✅              | ✅           | ✅             |
+| **Branch Node**   | ✅           | ✅              | ✅           | ✅             |
+| **Dangling Link** | ✅           | ❌              | ❌           | ❌             |
 
 ## License
 [MIT License](LICENSE)

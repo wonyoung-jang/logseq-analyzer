@@ -173,10 +173,8 @@ def process_content_data(
         )
         unique_aliases.update(processed_aliases)
 
-        # External links
+        # Process external and embedded links
         process_external_links(patterns, content_data, name, external_links)
-
-        # Embedded links
         process_embedded_links(patterns, content_data, name, embedded_links)
 
     # Create alphanum lookups and identify dangling links
@@ -206,8 +204,8 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
     alphanum_dict = defaultdict(set)
     for item in list_lookup:
         if item:
-            first_char_id = item[:2] if len(item) > 1 else f"!{item[0]}"
-            alphanum_dict[first_char_id].add(item)
+            id = item[:2] if len(item) > 1 else f"!{item[0]}"
+            alphanum_dict[id].add(item)
         else:
             logging.error(f"Empty item: {item}")
     return alphanum_dict
