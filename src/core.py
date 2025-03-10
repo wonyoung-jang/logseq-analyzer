@@ -12,7 +12,7 @@ import src.config as config
 
 def process_graph_files(
     logseq_graph_folder: Path, patterns: Dict[str, Pattern], target_dirs: List[str]
-) -> Tuple[dict, dict]:
+) -> Tuple[dict, dict, dict, dict]:
     """
     Process all files in the Logseq graph folder.
 
@@ -22,22 +22,27 @@ def process_graph_files(
         target_dirs (List[str]): The target directories to process.
 
     Returns:
-        Tuple[dict, dict]: The graph metadata and content data.
+        Tuple[dict, dict, dict, dict]: A tuple containing the graph metadata, content data, primary bullet data, and content bullets data.
     """
     graph_meta_data = {}
     meta_graph_content = {}
     meta_primary_bullet = {}
     meta_content_bullets = {}
+
     graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
+
     for file_path in graph_dir_structure:
         meta_data, graph_content, primary_bullet, content_bullets = process_single_file(file_path, patterns)
+
         name = meta_data["name"]
         if name in graph_meta_data:
             name = meta_data["name_secondary"]
+
         graph_meta_data[name] = meta_data
         meta_graph_content[name] = graph_content
         meta_primary_bullet[name] = primary_bullet
         meta_content_bullets[name] = content_bullets
+
     return graph_meta_data, meta_graph_content, meta_primary_bullet, meta_content_bullets
 
 
@@ -207,6 +212,7 @@ def handle_assets(
     graph_content_data: dict,
     graph_summary_data: dict,
     summary_data_subsets: dict,
+    to_delete_dir: Path,
 ) -> None:
     """
     Handle assets for the Logseq Analyzer.
@@ -218,10 +224,11 @@ def handle_assets(
         graph_content_data (dict): The graph content data.
         graph_summary_data (dict): The graph summary data.
         summary_data_subsets (dict): The summary data subsets.
+        to_delete_dir (Path): The directory for deleted files.
     """
     summary_is_asset = summary_data_subsets["is_asset"]
     not_referenced_assets_keys = list(summary_is_asset.keys())
-    for name, content_data in graph_content_data.items():
+    for content_data in graph_content_data.values():
         if not content_data["assets"]:
             continue
         for non_asset in not_referenced_assets_keys:
@@ -240,22 +247,22 @@ def handle_assets(
     write_output(
         output_dir,
         "is_asset_backlinked",
-        list(summary_is_asset_backlinked.keys()),
+        summary_is_asset_backlinked,
         config.OUTPUT_DIR_ASSETS,
     )
     write_output(
         output_dir,
         "is_asset_not_backlinked",
-        list(summary_is_asset_not_backlinked.keys()),
+        summary_is_asset_not_backlinked,
         config.OUTPUT_DIR_ASSETS,
     )
 
     # Optional move unlinked assets
     if args.move_unlinked_assets:
-        move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data)
+        move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data, to_delete_dir)
 
 
-def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> None:
+def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path, to_delete_dir: Path) -> None:
     """
     Handle bak and recycle files for the Logseq Analyzer.
 
@@ -263,14 +270,24 @@ def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path) -> No
         args (argparse.Namespace): The command line arguments.
         bak (Path): The bak directory.
         recycle (Path): The recycle directory.
+        to_delete_dir (Path): The directory for deleted files.
     """
-    to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not to_delete_dir.exists():
-        logging.info(f"Creating directory: {to_delete_dir}")
-        to_delete_dir.mkdir(parents=True, exist_ok=True)
-
     if args.move_bak:
         move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
 
     if args.move_recycle:
         move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))
+
+
+def create_delete_directory() -> Path:
+    """
+    Create a directory for deleted files.
+
+    Returns:
+        Path: The path to the delete directory.
+    """
+    delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
+    if not delete_dir.exists():
+        logging.info(f"Creating directory: {delete_dir}")
+        delete_dir.mkdir(parents=True, exist_ok=True)
+    return delete_dir

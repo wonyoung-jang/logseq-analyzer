@@ -69,22 +69,25 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
                 logging.error(f"Failed to move file: {file}: {e}")
 
 
-def move_unlinked_assets(summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any]) -> None:
+def move_unlinked_assets(
+    summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any], to_delete_dir: Path
+) -> None:
     """
     Move unlinked assets to a separate directory.
 
     Args:
         summary_is_asset_not_backlinked (Dict[str, Any]): Summary data for unlinked assets.
         graph_meta_data (Dict[str, Any]): Metadata for each file.
+        to_delete_dir (Path): The directory to move unlinked assets to.
     """
-    to_delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not to_delete_dir.exists():
-        logging.info(f"Creating directory: {to_delete_dir}")
-        to_delete_dir.mkdir(parents=True, exist_ok=True)
+    to_delete_asset_subdir = to_delete_dir / config.DIR_ASSETS
+    if not to_delete_asset_subdir.exists():
+        to_delete_asset_subdir.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Created unlinked assets directory: {to_delete_asset_subdir}")
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])
-        new_path = to_delete_dir / file_path.name
+        new_path = to_delete_asset_subdir / file_path.name
         try:
             shutil.move(file_path, new_path)
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")

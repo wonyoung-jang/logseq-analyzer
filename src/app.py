@@ -55,9 +55,6 @@ def run_app(**kwargs):
         graph_summary_data,
     ) = core_data_analysis(content_patterns, graph_meta_data, logseq_graph_content)
 
-    # Generate summary subsets
-    summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
-
     # Write initial outputs
     write_initial_outputs(
         args,
@@ -70,14 +67,20 @@ def run_app(**kwargs):
         graph_summary_data,
     )
 
-    # Generate global summary
+    # Generate summary
+    summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
+    # Create delete directory
+    to_delete_dir = create_delete_directory()
+
     # Handle assets
-    handle_assets(args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets)
+    handle_assets(
+        args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets, to_delete_dir
+    )
 
     # Handle bak and recycle directories
-    handle_bak_recycle(args, bak_dir, recycle_dir)
+    handle_bak_recycle(args, bak_dir, recycle_dir, to_delete_dir)
 
     # Namespaces analysis
     process_namespace_data(output_dir, graph_content_data, dangling_links)

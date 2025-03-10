@@ -17,7 +17,6 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
         argparse.Namespace: Parsed command line arguments.
     """
     if kwargs:
-        print("Running in GUI mode.")
         args = argparse.Namespace(
             graph_folder=kwargs.get("graph_folder"),
             global_config=kwargs.get("global_config_file"),
@@ -27,7 +26,6 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
             write_graph=kwargs.get("write_graph", False),
         )
         return args
-    print("Running in CLI mode.")
 
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
 
