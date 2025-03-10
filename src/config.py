@@ -21,11 +21,14 @@ NODE_TYPE_OTHER = "other-node"
 NODE_TYPE_ORPHAN_GRAPH = "orphan-graph"
 NODE_TYPE_ORPHAN_TRUE = "orphan-true"
 
-OUTPUT_DIR_META = "__meta"
-OUTPUT_DIR_GRAPH = "graph"
-OUTPUT_DIR_SUMMARY = "summary"
+OUTPUT_DIR_META = "_meta"
+OUTPUT_DIR_GRAPH = "_graph"
+OUTPUT_DIR_SUMMARY = "_summary"
+OUTPUT_DIR_NAMESPACE = "_namespaces"
 OUTPUT_DIR_EXTENSIONS = "extensions"
-OUTPUT_DIR_NAMESPACE = "namespace"
+OUTPUT_DIR_NODES = "nodes"
+OUTPUT_DIR_TYPES = "types"
+OUTPUT_DIR_ASSETS = "assets"
 OUTPUT_DIR_TEST = "test"
 
 # Core Logseq folder structure

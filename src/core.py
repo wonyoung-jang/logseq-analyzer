@@ -120,46 +120,66 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     Returns:
         dict: The summary data subsets.
     """
+    summary_data_subsets = {}
+
+    # Process general categories
     summary_categories: Dict[str, Dict[str, Any]] = {
+        "is_backlinked": {"is_backlinked": True},
         "has_content": {"has_content": True},
         "has_backlinks": {"has_backlinks": True},
         "has_external_links": {"has_external_links": True},
         "has_embedded_links": {"has_embedded_links": True},
-        "is_backlinked": {"is_backlinked": True},
-        "is_markdown": {"file_extension": ".md"},
+    }
+
+    for output_name, criteria in summary_categories.items():
+        subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = subset
+        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_SUMMARY)
+
+    # Process file types
+    summary_categories_types: Dict[str, Dict[str, Any]] = {
         "is_asset": {"file_type": "asset"},
         "is_draw": {"file_type": "draw"},
         "is_journal": {"file_type": "journal"},
         "is_page": {"file_type": "page"},
         "is_whiteboard": {"file_type": "whiteboard"},
         "is_other": {"file_type": "other"},
+    }
+
+    for output_name, criteria in summary_categories_types.items():
+        subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = subset
+        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TYPES)
+
+    # Process nodes
+    summary_categories_nodes: Dict[str, Dict[str, Any]] = {
         "is_orphan_true": {"node_type": "orphan_true"},
         "is_orphan_graph": {"node_type": "orphan_graph"},
         "is_node_root": {"node_type": "root"},
         "is_node_leaf": {"node_type": "leaf"},
         "is_node_branch": {"node_type": "branch"},
+        "is_node_other": {"node_type": "other-node"},
     }
 
-    summary_data_subsets = {}
-    for output_name, criteria in summary_categories.items():
-        summary_subset = extract_summary_subset(graph_summary_data, **criteria)
-        summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_SUMMARY)
+    for output_name, criteria in summary_categories_nodes.items():
+        subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = subset
+        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_NODES)
 
+    # Process file extensions
     file_extensions = {}
-    for name, meta_data in graph_summary_data.items():
-        file_extension = meta_data["file_extension"]
-        file_extensions[file_extension] = file_extensions.get(file_extension, 0) + 1
+    for meta in graph_summary_data.values():
+        ext = meta.get("file_extension")
+        file_extensions[ext] = file_extensions.get(ext, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
     write_output(output_dir, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
 
-    sum_categories = {}
-    for file_extension in file_extensions.keys():
-        sum_categories.update({f"all_{file_extension}s": {"file_extension": file_extension}})
-    for output_name, criteria in sum_categories.items():
-        summary_subset = extract_summary_subset(graph_summary_data, **criteria)
-        summary_data_subsets[output_name] = summary_subset
-        write_output(output_dir, output_name, summary_subset, config.OUTPUT_DIR_EXTENSIONS)
+    for ext in file_extensions:
+        output_name = f"all_{ext}s"
+        criteria = {"file_extension": ext}
+        subset = extract_summary_subset(graph_summary_data, **criteria)
+        summary_data_subsets[output_name] = subset
+        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
 
     return summary_data_subsets
 
@@ -221,13 +241,13 @@ def handle_assets(
         output_dir,
         "is_asset_backlinked",
         list(summary_is_asset_backlinked.keys()),
-        config.OUTPUT_DIR_SUMMARY,
+        config.OUTPUT_DIR_ASSETS,
     )
     write_output(
         output_dir,
         "is_asset_not_backlinked",
         list(summary_is_asset_not_backlinked.keys()),
-        config.OUTPUT_DIR_SUMMARY,
+        config.OUTPUT_DIR_ASSETS,
     )
 
     # Optional move unlinked assets
