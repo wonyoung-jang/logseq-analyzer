@@ -31,7 +31,7 @@ def process_summary_data(
 
     for name, meta_data in graph_meta_data.items():
         content_info = graph_content_data.get(name, {})
-        has_content = bool(content_info)
+        has_content = meta_data["size"] > 0
         has_backlinks = False
         has_external_links = False
         has_embedded_links = False
