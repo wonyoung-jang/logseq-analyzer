@@ -83,6 +83,9 @@ def write_initial_outputs(
     graph_meta_data,
     graph_content_data,
     graph_summary_data,
+    target_dirs,
+    meta_primary_bullet,
+    meta_content_bullets,
 ) -> None:
     """Write initial outputs for graph analysis to specified directories.
 
@@ -95,19 +98,17 @@ def write_initial_outputs(
         graph_meta_data (dict): Metadata about the graph structure
         graph_content_data (dict): Content data for graph nodes
         graph_summary_data (dict): Summary statistics of the graph
-
-    Returns:
-        None
-
-    Writes multiple output files to specified subdirectories under output_dir:
-    - alphanum_dictionary and dangling_links to meta subdirectory
-    - content_data, meta_data and summary_data to graph subdirectory
-    - Optionally writes graph_content to meta subdirectory if args.write_graph is True
+        meta_primary_bullet (dict): Primary bullet data for graph nodes
+        meta_content_bullets (dict): Content bullet data for graph nodes
     """
-    write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
-    write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
+
+    write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
+    write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
+    write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
+    write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
+    write_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
 
     write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
     write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
