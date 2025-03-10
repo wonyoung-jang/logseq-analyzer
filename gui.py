@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMessageBox,
 )
+from PySide6.QtCore import QSettings
 from src.app import run_app
 
 
@@ -72,6 +73,8 @@ class LogseqAnalyzerGUI(QMainWindow):
         button_layout.addWidget(self.exit_button)
 
         self.setCentralWidget(central_widget)
+        self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
+        self.load_settings()
 
     def run_analysis(self):
         args_gui = {
@@ -85,6 +88,8 @@ class LogseqAnalyzerGUI(QMainWindow):
         if not args_gui["graph_folder"]:
             self.show_error("Graph folder is required.")
             return
+
+        self.save_settings()
 
         # Call the run_app function with the provided parameters
         run_app(**args_gui)
@@ -111,6 +116,24 @@ class LogseqAnalyzerGUI(QMainWindow):
         file, _ = QFileDialog.getOpenFileName(self, "Select Logseq Global Config File", "", "EDN Files (*.edn)")
         if file:
             self.global_config_input.setText(file)
+
+    def save_settings(self):
+        """Save current settings using QSettings."""
+        self.settings.setValue("graph_folder", self.graph_folder_input.text())
+        self.settings.setValue("global_config_file", self.global_config_input.text())
+        self.settings.setValue("move_assets", self.move_assets_checkbox.isChecked())
+        self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
+        self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
+        self.settings.setValue("write_graph", self.write_graph_checkbox.isChecked())
+
+    def load_settings(self):
+        """Load settings using QSettings."""
+        self.graph_folder_input.setText(self.settings.value("graph_folder", ""))
+        self.global_config_input.setText(self.settings.value("global_config_file", ""))
+        self.move_assets_checkbox.setChecked(self.settings.value("move_assets", False, type=bool))
+        self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
+        self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
+        self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
 
 
 if __name__ == "__main__":

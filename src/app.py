@@ -34,15 +34,18 @@ def run_app(**kwargs):
 
     # Get target directories
     target_dirs = get_logseq_target_dirs(config_edn_data)
-    write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
+    write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)  # TODO: Remove this line
 
     # Process graph files
     graph_meta_data, logseq_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
         logseq_graph_dir, content_patterns, target_dirs
     )
-
-    write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
+    write_output(
+        output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META
+    )  # TODO: Remove this line
+    write_output(
+        output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META
+    )  # TODO: Remove this line
 
     # Core data analysis
     (

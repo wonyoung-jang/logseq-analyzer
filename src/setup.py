@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import Set
 
 
-def get_logseq_analyzer_args(**kwargs) -> argparse.Namespace:
+def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
     """
     Setup the command line arguments for the Logseq Analyzer.
 
+    Args:
+        **kwargs: Keyword arguments for GUI mode.
+
     Returns:
-        argparse.Namespace: The command line arguments.
+        argparse.Namespace: Parsed command line arguments.
     """
     if kwargs:
         print("Running in GUI mode.")
@@ -25,9 +28,9 @@ def get_logseq_analyzer_args(**kwargs) -> argparse.Namespace:
         )
         return args
     print("Running in CLI mode.")
-    
+
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
-    
+
     parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
     parser.add_argument(
         "-wg",
