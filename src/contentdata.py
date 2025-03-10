@@ -23,10 +23,10 @@ def process_content_data(
             - dangling_links: List of dangling links (linked, but no file).
     """
     content_data = {}
-    alphanum_dict = defaultdict(set)
     unique_linked_references = set()
     unique_aliases = set()
 
+    # Process each file's content
     for name, text in content.items():
         content_data[name] = {}
         content_data[name]["aliases"] = []
@@ -174,68 +174,43 @@ def process_content_data(
         unique_aliases.update(processed_aliases)
 
         # External links
-        if external_links:
-            content_data[name]["external_links"] = external_links
-            external_links_str = "\n".join(external_links)
-
-            external_links_internet = [
-                link.lower() for link in patterns["external_link_internet"].findall(external_links_str)
-            ]
-            if external_links_internet:
-                content_data[name]["external_links_internet"] = external_links_internet
-
-            external_links_alias = [
-                link.lower() for link in patterns["external_link_alias"].findall(external_links_str)
-            ]
-            if external_links_alias:
-                content_data[name]["external_links_alias"] = external_links_alias
+        process_external_links(patterns, content_data, name, external_links)
 
         # Embedded links
-        if embedded_links:
-            content_data[name]["embedded_links"] = embedded_links
-            embedded_links_str = "\n".join(embedded_links)
+        process_embedded_links(patterns, content_data, name, embedded_links)
 
-            embedded_links_internet = [
-                link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)
-            ]
-            if embedded_links_internet:
-                content_data[name]["embedded_links_internet"] = embedded_links_internet
+    # Create alphanum lookups and identify dangling links
+    alphanum_dict = create_alphanum(sorted(unique_linked_references))
+    alphanum_filenames = create_alphanum(sorted(content.keys()))
+    dangling_links = identify_dangling_links(unique_aliases, alphanum_dict, alphanum_filenames)
 
-            embedded_links_asset = [
-                link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)
-            ]
-            if embedded_links_asset:
-                content_data[name]["embedded_links_asset"] = embedded_links_asset
+    return content_data, alphanum_dict, dangling_links
 
-    # Create alphanum dictionary
-    for linked_reference in unique_linked_references:
-        if linked_reference:
-            first_char_id = linked_reference[:2] if len(linked_reference) > 1 else f"!{linked_reference[0]}"
-            alphanum_dict[first_char_id].add(linked_reference)
-        else:
-            logging.info(f"Empty linked reference: {linked_reference}")
 
-    # Check for dangling links (linked, but no file)
-    all_filenames = list(content.keys())
-    alphanum_filenames = defaultdict(set)
-    for filename in all_filenames:
-        if filename:
-            first_char_id = filename[:2] if len(filename) > 1 else f"!{filename[0]}"
-            alphanum_filenames[first_char_id].add(filename)
-        else:
-            logging.info(f"Empty filename: {filename}")
-
+def identify_dangling_links(
+    unique_aliases: Set[str], alphanum_dict: Dict[str, Set[str]], alphanum_filenames: Dict[str, Set[str]]
+) -> Set[str]:
+    """Identify dangling links in the alphanum lookups and aliases."""
     dangling_links = set()
     for id, references in alphanum_dict.items():
         if id not in alphanum_filenames:
             dangling_links.update(references)
         else:
-            for ref in references:
-                if ref not in alphanum_filenames[id]:
-                    dangling_links.add(ref)
+            dangling_links.update([ref for ref in references if ref not in alphanum_filenames[id]])
     dangling_links -= unique_aliases
+    return dangling_links
 
-    return content_data, alphanum_dict, dangling_links
+
+def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
+    """Create alphanum dictionary from a list of strings."""
+    alphanum_dict = defaultdict(set)
+    for item in list_lookup:
+        if item:
+            first_char_id = item[:2] if len(item) > 1 else f"!{item[0]}"
+            alphanum_dict[first_char_id].add(item)
+        else:
+            logging.error(f"Empty item: {item}")
+    return alphanum_dict
 
 
 def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
@@ -296,3 +271,41 @@ def process_aliases(aliases):
     if part:
         results.append(part)
     return results
+
+
+def process_external_links(
+    patterns: Dict[str, Pattern], content_data: Dict[str, Any], name: str, external_links: List[str]
+) -> None:
+    """Process external links and categorize them."""
+    if external_links:
+        content_data[name]["external_links"] = external_links
+        external_links_str = "\n".join(external_links)
+
+        external_links_internet = [
+            link.lower() for link in patterns["external_link_internet"].findall(external_links_str)
+        ]
+        if external_links_internet:
+            content_data[name]["external_links_internet"] = external_links_internet
+
+        external_links_alias = [link.lower() for link in patterns["external_link_alias"].findall(external_links_str)]
+        if external_links_alias:
+            content_data[name]["external_links_alias"] = external_links_alias
+
+
+def process_embedded_links(
+    patterns: Dict[str, Pattern], content_data: Dict[str, Any], name: str, embedded_links: List[str]
+) -> None:
+    """Process embedded links and categorize them."""
+    if embedded_links:
+        content_data[name]["embedded_links"] = embedded_links
+        embedded_links_str = "\n".join(embedded_links)
+
+        embedded_links_internet = [
+            link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)
+        ]
+        if embedded_links_internet:
+            content_data[name]["embedded_links_internet"] = embedded_links_internet
+
+        embedded_links_asset = [link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)]
+        if embedded_links_asset:
+            content_data[name]["embedded_links_asset"] = embedded_links_asset
