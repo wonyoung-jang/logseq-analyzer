@@ -5,6 +5,51 @@ from collections import defaultdict
 from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
+def init_content_data() -> Dict[str, Any]:
+    return {
+        "aliases": [],
+        "namespace_root": "",
+        "namespace_parent": "",
+        "namespace_parts": {},
+        "namespace_level": -1,
+        "page_references": [],
+        "tagged_backlinks": [],
+        "tags": [],
+        "properties_values": [],
+        "properties_page_builtin": [],
+        "properties_page_user": [],
+        "properties_block_builtin": [],
+        "properties_block_user": [],
+        "assets": [],
+        "draws": [],
+        "external_links": [],
+        "external_links_internet": [],
+        "external_links_alias": [],
+        "embedded_links": [],
+        "embedded_links_internet": [],
+        "embedded_links_asset": [],
+        "blockquotes": [],
+        "flashcards": [],
+        "multiline_code_block": [],
+        "calc_block": [],
+        "multiline_code_lang": [],
+        "reference": [],
+        "block_reference": [],
+        "embed": [],
+        "page_embed": [],
+        "block_embed": [],
+        "namespace_queries": [],
+        "clozes": [],
+        "simple_queries": [],
+        "query_functions": [],
+        "advanced_commands": [],
+    }
+
+
+def find_all_lower(pattern: Pattern, text: str) -> List[str]:
+    return [match.lower() for match in pattern.findall(text)]
+
+
 def process_content_data(
     content: Dict[str, str], patterns: Dict[str, Pattern]
 ) -> Tuple[Dict[str, Any], Dict[str, Set[str]], List[str]]:
@@ -28,77 +73,34 @@ def process_content_data(
 
     # Process each file's content
     for name, text in content.items():
-        content_data[name] = {}
-        content_data[name]["aliases"] = []
-        content_data[name]["namespace_root"] = ""
-        content_data[name]["namespace_parent"] = ""
-        content_data[name]["namespace_parts"] = {}
-        content_data[name]["namespace_level"] = -1
-
-        content_data[name]["page_references"] = []
-        content_data[name]["tagged_backlinks"] = []
-        content_data[name]["tags"] = []
-
-        content_data[name]["properties_values"] = []
-        content_data[name]["properties_page_builtin"] = []
-        content_data[name]["properties_page_user"] = []
-        content_data[name]["properties_block_builtin"] = []
-        content_data[name]["properties_block_user"] = []
-
-        content_data[name]["assets"] = []
-        content_data[name]["draws"] = []
-
-        content_data[name]["external_links"] = []
-        content_data[name]["external_links_internet"] = []
-        content_data[name]["external_links_alias"] = []
-        content_data[name]["embedded_links"] = []
-        content_data[name]["embedded_links_internet"] = []
-        content_data[name]["embedded_links_asset"] = []
-
-        content_data[name]["blockquotes"] = []
-        content_data[name]["flashcards"] = []
-        content_data[name]["multiline_code_block"] = []
-        content_data[name]["calc_block"] = []
-        content_data[name]["multiline_code_lang"] = []
-        content_data[name]["reference"] = []
-        content_data[name]["block_reference"] = []
-        content_data[name]["embed"] = []
-        content_data[name]["page_embed"] = []
-        content_data[name]["block_embed"] = []
-        content_data[name]["namespace_queries"] = []
-        content_data[name]["clozes"] = []
-        content_data[name]["simple_queries"] = []
-        content_data[name]["query_functions"] = []
-        content_data[name]["advanced_commands"] = []
+        content_data[name] = init_content_data()
 
         if not text:
-            logging.debug(f'Skipping content processing for "{name}" due to empty content.')
+            logging.warning(f'Skipping content processing for "{name}" due to empty content.')
             continue
 
-        # Page references
-        page_references = [page_ref.lower() for page_ref in patterns["page_reference"].findall(text)]
-        tagged_backlinks = [tag.lower() for tag in patterns["tagged_backlink"].findall(text)]
-        tags = [tag.lower() for tag in patterns["tag"].findall(text)]
-        assets = [asset.lower() for asset in patterns["asset"].findall(text)]
-        draws = [draw.lower() for draw in patterns["draw"].findall(text)]
-        external_links = [link.lower() for link in patterns["external_link"].findall(text)]
-        embedded_links = [link.lower() for link in patterns["embedded_link"].findall(text)]
-
-        blockquotes = [quote.lower() for quote in patterns["blockquote"].findall(text)]
-        flashcards = [flashcard.lower() for flashcard in patterns["flashcard"].findall(text)]
-        multiline_code_blocks = [code.lower() for code in patterns["multiline_code_block"].findall(text)]
-        calc_blocks = [calc.lower() for calc in patterns["calc_block"].findall(text)]
-        multiline_code_langs = [lang.lower() for lang in patterns["multiline_code_lang"].findall(text)]
-        references_general = [ref.lower() for ref in patterns["reference"].findall(text)]
-        block_references = [block_ref.lower() for block_ref in patterns["block_reference"].findall(text)]
-        embeds = [embed.lower() for embed in patterns["embed"].findall(text)]
-        page_embeds = [page_embed.lower() for page_embed in patterns["page_embed"].findall(text)]
-        block_embeds = [block_embed.lower() for block_embed in patterns["block_embed"].findall(text)]
-        namespace_queries = [ns_query.lower() for ns_query in patterns["namespace_query"].findall(text)]
-        clozes = [cloze.lower() for cloze in patterns["cloze"].findall(text)]
-        simple_queries = [simple_query.lower() for simple_query in patterns["simple_query"].findall(text)]
-        query_functions = [query_function.lower() for query_function in patterns["query_function"].findall(text)]
-        advanced_commands = [adv_cmd.lower() for adv_cmd in patterns["advanced_command"].findall(text)]
+        page_references = find_all_lower(patterns["page_reference"], text)
+        tagged_backlinks = find_all_lower(patterns["tagged_backlink"], text)
+        tags = find_all_lower(patterns["tag"], text)
+        assets = find_all_lower(patterns["asset"], text)
+        draws = find_all_lower(patterns["draw"], text)
+        external_links = find_all_lower(patterns["external_link"], text)
+        embedded_links = find_all_lower(patterns["embedded_link"], text)
+        blockquotes = find_all_lower(patterns["blockquote"], text)
+        flashcards = find_all_lower(patterns["flashcard"], text)
+        multiline_code_blocks = find_all_lower(patterns["multiline_code_block"], text)
+        calc_blocks = find_all_lower(patterns["calc_block"], text)
+        multiline_code_langs = find_all_lower(patterns["multiline_code_lang"], text)
+        references_general = find_all_lower(patterns["reference"], text)
+        block_references = find_all_lower(patterns["block_reference"], text)
+        embeds = find_all_lower(patterns["embed"], text)
+        page_embeds = find_all_lower(patterns["page_embed"], text)
+        block_embeds = find_all_lower(patterns["block_embed"], text)
+        namespace_queries = find_all_lower(patterns["namespace_query"], text)
+        clozes = find_all_lower(patterns["cloze"], text)
+        simple_queries = find_all_lower(patterns["simple_query"], text)
+        query_functions = find_all_lower(patterns["query_function"], text)
+        advanced_commands = find_all_lower(patterns["advanced_command"], text)
 
         properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
         page_properties, block_properties = extract_page_block_properties(text, patterns)
@@ -110,7 +112,6 @@ def process_content_data(
 
         content_data[name]["page_references"] = page_references
         content_data[name]["properties_values"] = properties_values
-
         content_data[name]["tagged_backlinks"] = tagged_backlinks
         content_data[name]["tags"] = tags
         content_data[name]["assets"] = assets

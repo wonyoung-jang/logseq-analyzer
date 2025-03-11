@@ -99,5 +99,3 @@ def run_app(**kwargs):
 
     # Handle bak and recycle directories
     handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
-
-    logging.info("Logseq Analyzer completed.")
