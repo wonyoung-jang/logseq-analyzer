@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QMessageBox,
+    QProgressBar,
 )
 from PySide6.QtCore import QSettings
 from src.app import run_app
@@ -62,6 +63,32 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
         form_layout.addRow(self.write_graph_checkbox)
 
+        # Progress Bars
+        self.setup_progress_bar = QProgressBar()
+        self.setup_progress_bar.setRange(0, 100)
+        self.setup_progress_bar.setValue(0)
+        form_layout.addRow("Setup:", self.setup_progress_bar)
+
+        self.process_files_progress_bar = QProgressBar()
+        self.process_files_progress_bar.setRange(0, 100)
+        self.process_files_progress_bar.setValue(0)
+        form_layout.addRow("Process Files:", self.process_files_progress_bar)
+
+        self.reporting_progress_bar = QProgressBar()
+        self.reporting_progress_bar.setRange(0, 100)
+        self.reporting_progress_bar.setValue(0)
+        form_layout.addRow("Reporting:", self.reporting_progress_bar)
+
+        self.namespaces_progress_bar = QProgressBar()
+        self.namespaces_progress_bar.setRange(0, 100)
+        self.namespaces_progress_bar.setValue(0)
+        form_layout.addRow("Namespaces:", self.namespaces_progress_bar)
+
+        self.move_files_progress_bar = QProgressBar()
+        self.move_files_progress_bar.setRange(0, 100)
+        self.move_files_progress_bar.setValue(0)
+        form_layout.addRow("Move Files:", self.move_files_progress_bar)
+
         # Buttons
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
@@ -90,16 +117,46 @@ class LogseqAnalyzerGUI(QMainWindow):
             return
 
         self.save_settings()
+        self.run_button.setEnabled(False)
 
-        # Call the run_app function with the provided parameters
-        run_app(**args_gui)
-        # Show success message when analysis is complete
-        success_dialog = QMessageBox(self)
-        success_dialog.setIcon(QMessageBox.Information)
-        success_dialog.setWindowTitle("Success")
-        success_dialog.setText("Analysis completed successfully.")
-        success_dialog.exec()
-        self.close()
+        # Reset progress bars before starting
+        self.setup_progress_bar.setValue(0)
+        self.process_files_progress_bar.setValue(0)
+        self.reporting_progress_bar.setValue(0)
+        self.namespaces_progress_bar.setValue(0)
+        self.move_files_progress_bar.setValue(0)
+        QApplication.processEvents()
+
+        try:
+            run_app(**args_gui, gui_instance=self)
+            success_dialog = QMessageBox(self)
+            success_dialog.setIcon(QMessageBox.Information)
+            success_dialog.setWindowTitle("Success")
+            success_dialog.setText("Analysis completed successfully.")
+            success_dialog.exec()
+            self.close()
+        except Exception as e:
+            self.show_error(f"Analysis failed: {e}")
+        finally:
+            self.run_button.setEnabled(True)
+
+    def update_progress(self, phase_name, progress_value):
+        """Updates the progress bar for a given phase."""
+        progress_bar = None
+        if phase_name == "setup":
+            progress_bar = self.setup_progress_bar
+        elif phase_name == "process_files":
+            progress_bar = self.process_files_progress_bar
+        elif phase_name == "reporting":
+            progress_bar = self.reporting_progress_bar
+        elif phase_name == "namespaces":
+            progress_bar = self.namespaces_progress_bar
+        elif phase_name == "move_files":
+            progress_bar = self.move_files_progress_bar
+
+        if progress_bar:
+            progress_bar.setValue(progress_value)
+            QApplication.processEvents()
 
     def show_error(self, message):
         error_dialog = QMessageBox(self)

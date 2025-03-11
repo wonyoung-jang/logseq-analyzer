@@ -1,4 +1,3 @@
-import logging
 import src.config as config
 from pathlib import Path
 from src.compile_regex import *
@@ -16,6 +15,11 @@ def run_app(**kwargs):
     ###################################################################
     # Phase 01: Setup
     ###################################################################
+    gui_instance = kwargs.get("gui_instance")
+
+    if gui_instance:
+        gui_instance.update_progress("setup", 20)
+
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
 
@@ -38,6 +42,9 @@ def run_app(**kwargs):
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
 
+    if gui_instance:
+        gui_instance.update_progress("setup", 100)
+        gui_instance.update_progress("process_files", 20)
     ################################################################
     # Phase 02: Process files
     ################################################################
@@ -57,6 +64,9 @@ def run_app(**kwargs):
     # Merge all graph data into a single dictionary
     graph_all_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
 
+    if gui_instance:
+        gui_instance.update_progress("process_files", 100)
+        gui_instance.update_progress("reporting", 20)
     #################################################################
     # Phase 03: Reporting/writing outputs
     #################################################################
@@ -80,12 +90,18 @@ def run_app(**kwargs):
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
+    if gui_instance:
+        gui_instance.update_progress("reporting", 100)
+        gui_instance.update_progress("namespaces", 20)
     ################################################################
     # Phase 04: Process namespaces
     ################################################################
     # Namespaces analysis
     process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
+    if gui_instance:
+        gui_instance.update_progress("namespaces", 100)
+        gui_instance.update_progress("move_files", 20)
     #####################################################################
     # Phase 05: Move files to a delete directory
     #####################################################################
@@ -99,3 +115,6 @@ def run_app(**kwargs):
 
     # Handle bak and recycle directories
     handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+
+    if gui_instance:
+        gui_instance.update_progress("move_files", 100)
