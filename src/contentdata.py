@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
+
 def init_content_data() -> Dict[str, Any]:
     return {
         "aliases": [],
