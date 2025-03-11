@@ -1,7 +1,7 @@
 import logging
+import csv
 from pathlib import Path
 from typing import Any, TextIO
-
 
 def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
     """
@@ -85,3 +85,81 @@ def write_output(
     with out_path.open("w", encoding="utf-8") as f:
         f.write(f"{filename} | Items: {count}\n\n")
         write_recursive(f, items)
+
+
+def write_csv_output(
+    output_dir: Path,
+    filename_prefix: str,
+    items: Any,
+    type_output: str = "",
+) -> None:
+    """
+    Write the output to CSV file. For dictionaries, it flattens them to create CSV rows.
+    For lists or sets, they are converted to comma-separated strings within a cell.
+
+    Args:
+        output_dir (Path): The output directory.
+        filename_prefix (str): The prefix of the filename.
+        items (Any): The data items to write to CSV. Assumed to be a dictionary
+                     where keys are filenames and values are dictionaries of properties.
+        type_output (str, optional):  The subdirectory for output. Defaults to "".
+    """
+    logging.info(f"Writing CSV output: {filename_prefix}...")
+
+    count = len(items) if isinstance(items, (dict, list, set)) else 1
+    filename = f"{filename_prefix}.csv" if count else f"{filename_prefix}_EMPTY.csv"
+
+    if type_output:
+        parent = output_dir / type_output
+        if not parent.exists():
+            parent.mkdir(parents=True, exist_ok=True)
+        out_path = parent / filename
+    else:
+        out_path = output_dir / filename
+
+    if not isinstance(items, dict): # Handle cases where 'items' is not a dictionary (e.g., list of strings)
+        logging.warning(f"Data for CSV output '{filename_prefix}' is not a dictionary, attempting to write as list.")
+        with out_path.open('w', encoding='utf-8', newline='') as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(['value']) # Default header
+            if isinstance(items, list) or isinstance(items, set):
+                for item in items:
+                    csv_writer.writerow([item])
+            elif items: # For single values
+                csv_writer.writerow([items])
+        return
+
+
+    # For dictionary data, assume keys of the dictionary are filenames,
+    # and values are dictionaries of properties.
+    with out_path.open('w', encoding='utf-8', newline='') as f:
+        csv_writer = csv.writer(f)
+
+        if not items: # Handle empty dictionary
+            csv_writer.writerow(['No data'])
+            return
+
+        # Extract headers from the first item's dictionary (assuming consistent structure)
+        example_item_value = next(iter(items.values())) # Get the first value in the dict
+        if isinstance(example_item_value, dict):
+            headers = ['key'] + list(example_item_value.keys()) # Filename as first column
+            csv_writer.writerow(headers)
+
+            # Write data rows
+            for filename_key, data_dict in items.items():
+                row_data = [filename_key] # Start row with filename
+                for header in headers[1:]: # Iterate through headers, skipping 'filename'
+                    # Check attribute of data_dict
+                    if not isinstance(data_dict, dict):
+                        logging.warning(f"Data for key '{filename_key}' is not a dictionary, skipping.")
+                        continue
+                    value = data_dict.get(header, '')
+                    if isinstance(value, (list, set)): # Convert lists/sets to comma-separated strings
+                        value = ', '.join(map(str, value))
+                    row_data.append(value)
+                csv_writer.writerow(row_data)
+        else: # If values are not dictionaries, write as filename and value columns
+            logging.warning(f"Values in data for CSV '{filename_prefix}' are not dictionaries, writing as key-value pairs.")
+            csv_writer.writerow(['key', 'value'])
+            for filename_key, value in items.items():
+                 csv_writer.writerow([filename_key, value])

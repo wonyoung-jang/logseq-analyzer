@@ -1,7 +1,7 @@
 from pathlib import Path
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
-from src.reporting import write_output
+from src.reporting import write_csv_output
 import src.config as config
 
 """
@@ -218,51 +218,51 @@ def process_namespace_data(
     # 01 Conflicts With Existing Pages
     # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
-    write_output(output_dir, "__namespace_parts", namespace_parts, output_dir_ns)
+    write_csv_output(output_dir, "__namespace_parts", namespace_parts, output_dir_ns)
 
     # Split content data by namespaces and non-namespaces
     content_data_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] >= 0}
     unique_names_namespace = set(content_data_namespaces.keys())
-    write_output(output_dir, "unique_names_namespace", unique_names_namespace, output_dir_ns)
+    write_csv_output(output_dir, "unique_names_namespace", unique_names_namespace, output_dir_ns)
 
     content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
     unique_names_not_namespace = set(content_data_not_namespaces.keys())
-    write_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, output_dir_ns)
+    write_csv_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, output_dir_ns)
 
     # Existing analysis: group by levels
     namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
-    write_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
-    write_output(output_dir, "unique_namespace_parts", unique_namespace_parts, output_dir_ns)
+    write_csv_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
+    write_csv_output(output_dir, "unique_namespace_parts", unique_namespace_parts, output_dir_ns)
 
     potential_non_namespace = unique_names_not_namespace.intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_non_namespace", potential_non_namespace, output_dir_ns)
+    write_csv_output(output_dir, "potential_non_namespace", potential_non_namespace, output_dir_ns)
 
     potential_dangling = set(meta_dangling_links).intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_dangling", potential_dangling, output_dir_ns)
+    write_csv_output(output_dir, "potential_dangling", potential_dangling, output_dir_ns)
 
     # Detecting conflicts with non-namespace pages
     conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
         namespace_parts, potential_non_namespace, potential_dangling
     )
-    write_output(output_dir, "conflicts_non_namespace", conflicts_non_namespace, output_dir_ns)
-    write_output(output_dir, "conflicts_dangling", conflicts_dangling, output_dir_ns)
+    write_csv_output(output_dir, "conflicts_non_namespace", conflicts_non_namespace, output_dir_ns)
+    write_csv_output(output_dir, "conflicts_dangling", conflicts_dangling, output_dir_ns)
 
     # 02 Parts that Appear at Multiple Depths
     conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
-    write_output(output_dir, "conflicts_parent_depth", conflicts_parent_depth, output_dir_ns)
-    write_output(output_dir, "conflicts_parents_unique", conflicts_parents_unique, output_dir_ns)
+    write_csv_output(output_dir, "conflicts_parent_depth", conflicts_parent_depth, output_dir_ns)
+    write_csv_output(output_dir, "conflicts_parents_unique", conflicts_parents_unique, output_dir_ns)
 
     # 03 General Namespace Data
     unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
-    write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
+    write_csv_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
 
     namespace_details = analyze_namespace_details(namespace_parts)
-    write_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
+    write_csv_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
-    write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
-    write_output(output_dir, "namespace_freq_list", namespace_freq_list, output_dir_ns)
+    write_csv_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
+    write_csv_output(output_dir, "namespace_freq_list", namespace_freq_list, output_dir_ns)
 
     # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_content_data)
-    write_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)
+    write_csv_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)

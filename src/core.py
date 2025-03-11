@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Pattern, Any
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
-from src.reporting import write_output
+from src.reporting import write_csv_output
 from src.filedata import process_single_file
 from src.contentdata import process_content_data
 from src.summarydata import process_summary_data, extract_summary_subset
@@ -101,17 +101,17 @@ def write_initial_outputs(
         meta_content_bullets (dict): Content bullet data for graph nodes
     """
     if args.write_graph:
-        write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
+        write_csv_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
 
-    write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
-    write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
-    write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
+    write_csv_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
+    write_csv_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
+    write_csv_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
+    write_csv_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
+    write_csv_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
 
-    write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
+    write_csv_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
+    write_csv_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
+    write_csv_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
 
 
 def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict:
@@ -139,7 +139,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for output_name, criteria in summary_categories.items():
         subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_SUMMARY)
+        write_csv_output(output_dir, output_name, subset, config.OUTPUT_DIR_SUMMARY)
 
     # Process file types
     summary_categories_types: Dict[str, Dict[str, Any]] = {
@@ -154,7 +154,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for output_name, criteria in summary_categories_types.items():
         subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TYPES)
+        write_csv_output(output_dir, output_name, subset, config.OUTPUT_DIR_TYPES)
 
     # Process nodes
     summary_categories_nodes: Dict[str, Dict[str, Any]] = {
@@ -169,7 +169,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for output_name, criteria in summary_categories_nodes.items():
         subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_NODES)
+        write_csv_output(output_dir, output_name, subset, config.OUTPUT_DIR_NODES)
 
     # Process file extensions
     file_extensions = {}
@@ -177,14 +177,14 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
         ext = meta.get("file_extension")
         file_extensions[ext] = file_extensions.get(ext, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
-    write_output(output_dir, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
+    write_csv_output(output_dir, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
 
     for ext in file_extensions:
         output_name = f"all_{ext}s"
         criteria = {"file_extension": ext}
         subset = extract_summary_subset(graph_summary_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
+        write_csv_output(output_dir, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
 
     return summary_data_subsets
 
@@ -202,7 +202,7 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
         global_summary[subset_name] = {}
         global_summary[subset_name]["results"] = len(subset)
 
-    write_output(output_dir, "global_summary", global_summary, config.OUTPUT_DIR_SUMMARY)
+    write_csv_output(output_dir, "global_summary", global_summary, config.OUTPUT_DIR_SUMMARY)
 
 
 def handle_assets(
@@ -255,13 +255,13 @@ def handle_assets(
     summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, **asset_backlinked_kwargs)
     summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, **asset_not_backlinked_kwargs)
 
-    write_output(
+    write_csv_output(
         output_dir,
         "is_asset_backlinked",
         summary_is_asset_backlinked,
         config.OUTPUT_DIR_ASSETS,
     )
-    write_output(
+    write_csv_output(
         output_dir,
         "is_asset_not_backlinked",
         summary_is_asset_not_backlinked,
