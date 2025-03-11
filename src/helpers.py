@@ -88,3 +88,21 @@ def move_unlinked_assets(
             logging.info(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
+
+
+def merge_dicts(*dicts):
+    """
+    Merge multiple dictionaries into a single dictionary.
+
+    Args:
+        *dicts: Dictionaries to merge.
+    Returns:
+        dict: Merged dictionary.
+    """
+    result = {}
+    for dict_data in dicts:
+        for key, values in dict_data.items():
+            if key not in result:
+                result[key] = {}
+            result[key].update(values)
+    return result

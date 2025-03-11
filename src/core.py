@@ -85,6 +85,7 @@ def write_initial_outputs(
     target_dirs,
     meta_primary_bullet,
     meta_content_bullets,
+    graph_all_data,
 ) -> None:
     """Write initial outputs for graph analysis to specified directories.
 
@@ -97,8 +98,10 @@ def write_initial_outputs(
         graph_meta_data (dict): Metadata about the graph structure
         graph_content_data (dict): Content data for graph nodes
         graph_summary_data (dict): Summary statistics of the graph
+        target_dirs (list): List of target directories for processing
         meta_primary_bullet (dict): Primary bullet data for graph nodes
         meta_content_bullets (dict): Content bullet data for graph nodes
+        graph_all_data (dict): All data related to the graph
     """
     if args.write_graph:
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
@@ -112,6 +115,7 @@ def write_initial_outputs(
     write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
     write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
     write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "04_all_data", graph_all_data, config.OUTPUT_DIR_GRAPH)
 
 
 def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict:

@@ -54,6 +54,9 @@ def run_app(**kwargs):
         graph_summary_data,
     ) = core_data_analysis(content_patterns, graph_meta_data, meta_graph_content)
 
+    # Merge all graph data into a single dictionary
+    graph_all_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
+
     #################################################################
     # Phase 03: Reporting/writing outputs
     #################################################################
@@ -70,6 +73,7 @@ def run_app(**kwargs):
         target_dirs,
         meta_primary_bullet,
         meta_content_bullets,
+        graph_all_data,
     )
 
     # Generate summary
