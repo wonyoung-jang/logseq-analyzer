@@ -5,7 +5,7 @@ import re
 # Logseq Analyzer configurations
 DEFAULT_OUTPUT_DIR = "logseq-analyzer-output"  # static
 DEFAULT_LOG_FILE = "logseq_analyzer.log"  # static
-DEFAULT_TO_DELETE_DIR = "to_delete" # static
+DEFAULT_TO_DELETE_DIR = "to_delete"  # static
 
 FILE_TYPE_ASSET = "asset"
 FILE_TYPE_DRAW = "draw"

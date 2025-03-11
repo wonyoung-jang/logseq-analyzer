@@ -182,15 +182,12 @@ def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict
     return config_edn_data
 
 
-def get_logseq_target_dirs(config_edn_data: dict) -> Set[str]:
+def set_logseq_config_edn_data(config_edn_data: dict) -> None:
     """
-    Get the target directories based on the configuration data.
+    Set the Logseq configuration data.
 
     Args:
         config_edn_data (dict): The configuration data.
-
-    Returns:
-        Set[str]: A set of target directories.
     """
     config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
     config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
@@ -201,6 +198,17 @@ def get_logseq_target_dirs(config_edn_data: dict) -> Set[str]:
     if config.NAMESPACE_FORMAT == ":triple-lowbar":
         config.NAMESPACE_FILE_SEP = "___"
 
+
+def get_logseq_target_dirs() -> Set[str]:
+    """
+    Get the target directories based on the configuration data.
+
+    Args:
+        config_edn_data (dict): The configuration data.
+
+    Returns:
+        Set[str]: A set of target directories.
+    """
     target_dirs = {
         config.DIR_ASSETS,
         config.DIR_DRAWS,
@@ -212,7 +220,7 @@ def get_logseq_target_dirs(config_edn_data: dict) -> Set[str]:
     return target_dirs
 
 
-def get_sub_file_or_folder(parent, child) -> Path:
+def get_sub_file_or_folder(parent: Path, child: str) -> Path:
     """
     Get the path to a specific subfolder.
 
@@ -229,5 +237,34 @@ def get_sub_file_or_folder(parent, child) -> Path:
         logging.warning(f"Subfolder does not exist: {target}")
         return None
     logging.debug(f"Successfully received: {target}")
+
+    return target
+
+
+def get_or_create_subdir(parent: Path, child: str) -> Path:
+    """
+    Get a subdirectory or create it if it doesn't exist.
+
+    Args:
+        parent (Path): The path to the parent folder.
+        child (str): The name of the target subfolder.
+
+    Returns:
+        Path: The path to the specified subfolder.
+    """
+    target = parent / child
+
+    if not parent.exists():
+        logging.warning(f"Parent folder does not exist: {parent}")
+        return None
+    elif not target.exists():
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+            logging.info(f"Created subdirectory: {target}")
+        except Exception as e:
+            logging.error(f"Failed to create subdirectory {target}: {e}")
+            raise
+    else:
+        logging.debug(f"Subdirectory already exists: {target}")
 
     return target

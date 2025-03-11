@@ -4,6 +4,8 @@ import src.config as config
 from pathlib import Path
 from typing import Optional, Dict, Any, Generator, List
 
+from src.setup import get_or_create_subdir
+
 
 def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Generator[Path, None, None]:
     """
@@ -48,11 +50,7 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
         if not folder.exists():
             return
 
-    if target_subdir:
-        target_dir = target_dir / target_subdir
-        if not target_dir.exists():
-            target_dir.mkdir(parents=True, exist_ok=True)
-            logging.info(f"Created target subdirectory: {target_dir}")
+    target_dir = get_or_create_subdir(target_dir, target_subdir) if target_subdir else target_dir
 
     for root, dirs, files in Path.walk(input_dir):
         for dir in dirs:
@@ -80,10 +78,7 @@ def move_unlinked_assets(
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         to_delete_dir (Path): The directory to move unlinked assets to.
     """
-    to_delete_asset_subdir = to_delete_dir / config.DIR_ASSETS
-    if not to_delete_asset_subdir.exists():
-        to_delete_asset_subdir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created unlinked assets directory: {to_delete_asset_subdir}")
+    to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, config.DIR_ASSETS)
 
     for name in summary_is_asset_not_backlinked.keys():
         file_path = Path(graph_meta_data[name]["file_path"])

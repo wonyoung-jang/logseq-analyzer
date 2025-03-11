@@ -13,6 +13,10 @@ def run_app(**kwargs):
     """
     Main function to run the Logseq analyzer.
     """
+    ###################################################################
+    # Phase 01: Setup
+    ###################################################################
+    # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
 
     # Setup output directory and logging
@@ -33,8 +37,12 @@ def run_app(**kwargs):
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
 
     # Get target directories
-    target_dirs = get_logseq_target_dirs(config_edn_data)
+    set_logseq_config_edn_data(config_edn_data)
+    target_dirs = get_logseq_target_dirs()
 
+    ################################################################
+    # Phase 02: Process files
+    ################################################################
     # Process graph files
     graph_meta_data, logseq_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
         logseq_graph_dir, content_patterns, target_dirs
@@ -48,6 +56,9 @@ def run_app(**kwargs):
         graph_summary_data,
     ) = core_data_analysis(content_patterns, graph_meta_data, logseq_graph_content)
 
+    #################################################################
+    # Phase 03: Reporting/writing outputs
+    #################################################################
     # Write initial outputs
     write_initial_outputs(
         args,
@@ -67,11 +78,17 @@ def run_app(**kwargs):
     summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
+    ################################################################
+    # Phase 04: Process namespaces
+    ################################################################
     # Namespaces analysis
     process_namespace_data(output_dir, graph_content_data, dangling_links)
 
+    #####################################################################
+    # Phase 05: Move files to a delete directory
+    #####################################################################
     # Create delete directory
-    to_delete_dir = create_delete_directory()
+    to_delete_dir = create_delete_directory(args)
 
     # Handle assets
     handle_assets(
