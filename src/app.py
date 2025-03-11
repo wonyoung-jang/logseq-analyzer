@@ -89,11 +89,11 @@ def run_app(**kwargs):
     to_delete_dir = create_delete_directory(args)
 
     # Handle assets
-    handle_assets(
+    summary_is_asset_not_backlinked = handle_assets(
         args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets, to_delete_dir
     )
 
     # Handle bak and recycle directories
-    handle_bak_recycle(args, bak_dir, recycle_dir, to_delete_dir)
+    handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     logging.info("Logseq Analyzer completed.")

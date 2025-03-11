@@ -270,23 +270,28 @@ def handle_assets(
         config.OUTPUT_DIR_ASSETS,
     )
 
-    # Optional move unlinked assets
-    if args.move_unlinked_assets:
-        move_unlinked_assets(summary_is_asset_not_backlinked, graph_meta_data, to_delete_dir)
+    return summary_is_asset_not_backlinked
 
 
-def handle_bak_recycle(args: argparse.Namespace, bak: Path, recycle: Path, to_delete_dir: Path) -> None:
+def handle_move_files(
+    args: argparse.Namespace, graph_meta_data: dict, assets: dict, bak: Path, recycle: Path, to_delete_dir: Path
+) -> None:
     """
-    Handle bak and recycle files for the Logseq Analyzer.
+    Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
     Args:
         args (argparse.Namespace): The command line arguments.
-        bak (Path): The bak directory.
-        recycle (Path): The recycle directory.
+        graph_meta_data (dict): The graph metadata.
+        assets (dict): The assets data.
+        bak (Path): The path to the bak directory.
+        recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
     """
     if not to_delete_dir:
         return
+
+    if args.move_unlinked_assets:
+        move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
 
     if args.move_bak:
         move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
