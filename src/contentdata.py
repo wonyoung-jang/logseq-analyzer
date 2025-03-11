@@ -6,7 +6,7 @@ from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
 def process_content_data(
-    content: Dict[str, str], patterns: Dict[str, Pattern], props: Set[str]
+    content: Dict[str, str], patterns: Dict[str, Pattern]
 ) -> Tuple[Dict[str, Any], Dict[str, Set[str]], List[str]]:
     """
     Process file content to extract links, tags, properties, and namespace information.
@@ -14,7 +14,6 @@ def process_content_data(
     Args:
         content (Dict[str, str]): Dictionary of file names to content.
         patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
-        props (Set[str]): Set of built-in properties.
 
     Returns:
         Tuple[Dict[str, Any], Dict[str, Set[str]]]:
@@ -25,6 +24,7 @@ def process_content_data(
     content_data = {}
     unique_linked_references = set()
     unique_aliases = set()
+    props = config.BUILT_IN_PROPERTIES
 
     # Process each file's content
     for name, text in content.items():

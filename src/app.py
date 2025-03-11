@@ -33,10 +33,8 @@ def run_app(**kwargs):
     content_patterns = compile_re_content()
     config_patterns = compile_re_config()
 
-    # Get configs
+    # Get config data and target directories
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
-
-    # Get target directories
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
 
@@ -44,17 +42,17 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     # Process graph files
-    graph_meta_data, logseq_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
+    graph_meta_data, meta_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
         logseq_graph_dir, content_patterns, target_dirs
     )
 
     # Core data analysis
     (
-        alphanum_dictionary,
-        dangling_links,
+        meta_alphanum_dictionary,
+        meta_dangling_links,
         graph_content_data,
         graph_summary_data,
-    ) = core_data_analysis(content_patterns, graph_meta_data, logseq_graph_content)
+    ) = core_data_analysis(content_patterns, graph_meta_data, meta_graph_content)
 
     #################################################################
     # Phase 03: Reporting/writing outputs
@@ -63,9 +61,9 @@ def run_app(**kwargs):
     write_initial_outputs(
         args,
         output_dir,
-        alphanum_dictionary,
-        dangling_links,
-        logseq_graph_content,
+        meta_alphanum_dictionary,
+        meta_dangling_links,
+        meta_graph_content,
         graph_meta_data,
         graph_content_data,
         graph_summary_data,
@@ -82,7 +80,7 @@ def run_app(**kwargs):
     # Phase 04: Process namespaces
     ################################################################
     # Namespaces analysis
-    process_namespace_data(output_dir, graph_content_data, dangling_links)
+    process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     #####################################################################
     # Phase 05: Move files to a delete directory

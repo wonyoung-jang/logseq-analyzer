@@ -60,9 +60,8 @@ def core_data_analysis(
     Returns:
         Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
-    built_in_properties = config.BUILT_IN_PROPERTIES
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(
-        meta_graph_content, patterns, built_in_properties
+        meta_graph_content, patterns
     )
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
 
@@ -247,8 +246,16 @@ def handle_assets(
                     graph_summary_data[non_asset]["is_backlinked"] = True
                     break
 
-    summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=True)
-    summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, file_type="asset", is_backlinked=False)
+    asset_backlinked_kwargs = {
+        "is_backlinked": True,
+        "file_type": "asset",
+    }
+    asset_not_backlinked_kwargs = {
+        "is_backlinked": False,
+        "file_type": "asset",
+    }
+    summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, **asset_backlinked_kwargs)
+    summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, **asset_not_backlinked_kwargs)
 
     write_output(
         output_dir,
