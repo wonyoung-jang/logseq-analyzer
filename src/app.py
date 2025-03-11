@@ -90,7 +90,7 @@ def run_app(**kwargs):
 
     # Handle assets
     summary_is_asset_not_backlinked = handle_assets(
-        args, output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets, to_delete_dir
+        output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets, to_delete_dir
     )
 
     # Handle bak and recycle directories

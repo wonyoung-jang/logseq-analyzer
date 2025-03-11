@@ -206,7 +206,6 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
 
 
 def handle_assets(
-    args: argparse.Namespace,
     output_dir: Path,
     graph_meta_data: dict,
     graph_content_data: dict,
@@ -218,7 +217,6 @@ def handle_assets(
     Handle assets for the Logseq Analyzer.
 
     Args:
-        args (argparse.Namespace): The command line arguments.
         output_dir (Path): The output directory.
         graph_meta_data (dict): The graph metadata.
         graph_content_data (dict): The graph content data.
