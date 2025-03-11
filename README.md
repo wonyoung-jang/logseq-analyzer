@@ -2,7 +2,7 @@
 
 Simple utility to analyze a Logseq graph for basic information to assist with the upcoming database version.
 
-
+![Logseq Analyzer's GUI](/images/Logseq%20Analyzer%20Main.png)
 
 > [!WARNING]  
 > Only supports Markdown (.md) graphs.
