@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
-
 def init_content_data() -> Dict[str, Any]:
     return {
         "aliases": [],
@@ -103,16 +102,7 @@ def process_content_data(
         query_functions = find_all_lower(patterns["query_function"], text)
         advanced_commands = find_all_lower(patterns["advanced_command"], text)
 
-        properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
-        page_properties, block_properties = extract_page_block_properties(text, patterns)
-        aliases = properties_values.get("alias", [])
-        processed_aliases = []
-        if aliases:
-            processed_aliases = process_aliases(aliases)
-            content_data[name]["aliases"] = processed_aliases
-
         content_data[name]["page_references"] = page_references
-        content_data[name]["properties_values"] = properties_values
         content_data[name]["tagged_backlinks"] = tagged_backlinks
         content_data[name]["tags"] = tags
         content_data[name]["assets"] = assets
@@ -133,15 +123,22 @@ def process_content_data(
         content_data[name]["query_functions"] = query_functions
         content_data[name]["advanced_commands"] = advanced_commands
 
-        (
-            content_data[name]["properties_page_builtin"],
-            content_data[name]["properties_page_user"],
-        ) = split_builtin_user_properties(page_properties, props)
+        properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
+        page_properties, block_properties = extract_page_block_properties(text, patterns)
+        aliases = properties_values.get("alias", [])
+        processed_aliases = []
+        if aliases:
+            processed_aliases = process_aliases(aliases)
+            content_data[name]["aliases"] = processed_aliases
 
-        (
-            content_data[name]["properties_block_builtin"],
-            content_data[name]["properties_block_user"],
-        ) = split_builtin_user_properties(block_properties, props)
+        properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, props)
+        properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, props)
+
+        content_data[name]["properties_values"] = properties_values
+        content_data[name]["properties_page_builtin"] = properties_page_builtin
+        content_data[name]["properties_page_user"] = properties_page_user
+        content_data[name]["properties_block_builtin"] = properties_block_builtin
+        content_data[name]["properties_block_user"] = properties_block_user
 
         # Namespace
         if config.NAMESPACE_SEP in name:
