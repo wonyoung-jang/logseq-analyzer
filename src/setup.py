@@ -219,3 +219,20 @@ def get_logseq_target_dirs() -> Set[str]:
     }
 
     return target_dirs
+
+
+def validate_path(path: Path) -> None:
+    """
+    Validate if a path exists.
+
+    Args:
+        path (Path): The path to validate.
+
+    Raises:
+        FileNotFoundError: If the path does not exist.
+    """
+    try:
+        path.resolve(strict=True)
+    except FileNotFoundError:
+        logging.warning(f"Path does not exist: {path}")
+        raise FileNotFoundError(f"Path does not exist: {path}")
