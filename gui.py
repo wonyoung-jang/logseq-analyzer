@@ -94,11 +94,17 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Buttons
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
+
         self.run_button = QPushButton("Run Analysis")
         self.run_button.clicked.connect(self.run_analysis)
+        self.run_button.setShortcut("Ctrl+R")
+        self.run_button.setToolTip("Ctrl+R to run analysis")
         button_layout.addWidget(self.run_button)
+
         self.exit_button = QPushButton("Exit")
         self.exit_button.clicked.connect(self.close)
+        self.exit_button.setShortcut("Ctrl+W")
+        self.exit_button.setToolTip("Ctrl+W to exit")
         button_layout.addWidget(self.exit_button)
 
         self.setCentralWidget(central_widget)
