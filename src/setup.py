@@ -4,7 +4,7 @@ import argparse
 import src.config as config
 from pathlib import Path
 from typing import Set
-from src.helpers import get_sub_file_or_folder, get_or_create_subdir
+from src.helpers import get_sub_file_or_folder
 
 
 def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:

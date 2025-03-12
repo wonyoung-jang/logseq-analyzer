@@ -4,8 +4,6 @@ import src.config as config
 from pathlib import Path
 from typing import Optional, Dict, Any, Generator, List
 
-from src.setup import get_or_create_subdir
-
 
 def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Generator[Path, None, None]:
     """
