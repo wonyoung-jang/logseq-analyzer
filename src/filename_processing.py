@@ -1,7 +1,8 @@
 import logging
-import src.config as config
 from datetime import datetime
 from urllib.parse import unquote
+
+import src.config as config
 
 
 def transform_date_format(cljs_format: str) -> str:

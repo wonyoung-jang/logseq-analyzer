@@ -1,4 +1,5 @@
 import sys
+
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 from PySide6.QtCore import QSettings
+
 from src.app import run_app
 
 

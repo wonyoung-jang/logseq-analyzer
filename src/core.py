@@ -1,7 +1,8 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Tuple, Dict, List, Pattern, Any
+from typing import Any, Dict, List, Tuple, Pattern
+
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
 from src.reporting import write_output
 from src.process_basic_file_data import process_single_file

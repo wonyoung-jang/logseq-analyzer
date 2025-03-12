@@ -1,7 +1,8 @@
 import logging
-import src.config as config
 from collections import defaultdict
-from typing import Dict, Pattern, Set, Any, Tuple, List
+from typing import Any, Dict, List, Pattern, Set, Tuple
+
+import src.config as config
 
 
 def init_content_data() -> Dict[str, Any]:

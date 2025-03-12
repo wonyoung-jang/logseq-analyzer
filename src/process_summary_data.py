@@ -1,5 +1,6 @@
-import src.config as config
 from typing import Any, Dict, List, Set
+
+import src.config as config
 
 
 def init_summary_data() -> Dict[str, Any]:

@@ -1,11 +1,29 @@
 import src.config as config
 from pathlib import Path
-from src.compile_regex import *
-from src.namespace import *
-from src.setup import *
-from src.core import *
-from src.helpers import *
-from src.reporting import *
+
+from src.compile_regex import compile_re_content, compile_re_config
+from src.namespace import process_namespace_data
+from src.setup import (
+    get_logseq_analyzer_args,
+    create_output_directory,
+    create_log_file,
+    get_logseq_config_edn,
+    get_logseq_target_dirs,
+    set_logseq_config_edn_data,
+    validate_path,
+    get_sub_file_or_folder,
+)
+from src.core import (
+    create_delete_directory,
+    handle_assets,
+    handle_move_files,
+    process_graph_files,
+    core_data_analysis,
+    write_initial_outputs,
+    generate_summary_subsets,
+    generate_global_summary,
+)
+from src.helpers import merge_dicts
 
 
 def run_app(**kwargs):

@@ -1,8 +1,9 @@
 import logging
 import shutil
-import src.config as config
 from pathlib import Path
-from typing import Optional, Dict, Any, Generator, List
+from typing import Any, Dict, Generator, List, Optional
+
+import src.config as config
 
 
 def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Generator[Path, None, None]:

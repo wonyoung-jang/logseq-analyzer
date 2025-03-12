@@ -1,8 +1,9 @@
 from pathlib import Path
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
-from src.reporting import write_output
+
 import src.config as config
+from src.reporting import write_output
 
 """
 Namespace Analysis

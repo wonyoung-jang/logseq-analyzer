@@ -1,9 +1,10 @@
 import logging
 import shutil
 import argparse
-import src.config as config
 from pathlib import Path
 from typing import Set
+
+import src.config as config
 from src.helpers import get_sub_file_or_folder
 
 
