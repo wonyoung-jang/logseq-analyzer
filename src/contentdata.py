@@ -1,4 +1,3 @@
-import re
 import logging
 import src.config as config
 from collections import defaultdict
