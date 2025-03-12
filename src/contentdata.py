@@ -130,10 +130,8 @@ def process_content_data(
         # Extract all properties and their values
         properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
         aliases = properties_values.get("alias", [])
-        processed_aliases = []
         if aliases:
-            processed_aliases = process_aliases(aliases)
-            content_data[name]["aliases"] = processed_aliases
+            content_data[name]["aliases"] = process_aliases(aliases)
 
         content_data[name]["properties_values"] = properties_values
 
