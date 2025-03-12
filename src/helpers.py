@@ -106,3 +106,53 @@ def merge_dicts(*dicts):
                 result[key] = {}
             result[key].update(values)
     return result
+
+
+def get_sub_file_or_folder(parent: Path, child: str) -> Path:
+    """
+    Get the path to a specific subfolder.
+
+    Args:
+        parent (Path): The path to the parent folder.
+        child (str): The name of the target subfolder (e.g., "recycle", "bak", etc.).
+
+    Returns:
+        Path: The path to the specified subfolder or None if not found.
+    """
+    target = parent / child
+
+    if not parent.exists() or not target.exists():
+        logging.warning(f"Subfolder does not exist: {target}")
+        return None
+    logging.debug(f"Successfully received: {target}")
+
+    return target
+
+
+def get_or_create_subdir(parent: Path, child: str) -> Path:
+    """
+    Get a subdirectory or create it if it doesn't exist.
+
+    Args:
+        parent (Path): The path to the parent folder.
+        child (str): The name of the target subfolder.
+
+    Returns:
+        Path: The path to the specified subfolder.
+    """
+    target = parent / child
+
+    if not parent.exists():
+        logging.warning(f"Parent folder does not exist: {parent}")
+        return None
+    elif not target.exists():
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+            logging.info(f"Created subdirectory: {target}")
+        except Exception as e:
+            logging.error(f"Failed to create subdirectory {target}: {e}")
+            raise
+    else:
+        logging.debug(f"Subdirectory already exists: {target}")
+
+    return target
