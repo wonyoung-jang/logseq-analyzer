@@ -5,6 +5,34 @@ from typing import Any, Dict, Optional, Pattern, Tuple
 from src.filename_processing import process_filename_key
 
 
+def init_metadata() -> Dict[str, Any]:
+    """
+    Initialize an empty metadata dictionary.
+
+    Returns:
+        Dict[str, Any]: An empty dictionary for metadata.
+    """
+    return {
+        "id": None,
+        "name": None,
+        "name_secondary": None,
+        "file_path": None,
+        "file_path_parent_name": None,
+        "file_path_name": None,
+        "file_path_suffix": None,
+        "file_path_parts": None,
+        "date_created": None,
+        "date_modified": None,
+        "time_existed": None,
+        "time_unmodified": None,
+        "size": 0,
+        "uri": None,
+        "char_count": 0,
+        "bullet_count": 0,
+        "bullet_density": 0,
+    }
+
+
 def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], Optional[str]]:
     """
     Process a single file: extract metadata, read content, and compute content-based metrics.
@@ -49,11 +77,14 @@ def get_file_metadata(file_path: Path) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: A dictionary with file metadata.
     """
+    metadata = init_metadata()
+
     stat = file_path.stat()
     parent = file_path.parent.name
     name = process_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
     now = datetime.now().replace(microsecond=0)
+    date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
 
     try:
         date_created = datetime.fromtimestamp(stat.st_birthtime).replace(microsecond=0)
@@ -61,29 +92,21 @@ def get_file_metadata(file_path: Path) -> Dict[str, Any]:
         date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
         logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
-    date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
-    time_existed = now - date_created
-    time_unmodified = now - date_modified
+    metadata["id"] = name[:2].lower() if len(name) > 1 else f"!{name[0].lower()}"
+    metadata["name"] = name
+    metadata["name_secondary"] = f"{name} {parent} + {suffix}".lower()
+    metadata["file_path"] = str(file_path)
+    metadata["file_path_parent_name"] = parent.lower()
+    metadata["file_path_name"] = name.lower()
+    metadata["file_path_suffix"] = suffix.lower() if suffix else None
+    metadata["file_path_parts"] = file_path.parts
+    metadata["date_created"] = date_created
+    metadata["date_modified"] = date_modified
+    metadata["time_existed"] = now - date_created
+    metadata["time_unmodified"] = now - date_modified
+    metadata["size"] = stat.st_size
+    metadata["uri"] = file_path.as_uri()
 
-    metadata = {
-        "id": name[:2].lower() if len(name) > 1 else f"!{name[0].lower()}",
-        "name": name,
-        "name_secondary": f"{name} {parent} + {suffix}".lower(),
-        "file_path": str(file_path),
-        "file_path_parent_name": parent.lower(),
-        "file_path_name": name.lower(),
-        "file_path_suffix": suffix.lower() if suffix else None,
-        "file_path_parts": file_path.parts,
-        "date_created": date_created,
-        "date_modified": date_modified,
-        "time_existed": time_existed,
-        "time_unmodified": time_unmodified,
-        "size": stat.st_size,
-        "uri": file_path.as_uri(),
-        "char_count": 0,
-        "bullet_count": 0,
-        "bullet_density": 0,
-    }
     return metadata
 
 

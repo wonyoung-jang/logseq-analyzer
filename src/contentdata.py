@@ -6,7 +6,13 @@ from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
 def init_content_data() -> Dict[str, Any]:
-    """Initialize content data structure."""
+    """
+    Initialize an empty content data dictionary.
+
+
+    Returns:
+        Dict[str, Any]: An empty dictionary for content data.
+    """
     return {
         "aliases": [],
         "namespace_root": "",
@@ -45,11 +51,6 @@ def init_content_data() -> Dict[str, Any]:
         "query_functions": [],
         "advanced_commands": [],
     }
-
-
-def find_all_lower(pattern: Pattern, text: str) -> List[str]:
-    """Find all matches of a regex pattern in the text, returning them in lowercase."""
-    return [match.lower() for match in pattern.findall(text)]
 
 
 def process_content_data(
@@ -193,6 +194,11 @@ def process_content_data(
     dangling_links = identify_dangling_links(unique_aliases, alphanum_dict, alphanum_filenames)
 
     return content_data, alphanum_dict, dangling_links
+
+
+def find_all_lower(pattern: Pattern, text: str) -> List[str]:
+    """Find all matches of a regex pattern in the text, returning them in lowercase."""
+    return [match.lower() for match in pattern.findall(text)]
 
 
 def identify_dangling_links(

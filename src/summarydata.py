@@ -1,6 +1,24 @@
 import src.config as config
 from typing import Any, Dict, Set
-from collections import defaultdict
+
+
+def init_summary_data() -> Dict[str, Any]:
+    """
+    Initialize an empty summary data dictionary.
+
+    Returns:
+        Dict[str, Any]: An empty dictionary for summary data.
+    """
+    return {
+        "file_type": "",
+        "file_extension": "",
+        "node_type": "",
+        "has_content": False,
+        "has_backlinks": False,
+        "has_external_links": False,
+        "has_embedded_links": False,
+        "is_backlinked": False,
+    }
 
 
 def process_summary_data(
@@ -21,7 +39,7 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    graph_summary_data: Dict[str, Dict[str, Any]] = defaultdict(lambda: defaultdict(bool))
+    graph_summary_data = {}
 
     assets_dir = config.DIR_ASSETS
     draws_dir = config.DIR_DRAWS
@@ -30,8 +48,9 @@ def process_summary_data(
     whiteboards_dir = config.DIR_WHITEBOARDS
 
     for name, meta_data in graph_meta_data.items():
+        graph_summary_data[name] = init_summary_data()
         content_info = graph_content_data.get(name, {})
-        has_content = meta_data["size"] > 0
+        has_content = bool(meta_data["size"] > 0)
         has_backlinks = False
         has_external_links = False
         has_embedded_links = False
@@ -64,8 +83,6 @@ def process_summary_data(
                     "embedded_links_asset",
                 ]
             )
-
-        file_extension = meta_data["file_path_suffix"]
         file_path_parent_name = meta_data["file_path_parent_name"]
         file_path_parts = meta_data["file_path_parts"]
 
@@ -83,13 +100,13 @@ def process_summary_data(
             file_type = config.FILE_TYPE_OTHER
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
-        node_type = config.NODE_TYPE_OTHER
         if file_type in [config.FILE_TYPE_JOURNAL, config.FILE_TYPE_PAGE]:
-            node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
+            graph_summary_data[name]["node_type"] = determine_node_type(has_content, is_backlinked, has_backlinks)
+        else:
+            graph_summary_data[name]["node_type"] = config.NODE_TYPE_OTHER
 
         graph_summary_data[name]["file_type"] = file_type
-        graph_summary_data[name]["file_extension"] = file_extension
-        graph_summary_data[name]["node_type"] = node_type
+        graph_summary_data[name]["file_extension"] = meta_data["file_path_suffix"]
         graph_summary_data[name]["has_content"] = has_content
         graph_summary_data[name]["has_backlinks"] = has_backlinks
         graph_summary_data[name]["has_external_links"] = has_external_links
