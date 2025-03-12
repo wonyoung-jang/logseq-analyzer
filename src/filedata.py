@@ -28,8 +28,8 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         bullet_count = 0
         if metadata["file_path_suffix"] == ".md":
             bullet_content = patterns["bullet"].split(content)
-            primary_bullet = bullet_content[0]
-            content_bullets = bullet_content[1:]
+            primary_bullet = bullet_content[0].strip()
+            content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
             bullet_count = len(content_bullets) if content_bullets else 0
         metadata["bullet_count"] = bullet_count
         metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
