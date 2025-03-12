@@ -31,7 +31,13 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
 
-    parser.add_argument("-g", "--graph-folder", action="store", help="path to your Logseq graph folder", required=True)
+    parser.add_argument(
+        "-g",
+        "--graph-folder",
+        action="store",
+        help="path to your main Logseq graph folder (contains subfolders)",
+        required=True,
+    )
     parser.add_argument(
         "-wg",
         "--write-graph",
