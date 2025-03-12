@@ -59,7 +59,7 @@ def run_app(**kwargs):
         meta_dangling_links,
         graph_content_data,
         graph_summary_data,
-    ) = core_data_analysis(content_patterns, graph_meta_data, meta_graph_content)
+    ) = core_data_analysis(content_patterns, graph_meta_data, meta_graph_content, meta_primary_bullet)
 
     # Merge all graph data into a single dictionary
     graph_all_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)

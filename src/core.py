@@ -47,7 +47,7 @@ def process_graph_files(
 
 
 def core_data_analysis(
-    patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict
+    patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict, meta_primary_bullet: dict
 ) -> Tuple[Dict[str, set], List[str], dict, dict]:
     """
     Process the core data analysis for the Logseq Analyzer.
@@ -56,12 +56,13 @@ def core_data_analysis(
         patterns (dict): The compiled regex patterns.
         graph_meta_data (dict): The graph metadata.
         meta_graph_content (dict): The graph content data.
+        meta_primary_bullet (dict): The primary bullet data.
 
     Returns:
         Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
     graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(
-        meta_graph_content, patterns
+        meta_graph_content, patterns, meta_primary_bullet
     )
     graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
 

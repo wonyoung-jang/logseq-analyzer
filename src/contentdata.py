@@ -51,7 +51,7 @@ def find_all_lower(pattern: Pattern, text: str) -> List[str]:
 
 
 def process_content_data(
-    content: Dict[str, str], patterns: Dict[str, Pattern]
+    content: Dict[str, str], patterns: Dict[str, Pattern], meta_primary_bullet: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], Dict[str, Set[str]], List[str]]:
     """
     Process file content to extract links, tags, properties, and namespace information.
@@ -59,6 +59,7 @@ def process_content_data(
     Args:
         content (Dict[str, str]): Dictionary of file names to content.
         patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
+        meta_primary_bullet (Dict[str, Any]): Metadata for primary bullets.
 
     Returns:
         Tuple[Dict[str, Any], Dict[str, Set[str]]]:
@@ -73,12 +74,15 @@ def process_content_data(
 
     # Process each file's content
     for name, text in content.items():
+        # Initialize content data for each file
         content_data[name] = init_content_data()
 
+        # If no content, skip processing
         if not text:
             logging.warning(f'Skipping content processing for "{name}" due to empty content.')
             continue
 
+        # Extract basic data
         page_references = find_all_lower(patterns["page_reference"], text)
         tagged_backlinks = find_all_lower(patterns["tagged_backlink"], text)
         tags = find_all_lower(patterns["tag"], text)
@@ -123,18 +127,27 @@ def process_content_data(
         content_data[name]["query_functions"] = query_functions
         content_data[name]["advanced_commands"] = advanced_commands
 
+        # Extract all properties and their values
         properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
-        page_properties, block_properties = extract_page_block_properties(text, patterns)
         aliases = properties_values.get("alias", [])
         processed_aliases = []
         if aliases:
             processed_aliases = process_aliases(aliases)
             content_data[name]["aliases"] = processed_aliases
 
+        content_data[name]["properties_values"] = properties_values
+
+        # Extract properties
+        page_properties = []
+        primary_bullet = meta_primary_bullet.get(name)
+        primary_bullet_is_page_props = process_primary_bullet(primary_bullet)
+        if primary_bullet_is_page_props:
+            page_properties = find_all_lower(patterns["property"], primary_bullet)
+            text = text.replace(primary_bullet, "")
+        block_properties = find_all_lower(patterns["property"], text)
         properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, props)
         properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, props)
 
-        content_data[name]["properties_values"] = properties_values
         content_data[name]["properties_page_builtin"] = properties_page_builtin
         content_data[name]["properties_page_user"] = properties_page_user
         content_data[name]["properties_block_builtin"] = properties_block_builtin
@@ -208,24 +221,6 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
         else:
             logging.error(f"Empty item: {item}")
     return alphanum_dict
-
-
-def extract_page_block_properties(text: str, patterns: Dict[str, Pattern]) -> Tuple[list, list]:
-    """Extract page and block properties from text using a combined regex search."""
-    # The regex groups a heading marker or a bullet marker.
-    split_match = re.search(r"^\s*(#+\s|-\s)", text, re.MULTILINE)
-
-    if split_match:
-        split_point = split_match.start()
-        page_text = text[:split_point]
-        block_text = text[split_point:]
-    else:
-        page_text = text
-        block_text = ""
-
-    page_properties = [prop.lower() for prop in patterns["property"].findall(page_text)]
-    block_properties = [prop.lower() for prop in patterns["property"].findall(block_text)]
-    return page_properties, block_properties
 
 
 def split_builtin_user_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
@@ -306,3 +301,19 @@ def process_embedded_links(
         embedded_links_asset = [link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)]
         if embedded_links_asset:
             content_data[name]["embedded_links_asset"] = embedded_links_asset
+
+
+def process_primary_bullet(primary_bullet: Dict[str, Any]) -> bool:
+    """
+    Process primary bullet data.
+
+    Args:
+        primary_bullet (Dict[str, Any]): The primary bullet data.
+
+    Returns:
+        bool: True if the primary bullet is page properties, False otherwise.
+    """
+    primary_bullet = primary_bullet.strip()
+    if not primary_bullet or primary_bullet.startswith("#"):
+        return False
+    return True

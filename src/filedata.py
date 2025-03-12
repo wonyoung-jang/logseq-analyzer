@@ -20,7 +20,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     """
     metadata = get_file_metadata(file_path)
     content = read_file_content(file_path)
-    primary_bullet = []
+    primary_bullet = ""
     content_bullets = []
 
     if content:
@@ -30,7 +30,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
             bullet_content = patterns["bullet"].split(content)
             primary_bullet = bullet_content[0]
             content_bullets = bullet_content[1:]
-            bullet_count = len(content_bullets) if content_bullets else 0
+            bullet_count = len(content_bullets) >= 1 if content_bullets else 0
         metadata["bullet_count"] = bullet_count
         metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
     return metadata, content, primary_bullet, content_bullets
