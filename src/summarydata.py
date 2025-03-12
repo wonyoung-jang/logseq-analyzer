@@ -86,27 +86,17 @@ def process_summary_data(
         file_path_parent_name = meta_data["file_path_parent_name"]
         file_path_parts = meta_data["file_path_parts"]
 
-        if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
-            file_type = config.FILE_TYPE_ASSET
-        elif file_path_parent_name == draws_dir:
-            file_type = config.FILE_TYPE_DRAW
-        elif file_path_parent_name == journals_dir:
-            file_type = config.FILE_TYPE_JOURNAL
-        elif file_path_parent_name == pages_dir:
-            file_type = config.FILE_TYPE_PAGE
-        elif file_path_parent_name == whiteboards_dir:
-            file_type = config.FILE_TYPE_WHITEBOARD
-        else:
-            file_type = config.FILE_TYPE_OTHER
-
+        file_type = determine_file_type(
+            assets_dir, draws_dir, journals_dir, pages_dir, whiteboards_dir, file_path_parent_name, file_path_parts
+        )
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
+        node_type = config.NODE_TYPE_OTHER
         if file_type in [config.FILE_TYPE_JOURNAL, config.FILE_TYPE_PAGE]:
-            graph_summary_data[name]["node_type"] = determine_node_type(has_content, is_backlinked, has_backlinks)
-        else:
-            graph_summary_data[name]["node_type"] = config.NODE_TYPE_OTHER
+            node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
 
         graph_summary_data[name]["file_type"] = file_type
         graph_summary_data[name]["file_extension"] = meta_data["file_path_suffix"]
+        graph_summary_data[name]["node_type"] = node_type
         graph_summary_data[name]["has_content"] = has_content
         graph_summary_data[name]["has_backlinks"] = has_backlinks
         graph_summary_data[name]["has_external_links"] = has_external_links
@@ -134,6 +124,45 @@ def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dic
             if name == page_ref or str(name + config.NAMESPACE_SEP) in page_ref:
                 return True
     return False
+
+
+def determine_file_type(
+    assets_dir: str,
+    draws_dir: str,
+    journals_dir: str,
+    pages_dir: str,
+    whiteboards_dir: str,
+    file_path_parent_name: str,
+    file_path_parts: List[str],
+) -> str:
+    """
+    Helper function to determine the file type based on the directory structure.
+
+    Args:
+        assets_dir (str): Directory for assets.
+        draws_dir (str): Directory for draws.
+        journals_dir (str): Directory for journals.
+        pages_dir (str): Directory for pages.
+        whiteboards_dir (str): Directory for whiteboards.
+        file_path_parent_name (str): The parent name of the file path.
+        file_path_parts (List[str]): Parts of the file path.
+
+    Returns:
+        str: The determined file type.
+    """
+    if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
+        file_type = config.FILE_TYPE_ASSET
+    elif file_path_parent_name == draws_dir:
+        file_type = config.FILE_TYPE_DRAW
+    elif file_path_parent_name == journals_dir:
+        file_type = config.FILE_TYPE_JOURNAL
+    elif file_path_parent_name == pages_dir:
+        file_type = config.FILE_TYPE_PAGE
+    elif file_path_parent_name == whiteboards_dir:
+        file_type = config.FILE_TYPE_WHITEBOARD
+    else:
+        file_type = config.FILE_TYPE_OTHER
+    return file_type
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: bool) -> str:
