@@ -51,7 +51,8 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
         if not folder.exists():
             return
 
-    target_dir = get_or_create_subdir(target_dir, target_subdir) if target_subdir else target_dir
+    if target_subdir:
+        target_dir = get_or_create_subdir(target_dir, target_subdir)
 
     for root, dirs, files in Path.walk(input_dir):
         for dir in dirs:
