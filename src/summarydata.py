@@ -1,5 +1,5 @@
 import src.config as config
-from typing import Any, Dict, Set
+from typing import Any, Dict, List, Set
 
 
 def init_summary_data() -> Dict[str, Any]:
@@ -156,7 +156,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
             return config.NODE_TYPE_LEAF
 
 
-def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> Dict[str, Any]:
+def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
 
@@ -165,7 +165,7 @@ def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> Di
         **criteria: Keyword arguments specifying the criteria for subset extraction.
 
     Returns:
-        Dict[str, Any]: A subset of the summary data matching the criteria.
+        List[str]: A list of keys from the summary data that match the criteria.
     """
     summary_subset = {
         k: v for k, v in graph_summary_data.items() if all(v.get(key) == expected for key, expected in criteria.items())

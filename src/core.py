@@ -212,9 +212,7 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
 
 def handle_assets(
     output_dir: Path,
-    graph_meta_data: dict,
-    graph_content_data: dict,
-    graph_summary_data: dict,
+    graph_data: dict,
     summary_data_subsets: dict,
     to_delete_dir: Path,
 ) -> None:
@@ -223,9 +221,7 @@ def handle_assets(
 
     Args:
         output_dir (Path): The output directory.
-        graph_meta_data (dict): The graph metadata.
-        graph_content_data (dict): The graph content data.
-        graph_summary_data (dict): The graph summary data.
+        graph_data (dict): The graph data.
         summary_data_subsets (dict): The summary data subsets.
         to_delete_dir (Path): The directory for deleted files.
     """
@@ -233,19 +229,19 @@ def handle_assets(
         return
 
     summary_is_asset = summary_data_subsets["is_asset"]
-    for content_data in graph_content_data.values():
+    for content_data in graph_data.values():
         if not content_data["assets"]:
             continue
 
         for non_asset in summary_is_asset:
-            non_asset_secondary = graph_meta_data[non_asset]["name"]
+            non_asset_secondary = graph_data[non_asset]["name"]
 
             for asset_mention in content_data["assets"]:
-                if graph_summary_data[non_asset]["is_backlinked"]:
+                if graph_data[non_asset]["is_backlinked"]:
                     continue
 
                 if non_asset in asset_mention or non_asset_secondary in asset_mention:
-                    graph_summary_data[non_asset]["is_backlinked"] = True
+                    graph_data[non_asset]["is_backlinked"] = True
                     break
 
     asset_backlinked_kwargs = {
@@ -256,8 +252,8 @@ def handle_assets(
         "is_backlinked": False,
         "file_type": "asset",
     }
-    summary_is_asset_backlinked = extract_summary_subset(graph_summary_data, **asset_backlinked_kwargs)
-    summary_is_asset_not_backlinked = extract_summary_subset(graph_summary_data, **asset_not_backlinked_kwargs)
+    summary_is_asset_backlinked = extract_summary_subset(graph_data, **asset_backlinked_kwargs)
+    summary_is_asset_not_backlinked = extract_summary_subset(graph_data, **asset_not_backlinked_kwargs)
 
     write_output(
         output_dir,

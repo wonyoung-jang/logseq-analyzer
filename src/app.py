@@ -23,7 +23,6 @@ def run_app(**kwargs):
     ###################################################################
     # Phase 01: Setup
     ###################################################################
-
     if gui_instance:
         gui_instance.update_progress(setup_phase, 20)
 
@@ -116,9 +115,7 @@ def run_app(**kwargs):
     to_delete_dir = create_delete_directory(args)
 
     # Handle assets
-    summary_is_asset_not_backlinked = handle_assets(
-        output_dir, graph_meta_data, graph_content_data, graph_summary_data, summary_data_subsets, to_delete_dir
-    )
+    summary_is_asset_not_backlinked = handle_assets(output_dir, graph_all_data, summary_data_subsets, to_delete_dir)
 
     # Handle bak and recycle directories
     handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
