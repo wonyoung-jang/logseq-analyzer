@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Tuple, Dict, List, Pattern, Any
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
 from src.reporting import write_output
-from src.filedata import process_single_file
-from src.contentdata import process_content_data
-from src.summarydata import process_summary_data, extract_summary_subset
+from src.process_basic_file_data import process_single_file
+from src.process_content_data import process_content_data
+from src.process_summary_data import process_summary_data, extract_summary_subset
 import src.config as config
 
 
