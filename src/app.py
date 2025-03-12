@@ -9,16 +9,23 @@ from src.reporting import *
 
 
 def run_app(**kwargs):
-    """
-    Main function to run the Logseq analyzer.
-    """
+    """Main function to run the Logseq analyzer."""
+
+    # Setup variables
+    gui_inst = "gui_instance"
+    setup_phase = "setup"
+    process_files_phase = "process_files"
+    reporting_phase = "reporting"
+    namespaces_phase = "namespaces"
+    move_files_phase = "move_files"
+    gui_instance = kwargs.get(gui_inst)
+
     ###################################################################
     # Phase 01: Setup
     ###################################################################
-    gui_instance = kwargs.get("gui_instance")
 
     if gui_instance:
-        gui_instance.update_progress("setup", 20)
+        gui_instance.update_progress(setup_phase, 20)
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
@@ -43,8 +50,8 @@ def run_app(**kwargs):
     target_dirs = get_logseq_target_dirs()
 
     if gui_instance:
-        gui_instance.update_progress("setup", 100)
-        gui_instance.update_progress("process_files", 20)
+        gui_instance.update_progress(setup_phase, 100)
+        gui_instance.update_progress(process_files_phase, 20)
     ################################################################
     # Phase 02: Process files
     ################################################################
@@ -65,8 +72,8 @@ def run_app(**kwargs):
     graph_all_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
 
     if gui_instance:
-        gui_instance.update_progress("process_files", 100)
-        gui_instance.update_progress("reporting", 20)
+        gui_instance.update_progress(process_files_phase, 100)
+        gui_instance.update_progress(reporting_phase, 20)
     #################################################################
     # Phase 03: Reporting/writing outputs
     #################################################################
@@ -91,8 +98,8 @@ def run_app(**kwargs):
     generate_global_summary(output_dir, summary_data_subsets)
 
     if gui_instance:
-        gui_instance.update_progress("reporting", 100)
-        gui_instance.update_progress("namespaces", 20)
+        gui_instance.update_progress(reporting_phase, 100)
+        gui_instance.update_progress(namespaces_phase, 20)
     ################################################################
     # Phase 04: Process namespaces
     ################################################################
@@ -100,8 +107,8 @@ def run_app(**kwargs):
     process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
 
     if gui_instance:
-        gui_instance.update_progress("namespaces", 100)
-        gui_instance.update_progress("move_files", 20)
+        gui_instance.update_progress(namespaces_phase, 100)
+        gui_instance.update_progress(move_files_phase, 20)
     #####################################################################
     # Phase 05: Move files to a delete directory
     #####################################################################
@@ -117,4 +124,4 @@ def run_app(**kwargs):
     handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
-        gui_instance.update_progress("move_files", 100)
+        gui_instance.update_progress(move_files_phase, 100)
