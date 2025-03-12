@@ -61,7 +61,9 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
             content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
             bullet_count = len(content_bullets) if content_bullets else 0
         metadata["bullet_count"] = bullet_count
-        metadata["bullet_density"] = metadata["char_count"] // bullet_count if bullet_count > 0 else 0
+        if bullet_count > 0:
+            metadata["bullet_density"] = round(metadata["char_count"] / bullet_count, 2)
+
     return metadata, content, primary_bullet, content_bullets
 
 
