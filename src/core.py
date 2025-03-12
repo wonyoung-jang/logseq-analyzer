@@ -233,12 +233,11 @@ def handle_assets(
         return
 
     summary_is_asset = summary_data_subsets["is_asset"]
-    not_referenced_assets_keys = list(summary_is_asset.keys())
     for content_data in graph_content_data.values():
         if not content_data["assets"]:
             continue
 
-        for non_asset in not_referenced_assets_keys:
+        for non_asset in summary_is_asset:
             non_asset_secondary = graph_meta_data[non_asset]["name"]
 
             for asset_mention in content_data["assets"]:

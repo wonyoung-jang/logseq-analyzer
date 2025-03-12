@@ -80,7 +80,7 @@ def move_unlinked_assets(
     """
     to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, config.DIR_ASSETS)
 
-    for name in summary_is_asset_not_backlinked.keys():
+    for name in summary_is_asset_not_backlinked:
         file_path = Path(graph_meta_data[name]["file_path"])
         new_path = to_delete_asset_subdir / file_path.name
         try:

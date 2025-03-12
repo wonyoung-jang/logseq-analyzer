@@ -94,7 +94,7 @@ def run_app(**kwargs):
     )
 
     # Generate summary
-    summary_data_subsets = generate_summary_subsets(output_dir, graph_summary_data)
+    summary_data_subsets = generate_summary_subsets(output_dir, graph_all_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
     if gui_instance:

@@ -167,6 +167,8 @@ def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> Di
     Returns:
         Dict[str, Any]: A subset of the summary data matching the criteria.
     """
-    return {
+    summary_subset = {
         k: v for k, v in graph_summary_data.items() if all(v.get(key) == expected for key, expected in criteria.items())
     }
+    summary_subset_list = sorted(summary_subset.keys())
+    return summary_subset_list
