@@ -6,6 +6,7 @@ from typing import Dict, Pattern, Set, Any, Tuple, List
 
 
 def init_content_data() -> Dict[str, Any]:
+    """Initialize content data structure."""
     return {
         "aliases": [],
         "namespace_root": "",
@@ -47,6 +48,7 @@ def init_content_data() -> Dict[str, Any]:
 
 
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:
+    """Find all matches of a regex pattern in the text, returning them in lowercase."""
     return [match.lower() for match in pattern.findall(text)]
 
 
@@ -127,15 +129,13 @@ def process_content_data(
         content_data[name]["query_functions"] = query_functions
         content_data[name]["advanced_commands"] = advanced_commands
 
-        # Extract all properties and their values
+        # Extract all properties: values pairs
         properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
         aliases = properties_values.get("alias", [])
-        if aliases:
-            content_data[name]["aliases"] = process_aliases(aliases)
-
+        content_data[name]["aliases"] = process_aliases(aliases) if aliases else []
         content_data[name]["properties_values"] = properties_values
 
-        # Extract properties
+        # Extract page/block properties
         page_properties = []
         primary_bullet = meta_primary_bullet.get(name)
         primary_bullet_is_page_props = process_primary_bullet(primary_bullet)
@@ -151,7 +151,7 @@ def process_content_data(
         content_data[name]["properties_block_builtin"] = properties_block_builtin
         content_data[name]["properties_block_user"] = properties_block_user
 
-        # Namespace
+        # Process namespaces
         if config.NAMESPACE_SEP in name:
             namespace_parts_list = name.split(config.NAMESPACE_SEP)
             namespace_level = len(namespace_parts_list) - 1
@@ -164,7 +164,7 @@ def process_content_data(
             content_data[name]["namespace_level"] = namespace_level
             unique_linked_references.update([namespace_root, name])
 
-            if namespace_level >= 1:
+            if namespace_level > 0:
                 if namespace_root in content_data:
                     root_level = content_data[namespace_root]["namespace_level"]
                     direct_level = 0
@@ -179,9 +179,9 @@ def process_content_data(
                         content_data[parent_joined]["namespace_level"] = direct_level
 
         unique_linked_references.update(
-            processed_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
+            aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
         )
-        unique_aliases.update(processed_aliases)
+        unique_aliases.update(aliases)
 
         # Process external and embedded links
         process_external_links(patterns, content_data, name, external_links)
@@ -228,23 +228,21 @@ def split_builtin_user_properties(properties: list, built_in_props: Set[str]) ->
     return builtin_props, user_props
 
 
-def process_aliases(aliases):
+def process_aliases(aliases: str) -> List[str]:
+    """Process aliases to extract individual aliases."""
     results = []
     current = []
     inside_brackets = False
     i = 0
     while i < len(aliases):
-        # Detect the start of a bracketed section.
         if aliases[i : i + 2] == "[[":
             inside_brackets = True
             i += 2
             continue
-        # Detect the end of a bracketed section.
         elif aliases[i : i + 2] == "]]":
             inside_brackets = False
             i += 2
             continue
-        # If we hit a comma and are not inside brackets, split.
         elif aliases[i] == "," and not inside_brackets:
             part = "".join(current).strip().lower()
             if part:
@@ -256,7 +254,6 @@ def process_aliases(aliases):
             current.append(aliases[i])
             i += 1
 
-    # Append the last alias if exists.
     part = "".join(current).strip().lower()
     if part:
         results.append(part)

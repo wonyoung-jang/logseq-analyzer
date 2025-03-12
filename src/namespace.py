@@ -189,8 +189,8 @@ def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, A
     """
     namespace_queries = {}
     for entry, data in graph_content_data.items():
-        if data.get("namespace_query"):
-            queries = data["namespace_query"]
+        if data.get("namespace_queries"):
+            queries = data["namespace_queries"]
             namespace_queries[entry] = queries
 
     return namespace_queries
