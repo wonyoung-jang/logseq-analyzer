@@ -337,14 +337,28 @@ def handle_move_files(
     if not to_delete_dir:
         return
 
+    moved_files = {}
     if args.move_unlinked_assets:
-        move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
+        moved_assets = move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
+        if moved_assets:
+            moved_files["moved_assets"] = moved_assets
 
     if args.move_bak:
-        move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
+        moved_bak = move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
+        if moved_bak:
+            moved_files["moved_bak"] = moved_bak
 
     if args.move_recycle:
-        move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))
+        moved_recycle = move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))
+        if moved_recycle:
+            moved_files["moved_recycle"] = moved_recycle
+
+    write_output(
+        Path(config.DEFAULT_OUTPUT_DIR),
+        "moved_files",
+        moved_files,
+        config.OUTPUT_DIR_META,
+    )
 
 
 def create_delete_directory() -> Path:
