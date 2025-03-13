@@ -186,7 +186,27 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
             return config.NODE_TYPE_LEAF
 
 
-def extract_summary_subset(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
+def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List[Any]:
+    """
+    Extract a subset of data based on a specific criteria.
+
+    Args:
+        graph_data (Dict[str, Any]): The complete data.
+        criteria (str): The criteria for extraction.
+
+    Returns:
+        List[Any]: A list of values from the data that match the criteria.
+    """
+    subset = set()
+    for v in graph_data.values():
+        values = v.get(criteria)
+        if values:
+            subset.update(values)
+
+    return sorted(subset)
+
+
+def extract_summary_subset_files(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
 

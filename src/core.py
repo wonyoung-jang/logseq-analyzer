@@ -7,7 +7,7 @@ from src.helpers import iter_files, move_unlinked_assets, move_all_folder_conten
 from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
 from src.process_content_data import process_content_data
-from src.process_summary_data import process_summary_data, extract_summary_subset
+from src.process_summary_data import extract_summary_subset_content, process_summary_data, extract_summary_subset_files
 import src.config as config
 
 
@@ -120,7 +120,7 @@ def write_initial_outputs(
     write_output(output_dir, "04_all_data", graph_all_data, config.OUTPUT_DIR_GRAPH)
 
 
-def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict:
+def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     """
     Generate summary subsets for the Logseq Analyzer.
 
@@ -143,7 +143,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     }
 
     for output_name, criteria in summary_categories.items():
-        subset = extract_summary_subset(graph_summary_data, **criteria)
+        subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
         write_output(output_dir, output_name, subset, config.OUTPUT_DIR_SUMMARY)
 
@@ -158,7 +158,7 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     }
 
     for output_name, criteria in summary_categories_types.items():
-        subset = extract_summary_subset(graph_summary_data, **criteria)
+        subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
         write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TYPES)
 
@@ -173,13 +173,13 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     }
 
     for output_name, criteria in summary_categories_nodes.items():
-        subset = extract_summary_subset(graph_summary_data, **criteria)
+        subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
         write_output(output_dir, output_name, subset, config.OUTPUT_DIR_NODES)
 
     # Process file extensions
     file_extensions = {}
-    for meta in graph_summary_data.values():
+    for meta in graph_data.values():
         ext = meta.get("file_extension")
         file_extensions[ext] = file_extensions.get(ext, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
@@ -188,9 +188,53 @@ def generate_summary_subsets(output_dir: Path, graph_summary_data: dict) -> dict
     for ext in file_extensions:
         output_name = f"all_{ext}s"
         criteria = {"file_extension": ext}
-        subset = extract_summary_subset(graph_summary_data, **criteria)
+        subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
         write_output(output_dir, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
+
+    # TODO Testing content subset
+    content_subset_tags_nodes = {
+        "aliases": "aliases",
+        # "namespace_root": "namespace_root",
+        # "namespace_parent": "namespace_parent",
+        "namespace_parts": "namespace_parts",
+        # "namespace_level": "namespace_level",
+        "page_references": "page_references",
+        "tagged_backlinks": "tagged_backlinks",
+        "tags": "tags",
+        "properties_values": "properties_values",
+        "properties_page_builtin": "properties_page_builtin",
+        "properties_page_user": "properties_page_user",
+        "properties_block_builtin": "properties_block_builtin",
+        "properties_block_user": "properties_block_user",
+        "assets": "assets",
+        "draws": "draws",
+        "external_links": "external_links",
+        "external_links_internet": "external_links_internet",
+        "external_links_alias": "external_links_alias",
+        "embedded_links": "embedded_links",
+        "embedded_links_internet": "embedded_links_internet",
+        "embedded_links_asset": "embedded_links_asset",
+        "blockquotes": "blockquotes",
+        "flashcards": "flashcards",
+        "multiline_code_block": "multiline_code_block",
+        "calc_block": "calc_block",
+        "multiline_code_lang": "multiline_code_lang",
+        "reference": "reference",
+        "block_reference": "block_reference",
+        "embed": "embed",
+        "page_embed": "page_embed",
+        "block_embed": "block_embed",
+        "namespace_queries": "namespace_queries",
+        "clozes": "clozes",
+        "simple_queries": "simple_queries",
+        "query_functions": "query_functions",
+        "advanced_commands": "advanced_commands",
+    }
+
+    for output_name, criteria in content_subset_tags_nodes.items():
+        subset = extract_summary_subset_content(graph_data, criteria)
+        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TEST)
 
     return summary_data_subsets
 
@@ -253,8 +297,8 @@ def handle_assets(
         "is_backlinked": False,
         "file_type": "asset",
     }
-    summary_is_asset_backlinked = extract_summary_subset(graph_data, **asset_backlinked_kwargs)
-    summary_is_asset_not_backlinked = extract_summary_subset(graph_data, **asset_not_backlinked_kwargs)
+    summary_is_asset_backlinked = extract_summary_subset_files(graph_data, **asset_backlinked_kwargs)
+    summary_is_asset_not_backlinked = extract_summary_subset_files(graph_data, **asset_not_backlinked_kwargs)
 
     write_output(
         output_dir,
