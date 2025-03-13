@@ -24,7 +24,9 @@ def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, 
     """
     for root, dirs, files in Path.walk(directory):
         root_path = Path(root)
-        if root_path.name in target_dirs or root_path == directory:
+        if root_path == directory:
+            continue
+        elif root_path.name in target_dirs:
             for file in files:
                 yield root_path / file
         else:
