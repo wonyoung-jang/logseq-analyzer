@@ -189,6 +189,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
 def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List[Any]:
     """
     Extract a subset of data based on a specific criteria.
+    Asks: What content matches the criteria? And where is it found? How many times?
 
     Args:
         graph_data (Dict[str, Any]): The complete data.
@@ -218,6 +219,7 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List
 def extract_summary_subset_files(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
+    Asks: What files match the criteria?
 
     Args:
         graph_summary_data (Dict[str, Any]): The complete summary data.

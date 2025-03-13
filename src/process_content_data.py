@@ -1,10 +1,8 @@
 import logging
 from collections import defaultdict
-from pathlib import Path
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
 import src.config as config
-from src.reporting import write_output
 
 
 def init_content_data() -> Dict[str, Any]:
