@@ -46,6 +46,10 @@ def run_app(**kwargs):
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
+    move_bak = args.move_bak
+    move_recycle = args.move_recycle
+    move_assets = args.move_unlinked_assets
+    move = any([move_bak, move_recycle, move_assets])
 
     # Setup output directory and logging
     output_dir = create_output_directory()
@@ -128,16 +132,17 @@ def run_app(**kwargs):
         gui_instance.update_progress(namespaces_phase, 100)
         gui_instance.update_progress(move_files_phase, 20)
     #####################################################################
-    # Phase 05: Move files to a delete directory
+    # Phase 05: Move files to a delete directory (optional)
     #####################################################################
-    # Create delete directory
-    to_delete_dir = create_delete_directory(args)
+    if move:
+        # Create delete directory
+        to_delete_dir = create_delete_directory(args)
 
-    # Handle assets
-    summary_is_asset_not_backlinked = handle_assets(output_dir, graph_all_data, summary_data_subsets, to_delete_dir)
+        # Handle assets
+        summary_is_asset_not_backlinked = handle_assets(output_dir, graph_all_data, summary_data_subsets, to_delete_dir)
 
-    # Handle bak and recycle directories
-    handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+        # Handle bak and recycle directories
+        handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)
