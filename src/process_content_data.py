@@ -1,8 +1,10 @@
 import logging
 from collections import defaultdict
+from pathlib import Path
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
 import src.config as config
+from src.reporting import write_output
 
 
 def init_content_data() -> Dict[str, Any]:
@@ -133,7 +135,9 @@ def process_content_data(
         # Extract all properties: values pairs
         properties_values = {prop: value for prop, value in patterns["property_value"].findall(text)}
         aliases = properties_values.get("alias", [])
-        content_data[name]["aliases"] = process_aliases(aliases) if aliases else []
+        if aliases:
+            aliases = process_aliases(aliases)
+        content_data[name]["aliases"] = aliases
         content_data[name]["properties_values"] = properties_values
 
         # Extract page/block properties
@@ -179,10 +183,10 @@ def process_content_data(
                     if direct_level > parent_level:
                         content_data[parent_joined]["namespace_level"] = direct_level
 
-        unique_linked_references.update(
-            aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
-        )
         unique_aliases.update(aliases)
+        unique_linked_references.update(
+            unique_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
+        )
 
         # Process external and embedded links
         process_external_links(patterns, content_data, name, external_links)
@@ -206,12 +210,14 @@ def identify_dangling_links(
 ) -> Set[str]:
     """Identify dangling links in the alphanum lookups and aliases."""
     dangling_links = set()
-    for id, references in alphanum_dict.items():
-        if id not in alphanum_filenames:
-            dangling_links.update(references)
+    for id, references_linked in alphanum_dict.items():
+        if id in alphanum_filenames:
+            references_nofiles = [ref for ref in references_linked if ref not in alphanum_filenames[id]]
+            if references_nofiles:
+                dangling_links.update(references_nofiles)
         else:
-            dangling_links.update([ref for ref in references if ref not in alphanum_filenames[id]])
-    dangling_links -= unique_aliases
+            dangling_links.update(references_linked)
+    dangling_links.difference_update(unique_aliases)
     return dangling_links
 
 
