@@ -221,27 +221,17 @@ def process_namespace_data(
     namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
     write_output(output_dir, "__namespace_parts", namespace_parts, output_dir_ns)
 
-    # Split content data by namespaces and non-namespaces
-    content_data_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] >= 0}
-    unique_names_namespace = set(content_data_namespaces.keys())
-    write_output(output_dir, "unique_names_namespace", unique_names_namespace, output_dir_ns)
-
+    # Find unique names that are not namespaces
     content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
     unique_names_not_namespace = set(content_data_not_namespaces.keys())
-    write_output(output_dir, "unique_names_not_namespace", unique_names_not_namespace, output_dir_ns)
 
     # Existing analysis: group by levels
     namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
     write_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
-    write_output(output_dir, "unique_namespace_parts", unique_namespace_parts, output_dir_ns)
-
-    potential_non_namespace = unique_names_not_namespace.intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_non_namespace", potential_non_namespace, output_dir_ns)
-
-    potential_dangling = set(meta_dangling_links).intersection(unique_namespace_parts)
-    write_output(output_dir, "potential_dangling", potential_dangling, output_dir_ns)
 
     # Detecting conflicts with non-namespace pages
+    potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
+    potential_dangling = unique_namespace_parts.intersection(meta_dangling_links)
     conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
         namespace_parts, potential_non_namespace, potential_dangling
     )
@@ -276,52 +266,13 @@ def process_namespace_data(
     #################################
     ############ Testing ############
     #################################
-    # Test specific namespace analysis
-    # results = analyze_specific_namespace("ableton", graph_content_data)
-    # write_output(output_dir, "namespace_ableton", results, output_dir_ns)
-
     # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
     write_output(output_dir, "namespace_hierarchy", namespace_hierarchy, output_dir_ns)
 
-    # Test namespace refactoring suggestions
-    suggestions = suggest_namespace_refactoring(namespace_parts, max_depth=3)
-    write_output(output_dir, "namespace_refactoring_suggestions", suggestions, output_dir_ns)
-
-
-def suggest_namespace_refactoring(namespace_parts, max_depth=3):
-    """
-    Suggest improvements to refactor overly deep or overlapping namespaces.
-
-    Args:
-        namespace_parts (dict): Namespace data.
-        max_depth (int): Threshold for recommending flattening.
-
-    Returns:
-        dict: Suggested refactor actions.
-    """
-    suggestions = []
-
-    # Identify namespaces exceeding max_depth
-    for entry, parts in namespace_parts.items():
-        if any(level > max_depth for level in parts.values()):
-            suggestions.append({"entry": entry, "recommendation": "Consider flattening deep hierarchy."})
-
-    # Identify parts that appear very frequently for possible merging
-    part_count = {}
-    for parts in namespace_parts.values():
-        for part in parts.keys():
-            part_count[part] = part_count.get(part, 0) + 1
-    frequent_parts = [p for p, c in part_count.items() if c > len(namespace_parts) / 2]
-    if frequent_parts:
-        suggestions.append(
-            {
-                "entry": frequent_parts,
-                "recommendation": "Frequently used parts found. Possible merging or re-organization.",
-            }
-        )
-
-    return {"refactor_suggestions": suggestions}
+    # Test extract namespace subtrees
+    namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
+    write_output(output_dir, "namespace_subtree", namespace_subtree, output_dir_ns)
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
@@ -343,43 +294,25 @@ def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) ->
     return tree
 
 
-def analyze_specific_namespace(name: str, graph_content_data: Dict[str, Any]) -> Dict[str, Any]:
+def extract_namespace_subtree(namespace: str, namespace_hierarchy: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Analyze a specific namespace and its subtree.
+    Extract a subtree of namespaces based on the given namespace.
 
     Args:
-        name (str): The name of the namespace to analyze.
-        graph_content_data (dict): The graph content data.
+        namespace (str): The namespace to extract.
+        namespace_hierarchy (dict): The hierarchy of namespaces.
 
     Returns:
-        dict: Analysis results for the specified namespace and its children.
+        dict: The extracted subtree of namespaces.
     """
-    if name not in graph_content_data:
-        return {"error": f"Namespace '{name}' not found in graph data"}
+    subtree = {}
+    parts = namespace.split(config.NAMESPACE_SEP)
+    current_level = subtree
 
-    # Check if it's a namespace
-    if graph_content_data[name]["namespace_level"] < 0:
-        return {"error": f"'{name}' is not a namespace"}
+    for part in parts:
+        if part not in namespace_hierarchy:
+            return {}
+        current_level[part] = namespace_hierarchy[part]
+        namespace_hierarchy = namespace_hierarchy[part]
 
-    # Find all child namespaces
-    children = {}
-    for page_name, data in graph_content_data.items():
-        if page_name.startswith(name + config.NAMESPACE_SEP):
-            children[page_name] = data
-
-    # Extract namespace parts for the subtree
-    subtree_namespace_parts = {
-        k: v["namespace_parts"]
-        for k, v in {name: graph_content_data[name], **children}.items()
-        if v.get("namespace_parts")
-    }
-
-    # Perform analysis on the subtree
-    results = {
-        "namespace": name,
-        "child_count": len(children),
-        "children": list(children.keys()),
-        "details": analyze_namespace_details(subtree_namespace_parts),
-    }
-
-    return results
+    return subtree
