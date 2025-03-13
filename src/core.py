@@ -233,8 +233,9 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     }
 
     for output_name, criteria in content_subset_tags_nodes.items():
-        subset = extract_summary_subset_content(graph_data, criteria)
+        subset, subset_counts = extract_summary_subset_content(graph_data, criteria)
         write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TEST)
+        write_output(output_dir, f"{output_name}_counts", subset_counts, config.OUTPUT_DIR_TEST)
 
     return summary_data_subsets
 

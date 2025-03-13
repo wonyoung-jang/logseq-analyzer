@@ -198,12 +198,18 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List
         List[Any]: A list of values from the data that match the criteria.
     """
     subset = set()
-    for v in graph_data.values():
+    subset_counter = {}
+    for k, v in graph_data.items():
         values = v.get(criteria)
         if values:
             subset.update(values)
+            for value in values:
+                subset_counter[value] = subset_counter.get(value, 0) + 1
 
-    return sorted(subset)
+    sorted_subset = sorted(subset)
+    sorted_subset_counter = dict(sorted(subset_counter.items(), key=lambda item: item[1], reverse=True))
+
+    return sorted_subset, sorted_subset_counter
 
 
 def extract_summary_subset_files(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
@@ -217,8 +223,9 @@ def extract_summary_subset_files(graph_summary_data: Dict[str, Any], **criteria)
     Returns:
         List[str]: A list of keys from the summary data that match the criteria.
     """
-    summary_subset = {
+    subset = {
         k: v for k, v in graph_summary_data.items() if all(v.get(key) == expected for key, expected in criteria.items())
     }
-    summary_subset_list = sorted(summary_subset.keys())
-    return summary_subset_list
+    sorted_subset = sorted(subset.keys())
+
+    return sorted_subset
