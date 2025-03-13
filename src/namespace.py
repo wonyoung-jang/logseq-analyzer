@@ -168,7 +168,7 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
     """
     namespace_part_levels = {}
     unique_namespace_parts = set()
-    for name, parts in namespace_parts.items():
+    for parts in namespace_parts.values():
         for k, v in parts.items():
             namespace_part_levels.setdefault(k, set()).add(v)
             unique_namespace_parts.add(k)
@@ -272,3 +272,70 @@ def process_namespace_data(
     # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_content_data)
     write_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)
+
+    results = analyze_specific_namespace("ableton", graph_content_data)
+    write_output(output_dir, "namespace_ableton", results, output_dir_ns)
+
+    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
+    write_output(output_dir, "namespace_hierarchy", namespace_hierarchy, output_dir_ns)
+
+
+def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
+    """
+    Build a tree-like structure of namespaces.
+    Returns a nested dictionary representing the hierarchy.
+    """
+    tree = {}
+
+    # Build tree structure
+    for full_name, parts in namespace_parts.items():
+        current_level = tree
+        for part_level in sorted(parts.items(), key=lambda x: x[1]):
+            part = part_level[0]
+            if part not in current_level:
+                current_level[part] = {}
+            current_level = current_level[part]
+
+    return tree
+
+
+def analyze_specific_namespace(name: str, graph_content_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Analyze a specific namespace and its subtree.
+
+    Args:
+        name (str): The name of the namespace to analyze.
+        graph_content_data (dict): The graph content data.
+
+    Returns:
+        dict: Analysis results for the specified namespace and its children.
+    """
+    if name not in graph_content_data:
+        return {"error": f"Namespace '{name}' not found in graph data"}
+
+    # Check if it's a namespace
+    if graph_content_data[name]["namespace_level"] < 0:
+        return {"error": f"'{name}' is not a namespace"}
+
+    # Find all child namespaces
+    children = {}
+    for page_name, data in graph_content_data.items():
+        if page_name.startswith(name + config.NAMESPACE_SEP):
+            children[page_name] = data
+
+    # Extract namespace parts for the subtree
+    subtree_namespace_parts = {
+        k: v["namespace_parts"]
+        for k, v in {name: graph_content_data[name], **children}.items()
+        if v.get("namespace_parts")
+    }
+
+    # Perform analysis on the subtree
+    results = {
+        "namespace": name,
+        "child_count": len(children),
+        "children": list(children.keys()),
+        "details": analyze_namespace_details(subtree_namespace_parts),
+    }
+
+    return results
