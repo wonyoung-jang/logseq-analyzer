@@ -347,21 +347,15 @@ def handle_move_files(
         move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))
 
 
-def create_delete_directory(args: argparse.Namespace) -> Path:
+def create_delete_directory() -> Path:
     """
     Create a directory for deleted files.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
 
     Returns:
         Path: The path to the delete directory.
     """
-    if any([args.move_bak, args.move_recycle, args.move_unlinked_assets]):
-        delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-        if not delete_dir.exists():
-            logging.info(f"Creating directory: {delete_dir}")
-            delete_dir.mkdir(parents=True, exist_ok=True)
-        return delete_dir
-    else:
-        return
+    delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
+    if not delete_dir.exists():
+        logging.info(f"Creating directory: {delete_dir}")
+        delete_dir.mkdir(parents=True, exist_ok=True)
+    return delete_dir

@@ -136,7 +136,7 @@ def run_app(**kwargs):
     #####################################################################
     if move:
         # Create delete directory
-        to_delete_dir = create_delete_directory(args)
+        to_delete_dir = create_delete_directory()
 
         # Handle assets
         summary_is_asset_not_backlinked = handle_assets(output_dir, graph_all_data, summary_data_subsets, to_delete_dir)
