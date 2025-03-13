@@ -204,10 +204,13 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List
         if values:
             subset.update(values)
             for value in values:
-                subset_counter[value] = subset_counter.get(value, 0) + 1
+                subset_counter[value] = subset_counter.get(value, {})
+                subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
+                subset_counter[value]["found_in"] = subset_counter[value].get("found_in", set())
+                subset_counter[value]["found_in"].add(k)
 
     sorted_subset = sorted(subset)
-    sorted_subset_counter = dict(sorted(subset_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_subset_counter = dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
     return sorted_subset, sorted_subset_counter
 
