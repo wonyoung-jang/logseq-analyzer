@@ -273,11 +273,55 @@ def process_namespace_data(
     namespace_queries = analyze_namespace_queries(graph_content_data)
     write_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)
 
+    #################################
+    ############ Testing ############
+    #################################
+    # Test specific namespace analysis
     results = analyze_specific_namespace("ableton", graph_content_data)
     write_output(output_dir, "namespace_ableton", results, output_dir_ns)
 
+    # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
     write_output(output_dir, "namespace_hierarchy", namespace_hierarchy, output_dir_ns)
+
+    # Test namespace refactoring suggestions
+    suggestions = suggest_namespace_refactoring(namespace_parts, max_depth=3)
+    write_output(output_dir, "namespace_refactoring_suggestions", suggestions, output_dir_ns)
+
+
+def suggest_namespace_refactoring(namespace_parts, max_depth=3):
+    """
+    Suggest improvements to refactor overly deep or overlapping namespaces.
+
+    Args:
+        namespace_parts (dict): Namespace data.
+        max_depth (int): Threshold for recommending flattening.
+
+    Returns:
+        dict: Suggested refactor actions.
+    """
+    suggestions = []
+
+    # Identify namespaces exceeding max_depth
+    for entry, parts in namespace_parts.items():
+        if any(level > max_depth for level in parts.values()):
+            suggestions.append({"entry": entry, "recommendation": "Consider flattening deep hierarchy."})
+
+    # Identify parts that appear very frequently for possible merging
+    part_count = {}
+    for parts in namespace_parts.values():
+        for part in parts.keys():
+            part_count[part] = part_count.get(part, 0) + 1
+    frequent_parts = [p for p, c in part_count.items() if c > len(namespace_parts) / 2]
+    if frequent_parts:
+        suggestions.append(
+            {
+                "entry": frequent_parts,
+                "recommendation": "Frequently used parts found. Possible merging or re-organization.",
+            }
+        )
+
+    return {"refactor_suggestions": suggestions}
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
