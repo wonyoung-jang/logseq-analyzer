@@ -254,11 +254,16 @@ def process_namespace_data(
     write_output(output_dir, "conflicts_parents_unique", conflicts_parents_unique, output_dir_ns)
 
     # 03 General Namespace Data
-    unique_namespace_roots = set(v["namespace_root"] for v in graph_content_data.values() if v.get("namespace_root"))
-    write_output(output_dir, "unique_namespace_roots", unique_namespace_roots, output_dir_ns)
-
     namespace_details = analyze_namespace_details(namespace_parts)
     write_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
+
+    max_depth = namespace_details["max_depth"]
+    unique_namespaces_per_level = {i: set() for i in range(max_depth + 1)}
+    for parts in namespace_parts.values():
+        for part, level in parts.items():
+            unique_namespaces_per_level[level].add(part)
+    for level, names in unique_namespaces_per_level.items():
+        write_output(output_dir, f"unique_namespaces_level_{level}", names, output_dir_ns)
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
     write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
