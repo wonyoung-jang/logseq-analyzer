@@ -1,6 +1,6 @@
-import src.config as config
 from pathlib import Path
 
+import src.config as config
 from src.compile_regex import compile_re_content, compile_re_config
 from src.namespace import process_namespace_data
 from src.setup import (
@@ -25,10 +25,9 @@ from src.core import (
 )
 from src.helpers import merge_dicts
 
-
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
-
+    
     # Setup variables
     gui_inst = "gui_instance"
     setup_phase = "setup"
