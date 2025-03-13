@@ -2,39 +2,34 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, Optional, Set
 from urllib.parse import unquote
 
 import src.config as config
 
 
-def iter_files(directory: Path, target_dirs: Optional[List[str]] = None) -> Generator[Path, None, None]:
+def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
     """
     Recursively iterate over files in the given directory.
 
     If target_dirs is provided, only yield files that reside within directories
-    whose names are in the target_dirs list.
+    whose names are in the target_dirs set.
 
     Args:
         directory (Path): The root directory to search.
-        target_dirs (Optional[List[str]]): List of allowed parent directory names.
+        target_dirs (Set[str]): Set of allowed parent directory names.
 
     Yields:
         Path: File paths that match the criteria.
     """
-    if not directory.exists() or not directory.is_dir():
-        logging.error(f"Directory not found: {directory}")
-        return
-
-    for path in directory.rglob("*"):
-        if path.is_file():
-            if target_dirs:
-                if path.parent.name in target_dirs:
-                    yield path
-                else:
-                    logging.info(f"Skipping file {path} outside target directories")
-            else:
-                yield path
+    for root, dirs, files in Path.walk(directory):
+        root_path = Path(root)
+        if root_path.name in target_dirs or root_path == directory:
+            for file in files:
+                yield root_path / file
+        else:
+            logging.debug(f"Skipping directory {root_path} outside target directories")
+            dirs.clear()
 
 
 def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[Path] = None) -> None:

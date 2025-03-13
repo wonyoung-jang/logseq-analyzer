@@ -111,6 +111,8 @@ def create_log_file(output: Path) -> None:
         filename=log_file,
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
+        encoding="utf-8",
+        datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
     )
     logging.info(f"Logging initialized to {log_file}")
