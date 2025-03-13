@@ -55,13 +55,13 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
         for dir in dirs:
             try:
                 shutil.move(Path(root) / dir, target_dir / dir)
-                logging.info(f"Moved folder: {dir}")
+                logging.warning(f"Moved folder: {dir}")
             except Exception as e:
                 logging.error(f"Failed to move folder: {dir}: {e}")
         for file in files:
             try:
                 shutil.move(Path(root) / file, target_dir / file)
-                logging.info(f"Moved file: {file}")
+                logging.warning(f"Moved file: {file}")
             except Exception as e:
                 logging.error(f"Failed to move file: {file}: {e}")
 
@@ -84,7 +84,7 @@ def move_unlinked_assets(
         new_path = to_delete_asset_subdir / file_path.name
         try:
             shutil.move(file_path, new_path)
-            logging.info(f"Moved unlinked asset: {file_path} to {new_path}")
+            logging.warning(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
 
