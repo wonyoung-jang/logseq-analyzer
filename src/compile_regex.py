@@ -41,7 +41,6 @@ def compile_re_content() -> Dict[str, Pattern]:
         query_function: Matches query functions.
         advanced_command: Matches advanced org-mode commands.
     """
-    logging.info("Compiling regex patterns")
     patterns = {
         "bullet": re.compile(
             r"""
@@ -329,6 +328,7 @@ def compile_re_content() -> Dict[str, Pattern]:
             re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),
     }
+    logging.info("Compiled regex patterns for content analysis.")
     return patterns
 
 
@@ -349,7 +349,6 @@ def compile_re_config() -> Dict[str, Pattern]:
         whiteboards_directory_pattern: Matches the whiteboards directory setting.
         file_name_format_pattern: Matches the file name format setting.
     """
-    logging.info("Compiling regex patterns for Logseq configuration")
     patterns = {
         # Pattern to match journal page title format in verbose mode.
         "journal_page_title_format_pattern": re.compile(
@@ -425,4 +424,5 @@ def compile_re_config() -> Dict[str, Pattern]:
             re.VERBOSE,
         ),
     }
+    logging.info("Compiled regex patterns for configuration analysis.")
     return patterns

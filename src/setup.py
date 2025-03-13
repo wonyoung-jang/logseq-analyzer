@@ -88,12 +88,12 @@ def create_output_directory() -> Path:
             shutil.rmtree(output_dir)
             logging.info(f"Removed existing output directory: {output_dir}")
         except Exception as e:
-            logging.debug(f"Failed to remove directory {output_dir}: {e}")
+            logging.error(f"Failed to remove directory {output_dir}: {e}")
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
         logging.info(f"Created output directory: {output_dir}")
     except Exception as e:
-        logging.debug(f"Failed to create output directory {output_dir}: {e}")
+        logging.error(f"Failed to create output directory {output_dir}: {e}")
         raise
 
     return output_dir
@@ -115,8 +115,8 @@ def create_log_file(output: Path) -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
     )
-    logging.info(f"Logging initialized to {log_file}")
-    logging.debug("Logseq Analyzer started.")
+    logging.debug(f"Logging initialized to {log_file}")
+    logging.info("Logseq Analyzer started.")
 
 
 def clean_logseq_config_edn_content(config_file: Path) -> str:

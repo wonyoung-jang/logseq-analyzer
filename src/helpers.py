@@ -30,7 +30,7 @@ def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, 
             for file in files:
                 yield root_path / file
         else:
-            logging.debug(f"Skipping directory {root_path} outside target directories")
+            logging.info(f"Skipping directory {root_path} outside target directories")
             dirs.clear()
 
 
@@ -123,7 +123,6 @@ def get_sub_file_or_folder(parent: Path, child: str) -> Path:
     if not parent.exists() or not target.exists():
         logging.warning(f"Subfolder does not exist: {target}")
         return None
-    logging.debug(f"Successfully received: {target}")
 
     return target
 
@@ -152,7 +151,7 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
             logging.error(f"Failed to create subdirectory {target}: {e}")
             raise
     else:
-        logging.debug(f"Subdirectory already exists: {target}")
+        logging.info(f"Subdirectory already exists: {target}")
 
     return target
 

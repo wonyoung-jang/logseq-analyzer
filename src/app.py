@@ -25,9 +25,10 @@ from src.core import (
 )
 from src.helpers import merge_dicts
 
+
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
-    
+
     # Setup variables
     gui_inst = "gui_instance"
     setup_phase = "setup"
