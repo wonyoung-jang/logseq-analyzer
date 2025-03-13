@@ -181,6 +181,7 @@ def process_content_data(
                     if direct_level > parent_level:
                         content_data[parent_joined]["namespace_level"] = direct_level
 
+        # Update aliases and linked references
         unique_aliases.update(aliases)
         unique_linked_references.update(
             unique_aliases, draws, page_references, tags, tagged_backlinks, page_properties, block_properties
@@ -191,9 +192,12 @@ def process_content_data(
         process_embedded_links(patterns, content_data, name, embedded_links)
 
     # Create alphanum lookups and identify dangling links
-    alphanum_dict = create_alphanum(sorted(unique_linked_references))
-    alphanum_filenames = create_alphanum(sorted(content.keys()))
-    dangling_links = identify_dangling_links(unique_aliases, alphanum_dict, alphanum_filenames)
+    unique_filenames = set(sorted(content.keys()))
+    unique_aliases = set(sorted(unique_aliases))
+    unique_linked_references = set(sorted(unique_linked_references))
+
+    dangling_links = unique_linked_references.difference(unique_filenames, unique_aliases)
+    alphanum_dict = create_alphanum(unique_linked_references)
 
     return content_data, alphanum_dict, dangling_links
 
@@ -201,22 +205,6 @@ def process_content_data(
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:
     """Find all matches of a regex pattern in the text, returning them in lowercase."""
     return [match.lower() for match in pattern.findall(text)]
-
-
-def identify_dangling_links(
-    unique_aliases: Set[str], alphanum_dict: Dict[str, Set[str]], alphanum_filenames: Dict[str, Set[str]]
-) -> Set[str]:
-    """Identify dangling links in the alphanum lookups and aliases."""
-    dangling_links = set()
-    for id, references_linked in alphanum_dict.items():
-        if id in alphanum_filenames:
-            references_nofiles = [ref for ref in references_linked if ref not in alphanum_filenames[id]]
-            if references_nofiles:
-                dangling_links.update(references_nofiles)
-        else:
-            dangling_links.update(references_linked)
-    dangling_links.difference_update(unique_aliases)
-    return dangling_links
 
 
 def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
