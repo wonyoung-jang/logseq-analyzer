@@ -277,8 +277,8 @@ def process_namespace_data(
     ############ Testing ############
     #################################
     # Test specific namespace analysis
-    results = analyze_specific_namespace("ableton", graph_content_data)
-    write_output(output_dir, "namespace_ableton", results, output_dir_ns)
+    # results = analyze_specific_namespace("ableton", graph_content_data)
+    # write_output(output_dir, "namespace_ableton", results, output_dir_ns)
 
     # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
