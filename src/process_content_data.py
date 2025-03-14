@@ -72,6 +72,7 @@ def process_content_data(
     """
     content_data = {}
     unique_linked_references = set()
+    unique_linked_references_namespaces = set()
     unique_aliases = set()
     props = config.BUILT_IN_PROPERTIES
 
@@ -165,7 +166,7 @@ def process_content_data(
             content_data[name]["namespace_parent"] = namespace_parent
             content_data[name]["namespace_parts"] = namespace_parts
             content_data[name]["namespace_level"] = namespace_level
-            unique_linked_references.update([namespace_root, name])
+            unique_linked_references_namespaces.update([namespace_root, name])
 
             if namespace_level > 0:
                 if namespace_root in content_data:
@@ -195,11 +196,13 @@ def process_content_data(
     unique_filenames = set(sorted(content.keys()))
     unique_aliases = set(sorted(unique_aliases))
     unique_linked_references = set(sorted(unique_linked_references))
-
-    dangling_links = unique_linked_references.difference(unique_filenames, unique_aliases)
+    unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
+    unique_linked_references_all = unique_linked_references.union(unique_linked_references_namespaces)
+    dangling_links = unique_linked_references_all.difference(unique_filenames, unique_aliases)
     alphanum_dict = create_alphanum(unique_linked_references)
+    alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 
-    return content_data, alphanum_dict, dangling_links
+    return content_data, alphanum_dict, alphanum_dict_ns, dangling_links
 
 
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:

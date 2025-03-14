@@ -19,6 +19,7 @@ def init_summary_data() -> Dict[str, Any]:
         "has_external_links": False,
         "has_embedded_links": False,
         "is_backlinked": False,
+        "is_backlinked_by_ns_only": False,
     }
 
 
@@ -26,6 +27,7 @@ def process_summary_data(
     graph_meta_data: Dict[str, Any],
     graph_content_data: Dict[str, Any],
     alphanum_dict: Dict[str, Set[str]],
+    alphanum_dict_ns: Dict[str, Set[str]],
 ) -> Dict[str, Any]:
     """
     Process summary data for each file based on metadata and content analysis.
@@ -36,6 +38,7 @@ def process_summary_data(
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         graph_content_data (Dict[str, Any]): Content-based data for each file.
         alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
+        alphanum_dict_ns (Dict[str, Set[str]]): Dictionary for quick lookup of linked references in namespaces.
 
     Returns:
         Dict[str, Any]: Summary data for each file.
@@ -90,10 +93,15 @@ def process_summary_data(
         file_type = determine_file_type(
             assets_dir, draws_dir, journals_dir, pages_dir, whiteboards_dir, file_path_parent_name, file_path_parts
         )
+
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
+        is_backlinked_by_ns_only = False
+        if not is_backlinked:
+            is_backlinked_by_ns_only = check_is_backlinked(name, meta_data, alphanum_dict_ns)
+
         node_type = config.NODE_TYPE_OTHER
         if file_type in [config.FILE_TYPE_JOURNAL, config.FILE_TYPE_PAGE]:
-            node_type = determine_node_type(has_content, is_backlinked, has_backlinks)
+            node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
         graph_summary_data[name]["file_type"] = file_type
         graph_summary_data[name]["file_extension"] = meta_data["file_path_suffix"]
@@ -103,6 +111,7 @@ def process_summary_data(
         graph_summary_data[name]["has_external_links"] = has_external_links
         graph_summary_data[name]["has_embedded_links"] = has_embedded_links
         graph_summary_data[name]["is_backlinked"] = is_backlinked
+        graph_summary_data[name]["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
 
     return graph_summary_data
 
@@ -122,7 +131,7 @@ def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dic
     id_key = meta_data["id"]
     if id_key in alphanum_dict:
         for page_ref in alphanum_dict[id_key]:
-            if name == page_ref or str(name + config.NAMESPACE_SEP) in page_ref:
+            if name == page_ref:
                 return True
     return False
 
@@ -166,7 +175,7 @@ def determine_file_type(
     return file_type
 
 
-def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: bool) -> str:
+def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
     if has_content:
         if is_backlinked:
@@ -178,9 +187,13 @@ def determine_node_type(has_content: bool, is_backlinked: bool, has_backlinks: b
             if has_backlinks:
                 return config.NODE_TYPE_ROOT
             else:
+                if is_backlinked_ns:
+                    return config.NODE_TYPE_ORPHAN_NS
                 return config.NODE_TYPE_ORPHAN_GRAPH
     else:
         if not is_backlinked:
+            if is_backlinked_ns:
+                return config.NODE_TYPE_ORPHAN_NS_TRUE
             return config.NODE_TYPE_ORPHAN_TRUE
         else:
             return config.NODE_TYPE_LEAF

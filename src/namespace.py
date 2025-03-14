@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Set, Tuple
 
 import src.config as config
 from src.reporting import write_output
+from src.core import generate_global_summary
 
 """
 Namespace Analysis
@@ -215,11 +216,11 @@ def process_namespace_data(
         conflicts_parents_unique
     """
     output_dir_ns = config.OUTPUT_DIR_NAMESPACE
+    subset = {}
 
     # 01 Conflicts With Existing Pages
     # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
-    write_output(output_dir, "__namespace_parts", namespace_parts, output_dir_ns)
 
     # Find unique names that are not namespaces
     content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
@@ -227,7 +228,6 @@ def process_namespace_data(
 
     # Existing analysis: group by levels
     namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
-    write_output(output_dir, "namespace_part_levels", namespace_part_levels, output_dir_ns)
 
     # Detecting conflicts with non-namespace pages
     potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
@@ -235,17 +235,12 @@ def process_namespace_data(
     conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
         namespace_parts, potential_non_namespace, potential_dangling
     )
-    write_output(output_dir, "conflicts_non_namespace", conflicts_non_namespace, output_dir_ns)
-    write_output(output_dir, "conflicts_dangling", conflicts_dangling, output_dir_ns)
 
     # 02 Parts that Appear at Multiple Depths
     conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
-    write_output(output_dir, "conflicts_parent_depth", conflicts_parent_depth, output_dir_ns)
-    write_output(output_dir, "conflicts_parents_unique", conflicts_parents_unique, output_dir_ns)
 
     # 03 General Namespace Data
     namespace_details = analyze_namespace_details(namespace_parts)
-    write_output(output_dir, "__namespace_details", namespace_details, output_dir_ns)
 
     max_depth = namespace_details["max_depth"]
     unique_namespaces_per_level = {i: set() for i in range(max_depth + 1)}
@@ -253,26 +248,42 @@ def process_namespace_data(
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)
     for level, names in unique_namespaces_per_level.items():
-        write_output(output_dir, f"unique_namespaces_level_{level}", names, output_dir_ns)
+        subset[f"unique_namespaces_level_{level}"] = names
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
-    write_output(output_dir, "namespace_frequency", namespace_frequency, output_dir_ns)
-    write_output(output_dir, "namespace_freq_list", namespace_freq_list, output_dir_ns)
 
     # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_content_data)
-    write_output(output_dir, "namespace_queries", namespace_queries, output_dir_ns)
 
     #################################
     ############ Testing ############
     #################################
     # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
-    write_output(output_dir, "namespace_hierarchy", namespace_hierarchy, output_dir_ns)
 
     # Test extract namespace subtrees
     namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
-    write_output(output_dir, "namespace_subtree", namespace_subtree, output_dir_ns)
+
+    subsetAdd = {
+        "__namespace_parts": namespace_parts,
+        "namespace_part_levels": namespace_part_levels,
+        "conflicts_non_namespace": conflicts_non_namespace,
+        "conflicts_dangling": conflicts_dangling,
+        "conflicts_parent_depth": conflicts_parent_depth,
+        "conflicts_parents_unique": conflicts_parents_unique,
+        "__namespace_details": namespace_details,
+        "namespace_frequency": namespace_frequency,
+        "namespace_freq_list": namespace_freq_list,
+        "namespace_queries": namespace_queries,
+        "namespace_hierarchy": namespace_hierarchy,
+        "namespace_subtree": namespace_subtree,
+    }
+    subset.update(subsetAdd)
+
+    for filename, items in subset.items():
+        write_output(output_dir, filename, items, output_dir_ns)
+
+    generate_global_summary(output_dir, subset, output_dir_ns)
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

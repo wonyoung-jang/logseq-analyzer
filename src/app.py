@@ -85,6 +85,7 @@ def run_app(**kwargs):
     # Core data analysis
     (
         meta_alphanum_dictionary,
+        alphanum_dict_ns,
         meta_dangling_links,
         graph_content_data,
         graph_summary_data,
@@ -104,6 +105,7 @@ def run_app(**kwargs):
         args,
         output_dir,
         meta_alphanum_dictionary,
+        alphanum_dict_ns,
         meta_dangling_links,
         meta_graph_content,
         graph_meta_data,

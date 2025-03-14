@@ -62,13 +62,16 @@ def core_data_analysis(
     Returns:
         Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
-    graph_content_data, meta_alphanum_dictionary, meta_dangling_links = process_content_data(
+    graph_content_data, meta_alphanum_dictionary, alphanum_dict_ns, meta_dangling_links = process_content_data(
         meta_graph_content, patterns, meta_primary_bullet
     )
-    graph_summary_data = process_summary_data(graph_meta_data, graph_content_data, meta_alphanum_dictionary)
+    graph_summary_data = process_summary_data(
+        graph_meta_data, graph_content_data, meta_alphanum_dictionary, alphanum_dict_ns
+    )
 
     return (
         meta_alphanum_dictionary,
+        alphanum_dict_ns,
         meta_dangling_links,
         graph_content_data,
         graph_summary_data,
@@ -79,6 +82,7 @@ def write_initial_outputs(
     args,
     output_dir,
     meta_alphanum_dictionary,
+    alphanum_dict_ns,
     meta_dangling_links,
     meta_graph_content,
     graph_meta_data,
@@ -109,6 +113,7 @@ def write_initial_outputs(
         write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
 
     write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
+    write_output(output_dir, "alphanum_dictionary_all", alphanum_dict_ns, config.OUTPUT_DIR_META)
     write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
     write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
     write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
@@ -136,6 +141,7 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     # Process general categories
     summary_categories: Dict[str, Dict[str, Any]] = {
         "is_backlinked": {"is_backlinked": True},
+        "is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
         "has_content": {"has_content": True},
         "has_backlinks": {"has_backlinks": True},
         "has_external_links": {"has_external_links": True},
@@ -166,10 +172,12 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     summary_categories_nodes: Dict[str, Dict[str, Any]] = {
         "is_orphan_true": {"node_type": "orphan_true"},
         "is_orphan_graph": {"node_type": "orphan_graph"},
+        "is_orphan_namespace": {"node_type": "orphan_namespace"},
+        "is_orphan_namespace_true": {"node_type": "orphan_namespace_true"},
         "is_node_root": {"node_type": "root"},
         "is_node_leaf": {"node_type": "leaf"},
         "is_node_branch": {"node_type": "branch"},
-        "is_node_other": {"node_type": "other-node"},
+        "is_node_other": {"node_type": "other_node"},
     }
 
     for output_name, criteria in summary_categories_nodes.items():
@@ -243,7 +251,7 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     return summary_data_subsets
 
 
-def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> None:
+def generate_global_summary(output_dir: Path, summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:
     """
     Generate a global summary for the Logseq Analyzer.
 
@@ -256,7 +264,7 @@ def generate_global_summary(output_dir: Path, summary_data_subsets: dict) -> Non
         global_summary[subset_name] = {}
         global_summary[subset_name]["results"] = len(subset)
 
-    write_output(output_dir, "global_summary", global_summary, config.OUTPUT_DIR_SUMMARY)
+    write_output(output_dir, "global_summary", global_summary, target)
 
 
 def handle_assets(
