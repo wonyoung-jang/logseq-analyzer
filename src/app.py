@@ -78,21 +78,15 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     # Process graph files
-    graph_meta_data, meta_graph_content, meta_primary_bullet, meta_content_bullets = process_graph_files(
-        logseq_graph_dir, content_patterns, target_dirs
-    )
+    graph_data, graph_content_bullets = process_graph_files(logseq_graph_dir, content_patterns, target_dirs)
 
     # Core data analysis
     (
-        meta_alphanum_dictionary,
+        alphanum_dict,
         alphanum_dict_ns,
-        meta_dangling_links,
-        graph_content_data,
-        graph_summary_data,
-    ) = core_data_analysis(content_patterns, graph_meta_data, meta_graph_content, meta_primary_bullet)
-
-    # Merge all graph data into a single dictionary
-    graph_all_data = merge_dicts(graph_meta_data, graph_content_data, graph_summary_data)
+        dangling_links,
+        graph_data,
+    ) = core_data_analysis(graph_data)
 
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
@@ -102,23 +96,17 @@ def run_app(**kwargs):
     #################################################################
     # Write initial outputs
     write_initial_outputs(
-        args,
         output_dir,
-        meta_alphanum_dictionary,
+        alphanum_dict,
         alphanum_dict_ns,
-        meta_dangling_links,
-        meta_graph_content,
-        graph_meta_data,
-        graph_content_data,
-        graph_summary_data,
+        dangling_links,
+        graph_data,
         target_dirs,
-        meta_primary_bullet,
-        meta_content_bullets,
-        graph_all_data,
+        graph_content_bullets,
     )
 
     # Generate summary
-    summary_data_subsets = generate_summary_subsets(output_dir, graph_all_data)
+    summary_data_subsets = generate_summary_subsets(output_dir, graph_data)
     generate_global_summary(output_dir, summary_data_subsets)
 
     if gui_instance:
@@ -128,7 +116,7 @@ def run_app(**kwargs):
     # Phase 04: Process namespaces
     ################################################################
     # Namespaces analysis
-    process_namespace_data(output_dir, graph_content_data, meta_dangling_links)
+    process_namespace_data(output_dir, graph_data, dangling_links)
 
     if gui_instance:
         gui_instance.update_progress(namespaces_phase, 100)
@@ -141,10 +129,10 @@ def run_app(**kwargs):
         to_delete_dir = create_delete_directory()
 
         # Handle assets
-        summary_is_asset_not_backlinked = handle_assets(output_dir, graph_all_data, summary_data_subsets, to_delete_dir)
+        summary_is_asset_not_backlinked = handle_assets(output_dir, graph_data, summary_data_subsets, to_delete_dir)
 
         # Handle bak and recycle directories
-        handle_move_files(args, graph_meta_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+        handle_move_files(args, graph_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)

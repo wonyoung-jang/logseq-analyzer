@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple, Pattern
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
 from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
-from src.process_content_data import process_content_data
+from src.process_content_data import post_processing_content
 from src.process_summary_data import extract_summary_subset_content, process_summary_data, extract_summary_subset_files
 import src.config as config
 
@@ -25,104 +25,73 @@ def process_graph_files(
     Returns:
         Tuple[dict, dict, dict, dict]: A tuple containing the graph metadata, content data, primary bullet data, and content bullets data.
     """
-    graph_meta_data = {}
-    meta_graph_content = {}
-    meta_primary_bullet = {}
+    graph_data = {}
     meta_content_bullets = {}
 
     graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
 
     for file_path in graph_dir_structure:
-        meta_data, graph_content, primary_bullet, content_bullets = process_single_file(file_path, patterns)
+        file_data, content_bullets = process_single_file(file_path, patterns)
 
-        name = meta_data["name"]
-        if name in graph_meta_data:
-            name = meta_data["name_secondary"]
+        name = file_data["name"]
+        if name in graph_data:
+            name = file_data["name_secondary"]
 
-        graph_meta_data[name] = meta_data
-        meta_graph_content[name] = graph_content
-        meta_primary_bullet[name] = primary_bullet
+        graph_data[name] = file_data
         meta_content_bullets[name] = content_bullets
 
-    return graph_meta_data, meta_graph_content, meta_primary_bullet, meta_content_bullets
+    return graph_data, meta_content_bullets
 
 
 def core_data_analysis(
-    patterns: Dict[str, Pattern], graph_meta_data: dict, meta_graph_content: dict, meta_primary_bullet: dict
+    graph_data: dict,
 ) -> Tuple[Dict[str, set], List[str], dict, dict]:
     """
     Process the core data analysis for the Logseq Analyzer.
 
     Args:
-        patterns (dict): The compiled regex patterns.
-        graph_meta_data (dict): The graph metadata.
-        meta_graph_content (dict): The graph content data.
-        meta_primary_bullet (dict): The primary bullet data.
+        graph_data (dict): The graph data to analyze.
 
     Returns:
         Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
-    graph_content_data, meta_alphanum_dictionary, alphanum_dict_ns, meta_dangling_links = process_content_data(
-        meta_graph_content, patterns, meta_primary_bullet
-    )
-    graph_summary_data = process_summary_data(
-        graph_meta_data, graph_content_data, meta_alphanum_dictionary, alphanum_dict_ns
-    )
+    graph_data, alphanum_dict, alphanum_dict_ns, dangling_links = post_processing_content(graph_data)
+    graph_data = process_summary_data(graph_data, alphanum_dict, alphanum_dict_ns)
 
     return (
-        meta_alphanum_dictionary,
+        alphanum_dict,
         alphanum_dict_ns,
-        meta_dangling_links,
-        graph_content_data,
-        graph_summary_data,
+        dangling_links,
+        graph_data,
     )
 
 
 def write_initial_outputs(
-    args,
     output_dir,
-    meta_alphanum_dictionary,
+    alphanum_dict,
     alphanum_dict_ns,
-    meta_dangling_links,
-    meta_graph_content,
-    graph_meta_data,
-    graph_content_data,
-    graph_summary_data,
+    dangling_links,
+    graph_data,
     target_dirs,
-    meta_primary_bullet,
-    meta_content_bullets,
-    graph_all_data,
+    graph_content_bullets,
 ) -> None:
     """Write initial outputs for graph analysis to specified directories.
 
     Args:
-        args: Arguments containing write_graph flag
-        output_dir (str): Base directory for output files
-        meta_alphanum_dictionary (dict): Dictionary of alphanumeric metadata
-        meta_dangling_links (list): List of dangling links in the graph
-        meta_graph_content (dict): Content of the graph metadata
-        graph_meta_data (dict): Metadata about the graph structure
-        graph_content_data (dict): Content data for graph nodes
-        graph_summary_data (dict): Summary statistics of the graph
-        target_dirs (list): List of target directories for processing
-        meta_primary_bullet (dict): Primary bullet data for graph nodes
-        meta_content_bullets (dict): Content bullet data for graph nodes
-        graph_all_data (dict): All data related to the graph
+        output_dir (Path): The output directory.
+        alphanum_dict (dict): The alphanumeric dictionary.
+        alphanum_dict_ns (dict): The alphanumeric dictionary for namespaces.
+        dangling_links (list): The dangling links.
+        graph_data (dict): The graph data.
+        target_dirs (list): The target directories.
+        graph_content_bullets (dict): The graph content bullets data.
     """
-    if args.write_graph:
-        write_output(output_dir, "graph_content", meta_graph_content, config.OUTPUT_DIR_META)
-
-    write_output(output_dir, "alphanum_dictionary", meta_alphanum_dictionary, config.OUTPUT_DIR_META)
+    write_output(output_dir, "alphanum_dictionary", alphanum_dict, config.OUTPUT_DIR_META)
     write_output(output_dir, "alphanum_dictionary_all", alphanum_dict_ns, config.OUTPUT_DIR_META)
-    write_output(output_dir, "dangling_links", meta_dangling_links, config.OUTPUT_DIR_META)
+    write_output(output_dir, "dangling_links", dangling_links, config.OUTPUT_DIR_META)
     write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_primary_bullet", meta_primary_bullet, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_content_bullets", meta_content_bullets, config.OUTPUT_DIR_META)
-
-    write_output(output_dir, "01_meta_data", graph_meta_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "02_content_data", graph_content_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "03_summary_data", graph_summary_data, config.OUTPUT_DIR_GRAPH)
-    write_output(output_dir, "04_all_data", graph_all_data, config.OUTPUT_DIR_GRAPH)
+    write_output(output_dir, "meta_content_bullets", graph_content_bullets, config.OUTPUT_DIR_META)
+    write_output(output_dir, "graph_data", graph_data, config.OUTPUT_DIR_GRAPH)
 
 
 def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:

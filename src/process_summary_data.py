@@ -3,29 +3,8 @@ from typing import Any, Dict, List, Set
 import src.config as config
 
 
-def init_summary_data() -> Dict[str, Any]:
-    """
-    Initialize an empty summary data dictionary.
-
-    Returns:
-        Dict[str, Any]: An empty dictionary for summary data.
-    """
-    return {
-        "file_type": "",
-        "file_extension": "",
-        "node_type": "",
-        "has_content": False,
-        "has_backlinks": False,
-        "has_external_links": False,
-        "has_embedded_links": False,
-        "is_backlinked": False,
-        "is_backlinked_by_ns_only": False,
-    }
-
-
 def process_summary_data(
-    graph_meta_data: Dict[str, Any],
-    graph_content_data: Dict[str, Any],
+    graph_data: Dict[str, Any],
     alphanum_dict: Dict[str, Set[str]],
     alphanum_dict_ns: Dict[str, Set[str]],
 ) -> Dict[str, Any]:
@@ -35,25 +14,21 @@ def process_summary_data(
     Categorizes files and determines node types (root, leaf, branch, orphan).
 
     Args:
-        graph_meta_data (Dict[str, Any]): Metadata for each file.
-        graph_content_data (Dict[str, Any]): Content-based data for each file.
+        graph_data (Dict[str, Any]): Metadata for each file.
         alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
         alphanum_dict_ns (Dict[str, Set[str]]): Dictionary for quick lookup of linked references in namespaces.
 
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    graph_summary_data = {}
-
     assets_dir = config.DIR_ASSETS
     draws_dir = config.DIR_DRAWS
     journals_dir = config.DIR_JOURNALS
     pages_dir = config.DIR_PAGES
     whiteboards_dir = config.DIR_WHITEBOARDS
 
-    for name, meta_data in graph_meta_data.items():
-        graph_summary_data[name] = init_summary_data()
-        content_info = graph_content_data.get(name, {})
+    for name, meta_data in graph_data.items():
+        content_info = meta_data.get("content", {})
         has_content = bool(meta_data["size"] > 0)
         has_backlinks = False
         has_external_links = False
@@ -103,17 +78,17 @@ def process_summary_data(
         if file_type in [config.FILE_TYPE_JOURNAL, config.FILE_TYPE_PAGE]:
             node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
-        graph_summary_data[name]["file_type"] = file_type
-        graph_summary_data[name]["file_extension"] = meta_data["file_path_suffix"]
-        graph_summary_data[name]["node_type"] = node_type
-        graph_summary_data[name]["has_content"] = has_content
-        graph_summary_data[name]["has_backlinks"] = has_backlinks
-        graph_summary_data[name]["has_external_links"] = has_external_links
-        graph_summary_data[name]["has_embedded_links"] = has_embedded_links
-        graph_summary_data[name]["is_backlinked"] = is_backlinked
-        graph_summary_data[name]["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
+        meta_data["file_type"] = file_type
+        meta_data["file_extension"] = meta_data["file_path_suffix"]
+        meta_data["node_type"] = node_type
+        meta_data["has_content"] = has_content
+        meta_data["has_backlinks"] = has_backlinks
+        meta_data["has_external_links"] = has_external_links
+        meta_data["has_embedded_links"] = has_embedded_links
+        meta_data["is_backlinked"] = is_backlinked
+        meta_data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
 
-    return graph_summary_data
+    return graph_data
 
 
 def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:

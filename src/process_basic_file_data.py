@@ -4,16 +4,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Pattern, Tuple
 
 from src.helpers import process_filename_key
+from src.process_content_data import *
 
 
-def init_metadata() -> Dict[str, Any]:
-    """
-    Initialize an empty metadata dictionary.
-
-    Returns:
-        Dict[str, Any]: An empty dictionary for metadata.
-    """
+def init_data() -> Dict[str, Any]:
     return {
+        # Metadata
         "id": None,
         "name": None,
         "name_secondary": None,
@@ -31,6 +27,53 @@ def init_metadata() -> Dict[str, Any]:
         "char_count": 0,
         "bullet_count": 0,
         "bullet_density": 0,
+        # Content Data
+        "aliases": [],
+        "namespace_root": "",
+        "namespace_parent": "",
+        "namespace_parts": {},
+        "namespace_level": -1,
+        "page_references": [],
+        "tagged_backlinks": [],
+        "tags": [],
+        "properties_values": [],
+        "properties_page_builtin": [],
+        "properties_page_user": [],
+        "properties_block_builtin": [],
+        "properties_block_user": [],
+        "assets": [],
+        "draws": [],
+        "external_links": [],
+        "external_links_internet": [],
+        "external_links_alias": [],
+        "embedded_links": [],
+        "embedded_links_internet": [],
+        "embedded_links_asset": [],
+        "blockquotes": [],
+        "flashcards": [],
+        "multiline_code_block": [],
+        "calc_block": [],
+        "multiline_code_lang": [],
+        "reference": [],
+        "block_reference": [],
+        "embed": [],
+        "page_embed": [],
+        "block_embed": [],
+        "namespace_queries": [],
+        "clozes": [],
+        "simple_queries": [],
+        "query_functions": [],
+        "advanced_commands": [],
+        # Summary Data
+        "file_type": "",
+        "file_extension": "",
+        "node_type": "",
+        "has_content": False,
+        "has_backlinks": False,
+        "has_external_links": False,
+        "has_embedded_links": False,
+        "is_backlinked": False,
+        "is_backlinked_by_ns_only": False,
     }
 
 
@@ -47,27 +90,34 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     Returns:
         Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
     """
-    metadata = get_file_metadata(file_path)
-    content = read_file_content(file_path)
-    primary_bullet = ""
+    data = init_data()
+    data = get_file_metadata(file_path, data)
+    content = get_file_content(file_path)
     content_bullets = []
 
     if content:
-        metadata["char_count"] = len(content)
+        primary_bullet = ""
+
+        # Count characters
+        data["char_count"] = len(content)
+        # Count bullets
         bullet_count = 0
-        if metadata["file_path_suffix"] == ".md":
+        if data["file_path_suffix"] == ".md":
             bullet_content = patterns["bullet"].split(content)
             primary_bullet = bullet_content[0].strip()
             content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
-            bullet_count = len(content_bullets) if content_bullets else 0
-        metadata["bullet_count"] = bullet_count
+            bullet_count = len(content_bullets)
+            data["bullet_count"] = bullet_count
+        # Calculate bullet density
         if bullet_count > 0:
-            metadata["bullet_density"] = round(metadata["char_count"] / bullet_count, 2)
+            data["bullet_density"] = round(data["char_count"] / bullet_count, 2)
 
-    return metadata, content, primary_bullet, content_bullets
+        data = process_content_data(data, content, patterns, primary_bullet)
+
+    return data, content_bullets
 
 
-def get_file_metadata(file_path: Path) -> Dict[str, Any]:
+def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract metadata from a file.
 
@@ -80,8 +130,6 @@ def get_file_metadata(file_path: Path) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: A dictionary with file metadata.
     """
-    metadata = init_metadata()
-
     stat = file_path.stat()
     parent = file_path.parent.name
     name = process_filename_key(file_path.stem, parent)
@@ -95,25 +143,25 @@ def get_file_metadata(file_path: Path) -> Dict[str, Any]:
         date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
         logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
-    metadata["id"] = name[:2].lower() if len(name) > 1 else f"!{name[0].lower()}"
-    metadata["name"] = name
-    metadata["name_secondary"] = f"{name} {parent} + {suffix}".lower()
-    metadata["file_path"] = str(file_path)
-    metadata["file_path_parent_name"] = parent.lower()
-    metadata["file_path_name"] = name.lower()
-    metadata["file_path_suffix"] = suffix.lower() if suffix else None
-    metadata["file_path_parts"] = file_path.parts
-    metadata["date_created"] = date_created
-    metadata["date_modified"] = date_modified
-    metadata["time_existed"] = now - date_created
-    metadata["time_unmodified"] = now - date_modified
-    metadata["size"] = stat.st_size
-    metadata["uri"] = file_path.as_uri()
+    data["id"] = name[:2].lower() if len(name) > 1 else f"!{name[0].lower()}"
+    data["name"] = name
+    data["name_secondary"] = f"{name} {parent} + {suffix}".lower()
+    data["file_path"] = str(file_path)
+    data["file_path_parent_name"] = parent.lower()
+    data["file_path_name"] = name.lower()
+    data["file_path_suffix"] = suffix.lower() if suffix else None
+    data["file_path_parts"] = file_path.parts
+    data["date_created"] = date_created
+    data["date_modified"] = date_modified
+    data["time_existed"] = now - date_created
+    data["time_unmodified"] = now - date_modified
+    data["uri"] = file_path.as_uri()
+    data["size"] = stat.st_size
 
-    return metadata
+    return data
 
 
-def read_file_content(file_path: Path) -> Optional[str]:
+def get_file_content(file_path: Path) -> Optional[str]:
     """
     Read the text content of a file using utf-8 encoding.
 
