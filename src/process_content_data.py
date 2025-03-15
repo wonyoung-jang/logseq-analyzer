@@ -105,8 +105,8 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
     alphanum_dict = defaultdict(set)
     for item in list_lookup:
         if item:
-            id = item[:2] if len(item) > 1 else f"!{item[0]}"
-            alphanum_dict[id].add(item)
+            id_key = item[:2] if len(item) > 1 else f"!{item[0]}"
+            alphanum_dict[id_key].add(item)
         else:
             logging.error(f"Empty item: {item}")
     return alphanum_dict

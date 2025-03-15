@@ -37,7 +37,7 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
     root_counter = Counter()
     part_level_details = defaultdict(list)
 
-    for entry, parts in namespace_parts.items():
+    for _, parts in namespace_parts.items():
         for part, level in parts.items():
             level_distribution[level] += 1
             part_level_details[part].append(level)
@@ -264,7 +264,7 @@ def process_namespace_data(
     # Test extract namespace subtrees
     namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
 
-    subsetAdd = {
+    subset_add = {
         "__namespace_parts": namespace_parts,
         "namespace_part_levels": namespace_part_levels,
         "conflicts_non_namespace": conflicts_non_namespace,
@@ -278,7 +278,7 @@ def process_namespace_data(
         "namespace_hierarchy": namespace_hierarchy,
         "namespace_subtree": namespace_subtree,
     }
-    subset.update(subsetAdd)
+    subset.update(subset_add)
 
     for filename, items in subset.items():
         write_output(output_dir, filename, items, output_dir_ns)
@@ -294,7 +294,7 @@ def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) ->
     tree = {}
 
     # Build tree structure
-    for full_name, parts in namespace_parts.items():
+    for _, parts in namespace_parts.items():
         current_level = tree
         for part_level in sorted(parts.items(), key=lambda x: x[1]):
             part = part_level[0]

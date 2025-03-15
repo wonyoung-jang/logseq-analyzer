@@ -23,7 +23,6 @@ from src.core import (
     generate_summary_subsets,
     generate_global_summary,
 )
-from src.helpers import merge_dicts
 
 
 def run_app(**kwargs):

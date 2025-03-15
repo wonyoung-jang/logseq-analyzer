@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Pattern, Tuple
 
 from src.helpers import process_filename_key
-from src.process_content_data import *
+from src.process_content_data import process_content_data
 
 
 def init_data() -> Dict[str, Any]:

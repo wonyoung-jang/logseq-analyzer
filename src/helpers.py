@@ -56,13 +56,13 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
 
     moved_content = []
     for root, dirs, files in Path.walk(input_dir):
-        for dir in dirs:
+        for directory in dirs:
             try:
-                moved_content.append(dir)
-                shutil.move(Path(root) / dir, target_dir / dir)
-                logging.warning(f"Moved folder: {dir}")
+                moved_content.append(directory)
+                shutil.move(Path(root) / directory, target_dir / directory)
+                logging.warning(f"Moved folder: {directory}")
             except Exception as e:
-                logging.error(f"Failed to move folder: {dir}: {e}")
+                logging.error(f"Failed to move folder: {directory}: {e}")
         for file in files:
             try:
                 moved_content.append(file)
@@ -102,24 +102,6 @@ def move_unlinked_assets(
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
 
     return moved_assets
-
-
-def merge_dicts(*dicts):
-    """
-    Merge multiple dictionaries into a single dictionary.
-
-    Args:
-        *dicts: Dictionaries to merge.
-    Returns:
-        dict: Merged dictionary.
-    """
-    result = {}
-    for dict_data in dicts:
-        for key, values in dict_data.items():
-            if key not in result:
-                result[key] = {}
-            result[key].update(values)
-    return result
 
 
 def get_sub_file_or_folder(parent: Path, child: str) -> Path:
