@@ -66,35 +66,21 @@ def core_data_analysis(
     )
 
 
-def write_initial_outputs(
-    args,
-    output_dir,
-    alphanum_dict,
-    alphanum_dict_ns,
-    dangling_links,
-    graph_data,
-    target_dirs,
-    graph_content_bullets,
-) -> None:
-    """Write initial outputs for graph analysis to specified directories.
+def write_initial_outputs(args, output_dir, **kwargs) -> None:
+    """
+    Write initial outputs for graph analysis to specified directories.
 
     Args:
         args (argparse.Namespace): The command line arguments.
         output_dir (Path): The output directory.
-        alphanum_dict (dict): The alphanumeric dictionary.
-        alphanum_dict_ns (dict): The alphanumeric dictionary for namespaces.
-        dangling_links (list): The dangling links.
-        graph_data (dict): The graph data.
-        target_dirs (list): The target directories.
-        graph_content_bullets (dict): The graph content bullets data.
+        **kwargs: Additional keyword arguments for output data.
     """
-    if args.write_graph:
-        write_output(output_dir, "graph_content_bullets", graph_content_bullets, config.OUTPUT_DIR_META)
-    write_output(output_dir, "alphanum_dict", alphanum_dict, config.OUTPUT_DIR_META)
-    write_output(output_dir, "alphanum_dict_ns", alphanum_dict_ns, config.OUTPUT_DIR_META)
-    write_output(output_dir, "dangling_links", dangling_links, config.OUTPUT_DIR_META)
-    write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
-    write_output(output_dir, "graph_data", graph_data, config.OUTPUT_DIR_GRAPH)
+    if kwargs:
+        for name, items in kwargs.items():
+            if name == "graph_content_bullets" and args.write_graph:
+                write_output(output_dir, name, items, config.OUTPUT_DIR_META)
+                continue
+            write_output(output_dir, name, items, config.OUTPUT_DIR_META)
 
 
 def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
@@ -223,24 +209,30 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     return summary_data_subsets
 
 
-def generate_summary_superlatives(output_dir: Path, graph_data: dict, target) -> None:
+def generate_sorted_summary(output_dir: Path, graph_data: dict, target, attribute) -> None:
     """
-    Generate summary superlatives for the Logseq Analyzer.
+    Generate a sorted summary for the Logseq Analyzer.
+
+    Args:
+        output_dir (Path): The output directory.
+        graph_data (dict): The graph data to analyze.
+        target (str): The target directory for the output files.
+        attribute (str): The attribute to sort by.
     """
-    # TODO
-    count = 10
-    columns = [
-        ("most_size", "size"),
-        ("most_chars", "char_count"),
-        ("most_bullets", "bullet_count"),
-        ("most_bullet_density", "bullet_density"),
-    ]
-    for output_name, key_name in columns:
-        sorted_data = {
-            k: v[key_name]
-            for k, v in sorted(graph_data.items(), key=lambda item: item[1][key_name], reverse=True)[:count]
-        }
-        write_output(output_dir, output_name, sorted_data, target)
+    sorted_data = {}
+    for name, data in graph_data.items():
+        if attribute in data:
+            if isinstance(data[attribute], (list, dict, set)):
+                sorted_data[name] = len(data[attribute])
+            elif isinstance(data[attribute], str):
+                sorted_data[name] = 1
+            else:
+                sorted_data[name] = data[attribute]
+
+    sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=True))
+    write_output(output_dir, f"sorted_{attribute}", sorted_data, target)
+
+    return sorted_data
 
 
 def generate_global_summary(output_dir: Path, summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:

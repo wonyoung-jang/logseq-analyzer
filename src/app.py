@@ -15,7 +15,7 @@ from src.setup import (
 )
 from src.core import (
     create_delete_directory,
-    generate_summary_superlatives,
+    generate_sorted_summary,
     handle_assets,
     handle_move_files,
     process_graph_files,
@@ -95,21 +95,25 @@ def run_app(**kwargs):
     # Phase 03: Reporting/writing outputs
     #################################################################
     # Write initial outputs
-    write_initial_outputs(
-        args,
-        output_dir,
-        alphanum_dict,
-        alphanum_dict_ns,
-        dangling_links,
-        graph_data,
-        target_dirs,
-        graph_content_bullets,
-    )
+    initial_outputs = {
+        "alphanum_dict": alphanum_dict,
+        "alphanum_dict_ns": alphanum_dict_ns,
+        "dangling_links": dangling_links,
+        "target_dirs": target_dirs,
+        "graph_data": graph_data,
+        "graph_content_bullets": graph_content_bullets,
+    }
+
+    write_initial_outputs(args, output_dir, **initial_outputs)
 
     # Generate summary
     summary_data_subsets = generate_summary_subsets(output_dir, graph_data)
-    generate_summary_superlatives(output_dir, graph_data, config.OUTPUT_DIR_TEST)
     generate_global_summary(output_dir, summary_data_subsets)
+
+    sorted_bullet_counts = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "bullet_count")
+    sorted_bullet_densities = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "bullet_density")
+    sorted_char_counts = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "char_count")
+    sorted_sizes = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "size")
 
     if gui_instance:
         gui_instance.update_progress(reporting_phase, 100)
