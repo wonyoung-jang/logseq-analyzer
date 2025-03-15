@@ -66,22 +66,6 @@ def core_data_analysis(
     )
 
 
-def write_initial_outputs(args, **kwargs) -> None:
-    """
-    Write initial outputs for graph analysis to specified directories.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-        **kwargs: Additional keyword arguments for output data.
-    """
-    if kwargs:
-        for name, items in kwargs.items():
-            if name == "graph_content_bullets" and args.write_graph:
-                write_output(config.DEFAULT_OUTPUT_DIR, name, items, config.OUTPUT_DIR_META)
-                continue
-            write_output(config.DEFAULT_OUTPUT_DIR, name, items, config.OUTPUT_DIR_META)
-
-
 def generate_summary_subsets(graph_data: dict) -> dict:
     """
     Generate summary subsets for the Logseq Analyzer.

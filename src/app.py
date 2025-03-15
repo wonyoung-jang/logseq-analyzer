@@ -3,6 +3,7 @@ from pathlib import Path
 import src.config as config
 from src.compile_regex import compile_re_content, compile_re_config
 from src.namespace import process_namespace_data
+from src.reporting import write_many_outputs
 from src.setup import (
     get_logseq_analyzer_args,
     create_output_directory,
@@ -20,7 +21,6 @@ from src.core import (
     handle_move_files,
     process_graph_files,
     core_data_analysis,
-    write_initial_outputs,
     generate_summary_subsets,
     generate_global_summary,
 )
@@ -104,7 +104,7 @@ def run_app(**kwargs):
         "graph_content_bullets": graph_content_bullets,
     }
 
-    write_initial_outputs(args, **initial_outputs)
+    write_many_outputs(args, config.OUTPUT_DIR_META, **initial_outputs)
 
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
