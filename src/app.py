@@ -96,6 +96,7 @@ def run_app(**kwargs):
     #################################################################
     # Write initial outputs
     write_initial_outputs(
+        args,
         output_dir,
         alphanum_dict,
         alphanum_dict_ns,

@@ -67,6 +67,7 @@ def core_data_analysis(
 
 
 def write_initial_outputs(
+    args,
     output_dir,
     alphanum_dict,
     alphanum_dict_ns,
@@ -78,6 +79,7 @@ def write_initial_outputs(
     """Write initial outputs for graph analysis to specified directories.
 
     Args:
+        args (argparse.Namespace): The command line arguments.
         output_dir (Path): The output directory.
         alphanum_dict (dict): The alphanumeric dictionary.
         alphanum_dict_ns (dict): The alphanumeric dictionary for namespaces.
@@ -86,11 +88,12 @@ def write_initial_outputs(
         target_dirs (list): The target directories.
         graph_content_bullets (dict): The graph content bullets data.
     """
-    write_output(output_dir, "alphanum_dictionary", alphanum_dict, config.OUTPUT_DIR_META)
-    write_output(output_dir, "alphanum_dictionary_all", alphanum_dict_ns, config.OUTPUT_DIR_META)
+    if args.write_graph:
+        write_output(output_dir, "graph_content_bullets", graph_content_bullets, config.OUTPUT_DIR_META)
+    write_output(output_dir, "alphanum_dict", alphanum_dict, config.OUTPUT_DIR_META)
+    write_output(output_dir, "alphanum_dict_ns", alphanum_dict_ns, config.OUTPUT_DIR_META)
     write_output(output_dir, "dangling_links", dangling_links, config.OUTPUT_DIR_META)
     write_output(output_dir, "target_dirs", target_dirs, config.OUTPUT_DIR_META)
-    write_output(output_dir, "meta_content_bullets", graph_content_bullets, config.OUTPUT_DIR_META)
     write_output(output_dir, "graph_data", graph_data, config.OUTPUT_DIR_GRAPH)
 
 
