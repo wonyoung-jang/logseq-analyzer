@@ -28,14 +28,13 @@ def process_summary_data(
     whiteboards_dir = config.DIR_WHITEBOARDS
 
     for name, meta_data in graph_data.items():
-        content_info = meta_data.get("content", {})
         has_content = bool(meta_data["size"] > 0)
         has_backlinks = False
         has_external_links = False
         has_embedded_links = False
         if has_content:
             has_backlinks = any(
-                content_info.get(key)
+                meta_data.get(key)
                 for key in [
                     "page_references",
                     "tags",
@@ -47,7 +46,7 @@ def process_summary_data(
                 ]
             )
             has_external_links = any(
-                content_info.get(key)
+                meta_data.get(key)
                 for key in [
                     "external_links",
                     "external_links_internet",
@@ -55,7 +54,7 @@ def process_summary_data(
                 ]
             )
             has_embedded_links = any(
-                content_info.get(key)
+                meta_data.get(key)
                 for key in [
                     "embedded_links",
                     "embedded_links_internet",

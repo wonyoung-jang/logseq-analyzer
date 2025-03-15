@@ -15,6 +15,7 @@ from src.setup import (
 )
 from src.core import (
     create_delete_directory,
+    generate_summary_superlatives,
     handle_assets,
     handle_move_files,
     process_graph_files,
@@ -106,6 +107,7 @@ def run_app(**kwargs):
 
     # Generate summary
     summary_data_subsets = generate_summary_subsets(output_dir, graph_data)
+    generate_summary_superlatives(output_dir, graph_data, config.OUTPUT_DIR_TEST)
     generate_global_summary(output_dir, summary_data_subsets)
 
     if gui_instance:

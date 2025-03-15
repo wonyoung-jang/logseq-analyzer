@@ -220,6 +220,26 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     return summary_data_subsets
 
 
+def generate_summary_superlatives(output_dir: Path, graph_data: dict, target) -> None:
+    """
+    Generate summary superlatives for the Logseq Analyzer.
+    """
+    # TODO
+    count = 10
+    columns = [
+        ("most_size", "size"),
+        ("most_chars", "char_count"),
+        ("most_bullets", "bullet_count"),
+        ("most_bullet_density", "bullet_density"),
+    ]
+    for output_name, key_name in columns:
+        sorted_data = {
+            k: v[key_name]
+            for k, v in sorted(graph_data.items(), key=lambda item: item[1][key_name], reverse=True)[:count]
+        }
+        write_output(output_dir, output_name, sorted_data, target)
+
+
 def generate_global_summary(output_dir: Path, summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:
     """
     Generate a global summary for the Logseq Analyzer.
