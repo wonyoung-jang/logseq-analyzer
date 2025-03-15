@@ -99,10 +99,11 @@ def create_output_directory() -> Path:
     return output_dir
 
 
-def create_log_file(output: Path) -> None:
+def create_log_file() -> None:
     """
     Setup logging configuration for the Logseq Analyzer.
     """
+    output = Path(config.DEFAULT_OUTPUT_DIR)
     log_file = Path(output / config.DEFAULT_LOG_FILE)
 
     if Path.exists(log_file):

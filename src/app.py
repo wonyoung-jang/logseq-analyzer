@@ -52,8 +52,8 @@ def run_app(**kwargs):
     move = any([move_bak, move_recycle, move_assets])
 
     # Setup output directory and logging
-    output_dir = create_output_directory()
-    create_log_file(output_dir)
+    create_output_directory()
+    create_log_file()
 
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
@@ -104,16 +104,16 @@ def run_app(**kwargs):
         "graph_content_bullets": graph_content_bullets,
     }
 
-    write_initial_outputs(args, output_dir, **initial_outputs)
+    write_initial_outputs(args, **initial_outputs)
 
     # Generate summary
-    summary_data_subsets = generate_summary_subsets(output_dir, graph_data)
-    generate_global_summary(output_dir, summary_data_subsets)
+    summary_data_subsets = generate_summary_subsets(graph_data)
+    generate_global_summary(summary_data_subsets)
 
-    sorted_bullet_counts = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "bullet_count")
-    sorted_bullet_densities = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "bullet_density")
-    sorted_char_counts = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "char_count")
-    sorted_sizes = generate_sorted_summary(output_dir, graph_data, config.OUTPUT_DIR_TEST, "size")
+    sorted_bullet_counts = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "bullet_count")
+    sorted_bullet_densities = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "bullet_density")
+    sorted_char_counts = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "char_count")
+    sorted_sizes = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "size")
 
     if gui_instance:
         gui_instance.update_progress(reporting_phase, 100)
@@ -122,7 +122,7 @@ def run_app(**kwargs):
     # Phase 04: Process namespaces
     ################################################################
     # Namespaces analysis
-    process_namespace_data(output_dir, graph_data, dangling_links)
+    process_namespace_data(graph_data, dangling_links)
 
     if gui_instance:
         gui_instance.update_progress(namespaces_phase, 100)
@@ -135,7 +135,7 @@ def run_app(**kwargs):
         to_delete_dir = create_delete_directory()
 
         # Handle assets
-        summary_is_asset_not_backlinked = handle_assets(output_dir, graph_data, summary_data_subsets, to_delete_dir)
+        summary_is_asset_not_backlinked = handle_assets(graph_data, summary_data_subsets, to_delete_dir)
 
         # Handle bak and recycle directories
         handle_move_files(args, graph_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)

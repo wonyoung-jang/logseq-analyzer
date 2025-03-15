@@ -66,29 +66,27 @@ def core_data_analysis(
     )
 
 
-def write_initial_outputs(args, output_dir, **kwargs) -> None:
+def write_initial_outputs(args, **kwargs) -> None:
     """
     Write initial outputs for graph analysis to specified directories.
 
     Args:
         args (argparse.Namespace): The command line arguments.
-        output_dir (Path): The output directory.
         **kwargs: Additional keyword arguments for output data.
     """
     if kwargs:
         for name, items in kwargs.items():
             if name == "graph_content_bullets" and args.write_graph:
-                write_output(output_dir, name, items, config.OUTPUT_DIR_META)
+                write_output(config.DEFAULT_OUTPUT_DIR, name, items, config.OUTPUT_DIR_META)
                 continue
-            write_output(output_dir, name, items, config.OUTPUT_DIR_META)
+            write_output(config.DEFAULT_OUTPUT_DIR, name, items, config.OUTPUT_DIR_META)
 
 
-def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
+def generate_summary_subsets(graph_data: dict) -> dict:
     """
     Generate summary subsets for the Logseq Analyzer.
 
     Args:
-        output_dir (Path): The output directory.
         graph_summary_data (dict): The graph summary data.
 
     Returns:
@@ -109,7 +107,7 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     for output_name, criteria in summary_categories.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_SUMMARY)
+        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_SUMMARY)
 
     # Process file types
     summary_categories_types: Dict[str, Dict[str, Any]] = {
@@ -124,7 +122,7 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     for output_name, criteria in summary_categories_types.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_TYPES)
+        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_TYPES)
 
     # Process nodes
     summary_categories_nodes: Dict[str, Dict[str, Any]] = {
@@ -141,7 +139,7 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
     for output_name, criteria in summary_categories_nodes.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_NODES)
+        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_NODES)
 
     # Process file extensions
     file_extensions = {}
@@ -149,14 +147,14 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
         ext = meta.get("file_extension")
         file_extensions[ext] = file_extensions.get(ext, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
-    write_output(output_dir, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
+    write_output(config.DEFAULT_OUTPUT_DIR, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
 
     for ext in file_extensions:
         output_name = f"all_{ext}s"
         criteria = {"file_extension": ext}
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
+        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
 
     # TODO Testing content subset
     content_subset_tags_nodes = {
@@ -203,18 +201,17 @@ def generate_summary_subsets(output_dir: Path, graph_data: dict) -> dict:
         counts_output_name = f"{output_name}_counts"
         summary_data_subsets[output_name] = subset
         summary_data_subsets[counts_output_name] = subset_counts
-        write_output(output_dir, output_name, subset, config.OUTPUT_DIR_CONTENTS)
-        write_output(output_dir, counts_output_name, subset_counts, config.OUTPUT_DIR_CONTENTS_COUNTS)
+        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_CONTENTS)
+        write_output(config.DEFAULT_OUTPUT_DIR, counts_output_name, subset_counts, config.OUTPUT_DIR_CONTENTS_COUNTS)
 
     return summary_data_subsets
 
 
-def generate_sorted_summary(output_dir: Path, graph_data: dict, target, attribute) -> None:
+def generate_sorted_summary(graph_data: dict, target, attribute) -> None:
     """
     Generate a sorted summary for the Logseq Analyzer.
 
     Args:
-        output_dir (Path): The output directory.
         graph_data (dict): The graph data to analyze.
         target (str): The target directory for the output files.
         attribute (str): The attribute to sort by.
@@ -230,29 +227,28 @@ def generate_sorted_summary(output_dir: Path, graph_data: dict, target, attribut
                 sorted_data[name] = data[attribute]
 
     sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=True))
-    write_output(output_dir, f"sorted_{attribute}", sorted_data, target)
+    write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sorted_data, target)
 
     return sorted_data
 
 
-def generate_global_summary(output_dir: Path, summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:
+def generate_global_summary(summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:
     """
     Generate a global summary for the Logseq Analyzer.
 
     Args:
-        output_dir (Path): The output directory.
         summary_data_subsets (dict): The summary data subsets.
+        target (str): The target directory for the output files.
     """
     global_summary: Dict[str, Dict[str, int]] = {}
     for subset_name, subset in summary_data_subsets.items():
         global_summary[subset_name] = {}
         global_summary[subset_name]["results"] = len(subset)
 
-    write_output(output_dir, "global_summary", global_summary, target)
+    write_output(config.DEFAULT_OUTPUT_DIR, "global_summary", global_summary, target)
 
 
 def handle_assets(
-    output_dir: Path,
     graph_data: dict,
     summary_data_subsets: dict,
     to_delete_dir: Path,
@@ -261,7 +257,6 @@ def handle_assets(
     Handle assets for the Logseq Analyzer.
 
     Args:
-        output_dir (Path): The output directory.
         graph_data (dict): The graph data.
         summary_data_subsets (dict): The summary data subsets.
         to_delete_dir (Path): The directory for deleted files.
@@ -297,13 +292,13 @@ def handle_assets(
     summary_is_asset_not_backlinked = extract_summary_subset_files(graph_data, **asset_not_backlinked_kwargs)
 
     write_output(
-        output_dir,
+        config.DEFAULT_OUTPUT_DIR,
         "is_asset_backlinked",
         summary_is_asset_backlinked,
         config.OUTPUT_DIR_ASSETS,
     )
     write_output(
-        output_dir,
+        config.DEFAULT_OUTPUT_DIR,
         "is_asset_not_backlinked",
         summary_is_asset_not_backlinked,
         config.OUTPUT_DIR_ASSETS,
@@ -346,7 +341,7 @@ def handle_move_files(
             moved_files["moved_recycle"] = moved_recycle
 
     write_output(
-        Path(config.DEFAULT_OUTPUT_DIR),
+        config.DEFAULT_OUTPUT_DIR,
         "moved_files",
         moved_files,
         config.OUTPUT_DIR_META,

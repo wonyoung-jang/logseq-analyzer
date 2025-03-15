@@ -198,14 +198,11 @@ def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, A
     return namespace_queries
 
 
-def process_namespace_data(
-    output_dir: Path, graph_content_data: Dict[str, Any], meta_dangling_links: List[str]
-) -> None:
+def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
     Args:
-        output_dir (Path): The output directory.
         graph_content_data (dict): The graph content data.
         meta_dangling_links (list): The list of dangling links.
 
@@ -281,9 +278,9 @@ def process_namespace_data(
     subset.update(subset_add)
 
     for filename, items in subset.items():
-        write_output(output_dir, filename, items, output_dir_ns)
+        write_output(config.DEFAULT_OUTPUT_DIR, filename, items, output_dir_ns)
 
-    generate_global_summary(output_dir, subset, output_dir_ns)
+    generate_global_summary(subset, output_dir_ns)
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

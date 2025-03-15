@@ -55,7 +55,7 @@ def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
 
 
 def write_output(
-    output_dir: Path,
+    output_dir: str,
     filename_prefix: str,
     items: Any,
     type_output: str = "",
@@ -64,7 +64,7 @@ def write_output(
     Write the output to a file using a recursive helper to handle nested structures.
 
     Args:
-        output_dir (Path): The output directory.
+        output_dir (str): The output directory.
         filename_prefix (str): The prefix of the filename.
         items (Any): The items to write.
         type_output (str, optional): The type of output. Defaults to "".
@@ -73,6 +73,7 @@ def write_output(
 
     count = len(items)
     filename = f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
+    output_dir = Path(output_dir)
 
     if type_output:
         parent = output_dir / type_output
