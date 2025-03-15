@@ -191,7 +191,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     return summary_data_subsets
 
 
-def generate_sorted_summary(graph_data: dict, target, attribute) -> None:
+def generate_sorted_summary(graph_data: dict, target, attribute, reverse=True, count=-1) -> None:
     """
     Generate a sorted summary for the Logseq Analyzer.
 
@@ -210,10 +210,42 @@ def generate_sorted_summary(graph_data: dict, target, attribute) -> None:
             else:
                 sorted_data[name] = data[attribute]
 
-    sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=True))
-    write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sorted_data, target)
+    sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=reverse))
+    if count > 0:
+        sub_sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=reverse)[:count])
+        write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sub_sorted_data, target)
+    else:
+        write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sorted_data, target)
 
     return sorted_data
+
+
+def generate_sorted_summary_statistics(sorted_data: dict, target, attribute) -> None:
+    """
+    Generate a sorted summary statistics for the Logseq Analyzer.
+
+    Args:
+        sorted_data (dict): The sorted data to analyze.
+        target (str): The target directory for the output files.
+        attribute (str): The attribute to sort by.
+    """
+    sorted_values = list(sorted_data.values())
+    minimum = min(sorted_values)
+    maximum = max(sorted_values)
+    mean = sum(sorted_values) / len(sorted_values)
+    median = sorted_values[len(sorted_values) // 2]
+    variance = sum((x - mean) ** 2 for x in sorted_values) / len(sorted_values)
+    stddev = variance**0.5
+
+    stats = {
+        "min": minimum,
+        "mean": round(mean, 2),
+        "median": round(median, 2),
+        "max": maximum,
+        "stddev": round(stddev, 2),
+    }
+
+    write_output(config.DEFAULT_OUTPUT_DIR, f"{attribute}_statistics", stats, target)
 
 
 def generate_global_summary(summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:

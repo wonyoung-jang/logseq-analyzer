@@ -17,6 +17,7 @@ from src.setup import (
 from src.core import (
     create_delete_directory,
     generate_sorted_summary,
+    generate_sorted_summary_statistics,
     handle_assets,
     handle_move_files,
     process_graph_files,
@@ -110,10 +111,15 @@ def run_app(**kwargs):
     summary_data_subsets = generate_summary_subsets(graph_data)
     generate_global_summary(summary_data_subsets)
 
-    sorted_bullet_counts = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "bullet_count")
-    sorted_bullet_densities = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "bullet_density")
-    sorted_char_counts = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "char_count")
-    sorted_sizes = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, "size")
+    sorted_outputs = {
+        "sorted_bullet_counts": "bullet_count",
+        "sorted_bullet_densities": "bullet_density",
+        "sorted_char_counts": "char_count",
+        "sorted_sizes": "size",
+    }
+    for name, key in sorted_outputs.items():
+        sorted_data = generate_sorted_summary(graph_data, config.OUTPUT_DIR_TEST, key, count=10)
+        generate_sorted_summary_statistics(sorted_data, config.OUTPUT_DIR_TEST, name)
 
     if gui_instance:
         gui_instance.update_progress(reporting_phase, 100)
