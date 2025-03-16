@@ -220,6 +220,32 @@ def generate_sorted_summary(graph_data: dict, target, attribute, reverse=True, c
     return sorted_data
 
 
+def generate_sorted_summary_all(graph_data: dict, target, reverse=True, count=-1) -> None:
+    """
+    Generate a sorted summary for the Logseq Analyzer.
+
+    Args:
+        graph_data (dict): The graph data to analyze.
+        target (str): The target directory for the output files.
+    """
+    flipped_data = {}
+    for name, data in graph_data.items():
+        for key, value in data.items():
+            if isinstance(value, (list, dict, set, tuple)):
+                flipped_data.setdefault(key, {})[name] = len(value)
+            else:
+                flipped_data.setdefault(key, {})[name] = value
+
+    for key, value in flipped_data.items():
+        sorted_data = dict(sorted(value.items(), key=lambda item: item[1], reverse=reverse))
+        if count > 0:
+            sub_sorted_data = dict(sorted_data.items()[:count])
+            write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sub_sorted_data, target)
+        else:
+            write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sorted_data, target)
+        # generate_sorted_summary_statistics(sorted_data, target, key)
+
+
 def generate_sorted_summary_statistics(sorted_data: dict, target, attribute) -> None:
     """
     Generate a sorted summary statistics for the Logseq Analyzer.
@@ -229,7 +255,7 @@ def generate_sorted_summary_statistics(sorted_data: dict, target, attribute) -> 
         target (str): The target directory for the output files.
         attribute (str): The attribute to sort by.
     """
-    sorted_values = list(sorted_data.values())
+    sorted_values = list(int(sorted_data.values()))
     minimum = min(sorted_values)
     maximum = max(sorted_values)
     mean = sum(sorted_values) / len(sorted_values)

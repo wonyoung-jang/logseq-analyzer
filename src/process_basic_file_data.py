@@ -10,20 +10,20 @@ from src.process_content_data import process_content_data
 def init_data() -> Dict[str, Any]:
     return {
         # Metadata
-        "id": None,
-        "name": None,
-        "name_secondary": None,
-        "file_path": None,
-        "file_path_parent_name": None,
-        "file_path_name": None,
-        "file_path_suffix": None,
-        "file_path_parts": None,
-        "date_created": None,
-        "date_modified": None,
-        "time_existed": None,
-        "time_unmodified": None,
+        "id": "",
+        "name": "",
+        "name_secondary": "",
+        "file_path": "",
+        "file_path_parent_name": "",
+        "file_path_name": "",
+        "file_path_suffix": "",
+        "file_path_parts": [],
+        "date_created": datetime.min,
+        "date_modified": datetime.min,
+        "time_existed": datetime.min,
+        "time_unmodified": datetime.min,
         "size": 0,
-        "uri": None,
+        "uri": "",
         "char_count": 0,
         "bullet_count": 0,
         "bullet_density": 0,
@@ -131,7 +131,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: A dictionary with file metadata.
     """
     stat = file_path.stat()
-    parent = file_path.parent.name
+    parent = file_path.parent.name.lower()
     name = process_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
     now = datetime.now().replace(microsecond=0)
@@ -143,14 +143,14 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
         date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
         logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
-    data["id"] = name[:2].lower() if len(name) > 1 else f"!{name[0].lower()}"
+    data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
     data["name"] = name
     data["name_secondary"] = f"{name} {parent} + {suffix}".lower()
     data["file_path"] = str(file_path)
-    data["file_path_parent_name"] = parent.lower()
-    data["file_path_name"] = name.lower()
-    data["file_path_suffix"] = suffix.lower() if suffix else None
-    data["file_path_parts"] = file_path.parts
+    data["file_path_parent_name"] = parent
+    data["file_path_name"] = name
+    data["file_path_suffix"] = suffix if suffix else None
+    data["file_path_parts"] = list(file_path.parts)
     data["date_created"] = date_created
     data["date_modified"] = date_modified
     data["time_existed"] = now - date_created
