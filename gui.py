@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
 )
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QSettings, QTimer
 
 from src.app import run_app
 
@@ -137,11 +137,29 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         try:
             run_app(**args_gui, gui_instance=self)
+            remaining_seconds = 10
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
-            success_dialog.setWindowTitle("Success")
-            success_dialog.setText("Analysis completed successfully.")
+            success_dialog.setWindowTitle("Analysis Complete")
+            success_dialog.setText(f"Analysis complete! The app will close in {remaining_seconds} seconds.")
+            success_dialog.addButton("Close", QMessageBox.AcceptRole)
+            timer = QTimer(self)
+
+            def update_dialog():
+                nonlocal remaining_seconds
+                remaining_seconds -= 1
+                if remaining_seconds > 0:
+                    success_dialog.setText(f"Analysis complete! The app will close in {remaining_seconds} seconds.")
+                else:
+                    timer.stop()
+                    success_dialog.accept()
+
+            timer.timeout.connect(update_dialog)
+            timer.start(1000)
             success_dialog.exec()
+            self.close()
+        except KeyboardInterrupt:
+            self.show_error("Analysis interrupted by user.")
             self.close()
         except Exception as e:
             self.show_error(f"Analysis failed: {e}")
