@@ -34,7 +34,7 @@ def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, 
             dirs.clear()
 
 
-def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[Path] = None) -> List[str]:
+def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[str] = "") -> List[str]:
     """
     Move all folders from one directory to another.
 

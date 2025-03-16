@@ -274,7 +274,7 @@ def generate_sorted_summary_statistics(sorted_data: dict, target, attribute) -> 
     write_output(config.DEFAULT_OUTPUT_DIR, f"{attribute}_statistics", stats, target)
 
 
-def generate_global_summary(summary_data_subsets: dict, target=config.OUTPUT_DIR_SUMMARY) -> None:
+def generate_global_summary(summary_data_subsets: dict, target: str) -> None:
     """
     Generate a global summary for the Logseq Analyzer.
 
@@ -373,12 +373,12 @@ def handle_move_files(
             moved_files["moved_assets"] = moved_assets
 
     if args.move_bak:
-        moved_bak = move_all_folder_content(bak, to_delete_dir, Path(config.DEFAULT_BAK_DIR))
+        moved_bak = move_all_folder_content(bak, to_delete_dir, config.DEFAULT_BAK_DIR)
         if moved_bak:
             moved_files["moved_bak"] = moved_bak
 
     if args.move_recycle:
-        moved_recycle = move_all_folder_content(recycle, to_delete_dir, Path(config.DEFAULT_RECYCLE_DIR))
+        moved_recycle = move_all_folder_content(recycle, to_delete_dir, config.DEFAULT_RECYCLE_DIR)
         if moved_recycle:
             moved_files["moved_recycle"] = moved_recycle
 
