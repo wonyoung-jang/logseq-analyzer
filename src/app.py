@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import src.config as config
+from src import config
 from src.compile_regex import compile_re_content, compile_re_config
 from src.namespace import process_namespace_data
 from src.reporting import write_many_outputs

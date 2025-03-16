@@ -1,6 +1,5 @@
 import re
 
-# import src.config as config
 
 # Logseq Analyzer configurations
 DEFAULT_OUTPUT_DIR = "logseq-analyzer-output"  # static

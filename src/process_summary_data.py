@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Set
 
-import src.config as config
+from src import config
 
 
 def process_summary_data(

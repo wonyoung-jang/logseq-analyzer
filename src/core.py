@@ -8,7 +8,7 @@ from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
 from src.process_content_data import post_processing_content
 from src.process_summary_data import extract_summary_subset_content, process_summary_data, extract_summary_subset_files
-import src.config as config
+from src import config
 
 
 def process_graph_files(

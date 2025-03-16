@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Set
 from urllib.parse import unquote
 
-import src.config as config
+from src import config
 
 
 def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:

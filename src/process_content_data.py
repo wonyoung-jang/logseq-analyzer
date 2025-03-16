@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
-import src.config as config
+from src import config
 
 
 def process_content_data(

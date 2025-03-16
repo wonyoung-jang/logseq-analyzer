@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Any, TextIO
 
-import src.config as config
+from src import config
 
 
 def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:

@@ -1,9 +1,9 @@
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 
-import src.config as config
-from src.reporting import write_output
+from src import config
 from src.core import generate_global_summary
+from src.reporting import write_output
 
 """
 Namespace Analysis
