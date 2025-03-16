@@ -134,13 +134,13 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     parent = file_path.parent.name.lower()
     name = process_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
-    now = datetime.now().replace(microsecond=0)
-    date_modified = datetime.fromtimestamp(stat.st_mtime).replace(microsecond=0)
+    now = datetime.now().timestamp()
+    date_modified = stat.st_mtime
 
     try:
-        date_created = datetime.fromtimestamp(stat.st_birthtime).replace(microsecond=0)
+        date_created = stat.st_birthtime
     except AttributeError:
-        date_created = datetime.fromtimestamp(stat.st_ctime).replace(microsecond=0)
+        date_created = stat.st_ctime
         logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
 
     data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
