@@ -75,10 +75,10 @@ DATETIME_TOKEN_MAP = {
     "MMMM": "%B",  # Full month name, e.g. January
     "MMM": "%b",  # Abbreviated month name, e.g. Jan
     "MM": "%m",  # 2-digit month, e.g. 01, 12
-    "M": "%m",  # Month number (platform-dependent; on Windows consider "%#m")
+    "M": "%#m",  # Month number (platform-dependent; on Windows consider "%#m")
     # Day
     "dd": "%d",  # 2-digit day of month, e.g. 09, 31
-    "d": "%d",  # Day of month (un-padded; platform-dependent; on Windows consider "%#d")
+    "d": "%#d",  # Day of month (un-padded; platform-dependent; on Windows consider "%#d")
     "D": "%j",  # Day of year as zero-padded decimal (001-366)
     # Weekday
     "EEEE": "%A",  # Full weekday name, e.g. Tuesday
@@ -97,10 +97,10 @@ DATETIME_TOKEN_MAP = {
     # "K": <custom>,   # Hour of halfday (0-11) – no direct mapping
     # Minute
     "mm": "%M",  # Minute (00-59)
-    "m": "%M",  # Minute (0-59; un-padded; platform-dependent)
+    "m": "%#M",  # Minute (0-59; un-padded; platform-dependent)
     # Second
     "ss": "%S",  # Second (00-59)
-    "s": "%S",  # Second (0-59; un-padded; platform-dependent)
+    "s": "%#S",  # Second (0-59; un-padded; platform-dependent)
     # Fractional seconds
     "SSS": "%f",  # Microseconds (6 digits); may need to truncate to 3 digits for milliseconds
     # AM/PM
