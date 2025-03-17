@@ -153,7 +153,7 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
     return target
 
 
-def transform_date_format(cljs_format: str) -> str:
+def convert_cljs_date_to_py(cljs_format: str) -> str:
     """
     Convert a Clojure-style date format to a Python-style date format.
 
@@ -173,7 +173,7 @@ def transform_date_format(cljs_format: str) -> str:
     return py_format
 
 
-def get_day_with_ordinal_suffix(day):
+def add_ordinal_suffix_to_day_of_month(day):
     """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
     if 11 <= day <= 13:
         suffix = "th"
@@ -182,7 +182,7 @@ def get_day_with_ordinal_suffix(day):
     return str(day) + suffix
 
 
-def process_journal_key(key: str) -> str:
+def process_logseq_journal_key(key: str) -> str:
     """
     Process the journal key to create a page title.
 
@@ -192,16 +192,16 @@ def process_journal_key(key: str) -> str:
     Returns:
         str: Processed page title.
     """
-    py_file_name_format = transform_date_format(config.JOURNAL_FILE_NAME_FORMAT)
+    py_file_name_format = convert_cljs_date_to_py(config.JOURNAL_FILE_NAME_FORMAT)
     py_page_title_no_ordinal = config.JOURNAL_PAGE_TITLE_FORMAT.replace("o", "")
-    py_page_title_format_base = transform_date_format(py_page_title_no_ordinal)
+    py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)
         page_title_base = date_object.strftime(py_page_title_format_base).lower()
         if "o" in config.JOURNAL_PAGE_TITLE_FORMAT:
             day_number = date_object.day
-            day_with_ordinal = get_day_with_ordinal_suffix(day_number)
+            day_with_ordinal = add_ordinal_suffix_to_day_of_month(day_number)
             page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
         else:
             page_title = page_title_base
@@ -212,7 +212,7 @@ def process_journal_key(key: str) -> str:
         return key
 
 
-def process_filename_key(key: str, parent: str) -> str:
+def process_logseq_filename_key(key: str, parent: str) -> str:
     """
     Process the key name by removing the parent name and formatting it.
 
@@ -230,5 +230,5 @@ def process_filename_key(key: str, parent: str) -> str:
         key = key.rstrip(config.NAMESPACE_FILE_SEP)
 
     if parent == config.DIR_JOURNALS:
-        return process_journal_key(key)
+        return process_logseq_journal_key(key)
     return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()

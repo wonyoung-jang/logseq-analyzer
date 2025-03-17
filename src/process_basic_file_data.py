@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Pattern, Tuple
 
-from src.helpers import process_filename_key
+from src.helpers import process_logseq_filename_key
 from src.process_content_data import process_content_data
 
 
@@ -132,7 +132,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     stat = file_path.stat()
     parent = file_path.parent.name.lower()
-    name = process_filename_key(file_path.stem, parent)
+    name = process_logseq_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
     now = datetime.now().timestamp()
     date_modified = stat.st_mtime
