@@ -68,35 +68,39 @@ CONFIG_EDN_DATA = {
 DATETIME_TOKEN_MAP = {
     # Year
     "yyyy": "%Y",  # 4-digit year, e.g. 1996
+    "xxxx": "%Y",  # 4-digit year, e.g. 1996
     "yy": "%y",  # 2-digit year, e.g. 96
+    "xx": "%y",  # 2-digit year, e.g. 96
     # Month
     "MMMM": "%B",  # Full month name, e.g. January
     "MMM": "%b",  # Abbreviated month name, e.g. Jan
     "MM": "%m",  # 2-digit month, e.g. 01, 12
-    "M": "%-m",  # Month number (platform-dependent; on Windows consider "%#m")
+    "M": "%m",  # Month number (platform-dependent; on Windows consider "%#m")
     # Day
     "dd": "%d",  # 2-digit day of month, e.g. 09, 31
-    "d": "%-d",  # Day of month (un-padded; platform-dependent; on Windows consider "%#d")
+    "d": "%d",  # Day of month (un-padded; platform-dependent; on Windows consider "%#d")
     "D": "%j",  # Day of year as zero-padded decimal (001-366)
     # Weekday
     "EEEE": "%A",  # Full weekday name, e.g. Tuesday
     "EEE": "%a",  # Abbreviated weekday name, e.g. Tue
-    "e": "%u",  # ISO weekday number (1=Monday, 7=Sunday)
+    "EE": "%a",  # Abbreviated weekday name, e.g. Tue
+    "E": "%a",  # Abbreviated weekday name, e.g. Tue
+    "e": "%u",  # TODO or %w? ISO weekday number (1=Monday, 7=Sunday)
     # Hour (24-hour clock)
     "HH": "%H",  # Hour (00-23)
-    "H": "%-H",  # Hour (0-23; un-padded; platform-dependent)
+    "H": "%H",  # Hour (0-23; un-padded; platform-dependent)
     # Hour (12-hour clock)
     "hh": "%I",  # Hour (01-12)
-    "h": "%-I",  # Hour (1-12; un-padded; platform-dependent)
+    "h": "%I",  # Hour (1-12; un-padded; platform-dependent)
     # TODO Alternative hour tokens (not directly supported in Python)
     # "k": <custom>,   # Clockhour of day (1-24) – no direct mapping
     # "K": <custom>,   # Hour of halfday (0-11) – no direct mapping
     # Minute
     "mm": "%M",  # Minute (00-59)
-    "m": "%-M",  # Minute (0-59; un-padded; platform-dependent)
+    "m": "%M",  # Minute (0-59; un-padded; platform-dependent)
     # Second
     "ss": "%S",  # Second (00-59)
-    "s": "%-S",  # Second (0-59; un-padded; platform-dependent)
+    "s": "%S",  # Second (0-59; un-padded; platform-dependent)
     # Fractional seconds
     "SSS": "%f",  # Microseconds (6 digits); may need to truncate to 3 digits for milliseconds
     # AM/PM

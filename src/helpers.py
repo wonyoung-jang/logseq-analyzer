@@ -163,6 +163,7 @@ def transform_date_format(cljs_format: str) -> str:
     Returns:
         str: Python-style date format.
     """
+    cljs_format = cljs_format.replace("o", "")
 
     def replace_token(match):
         token = match.group(0)
@@ -172,25 +173,42 @@ def transform_date_format(cljs_format: str) -> str:
     return py_format
 
 
+def get_day_with_ordinal_suffix(day):
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    if 11 <= day <= 13:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return str(day) + suffix
+
+
 def process_journal_key(key: str) -> str:
     """
-    Process the journal key by converting it to a page title format.
+    Process the journal key to create a page title.
 
     Args:
-        key (str): The journal key (filename stem).
+        key (str): The key name (filename stem).
 
     Returns:
-        str: Processed journal key as a page title.
+        str: Processed page title.
     """
     py_file_name_format = transform_date_format(config.JOURNAL_FILE_NAME_FORMAT)
-    py_page_title_format = transform_date_format(config.JOURNAL_PAGE_TITLE_FORMAT)
+    py_page_title_no_ordinal = config.JOURNAL_PAGE_TITLE_FORMAT.replace("o", "")
+    py_page_title_format_base = transform_date_format(py_page_title_no_ordinal)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)
-        page_title = date_object.strftime(py_page_title_format).lower()
+        page_title_base = date_object.strftime(py_page_title_format_base).lower()
+        if "o" in config.JOURNAL_PAGE_TITLE_FORMAT:
+            day_number = date_object.day
+            day_with_ordinal = get_day_with_ordinal_suffix(day_number)
+            page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
+        else:
+            page_title = page_title_base
+        page_title = page_title.replace("'", "")
         return page_title
-    except ValueError:
-        logging.warning(f"Could not parse journal key as date: {key}. Returning original key.")
+    except ValueError as e:
+        logging.warning(f"Failed to parse date from key '{key}', format `{py_file_name_format}`: {e}")
         return key
 
 
