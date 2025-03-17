@@ -23,6 +23,7 @@ from src.core import (
     core_data_analysis,
     generate_summary_subsets,
     generate_global_summary,
+    generate_graph_visualization,
 )
 
 
@@ -87,6 +88,9 @@ def run_app(**kwargs):
         dangling_links,
         graph_data,
     ) = core_data_analysis(graph_data)
+
+    if args.visualize_graph:  # Check for visualize_graph argument
+        generate_graph_visualization(graph_data, config.DEFAULT_OUTPUT_DIR)  # Call graph viz function
 
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)

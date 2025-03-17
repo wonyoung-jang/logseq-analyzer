@@ -3,6 +3,9 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Pattern
 
+import networkx as nx
+import matplotlib.pyplot as plt
+
 from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
 from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
@@ -64,6 +67,44 @@ def core_data_analysis(
         dangling_links,
         graph_data,
     )
+
+
+def generate_graph_visualization(graph_data: dict, output_dir: str) -> None:  # New function
+    """
+    Generates a basic graph visualization of page links.
+
+    Args:
+        graph_data (dict): The processed graph data.
+        output_dir (str): The directory to save the graph visualization image.
+    """
+    graph = nx.DiGraph()  # Use DiGraph for directed links
+
+    for page_name, data in graph_data.items():
+        graph.add_node(page_name)  # Add each page as a node
+        for linked_page in data["page_references"]:  # Iterate through page references
+            if linked_page in graph_data:  # Only add edge if target page exists in our data
+                graph.add_edge(page_name, linked_page)  # Add directed edge
+
+    if not graph.nodes():  # Check if graph is empty
+        logging.warning("No nodes to visualize in the graph.")
+        return
+
+    plt.figure(figsize=(12, 12))  # Adjust figure size as needed
+    pos = nx.spring_layout(graph, k=0.3, iterations=50)  # Layout algorithm, adjust parameters
+    nx.draw(
+        graph,
+        pos,
+        with_labels=True,
+        node_size=1500,
+        node_color="skyblue",
+        arrowsize=20,
+        alpha=0.7,
+        font_size=10,
+    )
+    plt.title("Logseq Page Link Graph")
+    plt.savefig(Path(output_dir) / "graph_visualization.png")  # Save to output directory
+    logging.info(f"Graph visualization saved to: {Path(output_dir) / 'graph_visualization.png'}")
+    plt.close()  # Close the plot to free memory
 
 
 def generate_summary_subsets(graph_data: dict) -> dict:
