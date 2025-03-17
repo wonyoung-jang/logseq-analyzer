@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from typing import Any, TextIO
@@ -61,6 +62,7 @@ def write_output(
     filename_prefix: str,
     items: Any,
     type_output: str = "",
+    output_format: str = "txt",
 ) -> None:
     """
     Write the output to a file using a recursive helper to handle nested structures.
@@ -70,24 +72,49 @@ def write_output(
         filename_prefix (str): The prefix of the filename.
         items (Any): The items to write.
         type_output (str, optional): The type of output. Defaults to "".
+        output_format (str, optional): The format of the output file. Defaults to "txt".
     """
-    logging.info(f"Writing {filename_prefix}...")
+    logging.info(f"Writing {filename_prefix} as {output_format}")
 
     count = len(items)
-    filename = f"{filename_prefix}.txt" if count else f"{filename_prefix}_EMPTY.txt"
+    filename = f"{filename_prefix}.{output_format}" if count else f"{filename_prefix}_EMPTY.{output_format}"
     output_dir = Path(output_dir)
 
     if type_output:
         parent = output_dir / type_output
         if not parent.exists():
             parent.mkdir(parents=True, exist_ok=True)
-        out_path = parent / filename
+        out_path = Path(parent) / filename
     else:
         out_path = output_dir / filename
 
     with out_path.open("w", encoding="utf-8") as f:
         f.write(f"{filename} | Items: {count}\n\n")
         write_recursive(f, items)
+
+    if output_format == "json":
+        try:
+            with out_path.open("w", encoding="utf-8") as f:
+                json.dump(items, f, indent=4)
+        except TypeError:
+            logging.error(f"Failed to write JSON for {filename_prefix}.")
+            if out_path.exists():
+                out_path.unlink()
+            filename = f"{filename_prefix}.txt"
+            if type_output:
+                out_path = Path(parent) / filename
+            with out_path.open("w", encoding="utf-8") as f:
+                f.write(f"{filename} | Items: {count}\n\n")
+                write_recursive(f, items)
+    elif output_format == "txt":
+        with out_path.open("w", encoding="utf-8") as f:
+            f.write(f"{filename} | Items: {count}\n\n")
+            write_recursive(f, items)
+    else:
+        logging.error(f"Unsupported output format: {output_format}. Defaulting to text.")
+        with out_path.open("w", encoding="utf-8") as f:
+            f.write(f"{filename} | Items: {count}\n\n")
+            write_recursive(f, items)
 
 
 def write_many_outputs(args, target=config.OUTPUT_DIR_TEST, **kwargs) -> None:
