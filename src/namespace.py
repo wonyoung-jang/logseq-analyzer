@@ -197,6 +197,31 @@ def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, A
     return namespace_queries
 
 
+def format_namespace_hierarchy_text(hierarchy: Dict[str, Any], indent_level: int = 0) -> str:
+    """
+    Formats a namespace hierarchy dictionary into an indented text string for visualization.
+
+    Args:
+        hierarchy (dict): The namespace hierarchy dictionary (nested dictionaries).
+        indent_level (int, optional): The current indentation level. Defaults to 0.
+
+    Returns:
+        str: A formatted text string representing the namespace hierarchy.
+    """
+    output = ""
+    indent = "    " * indent_level  # 4 spaces for indentation
+
+    # Sort keys alphabetically for consistent output
+    sorted_parts = sorted(hierarchy.keys())
+
+    for part in sorted_parts:
+        output += f"{indent}- {part}\n"  # Indented list item
+        if isinstance(hierarchy[part], dict):
+            output += format_namespace_hierarchy_text(hierarchy[part], indent_level + 1)  # Recursive call
+
+    return output
+
+
 def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
@@ -260,6 +285,9 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     # Test extract namespace subtrees
     namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
 
+    # Test format namespace hierarchy text
+    namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
+
     subset_add = {
         "__namespace_parts": namespace_parts,
         "namespace_part_levels": namespace_part_levels,
@@ -271,8 +299,9 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
         "namespace_frequency": namespace_frequency,
         "namespace_freq_list": namespace_freq_list,
         "namespace_queries": namespace_queries,
-        "namespace_hierarchy": namespace_hierarchy,
         "namespace_subtree": namespace_subtree,
+        "namespace_hierarchy": namespace_hierarchy,
+        "namespace_hierarchy_text": namespace_hierarchy_text,
     }
     subset.update(subset_add)
 
