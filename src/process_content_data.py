@@ -77,8 +77,8 @@ def process_content_data(
     # Process external and embedded links
     external_links = find_all_lower(patterns["external_link"], content)
     embedded_links = find_all_lower(patterns["embedded_link"], content)
-    process_external_links(patterns, data, external_links)
-    process_embedded_links(patterns, data, embedded_links)
+    process_ext_emb_links(patterns, data, external_links, "external")
+    process_ext_emb_links(patterns, data, embedded_links, "embedded")
 
     # Process namespaces
     if config.NAMESPACE_SEP in data["name"]:
@@ -151,42 +151,33 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_external_links(
-    patterns: Dict[str, Pattern], content_data: Dict[str, Any], external_links: List[str]
+def process_ext_emb_links(
+    patterns: Dict[str, Pattern], content_data: Dict[str, Any], links: List[str], links_type: str
 ) -> None:
-    """Process external links and categorize them."""
-    if external_links:
-        content_data["external_links"] = external_links
-        external_links_str = "\n".join(external_links)
+    """Process external and embedded links and categorize them."""
+    links_other = f"{links_type}_links_other"
+    links_internet = f"{links_type}_links_internet"
+    links_internet_pattern = f"{links_type}_link_internet"
+    if links_type == "external":
+        links_subtype = f"{links_type}_links_alias"
+        links_sub_pattern = f"{links_type}_link_alias"
+    elif links_type == "embedded":
+        links_subtype = f"{links_type}_links_asset"
+        links_sub_pattern = f"{links_type}_link_asset"
 
-        external_links_internet = [
-            link.lower() for link in patterns["external_link_internet"].findall(external_links_str)
-        ]
-        if external_links_internet:
-            content_data["external_links_internet"] = external_links_internet
-
-        external_links_alias = [link.lower() for link in patterns["external_link_alias"].findall(external_links_str)]
-        if external_links_alias:
-            content_data["external_links_alias"] = external_links_alias
-
-
-def process_embedded_links(
-    patterns: Dict[str, Pattern], content_data: Dict[str, Any], embedded_links: List[str]
-) -> None:
-    """Process embedded links and categorize them."""
-    if embedded_links:
-        content_data["embedded_links"] = embedded_links
-        embedded_links_str = "\n".join(embedded_links)
-
-        embedded_links_internet = [
-            link.lower() for link in patterns["embedded_link_internet"].findall(embedded_links_str)
-        ]
-        if embedded_links_internet:
-            content_data["embedded_links_internet"] = embedded_links_internet
-
-        embedded_links_asset = [link.lower() for link in patterns["embedded_link_asset"].findall(embedded_links_str)]
-        if embedded_links_asset:
-            content_data["embedded_links_asset"] = embedded_links_asset
+    if links:
+        content_data[links_other] = links
+        internet = []
+        alias_or_asset = []
+        for _ in range(len(links)):
+            link = links[0]
+            if patterns[links_internet_pattern].match(link):
+                internet.append(link)
+            elif patterns[links_sub_pattern].match(link):
+                alias_or_asset.append(link)
+            links.pop(0)
+        content_data[links_internet] = internet
+        content_data[links_subtype] = alias_or_asset
 
 
 def process_primary_bullet(primary_bullet: Dict[str, Any]) -> bool:
