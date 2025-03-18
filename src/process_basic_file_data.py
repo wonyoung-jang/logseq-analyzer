@@ -26,6 +26,7 @@ def init_data() -> Dict[str, Any]:
         "uri": "",
         "char_count": 0,
         "bullet_count": 0,
+        "bullet_count_empty": 0,
         "bullet_density": 0,
         # Content Data
         "aliases": [],
@@ -104,10 +105,17 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         bullet_count = 0
         if data["file_path_suffix"] == ".md":
             bullet_content = patterns["bullet"].split(content)
-            primary_bullet = bullet_content[0].strip()
-            content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
-            bullet_count = len(content_bullets)
+            if len(bullet_content) > 1:
+                primary_bullet = bullet_content[0].strip()
+                content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
+                empty_bullets = [bullet for bullet in content_bullets if not bullet]
+                bullet_count_empty = len(empty_bullets)
+                bullet_count = len(content_bullets)
+            else:
+                bullet_count = 0
+                bullet_count_empty = 0
             data["bullet_count"] = bullet_count
+            data["bullet_count_empty"] = bullet_count_empty
         # Calculate bullet density
         if bullet_count > 0:
             data["bullet_density"] = round(data["char_count"] / bullet_count, 2)
