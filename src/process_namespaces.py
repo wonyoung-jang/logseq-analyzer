@@ -22,6 +22,95 @@ Problems:
 """
 
 
+def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
+    """
+    Process namespace data and perform extended analysis for the Logseq Analyzer.
+
+    Args:
+        graph_content_data (dict): The graph content data.
+        meta_dangling_links (list): The list of dangling links.
+
+    Main outputs:
+        conflicts_non_namespace
+        conflicts_dangling
+        conflicts_parent_depth
+        conflicts_parents_unique
+    """
+    output_dir_ns = config.OUTPUT_DIR_NAMESPACE
+    subset = {}
+
+    # 01 Conflicts With Existing Pages
+    # Extract namespace parts
+    namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
+
+    # Find unique names that are not namespaces
+    content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
+    unique_names_not_namespace = set(content_data_not_namespaces.keys())
+
+    # Existing analysis: group by levels
+    namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
+
+    # Detecting conflicts with non-namespace pages
+    potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
+    potential_dangling = unique_namespace_parts.intersection(meta_dangling_links)
+    conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
+        namespace_parts, potential_non_namespace, potential_dangling
+    )
+
+    # 02 Parts that Appear at Multiple Depths
+    conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
+
+    # 03 General Namespace Data
+    namespace_details = analyze_namespace_details(namespace_parts)
+
+    max_depth = namespace_details["max_depth"]
+    unique_namespaces_per_level = {i: set() for i in range(max_depth + 1)}
+    for parts in namespace_parts.values():
+        for part, level in parts.items():
+            unique_namespaces_per_level[level].add(part)
+    for level, names in unique_namespaces_per_level.items():
+        subset[f"unique_namespaces_level_{level}"] = names
+
+    namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
+
+    # Namespace queries
+    namespace_queries = analyze_namespace_queries(graph_content_data)
+
+    #################################
+    ############ Testing ############
+    #################################
+    # Test namespace hierarchy visualization
+    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
+
+    # TODO Test extract namespace subtrees
+    # namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
+
+    # Test format namespace hierarchy text
+    namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
+
+    subset_add = {
+        "__namespace_parts": namespace_parts,
+        "namespace_part_levels": namespace_part_levels,
+        "conflicts_non_namespace": conflicts_non_namespace,
+        "conflicts_dangling": conflicts_dangling,
+        "conflicts_parent_depth": conflicts_parent_depth,
+        "conflicts_parents_unique": conflicts_parents_unique,
+        "__namespace_details": namespace_details,
+        "namespace_frequency": namespace_frequency,
+        "namespace_freq_list": namespace_freq_list,
+        "namespace_queries": namespace_queries,
+        # "namespace_subtree": namespace_subtree,
+        "namespace_hierarchy": namespace_hierarchy,
+        "namespace_hierarchy_text": namespace_hierarchy_text,
+    }
+    subset.update(subset_add)
+
+    for filename, items in subset.items():
+        write_output(config.DEFAULT_OUTPUT_DIR, filename, items, output_dir_ns)
+
+    generate_global_summary(subset, output_dir_ns)
+
+
 def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
     """
     Perform extended analysis on namespace parts.
@@ -220,95 +309,6 @@ def format_namespace_hierarchy_text(hierarchy: Dict[str, Any], indent_level: int
             output += format_namespace_hierarchy_text(hierarchy[part], indent_level + 1)  # Recursive call
 
     return output
-
-
-def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
-    """
-    Process namespace data and perform extended analysis for the Logseq Analyzer.
-
-    Args:
-        graph_content_data (dict): The graph content data.
-        meta_dangling_links (list): The list of dangling links.
-
-    Main outputs:
-        conflicts_non_namespace
-        conflicts_dangling
-        conflicts_parent_depth
-        conflicts_parents_unique
-    """
-    output_dir_ns = config.OUTPUT_DIR_NAMESPACE
-    subset = {}
-
-    # 01 Conflicts With Existing Pages
-    # Extract namespace parts
-    namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
-
-    # Find unique names that are not namespaces
-    content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
-    unique_names_not_namespace = set(content_data_not_namespaces.keys())
-
-    # Existing analysis: group by levels
-    namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
-
-    # Detecting conflicts with non-namespace pages
-    potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
-    potential_dangling = unique_namespace_parts.intersection(meta_dangling_links)
-    conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
-        namespace_parts, potential_non_namespace, potential_dangling
-    )
-
-    # 02 Parts that Appear at Multiple Depths
-    conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
-
-    # 03 General Namespace Data
-    namespace_details = analyze_namespace_details(namespace_parts)
-
-    max_depth = namespace_details["max_depth"]
-    unique_namespaces_per_level = {i: set() for i in range(max_depth + 1)}
-    for parts in namespace_parts.values():
-        for part, level in parts.items():
-            unique_namespaces_per_level[level].add(part)
-    for level, names in unique_namespaces_per_level.items():
-        subset[f"unique_namespaces_level_{level}"] = names
-
-    namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
-
-    # Namespace queries
-    namespace_queries = analyze_namespace_queries(graph_content_data)
-
-    #################################
-    ############ Testing ############
-    #################################
-    # Test namespace hierarchy visualization
-    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
-
-    # Test extract namespace subtrees
-    namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
-
-    # Test format namespace hierarchy text
-    namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
-
-    subset_add = {
-        "__namespace_parts": namespace_parts,
-        "namespace_part_levels": namespace_part_levels,
-        "conflicts_non_namespace": conflicts_non_namespace,
-        "conflicts_dangling": conflicts_dangling,
-        "conflicts_parent_depth": conflicts_parent_depth,
-        "conflicts_parents_unique": conflicts_parents_unique,
-        "__namespace_details": namespace_details,
-        "namespace_frequency": namespace_frequency,
-        "namespace_freq_list": namespace_freq_list,
-        "namespace_queries": namespace_queries,
-        "namespace_subtree": namespace_subtree,
-        "namespace_hierarchy": namespace_hierarchy,
-        "namespace_hierarchy_text": namespace_hierarchy_text,
-    }
-    subset.update(subset_add)
-
-    for filename, items in subset.items():
-        write_output(config.DEFAULT_OUTPUT_DIR, filename, items, output_dir_ns)
-
-    generate_global_summary(subset, output_dir_ns)
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

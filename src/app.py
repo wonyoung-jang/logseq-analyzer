@@ -2,7 +2,7 @@ from pathlib import Path
 
 from src import config
 from src.compile_regex import compile_re_content, compile_re_config
-from src.namespace import process_namespace_data
+from src.process_namespaces import process_namespace_data
 from src.reporting import write_many_outputs
 from src.setup import (
     get_logseq_analyzer_args,
