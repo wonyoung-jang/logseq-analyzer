@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMessageBox,
     QProgressBar,
+    QComboBox,
 )
 from PySide6.QtCore import QSettings, QTimer
 
@@ -54,6 +55,12 @@ class LogseqAnalyzerGUI(QMainWindow):
         global_config_layout.addWidget(self.global_config_input)
         global_config_layout.addWidget(self.global_config_button)
         form_layout.addRow(self.global_config_label, global_config_hbox)
+
+        # Report Format dropdown (txt, json)
+        self.report_format_label = QLabel("Report Format:")
+        self.report_format_combo = QComboBox()
+        self.report_format_combo.addItems([".txt", ".json"])
+        form_layout.addRow(self.report_format_label, self.report_format_combo)
 
         # Checkboxes
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
@@ -119,6 +126,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             "move_bak": self.move_bak_checkbox.isChecked(),
             "move_recycle": self.move_recycle_checkbox.isChecked(),
             "write_graph": self.write_graph_checkbox.isChecked(),
+            "report_format": self.report_format_combo.currentText(),
         }
         if not args_gui["graph_folder"]:
             self.show_error("Graph folder is required.")

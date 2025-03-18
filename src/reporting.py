@@ -61,8 +61,8 @@ def write_output(
     output_dir: str,
     filename_prefix: str,
     items: Any,
-    type_output: str = "",
-    output_format: str = "txt",
+    type_output="",
+    output_format="txt",
 ) -> None:
     """
     Write the output to a file using a recursive helper to handle nested structures.
@@ -75,9 +75,9 @@ def write_output(
         output_format (str, optional): The format of the output file. Defaults to "txt".
     """
     logging.info(f"Writing {filename_prefix} as {output_format}")
-
+    output_format = config.REPORT_FORMAT
     count = len(items)
-    filename = f"{filename_prefix}.{output_format}" if count else f"{filename_prefix}_EMPTY.{output_format}"
+    filename = f"{filename_prefix}{output_format}" if count else f"{filename_prefix}_EMPTY{output_format}"
     output_dir = Path(output_dir)
 
     if type_output:
@@ -92,7 +92,7 @@ def write_output(
         f.write(f"{filename} | Items: {count}\n\n")
         write_recursive(f, items)
 
-    if output_format == "json":
+    if output_format == config.REPORT_FORMAT_JSON:
         try:
             with out_path.open("w", encoding="utf-8") as f:
                 json.dump(items, f, indent=4)
@@ -100,13 +100,13 @@ def write_output(
             logging.error(f"Failed to write JSON for {filename_prefix}.")
             if out_path.exists():
                 out_path.unlink()
-            filename = f"{filename_prefix}.txt"
+            filename = f"{filename_prefix}{config.REPORT_FORMAT_TXT}"
             if type_output:
                 out_path = Path(parent) / filename
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 write_recursive(f, items)
-    elif output_format == "txt":
+    elif output_format == config.REPORT_FORMAT_TXT:
         with out_path.open("w", encoding="utf-8") as f:
             f.write(f"{filename} | Items: {count}\n\n")
             write_recursive(f, items)

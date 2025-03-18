@@ -27,6 +27,15 @@ from src.core import (
 )
 
 
+# Remove empty values from graph_data
+def remove_empty(obj):
+    if isinstance(obj, dict):
+        return {k: remove_empty(v) for k, v in obj.items() if v}
+    elif isinstance(obj, list):
+        return [remove_empty(item) for item in obj if item]
+    return obj
+
+
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
@@ -71,6 +80,7 @@ def run_app(**kwargs):
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
+    config.REPORT_FORMAT = args.report_format
 
     if gui_instance:
         gui_instance.update_progress(setup_phase, 100)
@@ -89,6 +99,8 @@ def run_app(**kwargs):
         graph_data,
     ) = core_data_analysis(graph_data)
 
+    cleaned_graph_data = remove_empty(graph_data)
+
     if args.visualize_graph:  # Check for visualize_graph argument
         generate_graph_visualization(graph_data, config.DEFAULT_OUTPUT_DIR)  # Call graph viz function
 
@@ -105,6 +117,7 @@ def run_app(**kwargs):
         "dangling_links": dangling_links,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
+        "graph_data_cleaned": cleaned_graph_data,
     }
 
     if args.write_graph:

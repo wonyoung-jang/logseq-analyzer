@@ -27,6 +27,7 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
             move_recycle=kwargs.get("move_recycle", False),
             write_graph=kwargs.get("write_graph", False),
             visualize_graph=kwargs.get("visualize_graph", False),  # TODO This is a test, do not use!
+            report_format=kwargs.get("report_format", ""),
         )
         return args
 
@@ -73,6 +74,11 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
         "--global-config",
         action="store",
         help="path to global configuration file",
+    )
+    parser.add_argument(
+        "--report-format",
+        action="store",
+        help="report format (.txt, .json)",
     )
 
     return parser.parse_args()
