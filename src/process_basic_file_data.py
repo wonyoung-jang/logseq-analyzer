@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Pattern, Tuple
 
 from src.helpers import process_logseq_filename_key
 from src.process_content_data import process_content_data
+from src.logseq_uri_convert import convert_uri_to_logseq_url
 
 
 def init_data() -> Dict[str, Any]:
@@ -24,6 +25,7 @@ def init_data() -> Dict[str, Any]:
         "time_unmodified": datetime.min,
         "size": 0,
         "uri": "",
+        "logseq_url": "",
         "char_count": 0,
         "bullet_count": 0,
         "bullet_count_empty": 0,
@@ -164,6 +166,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     data["time_existed"] = now - date_created
     data["time_unmodified"] = now - date_modified
     data["uri"] = file_path.as_uri()
+    data["logseq_url"] = convert_uri_to_logseq_url(data["uri"])
     data["size"] = stat.st_size
 
     return data
