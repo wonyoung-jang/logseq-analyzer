@@ -70,6 +70,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
             unique_namespaces_per_level[level].add(part)
     for level, names in unique_namespaces_per_level.items():
         subset[f"unique_namespaces_level_{level}"] = names
+    subset["unique_namespaces_per_level"] = {k: len(v) for k, v in unique_namespaces_per_level.items()}
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
 
