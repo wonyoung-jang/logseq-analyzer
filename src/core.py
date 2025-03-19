@@ -331,36 +331,27 @@ def generate_global_summary(summary_data_subsets: dict, target: str) -> None:
     write_output(config.DEFAULT_OUTPUT_DIR, "global_summary", global_summary, target)
 
 
-def handle_assets(
-    graph_data: dict,
-    summary_data_subsets: dict,
-    to_delete_dir: Path,
-) -> None:
+def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
     """
     Handle assets for the Logseq Analyzer.
 
     Args:
         graph_data (dict): The graph data.
         summary_data_subsets (dict): The summary data subsets.
-        to_delete_dir (Path): The directory for deleted files.
     """
-    if not to_delete_dir:
-        return
-
-    summary_is_asset = summary_data_subsets["is_asset"]
-    for content_data in graph_data.values():
-        if not content_data["assets"]:
+    for name, data in graph_data.items():
+        if not data["assets"]:
             continue
 
-        for non_asset in summary_is_asset:
-            non_asset_secondary = graph_data[non_asset]["name"]
+        for asset in summary_data_subsets["is_asset"]:
+            asset_name_secondary = graph_data[asset]["name"]
 
-            for asset_mention in content_data["assets"]:
-                if graph_data[non_asset]["is_backlinked"]:
+            for asset_mention in data["assets"]:
+                if graph_data[asset]["is_backlinked"]:
                     continue
 
-                if non_asset in asset_mention or non_asset_secondary in asset_mention:
-                    graph_data[non_asset]["is_backlinked"] = True
+                if asset in asset_mention or asset_name_secondary in asset_mention:
+                    graph_data[asset]["is_backlinked"] = True
                     break
 
     asset_backlinked_kwargs = {
@@ -404,9 +395,6 @@ def handle_move_files(
         recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
     """
-    if not to_delete_dir:
-        return
-
     moved_files = {}
     if args.move_unlinked_assets:
         moved_assets = move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
