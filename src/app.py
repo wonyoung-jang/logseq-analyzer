@@ -15,16 +15,14 @@ from src.setup import (
     get_sub_file_or_folder,
 )
 from src.core import (
-    create_delete_directory,
     generate_sorted_summary_all,
-    handle_assets,
-    handle_move_files,
     process_graph_files,
     core_data_analysis,
     generate_summary_subsets,
     generate_global_summary,
-    generate_graph_visualization,
 )
+from src.logseq_assets import handle_assets
+from src.logseq_move_files import handle_move_files, create_delete_directory
 
 
 # Remove empty values from graph_data
@@ -101,9 +99,6 @@ def run_app(**kwargs):
 
     cleaned_graph_data = remove_empty(graph_data)
 
-    if args.visualize_graph:  # Check for visualize_graph argument
-        generate_graph_visualization(graph_data, config.DEFAULT_OUTPUT_DIR)  # Call graph viz function
-
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
         gui_instance.update_progress(reporting_phase, 20)
@@ -151,7 +146,7 @@ def run_app(**kwargs):
         to_delete_dir = create_delete_directory()
 
         # Handle assets
-        summary_is_asset_not_backlinked = handle_assets(graph_data, summary_data_subsets, to_delete_dir)
+        summary_is_asset_not_backlinked = handle_assets(graph_data, summary_data_subsets)
 
         # Handle bak and recycle directories
         handle_move_files(args, graph_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)

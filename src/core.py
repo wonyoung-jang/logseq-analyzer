@@ -1,12 +1,7 @@
-import argparse
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Pattern
 
-import networkx as nx
-import matplotlib.pyplot as plt
-
-from src.helpers import iter_files, move_unlinked_assets, move_all_folder_content
+from src.helpers import iter_files
 from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
 from src.process_content_data import post_processing_content
@@ -67,44 +62,6 @@ def core_data_analysis(
         dangling_links,
         graph_data,
     )
-
-
-def generate_graph_visualization(graph_data: dict, output_dir: str) -> None:  # New function
-    """
-    Generates a basic graph visualization of page links.
-
-    Args:
-        graph_data (dict): The processed graph data.
-        output_dir (str): The directory to save the graph visualization image.
-    """
-    graph = nx.DiGraph()  # Use DiGraph for directed links
-
-    for page_name, data in graph_data.items():
-        graph.add_node(page_name)  # Add each page as a node
-        for linked_page in data["page_references"]:  # Iterate through page references
-            if linked_page in graph_data:  # Only add edge if target page exists in our data
-                graph.add_edge(page_name, linked_page)  # Add directed edge
-
-    if not graph.nodes():  # Check if graph is empty
-        logging.warning("No nodes to visualize in the graph.")
-        return
-
-    plt.figure(figsize=(12, 12))  # Adjust figure size as needed
-    pos = nx.spring_layout(graph, k=0.3, iterations=50)  # Layout algorithm, adjust parameters
-    nx.draw(
-        graph,
-        pos,
-        with_labels=True,
-        node_size=1500,
-        node_color="skyblue",
-        arrowsize=20,
-        alpha=0.7,
-        font_size=10,
-    )
-    plt.title("Logseq Page Link Graph")
-    plt.savefig(Path(output_dir) / "graph_visualization.png")  # Save to output directory
-    logging.info(f"Graph visualization saved to: {Path(output_dir) / 'graph_visualization.png'}")
-    plt.close()  # Close the plot to free memory
 
 
 def generate_summary_subsets(graph_data: dict) -> dict:
@@ -329,105 +286,3 @@ def generate_global_summary(summary_data_subsets: dict, target: str) -> None:
         global_summary[subset_name]["results"] = len(subset)
 
     write_output(config.DEFAULT_OUTPUT_DIR, "global_summary", global_summary, target)
-
-
-def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
-    """
-    Handle assets for the Logseq Analyzer.
-
-    Args:
-        graph_data (dict): The graph data.
-        summary_data_subsets (dict): The summary data subsets.
-    """
-    for name, data in graph_data.items():
-        if not data["assets"]:
-            continue
-
-        for asset in summary_data_subsets["is_asset"]:
-            asset_name_secondary = graph_data[asset]["name"]
-
-            for asset_mention in data["assets"]:
-                if graph_data[asset]["is_backlinked"]:
-                    continue
-
-                if asset in asset_mention or asset_name_secondary in asset_mention:
-                    graph_data[asset]["is_backlinked"] = True
-                    break
-
-    asset_backlinked_kwargs = {
-        "is_backlinked": True,
-        "file_type": "asset",
-    }
-    asset_not_backlinked_kwargs = {
-        "is_backlinked": False,
-        "file_type": "asset",
-    }
-    summary_is_asset_backlinked = extract_summary_subset_files(graph_data, **asset_backlinked_kwargs)
-    summary_is_asset_not_backlinked = extract_summary_subset_files(graph_data, **asset_not_backlinked_kwargs)
-
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "is_asset_backlinked",
-        summary_is_asset_backlinked,
-        config.OUTPUT_DIR_ASSETS,
-    )
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "is_asset_not_backlinked",
-        summary_is_asset_not_backlinked,
-        config.OUTPUT_DIR_ASSETS,
-    )
-
-    return summary_is_asset_not_backlinked
-
-
-def handle_move_files(
-    args: argparse.Namespace, graph_meta_data: dict, assets: dict, bak: Path, recycle: Path, to_delete_dir: Path
-) -> None:
-    """
-    Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-        graph_meta_data (dict): The graph metadata.
-        assets (dict): The assets data.
-        bak (Path): The path to the bak directory.
-        recycle (Path): The path to the recycle directory.
-        to_delete_dir (Path): The directory for deleted files.
-    """
-    moved_files = {}
-    if args.move_unlinked_assets:
-        moved_assets = move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
-        if moved_assets:
-            moved_files["moved_assets"] = moved_assets
-
-    if args.move_bak:
-        moved_bak = move_all_folder_content(bak, to_delete_dir, config.DEFAULT_BAK_DIR)
-        if moved_bak:
-            moved_files["moved_bak"] = moved_bak
-
-    if args.move_recycle:
-        moved_recycle = move_all_folder_content(recycle, to_delete_dir, config.DEFAULT_RECYCLE_DIR)
-        if moved_recycle:
-            moved_files["moved_recycle"] = moved_recycle
-
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "moved_files",
-        moved_files,
-        config.OUTPUT_DIR_META,
-    )
-
-
-def create_delete_directory() -> Path:
-    """
-    Create a directory for deleted files.
-
-    Returns:
-        Path: The path to the delete directory.
-    """
-    delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
-    if not delete_dir.exists():
-        logging.info(f"Creating directory: {delete_dir}")
-        delete_dir.mkdir(parents=True, exist_ok=True)
-    return delete_dir
