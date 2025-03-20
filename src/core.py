@@ -241,35 +241,6 @@ def generate_sorted_summary_all(graph_data: dict, target, reverse=True, count=-1
             write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sub_sorted_data, target)
         else:
             write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sorted_data, target)
-        # generate_sorted_summary_statistics(sorted_data, target, key)
-
-
-def generate_sorted_summary_statistics(sorted_data: dict, target, attribute) -> None:
-    """
-    Generate a sorted summary statistics for the Logseq Analyzer.
-
-    Args:
-        sorted_data (dict): The sorted data to analyze.
-        target (str): The target directory for the output files.
-        attribute (str): The attribute to sort by.
-    """
-    sorted_values = list(int(sorted_data.values()))
-    minimum = min(sorted_values)
-    maximum = max(sorted_values)
-    mean = sum(sorted_values) / len(sorted_values)
-    median = sorted_values[len(sorted_values) // 2]
-    variance = sum((x - mean) ** 2 for x in sorted_values) / len(sorted_values)
-    stddev = variance**0.5
-
-    stats = {
-        "min": minimum,
-        "mean": round(mean, 2),
-        "median": round(median, 2),
-        "max": maximum,
-        "stddev": round(stddev, 2),
-    }
-
-    write_output(config.DEFAULT_OUTPUT_DIR, f"{attribute}_statistics", stats, target)
 
 
 def generate_global_summary(summary_data_subsets: dict, target: str) -> None:

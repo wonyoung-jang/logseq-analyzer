@@ -2,27 +2,27 @@ from pathlib import Path
 
 from src import config
 from src.compile_regex import compile_re_content, compile_re_config
-from src.process_namespaces import process_namespace_data
-from src.reporting import write_many_outputs
-from src.setup import (
-    get_logseq_analyzer_args,
-    create_output_directory,
-    create_log_file,
-    get_logseq_config_edn,
-    get_logseq_target_dirs,
-    set_logseq_config_edn_data,
-    validate_path,
-    get_sub_file_or_folder,
-)
 from src.core import (
-    generate_sorted_summary_all,
-    process_graph_files,
     core_data_analysis,
-    generate_summary_subsets,
     generate_global_summary,
+    generate_sorted_summary_all,
+    generate_summary_subsets,
+    process_graph_files,
 )
 from src.logseq_assets import handle_assets
 from src.logseq_move_files import handle_move_files, create_delete_directory
+from src.process_namespaces import process_namespace_data
+from src.reporting import write_many_outputs
+from src.setup import (
+    create_log_file,
+    create_output_directory,
+    get_logseq_analyzer_args,
+    get_logseq_config_edn,
+    get_logseq_target_dirs,
+    get_sub_file_or_folder,
+    set_logseq_config_edn_data,
+    validate_path,
+)
 
 
 def run_app(**kwargs):
