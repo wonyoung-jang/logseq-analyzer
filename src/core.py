@@ -2,11 +2,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple, Pattern
 
 from src.helpers import iter_files
-from src.reporting import write_output
 from src.process_basic_file_data import process_single_file
 from src.process_content_data import post_processing_content
 from src.process_summary_data import extract_summary_subset_content, process_summary_data, extract_summary_subset_files
-from src import config
 
 
 def process_graph_files(
@@ -89,7 +87,6 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for output_name, criteria in summary_categories.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_SUMMARY)
 
     # Process file types
     summary_categories_types: Dict[str, Dict[str, Any]] = {
@@ -104,7 +101,6 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for output_name, criteria in summary_categories_types.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_TYPES)
 
     # Process nodes
     summary_categories_nodes: Dict[str, Dict[str, Any]] = {
@@ -121,7 +117,6 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for output_name, criteria in summary_categories_nodes.items():
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_NODES)
 
     # Process file extensions
     file_extensions = {}
@@ -129,22 +124,17 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         ext = meta.get("file_extension")
         file_extensions[ext] = file_extensions.get(ext, 0) + 1
     summary_data_subsets["file_extensions"] = file_extensions
-    write_output(config.DEFAULT_OUTPUT_DIR, "_file_extensions_oveview", file_extensions, config.OUTPUT_DIR_EXTENSIONS)
 
     for ext in file_extensions:
         output_name = f"all_{ext}s"
         criteria = {"file_extension": ext}
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
-        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_EXTENSIONS)
 
     # TODO Testing content subset
     content_subset_tags_nodes = {
         "aliases": "aliases",
-        # "namespace_root": "namespace_root",
-        # "namespace_parent": "namespace_parent",
         "namespace_parts": "namespace_parts",
-        # "namespace_level": "namespace_level",
         "page_references": "page_references",
         "tagged_backlinks": "tagged_backlinks",
         "tags": "tags",
@@ -183,48 +173,16 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         counts_output_name = f"{output_name}_counts"
         summary_data_subsets[output_name] = subset
         summary_data_subsets[counts_output_name] = subset_counts
-        write_output(config.DEFAULT_OUTPUT_DIR, output_name, subset, config.OUTPUT_DIR_CONTENTS)
-        write_output(config.DEFAULT_OUTPUT_DIR, counts_output_name, subset_counts, config.OUTPUT_DIR_CONTENTS_COUNTS)
 
     return summary_data_subsets
 
 
-def generate_sorted_summary(graph_data: dict, target, attribute, reverse=True, count=-1) -> None:
+def generate_sorted_summary_all(graph_data: dict, reverse=True, count=-1) -> dict:
     """
     Generate a sorted summary for the Logseq Analyzer.
 
     Args:
         graph_data (dict): The graph data to analyze.
-        target (str): The target directory for the output files.
-        attribute (str): The attribute to sort by.
-    """
-    sorted_data = {}
-    for name, data in graph_data.items():
-        if attribute in data:
-            if isinstance(data[attribute], (list, dict, set)):
-                sorted_data[name] = len(data[attribute])
-            elif isinstance(data[attribute], str):
-                sorted_data[name] = 1
-            else:
-                sorted_data[name] = data[attribute]
-
-    sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=reverse))
-    if count > 0:
-        sub_sorted_data = dict(sorted(sorted_data.items(), key=lambda item: item[1], reverse=reverse)[:count])
-        write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sub_sorted_data, target)
-    else:
-        write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{attribute}", sorted_data, target)
-
-    return sorted_data
-
-
-def generate_sorted_summary_all(graph_data: dict, target, reverse=True, count=-1) -> None:
-    """
-    Generate a sorted summary for the Logseq Analyzer.
-
-    Args:
-        graph_data (dict): The graph data to analyze.
-        target (str): The target directory for the output files.
     """
     flipped_data = {}
     for name, data in graph_data.items():
@@ -236,24 +194,22 @@ def generate_sorted_summary_all(graph_data: dict, target, reverse=True, count=-1
 
     for key, value in flipped_data.items():
         sorted_data = dict(sorted(value.items(), key=lambda item: item[1], reverse=reverse))
+        value = sorted_data
         if count > 0:
-            sub_sorted_data = dict(sorted_data.items()[:count])
-            write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sub_sorted_data, target)
-        else:
-            write_output(config.DEFAULT_OUTPUT_DIR, f"sorted_{key}", sorted_data, target)
+            value = dict(sorted_data.items()[:count])
+    
+    return flipped_data
 
 
-def generate_global_summary(summary_data_subsets: dict, target: str) -> None:
+def generate_global_summary(summary_data_subsets: dict) -> dict:
     """
     Generate a global summary for the Logseq Analyzer.
 
     Args:
         summary_data_subsets (dict): The summary data subsets.
-        target (str): The target directory for the output files.
     """
-    global_summary: Dict[str, Dict[str, int]] = {}
+    global_summary = {}
     for subset_name, subset in summary_data_subsets.items():
         global_summary[subset_name] = {}
         global_summary[subset_name]["results"] = len(subset)
-
-    write_output(config.DEFAULT_OUTPUT_DIR, "global_summary", global_summary, target)
+    return global_summary

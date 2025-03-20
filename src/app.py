@@ -110,9 +110,8 @@ def run_app(**kwargs):
 
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
-    generate_global_summary(summary_data_subsets, config.OUTPUT_DIR_SUMMARY)
-
-    generate_sorted_summary_all(graph_data, config.OUTPUT_DIR_TEST)
+    summary_global = generate_global_summary(summary_data_subsets)
+    summary_sorted_all = generate_sorted_summary_all(graph_data)
 
     if gui_instance:
         gui_instance.update_progress(reporting_phase, 100)

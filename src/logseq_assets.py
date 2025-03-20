@@ -1,6 +1,4 @@
-from src import config
 from src.process_summary_data import extract_summary_subset_files
-from src.reporting import write_output
 
 
 def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
@@ -34,20 +32,8 @@ def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
         "is_backlinked": False,
         "file_type": "asset",
     }
+    
     summary_is_asset_backlinked = extract_summary_subset_files(graph_data, **asset_backlinked_kwargs)
     summary_is_asset_not_backlinked = extract_summary_subset_files(graph_data, **asset_not_backlinked_kwargs)
-
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "is_asset_backlinked",
-        summary_is_asset_backlinked,
-        config.OUTPUT_DIR_ASSETS,
-    )
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "is_asset_not_backlinked",
-        summary_is_asset_not_backlinked,
-        config.OUTPUT_DIR_ASSETS,
-    )
 
     return summary_is_asset_not_backlinked

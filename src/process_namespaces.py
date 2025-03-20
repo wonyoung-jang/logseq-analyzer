@@ -83,9 +83,6 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
 
-    # TODO Test extract namespace subtrees
-    # namespace_subtree = extract_namespace_subtree("ableton", namespace_hierarchy)
-
     # Test format namespace hierarchy text
     namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
 
@@ -100,7 +97,6 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
         "namespace_frequency": namespace_frequency,
         "namespace_freq_list": namespace_freq_list,
         "namespace_queries": namespace_queries,
-        # "namespace_subtree": namespace_subtree,
         "namespace_hierarchy": namespace_hierarchy,
         "namespace_hierarchy_text": namespace_hierarchy_text,
     }
@@ -109,7 +105,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     for filename, items in subset.items():
         write_output(config.DEFAULT_OUTPUT_DIR, filename, items, output_dir_ns)
 
-    generate_global_summary(subset, output_dir_ns)
+    namespace_global_summary = generate_global_summary(subset)
 
 
 def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
@@ -329,27 +325,3 @@ def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) ->
             current_level = current_level[part]
 
     return tree
-
-
-def extract_namespace_subtree(namespace: str, namespace_hierarchy: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Extract a subtree of namespaces based on the given namespace.
-
-    Args:
-        namespace (str): The namespace to extract.
-        namespace_hierarchy (dict): The hierarchy of namespaces.
-
-    Returns:
-        dict: The extracted subtree of namespaces.
-    """
-    subtree = {}
-    parts = namespace.split(config.NAMESPACE_SEP)
-    current_level = subtree
-
-    for part in parts:
-        if part not in namespace_hierarchy:
-            return {}
-        current_level[part] = namespace_hierarchy[part]
-        namespace_hierarchy = namespace_hierarchy[part]
-
-    return subtree
