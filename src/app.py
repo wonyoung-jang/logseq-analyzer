@@ -123,7 +123,7 @@ def run_app(**kwargs):
     # Phase 04: Process namespaces
     ################################################################
     # Namespaces analysis
-    process_namespace_data(graph_data, dangling_links)
+    summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
 
     if gui_instance:
         gui_instance.update_progress(namespaces_phase, 100)
@@ -137,10 +137,10 @@ def run_app(**kwargs):
         to_delete_dir = create_delete_directory()
 
         # Handle assets
-        summary_is_asset_not_backlinked = handle_assets(graph_data, summary_data_subsets)
+        assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
 
         # Handle bak and recycle directories
-        handle_move_files(args, graph_data, summary_is_asset_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+        moved_files = handle_move_files(args, graph_data, assets_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)

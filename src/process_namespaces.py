@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Set, Tuple
 
 from src import config
 from src.core import generate_global_summary
-from src.reporting import write_output
 
 """
 Namespace Analysis
@@ -36,8 +35,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
         conflicts_parent_depth
         conflicts_parents_unique
     """
-    output_dir_ns = config.OUTPUT_DIR_NAMESPACE
-    subset = {}
+    namespace_data_subset = {}
 
     # 01 Conflicts With Existing Pages
     # Extract namespace parts
@@ -69,8 +67,8 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)
     for level, names in unique_namespaces_per_level.items():
-        subset[f"unique_namespaces_level_{level}"] = names
-    subset["unique_namespaces_per_level"] = {k: len(v) for k, v in unique_namespaces_per_level.items()}
+        namespace_data_subset[f"unique_namespaces_level_{level}"] = names
+    namespace_data_subset["unique_namespaces_per_level"] = {k: len(v) for k, v in unique_namespaces_per_level.items()}
 
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
 
@@ -100,12 +98,11 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
         "namespace_hierarchy": namespace_hierarchy,
         "namespace_hierarchy_text": namespace_hierarchy_text,
     }
-    subset.update(subset_add)
+    namespace_data_subset.update(subset_add)
 
-    for filename, items in subset.items():
-        write_output(config.DEFAULT_OUTPUT_DIR, filename, items, output_dir_ns)
+    namespace_global_summary = generate_global_summary(namespace_data_subset)
 
-    namespace_global_summary = generate_global_summary(subset)
+    return namespace_data_subset, namespace_global_summary
 
 
 def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

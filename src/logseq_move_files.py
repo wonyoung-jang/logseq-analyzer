@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 from src import config
 from src.helpers import get_or_create_subdir
-from src.reporting import write_output
 
 
 def create_delete_directory() -> Path:
@@ -38,6 +37,7 @@ def handle_move_files(
         to_delete_dir (Path): The directory for deleted files.
     """
     moved_files = {}
+
     if args.move_unlinked_assets:
         moved_assets = move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
         if moved_assets:
@@ -53,12 +53,7 @@ def handle_move_files(
         if moved_recycle:
             moved_files["moved_recycle"] = moved_recycle
 
-    write_output(
-        config.DEFAULT_OUTPUT_DIR,
-        "moved_files",
-        moved_files,
-        config.OUTPUT_DIR_META,
-    )
+    return moved_files
 
 
 def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[str] = "") -> List[str]:
