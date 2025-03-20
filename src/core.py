@@ -197,7 +197,7 @@ def generate_sorted_summary_all(graph_data: dict, reverse=True, count=-1) -> dic
         value = sorted_data
         if count > 0:
             value = dict(sorted_data.items()[:count])
-    
+
     return flipped_data
 
 

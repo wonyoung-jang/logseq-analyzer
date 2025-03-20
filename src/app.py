@@ -74,6 +74,7 @@ def run_app(**kwargs):
     if gui_instance:
         gui_instance.update_progress(setup_phase, 100)
         gui_instance.update_progress(process_files_phase, 20)
+
     ################################################################
     # Phase 02: Process files
     ################################################################
@@ -91,6 +92,7 @@ def run_app(**kwargs):
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
         gui_instance.update_progress(reporting_phase, 20)
+
     #################################################################
     # Phase 03: Reporting/writing outputs
     #################################################################
@@ -116,6 +118,7 @@ def run_app(**kwargs):
     if gui_instance:
         gui_instance.update_progress(reporting_phase, 100)
         gui_instance.update_progress(namespaces_phase, 20)
+
     ################################################################
     # Phase 04: Process namespaces
     ################################################################
@@ -125,6 +128,7 @@ def run_app(**kwargs):
     if gui_instance:
         gui_instance.update_progress(namespaces_phase, 100)
         gui_instance.update_progress(move_files_phase, 20)
+
     #####################################################################
     # Phase 05: Move files to a delete directory (optional)
     #####################################################################

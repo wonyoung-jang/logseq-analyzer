@@ -32,7 +32,7 @@ def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
         "is_backlinked": False,
         "file_type": "asset",
     }
-    
+
     summary_is_asset_backlinked = extract_summary_subset_files(graph_data, **asset_backlinked_kwargs)
     summary_is_asset_not_backlinked = extract_summary_subset_files(graph_data, **asset_not_backlinked_kwargs)
 

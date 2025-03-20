@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+import subprocess
 import sys
 
 from PySide6.QtWidgets import (
@@ -16,9 +19,10 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QComboBox,
 )
-from PySide6.QtCore import QSettings, QTimer
+from PySide6.QtCore import QSettings
 
 from src.app import run_app
+from src import config
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -114,9 +118,72 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.exit_button.setToolTip("Ctrl+W to exit")
         button_layout.addWidget(self.exit_button)
 
+        # Button to open output directory
+        self.output_button = QPushButton("Open Output Directory")
+        self.output_button.clicked.connect(self.open_output_directory)
+        self.output_button.setEnabled(False)  # Initially disabled
+        button_layout.addWidget(self.output_button)
+
+        # Button to open to_delete directory
+        self.delete_button = QPushButton("Open Delete Directory")
+        self.delete_button.clicked.connect(self.open_delete_directory)
+        self.delete_button.setEnabled(False)
+        button_layout.addWidget(self.delete_button)
+
+        # Button to open log file
+        self.log_button = QPushButton("Open Log File")
+        self.log_button.clicked.connect(self.open_log_file)
+        self.log_button.setEnabled(False)  # Initially disabled
+        button_layout.addWidget(self.log_button)
+
         self.setCentralWidget(central_widget)
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
+
+    def open_output_directory(self):
+        """Open the output directory in the file explorer."""
+        output_dir = config.DEFAULT_OUTPUT_DIR
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        if os.path.exists(output_dir):
+            output_dir = os.path.abspath(output_dir)
+            if sys.platform.startswith("win"):
+                os.startfile(output_dir)
+            elif sys.platform.startswith("darwin"):
+                subprocess.call(["open", output_dir])
+            else:
+                subprocess.call(["xdg-open", output_dir])
+        else:
+            self.show_error("Output directory not found.")
+
+    def open_delete_directory(self):
+        """Open the delete directory in the file explorer."""
+        delete_dir = config.DEFAULT_TO_DELETE_DIR
+        if not os.path.exists(delete_dir):
+            os.makedirs(delete_dir)
+        if os.path.exists(delete_dir):
+            delete_dir = os.path.abspath(delete_dir)
+            if sys.platform.startswith("win"):
+                os.startfile(delete_dir)
+            elif sys.platform.startswith("darwin"):
+                subprocess.call(["open", delete_dir])
+            else:
+                subprocess.call(["xdg-open", delete_dir])
+        else:
+            self.show_error("Delete directory not found.")
+
+    def open_log_file(self):
+        """Open the log file in the default text editor."""
+        log_file_path = Path(config.DEFAULT_OUTPUT_DIR) / config.DEFAULT_LOG_FILE
+        if os.path.exists(log_file_path):
+            if sys.platform.startswith("win"):
+                os.startfile(log_file_path)
+            elif sys.platform.startswith("darwin"):
+                subprocess.call(["open", log_file_path])
+            else:
+                subprocess.call(["xdg-open", log_file_path])
+        else:
+            self.show_error("Log file not found.")
 
     def run_analysis(self):
         args_gui = {
@@ -145,27 +212,15 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         try:
             run_app(**args_gui, gui_instance=self)
-            remaining_seconds = 10
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")
-            success_dialog.setText(f"Analysis complete! The app will close in {remaining_seconds} seconds.")
+            success_dialog.setText("Analysis completed successfully.")
             success_dialog.addButton("Close", QMessageBox.AcceptRole)
-            timer = QTimer(self)
-
-            def update_dialog():
-                nonlocal remaining_seconds
-                remaining_seconds -= 1
-                if remaining_seconds > 0:
-                    success_dialog.setText(f"Analysis complete! The app will close in {remaining_seconds} seconds.")
-                else:
-                    timer.stop()
-                    success_dialog.accept()
-
-            timer.timeout.connect(update_dialog)
-            timer.start(1000)
             success_dialog.exec()
-            self.close()
+            self.output_button.setEnabled(True)
+            self.delete_button.setEnabled(True)
+            self.log_button.setEnabled(True)
         except KeyboardInterrupt:
             self.show_error("Analysis interrupted by user.")
             self.close()
