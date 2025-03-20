@@ -93,14 +93,14 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
     Returns:
         Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
     """
-    data = init_data()
+    # data = init_data()
+    data = {}
     data = get_file_metadata(file_path, data)
     content = get_file_content(file_path)
     content_bullets = []
+    primary_bullet = ""
 
     if content:
-        primary_bullet = ""
-
         # Count characters
         data["char_count"] = len(content)
         # Count bullets
@@ -122,7 +122,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         if bullet_count > 0:
             data["bullet_density"] = round(data["char_count"] / bullet_count, 2)
 
-        data = process_content_data(data, content, patterns, primary_bullet)
+    data = process_content_data(data, content, patterns, primary_bullet)
 
     return data, content_bullets
 

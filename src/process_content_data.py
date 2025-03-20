@@ -8,6 +8,28 @@ from src import config
 def process_content_data(
     data: Dict[str, Any], content: str, patterns: Dict[str, Pattern], primary_bullet
 ) -> Dict[str, Any]:
+    # Process namespaces
+    data["namespace_level"] = -1
+    if config.NAMESPACE_SEP in data["name"]:
+        namespace_parts_list = data["name"].split(config.NAMESPACE_SEP)
+        namespace_level = len(namespace_parts_list) - 1
+        namespace_root = namespace_parts_list[0]
+        namespace_parent = namespace_parts_list[-2] if namespace_level > 1 else namespace_root
+        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list)}
+        namespace_data = {
+            "namespace_root": namespace_root,
+            "namespace_parent": namespace_parent,
+            "namespace_parts": namespace_parts,
+            "namespace_level": namespace_level,
+        }
+        for key, value in namespace_data.items():
+            if value:
+                data[key] = value
+
+    # If no content, return data
+    if not content:
+        return data
+
     # Extract basic data
     page_references = find_all_lower(patterns["page_reference"], content)
     tagged_backlinks = find_all_lower(patterns["tagged_backlink"], content)
@@ -30,34 +52,11 @@ def process_content_data(
     query_functions = find_all_lower(patterns["query_function"], content)
     advanced_commands = find_all_lower(patterns["advanced_command"], content)
 
-    data["page_references"] = page_references
-    data["tagged_backlinks"] = tagged_backlinks
-    data["tags"] = tags
-    data["assets"] = assets
-    data["draws"] = draws
-    data["blockquotes"] = blockquotes
-    data["flashcards"] = flashcards
-    data["multiline_code_block"] = multiline_code_blocks
-    data["calc_block"] = calc_blocks
-    data["multiline_code_lang"] = multiline_code_langs
-    data["reference"] = references_general
-    data["block_reference"] = block_references
-    data["embed"] = embeds
-    data["page_embed"] = page_embeds
-    data["block_embed"] = block_embeds
-    data["namespace_queries"] = namespace_queries
-    data["clozes"] = clozes
-    data["simple_queries"] = simple_queries
-    data["query_functions"] = query_functions
-    data["advanced_commands"] = advanced_commands
-
     # Extract all properties: values pairs
     properties_values = {prop: value for prop, value in patterns["property_value"].findall(content)}
     aliases = properties_values.get("alias", [])
     if aliases:
         aliases = process_aliases(aliases)
-    data["aliases"] = aliases
-    data["properties_values"] = properties_values
 
     # Extract page/block properties
     page_properties = []
@@ -69,28 +68,55 @@ def process_content_data(
     built_in_props = config.BUILT_IN_PROPERTIES
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
     properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, built_in_props)
-    data["properties_page_builtin"] = properties_page_builtin
-    data["properties_page_user"] = properties_page_user
-    data["properties_block_builtin"] = properties_block_builtin
-    data["properties_block_user"] = properties_block_user
 
     # Process external and embedded links
     external_links = find_all_lower(patterns["external_link"], content)
     embedded_links = find_all_lower(patterns["embedded_link"], content)
-    process_ext_emb_links(patterns, data, external_links, "external")
-    process_ext_emb_links(patterns, data, embedded_links, "embedded")
+    external_links_other, external_links_internet, external_links_alias = process_ext_emb_links(
+        patterns, external_links, "external"
+    )
+    embedded_links_other, embedded_links_internet, embedded_links_asset = process_ext_emb_links(
+        patterns, embedded_links, "embedded"
+    )
 
-    # Process namespaces
-    if config.NAMESPACE_SEP in data["name"]:
-        namespace_parts_list = data["name"].split(config.NAMESPACE_SEP)
-        namespace_level = len(namespace_parts_list) - 1
-        namespace_root = namespace_parts_list[0]
-        namespace_parent = namespace_parts_list[-2] if namespace_level > 1 else namespace_root
-        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list)}
-        data["namespace_root"] = namespace_root
-        data["namespace_parent"] = namespace_parent
-        data["namespace_parts"] = namespace_parts
-        data["namespace_level"] = namespace_level
+    primary_data = {
+        "page_references": page_references,
+        "tagged_backlinks": tagged_backlinks,
+        "tags": tags,
+        "assets": assets,
+        "draws": draws,
+        "blockquotes": blockquotes,
+        "flashcards": flashcards,
+        "multiline_code_blocks": multiline_code_blocks,
+        "calc_blocks": calc_blocks,
+        "multiline_code_langs": multiline_code_langs,
+        "references_general": references_general,
+        "block_references": block_references,
+        "embeds": embeds,
+        "page_embeds": page_embeds,
+        "block_embeds": block_embeds,
+        "namespace_queries": namespace_queries,
+        "clozes": clozes,
+        "simple_queries": simple_queries,
+        "query_functions": query_functions,
+        "advanced_commands": advanced_commands,
+        "aliases": aliases,
+        "properties_values": properties_values,
+        "properties_page_builtin": properties_page_builtin,
+        "properties_page_user": properties_page_user,
+        "properties_block_builtin": properties_block_builtin,
+        "properties_block_user": properties_block_user,
+        "external_links_other": external_links_other,
+        "external_links_internet": external_links_internet,
+        "external_links_alias": external_links_alias,
+        "embedded_links_other": embedded_links_other,
+        "embedded_links_internet": embedded_links_internet,
+        "embedded_links_asset": embedded_links_asset,
+    }
+
+    for key, value in primary_data.items():
+        if value:
+            data[key] = value
 
     return data
 
@@ -151,9 +177,7 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_ext_emb_links(
-    patterns: Dict[str, Pattern], content_data: Dict[str, Any], links: List[str], links_type: str
-) -> None:
+def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_type: str) -> Tuple[str, str, str]:
     """Process external and embedded links and categorize them."""
     links_other = f"{links_type}_links_other"
     links_internet = f"{links_type}_links_internet"
@@ -166,7 +190,6 @@ def process_ext_emb_links(
         links_sub_pattern = f"{links_type}_link_asset"
 
     if links:
-        content_data[links_other] = links
         internet = []
         alias_or_asset = []
         for _ in range(len(links)):
@@ -176,8 +199,7 @@ def process_ext_emb_links(
             elif patterns[links_sub_pattern].match(link):
                 alias_or_asset.append(link)
             links.pop(0)
-        content_data[links_internet] = internet
-        content_data[links_subtype] = alias_or_asset
+    return links_other, links_internet, links_subtype
 
 
 def process_primary_bullet(primary_bullet: Dict[str, Any]) -> bool:
@@ -225,17 +247,17 @@ def post_processing_content(content_data):
                         content_data[parent_joined]["namespace_level"] = direct_level
 
         # Update aliases and linked references
-        unique_aliases.update(data["aliases"])
+        unique_aliases.update(data.get("aliases", []))
         unique_linked_references.update(
             unique_aliases,
-            data["draws"],
-            data["page_references"],
-            data["tags"],
-            data["tagged_backlinks"],
-            data["properties_page_builtin"],
-            data["properties_page_user"],
-            data["properties_block_builtin"],
-            data["properties_block_user"],
+            data.get("draws", []),
+            data.get("page_references", []),
+            data.get("tags", []),
+            data.get("tagged_backlinks", []),
+            data.get("properties_page_builtin", []),
+            data.get("properties_page_user", []),
+            data.get("properties_block_builtin", []),
+            data.get("properties_block_user", []),
         )
 
     # Create alphanum lookups and identify dangling links

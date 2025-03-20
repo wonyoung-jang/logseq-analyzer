@@ -12,7 +12,7 @@ def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
         summary_data_subsets (dict): The summary data subsets.
     """
     for name, data in graph_data.items():
-        if not data["assets"]:
+        if not data.get("assets", []):
             continue
 
         for asset in summary_data_subsets["is_asset"]:

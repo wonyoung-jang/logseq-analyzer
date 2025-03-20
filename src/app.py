@@ -25,15 +25,6 @@ from src.logseq_assets import handle_assets
 from src.logseq_move_files import handle_move_files, create_delete_directory
 
 
-# Remove empty values from graph_data
-def remove_empty(obj):
-    if isinstance(obj, dict):
-        return {k: remove_empty(v) for k, v in obj.items() if v}
-    elif isinstance(obj, list):
-        return [remove_empty(item) for item in obj if item]
-    return obj
-
-
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
@@ -97,8 +88,6 @@ def run_app(**kwargs):
         graph_data,
     ) = core_data_analysis(graph_data)
 
-    cleaned_graph_data = remove_empty(graph_data)
-
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
         gui_instance.update_progress(reporting_phase, 20)
@@ -112,7 +101,6 @@ def run_app(**kwargs):
         "dangling_links": dangling_links,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
-        "graph_data_cleaned": cleaned_graph_data,
     }
 
     if args.write_graph:
