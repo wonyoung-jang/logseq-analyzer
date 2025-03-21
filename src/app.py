@@ -12,7 +12,6 @@ from src.core import (
 from src.logseq_assets import handle_assets
 from src.logseq_move_files import handle_move_files, create_delete_directory
 from src.process_namespaces import process_namespace_data
-from src.reporting import write_many_outputs
 from src.setup import (
     create_log_file,
     create_output_directory,
@@ -94,22 +93,8 @@ def run_app(**kwargs):
         gui_instance.update_progress(reporting_phase, 20)
 
     #################################################################
-    # Phase 03: Reporting/writing outputs
+    # Phase 03: Create summaries
     #################################################################
-    # Write initial outputs
-    initial_outputs = {
-        "alphanum_dict": alphanum_dict,
-        "alphanum_dict_ns": alphanum_dict_ns,
-        "dangling_links": dangling_links,
-        "target_dirs": target_dirs,
-        "graph_data": graph_data,
-    }
-
-    if args.write_graph:
-        initial_outputs["graph_content"] = graph_content_bullets
-
-    write_many_outputs(args, config.OUTPUT_DIR_META, **initial_outputs)
-
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
     summary_global = generate_global_summary(summary_data_subsets)
@@ -132,15 +117,39 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 05: Move files to a delete directory (optional)
     #####################################################################
+    moved_files = None
+    assets_backlinked = None
+    assets_not_backlinked = None
     if move:
         # Create delete directory
         to_delete_dir = create_delete_directory()
-
         # Handle assets
         assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
-
         # Handle bak and recycle directories
         moved_files = handle_move_files(args, graph_data, assets_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)
+
+    output_data = {
+        # Main meta outputs
+        "alphanum_dict": alphanum_dict,
+        "alphanum_dict_ns": alphanum_dict_ns,
+        "dangling_links": dangling_links,
+        "target_dirs": target_dirs,
+        "graph_data": graph_data,
+        "graph_content": graph_content_bullets,
+        # General summary
+        "summary_data_subsets": summary_data_subsets,
+        "summary_global": summary_global,
+        "summary_sorted_all": summary_sorted_all,
+        # Namespaces summary
+        "summary_namespaces": summary_namespaces,
+        "summary_global_namespaces": summary_global_namespaces,
+        # Move files and assets
+        "moved_files": moved_files,
+        "assets_backlinked": assets_backlinked,
+        "assets_not_backlinked": assets_not_backlinked,
+    }
+
+    return output_data

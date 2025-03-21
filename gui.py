@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QSettings
 
 from src.app import run_app
+from src.reporting import write_output
 from src import config
 
 
@@ -211,7 +212,49 @@ class LogseqAnalyzerGUI(QMainWindow):
         QApplication.processEvents()
 
         try:
-            run_app(**args_gui, gui_instance=self)
+            output_meta = [
+                "alphanum_dict",
+                "alphanum_dict_ns",
+                "dangling_links",
+                "target_dirs",
+                "graph_data",
+                "graph_content",
+            ]
+            output_summaries = [
+                "summary_data_subsets",
+                "summary_global",
+                "summary_sorted_all",
+            ]
+            output_namespaces = [
+                "summary_namespaces",
+                "summary_global_namespaces",
+            ]
+            output_assets = [
+                "moved_files",
+                "assets_backlinked",
+                "assets_not_backlinked",
+            ]
+
+            output_data = run_app(**args_gui, gui_instance=self)
+            for key, items in output_data.items():
+                print(f"Key: {key}, Items: {type(items)}")
+                if key in output_meta:
+                    write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_META)
+                elif key in output_summaries:
+                    if key == "summary_global":
+                        write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_SUMMARY)
+                    else:
+                        for summary, data in items.items():
+                            write_output(config.DEFAULT_OUTPUT_DIR, summary, data, config.OUTPUT_DIR_SUMMARY)
+                elif key in output_namespaces:
+                    if key == "summary_global_namespaces":
+                        write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_NAMESPACE)
+                    else:
+                        for summary, data in items.items():
+                            write_output(config.DEFAULT_OUTPUT_DIR, summary, data, config.OUTPUT_DIR_NAMESPACE)
+                elif key in output_assets:
+                    write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_ASSETS)
+
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")
@@ -222,8 +265,8 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.delete_button.setEnabled(True)
             self.log_button.setEnabled(True)
         except KeyboardInterrupt:
-            self.show_error("Analysis interrupted by user.")
             self.close()
+            print("Analysis interrupted by user.")
         except Exception as e:
             self.show_error(f"Analysis failed: {e}")
         finally:
