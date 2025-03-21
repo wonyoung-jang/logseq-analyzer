@@ -9,13 +9,16 @@ def process_content_data(
     data: Dict[str, Any], content: str, patterns: Dict[str, Pattern], primary_bullet
 ) -> Dict[str, Any]:
     # Process namespaces
-    data["namespace_level"] = -1
+    data["namespace_level"] = 0
     if config.NAMESPACE_SEP in data["name"]:
         namespace_parts_list = data["name"].split(config.NAMESPACE_SEP)
-        namespace_level = len(namespace_parts_list) - 1
+        namespace_level = len(namespace_parts_list)
         namespace_root = namespace_parts_list[0]
-        namespace_parent = namespace_parts_list[-2] if namespace_level > 1 else namespace_root
-        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list)}
+        if namespace_level > 2:
+            namespace_parent = namespace_parts_list[-2]
+        else:
+            namespace_parent = namespace_root
+        namespace_parts = {part: level + 1 for level, part in enumerate(namespace_parts_list)}
         namespace_data = {
             "namespace_root": namespace_root,
             "namespace_parent": namespace_parent,
@@ -60,7 +63,7 @@ def process_content_data(
 
     # Extract page/block properties
     page_properties = []
-    primary_bullet_is_page_props = process_primary_bullet(primary_bullet)
+    primary_bullet_is_page_props = is_primary_bullet_page_properties(primary_bullet)
     if primary_bullet_is_page_props:
         page_properties = find_all_lower(patterns["property"], primary_bullet)
         content = content.replace(primary_bullet, "")
@@ -202,7 +205,7 @@ def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_
     return links_other, links_internet, links_subtype
 
 
-def process_primary_bullet(primary_bullet: Dict[str, Any]) -> bool:
+def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
     """
     Process primary bullet data.
 
@@ -232,17 +235,17 @@ def post_processing_content(content_data):
             namespace_level = data["namespace_level"]
             unique_linked_references_namespaces.update([namespace_root, name])
 
-            if namespace_level > 0:
+            if namespace_level > 1:
                 if namespace_root in content_data:
                     root_level = content_data[namespace_root]["namespace_level"]
-                    direct_level = 0
+                    direct_level = 1
                     if direct_level > root_level:
                         content_data[namespace_root]["namespace_level"] = direct_level
 
                 parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
                 if parent_joined in content_data:
                     parent_level = content_data[parent_joined]["namespace_level"]
-                    direct_level = namespace_level - 1
+                    direct_level = namespace_level
                     if direct_level > parent_level:
                         content_data[parent_joined]["namespace_level"] = direct_level
 

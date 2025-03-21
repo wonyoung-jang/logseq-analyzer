@@ -31,7 +31,7 @@ def run_app(**kwargs):
     gui_inst = "gui_instance"
     setup_phase = "setup"
     process_files_phase = "process_files"
-    reporting_phase = "reporting"
+    summary_phase = "summary"
     namespaces_phase = "namespaces"
     move_files_phase = "move_files"
     gui_instance = kwargs.get(gui_inst)
@@ -90,10 +90,10 @@ def run_app(**kwargs):
 
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
-        gui_instance.update_progress(reporting_phase, 20)
+        gui_instance.update_progress(summary_phase, 20)
 
     #################################################################
-    # Phase 03: Create summaries
+    # Phase 03: Process summaries
     #################################################################
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
@@ -101,7 +101,7 @@ def run_app(**kwargs):
     summary_sorted_all = generate_sorted_summary_all(graph_data)
 
     if gui_instance:
-        gui_instance.update_progress(reporting_phase, 100)
+        gui_instance.update_progress(summary_phase, 100)
         gui_instance.update_progress(namespaces_phase, 20)
 
     ################################################################

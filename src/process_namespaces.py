@@ -62,7 +62,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     namespace_details = analyze_namespace_details(namespace_parts)
 
     max_depth = namespace_details["max_depth"]
-    unique_namespaces_per_level = {i: set() for i in range(max_depth + 1)}
+    unique_namespaces_per_level = {i: set() for i in range(1, max_depth + 1)}
     for parts in namespace_parts.values():
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
+    QGridLayout,
     QFormLayout,
     QLabel,
     QLineEdit,
@@ -33,11 +34,11 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # Central Widget and Layout
         central_widget = QWidget()
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QGridLayout(central_widget)
 
         # Form Layout for Input Fields
         form_layout = QFormLayout()
-        main_layout.addLayout(form_layout)
+        main_layout.addLayout(form_layout, 0, 0)
 
         # Logseq Graph Folder Input
         self.graph_folder_label = QLabel("Logseq Graph Folder (Required):")
@@ -88,10 +89,10 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.process_files_progress_bar.setValue(0)
         form_layout.addRow("Process Files:", self.process_files_progress_bar)
 
-        self.reporting_progress_bar = QProgressBar()
-        self.reporting_progress_bar.setRange(0, 100)
-        self.reporting_progress_bar.setValue(0)
-        form_layout.addRow("Reporting:", self.reporting_progress_bar)
+        self.summary_progress_bar = QProgressBar()
+        self.summary_progress_bar.setRange(0, 100)
+        self.summary_progress_bar.setValue(0)
+        form_layout.addRow("Summarizing:", self.summary_progress_bar)
 
         self.namespaces_progress_bar = QProgressBar()
         self.namespaces_progress_bar.setRange(0, 100)
@@ -104,38 +105,42 @@ class LogseqAnalyzerGUI(QMainWindow):
         form_layout.addRow("Move Files:", self.move_files_progress_bar)
 
         # Buttons
-        button_layout = QHBoxLayout()
-        main_layout.addLayout(button_layout)
+        button_layout = QVBoxLayout()
+        button_layout_primary = QHBoxLayout()
+        button_layout_secondary = QHBoxLayout()
+        button_layout.addLayout(button_layout_primary)
+        button_layout.addLayout(button_layout_secondary)
+        main_layout.addLayout(button_layout, 1, 0)
 
         self.run_button = QPushButton("Run Analysis")
         self.run_button.clicked.connect(self.run_analysis)
         self.run_button.setShortcut("Ctrl+R")
         self.run_button.setToolTip("Ctrl+R to run analysis")
-        button_layout.addWidget(self.run_button)
+        button_layout_primary.addWidget(self.run_button)
 
         self.exit_button = QPushButton("Exit")
         self.exit_button.clicked.connect(self.close)
         self.exit_button.setShortcut("Ctrl+W")
         self.exit_button.setToolTip("Ctrl+W to exit")
-        button_layout.addWidget(self.exit_button)
+        button_layout_primary.addWidget(self.exit_button)
 
         # Button to open output directory
         self.output_button = QPushButton("Open Output Directory")
         self.output_button.clicked.connect(self.open_output_directory)
         self.output_button.setEnabled(False)  # Initially disabled
-        button_layout.addWidget(self.output_button)
+        button_layout_secondary.addWidget(self.output_button)
 
         # Button to open to_delete directory
         self.delete_button = QPushButton("Open Delete Directory")
         self.delete_button.clicked.connect(self.open_delete_directory)
         self.delete_button.setEnabled(False)
-        button_layout.addWidget(self.delete_button)
+        button_layout_secondary.addWidget(self.delete_button)
 
         # Button to open log file
         self.log_button = QPushButton("Open Log File")
         self.log_button.clicked.connect(self.open_log_file)
         self.log_button.setEnabled(False)  # Initially disabled
-        button_layout.addWidget(self.log_button)
+        button_layout_secondary.addWidget(self.log_button)
 
         self.setCentralWidget(central_widget)
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
@@ -206,12 +211,14 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Reset progress bars before starting
         self.setup_progress_bar.setValue(0)
         self.process_files_progress_bar.setValue(0)
-        self.reporting_progress_bar.setValue(0)
+        self.summary_progress_bar.setValue(0)
         self.namespaces_progress_bar.setValue(0)
         self.move_files_progress_bar.setValue(0)
         QApplication.processEvents()
 
         try:
+            output_data = run_app(**args_gui, gui_instance=self)
+
             output_meta = [
                 "alphanum_dict",
                 "alphanum_dict_ns",
@@ -235,9 +242,7 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "assets_not_backlinked",
             ]
 
-            output_data = run_app(**args_gui, gui_instance=self)
             for key, items in output_data.items():
-                print(f"Key: {key}, Items: {type(items)}")
                 if key in output_meta:
                     write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_META)
                 elif key in output_summaries:
@@ -261,16 +266,17 @@ class LogseqAnalyzerGUI(QMainWindow):
             success_dialog.setText("Analysis completed successfully.")
             success_dialog.addButton("Close", QMessageBox.AcceptRole)
             success_dialog.exec()
+        except KeyboardInterrupt:
+            self.show_error("Analysis interrupted by user.")
+            self.close()
+        except Exception as e:
+            self.show_error(f"Analysis failed: {e}")
+            self.close()
+        finally:
+            self.run_button.setEnabled(True)
             self.output_button.setEnabled(True)
             self.delete_button.setEnabled(True)
             self.log_button.setEnabled(True)
-        except KeyboardInterrupt:
-            self.close()
-            print("Analysis interrupted by user.")
-        except Exception as e:
-            self.show_error(f"Analysis failed: {e}")
-        finally:
-            self.run_button.setEnabled(True)
 
     def update_progress(self, phase_name, progress_value):
         """Updates the progress bar for a given phase."""
@@ -279,8 +285,8 @@ class LogseqAnalyzerGUI(QMainWindow):
             progress_bar = self.setup_progress_bar
         elif phase_name == "process_files":
             progress_bar = self.process_files_progress_bar
-        elif phase_name == "reporting":
-            progress_bar = self.reporting_progress_bar
+        elif phase_name == "summary":
+            progress_bar = self.summary_progress_bar
         elif phase_name == "namespaces":
             progress_bar = self.namespaces_progress_bar
         elif phase_name == "move_files":

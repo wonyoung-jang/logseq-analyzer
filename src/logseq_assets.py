@@ -1,4 +1,4 @@
-from src.process_summary_data import extract_summary_subset_files
+from .process_summary_data import extract_summary_subset_files
 
 
 def handle_assets(graph_data: dict, summary_data_subsets: dict) -> None:
