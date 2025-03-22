@@ -140,12 +140,12 @@ def run_app(**kwargs):
         "target_dirs": target_dirs,
         "graph_data": graph_data,
         # General summary
+        "___summary_global": summary_global,
         "summary_data_subsets": summary_data_subsets,
-        "summary_global": summary_global,
         "summary_sorted_all": summary_sorted_all,
         # Namespaces summary
+        "___summary_global_namespaces": summary_global_namespaces,
         "summary_namespaces": summary_namespaces,
-        "summary_global_namespaces": summary_global_namespaces,
         # Move files and assets
         "moved_files": moved_files,
         "assets_backlinked": assets_backlinked,

@@ -229,13 +229,13 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "graph_content",
             ]
             output_summaries = [
+                "___summary_global",
                 "summary_data_subsets",
-                "summary_global",
                 "summary_sorted_all",
             ]
             output_namespaces = [
+                "___summary_global_namespaces",
                 "summary_namespaces",
-                "summary_global_namespaces",
             ]
             output_assets = [
                 "moved_files",
@@ -247,13 +247,13 @@ class LogseqAnalyzerGUI(QMainWindow):
                 if key in output_meta:
                     write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_META)
                 elif key in output_summaries:
-                    if key == "summary_global":
+                    if key == "___summary_global":
                         write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_SUMMARY)
                     else:
                         for summary, data in items.items():
                             write_output(config.DEFAULT_OUTPUT_DIR, summary, data, config.OUTPUT_DIR_SUMMARY)
                 elif key in output_namespaces:
-                    if key == "summary_global_namespaces":
+                    if key == "___summary_global_namespaces":
                         write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_NAMESPACE)
                     else:
                         for summary, data in items.items():

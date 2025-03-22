@@ -314,6 +314,8 @@ def analyze_namespace_queries(graph_data: Dict[str, Any], namespace_data: Dict[s
             namespace_queries[q]["found_in"].append(entry)
             namespace_queries[q]["namespace"] = page_ref
             namespace_queries[q]["size"] = namespace_data.get(page_ref, {}).get("namespace_size", 0)
+            namespace_queries[q]["uri"] = graph_data[entry].get("uri", "")
+            namespace_queries[q]["logseq_url"] = graph_data[entry].get("logseq_url", "")
 
     # Sort the queries by size in descending order
     namespace_queries = dict(sorted(namespace_queries.items(), key=lambda item: item[1]["size"], reverse=True))
