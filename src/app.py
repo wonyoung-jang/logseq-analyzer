@@ -138,7 +138,6 @@ def run_app(**kwargs):
         "dangling_links": dangling_links,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
-        "graph_content": graph_content_bullets,
         # General summary
         "summary_data_subsets": summary_data_subsets,
         "summary_global": summary_global,
@@ -151,5 +150,8 @@ def run_app(**kwargs):
         "assets_backlinked": assets_backlinked,
         "assets_not_backlinked": assets_not_backlinked,
     }
+
+    if args.write_graph:
+        output_data["graph_content"] = graph_content_bullets
 
     return output_data

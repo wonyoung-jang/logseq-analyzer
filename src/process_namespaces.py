@@ -120,7 +120,7 @@ def process_namespace_data(
 
 def get_unique_namespaces_by_level(
     namespace_parts: Dict[str, Dict[str, int]], namespace_details: Dict[str, Any], namespace_data_subset: Dict[str, Any]
-) -> Dict[int, Set[str]]:
+) -> Dict[str, Any]:
     """
     Get unique namespaces by level.
 
@@ -129,7 +129,7 @@ def get_unique_namespaces_by_level(
         namespace_details (dict): Dictionary containing details about namespaces.
 
     Returns:
-        dict: A dictionary mapping levels to sets of unique namespaces at that level.
+        dict: A dictionary containing unique namespaces at each level.
     """
     unique_namespaces_per_level = {i: set() for i in range(1, namespace_details["max_depth"] + 1)}
     for parts in namespace_parts.values():
@@ -162,7 +162,7 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
             level_distribution[level] += 1
             part_level_details[part].append(level)
 
-        sorted_parts = sorted(parts.items(), key=lambda x: x[1])
+        sorted_parts = parts.items()
 
         if sorted_parts:
             for sorted_part in sorted_parts:
@@ -255,8 +255,8 @@ def detect_parent_depth_conflicts(
 
     Returns:
         tuple: A tuple containing two dictionaries:
-            - Conflicts with non-namespace pages.
-            - Conflicts with dangling links.
+            - Conflicts with multiple levels (depths).
+            - Unique pages for each conflict.
     """
     # Mapping from namespace part to a set of levels and associated entries
     part_levels = defaultdict(set)
@@ -347,7 +347,7 @@ def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) ->
     tree = {}
     for _, parts in namespace_parts.items():
         current_level = tree
-        for part_level in sorted(parts.items(), key=lambda x: x[1]):
+        for part_level in parts.items():
             part = part_level[0]
             if part not in current_level:
                 current_level[part] = {}
