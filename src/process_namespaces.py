@@ -56,8 +56,8 @@ def process_namespace_data(
     # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
 
-    # Analyze namespace parts
-    unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
+    # Extract unique namespace parts
+    unique_namespace_parts = extract_unique_namespace_parts(namespace_parts)
 
     ##################################
     # 01 Conflicts With Existing Pages
@@ -257,7 +257,7 @@ def detect_parent_depth_conflicts(
     return output_conflicts, unique_conflicts
 
 
-def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) -> Set[str]:
+def extract_unique_namespace_parts(namespace_parts: Dict[str, Dict[str, int]]) -> Set[str]:
     """
     Analyze the levels of namespace parts across all entries.
 
