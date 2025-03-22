@@ -82,8 +82,6 @@ def process_namespace_data(
 
     namespace_data_subset = get_unique_namespaces_by_level(namespace_parts, namespace_details, namespace_data_subset)
 
-    namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
-
     # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_data)
 
@@ -106,8 +104,6 @@ def process_namespace_data(
             "conflicts_parent_depth": conflicts_parent_depth,
             "conflicts_parents_unique": conflicts_parents_unique,
             "namespace_part_levels": namespace_part_levels,
-            "namespace_frequency": namespace_frequency,
-            "namespace_freq_list": namespace_freq_list,
             "namespace_queries": namespace_queries,
             "namespace_hierarchy": namespace_hierarchy,
         }
@@ -184,34 +180,6 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         "root_counter": level_counter,
     }
     return details
-
-
-def analyze_namespace_frequency(
-    namespace_parts: Dict[str, Dict[str, int]],
-) -> Tuple[Dict[str, Counter], Dict[str, str]]:
-    """
-    Analyze frequency of each namespace part and their levels.
-
-    Args:
-        namespace_parts (dict): Dictionary of namespace parts per entry.
-
-    Returns:
-        tuple: A tuple containing:
-            - A dictionary mapping each namespace part to its frequency and levels.
-            - A dictionary mapping combined names to their corresponding entries.
-    """
-    frequency = {}
-    frequency_list = {}
-    for name, parts in namespace_parts.items():
-        for part, level in parts.items():
-            if part not in frequency:
-                frequency[part] = Counter()
-            frequency[part][level] += 1
-            combine_name = f"{part} ({level})"
-            if combine_name not in frequency_list:
-                frequency_list[combine_name] = ""
-            frequency_list[combine_name] += f"\n\t{name}"
-    return frequency, frequency_list
 
 
 def detect_non_namespace_conflicts(
