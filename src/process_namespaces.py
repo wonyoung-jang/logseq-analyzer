@@ -4,6 +4,9 @@ from typing import Any, Dict, List, Set, Tuple
 from src import config
 from src.core import generate_global_summary
 from .process_summary_data import extract_summary_subset_files
+from .compile_regex import compile_re_content
+
+CONTENT_RE = compile_re_content()
 
 """
 Namespace Analysis
@@ -80,7 +83,7 @@ def process_namespace_data(
     ###########################
     namespace_details = analyze_namespace_details(namespace_parts)
     namespace_data_subset = get_unique_namespaces_by_level(namespace_parts, namespace_details, namespace_data_subset)
-    namespace_queries = analyze_namespace_queries(graph_data)
+    namespace_queries = analyze_namespace_queries(graph_data, namespace_data)
 
     #################################
     ############ Testing ############
@@ -270,7 +273,7 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
     return unique_namespace_parts
 
 
-def analyze_namespace_queries(graph_data: Dict[str, Any]) -> Dict[str, Any]:
+def analyze_namespace_queries(graph_data: Dict[str, Any], namespace_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze namespace queries.
 
@@ -284,7 +287,21 @@ def analyze_namespace_queries(graph_data: Dict[str, Any]) -> Dict[str, Any]:
     for entry, data in graph_data.items():
         if data.get("namespace_queries"):
             namespace_queries[entry] = {}
-            namespace_queries[entry]["query"] = data["namespace_queries"]
+            queries = data["namespace_queries"]
+            for namespace_query in queries:
+                page_ref = CONTENT_RE["page_reference"].findall(namespace_query)
+                if len(page_ref) == 1:
+                    page_ref = page_ref[0]
+                elif len(page_ref) > 1:
+                    page_ref = page_ref[0]
+                else:
+                    continue
+                size = namespace_data.get(page_ref, {}).get("namespace_size", 0)
+                namespace_queries[entry][namespace_query] = {
+                    "namespace": page_ref,
+                    "size": size,
+                }
+
     return namespace_queries
 
 
