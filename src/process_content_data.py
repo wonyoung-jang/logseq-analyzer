@@ -18,13 +18,15 @@ def process_content_data(
             namespace_parent = namespace_parts_list[-2]
         else:
             namespace_parent = namespace_root
-        namespace_parts = {part: level + 1 for level, part in enumerate(namespace_parts_list)}
+            
+        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
         namespace_data = {
             "namespace_root": namespace_root,
             "namespace_parent": namespace_parent,
             "namespace_parts": namespace_parts,
             "namespace_level": namespace_level,
         }
+
         for key, value in namespace_data.items():
             if value:
                 data[key] = value
@@ -235,19 +237,18 @@ def post_processing_content(content_data):
             namespace_level = data["namespace_level"]
             unique_linked_references_namespaces.update([namespace_root, name])
 
-            if namespace_level > 1:
-                if namespace_root in content_data:
-                    root_level = content_data[namespace_root]["namespace_level"]
-                    direct_level = 1
-                    if direct_level > root_level:
-                        content_data[namespace_root]["namespace_level"] = direct_level
+            if namespace_root in content_data:
+                root_level = content_data[namespace_root]["namespace_level"]
+                direct_level = 1
+                if direct_level > root_level:
+                    content_data[namespace_root]["namespace_level"] = direct_level
 
-                parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
-                if parent_joined in content_data:
-                    parent_level = content_data[parent_joined]["namespace_level"]
-                    direct_level = namespace_level
-                    if direct_level > parent_level:
-                        content_data[parent_joined]["namespace_level"] = direct_level
+            parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
+            if parent_joined in content_data:
+                parent_level = content_data[parent_joined]["namespace_level"]
+                direct_level = namespace_level - 1
+                if direct_level > parent_level:
+                    content_data[parent_joined]["namespace_level"] = direct_level
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))
