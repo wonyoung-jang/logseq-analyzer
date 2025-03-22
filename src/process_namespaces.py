@@ -154,7 +154,7 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         dict: A dictionary containing various statistics about namespaces.
     """
     level_distribution = Counter()
-    root_counter = {}
+    level_counter = {}
     part_level_details = defaultdict(list)
 
     for namespace, parts in namespace_parts.items():
@@ -168,20 +168,20 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
             for sorted_part in sorted_parts:
                 part, level = sorted_part
                 if level == 0:
-                    root_counter[namespace] = part
-                if level not in root_counter:
-                    root_counter[level] = {}
-                root_counter[level][part] = root_counter[level].get(part, 0) + 1
+                    level_counter[namespace] = part
+                if level not in level_counter:
+                    level_counter[level] = {}
+                level_counter[level][part] = level_counter[level].get(part, 0) + 1
 
     max_depth = max(level_distribution) if level_distribution else 0
 
-    for k, v in root_counter.items():
-        root_counter[k] = {k: v for k, v in sorted(v.items(), key=lambda item: item[1], reverse=True)}
+    for k, v in level_counter.items():
+        level_counter[k] = {k: v for k, v in sorted(v.items(), key=lambda item: item[1], reverse=True)}
 
     details = {
         "level_distribution": dict(level_distribution),
         "max_depth": max_depth,
-        "root_counter": root_counter,
+        "root_counter": level_counter,
     }
     return details
 
