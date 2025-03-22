@@ -76,7 +76,8 @@ def process_namespace_data(
     #########################################
     # 02 Parts that Appear at Multiple Depths
     #########################################
-    conflicts_parent_depth, conflicts_parents_unique = detect_parent_depth_conflicts(namespace_parts)
+    conflicts_parent_depth = detect_parent_depth_conflicts(namespace_parts)
+    conflicts_parents_unique = get_unique_conflicts(conflicts_parent_depth)
 
     ###########################
     # 03 General Namespace Data
@@ -244,17 +245,20 @@ def detect_parent_depth_conflicts(
         for level in details["levels"]:
             output_conflicts[f"{part} {level}"] = [i["entry"] for i in details["entries"] if i["level"] == level]
 
+    return output_conflicts
+
+
+def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Set[str]]:
     unique_conflicts = {}
     for part, details in output_conflicts.items():
-        level = int(part.split(" ")[-1]) + 1
+        level = int(part.split(" ")[-1])
         unique_pages = set()
         for page in details:
             parts = page.split(config.NAMESPACE_SEP)
             up_to_level = parts[:level]
             unique_pages.add(config.NAMESPACE_SEP.join(up_to_level))
         unique_conflicts[part] = unique_pages
-
-    return output_conflicts, unique_conflicts
+    return unique_conflicts
 
 
 def extract_unique_namespace_parts(namespace_parts: Dict[str, Dict[str, int]]) -> Set[str]:

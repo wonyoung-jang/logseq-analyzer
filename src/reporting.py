@@ -115,19 +115,3 @@ def write_output(
         with out_path.open("w", encoding="utf-8") as f:
             f.write(f"{filename} | Items: {count}\n\n")
             write_recursive(f, items)
-
-
-def write_many_outputs(args, target=config.OUTPUT_DIR_TEST, **kwargs) -> None:
-    """
-    Write initial outputs for graph analysis to specified directories.
-
-    Args:
-        args (argparse.Namespace): The command line arguments.
-        **kwargs: Additional keyword arguments for output data.
-    """
-    if kwargs:
-        for name, items in kwargs.items():
-            if name == "graph_content_bullets" and args.write_graph:
-                write_output(config.DEFAULT_OUTPUT_DIR, name, items, target)
-                continue
-            write_output(config.DEFAULT_OUTPUT_DIR, name, items, target)
