@@ -32,6 +32,7 @@ class LogseqAnalyzerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
+        self.setGeometry(500, 500, 500, 500)
 
         # Central Widget and Layout
         central_widget = QWidget()
@@ -325,6 +326,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
         self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
         self.settings.setValue("write_graph", self.write_graph_checkbox.isChecked())
+        self.settings.setValue("geometry", self.saveGeometry())
 
     def load_settings(self):
         """Load settings using QSettings."""
@@ -334,6 +336,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
         self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
         self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
+        self.restoreGeometry(self.settings.value("geometry", b""))
 
 
 if __name__ == "__main__":
