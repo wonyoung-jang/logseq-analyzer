@@ -1,4 +1,5 @@
 from collections import Counter, defaultdict
+from logging import root
 from typing import Any, Dict, List, Set, Tuple
 
 from src import config
@@ -21,36 +22,39 @@ Problems:
 """
 
 
-def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_links: List[str]) -> None:
+def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]) -> None:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
     Args:
-        graph_content_data (dict): The graph content data.
-        meta_dangling_links (list): The list of dangling links.
-
-    Main outputs:
-        conflicts_non_namespace
-        conflicts_dangling
-        conflicts_parent_depth
-        conflicts_parents_unique
+        graph_data (dict): The graph content data.
+        dangling_links (list): The list of dangling links.
     """
     namespace_data_subset = {}
 
     # 01 Conflicts With Existing Pages
-    # Extract namespace parts
-    namespace_parts = {k: v["namespace_parts"] for k, v in graph_content_data.items() if v.get("namespace_parts")}
 
     # Find unique names that are not namespaces
-    content_data_not_namespaces = {k: v for k, v in graph_content_data.items() if v["namespace_level"] < 0}
-    unique_names_not_namespace = set(content_data_not_namespaces.keys())
+    content_data_not_namespaces = {k: v for k, v in graph_data.items() if not v["namespace_level"]}
+    unique_names_not_namespace = sorted(content_data_not_namespaces.keys())
+
+    # Find unique names that are namespaces
+    content_data_is_namespaces = [k for k, v in graph_data.items() if v.get("namespace_level")]
+    unique_names_is_namespace = sorted(content_data_is_namespaces)
+
+    namespace_data = {}
+    for name in unique_names_is_namespace:
+        namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k}
+
+    # Extract namespace parts
+    namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
 
     # Existing analysis: group by levels
     namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
 
     # Detecting conflicts with non-namespace pages
     potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
-    potential_dangling = unique_namespace_parts.intersection(meta_dangling_links)
+    potential_dangling = unique_namespace_parts.intersection(dangling_links)
     conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
         namespace_parts, potential_non_namespace, potential_dangling
     )
@@ -61,8 +65,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     # 03 General Namespace Data
     namespace_details = analyze_namespace_details(namespace_parts)
 
-    max_depth = namespace_details["max_depth"]
-    unique_namespaces_per_level = {i: set() for i in range(1, max_depth + 1)}
+    unique_namespaces_per_level = {i: set() for i in range(1, namespace_details["max_depth"] + 1)}
     for parts in namespace_parts.values():
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)
@@ -73,7 +76,7 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     namespace_frequency, namespace_freq_list = analyze_namespace_frequency(namespace_parts)
 
     # Namespace queries
-    namespace_queries = analyze_namespace_queries(graph_content_data)
+    namespace_queries = analyze_namespace_queries(graph_data)
 
     #################################
     ############ Testing ############
@@ -84,21 +87,25 @@ def process_namespace_data(graph_content_data: Dict[str, Any], meta_dangling_lin
     # Test format namespace hierarchy text
     namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
 
-    subset_add = {
-        "__namespace_parts": namespace_parts,
-        "namespace_part_levels": namespace_part_levels,
-        "conflicts_non_namespace": conflicts_non_namespace,
-        "conflicts_dangling": conflicts_dangling,
-        "conflicts_parent_depth": conflicts_parent_depth,
-        "conflicts_parents_unique": conflicts_parents_unique,
-        "__namespace_details": namespace_details,
-        "namespace_frequency": namespace_frequency,
-        "namespace_freq_list": namespace_freq_list,
-        "namespace_queries": namespace_queries,
-        "namespace_hierarchy": namespace_hierarchy,
-        "namespace_hierarchy_text": namespace_hierarchy_text,
-    }
-    namespace_data_subset.update(subset_add)
+    namespace_data_subset.update(
+        {
+            "__namespace_parts": namespace_parts,
+            "__namespace_data": namespace_data,
+            "unique_names_is_namespace": unique_names_is_namespace,
+            "unique_names_not_namespace": unique_names_not_namespace,
+            "namespace_part_levels": namespace_part_levels,
+            "conflicts_non_namespace": conflicts_non_namespace,
+            "conflicts_dangling": conflicts_dangling,
+            "conflicts_parent_depth": conflicts_parent_depth,
+            "conflicts_parents_unique": conflicts_parents_unique,
+            "__namespace_details": namespace_details,
+            "namespace_frequency": namespace_frequency,
+            "namespace_freq_list": namespace_freq_list,
+            "namespace_queries": namespace_queries,
+            "namespace_hierarchy": namespace_hierarchy,
+            "namespace_hierarchy_text": namespace_hierarchy_text,
+        }
+    )
 
     namespace_global_summary = generate_global_summary(namespace_data_subset)
 
@@ -116,32 +123,41 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         dict: A dictionary containing various statistics about namespaces.
     """
     level_distribution = Counter()
-    root_counter = Counter()
+    root_counter = {}
     part_level_details = defaultdict(list)
 
-    for _, parts in namespace_parts.items():
+    for namespace, parts in namespace_parts.items():
         for part, level in parts.items():
             level_distribution[level] += 1
             part_level_details[part].append(level)
 
         sorted_parts = sorted(parts.items(), key=lambda x: x[1])
+
         if sorted_parts:
-            prefix, _ = sorted_parts[0]
-            root_counter[prefix] += 1
+            for sorted_part in sorted_parts:
+                part, level = sorted_part
+                if level == 0:
+                    root_counter[namespace] = part
+                if level not in root_counter:
+                    root_counter[level] = {}
+                root_counter[level][part] = root_counter[level].get(part, 0) + 1
 
     max_depth = max(level_distribution) if level_distribution else 0
-    root_counter = {k: v for k, v in sorted(root_counter.items(), key=lambda item: item[1], reverse=True)}
+
+    for k, v in root_counter.items():
+        root_counter[k] = {k: v for k, v in sorted(v.items(), key=lambda item: item[1], reverse=True)}
 
     details = {
         "level_distribution": dict(level_distribution),
         "max_depth": max_depth,
-        "namespace_size": root_counter,
+        "root_counter": root_counter,
     }
-
     return details
 
 
-def analyze_namespace_frequency(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Counter]:
+def analyze_namespace_frequency(
+    namespace_parts: Dict[str, Dict[str, int]],
+) -> Tuple[Dict[str, Counter], Dict[str, str]]:
     """
     Analyze frequency of each namespace part and their levels.
 
@@ -149,7 +165,9 @@ def analyze_namespace_frequency(namespace_parts: Dict[str, Dict[str, int]]) -> D
         namespace_parts (dict): Dictionary of namespace parts per entry.
 
     Returns:
-        dict: A dictionary mapping each namespace part to a Counter of levels.
+        tuple: A tuple containing:
+            - A dictionary mapping each namespace part to its frequency and levels.
+            - A dictionary mapping combined names to their corresponding entries.
     """
     frequency = {}
     frequency_list = {}
@@ -261,22 +279,21 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
     return namespace_part_levels, unique_namespace_parts
 
 
-def analyze_namespace_queries(graph_content_data: Dict[str, Any]) -> Dict[str, Any]:
+def analyze_namespace_queries(graph_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze namespace queries.
 
     Args:
-        graph_content_data (dict): The graph content data.
+        graph_data (dict): The graph content data.
 
     Returns:
         dict: A dictionary mapping namespace parts to their level and associated entries
     """
     namespace_queries = {}
-    for entry, data in graph_content_data.items():
+    for entry, data in graph_data.items():
         if data.get("namespace_queries"):
-            queries = data["namespace_queries"]
-            namespace_queries[entry] = queries
-
+            namespace_queries[entry] = {}
+            namespace_queries[entry]["query"] = data["namespace_queries"]
     return namespace_queries
 
 
@@ -308,11 +325,14 @@ def format_namespace_hierarchy_text(hierarchy: Dict[str, Any], indent_level: int
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
     """
     Build a tree-like structure of namespaces.
-    Returns a nested dictionary representing the hierarchy.
+
+    Args:
+        namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
+
+    Returns:
+        dict: A tree-like structure representing the hierarchy of namespaces.
     """
     tree = {}
-
-    # Build tree structure
     for _, parts in namespace_parts.items():
         current_level = tree
         for part_level in sorted(parts.items(), key=lambda x: x[1]):
@@ -320,5 +340,4 @@ def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) ->
             if part not in current_level:
                 current_level[part] = {}
             current_level = current_level[part]
-
     return tree

@@ -58,11 +58,9 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract metadata from a file.
 
-    Metadata includes: id, name, name_secondary, file paths, dates (creation, modification),
-    time since creation, and size.
-
     Args:
         file_path (Path): The path to the file.
+        data (Dict[str, Any]): A dictionary to store metadata.
 
     Returns:
         Dict[str, Any]: A dictionary with file metadata.
