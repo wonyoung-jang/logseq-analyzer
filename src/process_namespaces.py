@@ -1,5 +1,4 @@
 from collections import Counter, defaultdict
-from logging import root
 from typing import Any, Dict, List, Set, Tuple
 
 from src import config
@@ -22,13 +21,20 @@ Problems:
 """
 
 
-def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]) -> None:
+def process_namespace_data(
+    graph_data: Dict[str, Any], dangling_links: List[str]
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
     Args:
         graph_data (dict): The graph content data.
         dangling_links (list): The list of dangling links.
+
+    Returns:
+        tuple: A tuple containing:
+            - A dictionary with namespace data and analysis results.
+            - A dictionary with a global summary of the namespace data.
     """
     namespace_data_subset = {}
 
@@ -84,26 +90,23 @@ def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]
     # Test namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
 
-    # Test format namespace hierarchy text
-    namespace_hierarchy_text = format_namespace_hierarchy_text(namespace_hierarchy)
-
     namespace_data_subset.update(
         {
-            "__namespace_parts": namespace_parts,
             "__namespace_data": namespace_data,
+            "__namespace_details": namespace_details,
+            "__namespace_parts": namespace_parts,
             "unique_names_is_namespace": unique_names_is_namespace,
             "unique_names_not_namespace": unique_names_not_namespace,
-            "namespace_part_levels": namespace_part_levels,
+            "unique_namespace_parts": unique_namespace_parts,
             "conflicts_non_namespace": conflicts_non_namespace,
             "conflicts_dangling": conflicts_dangling,
             "conflicts_parent_depth": conflicts_parent_depth,
             "conflicts_parents_unique": conflicts_parents_unique,
-            "__namespace_details": namespace_details,
+            "namespace_part_levels": namespace_part_levels,
             "namespace_frequency": namespace_frequency,
             "namespace_freq_list": namespace_freq_list,
             "namespace_queries": namespace_queries,
             "namespace_hierarchy": namespace_hierarchy,
-            "namespace_hierarchy_text": namespace_hierarchy_text,
         }
     )
 
@@ -184,18 +187,20 @@ def analyze_namespace_frequency(
 
 
 def detect_non_namespace_conflicts(
-    namespace_parts: Dict[str, Dict[str, int]], non_namespace: Set[str], dangling: List[str]
-) -> Dict[str, List[str]]:
+    namespace_parts: Dict[str, Dict[str, int]], non_namespace: Set[str], dangling: Set[str]
+) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
     """
     Check for conflicts between split namespace parts and existing non-namespace page names.
 
     Args:
         namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
-        non_namespace (set): Set of names from non-namespace pages.
-        dangling (list): List of dangling links.
+        non_namespace (set): Set of names from potential non-namespace pages.
+        dangling (set): Set of potential dangling links.
 
     Returns:
-        dict: Mapping of conflicting namespace parts to a list of entry names where the conflict occurs.
+        tuple: A tuple containing two dictionaries:
+            - Conflicts with non-namespace pages.
+            - Conflicts with dangling links.
     """
     conflicts_non_namespace = defaultdict(list)
     conflicts_dangling = defaultdict(list)
@@ -210,7 +215,9 @@ def detect_non_namespace_conflicts(
     return conflicts_non_namespace, conflicts_dangling
 
 
-def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, Any]]:
+def detect_parent_depth_conflicts(
+    namespace_parts: Dict[str, Dict[str, int]],
+) -> Tuple[Dict[str, List[str]], Dict[str, Set[str]]]:
     """
     Identify namespace parts that appear at different depths (levels) across entries.
 
@@ -219,8 +226,9 @@ def detect_parent_depth_conflicts(namespace_parts: Dict[str, Dict[str, int]]) ->
     as potential conflicts.
 
     Returns:
-        dict: Mapping of conflicting namespace parts to details including
-              the sorted levels they appear at and the list of entries with their level.
+        tuple: A tuple containing two dictionaries:
+            - Conflicts with non-namespace pages.
+            - Conflicts with dangling links.
     """
     # Mapping from namespace part to a set of levels and associated entries
     part_levels = defaultdict(set)
@@ -264,8 +272,9 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
         namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
 
     Returns:
-        dict: Mapping of namespace parts to a sorted list of levels they appear at.
-        set: Set all of unique namespace parts.
+        tuple: A tuple containing:
+            - A dictionary mapping each namespace part to its levels.
+            - A set of unique namespace parts.
     """
     namespace_part_levels = {}
     unique_namespace_parts = set()
@@ -295,31 +304,6 @@ def analyze_namespace_queries(graph_data: Dict[str, Any]) -> Dict[str, Any]:
             namespace_queries[entry] = {}
             namespace_queries[entry]["query"] = data["namespace_queries"]
     return namespace_queries
-
-
-def format_namespace_hierarchy_text(hierarchy: Dict[str, Any], indent_level: int = 0) -> str:
-    """
-    Formats a namespace hierarchy dictionary into an indented text string for visualization.
-
-    Args:
-        hierarchy (dict): The namespace hierarchy dictionary (nested dictionaries).
-        indent_level (int, optional): The current indentation level. Defaults to 0.
-
-    Returns:
-        str: A formatted text string representing the namespace hierarchy.
-    """
-    output = ""
-    indent = "    " * indent_level  # 4 spaces for indentation
-
-    # Sort keys alphabetically for consistent output
-    sorted_parts = sorted(hierarchy.keys())
-
-    for part in sorted_parts:
-        output += f"{indent}- {part}\n"  # Indented list item
-        if isinstance(hierarchy[part], dict):
-            output += format_namespace_hierarchy_text(hierarchy[part], indent_level + 1)  # Recursive call
-
-    return output
 
 
 def visualize_namespace_hierarchy(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
