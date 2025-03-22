@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Pattern
+from typing import Any, Dict, List, Pattern, Tuple
 
-from src.helpers import iter_files
-from src.process_basic_file_data import process_single_file
-from src.process_content_data import post_processing_content
-from src.process_summary_data import extract_summary_subset_content, process_summary_data, extract_summary_subset_files
+from .helpers import iter_files
+from .process_basic_file_data import process_single_file
+from .process_content_data import post_processing_content
+from .process_summary_data import extract_summary_subset_content, extract_summary_subset_files, process_summary_data
 
 
 def process_graph_files(

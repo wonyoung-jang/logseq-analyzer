@@ -1,30 +1,31 @@
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QGridLayout,
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
     QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QCheckBox,
-    QFileDialog,
-    QHBoxLayout,
+    QMainWindow,
     QMessageBox,
     QProgressBar,
-    QComboBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import QSettings
+
+from src import config
 
 from src.app import run_app
 from src.reporting import write_output
-from src import config
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -227,6 +228,8 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "target_dirs",
                 "graph_data",
                 "graph_content",
+                "content_patterns",
+                "config_patterns",
             ]
             output_summaries = [
                 "___summary_global",

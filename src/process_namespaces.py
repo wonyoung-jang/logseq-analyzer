@@ -1,9 +1,9 @@
-from collections import Counter, defaultdict
 import logging
+from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 
 from src import config
-from src.core import generate_global_summary
+from .core import generate_global_summary
 from .process_summary_data import extract_summary_subset_files
 from .compile_regex import compile_re_content
 
@@ -84,17 +84,16 @@ def process_namespace_data(
     # 03 General Namespace Data
     ###########################
     namespace_details = analyze_namespace_details(namespace_parts)
-    namespace_data_subset = get_unique_namespaces_by_level(namespace_parts, namespace_details, namespace_data_subset)
+    ns_individual_levels, ns_per_levels = get_unique_namespaces_by_level(namespace_parts, namespace_details)
     namespace_queries = analyze_namespace_queries(graph_data, namespace_data)
 
-    #################################
-    ############ Testing ############
-    #################################
-    # Test namespace hierarchy visualization
+    # Namespace hierarchy visualization
     namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
 
+    # Add all data to the namespace data subset
     namespace_data_subset.update(
         {
+            **ns_individual_levels,
             "__namespace_data": namespace_data,
             "__namespace_details": namespace_details,
             "__namespace_parts": namespace_parts,
@@ -107,7 +106,8 @@ def process_namespace_data(
             "conflicts_parents_unique": conflicts_parents_unique,
             "namespace_queries": namespace_queries,
             "namespace_hierarchy": namespace_hierarchy,
-        }
+            "unique_namespaces_per_level": ns_per_levels,
+        },
     )
 
     namespace_global_summary = generate_global_summary(namespace_data_subset)
@@ -116,8 +116,8 @@ def process_namespace_data(
 
 
 def get_unique_namespaces_by_level(
-    namespace_parts: Dict[str, Dict[str, int]], namespace_details: Dict[str, Any], namespace_data_subset: Dict[str, Any]
-) -> Dict[str, Any]:
+    namespace_parts: Dict[str, Dict[str, int]], namespace_details: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """
     Get unique namespaces by level.
 
@@ -126,18 +126,21 @@ def get_unique_namespaces_by_level(
         namespace_details (dict): Dictionary containing details about namespaces.
 
     Returns:
-        dict: A dictionary containing unique namespaces at each level.
+        tuple: A tuple containing:
+            - A dictionary with unique namespaces for each level.
+            - A dictionary with the count of unique namespaces per level.
     """
+    unique_namespaces_individual_levels = {}
     unique_namespaces_per_level = {i: set() for i in range(1, namespace_details["max_depth"] + 1)}
     for parts in namespace_parts.values():
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)
 
     for level, names in unique_namespaces_per_level.items():
-        namespace_data_subset[f"unique_namespaces_level_{level}"] = names
-    namespace_data_subset["unique_namespaces_per_level"] = {k: len(v) for k, v in unique_namespaces_per_level.items()}
+        unique_namespaces_individual_levels[f"unique_namespaces_level_{level}"] = names
+    unique_namespaces_per_level = {k: len(v) for k, v in unique_namespaces_per_level.items()}
 
-    return namespace_data_subset
+    return unique_namespaces_individual_levels, unique_namespaces_per_level
 
 
 def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

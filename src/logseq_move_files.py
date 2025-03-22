@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src import config
-from src.helpers import get_or_create_subdir
+from .helpers import get_or_create_subdir
 
 
 def create_delete_directory() -> Path:

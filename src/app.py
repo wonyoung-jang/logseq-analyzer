@@ -1,18 +1,18 @@
 from pathlib import Path
 
 from src import config
-from src.compile_regex import compile_re_content, compile_re_config
-from src.core import (
+from .compile_regex import compile_re_config, compile_re_content
+from .core import (
     core_data_analysis,
     generate_global_summary,
     generate_sorted_summary_all,
     generate_summary_subsets,
     process_graph_files,
 )
-from src.logseq_assets import handle_assets
-from src.logseq_move_files import handle_move_files, create_delete_directory
-from src.process_namespaces import process_namespace_data
-from src.setup import (
+from .logseq_assets import handle_assets
+from .logseq_move_files import create_delete_directory, handle_move_files
+from .process_namespaces import process_namespace_data
+from .setup import (
     create_log_file,
     create_output_directory,
     get_logseq_analyzer_args,
@@ -139,6 +139,8 @@ def run_app(**kwargs):
         "config_edn_data": config_edn_data,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
+        "content_patterns": content_patterns,
+        "config_patterns": config_patterns,
         # General summary
         "___summary_global": summary_global,
         "summary_data_subsets": summary_data_subsets,

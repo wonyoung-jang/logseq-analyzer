@@ -3,9 +3,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Pattern, Tuple
 
-from src.helpers import process_logseq_filename_key
-from src.process_content_data import process_content_data
-from src.logseq_uri_convert import convert_uri_to_logseq_url
+from .helpers import process_logseq_filename_key
+from .logseq_uri_convert import convert_uri_to_logseq_url
+from .process_content_data import process_content_data
 
 
 def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], Optional[str]]:
