@@ -41,24 +41,24 @@ def process_namespace_data(
             - A dictionary with namespace data and analysis results.
             - A dictionary with a global summary of the namespace data.
     """
-    namespace_data_subset = {}
-
     # Find unique names that are not namespaces
     unique_names_not_namespace = extract_summary_subset_files(graph_data, namespace_level=0)
 
     # Find unique names that are namespaces
-    content_data_is_namespaces = [k for k, v in graph_data.items() if v.get("namespace_level")]
-    unique_names_is_namespace = sorted(content_data_is_namespaces)
+    unique_names_is_namespace = sorted([k for k, v in graph_data.items() if v.get("namespace_level")])
 
     namespace_data = {}
     for name in unique_names_is_namespace:
         namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k}
 
-    # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
-
-    # Extract unique namespace parts
     unique_namespace_parts = extract_unique_namespace_parts(namespace_parts)
+    namespace_details = analyze_namespace_details(namespace_parts)
+    unique_namespaces_levels, unique_namespaces_per_level = get_unique_namespaces_by_level(
+        namespace_parts, namespace_details
+    )
+    namespace_queries = analyze_namespace_queries(graph_data, namespace_data)
+    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
 
     ##################################
     # 01 Conflicts With Existing Pages
@@ -81,19 +81,12 @@ def process_namespace_data(
     conflicts_parents_unique = get_unique_conflicts(conflicts_parent_depth)
 
     ###########################
-    # 03 General Namespace Data
+    # 03 Output Namespace Data
     ###########################
-    namespace_details = analyze_namespace_details(namespace_parts)
-    ns_individual_levels, ns_per_levels = get_unique_namespaces_by_level(namespace_parts, namespace_details)
-    namespace_queries = analyze_namespace_queries(graph_data, namespace_data)
-
-    # Namespace hierarchy visualization
-    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
-
-    # Add all data to the namespace data subset
+    namespace_data_subset = {}
     namespace_data_subset.update(
         {
-            **ns_individual_levels,
+            **unique_namespaces_levels,
             "__namespace_data": namespace_data,
             "__namespace_details": namespace_details,
             "__namespace_parts": namespace_parts,
@@ -106,7 +99,7 @@ def process_namespace_data(
             "conflicts_parents_unique": conflicts_parents_unique,
             "namespace_queries": namespace_queries,
             "namespace_hierarchy": namespace_hierarchy,
-            "unique_namespaces_per_level": ns_per_levels,
+            "unique_namespaces_per_level": unique_namespaces_per_level,
         },
     )
 
@@ -154,32 +147,16 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         dict: A dictionary containing various statistics about namespaces.
     """
     level_distribution = Counter()
-    level_counter = {}
-    part_level_details = defaultdict(list)
 
     for namespace, parts in namespace_parts.items():
         for part, level in parts.items():
             level_distribution[level] += 1
-            part_level_details[part].append(level)
-
-        sorted_parts = parts.items()
-
-        if sorted_parts:
-            for sorted_part in sorted_parts:
-                part, level = sorted_part
-                if level not in level_counter:
-                    level_counter[level] = {}
-                level_counter[level][part] = level_counter[level].get(part, 0) + 1
 
     max_depth = max(level_distribution) if level_distribution else 0
-
-    for k, v in level_counter.items():
-        level_counter[k] = {k: v for k, v in sorted(v.items(), key=lambda item: item[1], reverse=True)}
 
     details = {
         "max_depth": max_depth,
         "level_distribution": dict(level_distribution),
-        "level_counter": level_counter,
     }
     return details
 
