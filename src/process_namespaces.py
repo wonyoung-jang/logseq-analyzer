@@ -1,4 +1,5 @@
 from collections import Counter, defaultdict
+import logging
 from typing import Any, Dict, List, Set, Tuple
 
 from src import config
@@ -249,6 +250,15 @@ def detect_parent_depth_conflicts(
 
 
 def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Set[str]]:
+    """
+    Get unique conflicts for each namespace part.
+
+    Args:
+        output_conflicts (dict): Dictionary mapping namespace parts to their associated entries.
+
+    Returns:
+        dict: A dictionary mapping each namespace part to a set of unique pages.
+    """
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1])
@@ -285,26 +295,28 @@ def analyze_namespace_queries(graph_data: Dict[str, Any], namespace_data: Dict[s
         graph_data (dict): The graph content data.
 
     Returns:
-        dict: A dictionary mapping namespace parts to their level and associated entries
+        dict: A dictionary containing namespace queries and their details.
     """
     namespace_queries = {}
     for entry, data in graph_data.items():
-        if data.get("namespace_queries"):
-            namespace_queries[entry] = {}
-            queries = data["namespace_queries"]
-            for namespace_query in queries:
-                page_ref = CONTENT_RE["page_reference"].findall(namespace_query)
-                if len(page_ref) == 1:
-                    page_ref = page_ref[0]
-                elif len(page_ref) > 1:
-                    page_ref = page_ref[0]
-                else:
-                    continue
-                size = namespace_data.get(page_ref, {}).get("namespace_size", 0)
-                namespace_queries[entry][namespace_query] = {
-                    "namespace": page_ref,
-                    "size": size,
-                }
+        got_ns_queries = data.get("namespace_queries")
+        if not got_ns_queries:
+            continue
+        for q in got_ns_queries:
+            page_refs = CONTENT_RE["page_reference"].findall(q)
+            if len(page_refs) != 1:
+                logging.warning(f"Invalid references found in query: {q}")
+                continue
+
+            page_ref = page_refs[0]
+            namespace_queries[q] = namespace_queries.get(q, {})
+            namespace_queries[q]["found_in"] = namespace_queries[q].get("found_in", [])
+            namespace_queries[q]["found_in"].append(entry)
+            namespace_queries[q]["namespace"] = page_ref
+            namespace_queries[q]["size"] = namespace_data.get(page_ref, {}).get("namespace_size", 0)
+
+    # Sort the queries by size in descending order
+    namespace_queries = dict(sorted(namespace_queries.items(), key=lambda item: item[1]["size"], reverse=True))
 
     return namespace_queries
 

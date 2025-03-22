@@ -223,6 +223,7 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "alphanum_dict",
                 "alphanum_dict_ns",
                 "dangling_links",
+                "config_edn_data",
                 "target_dirs",
                 "graph_data",
                 "graph_content",

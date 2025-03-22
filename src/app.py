@@ -136,6 +136,7 @@ def run_app(**kwargs):
         "alphanum_dict": alphanum_dict,
         "alphanum_dict_ns": alphanum_dict_ns,
         "dangling_links": dangling_links,
+        "config_edn_data": config_edn_data,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
         # General summary
