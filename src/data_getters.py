@@ -136,6 +136,16 @@ def get_content_data(item):
     return content_data
 
 
+def get_namespace_data(item):
+    namespace_data = {}
+    namespace_data["namespace_parts"] = item.get("namespace_parts", {})
+    namespace_data["namespace_level"] = item.get("namespace_level", 0)
+    namespace_data["namespace_root"] = item.get("namespace_root", "")
+    namespace_data["namespace_parent"] = item.get("namespace_parent", "")
+    namespace_data["namespace_queries"] = item.get("namespace_queries", [])
+    return namespace_data
+
+
 def get_summary_data(item):
     summary_data = {}
     summary_data["file_type"] = item.get("file_type", "")

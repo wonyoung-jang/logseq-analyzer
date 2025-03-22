@@ -203,21 +203,19 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List
     return sorted_subset, sorted_subset_counter
 
 
-def extract_summary_subset_files(graph_summary_data: Dict[str, Any], **criteria) -> List[str]:
+def extract_summary_subset_files(graph_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     Asks: What files match the criteria?
 
     Args:
-        graph_summary_data (Dict[str, Any]): The complete summary data.
+        graph_data (Dict[str, Any]): The complete summary data.
         **criteria: Keyword arguments specifying the criteria for subset extraction.
 
     Returns:
         List[str]: A list of keys from the summary data that match the criteria.
     """
-    subset = {
-        k: v for k, v in graph_summary_data.items() if all(v.get(key) == expected for key, expected in criteria.items())
-    }
+    subset = {k: v for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}
     sorted_subset = sorted(subset.keys())
 
     return sorted_subset
