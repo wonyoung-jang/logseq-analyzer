@@ -10,19 +10,23 @@ def process_content_data(
 ) -> Dict[str, Any]:
     # Process namespaces
     data["namespace_level"] = 0
+    data["namespace_children"] = set()
+    data["namespace_size"] = 0
     if config.NAMESPACE_SEP in data["name"]:
         namespace_parts_list = data["name"].split(config.NAMESPACE_SEP)
         namespace_level = len(namespace_parts_list)
         namespace_root = namespace_parts_list[0]
+        namespace_stem = namespace_parts_list[-1]
         if namespace_level > 2:
             namespace_parent = namespace_parts_list[-2]
         else:
             namespace_parent = namespace_root
-            
+
         namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
         namespace_data = {
             "namespace_root": namespace_root,
             "namespace_parent": namespace_parent,
+            "namespace_stem": namespace_stem,
             "namespace_parts": namespace_parts,
             "namespace_level": namespace_level,
         }
@@ -242,6 +246,8 @@ def post_processing_content(content_data):
                 direct_level = 1
                 if direct_level > root_level:
                     content_data[namespace_root]["namespace_level"] = direct_level
+                content_data[namespace_root]["namespace_children"].add(name)
+                content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
 
             parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
             if parent_joined in content_data:
@@ -249,6 +255,8 @@ def post_processing_content(content_data):
                 direct_level = namespace_level - 1
                 if direct_level > parent_level:
                     content_data[parent_joined]["namespace_level"] = direct_level
+                content_data[parent_joined]["namespace_children"].add(name)
+                content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))

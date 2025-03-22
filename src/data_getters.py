@@ -28,8 +28,11 @@ def init_data() -> Dict[str, Any]:
         "aliases": [],
         "namespace_root": "",
         "namespace_parent": "",
+        "namespace_stem": "",
         "namespace_parts": {},
         "namespace_level": 0,
+        "namespace_children": {},
+        "namespace_size": 0,
         "page_references": [],
         "tagged_backlinks": [],
         "tags": [],
@@ -100,8 +103,11 @@ def get_content_data(item):
     content_data["aliases"] = item.get("aliases", [])
     content_data["namespace_root"] = item.get("namespace_root", "")
     content_data["namespace_parent"] = item.get("namespace_parent", "")
+    content_data["namespace_stem"] = item.get("namespace_stem", "")
     content_data["namespace_parts"] = item.get("namespace_parts", {})
     content_data["namespace_level"] = item.get("namespace_level", 0)
+    content_data["namespace_children"] = item.get("namespace_children", {})
+    content_data["namespace_size"] = item.get("namespace_size", 0)
     content_data["page_references"] = item.get("page_references", [])
     content_data["tagged_backlinks"] = item.get("tagged_backlinks", [])
     content_data["tags"] = item.get("tags", [])
@@ -138,11 +144,14 @@ def get_content_data(item):
 
 def get_namespace_data(item):
     namespace_data = {}
-    namespace_data["namespace_parts"] = item.get("namespace_parts", {})
-    namespace_data["namespace_level"] = item.get("namespace_level", 0)
     namespace_data["namespace_root"] = item.get("namespace_root", "")
     namespace_data["namespace_parent"] = item.get("namespace_parent", "")
+    namespace_data["namespace_stem"] = item.get("namespace_stem", "")
+    namespace_data["namespace_parts"] = item.get("namespace_parts", {})
+    namespace_data["namespace_level"] = item.get("namespace_level", 0)
+    namespace_data["namespace_children"] = item.get("namespace_children", {})
     namespace_data["namespace_queries"] = item.get("namespace_queries", [])
+    namespace_data["namespace_size"] = item.get("namespace_size", 0)
     return namespace_data
 
 
@@ -167,6 +176,7 @@ def get_numeric_data(item):
     numeric_data["bullet_count"] = item.get("bullet_count", 0)
     numeric_data["bullet_density"] = item.get("bullet_density", 0)
     numeric_data["namespace_level"] = item.get("namespace_level", 0)
+    numeric_data["namespace_size"] = item.get("namespace_size", 0)
     return numeric_data
 
 

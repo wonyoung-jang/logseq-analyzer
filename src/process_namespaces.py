@@ -79,10 +79,7 @@ def process_namespace_data(
     # 03 General Namespace Data
     ###########################
     namespace_details = analyze_namespace_details(namespace_parts)
-
     namespace_data_subset = get_unique_namespaces_by_level(namespace_parts, namespace_details, namespace_data_subset)
-
-    # Namespace queries
     namespace_queries = analyze_namespace_queries(graph_data)
 
     #################################
@@ -163,8 +160,6 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         if sorted_parts:
             for sorted_part in sorted_parts:
                 part, level = sorted_part
-                if level == 0:
-                    level_counter[namespace] = part
                 if level not in level_counter:
                     level_counter[level] = {}
                 level_counter[level][part] = level_counter[level].get(part, 0) + 1
@@ -175,9 +170,9 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
         level_counter[k] = {k: v for k, v in sorted(v.items(), key=lambda item: item[1], reverse=True)}
 
     details = {
-        "level_distribution": dict(level_distribution),
         "max_depth": max_depth,
-        "root_counter": level_counter,
+        "level_distribution": dict(level_distribution),
+        "level_counter": level_counter,
     }
     return details
 
