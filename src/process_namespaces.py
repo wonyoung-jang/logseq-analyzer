@@ -53,8 +53,8 @@ def process_namespace_data(
     # Extract namespace parts
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
 
-    # Existing analysis: group by levels
-    namespace_part_levels, unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
+    # Analyze namespace parts
+    unique_namespace_parts = analyze_namespace_part_levels(namespace_parts)
 
     ##################################
     # 01 Conflicts With Existing Pages
@@ -100,7 +100,6 @@ def process_namespace_data(
             "conflicts_dangling": conflicts_dangling,
             "conflicts_parent_depth": conflicts_parent_depth,
             "conflicts_parents_unique": conflicts_parents_unique,
-            "namespace_part_levels": namespace_part_levels,
             "namespace_queries": namespace_queries,
             "namespace_hierarchy": namespace_hierarchy,
         }
@@ -255,7 +254,7 @@ def detect_parent_depth_conflicts(
     return output_conflicts, unique_conflicts
 
 
-def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) -> Tuple[Dict[str, List[int]], Set[str]]:
+def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) -> Set[str]:
     """
     Analyze the levels of namespace parts across all entries.
 
@@ -263,20 +262,12 @@ def analyze_namespace_part_levels(namespace_parts: Dict[str, Dict[str, int]]) ->
         namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
 
     Returns:
-        tuple: A tuple containing:
-            - A dictionary mapping each namespace part to its levels.
-            - A set of unique namespace parts.
+        set: A set of unique namespace parts.
     """
-    namespace_part_levels = {}
     unique_namespace_parts = set()
     for parts in namespace_parts.values():
-        for k, v in parts.items():
-            namespace_part_levels.setdefault(k, set()).add(v)
-            unique_namespace_parts.add(k)
-    namespace_part_levels = {
-        k: sorted(v) for k, v in sorted(namespace_part_levels.items(), key=lambda item: len(item[1]), reverse=True)
-    }
-    return namespace_part_levels, unique_namespace_parts
+        unique_namespace_parts.update(parts.keys())
+    return unique_namespace_parts
 
 
 def analyze_namespace_queries(graph_data: Dict[str, Any]) -> Dict[str, Any]:
