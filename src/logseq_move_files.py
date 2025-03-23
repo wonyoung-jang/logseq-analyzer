@@ -24,7 +24,7 @@ def create_delete_directory() -> Path:
 
 def handle_move_files(
     args: argparse.Namespace, graph_meta_data: dict, assets: dict, bak: Path, recycle: Path, to_delete_dir: Path
-) -> None:
+) -> Dict[str, List[str]]:
     """
     Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
@@ -35,6 +35,9 @@ def handle_move_files(
         bak (Path): The path to the bak directory.
         recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
+    
+    Returns:
+        Dict[str, List[str]]: A dictionary containing lists of moved files.
     """
     moved_files = {}
 

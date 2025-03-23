@@ -121,9 +121,9 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
-    moved_files = None
-    assets_backlinked = None
-    assets_not_backlinked = None
+    moved_files = {}
+    assets_backlinked = {}
+    assets_not_backlinked = {}
     if move:
         # Create delete directory
         to_delete_dir = create_delete_directory()
