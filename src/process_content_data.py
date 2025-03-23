@@ -6,7 +6,10 @@ from src import config
 
 
 def process_content_data(
-    data: Dict[str, Any], content: str, patterns: Dict[str, Pattern], primary_bullet
+    data: Dict[str, Any],
+    content: str,
+    patterns: Dict[str, Pattern],
+    primary_bullet: Dict[str, Any],
 ) -> Dict[str, Any]:
     # Process namespaces
     data["namespace_level"] = 0
@@ -228,6 +231,7 @@ def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
 
 
 def post_processing_content(content_data):
+    all_linked_references = dict()
     unique_linked_references = set()
     unique_linked_references_namespaces = set()
     unique_aliases = set()
@@ -260,8 +264,9 @@ def post_processing_content(content_data):
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))
-        unique_linked_references.update(
-            unique_aliases,
+
+        linked_references = [
+            list(unique_aliases),
             data.get("draws", []),
             data.get("page_references", []),
             data.get("tags", []),
@@ -270,7 +275,20 @@ def post_processing_content(content_data):
             data.get("properties_page_user", []),
             data.get("properties_block_builtin", []),
             data.get("properties_block_user", []),
-        )
+            [
+                data.get("namespace_parent", ""),
+            ],
+        ]
+
+        linked_references = [item for sublist in linked_references for item in sublist if item]
+
+        for item in linked_references:
+            all_linked_references[item] = all_linked_references.get(item, {})
+            all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
+            all_linked_references[item]["found_in"] = all_linked_references[item].get("found_in", [])
+            all_linked_references[item]["found_in"].append(name)
+
+        unique_linked_references.update(linked_references)
 
     # Create alphanum lookups and identify dangling links
     unique_filenames = set(sorted(content_data.keys()))
@@ -282,4 +300,4 @@ def post_processing_content(content_data):
     alphanum_dict = create_alphanum(unique_linked_references)
     alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 
-    return content_data, alphanum_dict, alphanum_dict_ns, dangling_links
+    return content_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_linked_references

@@ -231,6 +231,8 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "graph_content",
                 "content_patterns",
                 "config_patterns",
+                "all_refs",
+                "dangling_dict",
             ]
             output_summaries = [
                 "___summary_global",

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from src import config
+from .process_dangling_links import process_dangling_links
 from .compile_regex import compile_re_config, compile_re_content
 from .core import (
     core_data_analysis,
@@ -86,7 +87,11 @@ def run_app(**kwargs):
         alphanum_dict_ns,
         dangling_links,
         graph_data,
+        all_refs,
     ) = core_data_analysis(graph_data)
+
+    # TODO Test dangling links
+    dangling_dict = process_dangling_links(all_refs, dangling_links)
 
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
@@ -141,6 +146,8 @@ def run_app(**kwargs):
         "graph_data": graph_data,
         "content_patterns": content_patterns,
         "config_patterns": config_patterns,
+        "all_refs": all_refs,
+        "dangling_dict": dangling_dict,
         # General summary
         "___summary_global": summary_global,
         "summary_data_subsets": summary_data_subsets,

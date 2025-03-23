@@ -51,7 +51,7 @@ def core_data_analysis(
     Returns:
         Tuple[dict, dict, dict, dict]: The core data analysis results.
     """
-    graph_data, alphanum_dict, alphanum_dict_ns, dangling_links = post_processing_content(graph_data)
+    graph_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_refs = post_processing_content(graph_data)
     graph_data = process_summary_data(graph_data, alphanum_dict, alphanum_dict_ns)
 
     return (
@@ -59,6 +59,7 @@ def core_data_analysis(
         alphanum_dict_ns,
         dangling_links,
         graph_data,
+        all_refs,
     )
 
 
