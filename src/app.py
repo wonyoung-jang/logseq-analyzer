@@ -91,6 +91,9 @@ def run_app(**kwargs):
         all_refs,
     ) = core_data_analysis(graph_data)
 
+    # Namespaces analysis
+    summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
+
     # TODO Test dangling links
     dangling_dict = process_dangling_links(all_refs, dangling_links)
 
@@ -113,20 +116,10 @@ def run_app(**kwargs):
 
     if gui_instance:
         gui_instance.update_progress(summary_phase, 100)
-        gui_instance.update_progress(namespaces_phase, 20)
-
-    ################################################################
-    # Phase 04: Process namespaces
-    ################################################################
-    # Namespaces analysis
-    summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
-
-    if gui_instance:
-        gui_instance.update_progress(namespaces_phase, 100)
         gui_instance.update_progress(move_files_phase, 20)
 
     #####################################################################
-    # Phase 05: Move files to a delete directory (optional)
+    # Phase 04: Move files to a delete directory (optional)
     #####################################################################
     moved_files = None
     assets_backlinked = None

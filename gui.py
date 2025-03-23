@@ -96,11 +96,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.summary_progress_bar.setValue(0)
         form_layout.addRow("Summarizing:", self.summary_progress_bar)
 
-        self.namespaces_progress_bar = QProgressBar()
-        self.namespaces_progress_bar.setRange(0, 100)
-        self.namespaces_progress_bar.setValue(0)
-        form_layout.addRow("Namespaces:", self.namespaces_progress_bar)
-
         self.move_files_progress_bar = QProgressBar()
         self.move_files_progress_bar.setRange(0, 100)
         self.move_files_progress_bar.setValue(0)
@@ -214,7 +209,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.setup_progress_bar.setValue(0)
         self.process_files_progress_bar.setValue(0)
         self.summary_progress_bar.setValue(0)
-        self.namespaces_progress_bar.setValue(0)
         self.move_files_progress_bar.setValue(0)
         QApplication.processEvents()
 
@@ -298,8 +292,6 @@ class LogseqAnalyzerGUI(QMainWindow):
             progress_bar = self.process_files_progress_bar
         elif phase_name == "summary":
             progress_bar = self.summary_progress_bar
-        elif phase_name == "namespaces":
-            progress_bar = self.namespaces_progress_bar
         elif phase_name == "move_files":
             progress_bar = self.move_files_progress_bar
 
