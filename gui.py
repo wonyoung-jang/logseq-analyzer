@@ -233,6 +233,10 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "config_patterns",
                 "all_refs",
                 "dangling_dict",
+                "set_all_prop_values_builtin",
+                "set_all_prop_values_user",
+                "sorted_all_props_builtin",
+                "sorted_all_props_user",
             ]
             output_summaries = [
                 "___summary_global",

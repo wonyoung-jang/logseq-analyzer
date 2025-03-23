@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from src import config
+from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
 from .compile_regex import compile_re_config, compile_re_content
 from .core import (
@@ -93,6 +94,11 @@ def run_app(**kwargs):
     # TODO Test dangling links
     dangling_dict = process_dangling_links(all_refs, dangling_links)
 
+    # TODO Test properties
+    set_all_prop_values_builtin, set_all_prop_values_user, sorted_all_props_builtin, sorted_all_props_user = (
+        process_properties(graph_data)
+    )
+
     if gui_instance:
         gui_instance.update_progress(process_files_phase, 100)
         gui_instance.update_progress(summary_phase, 20)
@@ -148,6 +154,11 @@ def run_app(**kwargs):
         "config_patterns": config_patterns,
         "all_refs": all_refs,
         "dangling_dict": dangling_dict,
+        # Properties
+        "set_all_prop_values_builtin": set_all_prop_values_builtin,
+        "set_all_prop_values_user": set_all_prop_values_user,
+        "sorted_all_props_builtin": sorted_all_props_builtin,
+        "sorted_all_props_user": sorted_all_props_user,
         # General summary
         "___summary_global": summary_global,
         "summary_data_subsets": summary_data_subsets,
