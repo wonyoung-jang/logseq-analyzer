@@ -3,7 +3,10 @@ import logging
 from pathlib import Path
 from typing import Any, TextIO
 
-from src import config
+from .config_loader import get_config
+
+
+CONFIG_INI = get_config()
 
 
 def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
@@ -62,7 +65,6 @@ def write_output(
     filename_prefix: str,
     items: Any,
     type_output="",
-    output_format="txt",
 ) -> None:
     """
     Write the output to a file using a recursive helper to handle nested structures.
@@ -72,10 +74,12 @@ def write_output(
         filename_prefix (str): The prefix of the filename.
         items (Any): The items to write.
         type_output (str, optional): The type of output. Defaults to "".
-        output_format (str, optional): The format of the output file. Defaults to "txt".
     """
+    json_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT_JSON")
+    txt_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT_TXT")
+    output_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT")
+
     logging.info(f"Writing {filename_prefix} as {output_format}")
-    output_format = config.REPORT_FORMAT
     count = len(items)
     filename = f"{filename_prefix}{output_format}" if count else f"{filename_prefix}_EMPTY{output_format}"
     output_dir = Path(output_dir)
@@ -92,7 +96,7 @@ def write_output(
         f.write(f"{filename} | Items: {count}\n\n")
         write_recursive(f, items)
 
-    if output_format == config.REPORT_FORMAT_JSON:
+    if output_format == json_format:
         try:
             with out_path.open("w", encoding="utf-8") as f:
                 json.dump(items, f, indent=4)
@@ -100,13 +104,13 @@ def write_output(
             logging.error(f"Failed to write JSON for {filename_prefix}.")
             if out_path.exists():
                 out_path.unlink()
-            filename = f"{filename_prefix}{config.REPORT_FORMAT_TXT}"
+            filename = f"{filename_prefix}{txt_format}"
             if type_output:
                 out_path = Path(parent) / filename
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 write_recursive(f, items)
-    elif output_format == config.REPORT_FORMAT_TXT:
+    elif output_format == txt_format:
         with out_path.open("w", encoding="utf-8") as f:
             f.write(f"{filename} | Items: {count}\n\n")
             write_recursive(f, items)

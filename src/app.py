@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src import config
+from .config_loader import get_config
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
 from .compile_regex import compile_re_config, compile_re_content
@@ -25,6 +25,8 @@ from .setup import (
     validate_path,
 )
 
+CONFIG_INI = get_config()
+
 
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
@@ -34,7 +36,6 @@ def run_app(**kwargs):
     setup_phase = "setup"
     process_files_phase = "process_files"
     summary_phase = "summary"
-    namespaces_phase = "namespaces"
     move_files_phase = "move_files"
     gui_instance = kwargs.get(gui_inst)
 
@@ -58,9 +59,12 @@ def run_app(**kwargs):
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
     validate_path(logseq_graph_dir)
-    logseq_dir = get_sub_file_or_folder(logseq_graph_dir, config.DEFAULT_LOGSEQ_DIR)
-    recycle_dir = get_sub_file_or_folder(logseq_dir, config.DEFAULT_RECYCLE_DIR)
-    bak_dir = get_sub_file_or_folder(logseq_dir, config.DEFAULT_BAK_DIR)
+    def_ls_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
+    def_rec_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
+    def_bak_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "BAK_DIR")
+    logseq_dir = get_sub_file_or_folder(logseq_graph_dir, def_ls_dir)
+    recycle_dir = get_sub_file_or_folder(logseq_dir, def_rec_dir)
+    bak_dir = get_sub_file_or_folder(logseq_dir, def_bak_dir)
 
     # Compile regex patterns
     content_patterns = compile_re_content()
@@ -70,7 +74,7 @@ def run_app(**kwargs):
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
-    config.REPORT_FORMAT = args.report_format
+    CONFIG_INI.set("REPORTING", "REPORT_FORMAT", args.report_format)
 
     if gui_instance:
         gui_instance.update_progress(setup_phase, 100)

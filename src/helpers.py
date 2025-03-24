@@ -5,6 +5,10 @@ from typing import Generator, Set
 from urllib.parse import unquote
 
 from src import config
+from .config_loader import get_config
+
+
+CONFIG_INI = get_config()
 
 
 def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
@@ -99,6 +103,7 @@ def convert_cljs_date_to_py(cljs_format: str) -> str:
         return config.DATETIME_TOKEN_MAP.get(token, token)
 
     py_format = config.DATETIME_TOKEN_PATTERN.sub(replace_token, cljs_format)
+
     return py_format
 
 
@@ -121,14 +126,16 @@ def process_logseq_journal_key(key: str) -> str:
     Returns:
         str: Processed page title.
     """
-    py_file_name_format = convert_cljs_date_to_py(config.JOURNAL_FILE_NAME_FORMAT)
-    py_page_title_no_ordinal = config.JOURNAL_PAGE_TITLE_FORMAT.replace("o", "")
+    journal_page_format = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
+    py_file_name_format = convert_cljs_date_to_py(journal_file_format)
+    py_page_title_no_ordinal = journal_page_format.replace("o", "")
     py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)
         page_title_base = date_object.strftime(py_page_title_format_base).lower()
-        if "o" in config.JOURNAL_PAGE_TITLE_FORMAT:
+        if "o" in journal_page_format:
             day_number = date_object.day
             day_with_ordinal = add_ordinal_suffix_to_day_of_month(day_number)
             page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
@@ -155,9 +162,14 @@ def process_logseq_filename_key(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    if key.endswith(config.NAMESPACE_FILE_SEP):
-        key = key.rstrip(config.NAMESPACE_FILE_SEP)
+    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
+    ns_file_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP")
+    dir_journals = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
 
-    if parent == config.DIR_JOURNALS:
+    if key.endswith(ns_file_sep):
+        key = key.rstrip(ns_file_sep)
+
+    if parent == dir_journals:
         return process_logseq_journal_key(key)
-    return unquote(key).replace(config.NAMESPACE_FILE_SEP, config.NAMESPACE_SEP).lower()
+
+    return unquote(key).replace(ns_file_sep, ns_sep).lower()

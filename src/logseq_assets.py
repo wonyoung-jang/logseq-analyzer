@@ -10,7 +10,7 @@ def handle_assets(graph_data: dict, summary_data_subsets: dict) -> Tuple[dict, d
     Args:
         graph_data (dict): The graph data.
         summary_data_subsets (dict): The summary data subsets.
-        
+
     Returns:
         Tuple[dict, dict]: Two dictionaries containing assets that are backlinked and not backlinked.
     """

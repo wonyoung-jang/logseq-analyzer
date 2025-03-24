@@ -2,7 +2,9 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
-from src import config
+from .config_loader import get_config
+
+CONFIG_INI = get_config()
 
 
 def process_content_data(
@@ -12,11 +14,12 @@ def process_content_data(
     primary_bullet: Dict[str, Any],
 ) -> Dict[str, Any]:
     # Process namespaces
+    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     data["namespace_level"] = 0
     data["namespace_children"] = set()
     data["namespace_size"] = 0
-    if config.NAMESPACE_SEP in data["name"]:
-        namespace_parts_list = data["name"].split(config.NAMESPACE_SEP)
+    if ns_sep in data["name"]:
+        namespace_parts_list = data["name"].split(ns_sep)
         namespace_level = len(namespace_parts_list)
         namespace_root = namespace_parts_list[0]
         namespace_stem = namespace_parts_list[-1]
@@ -77,7 +80,7 @@ def process_content_data(
         page_properties = find_all_lower(patterns["property"], primary_bullet)
         content = content.replace(primary_bullet, "")
     block_properties = find_all_lower(patterns["property"], content)
-    built_in_props = config.BUILT_IN_PROPERTIES
+    built_in_props = frozenset(CONFIG_INI.get("BUILT_IN_PROPERTIES", "PROPERTIES").split(","))
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
     properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, built_in_props)
 
@@ -237,10 +240,11 @@ def post_processing_content(content_data):
     unique_aliases = set()
 
     # Process each file's content
+    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     for name, data in content_data.items():
         # Process namespaces
-        if config.NAMESPACE_SEP in name:
-            namespace_parts_list = name.split(config.NAMESPACE_SEP)
+        if ns_sep in name:
+            namespace_parts_list = name.split(ns_sep)
             namespace_root = data["namespace_root"]
             namespace_level = data["namespace_level"]
             unique_linked_references_namespaces.update([namespace_root, name])
@@ -253,7 +257,7 @@ def post_processing_content(content_data):
                 content_data[namespace_root]["namespace_children"].add(name)
                 content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
 
-            parent_joined = config.NAMESPACE_SEP.join(namespace_parts_list[:-1])
+            parent_joined = ns_sep.join(namespace_parts_list[:-1])
             if parent_joined in content_data:
                 parent_level = content_data[parent_joined]["namespace_level"]
                 direct_level = namespace_level - 1

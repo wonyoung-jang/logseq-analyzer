@@ -4,8 +4,12 @@ import shutil
 from pathlib import Path
 from typing import Set
 
-from src import config
+
+from .config_loader import get_config
 from .helpers import get_sub_file_or_folder
+
+
+CONFIG_INI = get_config()
 
 
 def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
@@ -94,7 +98,7 @@ def create_output_directory() -> Path:
     Returns:
         Path: The output directory path.
     """
-    output_dir = Path(config.DEFAULT_OUTPUT_DIR)
+    output_dir = Path(CONFIG_INI.get("DEFAULT", "OUTPUT_DIR"))
 
     if output_dir.exists() and output_dir.is_dir():
         try:
@@ -116,8 +120,9 @@ def create_log_file() -> None:
     """
     Setup logging configuration for the Logseq Analyzer.
     """
-    output = Path(config.DEFAULT_OUTPUT_DIR)
-    log_file = Path(output / config.DEFAULT_LOG_FILE)
+    output_dir = Path(CONFIG_INI.get("DEFAULT", "OUTPUT_DIR"))
+    log_path = CONFIG_INI.get("DEFAULT", "LOG_FILE")
+    log_file = Path(output_dir / log_path)
 
     if Path.exists(log_file):
         Path.unlink(log_file)
@@ -170,13 +175,22 @@ def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: d
         logging.warning("No config.edn content found.")
         return {}
 
-    config_edn_data = {k: None for k, v in config.CONFIG_EDN_DATA.items()}
+    config_edn_data = {
+        "journal_page_title_format": None,
+        "journal_file_name_format": None,
+        "journals_directory": None,
+        "pages_directory": None,
+        "whiteboards_directory": None,
+        "file_name_format": None,
+    }
+
     for key in config_edn_data.keys():
         pattern = config_patterns.get(f"{key}_pattern")
         if pattern:
             match = pattern.search(config_edn_content)
             if match:
                 config_edn_data[key] = match.group(1)
+
     config_edn_data = {k: v for k, v in config_edn_data.items() if v is not None}
 
     return config_edn_data
@@ -194,15 +208,28 @@ def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict
     Returns:
         dict: A dictionary containing the extracted configuration data.
     """
-    config_file = get_sub_file_or_folder(logseq_dir, config.DEFAULT_CONFIG_FILE)
+    logseq_default_config_edn_data = {
+        "journal_page_title_format": "MMM do, yyyy",
+        "journal_file_name_format": "yyyy_MM_dd",
+        "journals_directory": "journals",
+        "pages_directory": "pages",
+        "whiteboards_directory": "whiteboards",
+        "file_name_format": ":legacy",
+    }
+
+    def_config_file = CONFIG_INI.get("LOGSEQ_STRUCTURE", "CONFIG_FILE")
+    config_file = get_sub_file_or_folder(logseq_dir, def_config_file)
     config_edn_content = clean_logseq_config_edn_content(config_file)
     config_edn_data = get_config_edn_data_for_analysis(config_edn_content, config_patterns)
-    config_edn_data = {**config.CONFIG_EDN_DATA, **config_edn_data}
+    config_edn_data = {**logseq_default_config_edn_data, **config_edn_data}
+
     if args.global_config:
-        global_config_edn_file = config.GLOBAL_CONFIG_FILE = Path(args.global_config)
+        global_config_edn_file = Path(args.global_config)
+        CONFIG_INI.set("LOGSEQ_STRUCTURE", "GLOBAL_CONFIG_FILE", args.global_config)
         global_config_edn_content = clean_logseq_config_edn_content(global_config_edn_file)
         global_config_edn_data = get_config_edn_data_for_analysis(global_config_edn_content, config_patterns)
         config_edn_data = {**config_edn_data, **global_config_edn_data}
+
     return config_edn_data
 
 
@@ -213,14 +240,15 @@ def set_logseq_config_edn_data(config_edn_data: dict) -> None:
     Args:
         config_edn_data (dict): The configuration data.
     """
-    config.JOURNAL_PAGE_TITLE_FORMAT = config_edn_data["journal_page_title_format"]
-    config.JOURNAL_FILE_NAME_FORMAT = config_edn_data["journal_file_name_format"]
-    config.DIR_PAGES = config_edn_data["pages_directory"]
-    config.DIR_JOURNALS = config_edn_data["journals_directory"]
-    config.DIR_WHITEBOARDS = config_edn_data["whiteboards_directory"]
-    config.NAMESPACE_FORMAT = config_edn_data["file_name_format"]
-    if config.NAMESPACE_FORMAT == ":triple-lowbar":
-        config.NAMESPACE_FILE_SEP = "___"
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT", config_edn_data["journal_page_title_format"])
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT", config_edn_data["journal_file_name_format"])
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES", config_edn_data["pages_directory"])
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS", config_edn_data["journals_directory"])
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS", config_edn_data["whiteboards_directory"])
+    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
+    ns_fmt = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT")
+    if ns_fmt == ":triple-lowbar":
+        CONFIG_INI.set("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP", "___")
 
 
 def get_logseq_target_dirs() -> Set[str]:
@@ -234,11 +262,11 @@ def get_logseq_target_dirs() -> Set[str]:
         Set[str]: A set of target directories.
     """
     target_dirs = {
-        config.DIR_ASSETS,
-        config.DIR_DRAWS,
-        config.DIR_JOURNALS,
-        config.DIR_PAGES,
-        config.DIR_WHITEBOARDS,
+        CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS"),
+        CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS"),
+        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS"),
+        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES"),
+        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS"),
     }
 
     return target_dirs

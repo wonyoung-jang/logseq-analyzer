@@ -4,8 +4,11 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src import config
 from .helpers import get_or_create_subdir
+from .config_loader import get_config
+
+
+CONFIG_INI = get_config()
 
 
 def create_delete_directory() -> Path:
@@ -15,7 +18,7 @@ def create_delete_directory() -> Path:
     Returns:
         Path: The path to the delete directory.
     """
-    delete_dir = Path(config.DEFAULT_TO_DELETE_DIR)
+    delete_dir = Path(CONFIG_INI.get("DEFAULT", "TO_DELETE_DIR"))
     if not delete_dir.exists():
         logging.info(f"Creating directory: {delete_dir}")
         delete_dir.mkdir(parents=True, exist_ok=True)
@@ -35,10 +38,12 @@ def handle_move_files(
         bak (Path): The path to the bak directory.
         recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
-    
+
     Returns:
         Dict[str, List[str]]: A dictionary containing lists of moved files.
     """
+    def_bak_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "DEFAULT_BAK_DIR")
+    def_rec_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "DEFAULT_RECYCLE_DIR")
     moved_files = {}
 
     if args.move_unlinked_assets:
@@ -47,12 +52,12 @@ def handle_move_files(
             moved_files["moved_assets"] = moved_assets
 
     if args.move_bak:
-        moved_bak = move_all_folder_content(bak, to_delete_dir, config.DEFAULT_BAK_DIR)
+        moved_bak = move_all_folder_content(bak, to_delete_dir, def_bak_dir)
         if moved_bak:
             moved_files["moved_bak"] = moved_bak
 
     if args.move_recycle:
-        moved_recycle = move_all_folder_content(recycle, to_delete_dir, config.DEFAULT_RECYCLE_DIR)
+        moved_recycle = move_all_folder_content(recycle, to_delete_dir, def_rec_dir)
         if moved_recycle:
             moved_files["moved_recycle"] = moved_recycle
 
@@ -113,7 +118,8 @@ def move_unlinked_assets(
     Returns:
         List[str]: List of moved asset names.
     """
-    to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, config.DIR_ASSETS)
+    asset_dir = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS")
+    to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, asset_dir)
 
     moved_assets = []
     for name in summary_is_asset_not_backlinked:

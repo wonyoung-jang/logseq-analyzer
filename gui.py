@@ -22,10 +22,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src import config
-
 from src.app import run_app
 from src.reporting import write_output
+from src.config_loader import get_config
+
+
+CONFIG_INI = get_config()
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -33,6 +35,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
         self.setGeometry(500, 500, 500, 500)
+        self.output_dir = CONFIG_INI.get("DEFAULT", "OUTPUT_DIR")
 
         # Central Widget and Layout
         central_widget = QWidget()
@@ -145,23 +148,22 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        output_dir = config.DEFAULT_OUTPUT_DIR
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        if os.path.exists(output_dir):
-            output_dir = os.path.abspath(output_dir)
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        if os.path.exists(self.output_dir):
+            self.output_dir = os.path.abspath(self.output_dir)
             if sys.platform.startswith("win"):
-                os.startfile(output_dir)
+                os.startfile(self.output_dir)
             elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", output_dir])
+                subprocess.call(["open", self.output_dir])
             else:
-                subprocess.call(["xdg-open", output_dir])
+                subprocess.call(["xdg-open", self.output_dir])
         else:
             self.show_error("Output directory not found.")
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        delete_dir = config.DEFAULT_TO_DELETE_DIR
+        delete_dir = CONFIG_INI.get("DEFAULT", "TO_DELETE_DIR")
         if not os.path.exists(delete_dir):
             os.makedirs(delete_dir)
         if os.path.exists(delete_dir):
@@ -177,7 +179,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        log_file_path = Path(config.DEFAULT_OUTPUT_DIR) / config.DEFAULT_LOG_FILE
+        log_file_path = Path(self.output_dir) / CONFIG_INI.get("DEFAULT", "LOG_FILE")
         if os.path.exists(log_file_path):
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
@@ -247,23 +249,28 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "assets_not_backlinked",
             ]
 
+            output_dir_meta = CONFIG_INI.get("OUTPUT_DIRS", "META")
+            output_dir_summaries = CONFIG_INI.get("OUTPUT_DIRS", "SUMMARY")
+            output_dir_namespaces = CONFIG_INI.get("OUTPUT_DIRS", "NAMESPACE")
+            output_dir_assets = CONFIG_INI.get("OUTPUT_DIRS", "ASSETS")
+
             for key, items in output_data.items():
                 if key in output_meta:
-                    write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_META)
+                    write_output(self.output_dir, key, items, output_dir_meta)
                 elif key in output_summaries:
                     if key == "___summary_global":
-                        write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_SUMMARY)
+                        write_output(self.output_dir, key, items, output_dir_summaries)
                     else:
                         for summary, data in items.items():
-                            write_output(config.DEFAULT_OUTPUT_DIR, summary, data, config.OUTPUT_DIR_SUMMARY)
+                            write_output(self.output_dir, summary, data, output_dir_summaries)
                 elif key in output_namespaces:
                     if key == "___summary_global_namespaces":
-                        write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_NAMESPACE)
+                        write_output(self.output_dir, key, items, output_dir_namespaces)
                     else:
                         for summary, data in items.items():
-                            write_output(config.DEFAULT_OUTPUT_DIR, summary, data, config.OUTPUT_DIR_NAMESPACE)
+                            write_output(self.output_dir, summary, data, output_dir_namespaces)
                 elif key in output_assets:
-                    write_output(config.DEFAULT_OUTPUT_DIR, key, items, config.OUTPUT_DIR_ASSETS)
+                    write_output(self.output_dir, key, items, output_dir_assets)
 
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
@@ -324,6 +331,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
         self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
         self.settings.setValue("write_graph", self.write_graph_checkbox.isChecked())
+        self.settings.setValue("report_format", self.report_format_combo.currentText())
         self.settings.setValue("geometry", self.saveGeometry())
 
     def load_settings(self):
@@ -334,6 +342,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
         self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
         self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
+        self.report_format_combo.setCurrentText(self.settings.value("report_format", ".txt"))
         self.restoreGeometry(self.settings.value("geometry", b""))
 
 

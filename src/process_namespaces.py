@@ -2,11 +2,12 @@ import logging
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 
-from src import config
+from .config_loader import get_config
 from .core import generate_global_summary
 from .process_summary_data import extract_summary_subset_files
 from .compile_regex import compile_re_content
 
+CONFIG_INI = get_config()
 CONTENT_RE = compile_re_content()
 
 """
@@ -239,14 +240,15 @@ def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Se
     Returns:
         dict: A dictionary mapping each namespace part to a set of unique pages.
     """
+    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1])
         unique_pages = set()
         for page in details:
-            parts = page.split(config.NAMESPACE_SEP)
+            parts = page.split(ns_sep)
             up_to_level = parts[:level]
-            unique_pages.add(config.NAMESPACE_SEP.join(up_to_level))
+            unique_pages.add(ns_sep.join(up_to_level))
         unique_conflicts[part] = unique_pages
     return unique_conflicts
 

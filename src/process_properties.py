@@ -1,10 +1,10 @@
 from typing import Dict, Any, Tuple
 
-from src import config
+from .config_loader import get_config
 from .process_content_data import split_builtin_user_properties
 
-
-PROPS = config.BUILT_IN_PROPERTIES
+CONFIG_INI = get_config()
+PROPS = frozenset(CONFIG_INI.get("BUILT_IN_PROPERTIES", "PROPERTIES").split(","))
 
 
 def process_properties(graph_data: Dict[str, Any]) -> Dict[str, Any]:
