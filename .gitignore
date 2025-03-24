@@ -16,3 +16,4 @@ profile_output*
 *.spec
 build/
 dist/
+src/process_all_graph.py

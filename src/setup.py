@@ -255,9 +255,6 @@ def get_logseq_target_dirs() -> Set[str]:
     """
     Get the target directories based on the configuration data.
 
-    Args:
-        config_edn_data (dict): The configuration data.
-
     Returns:
         Set[str]: A set of target directories.
     """

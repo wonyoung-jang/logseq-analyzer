@@ -28,7 +28,6 @@ def process_summary_data(
     journals_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
     pages_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
     whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")
-
     file_type_journal = CONFIG.get("FILE_TYPES", "JOURNAL")
     file_type_page = CONFIG.get("FILE_TYPES", "PAGE")
 
