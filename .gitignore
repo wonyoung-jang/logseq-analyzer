@@ -17,3 +17,7 @@ profile_output*
 build/
 dist/
 src/process_all_graph.py
+make.bat
+Makefile
+source/conf.py
+source/index.rst

@@ -233,13 +233,15 @@ def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
     return True
 
 
-def post_processing_content(content_data: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
+def post_processing_content(
+    content_data: Dict[str, Any],
+) -> Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
     """
     Post-process content data to extract linked references and namespaces.
-    
+
     Args:
         content_data (Dict[str, Any]): The content data to process.
-        
+
     Returns:
         Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]: Processed content data, alphanum dicts, dangling links, and all linked references.
     """
@@ -250,7 +252,7 @@ def post_processing_content(content_data: Dict[str, Any]) -> Tuple[Dict[str, Any
 
     # Process each file's content
     ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
-    
+
     for name, data in content_data.items():
         # Process namespaces
         if ns_sep in name:

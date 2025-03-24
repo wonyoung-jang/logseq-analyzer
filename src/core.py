@@ -24,9 +24,7 @@ def process_graph_files(
     graph_data = {}
     meta_content_bullets = {}
 
-    graph_dir_structure = iter_files(logseq_graph_folder, target_dirs)
-
-    for file_path in graph_dir_structure:
+    for file_path in iter_files(logseq_graph_folder, target_dirs):
         file_data, content_bullets = process_single_file(file_path, patterns)
 
         name = file_data["name"]
@@ -78,38 +76,22 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     Returns:
         dict: The summary data subsets.
     """
-    summary_data_subsets = {}
-
-    # Process general categories
     summary_categories: Dict[str, Dict[str, Any]] = {
+        # Process general categories
         "is_backlinked": {"is_backlinked": True},
         "is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
         "has_content": {"has_content": True},
         "has_backlinks": {"has_backlinks": True},
         "has_external_links": {"has_external_links": True},
         "has_embedded_links": {"has_embedded_links": True},
-    }
-
-    for output_name, criteria in summary_categories.items():
-        subset = extract_summary_subset_files(graph_data, **criteria)
-        summary_data_subsets[output_name] = subset
-
-    # Process file types
-    summary_categories_types: Dict[str, Dict[str, Any]] = {
+        # Process file types
         "is_asset": {"file_type": "asset"},
         "is_draw": {"file_type": "draw"},
         "is_journal": {"file_type": "journal"},
         "is_page": {"file_type": "page"},
         "is_whiteboard": {"file_type": "whiteboard"},
         "is_other": {"file_type": "other"},
-    }
-
-    for output_name, criteria in summary_categories_types.items():
-        subset = extract_summary_subset_files(graph_data, **criteria)
-        summary_data_subsets[output_name] = subset
-
-    # Process nodes
-    summary_categories_nodes: Dict[str, Dict[str, Any]] = {
+        # Process nodes
         "is_orphan_true": {"node_type": "orphan_true"},
         "is_orphan_graph": {"node_type": "orphan_graph"},
         "is_orphan_namespace": {"node_type": "orphan_namespace"},
@@ -120,9 +102,9 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         "is_node_other": {"node_type": "other_node"},
     }
 
-    for output_name, criteria in summary_categories_nodes.items():
-        subset = extract_summary_subset_files(graph_data, **criteria)
-        summary_data_subsets[output_name] = subset
+    summary_data_subsets = {}
+    for output_name, criteria in summary_categories.items():
+        summary_data_subsets[output_name] = extract_summary_subset_files(graph_data, **criteria)
 
     # Process file extensions
     file_extensions = {}
