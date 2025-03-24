@@ -47,10 +47,6 @@ def run_app(**kwargs):
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
-    move_bak = args.move_bak
-    move_recycle = args.move_recycle
-    move_assets = args.move_unlinked_assets
-    move = any([move_bak, move_recycle, move_assets])
 
     # Setup output directory and logging
     create_output_directory()
