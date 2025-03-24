@@ -9,7 +9,7 @@ from .process_summary_data import extract_summary_subset_content, extract_summar
 
 def process_graph_files(
     logseq_graph_folder: Path, patterns: Dict[str, Pattern], target_dirs: List[str]
-) -> Tuple[dict, dict, dict, dict]:
+) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
     """
     Process all files in the Logseq graph folder.
 
@@ -19,7 +19,7 @@ def process_graph_files(
         target_dirs (List[str]): The target directories to process.
 
     Returns:
-        Tuple[dict, dict, dict, dict]: A tuple containing the graph metadata, content data, primary bullet data, and content bullets data.
+        Tuple[Dict[str, Any], Dict[str, List[str]]]: A tuple containing the graph metadata and content bullets data.
     """
     graph_data = {}
     meta_content_bullets = {}
@@ -41,7 +41,7 @@ def process_graph_files(
 
 def core_data_analysis(
     graph_data: dict,
-) -> Tuple[Dict[str, set], List[str], dict, dict]:
+) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Process the core data analysis for the Logseq Analyzer.
 
@@ -49,7 +49,12 @@ def core_data_analysis(
         graph_data (dict): The graph data to analyze.
 
     Returns:
-        Tuple[dict, dict, dict, dict]: The core data analysis results.
+        Tuple[dict, dict, dict, dict, dict]: A tuple containing:
+            - Alphanumeric dictionary.
+            - Alphanumeric dictionary with namespace.
+            - Dangling links.
+            - Processed graph data.
+            - All references.
     """
     graph_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_refs = post_processing_content(graph_data)
     graph_data = process_summary_data(graph_data, alphanum_dict, alphanum_dict_ns)

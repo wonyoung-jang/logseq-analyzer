@@ -1,14 +1,14 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Pattern, Tuple
+from typing import Any, Dict, List, Optional, Pattern, Tuple
 
 from .helpers import process_logseq_filename_key
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_content_data import process_content_data
 
 
-def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], Optional[str]]:
+def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], List[str]]:
     """
     Process a single file: extract metadata, read content, and compute content-based metrics.
 
@@ -19,7 +19,9 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
 
     Returns:
-        Tuple[Dict[str, Any], Optional[str]]: A tuple containing metadata dictionary and file content (or None if reading failed).
+        Tuple[Dict[str, Any], List[str]]: A tuple containing:
+            - A dictionary with file metadata and computed metrics.
+            - A list of bullet points extracted from the content.
     """
     data = {}
     data = get_file_metadata(file_path, data)

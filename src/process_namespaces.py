@@ -111,7 +111,7 @@ def process_namespace_data(
 
 def get_unique_namespaces_by_level(
     namespace_parts: Dict[str, Dict[str, int]], namespace_details: Dict[str, Any]
-) -> Tuple[Dict[str, Any], Dict[str, int]]:
+) -> Tuple[Dict[str, Set[Any]], Dict[int, Set[Any]]]:
     """
     Get unique namespaces by level.
 
@@ -193,7 +193,7 @@ def detect_non_namespace_conflicts(
 
 def detect_parent_depth_conflicts(
     namespace_parts: Dict[str, Dict[str, int]],
-) -> Tuple[Dict[str, List[str]], Dict[str, Set[str]]]:
+) -> Dict[str, List[str]]:
     """
     Identify namespace parts that appear at different depths (levels) across entries.
 
@@ -201,10 +201,12 @@ def detect_parent_depth_conflicts(
     the associated entries. Parts that occur at more than one depth are flagged
     as potential conflicts.
 
+    Args:
+        namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
+
     Returns:
-        tuple: A tuple containing two dictionaries:
-            - Conflicts with multiple levels (depths).
-            - Unique pages for each conflict.
+        dict: A dictionary where keys are namespace parts with conflicts, and values
+              are lists of entries associated with those parts at different levels.
     """
     # Mapping from namespace part to a set of levels and associated entries
     part_levels = defaultdict(set)

@@ -51,7 +51,7 @@ def get_sub_file_or_folder(parent: Path, child: str) -> Path:
 
     if not parent.exists() or not target.exists():
         logging.warning(f"Subfolder does not exist: {target}")
-        return None
+        return Path()
 
     return target
 
@@ -71,7 +71,7 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
 
     if not parent.exists():
         logging.warning(f"Parent folder does not exist: {parent}")
-        return None
+        return Path()
     elif not target.exists():
         try:
             target.mkdir(parents=True, exist_ok=True)

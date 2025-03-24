@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 
 from .config_loader import get_config
 
@@ -178,7 +178,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
             return CONFIG.get("NODE_TYPES", "LEAF")
 
 
-def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List[Any]:
+def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tuple[List[str], Dict[str, Dict]]:
     """
     Extract a subset of data based on a specific criteria.
     Asks: What content matches the criteria? And where is it found? How many times?
@@ -188,7 +188,7 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List
         criteria (str): The criteria for extraction.
 
     Returns:
-        List[Any]: A list of values from the data that match the criteria.
+        Tuple[List[str], Dict[str, Dict]]: A tuple containing a sorted list of unique values and a dictionary with counts and locations.
     """
     subset = set()
     subset_counter = {}

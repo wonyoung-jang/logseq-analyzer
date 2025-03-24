@@ -7,7 +7,9 @@ CONFIG = get_config()
 BUILT_IN_PROPERTIES = CONFIG.get_built_in_properties()
 
 
-def process_properties(graph_data: Dict[str, Any]) -> Dict[str, Any]:
+def process_properties(
+    graph_data: Dict[str, Any],
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Process the properties of the dataset.
 
@@ -15,13 +17,19 @@ def process_properties(graph_data: Dict[str, Any]) -> Dict[str, Any]:
         graph_data (Dict[str, Any]): The graph data containing properties values.
 
     Returns:
-        Dict[str, Any]: A dictionary containing all property values and unique property values.
+        Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+            - Set of all built-in property values.
+            - Set of all user-defined property values.
+            - Sorted dictionary of all built-in property values.
+            - Sorted dictionary of all user-defined property values.
     """
     all_prop_values = get_all_prop_values(graph_data)
     return all_prop_values
 
 
-def get_all_prop_values(graph_data: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def get_all_prop_values(
+    graph_data: Dict[str, Any],
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Get all property values from the graph data.
 
@@ -29,9 +37,11 @@ def get_all_prop_values(graph_data: Dict[str, Any]) -> Tuple[Dict[str, Any], Dic
         graph_data (Dict[str, Any]): The graph data containing properties values.
 
     Returns:
-        Tuple[Dict[str, Any], Dict[str, Any]]: A tuple containing two dictionaries:
-            - The first dictionary contains sorted property values.
-            - The second dictionary contains unique property values as sets.
+        Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+            - Set of all built-in property values.
+            - Set of all user-defined property values.
+            - Sorted dictionary of all built-in property values.
+            - Sorted dictionary of all user-defined property values.
     """
     all_prop_values = {}
     for name, data in graph_data.items():

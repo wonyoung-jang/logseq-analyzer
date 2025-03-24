@@ -32,20 +32,20 @@ def handle_move_files(
     bak: Path,
     recycle: Path,
     to_delete_dir: Path,
-) -> Dict[str, List[str]]:
+) -> Dict[str, Dict[Any, Any]]:
     """
     Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
     Args:
         args (argparse.Namespace): The command line arguments.
         graph_meta_data (dict): The graph metadata.
-        assets (dict): The assets data.
+        unlinked_assets (dict): The assets data.
         bak (Path): The path to the bak directory.
         recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
 
     Returns:
-        Dict[str, List[str]]: A dictionary containing lists of moved files.
+        Dict[str, Dict[Any, Any]]: A dictionary containing the moved files.
     """
     def_bak_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_BAK_DIR")
     def_rec_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_RECYCLE_DIR")
@@ -82,7 +82,7 @@ def handle_move_files(
 
 def get_all_folder_content(
     input_dir: Path, target_dir: Path, target_subdir: Optional[str] = ""
-) -> List[Tuple[Path, Path]]:
+) -> Tuple[List[Tuple[Path, Path]], List[str]]:
     """
     Move all folders from one directory to another.
 
@@ -92,12 +92,14 @@ def get_all_folder_content(
         target_subdir (Path): The subdirectory in the destination directory.
 
     Returns:
-        List[Tuple[Path, Path]]: A list of tuples containing source and destination paths.
+        Tuple[List[Tuple[Path, Path]], List[str]]: A tuple containing:
+            - List of tuples with source and destination paths.
+            - List of names of moved files and folders.
     """
     folders = [input_dir, target_dir]
     for folder in folders:
         if not folder.exists():
-            return
+            return [], []
 
     if target_subdir:
         target_dir = get_or_create_subdir(target_dir, target_subdir)

@@ -1,9 +1,12 @@
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 from .process_summary_data import extract_summary_subset_files
 
 
-def handle_assets(graph_data: dict, summary_data_subsets: dict) -> Tuple[dict, dict]:
+def handle_assets(
+    graph_data: Dict[str, Any],
+    summary_data_subsets: Dict[str, Any],
+) -> Tuple[List[str], List[str]]:
     """
     Handle assets for the Logseq Analyzer.
 
@@ -12,7 +15,9 @@ def handle_assets(graph_data: dict, summary_data_subsets: dict) -> Tuple[dict, d
         summary_data_subsets (dict): The summary data subsets.
 
     Returns:
-        Tuple[dict, dict]: Two dictionaries containing assets that are backlinked and not backlinked.
+        tuple: A tuple containing two lists:
+            - List of assets that are backlinked.
+            - List of assets that are not backlinked.
     """
     for name, data in graph_data.items():
         if not data.get("assets", []):
