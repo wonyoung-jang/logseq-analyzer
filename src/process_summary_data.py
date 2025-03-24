@@ -23,8 +23,8 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    assets_dir = CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS")
-    draws_dir = CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS")
+    assets_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_ASSETS")
+    draws_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_DRAWS")
     journals_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
     pages_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
     whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")

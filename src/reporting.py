@@ -75,8 +75,8 @@ def write_output(
         items (Any): The items to write.
         type_output (str, optional): The type of output. Defaults to "".
     """
-    json_format = CONFIG.get("REPORTING", "REPORT_FORMAT_JSON")
-    txt_format = CONFIG.get("REPORTING", "REPORT_FORMAT_TXT")
+    json_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
+    txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
     output_format = CONFIG.get("REPORTING", "REPORT_FORMAT")
 
     logging.info(f"Writing {filename_prefix} as {output_format}")

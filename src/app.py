@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from .config_loader import get_config
 from .process_properties import process_properties
@@ -71,6 +72,8 @@ def run_app(**kwargs):
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
     CONFIG.set("REPORTING", "REPORT_FORMAT", args.report_format)
+    # with open("config_user.ini", "w") as cf:
+    #     CONFIG.config.write(cf)
 
     if gui_instance:
         gui_instance.update_progress(setup_phase, 100)

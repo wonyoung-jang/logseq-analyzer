@@ -248,7 +248,7 @@ def set_logseq_config_edn_data(config_edn_data: dict) -> None:
     CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
     ns_fmt = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT")
     if ns_fmt == ":triple-lowbar":
-        CONFIG.set("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP", "___")
+        CONFIG.set("LOGSEQ_NS", "NAMESPACE_FILE_SEP", "___")
 
 
 def get_logseq_target_dirs() -> Set[str]:
@@ -259,8 +259,8 @@ def get_logseq_target_dirs() -> Set[str]:
         Set[str]: A set of target directories.
     """
     target_dirs = {
-        CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS"),
-        CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS"),
+        CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_ASSETS"),
+        CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_DRAWS"),
         CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS"),
         CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES"),
         CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS"),

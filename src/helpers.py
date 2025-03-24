@@ -163,8 +163,8 @@ def process_logseq_filename_key(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
-    ns_file_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
+    ns_file_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_FILE_SEP")
     dir_journals = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
 
     if key.endswith(ns_file_sep):

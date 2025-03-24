@@ -5,7 +5,11 @@ import re
 
 class Config:
     def __init__(self, config_path="src/config.ini"):
-        self.config = configparser.ConfigParser()
+        self.config = configparser.ConfigParser(
+            allow_no_value=True,
+            default_section="None",
+            interpolation=configparser.ExtendedInterpolation(),
+        )
 
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
@@ -50,6 +54,10 @@ class Config:
             properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
             self._built_in_properties = frozenset(properties_str.split(","))
         return self._built_in_properties
+
+    def write(self, file):
+        """Write the config to a file-like object"""
+        self.config.write(file)
 
 
 # Singleton
