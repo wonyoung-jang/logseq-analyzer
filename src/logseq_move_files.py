@@ -2,7 +2,7 @@ import argparse
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .helpers import get_or_create_subdir
 from .config_loader import get_config
@@ -26,7 +26,12 @@ def create_delete_directory() -> Path:
 
 
 def handle_move_files(
-    args: argparse.Namespace, graph_meta_data: dict, assets: dict, bak: Path, recycle: Path, to_delete_dir: Path
+    args: argparse.Namespace,
+    graph_meta_data: dict,
+    unlinked_assets: dict,
+    bak: Path,
+    recycle: Path,
+    to_delete_dir: Path,
 ) -> Dict[str, List[str]]:
     """
     Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
@@ -44,27 +49,40 @@ def handle_move_files(
     """
     def_bak_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_BAK_DIR")
     def_rec_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_RECYCLE_DIR")
+
     moved_files = {}
 
-    if args.move_unlinked_assets:
-        moved_assets = move_unlinked_assets(assets, graph_meta_data, to_delete_dir)
-        if moved_assets:
-            moved_files["moved_assets"] = moved_assets
+    if unlinked_assets:
+        if args.move_unlinked_assets:
+            moved_files["moved_assets"] = unlinked_assets
+            move_unlinked_assets(unlinked_assets, graph_meta_data, to_delete_dir)
+        else:
+            moved_files["moved_assets_simulated_only"] = unlinked_assets
 
-    if args.move_bak:
-        moved_bak = move_all_folder_content(bak, to_delete_dir, def_bak_dir)
-        if moved_bak:
-            moved_files["moved_bak"] = moved_bak
+    moved_bak, moved_bak_names = get_all_folder_content(bak, to_delete_dir, def_bak_dir)
 
-    if args.move_recycle:
-        moved_recycle = move_all_folder_content(recycle, to_delete_dir, def_rec_dir)
-        if moved_recycle:
-            moved_files["moved_recycle"] = moved_recycle
+    if moved_bak:
+        if args.move_bak:
+            moved_files["moved_bak"] = moved_bak_names
+            move_all_folder_content(moved_bak)
+        else:
+            moved_files["moved_bak_simulated_only"] = moved_bak_names
+
+    moved_recycle, moved_recycle_names = get_all_folder_content(recycle, to_delete_dir, def_rec_dir)
+
+    if moved_recycle:
+        if args.move_recycle:
+            moved_files["moved_recycle"] = moved_recycle_names
+            move_all_folder_content(moved_recycle)
+        else:
+            moved_files["moved_recycle_simulated_only"] = moved_recycle_names
 
     return moved_files
 
 
-def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Optional[str] = "") -> List[str]:
+def get_all_folder_content(
+    input_dir: Path, target_dir: Path, target_subdir: Optional[str] = ""
+) -> List[Tuple[Path, Path]]:
     """
     Move all folders from one directory to another.
 
@@ -74,7 +92,7 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
         target_subdir (Path): The subdirectory in the destination directory.
 
     Returns:
-        List[str]: List of moved folder names.
+        List[Tuple[Path, Path]]: A list of tuples containing source and destination paths.
     """
     folders = [input_dir, target_dir]
     for folder in folders:
@@ -85,28 +103,41 @@ def move_all_folder_content(input_dir: Path, target_dir: Path, target_subdir: Op
         target_dir = get_or_create_subdir(target_dir, target_subdir)
 
     moved_content = []
+    moved_content_names = []
+
     for root, dirs, files in Path.walk(input_dir):
         for directory in dirs:
-            try:
-                moved_content.append(directory)
-                shutil.move(Path(root) / directory, target_dir / directory)
-                logging.warning(f"Moved folder: {directory}")
-            except Exception as e:
-                logging.error(f"Failed to move folder: {directory}: {e}")
+            current_dir_path = Path(root) / directory
+            moved_dir_path = target_dir / directory
+            moved_content.append((current_dir_path, moved_dir_path))
+            moved_content_names.append(directory)
         for file in files:
-            try:
-                moved_content.append(file)
-                shutil.move(Path(root) / file, target_dir / file)
-                logging.warning(f"Moved file: {file}")
-            except Exception as e:
-                logging.error(f"Failed to move file: {file}: {e}")
+            current_file_path = Path(root) / file
+            moved_file_path = target_dir / file
+            moved_content.append((current_file_path, moved_file_path))
+            moved_content_names.append(file)
 
-    return moved_content
+    return moved_content, moved_content_names
+
+
+def move_all_folder_content(moved_content: List[Tuple]) -> None:
+    """
+    Move all folders from one directory to another.
+
+    Args:
+        moved_content (List[Tuple]): List of tuples containing source and destination paths.
+    """
+    for old_path, new_path in moved_content:
+        try:
+            shutil.move(old_path, new_path)
+            logging.warning(f"Moved folder: {old_path} to {new_path}")
+        except Exception as e:
+            logging.error(f"Failed to move folder: {old_path} to {new_path}: {e}")
 
 
 def move_unlinked_assets(
     summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any], to_delete_dir: Path
-) -> List[str]:
+) -> None:
     """
     Move unlinked assets to a separate directory.
 
@@ -114,22 +145,15 @@ def move_unlinked_assets(
         summary_is_asset_not_backlinked (Dict[str, Any]): Summary data for unlinked assets.
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         to_delete_dir (Path): The directory to move unlinked assets to.
-
-    Returns:
-        List[str]: List of moved asset names.
     """
     asset_dir = CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS")
     to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, asset_dir)
 
-    moved_assets = []
     for name in summary_is_asset_not_backlinked:
         file_path = Path(graph_meta_data[name]["file_path"])
         new_path = to_delete_asset_subdir / file_path.name
         try:
-            moved_assets.append(name)
             shutil.move(file_path, new_path)
             logging.warning(f"Moved unlinked asset: {file_path} to {new_path}")
         except Exception as e:
             logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
-
-    return moved_assets

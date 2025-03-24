@@ -125,16 +125,10 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
+    to_delete_dir = create_delete_directory()
+    assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
     moved_files = {}
-    assets_backlinked = {}
-    assets_not_backlinked = {}
-    if move:
-        # Create delete directory
-        to_delete_dir = create_delete_directory()
-        # Handle assets
-        assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
-        # Handle bak and recycle directories
-        moved_files = handle_move_files(args, graph_data, assets_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+    moved_files = handle_move_files(args, graph_data, assets_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)
