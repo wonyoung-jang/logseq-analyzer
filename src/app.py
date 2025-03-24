@@ -1,5 +1,5 @@
+# import sys
 from pathlib import Path
-import sys
 
 from .config_loader import get_config
 from .process_properties import process_properties

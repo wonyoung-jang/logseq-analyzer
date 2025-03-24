@@ -28,11 +28,12 @@ def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, 
         root_path = Path(root)
         if root_path == directory:
             continue
-        elif root_path.name in target_dirs:
+
+        if root_path.name in target_dirs:
             for file in files:
                 yield root_path / file
         else:
-            logging.info(f"Skipping directory {root_path} outside target directories")
+            logging.info("Skipping directory %s outside target directories", root_path)
             dirs.clear()
 
 
@@ -50,7 +51,7 @@ def get_sub_file_or_folder(parent: Path, child: str) -> Path:
     target = parent / child
 
     if not parent.exists() or not target.exists():
-        logging.warning(f"Subfolder does not exist: {target}")
+        logging.warning("Subfolder does not exist: %s", target)
         return Path()
 
     return target
@@ -70,17 +71,18 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
     target = parent / child
 
     if not parent.exists():
-        logging.warning(f"Parent folder does not exist: {parent}")
+        logging.warning("Parent folder does not exist: %s", parent)
         return Path()
-    elif not target.exists():
+
+    if not target.exists():
         try:
             target.mkdir(parents=True, exist_ok=True)
-            logging.info(f"Created subdirectory: {target}")
+            logging.info("Created subdirectory: %s", target)
         except Exception as e:
-            logging.error(f"Failed to create subdirectory {target}: {e}")
+            logging.error("Failed to create subdirectory %s: %s", target, e)
             raise
     else:
-        logging.info(f"Subdirectory already exists: {target}")
+        logging.info("Subdirectory already exists: %s", target)
 
     return target
 
@@ -145,7 +147,7 @@ def process_logseq_journal_key(key: str) -> str:
         page_title = page_title.replace("'", "")
         return page_title
     except ValueError as e:
-        logging.warning(f"Failed to parse date from key '{key}', format `{py_file_name_format}`: {e}")
+        logging.warning("Failed to parse date from key '%s', format `%s`: %s", key, py_file_name_format, e)
         return key
 
 

@@ -102,14 +102,14 @@ def create_output_directory() -> Path:
     if output_dir.exists() and output_dir.is_dir():
         try:
             shutil.rmtree(output_dir)
-            logging.info(f"Removed existing output directory: {output_dir}")
+            logging.info("Removed existing output directory: %s", output_dir)
         except Exception as e:
-            logging.error(f"Failed to remove directory {output_dir}: {e}")
+            logging.error("Failed to remove directory %s: %s", output_dir, e)
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created output directory: {output_dir}")
+        logging.info("Created output directory: %s", output_dir)
     except Exception as e:
-        logging.error(f"Failed to create output directory {output_dir}: {e}")
+        logging.error("Failed to create output directory %s: %s", output_dir, e)
         raise
 
     return output_dir
@@ -133,7 +133,7 @@ def create_log_file() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
     )
-    logging.debug(f"Logging initialized to {log_file}")
+    logging.debug("Logging initialized to %s", log_file)
     logging.info("Logseq Analyzer started.")
 
 
@@ -281,9 +281,8 @@ def validate_path(path: Path) -> None:
     try:
         path.resolve(strict=True)
     except FileNotFoundError:
-        logging.warning(f"Path does not exist: {path}")
-        raise FileNotFoundError(f"Path does not exist: {path}") from None
+        logging.warning("Path does not exist: %s", path)
+        raise FileNotFoundError("Path does not exist: %s" % path) from None
     except Exception as e:
-        logging.warning(f"Error resolving path: {path} - {e}")
-        raise Exception(f"Error resolving path: {path}") from None
-        
+        logging.warning("Error resolving path: %s - %s", path, e)
+        raise Exception("Error resolving path: %s" % path) from None

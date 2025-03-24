@@ -68,7 +68,7 @@ def process_content_data(
     advanced_commands = find_all_lower(patterns["advanced_command"], content)
 
     # Extract all properties: values pairs
-    properties_values = {prop: value for prop, value in patterns["property_value"].findall(content)}
+    properties_values = dict(patterns["property_value"].findall(content))
     aliases = properties_values.get("alias", [])
     if aliases:
         aliases = process_aliases(aliases)
@@ -149,7 +149,7 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
             id_key = item[:2] if len(item) > 1 else f"!{item[0]}"
             alphanum_dict[id_key].add(item)
         else:
-            logging.error(f"Empty item: {item}")
+            logging.error("Empty item: %s", item)
     return alphanum_dict
 
 
@@ -170,18 +170,15 @@ def process_aliases(aliases: str) -> List[str]:
         if aliases[i : i + 2] == "[[":
             inside_brackets = True
             i += 2
-            continue
         elif aliases[i : i + 2] == "]]":
             inside_brackets = False
             i += 2
-            continue
         elif aliases[i] == "," and not inside_brackets:
             part = "".join(current).strip().lower()
             if part:
                 results.append(part)
             current = []
             i += 1
-            continue
         else:
             current.append(aliases[i])
             i += 1
@@ -245,7 +242,7 @@ def post_processing_content(
     Returns:
         Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]: Processed content data, alphanum dicts, dangling links, and all linked references.
     """
-    all_linked_references = dict()
+    all_linked_references = {}
     unique_linked_references = set()
     unique_linked_references_namespaces = set()
     unique_aliases = set()

@@ -79,7 +79,7 @@ def write_output(
     txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
     output_format = CONFIG.get("REPORTING", "REPORT_FORMAT")
 
-    logging.info(f"Writing {filename_prefix} as {output_format}")
+    logging.info("Writing %s as %s", filename_prefix, output_format)
     count = len(items)
     filename = f"{filename_prefix}{output_format}" if count else f"{filename_prefix}_EMPTY{output_format}"
     output_dir = Path(output_dir)
@@ -101,7 +101,7 @@ def write_output(
             with out_path.open("w", encoding="utf-8") as f:
                 json.dump(items, f, indent=4)
         except TypeError:
-            logging.error(f"Failed to write JSON for {filename_prefix}.")
+            logging.error("Failed to write JSON for %s.", filename_prefix)
             if out_path.exists():
                 out_path.unlink()
             filename = f"{filename_prefix}{txt_format}"
@@ -115,7 +115,7 @@ def write_output(
             f.write(f"{filename} | Items: {count}\n\n")
             write_recursive(f, items)
     else:
-        logging.error(f"Unsupported output format: {output_format}. Defaulting to text.")
+        logging.error("Unsupported output format: %s. Defaulting to text.", output_format)
         with out_path.open("w", encoding="utf-8") as f:
             f.write(f"{filename} | Items: {count}\n\n")
             write_recursive(f, items)

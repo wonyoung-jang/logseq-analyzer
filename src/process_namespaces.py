@@ -149,8 +149,8 @@ def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dic
     """
     level_distribution = Counter()
 
-    for namespace, parts in namespace_parts.items():
-        for part, level in parts.items():
+    for _, parts in namespace_parts.items():
+        for _, level in parts.items():
             level_distribution[level] += 1
 
     max_depth = max(level_distribution) if level_distribution else 0
@@ -289,7 +289,7 @@ def analyze_namespace_queries(graph_data: Dict[str, Any], namespace_data: Dict[s
         for q in got_ns_queries:
             page_refs = CONTENT_RE["page_reference"].findall(q)
             if len(page_refs) != 1:
-                logging.warning(f"Invalid references found in query: {q}")
+                logging.warning("Invalid references found in query: %s", q)
                 continue
 
             page_ref = page_refs[0]

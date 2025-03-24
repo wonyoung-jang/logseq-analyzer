@@ -78,7 +78,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
         date_created = stat.st_birthtime
     except AttributeError:
         date_created = stat.st_ctime
-        logging.warning(f"File creation time (st_birthtime) not available for {file_path}. Using st_ctime instead.")
+        logging.warning("File creation time (st_birthtime) not available for %s. Using st_ctime instead.", file_path)
 
     data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
     data["name"] = name
@@ -112,8 +112,8 @@ def get_file_content(file_path: Path) -> Optional[str]:
     try:
         return file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        logging.warning(f"File not found: {file_path}")
+        logging.warning("File not found: %s", file_path)
         return None
     except Exception as e:
-        logging.warning(f"Failed to read file {file_path}: {e}")
+        logging.warning("Failed to read file %s: %s", file_path, e)
         return None

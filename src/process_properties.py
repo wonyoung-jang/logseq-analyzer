@@ -47,10 +47,8 @@ def get_all_prop_values(
     for name, data in graph_data.items():
         if data.get("properties_values"):
             for prop, value in data["properties_values"].items():
-                if prop not in all_prop_values:
-                    all_prop_values[prop] = list()
                 found_in_value = (name, value)
-                all_prop_values[prop].append(found_in_value)
+                all_prop_values[prop] = all_prop_values.get(prop, []) + [found_in_value]
 
     props_found = sorted(all_prop_values.keys())
     built_in_props, user_props = split_builtin_user_properties(props_found, BUILT_IN_PROPERTIES)

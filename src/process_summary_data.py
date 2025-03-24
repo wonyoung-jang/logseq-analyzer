@@ -159,22 +159,18 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
         if is_backlinked:
             if has_backlinks:
                 return CONFIG.get("NODE_TYPES", "BRANCH")
-            else:
-                return CONFIG.get("NODE_TYPES", "LEAF")
-        else:
-            if has_backlinks:
-                return CONFIG.get("NODE_TYPES", "ROOT")
-            else:
-                if is_backlinked_ns:
-                    return CONFIG.get("NODE_TYPES", "ORPHAN_NS")
-                return CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
-    else:
-        if not is_backlinked:
-            if is_backlinked_ns:
-                return CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
-            return CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
-        else:
             return CONFIG.get("NODE_TYPES", "LEAF")
+        if has_backlinks:
+            return CONFIG.get("NODE_TYPES", "ROOT")
+        if is_backlinked_ns:
+            return CONFIG.get("NODE_TYPES", "ORPHAN_NS")
+        return CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
+
+    if not is_backlinked:
+        if is_backlinked_ns:
+            return CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
+        return CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
+    return CONFIG.get("NODE_TYPES", "LEAF")
 
 
 def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tuple[List[str], Dict[str, Dict]]:

@@ -20,7 +20,7 @@ def create_delete_directory() -> Path:
     """
     delete_dir = Path(CONFIG.get("DEFAULT", "TO_DELETE_DIR"))
     if not delete_dir.exists():
-        logging.info(f"Creating directory: {delete_dir}")
+        logging.info("Creating directory: %s", delete_dir)
         delete_dir.mkdir(parents=True, exist_ok=True)
     return delete_dir
 
@@ -132,9 +132,9 @@ def move_all_folder_content(moved_content: List[Tuple]) -> None:
     for old_path, new_path in moved_content:
         try:
             shutil.move(old_path, new_path)
-            logging.warning(f"Moved folder: {old_path} to {new_path}")
+            logging.warning("Moved folder: %s to %s", old_path, new_path)
         except Exception as e:
-            logging.error(f"Failed to move folder: {old_path} to {new_path}: {e}")
+            logging.error("Failed to move folder: %s to %s: %s", old_path, new_path, e)
 
 
 def move_unlinked_assets(
@@ -156,6 +156,6 @@ def move_unlinked_assets(
         new_path = to_delete_asset_subdir / file_path.name
         try:
             shutil.move(file_path, new_path)
-            logging.warning(f"Moved unlinked asset: {file_path} to {new_path}")
+            logging.warning("Moved unlinked asset: %s to %s", file_path, new_path)
         except Exception as e:
-            logging.error(f"Failed to move unlinked asset: {file_path} to {new_path}: {e}")
+            logging.error("Failed to move unlinked asset: %s to %s: %s", file_path, new_path, e)
