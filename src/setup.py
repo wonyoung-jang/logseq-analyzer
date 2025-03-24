@@ -9,7 +9,7 @@ from .config_loader import get_config
 from .helpers import get_sub_file_or_folder
 
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
@@ -98,7 +98,7 @@ def create_output_directory() -> Path:
     Returns:
         Path: The output directory path.
     """
-    output_dir = Path(CONFIG_INI.get("DEFAULT", "OUTPUT_DIR"))
+    output_dir = Path(CONFIG.get("DEFAULT", "OUTPUT_DIR"))
 
     if output_dir.exists() and output_dir.is_dir():
         try:
@@ -120,8 +120,8 @@ def create_log_file() -> None:
     """
     Setup logging configuration for the Logseq Analyzer.
     """
-    output_dir = Path(CONFIG_INI.get("DEFAULT", "OUTPUT_DIR"))
-    log_path = CONFIG_INI.get("DEFAULT", "LOG_FILE")
+    output_dir = Path(CONFIG.get("DEFAULT", "OUTPUT_DIR"))
+    log_path = CONFIG.get("DEFAULT", "LOG_FILE")
     log_file = Path(output_dir / log_path)
 
     if Path.exists(log_file):
@@ -217,7 +217,7 @@ def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict
         "file_name_format": ":legacy",
     }
 
-    def_config_file = CONFIG_INI.get("LOGSEQ_STRUCTURE", "CONFIG_FILE")
+    def_config_file = CONFIG.get("LOGSEQ_STRUCTURE", "CONFIG_FILE")
     config_file = get_sub_file_or_folder(logseq_dir, def_config_file)
     config_edn_content = clean_logseq_config_edn_content(config_file)
     config_edn_data = get_config_edn_data_for_analysis(config_edn_content, config_patterns)
@@ -225,7 +225,7 @@ def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict
 
     if args.global_config:
         global_config_edn_file = Path(args.global_config)
-        CONFIG_INI.set("LOGSEQ_STRUCTURE", "GLOBAL_CONFIG_FILE", args.global_config)
+        CONFIG.set("LOGSEQ_STRUCTURE", "GLOBAL_CONFIG_FILE", args.global_config)
         global_config_edn_content = clean_logseq_config_edn_content(global_config_edn_file)
         global_config_edn_data = get_config_edn_data_for_analysis(global_config_edn_content, config_patterns)
         config_edn_data = {**config_edn_data, **global_config_edn_data}
@@ -240,15 +240,15 @@ def set_logseq_config_edn_data(config_edn_data: dict) -> None:
     Args:
         config_edn_data (dict): The configuration data.
     """
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT", config_edn_data["journal_page_title_format"])
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT", config_edn_data["journal_file_name_format"])
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES", config_edn_data["pages_directory"])
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS", config_edn_data["journals_directory"])
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS", config_edn_data["whiteboards_directory"])
-    CONFIG_INI.set("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
-    ns_fmt = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT")
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT", config_edn_data["journal_page_title_format"])
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT", config_edn_data["journal_file_name_format"])
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES", config_edn_data["pages_directory"])
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS", config_edn_data["journals_directory"])
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS", config_edn_data["whiteboards_directory"])
+    CONFIG.set("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
+    ns_fmt = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "NAMESPACE_FORMAT")
     if ns_fmt == ":triple-lowbar":
-        CONFIG_INI.set("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP", "___")
+        CONFIG.set("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP", "___")
 
 
 def get_logseq_target_dirs() -> Set[str]:
@@ -262,11 +262,11 @@ def get_logseq_target_dirs() -> Set[str]:
         Set[str]: A set of target directories.
     """
     target_dirs = {
-        CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS"),
-        CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS"),
-        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS"),
-        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES"),
-        CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS"),
+        CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS"),
+        CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS"),
+        CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS"),
+        CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES"),
+        CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS"),
     }
 
     return target_dirs

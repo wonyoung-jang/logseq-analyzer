@@ -7,7 +7,7 @@ from .core import generate_global_summary
 from .process_summary_data import extract_summary_subset_files
 from .compile_regex import compile_re_content
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 CONTENT_RE = compile_re_content()
 
 """
@@ -240,7 +240,7 @@ def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Se
     Returns:
         dict: A dictionary mapping each namespace part to a set of unique pages.
     """
-    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1])

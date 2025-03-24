@@ -4,11 +4,10 @@ from pathlib import Path
 from typing import Generator, Set
 from urllib.parse import unquote
 
-from src import config
 from .config_loader import get_config
 
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
@@ -97,12 +96,14 @@ def convert_cljs_date_to_py(cljs_format: str) -> str:
         str: Python-style date format.
     """
     cljs_format = cljs_format.replace("o", "")
+    datetime_token_map = CONFIG.get_datetime_token_map()
+    datetime_token_pattern = CONFIG.get_datetime_token_pattern()
 
     def replace_token(match):
         token = match.group(0)
-        return config.DATETIME_TOKEN_MAP.get(token, token)
+        return datetime_token_map.get(token, token)
 
-    py_format = config.DATETIME_TOKEN_PATTERN.sub(replace_token, cljs_format)
+    py_format = datetime_token_pattern.sub(replace_token, cljs_format)
 
     return py_format
 
@@ -126,8 +127,8 @@ def process_logseq_journal_key(key: str) -> str:
     Returns:
         str: Processed page title.
     """
-    journal_page_format = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
-    journal_file_format = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
+    journal_page_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
     py_file_name_format = convert_cljs_date_to_py(journal_file_format)
     py_page_title_no_ordinal = journal_page_format.replace("o", "")
     py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
@@ -162,9 +163,9 @@ def process_logseq_filename_key(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
-    ns_file_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP")
-    dir_journals = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
+    ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
+    ns_file_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_FILE_SEP")
+    dir_journals = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
 
     if key.endswith(ns_file_sep):
         key = key.rstrip(ns_file_sep)

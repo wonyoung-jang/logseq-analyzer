@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Set
 
 from .config_loader import get_config
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def process_summary_data(
@@ -23,14 +23,14 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    assets_dir = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS")
-    draws_dir = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS")
-    journals_dir = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
-    pages_dir = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
-    whiteboards_dir = CONFIG_INI.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")
+    assets_dir = CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_ASSETS")
+    draws_dir = CONFIG.get("LOGSEQ_CONFIG_STATICS", "DIR_DRAWS")
+    journals_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
+    pages_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
+    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")
 
-    file_type_journal = CONFIG_INI.get("FILE_TYPES", "JOURNAL")
-    file_type_page = CONFIG_INI.get("FILE_TYPES", "PAGE")
+    file_type_journal = CONFIG.get("FILE_TYPES", "JOURNAL")
+    file_type_page = CONFIG.get("FILE_TYPES", "PAGE")
 
     for name, meta_data in graph_data.items():
         has_content = bool(meta_data["size"] > 0)
@@ -78,7 +78,7 @@ def process_summary_data(
         if not is_backlinked:
             is_backlinked_by_ns_only = check_is_backlinked(name, meta_data, alphanum_dict_ns)
 
-        node_type = CONFIG_INI.get("NODE_TYPES", "OTHER")
+        node_type = CONFIG.get("NODE_TYPES", "OTHER")
         if file_type in [file_type_journal, file_type_page]:
             node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
@@ -140,17 +140,17 @@ def determine_file_type(
         str: The determined file type.
     """
     if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
-        file_type = CONFIG_INI.get("FILE_TYPES", "ASSET")
+        file_type = CONFIG.get("FILE_TYPES", "ASSET")
     elif file_path_parent_name == draws_dir:
-        file_type = CONFIG_INI.get("FILE_TYPES", "DRAW")
+        file_type = CONFIG.get("FILE_TYPES", "DRAW")
     elif file_path_parent_name == journals_dir:
-        file_type = CONFIG_INI.get("FILE_TYPES", "JOURNAL")
+        file_type = CONFIG.get("FILE_TYPES", "JOURNAL")
     elif file_path_parent_name == pages_dir:
-        file_type = CONFIG_INI.get("FILE_TYPES", "PAGE")
+        file_type = CONFIG.get("FILE_TYPES", "PAGE")
     elif file_path_parent_name == whiteboards_dir:
-        file_type = CONFIG_INI.get("FILE_TYPES", "WHITEBOARD")
+        file_type = CONFIG.get("FILE_TYPES", "WHITEBOARD")
     else:
-        file_type = CONFIG_INI.get("FILE_TYPES", "OTHER")
+        file_type = CONFIG.get("FILE_TYPES", "OTHER")
     return file_type
 
 
@@ -159,23 +159,23 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
     if has_content:
         if is_backlinked:
             if has_backlinks:
-                return CONFIG_INI.get("NODE_TYPES", "BRANCH")
+                return CONFIG.get("NODE_TYPES", "BRANCH")
             else:
-                return CONFIG_INI.get("NODE_TYPES", "LEAF")
+                return CONFIG.get("NODE_TYPES", "LEAF")
         else:
             if has_backlinks:
-                return CONFIG_INI.get("NODE_TYPES", "ROOT")
+                return CONFIG.get("NODE_TYPES", "ROOT")
             else:
                 if is_backlinked_ns:
-                    return CONFIG_INI.get("NODE_TYPES", "ORPHAN_NS")
-                return CONFIG_INI.get("NODE_TYPES", "ORPHAN_GRAPH")
+                    return CONFIG.get("NODE_TYPES", "ORPHAN_NS")
+                return CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
     else:
         if not is_backlinked:
             if is_backlinked_ns:
-                return CONFIG_INI.get("NODE_TYPES", "ORPHAN_NS_TRUE")
-            return CONFIG_INI.get("NODE_TYPES", "ORPHAN_TRUE")
+                return CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
+            return CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
         else:
-            return CONFIG_INI.get("NODE_TYPES", "LEAF")
+            return CONFIG.get("NODE_TYPES", "LEAF")
 
 
 def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> List[Any]:

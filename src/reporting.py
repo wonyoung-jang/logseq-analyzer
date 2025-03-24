@@ -6,7 +6,7 @@ from typing import Any, TextIO
 from .config_loader import get_config
 
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
@@ -75,9 +75,9 @@ def write_output(
         items (Any): The items to write.
         type_output (str, optional): The type of output. Defaults to "".
     """
-    json_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT_JSON")
-    txt_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT_TXT")
-    output_format = CONFIG_INI.get("REPORTING", "REPORT_FORMAT")
+    json_format = CONFIG.get("REPORTING", "REPORT_FORMAT_JSON")
+    txt_format = CONFIG.get("REPORTING", "REPORT_FORMAT_TXT")
+    output_format = CONFIG.get("REPORTING", "REPORT_FORMAT")
 
     logging.info(f"Writing {filename_prefix} as {output_format}")
     count = len(items)

@@ -27,7 +27,7 @@ from src.reporting import write_output
 from src.config_loader import get_config
 
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -35,7 +35,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
         self.setGeometry(500, 500, 500, 500)
-        self.output_dir = CONFIG_INI.get("DEFAULT", "OUTPUT_DIR")
+        self.output_dir = CONFIG.get("DEFAULT", "OUTPUT_DIR")
 
         # Central Widget and Layout
         central_widget = QWidget()
@@ -163,7 +163,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        delete_dir = CONFIG_INI.get("DEFAULT", "TO_DELETE_DIR")
+        delete_dir = CONFIG.get("DEFAULT", "TO_DELETE_DIR")
         if not os.path.exists(delete_dir):
             os.makedirs(delete_dir)
         if os.path.exists(delete_dir):
@@ -179,7 +179,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        log_file_path = Path(self.output_dir) / CONFIG_INI.get("DEFAULT", "LOG_FILE")
+        log_file_path = Path(self.output_dir) / CONFIG.get("DEFAULT", "LOG_FILE")
         if os.path.exists(log_file_path):
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
@@ -249,10 +249,10 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "assets_not_backlinked",
             ]
 
-            output_dir_meta = CONFIG_INI.get("OUTPUT_DIRS", "META")
-            output_dir_summaries = CONFIG_INI.get("OUTPUT_DIRS", "SUMMARY")
-            output_dir_namespaces = CONFIG_INI.get("OUTPUT_DIRS", "NAMESPACE")
-            output_dir_assets = CONFIG_INI.get("OUTPUT_DIRS", "ASSETS")
+            output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
+            output_dir_summaries = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
+            output_dir_namespaces = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
+            output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
 
             for key, items in output_data.items():
                 if key in output_meta:

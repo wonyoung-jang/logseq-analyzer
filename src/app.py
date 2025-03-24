@@ -25,7 +25,7 @@ from .setup import (
     validate_path,
 )
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def run_app(**kwargs):
@@ -59,9 +59,9 @@ def run_app(**kwargs):
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
     validate_path(logseq_graph_dir)
-    def_ls_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
-    def_rec_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
-    def_bak_dir = CONFIG_INI.get("LOGSEQ_STRUCTURE", "BAK_DIR")
+    def_ls_dir = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
+    def_rec_dir = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
+    def_bak_dir = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
     logseq_dir = get_sub_file_or_folder(logseq_graph_dir, def_ls_dir)
     recycle_dir = get_sub_file_or_folder(logseq_dir, def_rec_dir)
     bak_dir = get_sub_file_or_folder(logseq_dir, def_bak_dir)
@@ -74,7 +74,7 @@ def run_app(**kwargs):
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
-    CONFIG_INI.set("REPORTING", "REPORT_FORMAT", args.report_format)
+    CONFIG.set("REPORTING", "REPORT_FORMAT", args.report_format)
 
     if gui_instance:
         gui_instance.update_progress(setup_phase, 100)

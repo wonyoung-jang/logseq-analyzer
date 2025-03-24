@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Pattern, Set, Tuple
 
 from .config_loader import get_config
 
-CONFIG_INI = get_config()
+CONFIG = get_config()
 
 
 def process_content_data(
@@ -14,7 +14,7 @@ def process_content_data(
     primary_bullet: Dict[str, Any],
 ) -> Dict[str, Any]:
     # Process namespaces
-    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     data["namespace_level"] = 0
     data["namespace_children"] = set()
     data["namespace_size"] = 0
@@ -80,7 +80,7 @@ def process_content_data(
         page_properties = find_all_lower(patterns["property"], primary_bullet)
         content = content.replace(primary_bullet, "")
     block_properties = find_all_lower(patterns["property"], content)
-    built_in_props = frozenset(CONFIG_INI.get("BUILT_IN_PROPERTIES", "PROPERTIES").split(","))
+    built_in_props = CONFIG.get_built_in_properties()
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
     properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, built_in_props)
 
@@ -240,7 +240,7 @@ def post_processing_content(content_data):
     unique_aliases = set()
 
     # Process each file's content
-    ns_sep = CONFIG_INI.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_CONFIG_STATICS", "NAMESPACE_SEP")
     for name, data in content_data.items():
         # Process namespaces
         if ns_sep in name:
