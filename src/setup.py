@@ -30,7 +30,6 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
             move_bak=kwargs.get("move_bak", False),
             move_recycle=kwargs.get("move_recycle", False),
             write_graph=kwargs.get("write_graph", False),
-            visualize_graph=kwargs.get("visualize_graph", False),  # TODO This is a test, do not use!
             report_format=kwargs.get("report_format", ""),
         )
         return args
@@ -184,7 +183,7 @@ def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: d
         "file_name_format": None,
     }
 
-    for key in config_edn_data.keys():
+    for key in config_edn_data:
         pattern = config_patterns.get(f"{key}_pattern")
         if pattern:
             match = pattern.search(config_edn_content)
@@ -283,4 +282,8 @@ def validate_path(path: Path) -> None:
         path.resolve(strict=True)
     except FileNotFoundError:
         logging.warning(f"Path does not exist: {path}")
-        raise FileNotFoundError(f"Path does not exist: {path}")
+        raise FileNotFoundError(f"Path does not exist: {path}") from None
+    except Exception as e:
+        logging.warning(f"Error resolving path: {path} - {e}")
+        raise Exception(f"Error resolving path: {path}") from None
+        
