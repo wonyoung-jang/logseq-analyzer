@@ -82,8 +82,10 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
         try:
             target.mkdir(parents=True, exist_ok=True)
             logging.info("Created subdirectory: %s", target)
-        except Exception as e:
-            logging.error("Failed to create subdirectory %s: %s", target, e)
+        except PermissionError:
+            logging.error("Permission denied to create subdirectory: %s", target)
+        except OSError as e:
+            logging.error("Error creating subdirectory: %s", e)
     else:
         logging.info("Subdirectory already exists: %s", target)
 

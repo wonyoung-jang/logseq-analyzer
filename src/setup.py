@@ -107,13 +107,17 @@ def create_output_directory() -> Path:
         try:
             shutil.rmtree(output_dir)
             logging.info("Removed existing output directory: %s", output_dir)
-        except Exception as e:
-            logging.error("Failed to remove directory %s: %s", output_dir, e)
+        except IsADirectoryError:
+            logging.error("Output directory is not empty: %s", output_dir)
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
         logging.info("Created output directory: %s", output_dir)
-    except Exception as e:
-        logging.error("Failed to create output directory %s: %s", output_dir, e)
+    except FileExistsError:
+        logging.error("Output directory already exists: %s", output_dir)
+    except PermissionError:
+        logging.error("Permission denied to create output directory: %s", output_dir)
+    except OSError as e:
+        logging.error("Error creating output directory: %s", e)
 
     return output_dir
 
@@ -286,5 +290,3 @@ def validate_path(path: Path) -> None:
     except FileNotFoundError:
         logging.warning("Path does not exist: %s", path)
         raise FileNotFoundError(f"Path does not exist: {path}") from None
-    except Exception as e:
-        logging.warning("Error resolving path: %s - %s", path, e)

@@ -117,5 +117,8 @@ def get_file_content(file_path: Path) -> Optional[str]:
         return file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         logging.warning("File not found: %s", file_path)
-    except Exception as e:
-        logging.warning("Failed to read file %s: %s", file_path, e)
+    except IsADirectoryError:
+        logging.warning("Path is a directory, not a file: %s", file_path)
+    except UnicodeDecodeError:
+        logging.warning("Failed to decode file %s with utf-8 encoding.", file_path)
+    return None

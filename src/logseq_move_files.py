@@ -137,7 +137,7 @@ def move_all_folder_content(moved_content: List[Tuple]) -> None:
         try:
             shutil.move(old_path, new_path)
             logging.warning("Moved folder: %s to %s", old_path, new_path)
-        except Exception as e:
+        except (shutil.Error, OSError) as e:
             logging.error("Failed to move folder: %s to %s: %s", old_path, new_path, e)
 
 
@@ -161,5 +161,5 @@ def move_unlinked_assets(
         try:
             shutil.move(file_path, new_path)
             logging.warning("Moved unlinked asset: %s to %s", file_path, new_path)
-        except Exception as e:
+        except (shutil.Error, OSError) as e:
             logging.error("Failed to move unlinked asset: %s to %s: %s", file_path, new_path, e)
