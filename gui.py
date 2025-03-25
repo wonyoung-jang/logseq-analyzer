@@ -47,12 +47,32 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Central Widget and Layout
         central_widget = QWidget()
         main_layout = QGridLayout(central_widget)
+        self.setCentralWidget(central_widget)
 
-        # Form Layout for Input Fields
-        form_layout = QFormLayout()
+        self.setup_ui(main_layout)
+
+        self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
+        self.load_settings()
+
+    def setup_ui(self, main_layout):
+        """Sets up the main user interface layout and elements."""
+        form_layout = self.create_input_fields_layout()
         main_layout.addLayout(form_layout, 0, 0)
 
-        # Logseq Graph Folder Input
+        checkboxes_layout = self.create_checkboxes_layout()
+        form_layout.addRow(checkboxes_layout)
+
+        progress_bars_layout = self.create_progress_bars_layout()
+        form_layout.addRow(progress_bars_layout)
+
+        buttons_layout = self.create_buttons_layout()
+        main_layout.addLayout(buttons_layout, 1, 0)
+
+    def create_input_fields_layout(self) -> QFormLayout:
+        """Creates and returns the layout for input fields (graph folder, config file, report format)."""
+        form_layout = QFormLayout()
+
+        # --- Graph Folder Input ---
         self.graph_folder_label = QLabel("Logseq Graph Folder (Required):")
         self.graph_folder_input = QLineEdit()
         self.graph_folder_button = QPushButton("Browse")
@@ -63,7 +83,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         graph_folder_layout.addWidget(self.graph_folder_button)
         form_layout.addRow(self.graph_folder_label, graph_folder_hbox)
 
-        # Logseq Global Config File Input
+        # --- Global Config File Input ---
         self.global_config_label = QLabel("Logseq Global Config File (Optional):")
         self.global_config_input = QLineEdit()
         self.global_config_button = QPushButton("Browse")
@@ -74,39 +94,54 @@ class LogseqAnalyzerGUI(QMainWindow):
         global_config_layout.addWidget(self.global_config_button)
         form_layout.addRow(self.global_config_label, global_config_hbox)
 
-        # Report Format dropdown (txt, json)
+        # --- Report Format Dropdown ---
         self.report_format_label = QLabel("Report Format:")
         self.report_format_combo = QComboBox()
         self.report_format_combo.addItems([".txt", ".json", ".md"])
         form_layout.addRow(self.report_format_label, self.report_format_combo)
 
-        # Checkboxes
+        return form_layout
+
+    def create_checkboxes_layout(self) -> QVBoxLayout:
+        """Creates and returns the layout for checkboxes."""
+        checkboxes_layout = QVBoxLayout()
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
         self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
         self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
         self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
-        form_layout.addRow(self.move_assets_checkbox)
-        form_layout.addRow(self.move_bak_checkbox)
-        form_layout.addRow(self.move_recycle_checkbox)
-        form_layout.addRow(self.write_graph_checkbox)
+        checkboxes_layout.addWidget(self.move_assets_checkbox)
+        checkboxes_layout.addWidget(self.move_bak_checkbox)
+        checkboxes_layout.addWidget(self.move_recycle_checkbox)
+        checkboxes_layout.addWidget(self.write_graph_checkbox)
+        return checkboxes_layout
 
-        # Progress Bars
+    def create_progress_bars_layout(self) -> QFormLayout:
+        """Creates and returns the layout for progress bars."""
+        progress_bars_layout = QFormLayout()
         self.setup_progress_bar = self.create_progress_bar()
         self.process_files_progress_bar = self.create_progress_bar()
         self.summary_progress_bar = self.create_progress_bar()
         self.move_files_progress_bar = self.create_progress_bar()
-        form_layout.addRow("Setup:", self.setup_progress_bar)
-        form_layout.addRow("Process Files:", self.process_files_progress_bar)
-        form_layout.addRow("Summarizing:", self.summary_progress_bar)
-        form_layout.addRow("Move Files:", self.move_files_progress_bar)
+        progress_bars_layout.addRow("Setup:", self.setup_progress_bar)
+        progress_bars_layout.addRow("Process Files:", self.process_files_progress_bar)
+        progress_bars_layout.addRow("Summarizing:", self.summary_progress_bar)
+        progress_bars_layout.addRow("Move Files:", self.move_files_progress_bar)
+        return progress_bars_layout
 
-        # Buttons
-        button_layout = QVBoxLayout()
+    def create_progress_bar(self):
+        """Create a progress bar."""
+        progress_bar = QProgressBar(self)
+        progress_bar.setRange(0, 100)
+        progress_bar.setValue(0)
+        return progress_bar
+
+    def create_buttons_layout(self) -> QVBoxLayout:
+        """Creates and returns the layout for all buttons (Run, Exit, Open Directories, Log)."""
+        buttons_layout = QVBoxLayout()
         button_layout_primary = QHBoxLayout()
         button_layout_secondary = QHBoxLayout()
-        button_layout.addLayout(button_layout_primary)
-        button_layout.addLayout(button_layout_secondary)
-        main_layout.addLayout(button_layout, 1, 0)
+        buttons_layout.addLayout(button_layout_primary)
+        buttons_layout.addLayout(button_layout_secondary)
 
         self.run_button = QPushButton("Run Analysis")
         self.run_button.clicked.connect(self.run_analysis)
@@ -120,34 +155,23 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.exit_button.setToolTip("Ctrl+W to exit")
         button_layout_primary.addWidget(self.exit_button)
 
-        # Button to open output directory
+        # --- Secondary Buttons ---
         self.output_button = QPushButton("Open Output Directory")
         self.output_button.clicked.connect(self.open_output_directory)
         self.output_button.setEnabled(False)
         button_layout_secondary.addWidget(self.output_button)
 
-        # Button to open to_delete directory
         self.delete_button = QPushButton("Open Delete Directory")
         self.delete_button.clicked.connect(self.open_delete_directory)
         self.delete_button.setEnabled(False)
         button_layout_secondary.addWidget(self.delete_button)
 
-        # Button to open log file
         self.log_button = QPushButton("Open Log File")
         self.log_button.clicked.connect(self.open_log_file)
         self.log_button.setEnabled(False)
         button_layout_secondary.addWidget(self.log_button)
 
-        self.setCentralWidget(central_widget)
-        self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
-        self.load_settings()
-
-    def create_progress_bar(self):
-        """Create a progress bar."""
-        progress_bar = QProgressBar(self)
-        progress_bar.setRange(0, 100)
-        progress_bar.setValue(0)
-        return progress_bar
+        return buttons_layout
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
