@@ -1,3 +1,7 @@
+"""
+Compile frequently used regex patterns for Logseq content and configuration.
+"""
+
 import logging
 import re
 from typing import Dict, Pattern

@@ -1,3 +1,7 @@
+"""
+Module to handle moving files in a Logseq graph directory.
+"""
+
 import argparse
 import logging
 import shutil

@@ -1,3 +1,7 @@
+"""
+Process content data for Logseq.
+"""
+
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
@@ -13,6 +17,18 @@ def process_content_data(
     patterns: Dict[str, Pattern],
     primary_bullet: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Process content data to extract various elements like backlinks, tags, and properties.
+
+    Args:
+        data (Dict[str, Any]): The initial data dictionary.
+        content (str): The content to process.
+        patterns (Dict[str, Pattern]): The compiled regex patterns for matching elements.
+        primary_bullet (Dict[str, Any]): The primary bullet data.
+
+    Returns:
+        Dict[str, Any]: The updated data dictionary with extracted elements.
+    """
     # Process namespaces
     ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
     data["namespace_level"] = 0
@@ -194,6 +210,8 @@ def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_
     links_other = f"{links_type}_links_other"
     links_internet = f"{links_type}_links_internet"
     links_internet_pattern = f"{links_type}_link_internet"
+    links_subtype = ""
+    links_sub_pattern = ""
     if links_type == "external":
         links_subtype = f"{links_type}_links_alias"
         links_sub_pattern = f"{links_type}_link_alias"
@@ -240,7 +258,8 @@ def post_processing_content(
         content_data (Dict[str, Any]): The content data to process.
 
     Returns:
-        Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]: Processed content data, alphanum dicts, dangling links, and all linked references.
+        Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
+            Processed content data, alphanum dicts, dangling links, and all linked references.
     """
     all_linked_references = {}
     unique_linked_references = set()

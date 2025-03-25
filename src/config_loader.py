@@ -1,10 +1,32 @@
+"""
+ConfigLoader class for loading and managing configuration files.
+"""
+
 import configparser
 import os
 import re
 
 
 class Config:
+    """
+    A class to handle configuration file loading and management.
+
+    This class uses the configparser module to read and write configuration files.
+    It provides methods to get and set configuration values, as well as to retrieve
+    specific sections and properties from the configuration file.
+
+    Attributes:
+        config (configparser.ConfigParser): The configparser instance for handling the configuration file.
+        _datetime_token_map (dict): A dictionary mapping datetime tokens to their values.
+        _datetime_token_pattern (re.Pattern): A compiled regex pattern for datetime tokens.
+        _built_in_properties (frozenset): A frozenset of built-in properties defined in the configuration file.
+    """
+
     def __init__(self, config_path="src/config.ini"):
+        """
+        Initialize the Config class with a given config file path.
+        If the file does not exist, a FileNotFoundError is raised.
+        """
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             default_section="None",
@@ -22,14 +44,17 @@ class Config:
         self._built_in_properties = None
 
     def get(self, section, key, fallback=None):
+        """Get a value from the config file"""
         return self.config.get(section, key, fallback=fallback)
 
     def set(self, section, key, value):
+        """Set a value in the config file"""
         if section not in self.config:
             self.config.add_section(section)
         self.config.set(section, key, value)
 
     def get_section(self, section):
+        """Get a section from the config file as a dictionary"""
         if section in self.config:
             return dict(self.config[section])
         return {}
@@ -61,11 +86,14 @@ class Config:
 
 
 # Singleton
-_config_instance = None
+_CONFIG_INSTANCE = None
 
 
 def get_config(config_path="src/config.ini"):
-    global _config_instance
-    if _config_instance is None:
-        _config_instance = Config(config_path)
-    return _config_instance
+    """
+    Get the singleton instance of the Config class.
+    """
+    global _CONFIG_INSTANCE
+    if _CONFIG_INSTANCE is None:
+        _CONFIG_INSTANCE = Config(config_path)
+    return _CONFIG_INSTANCE

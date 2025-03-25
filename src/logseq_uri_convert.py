@@ -1,3 +1,7 @@
+"""
+Convert a file URI to a Logseq URL and open it in the default web browser.
+"""
+
 import webbrowser
 
 

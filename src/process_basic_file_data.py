@@ -1,3 +1,7 @@
+"""
+Process basic file data for Logseq files.
+"""
+
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -113,7 +117,5 @@ def get_file_content(file_path: Path) -> Optional[str]:
         return file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         logging.warning("File not found: %s", file_path)
-        return None
     except Exception as e:
         logging.warning("Failed to read file %s: %s", file_path, e)
-        return None

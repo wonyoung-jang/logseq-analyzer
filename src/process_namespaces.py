@@ -1,18 +1,6 @@
-import logging
-from collections import Counter, defaultdict
-from typing import Any, Dict, List, Set, Tuple
-
-from .config_loader import get_config
-from .core import generate_global_summary
-from .process_summary_data import extract_summary_subset_files
-from .compile_regex import compile_re_content
-
-CONFIG = get_config()
-CONTENT_RE = compile_re_content()
-
 """
-Namespace Analysis
-------------------
+This module contains functions for processing and analyzing namespace data in Logseq.
+
 What are the problems trying to be solved?
 
 Logseq's move to a database system from a markdown one.
@@ -25,6 +13,18 @@ Problems:
     2. Some parents may appear across multiple namespaces at different depths.
     3. There is no easy way to get data about namespaces.
 """
+
+import logging
+from collections import Counter, defaultdict
+from typing import Any, Dict, List, Set, Tuple
+
+from .config_loader import get_config
+from .core import generate_global_summary
+from .process_summary_data import extract_summary_subset_files
+from .compile_regex import compile_re_content
+
+CONFIG = get_config()
+CONTENT_RE = compile_re_content()
 
 
 def process_namespace_data(

@@ -1,3 +1,7 @@
+"""
+This module contains functions for processing and analyzing Logseq graph data.
+"""
+
 from pathlib import Path
 from typing import Any, Dict, List, Pattern, Tuple
 

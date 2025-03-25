@@ -1,3 +1,7 @@
+"""
+Helper functions for file and date processing.
+"""
+
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -80,7 +84,6 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
             logging.info("Created subdirectory: %s", target)
         except Exception as e:
             logging.error("Failed to create subdirectory %s: %s", target, e)
-            raise
     else:
         logging.info("Subdirectory already exists: %s", target)
 

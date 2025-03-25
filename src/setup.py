@@ -1,3 +1,7 @@
+"""
+Setup module for Logseq Analyzer.
+"""
+
 import argparse
 import logging
 import shutil
@@ -110,7 +114,6 @@ def create_output_directory() -> Path:
         logging.info("Created output directory: %s", output_dir)
     except Exception as e:
         logging.error("Failed to create output directory %s: %s", output_dir, e)
-        raise
 
     return output_dir
 
@@ -282,7 +285,6 @@ def validate_path(path: Path) -> None:
         path.resolve(strict=True)
     except FileNotFoundError:
         logging.warning("Path does not exist: %s", path)
-        raise FileNotFoundError("Path does not exist: %s" % path) from None
+        raise FileNotFoundError(f"Path does not exist: {path}") from None
     except Exception as e:
         logging.warning("Error resolving path: %s - %s", path, e)
-        raise Exception("Error resolving path: %s" % path) from None

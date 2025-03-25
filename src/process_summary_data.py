@@ -1,3 +1,7 @@
+"""
+Process summary data for each file based on metadata and content analysis.
+"""
+
 from typing import Any, Dict, List, Set, Tuple
 
 from .config_loader import get_config
@@ -183,7 +187,8 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tupl
         criteria (str): The criteria for extraction.
 
     Returns:
-        Tuple[List[str], Dict[str, Dict]]: A tuple containing a sorted list of unique values and a dictionary with counts and locations.
+        Tuple[List[str], Dict[str, Dict]]: A tuple containing a sorted list of
+        unique values and a dictionary with counts and locations.
     """
     subset = set()
     subset_counter = {}

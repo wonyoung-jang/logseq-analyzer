@@ -1,3 +1,7 @@
+"""
+Module to process dangling links in a graph data structure.
+"""
+
 from typing import Any, Dict, Set
 
 

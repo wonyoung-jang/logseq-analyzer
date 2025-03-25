@@ -1,3 +1,7 @@
+"""
+This module contains the main application logic for the Logseq analyzer.
+"""
+
 # import sys
 from pathlib import Path
 

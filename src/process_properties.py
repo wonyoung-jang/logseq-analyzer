@@ -1,3 +1,7 @@
+"""
+Process properties of the dataset.
+"""
+
 from typing import Dict, Any, Tuple
 
 from .config_loader import get_config

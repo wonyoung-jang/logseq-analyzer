@@ -1,3 +1,7 @@
+"""
+Logseq Analyzer GUI using PySide6.
+"""
+
 import os
 import subprocess
 import sys
@@ -31,7 +35,10 @@ CONFIG = get_config()
 
 
 class LogseqAnalyzerGUI(QMainWindow):
+    """Main GUI class for the Logseq Analyzer application."""
+
     def __init__(self):
+        """Initialize the GUI components and layout."""
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
         self.setGeometry(500, 500, 500, 500)
@@ -191,6 +198,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.show_error("Log file not found.")
 
     def run_analysis(self):
+        """Run the analysis with the provided arguments."""
         args_gui = {
             "graph_folder": self.graph_folder_input.text(),
             "global_config_file": self.global_config_input.text(),
@@ -307,6 +315,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             QApplication.processEvents()
 
     def show_error(self, message):
+        """Show an error message in a dialog."""
         error_dialog = QMessageBox(self)
         error_dialog.setIcon(QMessageBox.Critical)
         error_dialog.setWindowTitle("Error")
@@ -314,11 +323,13 @@ class LogseqAnalyzerGUI(QMainWindow):
         error_dialog.exec()
 
     def select_graph_folder(self):
+        """Open a file dialog to select the Logseq graph folder."""
         folder = QFileDialog.getExistingDirectory(self, "Select Logseq Graph Folder")
         if folder:
             self.graph_folder_input.setText(folder)
 
     def select_global_config_file(self):
+        """Open a file dialog to select the Logseq global config file."""
         file, _ = QFileDialog.getOpenFileName(self, "Select Logseq Global Config File", "", "EDN Files (*.edn)")
         if file:
             self.global_config_input.setText(file)

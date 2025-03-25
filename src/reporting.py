@@ -1,3 +1,7 @@
+"""
+Reporting module for writing output to files.
+"""
+
 import json
 import logging
 from pathlib import Path

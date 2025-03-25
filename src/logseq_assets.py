@@ -1,3 +1,7 @@
+"""
+This module handles the processing of assets in the Logseq Analyzer.
+"""
+
 from typing import Any, Dict, List, Tuple
 
 from .process_summary_data import extract_summary_subset_files
