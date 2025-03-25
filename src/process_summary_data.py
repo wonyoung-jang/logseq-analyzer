@@ -27,14 +27,6 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    assets_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_ASSETS")
-    draws_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_DRAWS")
-    journals_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
-    pages_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
-    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")
-    file_type_journal = CONFIG.get("FILE_TYPES", "JOURNAL")
-    file_type_page = CONFIG.get("FILE_TYPES", "PAGE")
-
     for name, meta_data in graph_data.items():
         has_content = bool(meta_data["size"] > 0)
         has_backlinks = False
@@ -72,9 +64,7 @@ def process_summary_data(
         file_path_parent_name = meta_data["file_path_parent_name"]
         file_path_parts = meta_data["file_path_parts"]
 
-        file_type = determine_file_type(
-            assets_dir, draws_dir, journals_dir, pages_dir, whiteboards_dir, file_path_parent_name, file_path_parts
-        )
+        file_type = determine_file_type(file_path_parent_name, file_path_parts)
 
         is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
         is_backlinked_by_ns_only = False
@@ -82,7 +72,7 @@ def process_summary_data(
             is_backlinked_by_ns_only = check_is_backlinked(name, meta_data, alphanum_dict_ns)
 
         node_type = CONFIG.get("NODE_TYPES", "OTHER")
-        if file_type in [file_type_journal, file_type_page]:
+        if file_type in [CONFIG.get("FILE_TYPES", "JOURNAL"), CONFIG.get("FILE_TYPES", "PAGE")]:
             node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
         meta_data["file_type"] = file_type
@@ -119,11 +109,6 @@ def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dic
 
 
 def determine_file_type(
-    assets_dir: str,
-    draws_dir: str,
-    journals_dir: str,
-    pages_dir: str,
-    whiteboards_dir: str,
     file_path_parent_name: str,
     file_path_parts: List[str],
 ) -> str:
@@ -131,17 +116,20 @@ def determine_file_type(
     Helper function to determine the file type based on the directory structure.
 
     Args:
-        assets_dir (str): Directory for assets.
-        draws_dir (str): Directory for draws.
-        journals_dir (str): Directory for journals.
-        pages_dir (str): Directory for pages.
-        whiteboards_dir (str): Directory for whiteboards.
         file_path_parent_name (str): The parent name of the file path.
         file_path_parts (List[str]): Parts of the file path.
 
     Returns:
         str: The determined file type.
     """
+    assets_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_ASSETS")
+    draws_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_DRAWS")
+    journals_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
+    pages_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_PAGES")
+    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_WHITEBOARDS")
+
+    file_type = None
+
     if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
         file_type = CONFIG.get("FILE_TYPES", "ASSET")
     elif file_path_parent_name == draws_dir:
@@ -154,27 +142,36 @@ def determine_file_type(
         file_type = CONFIG.get("FILE_TYPES", "WHITEBOARD")
     else:
         file_type = CONFIG.get("FILE_TYPES", "OTHER")
+
     return file_type
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
+    node_type = None
+
     if has_content:
         if is_backlinked:
             if has_backlinks:
-                return CONFIG.get("NODE_TYPES", "BRANCH")
-            return CONFIG.get("NODE_TYPES", "LEAF")
-        if has_backlinks:
-            return CONFIG.get("NODE_TYPES", "ROOT")
-        if is_backlinked_ns:
-            return CONFIG.get("NODE_TYPES", "ORPHAN_NS")
-        return CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
+                node_type = CONFIG.get("NODE_TYPES", "BRANCH")
+            else:
+                node_type = CONFIG.get("NODE_TYPES", "LEAF")
+        elif has_backlinks:
+            node_type = CONFIG.get("NODE_TYPES", "ROOT")
+        elif is_backlinked_ns:
+            node_type = CONFIG.get("NODE_TYPES", "ORPHAN_NS")
+        else:
+            node_type = CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
+    else:  # No content
+        if not is_backlinked:
+            if is_backlinked_ns:
+                node_type = CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
+            else:
+                node_type = CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
+        else:
+            node_type = CONFIG.get("NODE_TYPES", "LEAF")
 
-    if not is_backlinked:
-        if is_backlinked_ns:
-            return CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
-        return CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
-    return CONFIG.get("NODE_TYPES", "LEAF")
+    return node_type
 
 
 def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tuple[List[str], Dict[str, Dict]]:

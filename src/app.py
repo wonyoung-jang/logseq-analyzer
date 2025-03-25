@@ -17,7 +17,7 @@ from .core import (
     process_graph_files,
 )
 from .logseq_assets import handle_assets
-from .logseq_move_files import create_delete_directory, handle_move_files
+from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
 from .process_namespaces import process_namespace_data
 from .setup import (
     create_log_file,
@@ -130,7 +130,13 @@ def run_app(**kwargs):
     #####################################################################
     to_delete_dir = create_delete_directory()
     assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
-    moved_files = handle_move_files(args, graph_data, assets_not_backlinked, bak_dir, recycle_dir, to_delete_dir)
+
+    moved_files = {}
+    moved_files["moved_assets"] = handle_move_files(
+        args.move_unlinked_assets, graph_data, assets_not_backlinked, to_delete_dir
+    )
+    moved_files["moved_bak"] = handle_move_directory(args.move_bak, bak_dir, to_delete_dir, def_bak_dir)
+    moved_files["moved_recycle"] = handle_move_directory(args.move_recycle, recycle_dir, to_delete_dir, def_rec_dir)
 
     if gui_instance:
         gui_instance.update_progress(move_files_phase, 100)

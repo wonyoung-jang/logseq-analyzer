@@ -31,32 +31,35 @@ def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
                 for index, value in enumerate(values):
                     f.write(f"{indent}\t{index}\t-\t{value}\n")
                 f.write("\n")
-            elif isinstance(values, dict):
+                continue
+
+            if isinstance(values, dict):
                 for k, v in values.items():
                     if not isinstance(v, (list, set, dict)):
                         f.write(f"{indent}\t{k:<60}: {v}\n")
-                    else:
-                        f.write(f"{indent}\t{k:<60}:\n")
-                        write_recursive(f, v, indent_level + 2)
+                        continue
+                    f.write(f"{indent}\t{k:<60}:\n")
+                    write_recursive(f, v, indent_level + 2)
                 f.write("\n")
-            else:
-                f.write(f"{indent}Value: {values}\n\n")
+                continue
+
+            f.write(f"{indent}Value: {values}\n\n")
     else:
         if isinstance(data, dict):
             for k, v in data.items():
                 if isinstance(v, (list, set, dict)):
                     f.write(f"{indent}{k}:\n")
                     write_recursive(f, v, indent_level + 1)
-                else:
-                    f.write(f"{indent}{k:<60}: {v}\n")
+                    continue
+                f.write(f"{indent}{k:<60}: {v}\n")
         elif isinstance(data, (list, set)):
             try:
                 for index, item in enumerate(sorted(data)):
                     if isinstance(item, (list, set, dict)):
                         f.write(f"{indent}{index}:\n")
                         write_recursive(f, item, indent_level + 1)
-                    else:
-                        f.write(f"{indent}{index}\t-\t{item}\n")
+                        continue
+                    f.write(f"{indent}{index}\t-\t{item}\n")
             except TypeError:
                 for index, item in enumerate(data):
                     f.write(f"{indent}{index}\t-\t{item}\n")

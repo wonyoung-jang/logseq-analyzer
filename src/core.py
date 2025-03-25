@@ -58,12 +58,14 @@ def core_data_analysis(
             - Processed graph data.
             - All references.
     """
-    graph_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_refs = post_processing_content(graph_data)
-    graph_data = process_summary_data(graph_data, alphanum_dict, alphanum_dict_ns)
+    graph_data, alphanum_dictionary, alphanum_dictionary_ns, dangling_links, all_refs = post_processing_content(
+        graph_data
+    )
+    graph_data = process_summary_data(graph_data, alphanum_dictionary, alphanum_dictionary_ns)
 
     return (
-        alphanum_dict,
-        alphanum_dict_ns,
+        alphanum_dictionary,
+        alphanum_dictionary_ns,
         dangling_links,
         graph_data,
         all_refs,

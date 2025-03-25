@@ -42,14 +42,17 @@ def process_namespace_data(
             - A dictionary with namespace data and analysis results.
             - A dictionary with a global summary of the namespace data.
     """
+    namespace_data_subset = {}
     # Find unique names that are not namespaces
-    unique_names_not_namespace = extract_summary_subset_files(graph_data, namespace_level=0)
+    namespace_data_subset["unique_names_not_namespace"] = extract_summary_subset_files(graph_data, namespace_level=0)
 
     # Find unique names that are namespaces
-    unique_names_is_namespace = sorted([k for k, v in graph_data.items() if v.get("namespace_level")])
+    namespace_data_subset["unique_names_is_namespace"] = sorted(
+        [k for k, v in graph_data.items() if v.get("namespace_level")]
+    )
 
     namespace_data = {}
-    for name in unique_names_is_namespace:
+    for name in namespace_data_subset["unique_names_is_namespace"]:
         namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k}
 
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
@@ -58,14 +61,14 @@ def process_namespace_data(
     unique_namespaces_levels, unique_namespaces_per_level = get_unique_namespaces_by_level(
         namespace_parts, namespace_details
     )
-    namespace_queries = analyze_namespace_queries(graph_data, namespace_data)
-    namespace_hierarchy = visualize_namespace_hierarchy(namespace_parts)
+    namespace_data_subset["namespace_queries"] = analyze_namespace_queries(graph_data, namespace_data)
+    namespace_data_subset["namespace_hierarchy"] = visualize_namespace_hierarchy(namespace_parts)
 
     ##################################
     # 01 Conflicts With Existing Pages
     ##################################
     # Potential non-namespace pages are those that are in the namespace data
-    potential_non_namespace = unique_namespace_parts.intersection(unique_names_not_namespace)
+    potential_non_namespace = unique_namespace_parts.intersection(namespace_data_subset["unique_names_not_namespace"])
 
     # Potential dangling links are those that are in the namespace data
     potential_dangling = unique_namespace_parts.intersection(dangling_links)
@@ -78,28 +81,23 @@ def process_namespace_data(
     #########################################
     # 02 Parts that Appear at Multiple Depths
     #########################################
-    conflicts_parent_depth = detect_parent_depth_conflicts(namespace_parts)
-    conflicts_parents_unique = get_unique_conflicts(conflicts_parent_depth)
+    namespace_data_subset["conflicts_parent_depth"] = detect_parent_depth_conflicts(namespace_parts)
+    namespace_data_subset["conflicts_parents_unique"] = get_unique_conflicts(
+        namespace_data_subset["conflicts_parent_depth"]
+    )
 
     ###########################
     # 03 Output Namespace Data
     ###########################
-    namespace_data_subset = {}
     namespace_data_subset.update(
         {
             **unique_namespaces_levels,
             "__namespace_data": namespace_data,
             "__namespace_details": namespace_details,
             "__namespace_parts": namespace_parts,
-            "unique_names_is_namespace": unique_names_is_namespace,
-            "unique_names_not_namespace": unique_names_not_namespace,
             "unique_namespace_parts": unique_namespace_parts,
             "conflicts_non_namespace": conflicts_non_namespace,
             "conflicts_dangling": conflicts_dangling,
-            "conflicts_parent_depth": conflicts_parent_depth,
-            "conflicts_parents_unique": conflicts_parents_unique,
-            "namespace_queries": namespace_queries,
-            "namespace_hierarchy": namespace_hierarchy,
             "unique_namespaces_per_level": unique_namespaces_per_level,
         },
     )

@@ -2,7 +2,6 @@
 Module to handle moving files in a Logseq graph directory.
 """
 
-import argparse
 import logging
 import shutil
 from pathlib import Path
@@ -30,58 +29,56 @@ def create_delete_directory() -> Path:
 
 
 def handle_move_files(
-    args: argparse.Namespace,
-    graph_meta_data: dict,
+    argument: bool,
+    graph_data: dict,
     unlinked_assets: dict,
-    bak: Path,
-    recycle: Path,
     to_delete_dir: Path,
-) -> Dict[str, Dict[Any, Any]]:
+) -> List[str]:
     """
     Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
     Args:
-        args (argparse.Namespace): The command line arguments.
-        graph_meta_data (dict): The graph metadata.
+        argument: The command line arguments.
+        graph_data (dict): The graph data.
         unlinked_assets (dict): The assets data.
-        bak (Path): The path to the bak directory.
-        recycle (Path): The path to the recycle directory.
         to_delete_dir (Path): The directory for deleted files.
 
     Returns:
-        Dict[str, Dict[Any, Any]]: A dictionary containing the moved files.
+        List[str]: A list of moved files or None.
     """
-    def_bak_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_BAK_DIR")
-    def_rec_dir = CONFIG.get("LOGSEQ_STRUCTURE", "DEFAULT_RECYCLE_DIR")
-
-    moved_files = {}
-
     if unlinked_assets:
-        if args.move_unlinked_assets:
-            moved_files["moved_assets"] = unlinked_assets
-            move_unlinked_assets(unlinked_assets, graph_meta_data, to_delete_dir)
-        else:
-            moved_files["moved_assets_simulated_only"] = unlinked_assets
+        if argument:
+            move_unlinked_assets(unlinked_assets, graph_data, to_delete_dir)
+            return unlinked_assets
+        unlinked_assets = ["=== Simulated only ==="] + unlinked_assets
+        return unlinked_assets
 
-    moved_bak, moved_bak_names = get_all_folder_content(bak, to_delete_dir, def_bak_dir)
+    return []
 
-    if moved_bak:
-        if args.move_bak:
-            moved_files["moved_bak"] = moved_bak_names
-            move_all_folder_content(moved_bak)
-        else:
-            moved_files["moved_bak_simulated_only"] = moved_bak_names
 
-    moved_recycle, moved_recycle_names = get_all_folder_content(recycle, to_delete_dir, def_rec_dir)
+def handle_move_directory(argument: bool, target_dir: Path, to_delete_dir: Path, default_dir: Path) -> List[str]:
+    """
+    Move bak and recycle files to a specified directory.
 
-    if moved_recycle:
-        if args.move_recycle:
-            moved_files["moved_recycle"] = moved_recycle_names
-            move_all_folder_content(moved_recycle)
-        else:
-            moved_files["moved_recycle_simulated_only"] = moved_recycle_names
+    Args:
+        argument (bool): The command line argument for moving files.
+        target_dir (Path): The directory to move files from.
+        to_delete_dir (Path): The directory to move files to.
+        default_dir (Path): The default directory for bak and recycle files.
 
-    return moved_files
+    Returns:
+        List[str]: A list of moved files or an empty list if no files were moved.
+    """
+    moved, moved_names = get_all_folder_content(target_dir, to_delete_dir, default_dir)
+
+    if moved:
+        if argument:
+            move_all_folder_content(moved)
+            return moved_names
+        moved_names = ["=== Simulated only ==="] + moved_names
+        return moved_names
+
+    return []
 
 
 def get_all_folder_content(
@@ -100,8 +97,7 @@ def get_all_folder_content(
             - List of tuples with source and destination paths.
             - List of names of moved files and folders.
     """
-    folders = [input_dir, target_dir]
-    for folder in folders:
+    for folder in [input_dir, target_dir]:
         if not folder.exists():
             return [], []
 

@@ -257,28 +257,23 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "assets_not_backlinked",
             ]
 
-            output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
-            output_dir_summaries = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
-            output_dir_namespaces = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
-            output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
-
             for key, items in output_data.items():
                 if key in output_meta:
-                    write_output(self.output_dir, key, items, output_dir_meta)
+                    write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "META"))
                 elif key in output_summaries:
                     if key == "___summary_global":
-                        write_output(self.output_dir, key, items, output_dir_summaries)
-                    else:
-                        for summary, data in items.items():
-                            write_output(self.output_dir, summary, data, output_dir_summaries)
+                        write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "SUMMARY"))
+                        continue
+                    for summary, data in items.items():
+                        write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "SUMMARY"))
                 elif key in output_namespaces:
                     if key == "___summary_global_namespaces":
-                        write_output(self.output_dir, key, items, output_dir_namespaces)
-                    else:
-                        for summary, data in items.items():
-                            write_output(self.output_dir, summary, data, output_dir_namespaces)
+                        write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "NAMESPACE"))
+                        continue
+                    for summary, data in items.items():
+                        write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "NAMESPACE"))
                 elif key in output_assets:
-                    write_output(self.output_dir, key, items, output_dir_assets)
+                    write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "ASSETS"))
 
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
@@ -288,9 +283,6 @@ class LogseqAnalyzerGUI(QMainWindow):
             success_dialog.exec()
         except KeyboardInterrupt:
             self.show_error("Analysis interrupted by user.")
-            self.close()
-        except Exception as e:
-            self.show_error(f"Analysis failed: {e}")
             self.close()
         finally:
             self.run_button.setEnabled(True)
