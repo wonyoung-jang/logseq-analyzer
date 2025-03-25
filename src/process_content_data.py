@@ -85,7 +85,12 @@ def process_content_data(
     advanced_commands = find_all_lower(patterns["advanced_command"], content)
 
     # Extract all properties: values pairs
-    properties_values = {prop: value for prop, value in patterns["property_value"].findall(content)}
+    properties_values = {}
+    property_value_all = patterns["property_value"].findall(content)
+    for prop, value in property_value_all:
+        properties_values[prop] = properties_values.get(prop, [])
+        properties_values[prop].append(value)
+
     aliases = properties_values.get("alias", [])
     if aliases:
         aliases = process_aliases(aliases)
