@@ -189,15 +189,15 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tupl
     """
     subset = set()
     subset_counter = {}
-    for k, v in graph_data.items():
-        values = v.get(criteria)
+    for name, data in graph_data.items():
+        values = data.get(criteria)
         if values:
             subset.update(values)
             for value in values:
                 subset_counter[value] = subset_counter.get(value, {})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
                 subset_counter[value]["found_in"] = subset_counter[value].get("found_in", set())
-                subset_counter[value]["found_in"].add(k)
+                subset_counter[value]["found_in"].add(name)
 
     sorted_subset = sorted(subset)
     sorted_subset_counter = dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))

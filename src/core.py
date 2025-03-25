@@ -84,28 +84,28 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     """
     summary_categories: Dict[str, Dict[str, Any]] = {
         # Process general categories
-        "is_backlinked": {"is_backlinked": True},
-        "is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
-        "has_content": {"has_content": True},
-        "has_backlinks": {"has_backlinks": True},
-        "has_external_links": {"has_external_links": True},
-        "has_embedded_links": {"has_embedded_links": True},
+        "_is_backlinked": {"is_backlinked": True},
+        "_is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
+        "_has_content": {"has_content": True},
+        "_has_backlinks": {"has_backlinks": True},
+        "_has_external_links": {"has_external_links": True},
+        "_has_embedded_links": {"has_embedded_links": True},
         # Process file types
-        "is_asset": {"file_type": "asset"},
-        "is_draw": {"file_type": "draw"},
-        "is_journal": {"file_type": "journal"},
-        "is_page": {"file_type": "page"},
-        "is_whiteboard": {"file_type": "whiteboard"},
-        "is_other": {"file_type": "other"},
+        "_is_asset": {"file_type": "asset"},
+        "_is_draw": {"file_type": "draw"},
+        "_is_journal": {"file_type": "journal"},
+        "_is_page": {"file_type": "page"},
+        "_is_whiteboard": {"file_type": "whiteboard"},
+        "_is_other": {"file_type": "other"},
         # Process nodes
-        "is_orphan_true": {"node_type": "orphan_true"},
-        "is_orphan_graph": {"node_type": "orphan_graph"},
-        "is_orphan_namespace": {"node_type": "orphan_namespace"},
-        "is_orphan_namespace_true": {"node_type": "orphan_namespace_true"},
-        "is_node_root": {"node_type": "root"},
-        "is_node_leaf": {"node_type": "leaf"},
-        "is_node_branch": {"node_type": "branch"},
-        "is_node_other": {"node_type": "other_node"},
+        "_is_orphan_true": {"node_type": "orphan_true"},
+        "_is_orphan_graph": {"node_type": "orphan_graph"},
+        "_is_orphan_namespace": {"node_type": "orphan_namespace"},
+        "_is_orphan_namespace_true": {"node_type": "orphan_namespace_true"},
+        "_is_node_root": {"node_type": "root"},
+        "_is_node_leaf": {"node_type": "leaf"},
+        "_is_node_branch": {"node_type": "branch"},
+        "_is_node_other": {"node_type": "other_node"},
     }
 
     summary_data_subsets = {}
@@ -117,54 +117,54 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for meta in graph_data.values():
         ext = meta.get("file_extension")
         file_extensions[ext] = file_extensions.get(ext, 0) + 1
-    summary_data_subsets["file_extensions"] = file_extensions
+    summary_data_subsets["_file_extensions"] = file_extensions
 
     for ext in file_extensions:
-        output_name = f"all_{ext}s"
+        output_name = f"_all_{ext}s"
         criteria = {"file_extension": ext}
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
 
     # Process content types
     content_subset_tags_nodes = {
+        "advanced_commands": "advanced_commands",
         "aliases": "aliases",
+        "assets": "assets",
+        "block_embeds": "block_embeds",
+        "block_references": "block_references",
+        "blockquotes": "blockquotes",
+        "calc_blocks": "calc_blocks",
+        "clozes": "clozes",
+        "draws": "draws",
+        "embedded_links_asset": "embedded_links_asset",
+        "embedded_links_internet": "embedded_links_internet",
+        "embedded_links_other": "embedded_links_other",
+        "embeds": "embeds",
+        "external_links_alias": "external_links_alias",
+        "external_links_internet": "external_links_internet",
+        "external_links_other": "external_links_other",
+        "flashcards": "flashcards",
+        "multiline_code_blocks": "multiline_code_blocks",
+        "multiline_code_langs": "multiline_code_langs",
         "namespace_parts": "namespace_parts",
+        "namespace_queries": "namespace_queries",
+        "page_embeds": "page_embeds",
         "page_references": "page_references",
-        "tagged_backlinks": "tagged_backlinks",
-        "tags": "tags",
-        "properties_values": "properties_values",
-        "properties_page_builtin": "properties_page_builtin",
-        "properties_page_user": "properties_page_user",
         "properties_block_builtin": "properties_block_builtin",
         "properties_block_user": "properties_block_user",
-        "assets": "assets",
-        "draws": "draws",
-        "external_links": "external_links",
-        "external_links_internet": "external_links_internet",
-        "external_links_alias": "external_links_alias",
-        "embedded_links": "embedded_links",
-        "embedded_links_internet": "embedded_links_internet",
-        "embedded_links_asset": "embedded_links_asset",
-        "blockquotes": "blockquotes",
-        "flashcards": "flashcards",
-        "multiline_code_block": "multiline_code_block",
-        "calc_block": "calc_block",
-        "multiline_code_lang": "multiline_code_lang",
-        "reference": "reference",
-        "block_reference": "block_reference",
-        "embed": "embed",
-        "page_embed": "page_embed",
-        "block_embed": "block_embed",
-        "namespace_queries": "namespace_queries",
-        "clozes": "clozes",
-        "simple_queries": "simple_queries",
+        "properties_page_builtin": "properties_page_builtin",
+        "properties_page_user": "properties_page_user",
+        "properties_values": "properties_values",
         "query_functions": "query_functions",
-        "advanced_commands": "advanced_commands",
+        "references_general": "references_general",
+        "simple_queries": "simple_queries",
+        "tagged_backlinks": "tagged_backlinks",
+        "tags": "tags",
     }
 
     for output_name, criteria in content_subset_tags_nodes.items():
         subset, subset_counts = extract_summary_subset_content(graph_data, criteria)
-        counts_output_name = f"{output_name}_counts"
+        counts_output_name = f"counts_{output_name}"
         summary_data_subsets[output_name] = subset
         summary_data_subsets[counts_output_name] = subset_counts
 
