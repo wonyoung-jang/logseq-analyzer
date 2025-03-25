@@ -77,38 +77,27 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Report Format dropdown (txt, json)
         self.report_format_label = QLabel("Report Format:")
         self.report_format_combo = QComboBox()
-        self.report_format_combo.addItems([".txt", ".json"])
+        self.report_format_combo.addItems([".txt", ".json", ".md"])
         form_layout.addRow(self.report_format_label, self.report_format_combo)
 
         # Checkboxes
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
-        form_layout.addRow(self.move_assets_checkbox)
         self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
-        form_layout.addRow(self.move_bak_checkbox)
         self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
-        form_layout.addRow(self.move_recycle_checkbox)
         self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
+        form_layout.addRow(self.move_assets_checkbox)
+        form_layout.addRow(self.move_bak_checkbox)
+        form_layout.addRow(self.move_recycle_checkbox)
         form_layout.addRow(self.write_graph_checkbox)
 
         # Progress Bars
-        self.setup_progress_bar = QProgressBar()
-        self.setup_progress_bar.setRange(0, 100)
-        self.setup_progress_bar.setValue(0)
+        self.setup_progress_bar = self.create_progress_bar()
+        self.process_files_progress_bar = self.create_progress_bar()
+        self.summary_progress_bar = self.create_progress_bar()
+        self.move_files_progress_bar = self.create_progress_bar()
         form_layout.addRow("Setup:", self.setup_progress_bar)
-
-        self.process_files_progress_bar = QProgressBar()
-        self.process_files_progress_bar.setRange(0, 100)
-        self.process_files_progress_bar.setValue(0)
         form_layout.addRow("Process Files:", self.process_files_progress_bar)
-
-        self.summary_progress_bar = QProgressBar()
-        self.summary_progress_bar.setRange(0, 100)
-        self.summary_progress_bar.setValue(0)
         form_layout.addRow("Summarizing:", self.summary_progress_bar)
-
-        self.move_files_progress_bar = QProgressBar()
-        self.move_files_progress_bar.setRange(0, 100)
-        self.move_files_progress_bar.setValue(0)
         form_layout.addRow("Move Files:", self.move_files_progress_bar)
 
         # Buttons
@@ -134,7 +123,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Button to open output directory
         self.output_button = QPushButton("Open Output Directory")
         self.output_button.clicked.connect(self.open_output_directory)
-        self.output_button.setEnabled(False)  # Initially disabled
+        self.output_button.setEnabled(False)
         button_layout_secondary.addWidget(self.output_button)
 
         # Button to open to_delete directory
@@ -146,12 +135,19 @@ class LogseqAnalyzerGUI(QMainWindow):
         # Button to open log file
         self.log_button = QPushButton("Open Log File")
         self.log_button.clicked.connect(self.open_log_file)
-        self.log_button.setEnabled(False)  # Initially disabled
+        self.log_button.setEnabled(False)
         button_layout_secondary.addWidget(self.log_button)
 
         self.setCentralWidget(central_widget)
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
+
+    def create_progress_bar(self):
+        """Create a progress bar."""
+        progress_bar = QProgressBar(self)
+        progress_bar.setRange(0, 100)
+        progress_bar.setValue(0)
+        return progress_bar
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
@@ -350,7 +346,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication()
     gui = LogseqAnalyzerGUI()
     gui.show()
     sys.exit(app.exec())

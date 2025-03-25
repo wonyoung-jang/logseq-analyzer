@@ -39,10 +39,9 @@ def process_content_data(
         namespace_level = len(namespace_parts_list)
         namespace_root = namespace_parts_list[0]
         namespace_stem = namespace_parts_list[-1]
+        namespace_parent = namespace_root
         if namespace_level > 2:
             namespace_parent = namespace_parts_list[-2]
-        else:
-            namespace_parent = namespace_root
 
         namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
         namespace_data = {

@@ -125,7 +125,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         subset = extract_summary_subset_files(graph_data, **criteria)
         summary_data_subsets[output_name] = subset
 
-    # TODO Testing content subset
+    # Process content types
     content_subset_tags_nodes = {
         "aliases": "aliases",
         "namespace_parts": "namespace_parts",

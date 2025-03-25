@@ -37,18 +37,13 @@ def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
     # Setup variables
-    gui_inst = "gui_instance"
-    setup_phase = "setup"
-    process_files_phase = "process_files"
-    summary_phase = "summary"
-    move_files_phase = "move_files"
-    gui_instance = kwargs.get(gui_inst)
+    gui_instance = kwargs.get("gui_instance")
 
     ###################################################################
     # Phase 01: Setup
     ###################################################################
     if gui_instance:
-        gui_instance.update_progress(setup_phase, 20)
+        gui_instance.update_progress("setup", 20)
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
@@ -80,8 +75,8 @@ def run_app(**kwargs):
     #     CONFIG.config.write(cf)
 
     if gui_instance:
-        gui_instance.update_progress(setup_phase, 100)
-        gui_instance.update_progress(process_files_phase, 20)
+        gui_instance.update_progress("setup", 100)
+        gui_instance.update_progress("process_files", 20)
 
     ################################################################
     # Phase 02: Process files
@@ -101,17 +96,17 @@ def run_app(**kwargs):
     # Namespaces analysis
     summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
 
-    # TODO Test dangling links
+    # Basic dangling links analysis
     dangling_dict = process_dangling_links(all_refs, dangling_links)
 
-    # TODO Test properties
+    # Basic properties analysis
     set_all_prop_values_builtin, set_all_prop_values_user, sorted_all_props_builtin, sorted_all_props_user = (
         process_properties(graph_data)
     )
 
     if gui_instance:
-        gui_instance.update_progress(process_files_phase, 100)
-        gui_instance.update_progress(summary_phase, 20)
+        gui_instance.update_progress("process_files", 100)
+        gui_instance.update_progress("summary", 20)
 
     #################################################################
     # Phase 03: Process summaries
@@ -122,8 +117,8 @@ def run_app(**kwargs):
     summary_sorted_all = generate_sorted_summary_all(graph_data)
 
     if gui_instance:
-        gui_instance.update_progress(summary_phase, 100)
-        gui_instance.update_progress(move_files_phase, 20)
+        gui_instance.update_progress("summary", 100)
+        gui_instance.update_progress("move_files", 20)
 
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
@@ -139,7 +134,7 @@ def run_app(**kwargs):
     moved_files["moved_recycle"] = handle_move_directory(args.move_recycle, recycle_dir, to_delete_dir, def_rec_dir)
 
     if gui_instance:
-        gui_instance.update_progress(move_files_phase, 100)
+        gui_instance.update_progress("move_files", 100)
 
     output_data = {
         # Main meta outputs
