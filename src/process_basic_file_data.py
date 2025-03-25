@@ -42,8 +42,8 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
             bullet_content = patterns["bullet"].split(content)
             if len(bullet_content) > 1:
                 primary_bullet = bullet_content[0].strip()
-                content_bullets = [bullet.strip() for bullet in bullet_content[1:]]
-                empty_bullets = [bullet for bullet in content_bullets if not bullet]
+                content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
+                empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
                 bullet_count_empty = len(empty_bullets)
                 bullet_count = len(content_bullets)
             else:
@@ -55,7 +55,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         if bullet_count > 0:
             data["bullet_density"] = round(data["char_count"] / bullet_count, 2)
 
-    data = process_content_data(data, content, patterns, primary_bullet)
+    data = process_content_data(data, content, patterns, primary_bullet, content_bullets)
 
     return data, content_bullets
 

@@ -85,20 +85,22 @@ def compile_re_content() -> Dict[str, Pattern]:
         ),
         "property": re.compile(
             r"""
-            ^               # Start of line
-            (?!\s*-\s)      # Negative lookahead: not a bullet
-            ([A-Za-z0-9_-]+)# Capture group: alphanumeric, underscore, or hyphen
-            (?=::)          # Positive lookahead: double colon
+            ^                   # Start of line
+            (?!\s*-\s)          # Negative lookahead: not a bullet
+            \s*?                # Optional whitespace
+            ([A-Za-z0-9_-]+)    # Capture group: alphanumeric, underscore, or hyphen
+            (?=::)              # Positive lookahead: double colon
             """,
             re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
         "property_value": re.compile(
             r"""
-            ^               # Start of line
-            (?!\s*-\s)      # Negative lookahead: not a bullet
-            ([A-Za-z0-9_-]+)# Capture group 1: Alphanumeric, underscore, or hyphen
-            ::              # Literal ::
-            (.*)            # Capture group 2: Any characters
+            ^                   # Start of line
+            (?!\s*-\s)          # Negative lookahead: not a bullet
+            \s*?                # Optional whitespace
+            ([A-Za-z0-9_-]+)    # Capture group 1: Alphanumeric, underscore, or hyphen
+            ::                  # Literal ::
+            (.*)                # Capture group 2: Any characters
             """,
             re.MULTILINE | re.IGNORECASE | re.VERBOSE,
         ),
@@ -325,9 +327,10 @@ def compile_re_content() -> Dict[str, Pattern]:
         "advanced_command": re.compile(
             r"""
             \#\+BEGIN_          # "#BEGIN_"
-            .*                  # Any characters
+            .*?                 # Any characters (non-greedy)
             \#\+END_            # "#END_"
-            .*                  # Any characters
+            .*?                 # Any characters (non-greedy)
+            \n                  # Newline
             """,
             re.DOTALL | re.IGNORECASE | re.VERBOSE,
         ),

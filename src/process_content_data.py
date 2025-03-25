@@ -16,6 +16,7 @@ def process_content_data(
     content: str,
     patterns: Dict[str, Pattern],
     primary_bullet: Dict[str, Any],
+    content_bullets: List[str],
 ) -> Dict[str, Any]:
     """
     Process content data to extract various elements like backlinks, tags, and properties.
@@ -25,6 +26,7 @@ def process_content_data(
         content (str): The content to process.
         patterns (Dict[str, Pattern]): The compiled regex patterns for matching elements.
         primary_bullet (Dict[str, Any]): The primary bullet data.
+        content_bullets (List[str]): The list of bullet points extracted from the content.
 
     Returns:
         Dict[str, Any]: The updated data dictionary with extracted elements.
@@ -83,7 +85,7 @@ def process_content_data(
     advanced_commands = find_all_lower(patterns["advanced_command"], content)
 
     # Extract all properties: values pairs
-    properties_values = dict(patterns["property_value"].findall(content))
+    properties_values = {prop: value for prop, value in patterns["property_value"].findall(content)}
     aliases = properties_values.get("alias", [])
     if aliases:
         aliases = process_aliases(aliases)
@@ -93,7 +95,8 @@ def process_content_data(
     primary_bullet_is_page_props = is_primary_bullet_page_properties(primary_bullet)
     if primary_bullet_is_page_props:
         page_properties = find_all_lower(patterns["property"], primary_bullet)
-        content = content.replace(primary_bullet, "")
+        content = "\n".join(content_bullets)
+
     block_properties = find_all_lower(patterns["property"], content)
     built_in_props = CONFIG.get_built_in_properties()
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
