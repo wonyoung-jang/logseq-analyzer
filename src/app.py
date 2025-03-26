@@ -19,7 +19,7 @@ from .core import (
 )
 from .logseq_assets import handle_assets
 from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
-from .process_journals import extract_journals_from_dangling_links, process_journals_timelines
+from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
 from .setup import (
     create_log_file,
@@ -33,6 +33,9 @@ from .setup import (
 )
 
 CONFIG = get_config()
+DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
+DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
+DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
 
 
 def run_app(**kwargs):
@@ -57,12 +60,9 @@ def run_app(**kwargs):
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
     validate_path(logseq_graph_dir)
-    def_ls_dir = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
-    def_rec_dir = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
-    def_bak_dir = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
-    logseq_dir = get_sub_file_or_folder(logseq_graph_dir, def_ls_dir)
-    recycle_dir = get_sub_file_or_folder(logseq_dir, def_rec_dir)
-    bak_dir = get_sub_file_or_folder(logseq_dir, def_bak_dir)
+    logseq_dir = get_sub_file_or_folder(logseq_graph_dir, DEF_LS_DIR)
+    recycle_dir = get_sub_file_or_folder(logseq_dir, DEF_REC_DIR)
+    bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
 
     # Compile regex patterns
     content_patterns = compile_re_content()
@@ -73,8 +73,6 @@ def run_app(**kwargs):
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
     CONFIG.set("REPORTING", "REPORT_FORMAT", args.report_format)
-    # with open("config_user.ini", "w") as cf:
-    #     CONFIG.config.write(cf)
 
     if gui_instance:
         gui_instance.update_progress("setup", 100)
@@ -132,8 +130,8 @@ def run_app(**kwargs):
     moved_files["moved_assets"] = handle_move_files(
         args.move_unlinked_assets, graph_data, assets_not_backlinked, to_delete_dir
     )
-    moved_files["moved_bak"] = handle_move_directory(args.move_bak, bak_dir, to_delete_dir, def_bak_dir)
-    moved_files["moved_recycle"] = handle_move_directory(args.move_recycle, recycle_dir, to_delete_dir, def_rec_dir)
+    moved_files["moved_bak"] = handle_move_directory(args.move_bak, bak_dir, to_delete_dir, DEF_BAK_DIR)
+    moved_files["moved_recycle"] = handle_move_directory(args.move_recycle, recycle_dir, to_delete_dir, DEF_REC_DIR)
 
     if gui_instance:
         gui_instance.update_progress("move_files", 100)
@@ -179,5 +177,9 @@ def run_app(**kwargs):
     shelf_file = shelve.open("mydata")
     shelf_file["output_data"] = output_data
     shelf_file.close()
+
+    # TODO write config to file
+    with open("user_config.ini", "w") as config_file:
+        CONFIG.write(config_file)
 
     return output_data

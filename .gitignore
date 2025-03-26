@@ -25,3 +25,4 @@ source/index.rst
 config_user.ini
 .pylintrc
 mydata
+src/persistence.py

@@ -1,5 +1,5 @@
 """
-ConfigLoader class for loading and managing configuration files.
+Config class for loading and managing configuration files.
 """
 
 import configparser
@@ -22,6 +22,8 @@ class Config:
         _built_in_properties (frozenset): A frozenset of built-in properties defined in the configuration file.
     """
 
+    instance = None
+
     def __init__(self, config_path="src/config.ini"):
         """
         Initialize the Config class with a given config file path.
@@ -42,6 +44,15 @@ class Config:
         self._datetime_token_map = None
         self._datetime_token_pattern = None
         self._built_in_properties = None
+
+    @staticmethod
+    def get_instance(config_path="src/config.ini"):
+        """
+        Get the singleton instance of the Config class.
+        """
+        if Config.instance is None:
+            Config.instance = Config(config_path)
+        return Config.instance
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""
@@ -85,15 +96,8 @@ class Config:
         self.config.write(file)
 
 
-# Singleton
-_CONFIG_INSTANCE = None
-
-
-def get_config(config_path="src/config.ini"):
+def get_config():
     """
     Get the singleton instance of the Config class.
     """
-    global _CONFIG_INSTANCE
-    if _CONFIG_INSTANCE is None:
-        _CONFIG_INSTANCE = Config(config_path)
-    return _CONFIG_INSTANCE
+    return Config.get_instance()

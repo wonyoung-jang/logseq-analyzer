@@ -111,7 +111,6 @@ def convert_cljs_date_to_py(cljs_format: str) -> str:
         return datetime_token_map.get(token, token)
 
     py_format = datetime_token_pattern.sub(replace_token, cljs_format)
-
     return py_format
 
 
@@ -136,9 +135,18 @@ def process_logseq_journal_key(key: str) -> str:
     """
     journal_page_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
     journal_file_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
-    py_file_name_format = convert_cljs_date_to_py(journal_file_format)
+
+    py_file_name_format = CONFIG.get("JOURNALS", "PY_FILE_FORMAT")
+    if not py_file_name_format:
+        py_file_name_format = convert_cljs_date_to_py(journal_file_format)
+        CONFIG.set("JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+
     py_page_title_no_ordinal = journal_page_format.replace("o", "")
-    py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
+
+    py_page_title_format_base = CONFIG.get("JOURNALS", "PY_PAGE_BASE_FORMAT")
+    if not py_page_title_format_base:
+        py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
+        CONFIG.set("JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)

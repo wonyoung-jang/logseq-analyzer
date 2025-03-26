@@ -1,18 +1,18 @@
 """
 Process logseq journals.
-
-Questions:
-- What is the journal timeline implied by the files in the journal folder?
-- What journals are missing?
-- What journals are dangling links?
-- What is the range of the journal timeline?
-- What is the range of the journal timeline in days, weeks, months, and years?
-- What is the first and last journal key in the timeline?
-- What dangling links are journal formatted, but not within the timeline?
 """
 
 from datetime import datetime, timedelta
+import logging
 from typing import List, Optional, Tuple, Union
+
+from .reporting import write_output
+from .config_loader import get_config
+
+
+CONFIG = get_config()
+OUTPUT_DIR = CONFIG.get("DEFAULT", "OUTPUT_DIR")
+JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "JOURNALS")
 
 
 def process_journals_timelines(journal_keys: List[str], dangling_journals: List[Union[str, datetime]]) -> None:
@@ -24,15 +24,57 @@ def process_journals_timelines(journal_keys: List[str], dangling_journals: List[
         dangling_journals (List[Union[str, datetime]]): List of dangling link keys (either strings or datetime objects).
     """
     # Convert journal keys from strings to datetime objects
+    processed_keys = process_journal_keys_to_datetime(journal_keys)
+    complete_timeline, missing_keys = build_complete_timeline(dangling_journals, processed_keys)
+
+    # Write out results to files.
+    write_output(OUTPUT_DIR, "complete_timeline", complete_timeline, JOURNAL_DIR)
+    write_output(OUTPUT_DIR, "processed_keys", processed_keys, JOURNAL_DIR)
+    write_output(OUTPUT_DIR, "missing_keys", missing_keys, JOURNAL_DIR)
+    write_output(OUTPUT_DIR, "dangling_journals", dangling_journals, JOURNAL_DIR)
+
+    timeline_stats = {}
+    timeline_stats["complete_timeline"] = get_date_stats(complete_timeline)
+    timeline_stats["dangling_journals"] = get_date_stats(dangling_journals)
+    write_output(OUTPUT_DIR, "timeline_stats", timeline_stats, JOURNAL_DIR)
+
+    if timeline_stats["complete_timeline"]["first_date"] > timeline_stats["dangling_journals"]["first_date"]:
+        dangling_journals_past = get_dangling_journals_past(
+            dangling_journals, timeline_stats["complete_timeline"]["first_date"]
+        )
+        write_output(OUTPUT_DIR, "dangling_journals_past", dangling_journals_past, JOURNAL_DIR)
+
+    if timeline_stats["complete_timeline"]["last_date"] < timeline_stats["dangling_journals"]["last_date"]:
+        dangling_journals_future = get_dangling_journals_future(
+            dangling_journals, timeline_stats["complete_timeline"]["last_date"]
+        )
+        write_output(OUTPUT_DIR, "dangling_journals_future", dangling_journals_future, JOURNAL_DIR)
+
+
+def process_journal_keys_to_datetime(journal_keys: List[str]) -> List[datetime]:
+    """
+    Convert journal keys from strings to datetime objects.
+
+    Args:
+        journal_keys (List[str]): List of journal key strings.
+
+    Returns:
+        List[datetime]: List of datetime objects.
+    """
     processed_keys = []
     for key in journal_keys:
         try:
             date_obj = datetime.strptime(key, "%Y-%m-%d %A")
             processed_keys.append(date_obj)
         except ValueError as e:
-            print(f"Skipping invalid journal key '{key}': {e}")
-    processed_keys.sort()
+            logging.warning("Invalid date format for key: %s. Error: %s", key, e)
+    return processed_keys
 
+
+def build_complete_timeline(dangling_journals, processed_keys):
+    """
+    Build a complete timeline of journal entries, filling in any missing dates.
+    """
     complete_timeline = []
     missing_keys = []
 
@@ -58,47 +100,25 @@ def process_journals_timelines(journal_keys: List[str], dangling_journals: List[
     # Add the last journal key if available.
     if processed_keys:
         complete_timeline.append(processed_keys[-1])
+    return complete_timeline, missing_keys
 
-    # Write out results to files.
-    simple_write(
-        "00___complete_timeline.txt", complete_timeline
-    )  # Start to end of journals on file, with gaps filled in
-    simple_write("01___processed_keys.txt", processed_keys)  # Start to end of journals on file
-    simple_write(
-        "02___dangling_journals.txt", dangling_journals
-    )  # Start to end of journals referenced, but not on file
-    simple_write(
-        "03___missing_keys.txt", missing_keys
-    )  # Start to end of gap journals not on file and not referenced anywhere
 
-    # Summary statistics
-    # print(f"Total dates in complete timeline: {len(complete_timeline)}")
-    # print(f"Missing journal dates: {len(missing_keys)}")
-    # print(f"Original journal keys count: {len(processed_keys)}")
-    # print(f"Remaining dangling links: {len(dangling_links)}")
-
-    timeline_start = get_least_recent_date(complete_timeline)
-    timeline_end = get_most_recent_date(complete_timeline)
-    dangling_start = get_least_recent_date(dangling_journals)
-    dangling_end = get_most_recent_date(dangling_journals)
-    days, weeks, months, years = get_date_ranges(timeline_end, timeline_start)
-
-    print(f"First journal key on file: {timeline_start}")
-    print(f"Last journal key on file: {timeline_end}")
-    print(f"First dangling link journal key: {dangling_start}")
-    print(f"Last dangling link journal key: {dangling_end}")
-    print(f"Timeline range: {days} days, {weeks} weeks, {months} months, {years} years")
-
-    if dangling_start < timeline_start:
-        past_dangling_journals = get_dangling_journals_past(dangling_journals, timeline_start)
-        simple_write(
-            "99___past_dangling_journals.txt", past_dangling_journals
-        )  # Start to end of journals referenced, but not on file
-    if dangling_end > timeline_end:
-        future_dangling_journals = get_dangling_journals_future(dangling_journals, timeline_end)
-        simple_write(
-            "99___future_dangling_journals.txt", future_dangling_journals
-        )  # Start to end of journals referenced, but not on file
+def get_date_stats(timeline):
+    """
+    Get statistics about the timeline.
+    """
+    first_date = min(timeline)
+    last_date = max(timeline)
+    days, weeks, months, years = get_date_ranges(last_date, first_date)
+    journal_stats = {
+        "first_date": first_date,
+        "last_date": last_date,
+        "days": days,
+        "weeks": weeks,
+        "months": months,
+        "years": years,
+    }
+    return journal_stats
 
 
 def get_dangling_journals_past(dangling_links: List[str], timeline_start: datetime) -> List[datetime]:
