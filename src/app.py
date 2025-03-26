@@ -4,6 +4,7 @@ This module contains the main application logic for the Logseq analyzer.
 
 # import sys
 from pathlib import Path
+import shelve
 
 from .config_loader import get_config
 from .process_properties import process_properties
@@ -18,6 +19,7 @@ from .core import (
 )
 from .logseq_assets import handle_assets
 from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
+from .process_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
 from .setup import (
     create_log_file,
@@ -168,5 +170,14 @@ def run_app(**kwargs):
 
     if args.write_graph:
         output_data["graph_content"] = graph_content_bullets
+
+    # TODO Process journal keys to create a timeline
+    journals_dangling = extract_journals_from_dangling_links(dangling_links)
+    process_journals_timelines(summary_data_subsets["_is_journal"], journals_dangling)
+
+    # TODO test shelf
+    shelf_file = shelve.open("mydata")
+    shelf_file["output_data"] = output_data
+    shelf_file.close()
 
     return output_data
