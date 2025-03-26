@@ -73,32 +73,32 @@ class LogseqAnalyzerGUI(QMainWindow):
         form_layout = QFormLayout()
 
         # --- Graph Folder Input ---
-        self.graph_folder_label = QLabel("Logseq Graph Folder (Required):")
+        graph_folder_label = QLabel("Logseq Graph Folder (Required):")
         self.graph_folder_input = QLineEdit()
-        self.graph_folder_button = QPushButton("Browse")
-        self.graph_folder_button.clicked.connect(self.select_graph_folder)
+        graph_folder_button = QPushButton("Browse")
+        graph_folder_button.clicked.connect(self.select_graph_folder)
         graph_folder_hbox = QWidget()
         graph_folder_layout = QHBoxLayout(graph_folder_hbox)
         graph_folder_layout.addWidget(self.graph_folder_input)
-        graph_folder_layout.addWidget(self.graph_folder_button)
-        form_layout.addRow(self.graph_folder_label, graph_folder_hbox)
+        graph_folder_layout.addWidget(graph_folder_button)
+        form_layout.addRow(graph_folder_label, graph_folder_hbox)
 
         # --- Global Config File Input ---
-        self.global_config_label = QLabel("Logseq Global Config File (Optional):")
+        global_config_label = QLabel("Logseq Global Config File (Optional):")
         self.global_config_input = QLineEdit()
-        self.global_config_button = QPushButton("Browse")
-        self.global_config_button.clicked.connect(self.select_global_config_file)
+        global_config_button = QPushButton("Browse")
+        global_config_button.clicked.connect(self.select_global_config_file)
         global_config_hbox = QWidget()
         global_config_layout = QHBoxLayout(global_config_hbox)
         global_config_layout.addWidget(self.global_config_input)
-        global_config_layout.addWidget(self.global_config_button)
-        form_layout.addRow(self.global_config_label, global_config_hbox)
+        global_config_layout.addWidget(global_config_button)
+        form_layout.addRow(global_config_label, global_config_hbox)
 
         # --- Report Format Dropdown ---
-        self.report_format_label = QLabel("Report Format:")
+        report_format_label = QLabel("Report Format:")
         self.report_format_combo = QComboBox()
         self.report_format_combo.addItems([".txt", ".json", ".md"])
-        form_layout.addRow(self.report_format_label, self.report_format_combo)
+        form_layout.addRow(report_format_label, self.report_format_combo)
 
         return form_layout
 
@@ -149,11 +149,11 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.run_button.setToolTip("Ctrl+R to run analysis")
         button_layout_primary.addWidget(self.run_button)
 
-        self.exit_button = QPushButton("Exit")
-        self.exit_button.clicked.connect(self.close)
-        self.exit_button.setShortcut("Ctrl+W")
-        self.exit_button.setToolTip("Ctrl+W to exit")
-        button_layout_primary.addWidget(self.exit_button)
+        exit_button = QPushButton("Exit")
+        exit_button.clicked.connect(self.close)
+        exit_button.setShortcut("Ctrl+W")
+        exit_button.setToolTip("Ctrl+W to exit")
+        button_layout_primary.addWidget(exit_button)
 
         # --- Secondary Buttons ---
         self.output_button = QPushButton("Open Output Directory")

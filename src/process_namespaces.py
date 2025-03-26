@@ -53,7 +53,7 @@ def process_namespace_data(
 
     namespace_data = {}
     for name in namespace_data_subset["unique_names_is_namespace"]:
-        namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k}
+        namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k and v}
 
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
     unique_namespace_parts = extract_unique_namespace_parts(namespace_parts)
