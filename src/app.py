@@ -60,6 +60,7 @@ def run_app(**kwargs):
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
     validate_path(logseq_graph_dir)
+    CONFIG.set("CONSTANTS", "GRAPH_DIR", str(logseq_graph_dir))
     logseq_dir = get_sub_file_or_folder(logseq_graph_dir, DEF_LS_DIR)
     recycle_dir = get_sub_file_or_folder(logseq_dir, DEF_REC_DIR)
     bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
