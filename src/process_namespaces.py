@@ -91,7 +91,6 @@ def process_namespace_data(
     ###########################
     namespace_data_subset.update(
         {
-            **unique_namespaces_levels,
             "__namespace_data": namespace_data,
             "__namespace_details": namespace_details,
             "__namespace_parts": namespace_parts,
@@ -99,6 +98,7 @@ def process_namespace_data(
             "conflicts_non_namespace": conflicts_non_namespace,
             "conflicts_dangling": conflicts_dangling,
             "unique_namespaces_per_level": unique_namespaces_per_level,
+            **unique_namespaces_levels,
         },
     )
 

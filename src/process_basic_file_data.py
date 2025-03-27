@@ -75,6 +75,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     parent = file_path.parent.name.lower()
     name = process_logseq_filename_key(file_path.stem, parent)
     suffix = file_path.suffix.lower() if file_path.suffix else None
+    name_secondary = f"{name} {parent} + {suffix}".lower()
     now = datetime.now().timestamp()
     date_modified = stat.st_mtime
 
@@ -86,7 +87,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
 
     data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
     data["name"] = name
-    data["name_secondary"] = f"{name} {parent} + {suffix}".lower()
+    data["name_secondary"] = name_secondary
     data["file_path"] = str(file_path)
     data["file_path_parent_name"] = parent
     data["file_path_name"] = name

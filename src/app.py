@@ -3,8 +3,11 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 # import sys
+import logging
 from pathlib import Path
 import shelve
+
+from src.helpers import iter_files
 
 from .config_loader import get_config
 from .process_properties import process_properties
@@ -36,6 +39,26 @@ CONFIG = get_config()
 DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
+
+
+def check_for_modified_files(logseq_graph_dir: Path, target_dirs: list):
+    modded_files = []
+
+    with shelve.open("mydata") as db:
+        mod_tracker = db.get("mod_tracker", {})
+
+        for path in iter_files(logseq_graph_dir, target_dirs):
+            curr_date_mod = path.stat().st_mtime
+            last_date_mod = mod_tracker.get(str(path))
+
+            if last_date_mod is None or last_date_mod != curr_date_mod:
+                mod_tracker[str(path)] = curr_date_mod
+                logging.debug("File modified: %s", path)
+                modded_files.append(path)
+
+        db["mod_tracker"] = mod_tracker
+
+    return modded_files
 
 
 def run_app(**kwargs):
@@ -82,8 +105,18 @@ def run_app(**kwargs):
     ################################################################
     # Phase 02: Process files
     ################################################################
+    # Check for modified files
+    modded_files = check_for_modified_files(logseq_graph_dir, target_dirs)
+
+    with shelve.open("mydata") as db:
+        graph_data_db = db.get("graph_data", {})
+        graph_content_db = db.get("graph_content", {})
+
     # Process graph files
-    graph_data, graph_content_bullets = process_graph_files(logseq_graph_dir, content_patterns, target_dirs)
+    # graph_meta_data, graph_content_bullets = process_graph_files(logseq_graph_dir, content_patterns, target_dirs)
+    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
+    graph_data_db.update(graph_meta_data)
+    graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
     (
@@ -92,7 +125,7 @@ def run_app(**kwargs):
         dangling_links,
         graph_data,
         all_refs,
-    ) = core_data_analysis(graph_data)
+    ) = core_data_analysis(graph_data_db)
 
     # Namespaces analysis
     summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
@@ -145,6 +178,7 @@ def run_app(**kwargs):
         "config_edn_data": config_edn_data,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
+        "graph_meta_data": graph_meta_data,
         "content_patterns": content_patterns,
         "config_patterns": config_patterns,
         "all_refs": all_refs,
@@ -175,9 +209,41 @@ def run_app(**kwargs):
     process_journals_timelines(summary_data_subsets["_is_journal"], journals_dangling)
 
     # TODO test shelf
+    shelve_output_data = {
+        # Main meta outputs
+        "alphanum_dict": alphanum_dict,
+        "alphanum_dict_ns": alphanum_dict_ns,
+        "dangling_links": dangling_links,
+        "config_edn_data": config_edn_data,
+        "target_dirs": target_dirs,
+        "graph_data": graph_data,
+        "graph_meta_data": graph_meta_data,
+        "content_patterns": content_patterns,
+        "config_patterns": config_patterns,
+        "all_refs": all_refs,
+        "dangling_dict": dangling_dict,
+        # Properties
+        "set_all_prop_values_builtin": set_all_prop_values_builtin,
+        "set_all_prop_values_user": set_all_prop_values_user,
+        "sorted_all_props_builtin": sorted_all_props_builtin,
+        "sorted_all_props_user": sorted_all_props_user,
+        # General summary
+        "___summary_global": summary_global,
+        **summary_data_subsets,
+        **summary_sorted_all,
+        # Namespaces summary
+        "___summary_global_namespaces": summary_global_namespaces,
+        **summary_namespaces,
+        # Move files and assets
+        "moved_files": moved_files,
+        "assets_backlinked": assets_backlinked,
+        "assets_not_backlinked": assets_not_backlinked,
+    }
+
     with shelve.open("mydata") as db:
-        for key, values in output_data.items():
+        for key, values in shelve_output_data.items():
             db[key] = values
+        db["graph_content"] = graph_content_bullets
 
     # TODO write config to file
     with open("user_config.ini", "w") as config_file:

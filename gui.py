@@ -252,6 +252,7 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "config_edn_data",
                 "target_dirs",
                 "graph_data",
+                "graph_meta_data",
                 "graph_content",
                 "content_patterns",
                 "config_patterns",
