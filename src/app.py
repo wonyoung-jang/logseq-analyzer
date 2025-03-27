@@ -113,7 +113,6 @@ def run_app(**kwargs):
         graph_content_db = db.get("graph_content", {})
 
     # Process graph files
-    # graph_meta_data, graph_content_bullets = process_graph_files(logseq_graph_dir, content_patterns, target_dirs)
     graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
     graph_data_db.update(graph_meta_data)
     graph_content_db.update(graph_content_bullets)
@@ -178,7 +177,6 @@ def run_app(**kwargs):
         "config_edn_data": config_edn_data,
         "target_dirs": target_dirs,
         "graph_data": graph_data,
-        "graph_meta_data": graph_meta_data,
         "content_patterns": content_patterns,
         "config_patterns": config_patterns,
         "all_refs": all_refs,
@@ -202,7 +200,7 @@ def run_app(**kwargs):
     }
 
     if args.write_graph:
-        output_data["graph_content"] = graph_content_bullets
+        output_data["graph_content"] = graph_content_db
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(dangling_links)
@@ -216,8 +214,8 @@ def run_app(**kwargs):
         "dangling_links": dangling_links,
         "config_edn_data": config_edn_data,
         "target_dirs": target_dirs,
+        "graph_content": graph_content_db,
         "graph_data": graph_data,
-        "graph_meta_data": graph_meta_data,
         "content_patterns": content_patterns,
         "config_patterns": config_patterns,
         "all_refs": all_refs,
@@ -243,7 +241,6 @@ def run_app(**kwargs):
     with shelve.open("mydata") as db:
         for key, values in shelve_output_data.items():
             db[key] = values
-        db["graph_content"] = graph_content_bullets
 
     # TODO write config to file
     with open("user_config.ini", "w") as config_file:
