@@ -175,9 +175,9 @@ def run_app(**kwargs):
     process_journals_timelines(summary_data_subsets["_is_journal"], journals_dangling)
 
     # TODO test shelf
-    shelf_file = shelve.open("mydata")
-    shelf_file["output_data"] = output_data
-    shelf_file.close()
+    with shelve.open("mydata") as db:
+        for key, values in output_data.items():
+            db[key] = values
 
     # TODO write config to file
     with open("user_config.ini", "w") as config_file:
