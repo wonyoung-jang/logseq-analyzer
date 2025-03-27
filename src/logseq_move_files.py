@@ -21,7 +21,7 @@ def create_delete_directory() -> Path:
     Returns:
         Path: The path to the delete directory.
     """
-    delete_dir = Path(CONFIG.get("DEFAULT", "TO_DELETE_DIR"))
+    delete_dir = Path(CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
     if not delete_dir.exists():
         logging.info("Creating directory: %s", delete_dir)
         delete_dir.mkdir(parents=True, exist_ok=True)
@@ -148,7 +148,7 @@ def move_unlinked_assets(
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         to_delete_dir (Path): The directory to move unlinked assets to.
     """
-    asset_dir = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_ASSETS")
+    asset_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
     to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, asset_dir)
 
     for name in summary_is_asset_not_backlinked:

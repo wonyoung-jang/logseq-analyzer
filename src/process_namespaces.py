@@ -228,7 +228,7 @@ def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Se
     Returns:
         dict: A dictionary mapping each namespace part to a set of unique pages.
     """
-    ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1])

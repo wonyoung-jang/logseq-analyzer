@@ -30,7 +30,7 @@ def write_output(
     """
     json_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
     txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
-    output_format = CONFIG.get("REPORTING", "REPORT_FORMAT")
+    output_format = CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     logging.info("Writing %s as %s", filename_prefix, output_format)
     count = len(items)

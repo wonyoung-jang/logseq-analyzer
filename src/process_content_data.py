@@ -32,7 +32,7 @@ def process_content_data(
         Dict[str, Any]: The updated data dictionary with extracted elements.
     """
     # Process namespaces
-    ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
     data["namespace_level"] = 0
     data["namespace_children"] = set()
     data["namespace_size"] = 0
@@ -274,7 +274,7 @@ def post_processing_content(
     unique_aliases = set()
 
     # Process each file's content
-    ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
+    ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
 
     for name, data in content_data.items():
         # Process namespaces

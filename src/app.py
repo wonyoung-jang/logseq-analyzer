@@ -10,14 +10,13 @@ from .process_dangling_links import process_dangling_links
 from .compile_regex import get_patterns
 from .core import (
     core_data_analysis,
-    generate_sorted_summary_all,
-    generate_summary_subsets,
     process_graph_files,
 )
 from .logseq_assets import handle_assets
 from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
+from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
 from .cache import get_cache
 from .setup import (
     create_log_file,
@@ -32,9 +31,9 @@ from .setup import (
 
 PATTERNS = get_patterns()
 CONFIG = get_config()
-DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
-DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
-DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
+DEF_LS_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
+DEF_REC_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
+DEF_BAK_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
 CACHE = get_cache(CONFIG.get("CONSTANTS", "CACHE"))
 
 
@@ -69,15 +68,11 @@ def run_app(**kwargs):
     recycle_dir = get_sub_file_or_folder(logseq_dir, DEF_REC_DIR)
     bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
 
-    # Compile regex patterns
-    content_patterns = PATTERNS.content
-    config_patterns = PATTERNS.config
-
     # Get config data and target directories
-    config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
+    config_edn_data = get_logseq_config_edn(args, logseq_dir, PATTERNS.config)
     set_logseq_config_edn_data(config_edn_data)
     target_dirs = get_logseq_target_dirs()
-    CONFIG.set("REPORTING", "REPORT_FORMAT", args.report_format)
+    CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
 
     if gui_instance:
         gui_instance.update_progress("setup", 100)
@@ -93,7 +88,7 @@ def run_app(**kwargs):
     CACHE.clear_deleted_files()
 
     # Process for only modified/new graph files
-    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
+    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, PATTERNS.content)
 
     # Check for existing data
     graph_data_db = CACHE.cache.get("___meta___graph_data", {})
@@ -159,8 +154,8 @@ def run_app(**kwargs):
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
         "___meta___alphanum_dict": alphanum_dict,
         "___meta___config_edn_data": config_edn_data,
-        "___meta___config_patterns": config_patterns,
-        "___meta___content_patterns": content_patterns,
+        "___meta___config_patterns": PATTERNS.config,
+        "___meta___content_patterns": PATTERNS.content,
         "___meta___graph_data": graph_data,
         "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
@@ -195,8 +190,8 @@ def run_app(**kwargs):
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
         "___meta___alphanum_dict": alphanum_dict,
         "___meta___config_edn_data": config_edn_data,
-        "___meta___config_patterns": config_patterns,
-        "___meta___content_patterns": content_patterns,
+        "___meta___config_patterns": PATTERNS.config,
+        "___meta___content_patterns": PATTERNS.content,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph_data,
         "___meta___target_dirs": target_dirs,

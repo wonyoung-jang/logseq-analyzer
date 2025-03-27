@@ -11,8 +11,8 @@ from .config_loader import get_config
 
 
 CONFIG = get_config()
-OUTPUT_DIR = CONFIG.get("DEFAULT", "OUTPUT_DIR")
-JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "JOURNALS")
+OUTPUT_DIR = CONFIG.get("ANALYZER", "OUTPUT_DIR")
+JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
 
 
 def process_logseq_journal_key(key: str) -> str:
@@ -25,20 +25,20 @@ def process_logseq_journal_key(key: str) -> str:
     Returns:
         str: Processed page title.
     """
-    journal_page_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
-    journal_file_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
+    journal_page_format = CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
 
-    py_file_name_format = CONFIG.get("JOURNALS", "PY_FILE_FORMAT")
+    py_file_name_format = CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
     if not py_file_name_format:
         py_file_name_format = convert_cljs_date_to_py(journal_file_format)
-        CONFIG.set("JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+        CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
 
     py_page_title_no_ordinal = journal_page_format.replace("o", "")
 
-    py_page_title_format_base = CONFIG.get("JOURNALS", "PY_PAGE_BASE_FORMAT")
+    py_page_title_format_base = CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
     if not py_page_title_format_base:
         py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
-        CONFIG.set("JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+        CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)

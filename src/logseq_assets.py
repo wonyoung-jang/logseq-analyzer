@@ -28,13 +28,13 @@ def handle_assets(
             continue
 
         for asset in summary_data_subsets["___is_asset"]:
-            asset_name_secondary = graph_data[asset]["name"]
+            asset_original_name = graph_data[asset]["name"]
 
             for asset_mention in data["assets"]:
                 if graph_data[asset]["is_backlinked"]:
                     continue
 
-                if asset in asset_mention or asset_name_secondary in asset_mention:
+                if asset in asset_mention or asset_original_name in asset_mention:
                     graph_data[asset]["is_backlinked"] = True
                     break
 
