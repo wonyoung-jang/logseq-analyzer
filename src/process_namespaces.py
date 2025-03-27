@@ -20,10 +20,10 @@ from typing import Any, Dict, List, Set, Tuple
 
 from .config_loader import get_config
 from .process_summary_data import extract_summary_subset_files
-from .compile_regex import compile_re_content
+from .compile_regex import get_patterns
 
 CONFIG = get_config()
-CONTENT_RE = compile_re_content()
+PATTERNS = get_patterns()
 
 
 def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]) -> Dict[str, Any]:
@@ -273,7 +273,7 @@ def analyze_namespace_queries(graph_data: Dict[str, Any], namespace_data: Dict[s
         if not got_ns_queries:
             continue
         for q in got_ns_queries:
-            page_refs = CONTENT_RE["page_reference"].findall(q)
+            page_refs = PATTERNS.content["page_reference"].findall(q)
             if len(page_refs) != 1:
                 logging.warning("Invalid references found in query: %s", q)
                 continue

@@ -7,7 +7,7 @@ from pathlib import Path
 from .config_loader import get_config
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
-from .compile_regex import compile_re_config, compile_re_content
+from .compile_regex import get_patterns
 from .core import (
     core_data_analysis,
     generate_sorted_summary_all,
@@ -30,6 +30,7 @@ from .setup import (
     validate_path,
 )
 
+PATTERNS = get_patterns()
 CONFIG = get_config()
 DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
@@ -69,8 +70,8 @@ def run_app(**kwargs):
     bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
 
     # Compile regex patterns
-    content_patterns = compile_re_content()
-    config_patterns = compile_re_config()
+    content_patterns = PATTERNS.content
+    config_patterns = PATTERNS.config
 
     # Get config data and target directories
     config_edn_data = get_logseq_config_edn(args, logseq_dir, config_patterns)
