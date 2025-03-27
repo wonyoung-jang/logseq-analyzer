@@ -31,6 +31,7 @@ class Config:
         """
         self.config = configparser.ConfigParser(
             allow_no_value=True,
+            inline_comment_prefixes=("#", ";"),
             default_section="None",
             interpolation=configparser.ExtendedInterpolation(),
         )
