@@ -6,10 +6,14 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, Tuple
+from urllib.parse import unquote
 
-from .helpers import process_logseq_filename_key
+from .config_loader import get_config
+from .logseq_journals import process_logseq_journal_key
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_content_data import process_content_data
+
+CONFIG = get_config()
 
 
 def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], List[str]]:
@@ -123,3 +127,30 @@ def get_file_content(file_path: Path) -> Optional[str]:
     except UnicodeDecodeError:
         logging.warning("Failed to decode file %s with utf-8 encoding.", file_path)
     return None
+
+
+def process_logseq_filename_key(key: str, parent: str) -> str:
+    """
+    Process the key name by removing the parent name and formatting it.
+
+    For 'journals' parent, it formats the key as 'day-month-year dayOfWeek'.
+    For other parents, it unquotes URL-encoded characters and replaces '___' with '/'.
+
+    Args:
+        key (str): The key name (filename stem).
+        parent (str): The parent directory name.
+
+    Returns:
+        str: Processed key name.
+    """
+    ns_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_SEP")
+    ns_file_sep = CONFIG.get("LOGSEQ_NS", "NAMESPACE_FILE_SEP")
+    dir_journals = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "DIR_JOURNALS")
+
+    if key.endswith(ns_file_sep):
+        key = key.rstrip(ns_file_sep)
+
+    if parent == dir_journals:
+        return process_logseq_journal_key(key)
+
+    return unquote(key).replace(ns_file_sep, ns_sep).lower()

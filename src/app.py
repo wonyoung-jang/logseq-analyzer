@@ -2,12 +2,7 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-# import sys
-import logging
 from pathlib import Path
-import shelve
-
-from src.helpers import iter_files
 
 from .config_loader import get_config
 from .process_properties import process_properties
@@ -23,6 +18,7 @@ from .logseq_assets import handle_assets
 from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
+from .cache import get_cache
 from .setup import (
     create_log_file,
     create_output_directory,
@@ -38,59 +34,7 @@ CONFIG = get_config()
 DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
-CACHE = CONFIG.get("CONSTANTS", "CACHE")
-
-
-def get_modified_files(logseq_graph_dir: Path, target_dirs: list) -> list:
-    """
-    Check for modified files in the Logseq graph directory.
-
-    Args:
-        logseq_graph_dir (Path): Path to the Logseq graph directory.
-        target_dirs (list): List of target directories to check for modified files.
-
-    Returns:
-        list: List of modified files.
-    """
-    modded_files = []
-
-    with shelve.open(CACHE) as db:
-        mod_tracker = db.get("mod_tracker", {})
-
-        for path in iter_files(logseq_graph_dir, target_dirs):
-            curr_date_mod = path.stat().st_mtime
-            last_date_mod = mod_tracker.get(str(path))
-
-            if last_date_mod is None or last_date_mod != curr_date_mod:
-                mod_tracker[str(path)] = curr_date_mod
-                logging.debug("File modified: %s", path)
-                modded_files.append(path)
-
-        db["mod_tracker"] = mod_tracker
-
-    return modded_files
-
-
-def get_deleted_files(graph_data_db: dict) -> list:
-    """
-    Check for deleted files in the graph data database.
-
-    Args:
-        graph_data_db (dict): Dictionary containing graph data.
-
-    Returns:
-        list: List of deleted files.
-    """
-    deleted_files = []
-
-    for key, data in graph_data_db.items():
-        path = data.get("file_path", None)
-        if Path(path).exists():
-            continue
-        deleted_files.append(key)
-        logging.debug("File deleted: %s", path)
-
-    return deleted_files
+CACHE = get_cache(CONFIG.get("CONSTANTS", "CACHE"))
 
 
 def run_app(**kwargs):
@@ -107,10 +51,10 @@ def run_app(**kwargs):
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
-    
-    # TODO Clearing graph cache
+
+    # Clearing graph cache option
     if args.graph_cache:
-        Path(CACHE).unlink(missing_ok=True)
+        CACHE.cache.clear()
 
     # Setup output directory and logging
     create_output_directory()
@@ -142,21 +86,17 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     # Check for modified files
-    modded_files = get_modified_files(logseq_graph_dir, target_dirs)
+    modded_files = CACHE.get_modified_files(logseq_graph_dir, target_dirs)
+
+    # Check for deleted files and remove them from the database
+    CACHE.get_deleted_files()
 
     # Process for only modified/new graph files
     graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
 
     # Check for existing data
-    with shelve.open(CACHE) as db:
-        graph_data_db = db.get("___meta___graph_data", {})
-        graph_content_db = db.get("___meta___graph_content", {})
-
-    # Check for deleted files and remove them from the database
-    deleted_files = get_deleted_files(graph_data_db)
-    for file in deleted_files:
-        graph_data_db.pop(file, None)
-        graph_content_db.pop(file, None)
+    graph_data_db = CACHE.cache.get("___meta___graph_data", {})
+    graph_content_db = CACHE.cache.get("___meta___graph_content", {})
 
     # Update existing data with new data
     graph_data_db.update(graph_meta_data)
@@ -245,10 +185,10 @@ def run_app(**kwargs):
         output_data["___meta___graph_content"] = graph_content_db
 
     # TODO Process journal keys to create a timeline
-    # journals_dangling = extract_journals_from_dangling_links(dangling_links)
-    # process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
+    journals_dangling = extract_journals_from_dangling_links(dangling_links)
+    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
 
-    # TODO test shelf
+    # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
@@ -278,11 +218,11 @@ def run_app(**kwargs):
         "assets_not_backlinked": assets_not_backlinked,
     }
 
-    with shelve.open(CACHE) as db:
-        db.update(shelve_output_data)
+    CACHE.cache.update(shelve_output_data)
+    CACHE.close()
 
     # TODO write config to file
-    with open("user_config.ini", "w") as config_file:
+    with open("user_config.ini", "w", encoding="utf-8") as config_file:
         CONFIG.write(config_file)
 
     return output_data

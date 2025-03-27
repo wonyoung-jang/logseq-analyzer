@@ -2,8 +2,8 @@
 Process logseq journals.
 """
 
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 from .reporting import write_output
@@ -13,6 +13,78 @@ from .config_loader import get_config
 CONFIG = get_config()
 OUTPUT_DIR = CONFIG.get("DEFAULT", "OUTPUT_DIR")
 JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "JOURNALS")
+
+
+def process_logseq_journal_key(key: str) -> str:
+    """
+    Process the journal key to create a page title.
+
+    Args:
+        key (str): The key name (filename stem).
+
+    Returns:
+        str: Processed page title.
+    """
+    journal_page_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = CONFIG.get("LOGSEQ_CONFIG_DEFAULTS", "JOURNAL_FILE_NAME_FORMAT")
+
+    py_file_name_format = CONFIG.get("JOURNALS", "PY_FILE_FORMAT")
+    if not py_file_name_format:
+        py_file_name_format = convert_cljs_date_to_py(journal_file_format)
+        CONFIG.set("JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+
+    py_page_title_no_ordinal = journal_page_format.replace("o", "")
+
+    py_page_title_format_base = CONFIG.get("JOURNALS", "PY_PAGE_BASE_FORMAT")
+    if not py_page_title_format_base:
+        py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
+        CONFIG.set("JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+
+    try:
+        date_object = datetime.strptime(key, py_file_name_format)
+        page_title_base = date_object.strftime(py_page_title_format_base).lower()
+        if "o" in journal_page_format:
+            day_number = date_object.day
+            day_with_ordinal = add_ordinal_suffix_to_day_of_month(day_number)
+            page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
+        else:
+            page_title = page_title_base
+        page_title = page_title.replace("'", "")
+        return page_title
+    except ValueError as e:
+        logging.warning("Failed to parse date from key '%s', format `%s`: %s", key, py_file_name_format, e)
+        return key
+
+
+def convert_cljs_date_to_py(cljs_format: str) -> str:
+    """
+    Convert a Clojure-style date format to a Python-style date format.
+
+    Args:
+        cljs_format (str): Clojure-style date format.
+
+    Returns:
+        str: Python-style date format.
+    """
+    cljs_format = cljs_format.replace("o", "")
+    datetime_token_map = CONFIG.get_datetime_token_map()
+    datetime_token_pattern = CONFIG.get_datetime_token_pattern()
+
+    def replace_token(match):
+        token = match.group(0)
+        return datetime_token_map.get(token, token)
+
+    py_format = datetime_token_pattern.sub(replace_token, cljs_format)
+    return py_format
+
+
+def add_ordinal_suffix_to_day_of_month(day):
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    if 11 <= day <= 13:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return str(day) + suffix
 
 
 def process_journals_timelines(journal_keys: List[str], dangling_journals: List[Union[str, datetime]]) -> None:
@@ -228,10 +300,3 @@ def get_least_recent_date(dates) -> Optional[datetime]:
         Optional[datetime]: The least recent date or None if the list is empty.
     """
     return min(dates) if dates else None
-
-
-def simple_write(file, data):
-    """Write data to a file."""
-    with open(file, "w", encoding="utf-8") as f:
-        for line in data:
-            f.write(f"{line}\n")
