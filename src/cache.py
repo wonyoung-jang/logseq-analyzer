@@ -61,7 +61,7 @@ class Cache:
 
         return modded_files
 
-    def get_deleted_files(self) -> None:
+    def clear_deleted_files(self) -> None:
         """
         Get the deleted files from the cache.
         """

@@ -89,7 +89,7 @@ def run_app(**kwargs):
     modded_files = CACHE.get_modified_files(logseq_graph_dir, target_dirs)
 
     # Check for deleted files and remove them from the database
-    CACHE.get_deleted_files()
+    CACHE.clear_deleted_files()
 
     # Process for only modified/new graph files
     graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
