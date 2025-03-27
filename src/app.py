@@ -61,6 +61,19 @@ def check_for_modified_files(logseq_graph_dir: Path, target_dirs: list):
     return modded_files
 
 
+def check_for_deleted_files(graph_data_db: dict):
+    deleted_files = []
+    
+    for key, data in graph_data_db.items():
+        path = data.get("file_path", None)
+        if Path(path).exists():
+            continue
+        deleted_files.append(key)
+        logging.debug("File deleted: %s", path)
+        
+    return deleted_files
+
+
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
@@ -107,14 +120,23 @@ def run_app(**kwargs):
     ################################################################
     # Check for modified files
     modded_files = check_for_modified_files(logseq_graph_dir, target_dirs)
-
+        
+    # Process for only modified/new graph files
+    graph_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
+    
+    # Check for existing data
     with shelve.open("mydata") as db:
         graph_data_db = db.get("graph_data", {})
         graph_content_db = db.get("graph_content", {})
-
-    # Process graph files
-    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
-    graph_data_db.update(graph_meta_data)
+        
+    # Check for deleted files and remove them from the database
+    deleted_files = check_for_deleted_files(graph_data_db)
+    for file in deleted_files:
+        graph_data_db.pop(file, None)
+        graph_content_db.pop(file, None)
+    
+    # Update existing data with new data
+    graph_data_db.update(graph_data)
     graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
