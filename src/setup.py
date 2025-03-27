@@ -34,6 +34,7 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
             move_bak=kwargs.get("move_bak", False),
             move_recycle=kwargs.get("move_recycle", False),
             write_graph=kwargs.get("write_graph", False),
+            graph_cache=kwargs.get("graph_cache", False),
             report_format=kwargs.get("report_format", ""),
         )
         return args
@@ -54,10 +55,10 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
         help="write all graph content to output folder (warning: may result in large file)",
     )
     parser.add_argument(
-        "-vg",  # Short option for visualize graph
-        "--visualize-graph",
+        "-gc",
+        "--graph_cache",
         action="store_true",
-        help="generate a graph visualization of page links (requires networkx and matplotlib)",
+        help="Reindex graph cache on run",
     )
     parser.add_argument(
         "-ma",

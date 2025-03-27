@@ -40,10 +40,6 @@ DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
 CACHE = CONFIG.get("CONSTANTS", "CACHE")
 
-# TODO Testing - clear cache
-if Path(CACHE).exists():
-    Path(CACHE).unlink()
-
 
 def get_modified_files(logseq_graph_dir: Path, target_dirs: list) -> list:
     """
@@ -111,6 +107,11 @@ def run_app(**kwargs):
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
+    
+    # TODO Clearing graph cache
+    if args.graph_cache:
+        if Path(CACHE).exists():
+            Path(CACHE).unlink()
 
     # Setup output directory and logging
     create_output_directory()
@@ -145,7 +146,7 @@ def run_app(**kwargs):
     modded_files = get_modified_files(logseq_graph_dir, target_dirs)
 
     # Process for only modified/new graph files
-    graph_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
+    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
 
     # Check for existing data
     with shelve.open(CACHE) as db:
@@ -159,7 +160,7 @@ def run_app(**kwargs):
         graph_content_db.pop(file, None)
 
     # Update existing data with new data
-    graph_data_db.update(graph_data)
+    graph_data_db.update(graph_meta_data)
     graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
@@ -245,8 +246,8 @@ def run_app(**kwargs):
         output_data["___meta___graph_content"] = graph_content_db
 
     # TODO Process journal keys to create a timeline
-    journals_dangling = extract_journals_from_dangling_links(dangling_links)
-    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
+    # journals_dangling = extract_journals_from_dangling_links(dangling_links)
+    # process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
 
     # TODO test shelf
     shelve_output_data = {

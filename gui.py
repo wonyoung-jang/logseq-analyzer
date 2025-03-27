@@ -68,14 +68,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         buttons_layout = self.create_buttons_layout()
         main_layout.addLayout(buttons_layout, 1, 0)
 
-    def create_graph_cache_layout(self) -> QFormLayout:
-        """Creates and returns the layout for graph cache settings."""
-        graph_cache_layout = QFormLayout()
-        self.graph_cache_checkbox = QCheckBox("Use Graph Cache")
-        self.graph_cache_checkbox.setChecked(CONFIG.getboolean("DEFAULT", "USE_GRAPH_CACHE"))
-        graph_cache_layout.addRow(self.graph_cache_checkbox)
-        return graph_cache_layout
-
     def create_input_fields_layout(self) -> QFormLayout:
         """Creates and returns the layout for input fields (graph folder, config file, report format)."""
         form_layout = QFormLayout()
@@ -117,10 +109,12 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
         self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
         self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
+        self.graph_cache_checkbox = QCheckBox("Reindex Graph Cache")
         checkboxes_layout.addWidget(self.move_assets_checkbox)
         checkboxes_layout.addWidget(self.move_bak_checkbox)
         checkboxes_layout.addWidget(self.move_recycle_checkbox)
         checkboxes_layout.addWidget(self.write_graph_checkbox)
+        checkboxes_layout.addWidget(self.graph_cache_checkbox)
         return checkboxes_layout
 
     def create_progress_bars_layout(self) -> QFormLayout:
@@ -234,6 +228,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             "move_bak": self.move_bak_checkbox.isChecked(),
             "move_recycle": self.move_recycle_checkbox.isChecked(),
             "write_graph": self.write_graph_checkbox.isChecked(),
+            "graph_cache": self.graph_cache_checkbox.isChecked(),
             "report_format": self.report_format_combo.currentText(),
         }
         if not args_gui["graph_folder"]:
@@ -305,7 +300,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.show_error("Analysis interrupted by user.")
             self.close()
         finally:
-            self.run_button.setEnabled(True)
+            self.run_button.setEnabled(False)
             self.output_button.setEnabled(True)
             self.delete_button.setEnabled(True)
             self.log_button.setEnabled(True)
@@ -354,6 +349,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
         self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
         self.settings.setValue("write_graph", self.write_graph_checkbox.isChecked())
+        self.settings.setValue("graph_cache", self.graph_cache_checkbox.isChecked())
         self.settings.setValue("report_format", self.report_format_combo.currentText())
         self.settings.setValue("geometry", self.saveGeometry())
 
@@ -365,6 +361,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
         self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
         self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
+        self.graph_cache_checkbox.setChecked(self.settings.value("graph_cache", False, type=bool))
         self.report_format_combo.setCurrentText(self.settings.value("report_format", ".txt"))
         self.restoreGeometry(self.settings.value("geometry", b""))
 
