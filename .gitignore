@@ -15,7 +15,7 @@ build/
 config_user.ini
 dist/
 logseq_api_cache/*
-logseqanalyzerdata
+logseqanalyzerdata*
 make.bat
 Makefile
 output*/*

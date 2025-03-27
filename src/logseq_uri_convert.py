@@ -2,7 +2,13 @@
 Convert a file URI to a Logseq URL and open it in the default web browser.
 """
 
+from pathlib import Path
+from urllib.parse import quote
 import webbrowser
+
+from .config_loader import get_config
+
+CONFIG = get_config()
 
 
 def convert_uri_to_logseq_url(uri):
@@ -15,20 +21,20 @@ def convert_uri_to_logseq_url(uri):
     Returns:
         str: The Logseq URL corresponding to the given file URI.
     """
-    prefix = "file:///C:/Logseq/pages/"
+
+    len_uri = len(Path(uri).parts)
+    len_graph_dir = len(Path(CONFIG.get("CONSTANTS", "GRAPH_DIR")).parts)
+    target_index = len_uri - len_graph_dir
+    target_segment = Path(uri).parts[target_index]
+    prefix = f"file:///C:/Logseq/{target_segment}/"
     if not uri.startswith(prefix):
         return ""
-
-    path_without_prefix = uri[len(prefix) :]
-    if path_without_prefix.endswith(".md"):
-        path_without_prefix = path_without_prefix[:-3]
-
-    path_with_slashes = path_without_prefix.replace("___", "/")
-
-    segments = path_with_slashes.split("/")
-    encoded_path = "%2F".join(segments)
-
-    return f"logseq://graph/Logseq?page={encoded_path}"
+    len_suffix = len(Path(uri).suffix)
+    path_without_prefix = uri[len(prefix) : -(len_suffix)]
+    path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
+    encoded_path = path_with_slashes
+    target_segment = target_segment[:-1]
+    return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
 
 def open_logseq_url_in_graph(logseq_url):

@@ -205,22 +205,20 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tupl
     return sorted_subset, sorted_subset_counter
 
 
-def extract_summary_subset_files(graph_data: Dict[str, Any], **criteria) -> List[str]:
+def extract_summary_subset_existence(graph_data: Dict[str, Any], *criteria) -> List[str]:
+    """
+    Extract a subset of the summary data based on whether the keys exists.
+    """
+    subset = [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
+    return subset
+
+
+def extract_summary_subset_key_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
-    Asks: What files match the criteria?
-
-    Args:
-        graph_data (Dict[str, Any]): The complete summary data.
-        **criteria: Keyword arguments specifying the criteria for subset extraction.
-
-    Returns:
-        List[str]: A list of keys from the summary data that match the criteria.
     """
-    subset = {k: v for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}
-    sorted_subset = sorted(subset.keys())
-
-    return sorted_subset
+    subset = [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
+    return subset
 
 
 def generate_summary_subsets(graph_data: dict) -> dict:
@@ -233,6 +231,16 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     Returns:
         dict: The summary data subsets.
     """
+    summary_data_subsets = {}
+
+    test_categories_for_existence = {
+        "is_backlinked",
+        "has_backlinks",
+    }
+
+    exist_subset = extract_summary_subset_existence(graph_data, *test_categories_for_existence)
+    summary_data_subsets["_____________exist_subset"] = exist_subset
+
     summary_categories: Dict[str, Dict[str, Any]] = {
         # Process general categories
         "___is_backlinked": {"is_backlinked": True},
@@ -259,9 +267,8 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         "___is_node_other": {"node_type": "other_node"},
     }
 
-    summary_data_subsets = {}
     for output_name, criteria in summary_categories.items():
-        summary_data_subsets[output_name] = extract_summary_subset_files(graph_data, **criteria)
+        summary_data_subsets[output_name] = extract_summary_subset_key_values(graph_data, **criteria)
 
     # Process file extensions
     file_extensions = {}
@@ -275,7 +282,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for ext in file_extensions:
         output_name = f"_all_{ext}s"
         criteria = {"file_extension": ext}
-        subset = extract_summary_subset_files(graph_data, **criteria)
+        subset = extract_summary_subset_key_values(graph_data, **criteria)
         file_ext_dict[output_name] = subset
     summary_data_subsets["____file_extensions_dict"] = file_ext_dict
 
@@ -336,10 +343,11 @@ def generate_sorted_summary_all(graph_data: dict, reverse=True, count=-1) -> dic
     for name, data in graph_data.items():
         for key, value in data.items():
             key = f"_pages_with_{key}"
-            if isinstance(value, (list, dict, set, tuple)):
-                flipped_data.setdefault(key, {})[name] = len(value)
-            else:
-                flipped_data.setdefault(key, {})[name] = value
+            if value:
+                if isinstance(value, (list, dict, set, tuple)):
+                    flipped_data.setdefault(key, {})[name] = len(value)
+                else:
+                    flipped_data.setdefault(key, {})[name] = value
 
     for key, value in flipped_data.items():
         sorted_data = dict(sorted(value.items(), key=lambda item: item[1], reverse=reverse))

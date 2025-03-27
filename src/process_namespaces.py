@@ -19,7 +19,7 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 
 from .config_loader import get_config
-from .process_summary_data import extract_summary_subset_files
+from .process_summary_data import extract_summary_subset_key_values
 from .compile_regex import get_patterns
 
 CONFIG = get_config()
@@ -39,7 +39,7 @@ def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]
     """
     namespace_data_subset = {}
     # Find unique names that are not namespaces
-    namespace_data_subset["___meta___unique_names_not_namespace"] = extract_summary_subset_files(
+    namespace_data_subset["___meta___unique_names_not_namespace"] = extract_summary_subset_key_values(
         graph_data, namespace_level=0
     )
 

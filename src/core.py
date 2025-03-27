@@ -62,6 +62,7 @@ def core_data_analysis(
     )
 
     graph_data = process_summary_data(graph_data_post, alphanum_dictionary, alphanum_dictionary_ns)
+    graph_data = dict(sorted(graph_data.items(), key=lambda item: item[0]))
 
     return (
         alphanum_dictionary,

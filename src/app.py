@@ -4,6 +4,8 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 
+from pyparsing import C
+
 from .config_loader import get_config
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
@@ -129,6 +131,10 @@ def run_app(**kwargs):
     summary_data_subsets = generate_summary_subsets(graph_data)
     summary_sorted_all = generate_sorted_summary_all(graph_data)
 
+    # TODO Process journal keys to create a timeline
+    journals_dangling = extract_journals_from_dangling_links(dangling_links)
+    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
+
     if gui_instance:
         gui_instance.update_progress("summary", 100)
         gui_instance.update_progress("move_files", 20)
@@ -179,10 +185,6 @@ def run_app(**kwargs):
 
     if args.write_graph:
         output_data["___meta___graph_content"] = graph_content_db
-
-    # TODO Process journal keys to create a timeline
-    journals_dangling = extract_journals_from_dangling_links(dangling_links)
-    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
 
     # Write output data to persistent storage
     shelve_output_data = {
