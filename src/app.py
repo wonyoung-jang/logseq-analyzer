@@ -15,7 +15,6 @@ from .process_dangling_links import process_dangling_links
 from .compile_regex import compile_re_config, compile_re_content
 from .core import (
     core_data_analysis,
-    generate_global_summary,
     generate_sorted_summary_all,
     generate_summary_subsets,
     process_graph_files,
@@ -39,22 +38,27 @@ CONFIG = get_config()
 DEF_LS_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_STRUCTURE", "BAK_DIR")
+CACHE = CONFIG.get("CONSTANTS", "CACHE")
+
+# TODO Testing - clear cache
+if Path(CACHE).exists():
+    Path(CACHE).unlink()
 
 
 def get_modified_files(logseq_graph_dir: Path, target_dirs: list) -> list:
     """
     Check for modified files in the Logseq graph directory.
-    
+
     Args:
         logseq_graph_dir (Path): Path to the Logseq graph directory.
         target_dirs (list): List of target directories to check for modified files.
-        
+
     Returns:
         list: List of modified files.
     """
     modded_files = []
 
-    with shelve.open("mydata") as db:
+    with shelve.open(CACHE) as db:
         mod_tracker = db.get("mod_tracker", {})
 
         for path in iter_files(logseq_graph_dir, target_dirs):
@@ -144,7 +148,7 @@ def run_app(**kwargs):
     graph_data, graph_content_bullets = process_graph_files(modded_files, content_patterns)
 
     # Check for existing data
-    with shelve.open("mydata") as db:
+    with shelve.open(CACHE) as db:
         graph_data_db = db.get("graph_data", {})
         graph_content_db = db.get("graph_content", {})
 
@@ -168,7 +172,7 @@ def run_app(**kwargs):
     ) = core_data_analysis(graph_data_db)
 
     # Namespaces analysis
-    summary_namespaces, summary_global_namespaces = process_namespace_data(graph_data, dangling_links)
+    summary_namespaces = process_namespace_data(graph_data, dangling_links)
 
     # Basic dangling links analysis
     dangling_dict = process_dangling_links(all_refs, dangling_links)
@@ -187,7 +191,6 @@ def run_app(**kwargs):
     #################################################################
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
-    summary_global = generate_global_summary(summary_data_subsets)
     summary_sorted_all = generate_sorted_summary_all(graph_data)
 
     if gui_instance:
@@ -212,27 +215,25 @@ def run_app(**kwargs):
 
     output_data = {
         # Main meta outputs
-        "alphanum_dict": alphanum_dict,
-        "alphanum_dict_ns": alphanum_dict_ns,
-        "dangling_links": dangling_links,
-        "config_edn_data": config_edn_data,
-        "target_dirs": target_dirs,
-        "graph_data": graph_data,
-        "content_patterns": content_patterns,
-        "config_patterns": config_patterns,
+        "___meta___alphanum_dict_ns": alphanum_dict_ns,
+        "___meta___alphanum_dict": alphanum_dict,
+        "___meta___config_edn_data": config_edn_data,
+        "___meta___config_patterns": config_patterns,
+        "___meta___content_patterns": content_patterns,
+        "___meta___graph_data": graph_data,
+        "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
         "dangling_dict": dangling_dict,
+        "dangling_links": dangling_links,
         # Properties
         "set_all_prop_values_builtin": set_all_prop_values_builtin,
         "set_all_prop_values_user": set_all_prop_values_user,
         "sorted_all_props_builtin": sorted_all_props_builtin,
         "sorted_all_props_user": sorted_all_props_user,
         # General summary
-        "___summary_global": summary_global,
         "summary_data_subsets": summary_data_subsets,
         "summary_sorted_all": summary_sorted_all,
         # Namespaces summary
-        "___summary_global_namespaces": summary_global_namespaces,
         "summary_namespaces": summary_namespaces,
         # Move files and assets
         "moved_files": moved_files,
@@ -241,37 +242,35 @@ def run_app(**kwargs):
     }
 
     if args.write_graph:
-        output_data["graph_content"] = graph_content_db
+        output_data["___meta___graph_content"] = graph_content_db
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(dangling_links)
-    process_journals_timelines(summary_data_subsets["_is_journal"], journals_dangling)
+    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
 
     # TODO test shelf
     shelve_output_data = {
         # Main meta outputs
-        "alphanum_dict": alphanum_dict,
-        "alphanum_dict_ns": alphanum_dict_ns,
-        "dangling_links": dangling_links,
-        "config_edn_data": config_edn_data,
-        "target_dirs": target_dirs,
-        "graph_content": graph_content_db,
-        "graph_data": graph_data,
-        "content_patterns": content_patterns,
-        "config_patterns": config_patterns,
+        "___meta___alphanum_dict_ns": alphanum_dict_ns,
+        "___meta___alphanum_dict": alphanum_dict,
+        "___meta___config_edn_data": config_edn_data,
+        "___meta___config_patterns": config_patterns,
+        "___meta___content_patterns": content_patterns,
+        "___meta___graph_content": graph_content_db,
+        "___meta___graph_data": graph_data,
+        "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
         "dangling_dict": dangling_dict,
+        "dangling_links": dangling_links,
         # Properties
         "set_all_prop_values_builtin": set_all_prop_values_builtin,
         "set_all_prop_values_user": set_all_prop_values_user,
         "sorted_all_props_builtin": sorted_all_props_builtin,
         "sorted_all_props_user": sorted_all_props_user,
         # General summary
-        "___summary_global": summary_global,
         **summary_data_subsets,
         **summary_sorted_all,
         # Namespaces summary
-        "___summary_global_namespaces": summary_global_namespaces,
         **summary_namespaces,
         # Move files and assets
         "moved_files": moved_files,
@@ -279,7 +278,7 @@ def run_app(**kwargs):
         "assets_not_backlinked": assets_not_backlinked,
     }
 
-    with shelve.open("mydata") as db:
+    with shelve.open(CACHE) as db:
         for key, values in shelve_output_data.items():
             db[key] = values
 

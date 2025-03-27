@@ -214,29 +214,29 @@ def process_aliases(aliases: str) -> List[str]:
 
 def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_type: str) -> Tuple[str, str, str]:
     """Process external and embedded links and categorize them."""
-    links_other = f"{links_type}_links_other"
-    links_internet = f"{links_type}_links_internet"
     links_internet_pattern = f"{links_type}_link_internet"
-    links_subtype = ""
     links_sub_pattern = ""
     if links_type == "external":
-        links_subtype = f"{links_type}_links_alias"
         links_sub_pattern = f"{links_type}_link_alias"
     elif links_type == "embedded":
-        links_subtype = f"{links_type}_links_asset"
         links_sub_pattern = f"{links_type}_link_asset"
 
+    internet = []
+    alias_or_asset = []
     if links:
-        internet = []
-        alias_or_asset = []
         for _ in range(len(links)):
-            link = links[0]
+            link = links[-1]
             if patterns[links_internet_pattern].match(link):
                 internet.append(link)
-            elif patterns[links_sub_pattern].match(link):
+                links.pop()
+                continue
+
+            if patterns[links_sub_pattern].match(link):
                 alias_or_asset.append(link)
-            links.pop(0)
-    return links_other, links_internet, links_subtype
+                links.pop()
+                continue
+
+    return links, internet, alias_or_asset
 
 
 def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:

@@ -68,6 +68,14 @@ class LogseqAnalyzerGUI(QMainWindow):
         buttons_layout = self.create_buttons_layout()
         main_layout.addLayout(buttons_layout, 1, 0)
 
+    def create_graph_cache_layout(self) -> QFormLayout:
+        """Creates and returns the layout for graph cache settings."""
+        graph_cache_layout = QFormLayout()
+        self.graph_cache_checkbox = QCheckBox("Use Graph Cache")
+        self.graph_cache_checkbox.setChecked(CONFIG.getboolean("DEFAULT", "USE_GRAPH_CACHE"))
+        graph_cache_layout.addRow(self.graph_cache_checkbox)
+        return graph_cache_layout
+
     def create_input_fields_layout(self) -> QFormLayout:
         """Creates and returns the layout for input fields (graph folder, config file, report format)."""
         form_layout = QFormLayout()
@@ -246,29 +254,27 @@ class LogseqAnalyzerGUI(QMainWindow):
             output_data = run_app(**args_gui, gui_instance=self)
 
             output_meta = [
-                "alphanum_dict",
-                "alphanum_dict_ns",
-                "dangling_links",
-                "config_edn_data",
-                "target_dirs",
-                "graph_data",
-                "graph_content",
-                "content_patterns",
-                "config_patterns",
+                "___meta___alphanum_dict_ns",
+                "___meta___alphanum_dict",
+                "___meta___config_edn_data",
+                "___meta___config_patterns",
+                "___meta___content_patterns",
+                "___meta___graph_content",
+                "___meta___graph_data",
+                "___meta___target_dirs",
                 "all_refs",
                 "dangling_dict",
+                "dangling_links",
                 "set_all_prop_values_builtin",
                 "set_all_prop_values_user",
                 "sorted_all_props_builtin",
                 "sorted_all_props_user",
             ]
             output_summaries = [
-                "___summary_global",
                 "summary_data_subsets",
                 "summary_sorted_all",
             ]
             output_namespaces = [
-                "___summary_global_namespaces",
                 "summary_namespaces",
             ]
             output_assets = [
@@ -281,15 +287,9 @@ class LogseqAnalyzerGUI(QMainWindow):
                 if key in output_meta:
                     write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "META"))
                 elif key in output_summaries:
-                    if key == "___summary_global":
-                        write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "SUMMARY"))
-                        continue
                     for summary, data in items.items():
                         write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "SUMMARY"))
                 elif key in output_namespaces:
-                    if key == "___summary_global_namespaces":
-                        write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "NAMESPACE"))
-                        continue
                     for summary, data in items.items():
                         write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "NAMESPACE"))
                 elif key in output_assets:

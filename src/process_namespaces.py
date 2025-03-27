@@ -19,7 +19,6 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 
 from .config_loader import get_config
-from .core import generate_global_summary
 from .process_summary_data import extract_summary_subset_files
 from .compile_regex import compile_re_content
 
@@ -27,9 +26,7 @@ CONFIG = get_config()
 CONTENT_RE = compile_re_content()
 
 
-def process_namespace_data(
-    graph_data: Dict[str, Any], dangling_links: List[str]
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]) -> Dict[str, Any]:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
@@ -38,29 +35,27 @@ def process_namespace_data(
         dangling_links (list): The list of dangling links.
 
     Returns:
-        tuple: A tuple containing:
-            - A dictionary with namespace data and analysis results.
-            - A dictionary with a global summary of the namespace data.
+        dict: A dictionary containing namespace data and analysis results.
     """
     namespace_data_subset = {}
     # Find unique names that are not namespaces
-    namespace_data_subset["unique_names_not_namespace"] = extract_summary_subset_files(graph_data, namespace_level=0)
+    namespace_data_subset["___meta___unique_names_not_namespace"] = extract_summary_subset_files(
+        graph_data, namespace_level=0
+    )
 
     # Find unique names that are namespaces
-    namespace_data_subset["unique_names_is_namespace"] = sorted(
+    namespace_data_subset["___meta___unique_names_is_namespace"] = sorted(
         [k for k, v in graph_data.items() if v.get("namespace_level")]
     )
 
     namespace_data = {}
-    for name in namespace_data_subset["unique_names_is_namespace"]:
+    for name in namespace_data_subset["___meta___unique_names_is_namespace"]:
         namespace_data[name] = {k: v for k, v in graph_data[name].items() if "namespace" in k and v}
 
     namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
     unique_namespace_parts = extract_unique_namespace_parts(namespace_parts)
     namespace_details = analyze_namespace_details(namespace_parts)
-    unique_namespaces_levels, unique_namespaces_per_level = get_unique_namespaces_by_level(
-        namespace_parts, namespace_details
-    )
+    unique_namespaces_per_level = get_unique_namespaces_by_level(namespace_parts, namespace_details)
     namespace_data_subset["namespace_queries"] = analyze_namespace_queries(graph_data, namespace_data)
     namespace_data_subset["namespace_hierarchy"] = visualize_namespace_hierarchy(namespace_parts)
 
@@ -68,7 +63,9 @@ def process_namespace_data(
     # 01 Conflicts With Existing Pages
     ##################################
     # Potential non-namespace pages are those that are in the namespace data
-    potential_non_namespace = unique_namespace_parts.intersection(namespace_data_subset["unique_names_not_namespace"])
+    potential_non_namespace = unique_namespace_parts.intersection(
+        namespace_data_subset["___meta___unique_names_not_namespace"]
+    )
 
     # Potential dangling links are those that are in the namespace data
     potential_dangling = unique_namespace_parts.intersection(dangling_links)
@@ -91,25 +88,22 @@ def process_namespace_data(
     ###########################
     namespace_data_subset.update(
         {
-            "__namespace_data": namespace_data,
-            "__namespace_details": namespace_details,
-            "__namespace_parts": namespace_parts,
-            "unique_namespace_parts": unique_namespace_parts,
-            "conflicts_non_namespace": conflicts_non_namespace,
+            "___meta___namespace_data": namespace_data,
+            "___meta___namespace_parts": namespace_parts,
             "conflicts_dangling": conflicts_dangling,
+            "conflicts_non_namespace": conflicts_non_namespace,
+            "namespace_details": namespace_details,
+            "unique_namespace_parts": unique_namespace_parts,
             "unique_namespaces_per_level": unique_namespaces_per_level,
-            **unique_namespaces_levels,
         },
     )
 
-    namespace_global_summary = generate_global_summary(namespace_data_subset)
-
-    return namespace_data_subset, namespace_global_summary
+    return namespace_data_subset
 
 
 def get_unique_namespaces_by_level(
     namespace_parts: Dict[str, Dict[str, int]], namespace_details: Dict[str, Any]
-) -> Tuple[Dict[str, Set[Any]], Dict[int, Set[Any]]]:
+) -> Dict[str, Set[str]]:
     """
     Get unique namespaces by level.
 
@@ -118,21 +112,15 @@ def get_unique_namespaces_by_level(
         namespace_details (dict): Dictionary containing details about namespaces.
 
     Returns:
-        tuple: A tuple containing:
-            - A dictionary with unique namespaces for each level.
-            - A dictionary with the count of unique namespaces per level.
+        dict: A dictionary mapping each level to a set of unique namespaces.
     """
-    unique_namespaces_individual_levels = {}
     unique_namespaces_per_level = {i: set() for i in range(1, namespace_details["max_depth"] + 1)}
+
     for parts in namespace_parts.values():
         for part, level in parts.items():
             unique_namespaces_per_level[level].add(part)
 
-    for level, names in unique_namespaces_per_level.items():
-        unique_namespaces_individual_levels[f"unique_namespaces_level_{level}"] = names
-    unique_namespaces_per_level = {k: len(v) for k, v in unique_namespaces_per_level.items()}
-
-    return unique_namespaces_individual_levels, unique_namespaces_per_level
+    return unique_namespaces_per_level
 
 
 def analyze_namespace_details(namespace_parts: Dict[str, Dict[str, int]]) -> Dict[str, Any]:

@@ -15,15 +15,15 @@ build/
 config_user.ini
 dist/
 logseq_api_cache/*
+logseqanalyzerdata
 make.bat
 Makefile
-mydata
 output*/*
 output/*
+persistence.py
 profile_output*
 source/conf.py
 source/index.rst
-src/persistence.py
 src/process_all_graph.py
 to_delete/*
 user_config.ini
