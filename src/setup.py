@@ -55,10 +55,9 @@ def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
         help="write all graph content to output folder (warning: may result in large file)",
     )
     parser.add_argument(
-        "-gc",
-        "--graph_cache",
+        "--graph-cache",
         action="store_true",
-        help="Reindex graph cache on run",
+        help="reindex graph cache on run",
     )
     parser.add_argument(
         "-ma",

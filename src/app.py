@@ -110,8 +110,7 @@ def run_app(**kwargs):
     
     # TODO Clearing graph cache
     if args.graph_cache:
-        if Path(CACHE).exists():
-            Path(CACHE).unlink()
+        Path(CACHE).unlink(missing_ok=True)
 
     # Setup output directory and logging
     create_output_directory()
@@ -150,8 +149,8 @@ def run_app(**kwargs):
 
     # Check for existing data
     with shelve.open(CACHE) as db:
-        graph_data_db = db.get("graph_data", {})
-        graph_content_db = db.get("graph_content", {})
+        graph_data_db = db.get("___meta___graph_data", {})
+        graph_content_db = db.get("___meta___graph_content", {})
 
     # Check for deleted files and remove them from the database
     deleted_files = get_deleted_files(graph_data_db)
@@ -280,8 +279,7 @@ def run_app(**kwargs):
     }
 
     with shelve.open(CACHE) as db:
-        for key, values in shelve_output_data.items():
-            db[key] = values
+        db.update(shelve_output_data)
 
     # TODO write config to file
     with open("user_config.ini", "w") as config_file:
