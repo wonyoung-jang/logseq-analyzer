@@ -66,11 +66,11 @@ class Cache:
         Get the deleted files from the cache.
         """
         deleted_files = []
-        self.cache["___meta___graph_data"] = self.cache.get("___meta___graph_data", {})
-        self.cache["___meta___graph_content"] = self.cache.get("___meta___graph_content", {})
+        self.cache.setdefault("___meta___graph_data", {})
+        self.cache.setdefault("___meta___graph_content", {})
 
         for key, data in self.cache["___meta___graph_data"].items():
-            path = data.get("file_path", None)
+            path = data.get("file_path")
             if Path(path).exists():
                 continue
             deleted_files.append(key)

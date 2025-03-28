@@ -167,7 +167,7 @@ def detect_non_namespace_conflicts(
     conflicts_non_namespace = defaultdict(list)
     conflicts_dangling = defaultdict(list)
     for entry, parts in namespace_parts.items():
-        for part in parts.keys():
+        for part in parts:
             if part in non_namespace:
                 conflicts_non_namespace[part].append(entry)
 

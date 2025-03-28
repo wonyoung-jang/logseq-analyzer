@@ -51,7 +51,7 @@ def get_all_prop_values(
     for name, data in graph_data.items():
         if data.get("properties_values"):
             for prop, values in data["properties_values"].items():
-                all_prop_values[prop] = all_prop_values.get(prop, [])
+                all_prop_values.setdefault(prop, [])
                 for value in values:
                     found_in_value = (name, value)
                     all_prop_values[prop].append(found_in_value)

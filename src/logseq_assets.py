@@ -24,7 +24,7 @@ def handle_assets(
             - List of assets that are not backlinked.
     """
     for _, data in graph_data.items():
-        if not data.get("assets", []):
+        if not data.get("assets"):
             continue
 
         for asset in summary_data_subsets["___is_asset"]:
@@ -42,6 +42,7 @@ def handle_assets(
         "is_backlinked": True,
         "file_type": "asset",
     }
+
     asset_not_backlinked_kwargs = {
         "is_backlinked": False,
         "file_type": "asset",

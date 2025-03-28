@@ -3,7 +3,6 @@ Convert a file URI to a Logseq URL and open it in the default web browser.
 """
 
 from pathlib import Path
-from urllib.parse import quote
 import webbrowser
 
 from .config_loader import get_config

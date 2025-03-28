@@ -194,9 +194,10 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tupl
         if values:
             subset.update(values)
             for value in values:
-                subset_counter[value] = subset_counter.get(value, {})
-                subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                subset_counter[value]["found_in"] = subset_counter[value].get("found_in", set())
+                subset_counter.setdefault(value, {})
+                subset_counter[value].setdefault("count", 0)
+                subset_counter[value]["count"] += 1
+                subset_counter[value].setdefault("found_in", set())
                 subset_counter[value]["found_in"].add(name)
 
     sorted_subset = sorted(subset)
@@ -238,7 +239,6 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         "has_external_links",
         "has_embedded_links",
     }
-
     exist_subset = extract_summary_subset_existence(graph_data, *test_categories_for_existence)
     summary_data_subsets["_____________exist_subset"] = exist_subset
 
@@ -285,6 +285,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         criteria = {"file_extension": ext}
         subset = extract_summary_subset_key_values(graph_data, **criteria)
         file_ext_dict[output_name] = subset
+
     summary_data_subsets["____file_extensions_dict"] = file_ext_dict
 
     # Process content types

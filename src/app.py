@@ -4,8 +4,6 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 
-from pyparsing import C
-
 from .config_loader import get_config
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
