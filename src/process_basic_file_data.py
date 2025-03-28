@@ -30,9 +30,8 @@ def process_single_file(file_path: Path) -> Tuple[Dict[str, Any], List[str]]:
             - A dictionary with file metadata and computed metrics.
             - A list of bullet points extracted from the content.
     """
-    data = {}
-    data = get_file_metadata(file_path, data)
-    content = get_file_content(file_path)
+    data = get_single_file_metadata(file_path)
+    content = get_single_file_content(file_path)
     content_bullets = []
     primary_bullet = ""
 
@@ -63,17 +62,17 @@ def process_single_file(file_path: Path) -> Tuple[Dict[str, Any], List[str]]:
     return data, content_bullets
 
 
-def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
+def get_single_file_metadata(file_path: Path) -> Dict[str, Any]:
     """
     Extract metadata from a file.
 
     Args:
         file_path (Path): The path to the file.
-        data (Dict[str, Any]): A dictionary to store metadata.
 
     Returns:
         Dict[str, Any]: A dictionary with file metadata.
     """
+    data = {}
     stat = file_path.stat()
     parent = file_path.parent.name.lower()
     name = process_logseq_filename_key(file_path.stem, parent)
@@ -107,7 +106,7 @@ def get_file_metadata(file_path: Path, data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
-def get_file_content(file_path: Path) -> Optional[str]:
+def get_single_file_content(file_path: Path) -> Optional[str]:
     """
     Read the text content of a file using utf-8 encoding.
 

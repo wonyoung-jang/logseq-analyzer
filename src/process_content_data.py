@@ -37,59 +37,40 @@ def process_content_data(
     data["namespace_children"] = set()
     data["namespace_size"] = 0
     if ns_sep in data["name"]:
-        namespace_parts_list = data["name"].split(ns_sep)
-        namespace_level = len(namespace_parts_list)
-        namespace_root = namespace_parts_list[0]
-        namespace_stem = namespace_parts_list[-1]
-        namespace_parent = namespace_root
-        if namespace_level > 2:
-            namespace_parent = namespace_parts_list[-2]
-
-        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
-        namespace_data = {
-            "namespace_root": namespace_root,
-            "namespace_parent": namespace_parent,
-            "namespace_stem": namespace_stem,
-            "namespace_parts": namespace_parts,
-            "namespace_level": namespace_level,
-        }
-
-        for key, value in namespace_data.items():
-            if value:
-                data[key] = value
+        for key, value in process_content_namespace_data(data, ns_sep):
+            data[key] = value
 
     # If no content, return data
     if not content:
         return data
 
     # Extract basic data
-    page_references = find_all_lower(PATTERNS.content["page_reference"], content)
-    tagged_backlinks = find_all_lower(PATTERNS.content["tagged_backlink"], content)
-    tags = find_all_lower(PATTERNS.content["tag"], content)
+    advanced_commands = find_all_lower(PATTERNS.content["advanced_command"], content)
     assets = find_all_lower(PATTERNS.content["asset"], content)
-    draws = find_all_lower(PATTERNS.content["draw"], content)
+    block_embeds = find_all_lower(PATTERNS.content["block_embed"], content)
+    block_references = find_all_lower(PATTERNS.content["block_reference"], content)
     blockquotes = find_all_lower(PATTERNS.content["blockquote"], content)
+    calc_blocks = find_all_lower(PATTERNS.content["calc_block"], content)
+    clozes = find_all_lower(PATTERNS.content["cloze"], content)
+    draws = find_all_lower(PATTERNS.content["draw"], content)
+    embeds = find_all_lower(PATTERNS.content["embed"], content)
     flashcards = find_all_lower(PATTERNS.content["flashcard"], content)
     multiline_code_blocks = find_all_lower(PATTERNS.content["multiline_code_block"], content)
-    calc_blocks = find_all_lower(PATTERNS.content["calc_block"], content)
     multiline_code_langs = find_all_lower(PATTERNS.content["multiline_code_lang"], content)
-    references_general = find_all_lower(PATTERNS.content["reference"], content)
-    block_references = find_all_lower(PATTERNS.content["block_reference"], content)
-    embeds = find_all_lower(PATTERNS.content["embed"], content)
-    page_embeds = find_all_lower(PATTERNS.content["page_embed"], content)
-    block_embeds = find_all_lower(PATTERNS.content["block_embed"], content)
     namespace_queries = find_all_lower(PATTERNS.content["namespace_query"], content)
-    clozes = find_all_lower(PATTERNS.content["cloze"], content)
-    simple_queries = find_all_lower(PATTERNS.content["simple_query"], content)
+    page_embeds = find_all_lower(PATTERNS.content["page_embed"], content)
+    page_references = find_all_lower(PATTERNS.content["page_reference"], content)
     query_functions = find_all_lower(PATTERNS.content["query_function"], content)
-    advanced_commands = find_all_lower(PATTERNS.content["advanced_command"], content)
+    references_general = find_all_lower(PATTERNS.content["reference"], content)
+    simple_queries = find_all_lower(PATTERNS.content["simple_query"], content)
+    tagged_backlinks = find_all_lower(PATTERNS.content["tagged_backlink"], content)
+    tags = find_all_lower(PATTERNS.content["tag"], content)
 
     # Extract all properties: values pairs
     properties_values = {}
     property_value_all = PATTERNS.content["property_value"].findall(content)
     for prop, value in property_value_all:
-        properties_values[prop] = properties_values.get(prop, [])
-        properties_values[prop].append(value)
+        properties_values.setdefault(prop, []).append(value)
 
     aliases = properties_values.get("alias", [])
     if aliases:
@@ -157,6 +138,32 @@ def process_content_data(
             data[key] = value
 
     return data
+
+
+def process_content_namespace_data(data: Dict[str, Any], ns_sep: str):
+    """
+    Process namespaces in the data dictionary.
+    """
+    namespace_parts_list = data["name"].split(ns_sep)
+    namespace_level = len(namespace_parts_list)
+    namespace_root = namespace_parts_list[0]
+    namespace_stem = namespace_parts_list[-1]
+    namespace_parent = namespace_root
+    if namespace_level > 2:
+        namespace_parent = namespace_parts_list[-2]
+
+    namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
+    namespace_data = {
+        "namespace_root": namespace_root,
+        "namespace_parent": namespace_parent,
+        "namespace_stem": namespace_stem,
+        "namespace_parts": namespace_parts,
+        "namespace_level": namespace_level,
+    }
+
+    for key, value in namespace_data.items():
+        if value:
+            yield key, value
 
 
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:
@@ -255,6 +262,36 @@ def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
     return True
 
 
+def post_processing_content_namespaces(
+    content_data: Dict[str, Any], name: str, data: Dict[str, Any], ns_sep: str
+) -> Dict[str, Any]:
+    """
+    Post-process namespaces in the content data.
+    """
+    namespace_parts_list = name.split(ns_sep)
+    namespace_root = data["namespace_root"]
+    namespace_level = data["namespace_level"]
+
+    if namespace_root in content_data:
+        root_level = content_data[namespace_root]["namespace_level"]
+        direct_level = 1
+        if direct_level > root_level:
+            content_data[namespace_root]["namespace_level"] = direct_level
+        content_data[namespace_root]["namespace_children"].add(name)
+        content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
+
+    parent_joined = ns_sep.join(namespace_parts_list[:-1])
+    if parent_joined in content_data:
+        parent_level = content_data[parent_joined]["namespace_level"]
+        direct_level = namespace_level - 1
+        if direct_level > parent_level:
+            content_data[parent_joined]["namespace_level"] = direct_level
+        content_data[parent_joined]["namespace_children"].add(name)
+        content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
+
+    return content_data
+
+
 def post_processing_content(
     content_data: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
@@ -279,27 +316,8 @@ def post_processing_content(
     for name, data in content_data.items():
         # Process namespaces
         if ns_sep in name:
-            namespace_parts_list = name.split(ns_sep)
-            namespace_root = data["namespace_root"]
-            namespace_level = data["namespace_level"]
-            unique_linked_references_namespaces.update([namespace_root, name])
-
-            if namespace_root in content_data:
-                root_level = content_data[namespace_root]["namespace_level"]
-                direct_level = 1
-                if direct_level > root_level:
-                    content_data[namespace_root]["namespace_level"] = direct_level
-                content_data[namespace_root]["namespace_children"].add(name)
-                content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
-
-            parent_joined = ns_sep.join(namespace_parts_list[:-1])
-            if parent_joined in content_data:
-                parent_level = content_data[parent_joined]["namespace_level"]
-                direct_level = namespace_level - 1
-                if direct_level > parent_level:
-                    content_data[parent_joined]["namespace_level"] = direct_level
-                content_data[parent_joined]["namespace_children"].add(name)
-                content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
+            unique_linked_references_namespaces.update([data["namespace_root"], name])
+            content_data = post_processing_content_namespaces(content_data, name, data, ns_sep)
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))

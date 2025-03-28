@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Tuple
 
 from .setup import get_logseq_target_dirs
 from .cache import Cache
-from .compile_regex import RegexPatterns
 from .config_loader import Config
 from .process_basic_file_data import process_single_file
 from .process_content_data import post_processing_content
@@ -15,7 +14,6 @@ from .process_summary_data import process_summary_data
 
 CONFIG = Config.get_instance()
 CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
-PATTERNS = RegexPatterns.get_instance()
 
 
 def process_graph_files() -> Tuple[Dict[str, Any], Dict[str, List[str]]]:

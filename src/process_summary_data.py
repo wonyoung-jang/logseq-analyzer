@@ -88,19 +88,19 @@ def process_summary_data(
     return graph_data
 
 
-def check_is_backlinked(name: str, meta_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
+def check_is_backlinked(name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
     """
     Helper function to check if a file is backlinked.
 
     Args:
         name (str): The file name.
-        meta_data (Dict[str, Any]): Metadata for the file.
+        graph_data (Dict[str, Any]): Graph data.
         alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
 
     Returns:
         bool: True if the file is backlinked; otherwise, False.
     """
-    id_key = meta_data["id"]
+    id_key = graph_data["id"]
     if id_key in alphanum_dict:
         for page_ref in alphanum_dict[id_key]:
             if name == page_ref:

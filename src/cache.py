@@ -27,6 +27,24 @@ class Cache:
         """
         self.cache.close()
 
+    def update(self, data):
+        """
+        Update the cache with new data.
+        """
+        self.cache.update(data)
+
+    def get(self, key, default=None):
+        """
+        Get a value from the cache.
+        """
+        return self.cache.get(key, default)
+
+    def clear(self):
+        """
+        Clear the cache.
+        """
+        self.cache.clear()
+
     @staticmethod
     def get_instance(cache_path: str):
         """

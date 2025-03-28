@@ -22,7 +22,6 @@ from .setup import (
     create_output_directory,
     get_logseq_analyzer_args,
     get_logseq_config_edn,
-    get_logseq_target_dirs,
     get_sub_file_or_folder,
     set_logseq_config_edn_data,
     validate_path,
@@ -56,7 +55,7 @@ def run_app(**kwargs):
 
     # Clear cache if specified
     if args.graph_cache:
-        CACHE.cache.clear()
+        CACHE.clear()
 
     # Setup output directory and log file
     create_output_directory()
@@ -82,8 +81,6 @@ def run_app(**kwargs):
     # Set the config data in the config object
     set_logseq_config_edn_data(config_edn_data)
 
-    target_dirs = get_logseq_target_dirs()
-
     # Set the report format in the config
     CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
 
@@ -101,9 +98,9 @@ def run_app(**kwargs):
     graph_meta_data, graph_content_bullets = process_graph_files()
 
     # Check for existing data
-    graph_data_db = CACHE.cache.get("___meta___graph_data", {})
+    graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_data_db.update(graph_meta_data)
-    graph_content_db = CACHE.cache.get("___meta___graph_content", {})
+    graph_content_db = CACHE.get("___meta___graph_content", {})
     graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
@@ -167,7 +164,6 @@ def run_app(**kwargs):
         "___meta___alphanum_dict": alphanum_dict,
         "___meta___config_edn_data": config_edn_data,
         "___meta___graph_data": graph_data,
-        "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
         "dangling_dict": dangling_dict,
         "dangling_links": dangling_links,
@@ -198,7 +194,6 @@ def run_app(**kwargs):
         "___meta___config_edn_data": config_edn_data,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph_data,
-        "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
         "dangling_dict": dangling_dict,
         "dangling_links": dangling_links,
@@ -218,7 +213,7 @@ def run_app(**kwargs):
         "assets_not_backlinked": assets_not_backlinked,
     }
 
-    CACHE.cache.update(shelve_output_data)
+    CACHE.update(shelve_output_data)
     CACHE.close()
 
     # TODO write config to file
