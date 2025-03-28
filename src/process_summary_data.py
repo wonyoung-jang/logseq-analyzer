@@ -234,14 +234,15 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     summary_data_subsets = {}
 
     test_categories_for_existence = {
-        "is_backlinked",
-        "has_backlinks",
+        "is_backlinked_by_ns_only",
+        "has_external_links",
+        "has_embedded_links",
     }
 
     exist_subset = extract_summary_subset_existence(graph_data, *test_categories_for_existence)
     summary_data_subsets["_____________exist_subset"] = exist_subset
 
-    summary_categories: Dict[str, Dict[str, Any]] = {
+    summary_categories = {
         # Process general categories
         "___is_backlinked": {"is_backlinked": True},
         "___is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
