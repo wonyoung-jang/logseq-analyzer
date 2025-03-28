@@ -4,11 +4,7 @@ import logging
 import shelve
 from pathlib import Path
 
-from .config_loader import get_config
 from .helpers import iter_files
-
-CONFIG = get_config()
-CACHE = CONFIG.get("CONSTANTS", "CACHE")
 
 
 class Cache:
@@ -79,13 +75,3 @@ class Cache:
         for file in deleted_files:
             self.cache["___meta___graph_data"].pop(file, None)
             self.cache["___meta___graph_content"].pop(file, None)
-
-
-def get_cache(cache_path: str):
-    """
-    Get the cache object for the application.
-
-    Returns:
-        Cache: The cache object.
-    """
-    return Cache.get_instance(cache_path)

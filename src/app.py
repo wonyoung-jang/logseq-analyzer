@@ -4,10 +4,11 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 
-from .config_loader import get_config
+from .cache import Cache
+from .config_loader import Config
+from .compile_regex import RegexPatterns
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
-from .compile_regex import get_patterns
 from .core import (
     core_data_analysis,
     process_graph_files,
@@ -17,7 +18,6 @@ from .logseq_move_files import create_delete_directory, handle_move_files, handl
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
 from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
-from .cache import get_cache
 from .setup import (
     create_log_file,
     create_output_directory,
@@ -29,12 +29,12 @@ from .setup import (
     validate_path,
 )
 
-PATTERNS = get_patterns()
-CONFIG = get_config()
+PATTERNS = RegexPatterns.get_instance()
+CONFIG = Config.get_instance()
+CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
 DEF_LS_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
-CACHE = get_cache(CONFIG.get("CONSTANTS", "CACHE"))
 
 
 def run_app(**kwargs):

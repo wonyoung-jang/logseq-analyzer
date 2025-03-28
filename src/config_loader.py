@@ -95,10 +95,3 @@ class Config:
     def write(self, file):
         """Write the config to a file-like object"""
         self.config.write(file)
-
-
-def get_config():
-    """
-    Get the singleton instance of the Config class.
-    """
-    return Config.get_instance()

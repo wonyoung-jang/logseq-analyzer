@@ -6,9 +6,9 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
-from .config_loader import get_config
+from .config_loader import Config
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 def process_content_data(

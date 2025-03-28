@@ -4,10 +4,10 @@ Process properties of the dataset.
 
 from typing import Dict, Any, Tuple
 
-from .config_loader import get_config
+from .config_loader import Config
 from .process_content_data import split_builtin_user_properties
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 BUILT_IN_PROPERTIES = CONFIG.get_built_in_properties()
 
 

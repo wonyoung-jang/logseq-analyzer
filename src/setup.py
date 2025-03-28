@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Set
 
 
-from .config_loader import get_config
+from .config_loader import Config
 from .helpers import get_sub_file_or_folder
 
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:

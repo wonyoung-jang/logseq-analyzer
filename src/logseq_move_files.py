@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .helpers import get_or_create_subdir
-from .config_loader import get_config
+from .config_loader import Config
 
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 def create_delete_directory() -> Path:

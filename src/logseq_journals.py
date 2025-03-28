@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 from .reporting import write_output
-from .config_loader import get_config
+from .config_loader import Config
 
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 OUTPUT_DIR = CONFIG.get("ANALYZER", "OUTPUT_DIR")
 JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
 

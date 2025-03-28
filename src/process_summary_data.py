@@ -4,9 +4,9 @@ Process summary data for each file based on metadata and content analysis.
 
 from typing import Any, Dict, List, Set, Tuple
 
-from .config_loader import get_config
+from .config_loader import Config
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 def process_summary_data(

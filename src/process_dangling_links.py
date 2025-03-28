@@ -10,7 +10,7 @@ def process_dangling_links(all_refs: Dict[str, Any], dangling_links: Set[str]) -
     Process dangling links in the graph data.
 
     Args:
-        all_refs (dict): The graph data containing nodes and edges.
+        all_refs (dict): The graph data of all references.
         dangling_links (set): Set of dangling links to be processed.
 
     Returns:

@@ -7,10 +7,10 @@ import logging
 from pathlib import Path
 from typing import Any, TextIO
 
-from .config_loader import get_config
+from .config_loader import Config
 
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 def write_output(

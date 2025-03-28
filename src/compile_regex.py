@@ -459,13 +459,3 @@ class RegexPatterns:
         }
         logging.info("Compiled regex patterns for configuration analysis.")
         return patterns
-
-
-def get_patterns():
-    """
-    Get the singleton instance of the RegexPatterns class.
-
-    Returns:
-        RegexPatterns: The singleton instance.
-    """
-    return RegexPatterns.get_instance()

@@ -28,10 +28,10 @@ from PySide6.QtWidgets import (
 
 from src.app import run_app
 from src.reporting import write_output
-from src.config_loader import get_config
+from src.config_loader import Config
 
 
-CONFIG = get_config()
+CONFIG = Config.get_instance()
 
 
 class LogseqAnalyzerGUI(QMainWindow):
