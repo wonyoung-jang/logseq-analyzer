@@ -36,12 +36,10 @@ class Cache:
             Cache.instance = Cache(cache_path)
         return Cache.instance
 
-    def get_modified_files(self, logseq_graph_dir: Path, target_dirs: list) -> list:
+    def iter_modified_files(self, logseq_graph_dir: Path, target_dirs: list):
         """
         Get the modified files from the cache.
         """
-        modded_files = []
-
         mod_tracker = self.cache.get("mod_tracker", {})
 
         for path in iter_files(logseq_graph_dir, target_dirs):
@@ -51,11 +49,9 @@ class Cache:
             if last_date_mod is None or last_date_mod != curr_date_mod:
                 mod_tracker[str(path)] = curr_date_mod
                 logging.debug("File modified: %s", path)
-                modded_files.append(path)
+                yield path
 
         self.cache["mod_tracker"] = mod_tracker
-
-        return modded_files
 
     def clear_deleted_files(self) -> None:
         """

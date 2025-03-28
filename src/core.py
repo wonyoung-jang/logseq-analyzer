@@ -3,32 +3,34 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Pattern, Tuple
+from typing import Any, Dict, List, Tuple
 
+from .setup import get_logseq_target_dirs
+from .cache import Cache
+from .compile_regex import RegexPatterns
+from .config_loader import Config
 from .process_basic_file_data import process_single_file
 from .process_content_data import post_processing_content
 from .process_summary_data import process_summary_data
 
+CONFIG = Config.get_instance()
+CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
+PATTERNS = RegexPatterns.get_instance()
 
-def process_graph_files(
-    modded_files: Path,
-    patterns: Dict[str, Pattern],
-) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
+
+def process_graph_files() -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
     """
     Process all files in the Logseq graph folder.
-
-    Args:
-        modded_files (Path): The modified files to process.
-        patterns (dict): The compiled regex patterns.
 
     Returns:
         Tuple[Dict[str, Any], Dict[str, List[str]]]: A tuple containing the graph metadata and content bullets data.
     """
     graph_data = {}
     meta_content_bullets = {}
-
-    for file_path in modded_files:
-        file_data, content_bullets = process_single_file(file_path, patterns)
+    graph_dir = Path(CONFIG.get("CONSTANTS", "GRAPH_DIR"))
+    target_dirs = get_logseq_target_dirs()
+    for file_path in CACHE.iter_modified_files(graph_dir, target_dirs):
+        file_data, content_bullets = process_single_file(file_path)
 
         name = file_data["name"]
         if name in graph_data:

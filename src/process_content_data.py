@@ -6,15 +6,16 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 
+from .compile_regex import RegexPatterns
 from .config_loader import Config
 
 CONFIG = Config.get_instance()
+PATTERNS = RegexPatterns.get_instance()
 
 
 def process_content_data(
     data: Dict[str, Any],
     content: str,
-    patterns: Dict[str, Pattern],
     primary_bullet: Dict[str, Any],
     content_bullets: List[str],
 ) -> Dict[str, Any]:
@@ -24,7 +25,6 @@ def process_content_data(
     Args:
         data (Dict[str, Any]): The initial data dictionary.
         content (str): The content to process.
-        patterns (Dict[str, Pattern]): The compiled regex patterns for matching elements.
         primary_bullet (Dict[str, Any]): The primary bullet data.
         content_bullets (List[str]): The list of bullet points extracted from the content.
 
@@ -63,30 +63,30 @@ def process_content_data(
         return data
 
     # Extract basic data
-    page_references = find_all_lower(patterns["page_reference"], content)
-    tagged_backlinks = find_all_lower(patterns["tagged_backlink"], content)
-    tags = find_all_lower(patterns["tag"], content)
-    assets = find_all_lower(patterns["asset"], content)
-    draws = find_all_lower(patterns["draw"], content)
-    blockquotes = find_all_lower(patterns["blockquote"], content)
-    flashcards = find_all_lower(patterns["flashcard"], content)
-    multiline_code_blocks = find_all_lower(patterns["multiline_code_block"], content)
-    calc_blocks = find_all_lower(patterns["calc_block"], content)
-    multiline_code_langs = find_all_lower(patterns["multiline_code_lang"], content)
-    references_general = find_all_lower(patterns["reference"], content)
-    block_references = find_all_lower(patterns["block_reference"], content)
-    embeds = find_all_lower(patterns["embed"], content)
-    page_embeds = find_all_lower(patterns["page_embed"], content)
-    block_embeds = find_all_lower(patterns["block_embed"], content)
-    namespace_queries = find_all_lower(patterns["namespace_query"], content)
-    clozes = find_all_lower(patterns["cloze"], content)
-    simple_queries = find_all_lower(patterns["simple_query"], content)
-    query_functions = find_all_lower(patterns["query_function"], content)
-    advanced_commands = find_all_lower(patterns["advanced_command"], content)
+    page_references = find_all_lower(PATTERNS.content["page_reference"], content)
+    tagged_backlinks = find_all_lower(PATTERNS.content["tagged_backlink"], content)
+    tags = find_all_lower(PATTERNS.content["tag"], content)
+    assets = find_all_lower(PATTERNS.content["asset"], content)
+    draws = find_all_lower(PATTERNS.content["draw"], content)
+    blockquotes = find_all_lower(PATTERNS.content["blockquote"], content)
+    flashcards = find_all_lower(PATTERNS.content["flashcard"], content)
+    multiline_code_blocks = find_all_lower(PATTERNS.content["multiline_code_block"], content)
+    calc_blocks = find_all_lower(PATTERNS.content["calc_block"], content)
+    multiline_code_langs = find_all_lower(PATTERNS.content["multiline_code_lang"], content)
+    references_general = find_all_lower(PATTERNS.content["reference"], content)
+    block_references = find_all_lower(PATTERNS.content["block_reference"], content)
+    embeds = find_all_lower(PATTERNS.content["embed"], content)
+    page_embeds = find_all_lower(PATTERNS.content["page_embed"], content)
+    block_embeds = find_all_lower(PATTERNS.content["block_embed"], content)
+    namespace_queries = find_all_lower(PATTERNS.content["namespace_query"], content)
+    clozes = find_all_lower(PATTERNS.content["cloze"], content)
+    simple_queries = find_all_lower(PATTERNS.content["simple_query"], content)
+    query_functions = find_all_lower(PATTERNS.content["query_function"], content)
+    advanced_commands = find_all_lower(PATTERNS.content["advanced_command"], content)
 
     # Extract all properties: values pairs
     properties_values = {}
-    property_value_all = patterns["property_value"].findall(content)
+    property_value_all = PATTERNS.content["property_value"].findall(content)
     for prop, value in property_value_all:
         properties_values[prop] = properties_values.get(prop, [])
         properties_values[prop].append(value)
@@ -99,22 +99,22 @@ def process_content_data(
     page_properties = []
     primary_bullet_is_page_props = is_primary_bullet_page_properties(primary_bullet)
     if primary_bullet_is_page_props:
-        page_properties = find_all_lower(patterns["property"], primary_bullet)
+        page_properties = find_all_lower(PATTERNS.content["property"], primary_bullet)
         content = "\n".join(content_bullets)
 
-    block_properties = find_all_lower(patterns["property"], content)
+    block_properties = find_all_lower(PATTERNS.content["property"], content)
     built_in_props = CONFIG.get_built_in_properties()
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
     properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, built_in_props)
 
     # Process external and embedded links
-    external_links = find_all_lower(patterns["external_link"], content)
-    embedded_links = find_all_lower(patterns["embedded_link"], content)
+    external_links = find_all_lower(PATTERNS.content["external_link"], content)
+    embedded_links = find_all_lower(PATTERNS.content["embedded_link"], content)
     external_links_other, external_links_internet, external_links_alias = process_ext_emb_links(
-        patterns, external_links, "external"
+        external_links, "external"
     )
     embedded_links_other, embedded_links_internet, embedded_links_asset = process_ext_emb_links(
-        patterns, embedded_links, "embedded"
+        embedded_links, "embedded"
     )
 
     primary_data = {
@@ -212,7 +212,7 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_type: str) -> Tuple[str, str, str]:
+def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[str, str, str]:
     """Process external and embedded links and categorize them."""
     links_internet_pattern = f"{links_type}_link_internet"
     links_sub_pattern = ""
@@ -226,12 +226,12 @@ def process_ext_emb_links(patterns: Dict[str, Pattern], links: List[str], links_
     if links:
         for _ in range(len(links)):
             link = links[-1]
-            if patterns[links_internet_pattern].match(link):
+            if PATTERNS.content[links_internet_pattern].match(link):
                 internet.append(link)
                 links.pop()
                 continue
 
-            if patterns[links_sub_pattern].match(link):
+            if PATTERNS.content[links_sub_pattern].match(link):
                 alias_or_asset.append(link)
                 links.pop()
                 continue

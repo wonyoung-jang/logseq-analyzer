@@ -6,7 +6,6 @@ from pathlib import Path
 
 from .cache import Cache
 from .config_loader import Config
-from .compile_regex import RegexPatterns
 from .process_properties import process_properties
 from .process_dangling_links import process_dangling_links
 from .core import (
@@ -29,7 +28,6 @@ from .setup import (
     validate_path,
 )
 
-PATTERNS = RegexPatterns.get_instance()
 CONFIG = Config.get_instance()
 CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
 DEF_LS_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
@@ -41,37 +39,52 @@ def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
     # Setup variables
+
+    # Get GUI instance if available
     gui_instance = kwargs.get("gui_instance")
 
     ###################################################################
     # Phase 01: Setup
     ###################################################################
+
+    # Update progress in GUI if available
     if gui_instance:
         gui_instance.update_progress("setup", 20)
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
 
-    # Clearing graph cache option
+    # Clear cache if specified
     if args.graph_cache:
         CACHE.cache.clear()
 
-    # Setup output directory and logging
+    # Setup output directory and log file
     create_output_directory()
     create_log_file()
 
     # Get graph folder and extract bak and recycle directories
     logseq_graph_dir = Path(args.graph_folder)
+
+    # Validate the graph folder path
     validate_path(logseq_graph_dir)
+
+    # Set the graph directory in the config
     CONFIG.set("CONSTANTS", "GRAPH_DIR", str(logseq_graph_dir))
+
+    # Get the subdirectories for logseq, recycle and backup
     logseq_dir = get_sub_file_or_folder(logseq_graph_dir, DEF_LS_DIR)
     recycle_dir = get_sub_file_or_folder(logseq_dir, DEF_REC_DIR)
     bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
 
     # Get config data and target directories
-    config_edn_data = get_logseq_config_edn(args, logseq_dir, PATTERNS.config)
+    config_edn_data = get_logseq_config_edn(args, logseq_dir)
+
+    # Set the config data in the config object
     set_logseq_config_edn_data(config_edn_data)
+
     target_dirs = get_logseq_target_dirs()
+
+    # Set the report format in the config
     CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
 
     if gui_instance:
@@ -81,21 +94,16 @@ def run_app(**kwargs):
     ################################################################
     # Phase 02: Process files
     ################################################################
-    # Check for modified files
-    modded_files = CACHE.get_modified_files(logseq_graph_dir, target_dirs)
-
     # Check for deleted files and remove them from the database
     CACHE.clear_deleted_files()
 
     # Process for only modified/new graph files
-    graph_meta_data, graph_content_bullets = process_graph_files(modded_files, PATTERNS.content)
+    graph_meta_data, graph_content_bullets = process_graph_files()
 
     # Check for existing data
     graph_data_db = CACHE.cache.get("___meta___graph_data", {})
-    graph_content_db = CACHE.cache.get("___meta___graph_content", {})
-
-    # Update existing data with new data
     graph_data_db.update(graph_meta_data)
+    graph_content_db = CACHE.cache.get("___meta___graph_content", {})
     graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
@@ -158,8 +166,6 @@ def run_app(**kwargs):
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
         "___meta___alphanum_dict": alphanum_dict,
         "___meta___config_edn_data": config_edn_data,
-        "___meta___config_patterns": PATTERNS.config,
-        "___meta___content_patterns": PATTERNS.content,
         "___meta___graph_data": graph_data,
         "___meta___target_dirs": target_dirs,
         "all_refs": all_refs,
@@ -190,8 +196,6 @@ def run_app(**kwargs):
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
         "___meta___alphanum_dict": alphanum_dict,
         "___meta___config_edn_data": config_edn_data,
-        "___meta___config_patterns": PATTERNS.config,
-        "___meta___content_patterns": PATTERNS.content,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph_data,
         "___meta___target_dirs": target_dirs,

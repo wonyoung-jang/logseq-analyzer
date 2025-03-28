@@ -8,12 +8,13 @@ import shutil
 from pathlib import Path
 from typing import Set
 
-
+from .compile_regex import RegexPatterns
 from .config_loader import Config
 from .helpers import get_sub_file_or_folder
 
 
 CONFIG = Config.get_instance()
+PATTERNS = RegexPatterns.get_instance()
 
 
 def get_logseq_analyzer_args(**kwargs: dict) -> argparse.Namespace:
@@ -166,13 +167,12 @@ def clean_logseq_config_edn_content(config_file: Path) -> str:
     return config_edn_content
 
 
-def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: dict) -> dict:
+def get_config_edn_data_for_analysis(config_edn_content: str) -> dict:
     """
     Extract EDN configuration data from a Logseq configuration file.
 
     Args:
         config_edn_content (str): The content of the configuration file.
-        config_patterns (dict): A dictionary of regex patterns for extracting configuration data.
 
     Returns:
         dict: A dictionary containing the extracted configuration data.
@@ -191,7 +191,7 @@ def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: d
     }
 
     for key in config_edn_data:
-        pattern = config_patterns.get(f"{key}_pattern")
+        pattern = PATTERNS.config.get(f"{key}_pattern")
         if pattern:
             match = pattern.search(config_edn_content)
             if match:
@@ -202,14 +202,13 @@ def get_config_edn_data_for_analysis(config_edn_content: str, config_patterns: d
     return config_edn_data
 
 
-def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict:
+def get_logseq_config_edn(args, logseq_dir: Path) -> dict:
     """
     Get the configuration data from the Logseq configuration file.
 
     Args:
         args (argparse.Namespace): The command line arguments.
         logseq_dir (Path): The path to the Logseq graph folder.
-        config_patterns (dict): A dictionary of regex patterns for extracting configuration data.
 
     Returns:
         dict: A dictionary containing the extracted configuration data.
@@ -226,14 +225,14 @@ def get_logseq_config_edn(args, logseq_dir: Path, config_patterns: dict) -> dict
     def_config_file = CONFIG.get("LOGSEQ_FILESYSTEM", "CONFIG_FILE")
     config_file = get_sub_file_or_folder(logseq_dir, def_config_file)
     config_edn_content = clean_logseq_config_edn_content(config_file)
-    config_edn_data = get_config_edn_data_for_analysis(config_edn_content, config_patterns)
+    config_edn_data = get_config_edn_data_for_analysis(config_edn_content)
     config_edn_data = {**logseq_default_config_edn_data, **config_edn_data}
 
     if args.global_config:
         global_config_edn_file = Path(args.global_config)
         CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
         global_config_edn_content = clean_logseq_config_edn_content(global_config_edn_file)
-        global_config_edn_data = get_config_edn_data_for_analysis(global_config_edn_content, config_patterns)
+        global_config_edn_data = get_config_edn_data_for_analysis(global_config_edn_content)
         config_edn_data = {**config_edn_data, **global_config_edn_data}
 
     return config_edn_data

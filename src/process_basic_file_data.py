@@ -5,26 +5,25 @@ Process basic file data for Logseq files.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import unquote
 
 from .config_loader import Config
+from .compile_regex import RegexPatterns
 from .logseq_journals import process_logseq_journal_key
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_content_data import process_content_data
 
 CONFIG = Config.get_instance()
+PATTERNS = RegexPatterns.get_instance()
 
 
-def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[Dict[str, Any], List[str]]:
+def process_single_file(file_path: Path) -> Tuple[Dict[str, Any], List[str]]:
     """
     Process a single file: extract metadata, read content, and compute content-based metrics.
 
-    Metrics computed are character count and bullet count using provided regex patterns.
-
     Args:
         file_path (Path): The file path to process.
-        patterns (Dict[str, Pattern]): Dictionary of compiled regex patterns.
 
     Returns:
         Tuple[Dict[str, Any], List[str]]: A tuple containing:
@@ -43,7 +42,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         # Count bullets
         bullet_count = 0
         if data["file_path_suffix"] == ".md":
-            bullet_content = patterns["bullet"].split(content)
+            bullet_content = PATTERNS.content["bullet"].split(content)
             if len(bullet_content) > 1:
                 primary_bullet = bullet_content[0].strip()
                 content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
@@ -59,7 +58,7 @@ def process_single_file(file_path: Path, patterns: Dict[str, Pattern]) -> Tuple[
         if bullet_count > 0:
             data["bullet_density"] = round(data["char_count"] / bullet_count, 2)
 
-    data = process_content_data(data, content, patterns, primary_bullet, content_bullets)
+    data = process_content_data(data, content, primary_bullet, content_bullets)
 
     return data, content_bullets
 
