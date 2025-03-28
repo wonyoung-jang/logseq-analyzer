@@ -35,14 +35,11 @@ DEF_BAK_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
-    # Setup variables
-
-    # Get GUI instance if available
-    gui_instance = kwargs.get("gui_instance")
-
     ###################################################################
     # Phase 01: Setup
     ###################################################################
+    # Get GUI instance if available
+    gui_instance = kwargs.get("gui_instance")
 
     # Update progress in GUI if available
     if gui_instance:
