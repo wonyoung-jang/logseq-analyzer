@@ -258,12 +258,7 @@ class LogseqAnalyzerGUI(QMainWindow):
                 "___meta___graph_data",
                 "___meta___target_dirs",
                 "all_refs",
-                "dangling_dict",
                 "dangling_links",
-                "set_all_prop_values_builtin",
-                "set_all_prop_values_user",
-                "sorted_all_props_builtin",
-                "sorted_all_props_user",
             ]
             output_summaries = [
                 "summary_data_subsets",

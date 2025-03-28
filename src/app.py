@@ -6,8 +6,6 @@ from pathlib import Path
 
 from .cache import Cache
 from .config_loader import Config
-from .process_properties import process_properties
-from .process_dangling_links import process_dangling_links
 from .core import (
     core_data_analysis,
     process_graph_files,
@@ -115,14 +113,6 @@ def run_app(**kwargs):
     # Namespaces analysis
     summary_namespaces = process_namespace_data(graph_data, dangling_links)
 
-    # Basic dangling links analysis
-    dangling_dict = process_dangling_links(all_refs, dangling_links)
-
-    # Basic properties analysis
-    set_all_prop_values_builtin, set_all_prop_values_user, sorted_all_props_builtin, sorted_all_props_user = (
-        process_properties(graph_data)
-    )
-
     if gui_instance:
         gui_instance.update_progress("process_files", 100)
         gui_instance.update_progress("summary", 20)
@@ -165,13 +155,7 @@ def run_app(**kwargs):
         "___meta___config_edn_data": config_edn_data,
         "___meta___graph_data": graph_data,
         "all_refs": all_refs,
-        "dangling_dict": dangling_dict,
         "dangling_links": dangling_links,
-        # Properties
-        "set_all_prop_values_builtin": set_all_prop_values_builtin,
-        "set_all_prop_values_user": set_all_prop_values_user,
-        "sorted_all_props_builtin": sorted_all_props_builtin,
-        "sorted_all_props_user": sorted_all_props_user,
         # General summary
         "summary_data_subsets": summary_data_subsets,
         "summary_sorted_all": summary_sorted_all,
@@ -195,13 +179,7 @@ def run_app(**kwargs):
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph_data,
         "all_refs": all_refs,
-        "dangling_dict": dangling_dict,
         "dangling_links": dangling_links,
-        # Properties
-        "set_all_prop_values_builtin": set_all_prop_values_builtin,
-        "set_all_prop_values_user": set_all_prop_values_user,
-        "sorted_all_props_builtin": sorted_all_props_builtin,
-        "sorted_all_props_user": sorted_all_props_user,
         # General summary
         **summary_data_subsets,
         **summary_sorted_all,

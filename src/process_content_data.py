@@ -82,11 +82,10 @@ def process_content_data(
     if primary_bullet_is_page_props:
         page_properties = find_all_lower(PATTERNS.content["property"], primary_bullet)
         content = "\n".join(content_bullets)
-
     block_properties = find_all_lower(PATTERNS.content["property"], content)
-    built_in_props = CONFIG.get_built_in_properties()
-    properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties, built_in_props)
-    properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties, built_in_props)
+
+    properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties)
+    properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties)
 
     # Process external and embedded links
     external_links = find_all_lower(PATTERNS.content["external_link"], content)
@@ -183,10 +182,10 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
     return alphanum_dict
 
 
-def split_builtin_user_properties(properties: list, built_in_props: Set[str]) -> Tuple[list, list]:
+def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
-    builtin_props = [prop for prop in properties if prop in built_in_props]
-    user_props = [prop for prop in properties if prop not in built_in_props]
+    builtin_props = [prop for prop in properties if prop in CONFIG.get_built_in_properties()]
+    user_props = [prop for prop in properties if prop not in CONFIG.get_built_in_properties()]
     return builtin_props, user_props
 
 
