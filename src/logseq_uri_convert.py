@@ -25,9 +25,13 @@ def convert_uri_to_logseq_url(uri):
     len_graph_dir = len(Path(CONFIG.get("CONSTANTS", "GRAPH_DIR")).parts)
     target_index = len_uri - len_graph_dir
     target_segment = Path(uri).parts[target_index]
+    if target_segment[:-1] not in ("page", "block-id"):
+        return ""
+
     prefix = f"file:///C:/Logseq/{target_segment}/"
     if not uri.startswith(prefix):
         return ""
+
     len_suffix = len(Path(uri).suffix)
     path_without_prefix = uri[len(prefix) : -(len_suffix)]
     path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
