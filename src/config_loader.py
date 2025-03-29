@@ -5,6 +5,7 @@ Config class for loading and managing configuration files.
 import configparser
 import os
 import re
+from typing import Set
 
 
 class Config:
@@ -95,3 +96,26 @@ class Config:
     def write(self, file):
         """Write the config to a file-like object"""
         self.config.write(file)
+
+    def get_logseq_target_dirs(self) -> Set[str]:
+        """Get the target directories based on the configuration data."""
+        target_dirs = {
+            self.get("TARGET_DIRS", "DIR_ASSETS"),
+            self.get("TARGET_DIRS", "DIR_DRAWS"),
+            self.get("TARGET_DIRS", "DIR_JOURNALS"),
+            self.get("TARGET_DIRS", "DIR_PAGES"),
+            self.get("TARGET_DIRS", "DIR_WHITEBOARDS"),
+        }
+        return target_dirs
+
+    def set_logseq_config_edn_data(self, config_edn_data: dict) -> None:
+        """Set the Logseq configuration data."""
+        self.set("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT", config_edn_data["journal_page_title_format"])
+        self.set("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT", config_edn_data["journal_file_name_format"])
+        self.set("LOGSEQ_CONFIG", "DIR_PAGES", config_edn_data["pages_directory"])
+        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", config_edn_data["journals_directory"])
+        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", config_edn_data["whiteboards_directory"])
+        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
+        ns_fmt = self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT")
+        if ns_fmt == ":triple-lowbar":
+            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")

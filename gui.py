@@ -41,8 +41,8 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Initialize the GUI components and layout."""
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
-        self.setGeometry(500, 500, 500, 500)
-        self.output_dir = CONFIG.get("ANALYZER", "OUTPUT_DIR")
+        self.resize(500, 500)
+        self.output_dir = Path(CONFIG.get("ANALYZER", "OUTPUT_DIR"))
 
         # Central Widget and Layout
         central_widget = QWidget()
@@ -152,7 +152,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         button_layout_primary.addWidget(self.run_button)
 
         exit_button = QPushButton("Exit")
-        exit_button.clicked.connect(self.close)
+        exit_button.clicked.connect(self.close_analyzer)
         exit_button.setShortcut("Ctrl+W")
         exit_button.setToolTip("Ctrl+W to exit")
         button_layout_primary.addWidget(exit_button)
@@ -175,41 +175,41 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         return buttons_layout
 
+    def close_analyzer(self):
+        """Close the application."""
+        self.save_settings()
+        self.close()
+
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-        if os.path.exists(self.output_dir):
-            self.output_dir = os.path.abspath(self.output_dir)
+        if not self.output_dir.exists():
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        if self.output_dir.exists():
+            self.output_dir = Path(self.output_dir).resolve()
             if sys.platform.startswith("win"):
                 os.startfile(self.output_dir)
             elif sys.platform.startswith("darwin"):
                 subprocess.call(["open", self.output_dir])
             else:
                 subprocess.call(["xdg-open", self.output_dir])
-        else:
-            self.show_error("Output directory not found.")
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        delete_dir = CONFIG.get("ANALYZER", "TO_DELETE_DIR")
-        if not os.path.exists(delete_dir):
-            os.makedirs(delete_dir)
-        if os.path.exists(delete_dir):
-            delete_dir = os.path.abspath(delete_dir)
+        delete_dir = Path(CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
+        if delete_dir.exists():
+            delete_dir = Path(delete_dir).resolve()
             if sys.platform.startswith("win"):
                 os.startfile(delete_dir)
             elif sys.platform.startswith("darwin"):
                 subprocess.call(["open", delete_dir])
             else:
                 subprocess.call(["xdg-open", delete_dir])
-        else:
-            self.show_error("Delete directory not found.")
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
         log_file_path = Path(self.output_dir) / CONFIG.get("ANALYZER", "LOG_FILE")
-        if os.path.exists(log_file_path):
+        if log_file_path.exists():
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
             elif sys.platform.startswith("darwin"):
@@ -247,43 +247,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         try:
             output_data = run_app(**args_gui, gui_instance=self)
-
-            output_meta = [
-                "___meta___alphanum_dict_ns",
-                "___meta___alphanum_dict",
-                "___meta___config_edn_data",
-                "___meta___config_patterns",
-                "___meta___content_patterns",
-                "___meta___graph_content",
-                "___meta___graph_data",
-                "___meta___target_dirs",
-                "all_refs",
-                "dangling_links",
-            ]
-            output_summaries = [
-                "summary_data_subsets",
-                "summary_sorted_all",
-            ]
-            output_namespaces = [
-                "summary_namespaces",
-            ]
-            output_assets = [
-                "moved_files",
-                "assets_backlinked",
-                "assets_not_backlinked",
-            ]
-
-            for key, items in output_data.items():
-                if key in output_meta:
-                    write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "META"))
-                elif key in output_summaries:
-                    for summary, data in items.items():
-                        write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "SUMMARY"))
-                elif key in output_namespaces:
-                    for summary, data in items.items():
-                        write_output(self.output_dir, summary, data, CONFIG.get("OUTPUT_DIRS", "NAMESPACE"))
-                elif key in output_assets:
-                    write_output(self.output_dir, key, items, CONFIG.get("OUTPUT_DIRS", "ASSETS"))
+            for prefix, data, subdir in output_data:
+                write_output(self.output_dir, prefix, data, subdir)
 
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)

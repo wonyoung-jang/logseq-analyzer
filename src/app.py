@@ -2,32 +2,23 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from pathlib import Path
-
 from .cache import Cache
 from .config_loader import Config
 from .core import (
     core_data_analysis,
     process_graph_files,
 )
+from .logseq_analyzer import LogseqAnalyzer
+from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
-from .logseq_move_files import create_delete_directory, handle_move_files, handle_move_directory
+from .logseq_move_files import handle_move_files, handle_move_directory
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .process_namespaces import process_namespace_data
 from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
-from .setup import (
-    create_log_file,
-    create_output_directory,
-    get_logseq_analyzer_args,
-    get_logseq_config_edn,
-    get_sub_file_or_folder,
-    set_logseq_config_edn_data,
-    validate_path,
-)
+from .setup import get_logseq_analyzer_args
 
 CONFIG = Config.get_instance()
 CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
-DEF_LS_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
 DEF_REC_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
 DEF_BAK_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
 
@@ -40,44 +31,20 @@ def run_app(**kwargs):
     ###################################################################
     # Get GUI instance if available
     gui_instance = kwargs.get("gui_instance")
-
-    # Update progress in GUI if available
     if gui_instance:
         gui_instance.update_progress("setup", 20)
 
     # Parse command line arguments or GUI arguments
     args = get_logseq_analyzer_args(**kwargs)
-
-    # Clear cache if specified
+    analyzer = LogseqAnalyzer.get_instance()
+    graph = LogseqGraph.get_instance(args)
     if args.graph_cache:
         CACHE.clear()
 
-    # Setup output directory and log file
-    create_output_directory()
-    create_log_file()
-
-    # Get graph folder and extract bak and recycle directories
-    logseq_graph_dir = Path(args.graph_folder)
-
-    # Validate the graph folder path
-    validate_path(logseq_graph_dir)
-
-    # Set the graph directory in the config
-    CONFIG.set("CONSTANTS", "GRAPH_DIR", str(logseq_graph_dir))
-
-    # Get the subdirectories for logseq, recycle and backup
-    logseq_dir = get_sub_file_or_folder(logseq_graph_dir, DEF_LS_DIR)
-    recycle_dir = get_sub_file_or_folder(logseq_dir, DEF_REC_DIR)
-    bak_dir = get_sub_file_or_folder(logseq_dir, DEF_BAK_DIR)
-
-    # Get config data and target directories
-    config_edn_data = get_logseq_config_edn(args, logseq_dir)
-
-    # Set the config data in the config object
-    set_logseq_config_edn_data(config_edn_data)
-
-    # Set the report format in the config
+    # Set the configuration for the Logseq graph
     CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+    CONFIG.set("CONSTANTS", "GRAPH_DIR", str(graph.directory))
+    CONFIG.set_logseq_config_edn_data(graph.logseq_config)
 
     if gui_instance:
         gui_instance.update_progress("setup", 100)
@@ -90,12 +57,10 @@ def run_app(**kwargs):
     CACHE.clear_deleted_files()
 
     # Process for only modified/new graph files
-    graph_meta_data, graph_content_bullets = process_graph_files()
-
-    # Check for existing data
     graph_data_db = CACHE.get("___meta___graph_data", {})
-    graph_data_db.update(graph_meta_data)
     graph_content_db = CACHE.get("___meta___graph_content", {})
+    graph_meta_data, graph_content_bullets = process_graph_files()
+    graph_data_db.update(graph_meta_data)
     graph_content_db.update(graph_content_bullets)
 
     # Core data analysis
@@ -132,47 +97,55 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
-    to_delete_dir = create_delete_directory()
     assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
 
     moved_files = {}
     moved_files["moved_assets"] = handle_move_files(
-        args.move_unlinked_assets, graph_data, assets_not_backlinked, to_delete_dir
+        args.move_unlinked_assets, graph_data, assets_not_backlinked, analyzer.delete_dir
     )
-    moved_files["moved_bak"] = handle_move_directory(args.move_bak, bak_dir, to_delete_dir, DEF_BAK_DIR)
-    moved_files["moved_recycle"] = handle_move_directory(args.move_recycle, recycle_dir, to_delete_dir, DEF_REC_DIR)
+    moved_files["moved_bak"] = handle_move_directory(args.move_bak, graph.bak_dir, analyzer.delete_dir, DEF_BAK_DIR)
+    moved_files["moved_recycle"] = handle_move_directory(
+        args.move_recycle, graph.recycle_dir, analyzer.delete_dir, DEF_REC_DIR
+    )
 
     if gui_instance:
         gui_instance.update_progress("move_files", 100)
 
-    output_data = {
-        # Main meta outputs
-        "___meta___alphanum_dict_ns": alphanum_dict_ns,
-        "___meta___alphanum_dict": alphanum_dict,
-        "___meta___config_edn_data": config_edn_data,
-        "___meta___graph_data": graph_data,
-        "all_refs": all_refs,
-        "dangling_links": dangling_links,
-        # General summary
-        "summary_data_subsets": summary_data_subsets,
-        "summary_sorted_all": summary_sorted_all,
-        # Namespaces summary
-        "summary_namespaces": summary_namespaces,
-        # Move files and assets
-        "moved_files": moved_files,
-        "assets_backlinked": assets_backlinked,
-        "assets_not_backlinked": assets_not_backlinked,
-    }
+    # Output writing
+    output_data = []
+    output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
+    output_data.append(("___meta___alphanum_dict", alphanum_dict, output_dir_meta))
+    output_data.append(("___meta___alphanum_dict_ns", alphanum_dict_ns, output_dir_meta))
+    output_data.append(("___meta___config_edn_data", graph.logseq_config, output_dir_meta))
+    output_data.append(("___meta___graph_data", graph_data, output_dir_meta))
+    output_data.append(("all_refs", all_refs, output_dir_meta))
+    output_data.append(("dangling_links", dangling_links, output_dir_meta))
+
+    output_dir_summary = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
+    for name, data in summary_data_subsets.items():
+        output_data.append((name, data, output_dir_summary))
+
+    for name, data in summary_sorted_all.items():
+        output_data.append((name, data, output_dir_summary))
+
+    output_dir_namespace = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
+    for name, data in summary_namespaces.items():
+        output_data.append((name, data, output_dir_namespace))
+
+    output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
+    output_data.append(("moved_files", moved_files, output_dir_assets))
+    output_data.append(("assets_backlinked", assets_backlinked, output_dir_assets))
+    output_data.append(("assets_not_backlinked", assets_not_backlinked, output_dir_assets))
 
     if args.write_graph:
-        output_data["___meta___graph_content"] = graph_content_db
+        output_data.append(("___meta___graph_content", graph_content_db, output_dir_meta))
 
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
         "___meta___alphanum_dict_ns": alphanum_dict_ns,
         "___meta___alphanum_dict": alphanum_dict,
-        "___meta___config_edn_data": config_edn_data,
+        "___meta___config_edn_data": graph.logseq_config,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph_data,
         "all_refs": all_refs,

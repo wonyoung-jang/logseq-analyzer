@@ -5,7 +5,6 @@ This module contains functions for processing and analyzing Logseq graph data.
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-from .setup import get_logseq_target_dirs
 from .cache import Cache
 from .config_loader import Config
 from .process_basic_file_data import process_single_file
@@ -26,7 +25,7 @@ def process_graph_files() -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
     graph_data = {}
     meta_content_bullets = {}
     graph_dir = Path(CONFIG.get("CONSTANTS", "GRAPH_DIR"))
-    target_dirs = get_logseq_target_dirs()
+    target_dirs = CONFIG.get_logseq_target_dirs()
     for file_path in CACHE.iter_modified_files(graph_dir, target_dirs):
         file_data, content_bullets = process_single_file(file_path)
 

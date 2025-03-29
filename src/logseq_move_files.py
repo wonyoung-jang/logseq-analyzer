@@ -14,20 +14,6 @@ from .config_loader import Config
 CONFIG = Config.get_instance()
 
 
-def create_delete_directory() -> Path:
-    """
-    Create a directory for deleted files.
-
-    Returns:
-        Path: The path to the delete directory.
-    """
-    delete_dir = Path(CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
-    if not delete_dir.exists():
-        logging.info("Creating directory: %s", delete_dir)
-        delete_dir.mkdir(parents=True, exist_ok=True)
-    return delete_dir
-
-
 def handle_move_files(
     argument: bool,
     graph_data: dict,
