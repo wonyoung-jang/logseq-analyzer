@@ -2,10 +2,10 @@
 Config class for loading and managing configuration files.
 """
 
+from typing import Set
 import configparser
 import os
 import re
-from typing import Set
 
 
 class Config:

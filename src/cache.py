@@ -1,8 +1,11 @@
 """This module handles caching mechanisms for the application."""
 
+from pathlib import Path
 import logging
 import shelve
-from pathlib import Path
+
+from src.config_loader import Config
+from src.logseq_graph import LogseqGraph
 
 from .helpers import iter_files
 
@@ -20,6 +23,15 @@ class Cache:
         """
         self.cache_path = Path(cache_path)
         self.cache = shelve.open(self.cache_path, protocol=5)
+
+    @staticmethod
+    def get_instance(cache_path: str = None):
+        """
+        Get the singleton instance of the Cache class.
+        """
+        if Cache.instance is None and cache_path:
+            Cache.instance = Cache(cache_path)
+        return Cache.instance
 
     def close(self):
         """
@@ -45,22 +57,16 @@ class Cache:
         """
         self.cache.clear()
 
-    @staticmethod
-    def get_instance(cache_path: str):
-        """
-        Get the singleton instance of the Cache class.
-        """
-        if Cache.instance is None:
-            Cache.instance = Cache(cache_path)
-        return Cache.instance
-
-    def iter_modified_files(self, logseq_graph_dir: Path, target_dirs: list):
+    def iter_modified_files(self):
         """
         Get the modified files from the cache.
         """
         mod_tracker = self.cache.get("mod_tracker", {})
+        config = Config.get_instance()
+        graph = LogseqGraph.get_instance()
+        target_dirs = config.get_logseq_target_dirs()
 
-        for path in iter_files(logseq_graph_dir, target_dirs):
+        for path in iter_files(graph.directory, target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
 

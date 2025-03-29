@@ -2,9 +2,9 @@
 Process content data for Logseq.
 """
 
-import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
+import logging
 
 from .compile_regex import RegexPatterns
 from .config_loader import Config
@@ -347,6 +347,7 @@ def post_processing_content(
         unique_linked_references.update(linked_references)
 
     # Create alphanum lookups and identify dangling links
+    all_linked_references = dict(sorted(all_linked_references.items(), key=lambda item: item[1]["count"], reverse=True))
     unique_filenames = set(sorted(content_data.keys()))
     unique_aliases = set(sorted(unique_aliases))
     unique_linked_references = set(sorted(unique_linked_references))

@@ -14,12 +14,12 @@ Problems:
     3. There is no easy way to get data about namespaces.
 """
 
-import logging
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
+import logging
 
-from .config_loader import Config
 from .compile_regex import RegexPatterns
+from .config_loader import Config
 from .process_summary_data import extract_summary_subset_key_values
 
 CONFIG = Config.get_instance()
@@ -173,7 +173,6 @@ def detect_non_namespace_conflicts(
 
             if part in dangling:
                 conflicts_dangling[part].append(entry)
-
     return conflicts_non_namespace, conflicts_dangling
 
 

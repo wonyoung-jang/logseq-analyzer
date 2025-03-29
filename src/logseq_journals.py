@@ -2,12 +2,12 @@
 Process logseq journals.
 """
 
-import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
+import logging
 
-from .reporting import write_output
 from .config_loader import Config
+from .reporting import write_output
 
 
 CONFIG = Config.get_instance()

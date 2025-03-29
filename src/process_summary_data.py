@@ -102,9 +102,8 @@ def check_is_backlinked(name: str, graph_data: Dict[str, Any], alphanum_dict: Di
     """
     id_key = graph_data["id"]
     if id_key in alphanum_dict:
-        for page_ref in alphanum_dict[id_key]:
-            if name == page_ref:
-                return True
+        if name in alphanum_dict[id_key]:
+            return True
     return False
 
 

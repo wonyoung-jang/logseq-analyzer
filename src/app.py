@@ -4,23 +4,14 @@ This module contains the main application logic for the Logseq analyzer.
 
 from .cache import Cache
 from .config_loader import Config
-from .core import (
-    core_data_analysis,
-    process_graph_files,
-)
+from .core import core_data_analysis, process_graph_files
 from .logseq_analyzer import LogseqAnalyzer
-from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
-from .logseq_move_files import handle_move_files, handle_move_directory
+from .logseq_graph import LogseqGraph
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
+from .logseq_move_files import handle_move_files, handle_move_directory
 from .process_namespaces import process_namespace_data
 from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
-from .setup import get_logseq_analyzer_args
-
-CONFIG = Config.get_instance()
-CACHE = Cache.get_instance(CONFIG.get("CONSTANTS", "CACHE"))
-DEF_REC_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
-DEF_BAK_DIR = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
 
 
 def run_app(**kwargs):
@@ -35,16 +26,18 @@ def run_app(**kwargs):
         gui_instance.update_progress("setup", 20)
 
     # Parse command line arguments or GUI arguments
-    args = get_logseq_analyzer_args(**kwargs)
     analyzer = LogseqAnalyzer.get_instance()
-    graph = LogseqGraph.get_instance(args)
-    if args.graph_cache:
-        CACHE.clear()
+    analyzer.get_logseq_analyzer_args(**kwargs)
+    config = Config.get_instance()
+    cache = Cache.get_instance(config.get("CONSTANTS", "CACHE"))
+    graph = LogseqGraph.get_instance(analyzer.args)
+    if analyzer.args.graph_cache:
+        cache.clear()
 
     # Set the configuration for the Logseq graph
-    CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
-    CONFIG.set("CONSTANTS", "GRAPH_DIR", str(graph.directory))
-    CONFIG.set_logseq_config_edn_data(graph.logseq_config)
+    config.set("ANALYZER", "REPORT_FORMAT", analyzer.args.report_format)
+    config.set("CONSTANTS", "GRAPH_DIR", str(graph.directory))
+    config.set_logseq_config_edn_data(graph.logseq_config)
 
     if gui_instance:
         gui_instance.update_progress("setup", 100)
@@ -54,11 +47,11 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     # Check for deleted files and remove them from the database
-    CACHE.clear_deleted_files()
+    cache.clear_deleted_files()
 
     # Process for only modified/new graph files
-    graph_data_db = CACHE.get("___meta___graph_data", {})
-    graph_content_db = CACHE.get("___meta___graph_content", {})
+    graph_data_db = cache.get("___meta___graph_data", {})
+    graph_content_db = cache.get("___meta___graph_content", {})
     graph_meta_data, graph_content_bullets = process_graph_files()
     graph_data_db.update(graph_meta_data)
     graph_content_db.update(graph_content_bullets)
@@ -101,19 +94,27 @@ def run_app(**kwargs):
 
     moved_files = {}
     moved_files["moved_assets"] = handle_move_files(
-        args.move_unlinked_assets, graph_data, assets_not_backlinked, analyzer.delete_dir
+        analyzer.args.move_unlinked_assets, graph_data, assets_not_backlinked, analyzer.delete_dir
     )
-    moved_files["moved_bak"] = handle_move_directory(args.move_bak, graph.bak_dir, analyzer.delete_dir, DEF_BAK_DIR)
+    moved_files["moved_bak"] = handle_move_directory(
+        analyzer.args.move_bak, graph.bak_dir, analyzer.delete_dir, config.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
+    )
     moved_files["moved_recycle"] = handle_move_directory(
-        args.move_recycle, graph.recycle_dir, analyzer.delete_dir, DEF_REC_DIR
+        analyzer.args.move_recycle,
+        graph.recycle_dir,
+        analyzer.delete_dir,
+        config.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR"),
     )
 
     if gui_instance:
         gui_instance.update_progress("move_files", 100)
 
+    #####################################################################
+    # Phase 05: Outputs
+    #####################################################################
     # Output writing
     output_data = []
-    output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
+    output_dir_meta = config.get("OUTPUT_DIRS", "META")
     output_data.append(("___meta___alphanum_dict", alphanum_dict, output_dir_meta))
     output_data.append(("___meta___alphanum_dict_ns", alphanum_dict_ns, output_dir_meta))
     output_data.append(("___meta___config_edn_data", graph.logseq_config, output_dir_meta))
@@ -121,23 +122,23 @@ def run_app(**kwargs):
     output_data.append(("all_refs", all_refs, output_dir_meta))
     output_data.append(("dangling_links", dangling_links, output_dir_meta))
 
-    output_dir_summary = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
+    output_dir_summary = config.get("OUTPUT_DIRS", "SUMMARY")
     for name, data in summary_data_subsets.items():
         output_data.append((name, data, output_dir_summary))
 
     for name, data in summary_sorted_all.items():
         output_data.append((name, data, output_dir_summary))
 
-    output_dir_namespace = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
+    output_dir_namespace = config.get("OUTPUT_DIRS", "NAMESPACE")
     for name, data in summary_namespaces.items():
         output_data.append((name, data, output_dir_namespace))
 
-    output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
+    output_dir_assets = config.get("OUTPUT_DIRS", "ASSETS")
     output_data.append(("moved_files", moved_files, output_dir_assets))
     output_data.append(("assets_backlinked", assets_backlinked, output_dir_assets))
     output_data.append(("assets_not_backlinked", assets_not_backlinked, output_dir_assets))
 
-    if args.write_graph:
+    if analyzer.args.write_graph:
         output_data.append(("___meta___graph_content", graph_content_db, output_dir_meta))
 
     # Write output data to persistent storage
@@ -161,11 +162,11 @@ def run_app(**kwargs):
         "assets_not_backlinked": assets_not_backlinked,
     }
 
-    CACHE.update(shelve_output_data)
-    CACHE.close()
+    cache.update(shelve_output_data)
+    cache.close()
 
     # TODO write config to file
     with open("user_config.ini", "w", encoding="utf-8") as config_file:
-        CONFIG.write(config_file)
+        config.write(config_file)
 
     return output_data

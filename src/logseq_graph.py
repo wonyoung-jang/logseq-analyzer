@@ -2,12 +2,12 @@
 Logseq Graph Class
 """
 
-import logging
 from pathlib import Path
+import logging
 
 from .config_loader import Config
-from .logseq_config import LogseqConfig
 from .helpers import get_or_create_subdir, get_sub_file_or_folder
+from .logseq_config import LogseqConfig
 
 CONFIG = Config.get_instance()
 DEFAULT_LOGSEQ_DIRECTORY = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
@@ -60,9 +60,9 @@ class LogseqGraph:
         self.config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
 
     @staticmethod
-    def get_instance(args):
+    def get_instance(args=None):
         """Get the singleton instance of LogseqGraph."""
-        if LogseqGraph.instance is None:
+        if LogseqGraph.instance is None and args:
             LogseqGraph.instance = LogseqGraph()
             LogseqGraph.instance.initialize_graph(args)
             LogseqGraph.instance.initialize_config(args)

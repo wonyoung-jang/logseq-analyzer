@@ -2,13 +2,12 @@
 Reporting module for writing output to files.
 """
 
-import json
-import logging
 from pathlib import Path
 from typing import Any, TextIO
+import json
+import logging
 
 from .config_loader import Config
-
 
 CONFIG = Config.get_instance()
 

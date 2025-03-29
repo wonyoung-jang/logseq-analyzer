@@ -2,12 +2,12 @@
 Logseq configuration module.
 """
 
+from pathlib import Path
 import argparse
 import logging
-from pathlib import Path
 
-from src.config_loader import Config
-from src.compile_regex import RegexPatterns
+from .compile_regex import RegexPatterns
+from .config_loader import Config
 
 PATTERNS = RegexPatterns.get_instance()
 CONFIG = Config.get_instance()

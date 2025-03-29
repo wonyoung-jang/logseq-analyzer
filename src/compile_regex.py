@@ -2,9 +2,9 @@
 Compile frequently used regex patterns for Logseq content and configuration.
 """
 
+from typing import Dict, Pattern
 import logging
 import re
-from typing import Dict, Pattern
 
 
 class RegexPatterns:

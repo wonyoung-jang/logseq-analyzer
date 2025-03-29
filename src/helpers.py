@@ -2,9 +2,9 @@
 Helper functions for file and date processing.
 """
 
-import logging
 from pathlib import Path
 from typing import Generator, Set
+import logging
 
 
 def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:

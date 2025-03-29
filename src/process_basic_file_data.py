@@ -2,14 +2,14 @@
 Process basic file data for Logseq files.
 """
 
-import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import unquote
+import logging
 
-from .config_loader import Config
 from .compile_regex import RegexPatterns
+from .config_loader import Config
 from .logseq_journals import process_logseq_journal_key
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_content_data import process_content_data
