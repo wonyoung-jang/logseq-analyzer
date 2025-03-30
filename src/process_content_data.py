@@ -63,9 +63,9 @@ def process_content_data(
     properties_values = {}
     property_value_all = PATTERNS.content["property_value"].findall(content)
     for prop, value in property_value_all:
-        properties_values.setdefault(prop, []).append(value)
+        properties_values.setdefault(prop, value)
 
-    aliases = properties_values.get("alias", [])
+    aliases = properties_values.get("alias", "")
     if aliases:
         aliases = process_aliases(aliases)
 
@@ -184,6 +184,7 @@ def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
 
 def process_aliases(aliases: str) -> List[str]:
     """Process aliases to extract individual aliases."""
+    aliases = aliases.strip()
     results = []
     current = []
     inside_brackets = False
@@ -338,6 +339,7 @@ def post_processing_content(
 
         if ns_parent:
             linked_references.remove(ns_parent)
+
         unique_linked_references.update(linked_references)
 
     # Create alphanum lookups and identify dangling links
@@ -347,8 +349,23 @@ def post_processing_content(
     unique_linked_references = set(sorted(unique_linked_references))
     unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
     unique_linked_references_all = unique_linked_references.union(unique_linked_references_namespaces)
-    dangling_links = unique_linked_references_all.difference(unique_filenames, unique_aliases)
+    dangling_links = unique_linked_references_all.copy()
+    dangling_links.difference_update(unique_filenames)
+    dangling_links.difference_update(unique_aliases)
     alphanum_dict = create_alphanum(unique_linked_references)
     alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 
     return content_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_linked_references
+
+
+def remove_double_brackets(text: str) -> str:
+    """
+    Remove double brackets from the text.
+
+    Args:
+        text (str): The text to process.
+
+    Returns:
+        str: The processed text without double brackets.
+    """
+    return text.replace("[[", "").replace("]]", "").strip()
