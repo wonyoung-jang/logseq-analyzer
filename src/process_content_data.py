@@ -315,7 +315,7 @@ def post_processing_content(
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))
-
+        ns_parent = data.get("namespace_parent", "")
         linked_references = [
             list(unique_aliases),
             data.get("draws", []),
@@ -326,19 +326,18 @@ def post_processing_content(
             data.get("properties_page_user", []),
             data.get("properties_block_builtin", []),
             data.get("properties_block_user", []),
-            [
-                data.get("namespace_parent", ""),
-            ],
+            [ns_parent],
         ]
 
         linked_references = [item for sublist in linked_references for item in sublist if item]
 
         for item in linked_references:
-            all_linked_references[item] = all_linked_references.get(item, {})
+            all_linked_references.setdefault(item, {})
             all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
-            all_linked_references[item]["found_in"] = all_linked_references[item].get("found_in", [])
-            all_linked_references[item]["found_in"].append(name)
+            all_linked_references[item].setdefault("found_in", []).append(name)
 
+        if ns_parent:
+            linked_references.remove(ns_parent)
         unique_linked_references.update(linked_references)
 
     # Create alphanum lookups and identify dangling links
