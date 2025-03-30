@@ -7,11 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import logging
 import shutil
 
-from .config_loader import Config
+from ._global_objects import CONFIG
 from .helpers import get_or_create_subdir
-
-
-CONFIG = Config.get_instance()
 
 
 def handle_move_files(

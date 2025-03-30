@@ -8,7 +8,7 @@ import os
 import re
 
 
-class Config:
+class LogseqAnalyzerConfig:
     """
     A class to handle configuration file loading and management.
 
@@ -23,38 +23,22 @@ class Config:
         _built_in_properties (frozenset): A frozenset of built-in properties defined in the configuration file.
     """
 
-    instance = None
-
     def __init__(self, config_path="src/config.ini"):
-        """
-        Initialize the Config class with a given config file path.
-        If the file does not exist, a FileNotFoundError is raised.
-        """
+        """Initialize the LogseqAnalyzerConfig class."""
+        self.config_path = config_path
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
             default_section="None",
             interpolation=configparser.ExtendedInterpolation(),
         )
-
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
-
         self.config.optionxform = lambda option: option
         self.config.read(config_path)
-
         self._datetime_token_map = None
         self._datetime_token_pattern = None
         self._built_in_properties = None
-
-    @staticmethod
-    def get_instance(config_path="src/config.ini"):
-        """
-        Get the singleton instance of the Config class.
-        """
-        if Config.instance is None:
-            Config.instance = Config(config_path)
-        return Config.instance
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""

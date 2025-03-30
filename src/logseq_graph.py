@@ -5,11 +5,10 @@ Logseq Graph Class
 from pathlib import Path
 import logging
 
-from .config_loader import Config
+from ._global_objects import CONFIG
 from .helpers import get_or_create_subdir, get_sub_file_or_folder
 from .logseq_config import LogseqConfig
 
-CONFIG = Config.get_instance()
 DEFAULT_LOGSEQ_DIRECTORY = CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
 DEFAULT_RECYCLE_DIRECTORY = CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
 DEFAULT_BACKUP_DIRECTORY = CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
@@ -29,10 +28,8 @@ class LogseqGraph:
     A class to LogseqGraph.
     """
 
-    instance = None
-
     def __init__(self):
-        """Initialize the LogseqGraph."""
+        """Initialize the LogseqGraph class."""
         self.directory = Path()
         self.logseq_dir = Path()
         self.recycle_dir = Path()
@@ -58,15 +55,6 @@ class LogseqGraph:
         self.recycle_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_RECYCLE_DIRECTORY)
         self.bak_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_BACKUP_DIRECTORY)
         self.config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
-
-    @staticmethod
-    def get_instance(args=None):
-        """Get the singleton instance of LogseqGraph."""
-        if LogseqGraph.instance is None and args:
-            LogseqGraph.instance = LogseqGraph()
-            LogseqGraph.instance.initialize_graph(args)
-            LogseqGraph.instance.initialize_config(args)
-        return LogseqGraph.instance
 
     def validate_graph_dir(self, args) -> Path:
         """Validate if a path exists."""

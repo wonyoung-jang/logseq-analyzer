@@ -7,9 +7,7 @@ from pathlib import Path
 import logging
 import shutil
 
-from .config_loader import Config
-
-CONFIG = Config.get_instance()
+from ._global_objects import CONFIG
 
 
 class LogseqAnalyzer:
@@ -17,24 +15,15 @@ class LogseqAnalyzer:
     A class to analyze Logseq data.
     """
 
-    instance = None
-
     def __init__(self):
-        """Initialize the LogseqAnalyzer."""
-        self.output_dir = Path()
-        self.log_file = Path()
-        self.delete_dir = Path()
+        """Initialize the LogseqAnalyzer class."""
         self.args = None
+        self.output_dir = None
+        self.log_file = None
+        self.delete_dir = None
         self.create_output_directory()
         self.create_log_file()
         self.create_delete_directory()
-
-    @staticmethod
-    def get_instance():
-        """Get the singleton instance of LogseqAnalyzer."""
-        if LogseqAnalyzer.instance is None:
-            LogseqAnalyzer.instance = LogseqAnalyzer()
-        return LogseqAnalyzer.instance
 
     def create_output_directory(self) -> None:
         """Setup the output directory for the Logseq Analyzer."""

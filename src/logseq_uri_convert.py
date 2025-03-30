@@ -5,9 +5,7 @@ Convert a file URI to a Logseq URL and open it in the default web browser.
 from pathlib import Path
 import webbrowser
 
-from .config_loader import Config
-
-CONFIG = Config.get_instance()
+from ._global_objects import CONFIG
 
 
 def convert_uri_to_logseq_url(uri):
@@ -20,7 +18,6 @@ def convert_uri_to_logseq_url(uri):
     Returns:
         str: The Logseq URL corresponding to the given file URI.
     """
-
     len_uri = len(Path(uri).parts)
     len_graph_dir = len(Path(CONFIG.get("CONSTANTS", "GRAPH_DIR")).parts)
     target_index = len_uri - len_graph_dir

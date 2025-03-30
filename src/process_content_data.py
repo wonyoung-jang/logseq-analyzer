@@ -6,11 +6,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 import logging
 
-from .compile_regex import RegexPatterns
-from .config_loader import Config
-
-CONFIG = Config.get_instance()
-PATTERNS = RegexPatterns.get_instance()
+from ._global_objects import PATTERNS, CONFIG
 
 
 def process_content_data(
@@ -33,9 +29,6 @@ def process_content_data(
     """
     # Process namespaces
     ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
-    data["namespace_level"] = 0
-    data["namespace_children"] = set()
-    data["namespace_size"] = 0
     if ns_sep in data["name"]:
         for key, value in process_content_namespace_data(data, ns_sep):
             data[key] = value
@@ -272,19 +265,21 @@ def post_processing_content_namespaces(
     namespace_level = data["namespace_level"]
 
     if namespace_root in content_data:
-        root_level = content_data[namespace_root]["namespace_level"]
+        root_level = content_data[namespace_root].get("namespace_level", 0)
         direct_level = 1
         if direct_level > root_level:
             content_data[namespace_root]["namespace_level"] = direct_level
+        content_data[namespace_root].setdefault("namespace_children", set())
         content_data[namespace_root]["namespace_children"].add(name)
         content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
 
     parent_joined = ns_sep.join(namespace_parts_list[:-1])
     if parent_joined in content_data:
-        parent_level = content_data[parent_joined]["namespace_level"]
+        parent_level = content_data[parent_joined].get("namespace_level", 0)
         direct_level = namespace_level - 1
         if direct_level > parent_level:
             content_data[parent_joined]["namespace_level"] = direct_level
+        content_data[parent_joined].setdefault("namespace_children", set())
         content_data[parent_joined]["namespace_children"].add(name)
         content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
 

@@ -4,7 +4,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import Any, Dict, List, Tuple
 
-from .cache import Cache
+from ._global_objects import CACHE
 from .process_basic_file_data import process_single_file
 from .process_content_data import post_processing_content
 from .process_summary_data import process_summary_data
@@ -17,10 +17,9 @@ def process_graph_files() -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
     Returns:
         Tuple[Dict[str, Any], Dict[str, List[str]]]: A tuple containing the graph metadata and content bullets data.
     """
-    cache = Cache.get_instance()
     graph_data = {}
     meta_content_bullets = {}
-    for file_path in cache.iter_modified_files():
+    for file_path in CACHE.iter_modified_files():
         file_data, content_bullets = process_single_file(file_path)
 
         name = file_data.get("name")

@@ -2,11 +2,9 @@
 Process summary data for each file based on metadata and content analysis.
 """
 
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set
 
-from .config_loader import Config
-
-CONFIG = Config.get_instance()
+from .config_loader import LogseqAnalyzerConfig
 
 
 def process_summary_data(
@@ -71,12 +69,11 @@ def process_summary_data(
         if not is_backlinked:
             is_backlinked_by_ns_only = check_is_backlinked(name, meta_data, alphanum_dict_ns)
 
-        node_type = CONFIG.get("NODE_TYPES", "OTHER")
-        if file_type in [CONFIG.get("FILE_TYPES", "JOURNAL"), CONFIG.get("FILE_TYPES", "PAGE")]:
+        node_type = "other"
+        if file_type in ["journal", "page"]:
             node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
         meta_data["file_type"] = file_type
-        meta_data["file_extension"] = meta_data["file_path_suffix"]
         meta_data["node_type"] = node_type
         meta_data["has_content"] = has_content
         meta_data["has_backlinks"] = has_backlinks
@@ -121,26 +118,27 @@ def determine_file_type(
     Returns:
         str: The determined file type.
     """
-    assets_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    draws_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
-    journals_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
-    pages_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES")
-    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
+    config = LogseqAnalyzerConfig()
+    assets_dir = config.get("LOGSEQ_CONFIG", "DIR_ASSETS")
+    draws_dir = config.get("LOGSEQ_CONFIG", "DIR_DRAWS")
+    journals_dir = config.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
+    pages_dir = config.get("LOGSEQ_CONFIG", "DIR_PAGES")
+    whiteboards_dir = config.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
 
     file_type = None
 
     if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
-        file_type = CONFIG.get("FILE_TYPES", "ASSET")
+        file_type = "asset"
     elif file_path_parent_name == draws_dir:
-        file_type = CONFIG.get("FILE_TYPES", "DRAW")
+        file_type = "draw"
     elif file_path_parent_name == journals_dir:
-        file_type = CONFIG.get("FILE_TYPES", "JOURNAL")
+        file_type = "journal"
     elif file_path_parent_name == pages_dir:
-        file_type = CONFIG.get("FILE_TYPES", "PAGE")
+        file_type = "page"
     elif file_path_parent_name == whiteboards_dir:
-        file_type = CONFIG.get("FILE_TYPES", "WHITEBOARD")
+        file_type = "whiteboard"
     else:
-        file_type = CONFIG.get("FILE_TYPES", "OTHER")
+        file_type = "other"
 
     return file_type
 
@@ -152,28 +150,28 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
     if has_content:
         if is_backlinked:
             if has_backlinks:
-                node_type = CONFIG.get("NODE_TYPES", "BRANCH")
+                node_type = "branch"
             else:
-                node_type = CONFIG.get("NODE_TYPES", "LEAF")
+                node_type = "leaf"
         elif has_backlinks:
-            node_type = CONFIG.get("NODE_TYPES", "ROOT")
+            node_type = "root"
         elif is_backlinked_ns:
-            node_type = CONFIG.get("NODE_TYPES", "ORPHAN_NS")
+            node_type = "orphan_namespace"
         else:
-            node_type = CONFIG.get("NODE_TYPES", "ORPHAN_GRAPH")
+            node_type = "orphan_graph"
     else:  # No content
         if not is_backlinked:
             if is_backlinked_ns:
-                node_type = CONFIG.get("NODE_TYPES", "ORPHAN_NS_TRUE")
+                node_type = "orphan_namespace_true"
             else:
-                node_type = CONFIG.get("NODE_TYPES", "ORPHAN_TRUE")
+                node_type = "orphan_true"
         else:
-            node_type = CONFIG.get("NODE_TYPES", "LEAF")
+            node_type = "leaf"
 
     return node_type
 
 
-def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tuple[List[str], Dict[str, Dict]]:
+def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Dict[str, Any]:
     """
     Extract a subset of data based on a specific criteria.
     Asks: What content matches the criteria? And where is it found? How many times?
@@ -183,42 +181,31 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Tupl
         criteria (str): The criteria for extraction.
 
     Returns:
-        Tuple[List[str], Dict[str, Dict]]: A tuple containing a sorted list of
-        unique values and a dictionary with counts and locations.
+        Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
     """
-    subset = set()
     subset_counter = {}
     for name, data in graph_data.items():
         values = data.get(criteria)
         if values:
-            subset.update(values)
             for value in values:
                 subset_counter.setdefault(value, {})
-                subset_counter[value].setdefault("count", 0)
-                subset_counter[value]["count"] += 1
-                subset_counter[value].setdefault("found_in", set())
-                subset_counter[value]["found_in"].add(name)
-
-    sorted_subset = sorted(subset)
-    sorted_subset_counter = dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
-
-    return sorted_subset, sorted_subset_counter
+                subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
+                subset_counter[value].setdefault("found_in", set()).add(name)
+    return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
 
 def extract_summary_subset_existence(graph_data: Dict[str, Any], *criteria) -> List[str]:
     """
     Extract a subset of the summary data based on whether the keys exists.
     """
-    subset = [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
-    return subset
+    return [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
 
 
 def extract_summary_subset_key_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     """
-    subset = [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
-    return subset
+    return [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
 
 
 def generate_summary_subsets(graph_data: dict) -> dict:
@@ -232,15 +219,6 @@ def generate_summary_subsets(graph_data: dict) -> dict:
         dict: The summary data subsets.
     """
     summary_data_subsets = {}
-
-    test_categories_for_existence = {
-        "is_backlinked_by_ns_only",
-        "has_external_links",
-        "has_embedded_links",
-    }
-    exist_subset = extract_summary_subset_existence(graph_data, *test_categories_for_existence)
-    summary_data_subsets["_____________exist_subset"] = exist_subset
-
     summary_categories = {
         # Process general categories
         "___is_backlinked": {"is_backlinked": True},
@@ -273,7 +251,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     # Process file extensions
     file_extensions = {}
     for meta in graph_data.values():
-        ext = meta.get("file_extension")
+        ext = meta.get("file_path_suffix")
         if ext in file_extensions:
             continue
         file_extensions[ext] = True
@@ -281,54 +259,53 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     file_ext_dict = {}
     for ext in file_extensions:
         output_name = f"_all_{ext}s"
-        criteria = {"file_extension": ext}
+        criteria = {"file_path_suffix": ext}
         subset = extract_summary_subset_key_values(graph_data, **criteria)
         file_ext_dict[output_name] = subset
 
     summary_data_subsets["____file_extensions_dict"] = file_ext_dict
 
     # Process content types
-    content_subset_tags_nodes = {
-        "_all_advanced_commands": "advanced_commands",
-        "_all_aliases": "aliases",
-        "_all_assets": "assets",
-        "_all_block_embeds": "block_embeds",
-        "_all_block_references": "block_references",
-        "_all_blockquotes": "blockquotes",
-        "_all_calc_blocks": "calc_blocks",
-        "_all_clozes": "clozes",
-        "_all_draws": "draws",
-        "_all_embedded_links_asset": "embedded_links_asset",
-        "_all_embedded_links_internet": "embedded_links_internet",
-        "_all_embedded_links_other": "embedded_links_other",
-        "_all_embeds": "embeds",
-        "_all_external_links_alias": "external_links_alias",
-        "_all_external_links_internet": "external_links_internet",
-        "_all_external_links_other": "external_links_other",
-        "_all_flashcards": "flashcards",
-        "_all_multiline_code_blocks": "multiline_code_blocks",
-        "_all_multiline_code_langs": "multiline_code_langs",
-        "_all_namespace_parts": "namespace_parts",
-        "_all_namespace_queries": "namespace_queries",
-        "_all_page_embeds": "page_embeds",
-        "_all_page_references": "page_references",
-        "_all_properties_block_builtin": "properties_block_builtin",
-        "_all_properties_block_user": "properties_block_user",
-        "_all_properties_page_builtin": "properties_page_builtin",
-        "_all_properties_page_user": "properties_page_user",
-        "_all_properties_values": "properties_values",
-        "_all_query_functions": "query_functions",
-        "_all_references_general": "references_general",
-        "_all_simple_queries": "simple_queries",
-        "_all_tagged_backlinks": "tagged_backlinks",
-        "_all_tags": "tags",
-    }
+    content_subset_tags_nodes = [
+        "advanced_commands",
+        "aliases",
+        "assets",
+        "block_embed",
+        "block_reference",
+        "blockquotes",
+        "calc_block",
+        "clozes",
+        "draws",
+        "embed",
+        "embedded_links_asset",
+        "embedded_links_internet",
+        "embedded_links_other",
+        "external_links_alias",
+        "external_links_internet",
+        "external_links_other",
+        "file_path_parts",
+        "flashcards",
+        "multiline_code_block",
+        "multiline_code_lang",
+        "namespace_queries",
+        "page_embed",
+        "page_references",
+        "properties_block_builtin",
+        "properties_block_user",
+        "properties_page_builtin",
+        "properties_page_user",
+        "properties_values",
+        "query_functions",
+        "reference",
+        "simple_queries",
+        "tagged_backlinks",
+        "tags",
+    ]
 
-    for output_name, criteria in content_subset_tags_nodes.items():
-        subset, subset_counts = extract_summary_subset_content(graph_data, criteria)
-        counts_output_name = f"_content_{output_name}"
-        summary_data_subsets[output_name] = subset
-        summary_data_subsets[counts_output_name] = subset_counts
+    # for criteria in ALL_DATA_POINTS:
+    for criteria in content_subset_tags_nodes:
+        counts_output_name = f"_content_{criteria}"
+        summary_data_subsets[counts_output_name] = extract_summary_subset_content(graph_data, criteria)
 
     return summary_data_subsets
 

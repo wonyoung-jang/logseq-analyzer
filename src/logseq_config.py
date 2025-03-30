@@ -6,11 +6,7 @@ from pathlib import Path
 import argparse
 import logging
 
-from .compile_regex import RegexPatterns
-from .config_loader import Config
-
-PATTERNS = RegexPatterns.get_instance()
-CONFIG = Config.get_instance()
+from ._global_objects import PATTERNS
 
 
 class LogseqConfig:

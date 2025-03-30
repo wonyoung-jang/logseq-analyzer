@@ -16,23 +16,10 @@ class RegexPatterns:
         config_patterns (Dict[str, Pattern]): Compiled regex patterns for configuration.
     """
 
-    instance = None
-
     def __init__(self):
+        """Initialize the RegexPatterns class."""
         self.content = self.compile_re_content()
         self.config = self.compile_re_config()
-
-    @staticmethod
-    def get_instance():
-        """
-        Get the singleton instance of the RegexPatterns class.
-
-        Returns:
-            RegexPatterns: The singleton instance.
-        """
-        if RegexPatterns.instance is None:
-            RegexPatterns.instance = RegexPatterns()
-        return RegexPatterns.instance
 
     def compile_re_content(self) -> Dict[str, Pattern]:
         """

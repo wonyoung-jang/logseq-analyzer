@@ -7,9 +7,7 @@ from typing import Any, TextIO
 import json
 import logging
 
-from .config_loader import Config
-
-CONFIG = Config.get_instance()
+from ._global_objects import CONFIG
 
 
 def write_output(

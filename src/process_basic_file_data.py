@@ -8,14 +8,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import unquote
 import logging
 
-from .compile_regex import RegexPatterns
-from .config_loader import Config
+from ._global_objects import PATTERNS, CONFIG
 from .logseq_journals import process_logseq_journal_key
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_content_data import process_content_data
-
-CONFIG = Config.get_instance()
-PATTERNS = RegexPatterns.get_instance()
 
 
 def process_single_file(file_path: Path) -> Tuple[Dict[str, Any], List[str]]:
