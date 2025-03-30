@@ -4,7 +4,7 @@ Process summary data for each file based on metadata and content analysis.
 
 from typing import Any, Dict, List, Set
 
-from .config_loader import LogseqAnalyzerConfig
+from ._global_objects import CONFIG
 
 
 def process_summary_data(
@@ -104,10 +104,7 @@ def check_is_backlinked(name: str, graph_data: Dict[str, Any], alphanum_dict: Di
     return False
 
 
-def determine_file_type(
-    file_path_parent_name: str,
-    file_path_parts: List[str],
-) -> str:
+def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) -> str:
     """
     Helper function to determine the file type based on the directory structure.
 
@@ -118,12 +115,11 @@ def determine_file_type(
     Returns:
         str: The determined file type.
     """
-    config = LogseqAnalyzerConfig()
-    assets_dir = config.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    draws_dir = config.get("LOGSEQ_CONFIG", "DIR_DRAWS")
-    journals_dir = config.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
-    pages_dir = config.get("LOGSEQ_CONFIG", "DIR_PAGES")
-    whiteboards_dir = config.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
+    assets_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
+    draws_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
+    journals_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
+    pages_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES")
+    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
 
     file_type = None
 
@@ -194,21 +190,21 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Dict
     return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
 
-def extract_summary_subset_existence(graph_data: Dict[str, Any], *criteria) -> List[str]:
+def list_files_with_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
     """
     Extract a subset of the summary data based on whether the keys exists.
     """
     return [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
 
 
-def extract_summary_subset_key_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
+def list_files_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     """
     return [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
 
 
-def generate_summary_subsets(graph_data: dict) -> dict:
+def generate_summary_subsets(graph_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate summary subsets for the Logseq Analyzer.
 
@@ -246,7 +242,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     }
 
     for output_name, criteria in summary_categories.items():
-        summary_data_subsets[output_name] = extract_summary_subset_key_values(graph_data, **criteria)
+        summary_data_subsets[output_name] = list_files_with_keys_and_values(graph_data, **criteria)
 
     # Process file extensions
     file_extensions = {}
@@ -260,7 +256,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     for ext in file_extensions:
         output_name = f"_all_{ext}s"
         criteria = {"file_path_suffix": ext}
-        subset = extract_summary_subset_key_values(graph_data, **criteria)
+        subset = list_files_with_keys_and_values(graph_data, **criteria)
         file_ext_dict[output_name] = subset
 
     summary_data_subsets["____file_extensions_dict"] = file_ext_dict
@@ -310,7 +306,7 @@ def generate_summary_subsets(graph_data: dict) -> dict:
     return summary_data_subsets
 
 
-def generate_sorted_summary_all(graph_data: dict, reverse=True, count=-1) -> dict:
+def generate_sorted_summary_all(graph_data: Dict[str, Any], count: int = 0, reverse: bool = True) -> Dict[str, Any]:
     """
     Generate a sorted summary for the Logseq Analyzer.
 

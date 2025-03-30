@@ -4,7 +4,7 @@ This module handles the processing of assets in the Logseq Analyzer.
 
 from typing import Any, Dict, List, Tuple
 
-from .process_summary_data import extract_summary_subset_key_values
+from .process_summary_data import list_files_with_keys_and_values
 
 
 def handle_assets(
@@ -48,7 +48,7 @@ def handle_assets(
         "file_type": "asset",
     }
 
-    summary_is_asset_backlinked = extract_summary_subset_key_values(graph_data, **asset_backlinked_kwargs)
-    summary_is_asset_not_backlinked = extract_summary_subset_key_values(graph_data, **asset_not_backlinked_kwargs)
+    summary_is_asset_backlinked = list_files_with_keys_and_values(graph_data, **asset_backlinked_kwargs)
+    summary_is_asset_not_backlinked = list_files_with_keys_and_values(graph_data, **asset_not_backlinked_kwargs)
 
     return summary_is_asset_backlinked, summary_is_asset_not_backlinked
