@@ -41,28 +41,33 @@ def process_content_data(
     primary_data = {
         "advanced_commands": find_all_lower(PATTERNS.content["advanced_command"], content),
         "assets": find_all_lower(PATTERNS.content["asset"], content),
-        "block_embeds": find_all_lower(PATTERNS.content["block_embed"], content),
         "block_references": find_all_lower(PATTERNS.content["block_reference"], content),
         "blockquotes": find_all_lower(PATTERNS.content["blockquote"], content),
         "calc_blocks": find_all_lower(PATTERNS.content["calc_block"], content),
-        "clozes": find_all_lower(PATTERNS.content["cloze"], content),
         "draws": find_all_lower(PATTERNS.content["draw"], content),
-        "embeds": find_all_lower(PATTERNS.content["embed"], content),
         "flashcards": find_all_lower(PATTERNS.content["flashcard"], content),
         "multiline_code_blocks": find_all_lower(PATTERNS.content["multiline_code_block"], content),
         "multiline_code_langs": find_all_lower(PATTERNS.content["multiline_code_lang"], content),
-        "namespace_queries": find_all_lower(PATTERNS.content["namespace_query"], content),
-        "page_embeds": find_all_lower(PATTERNS.content["page_embed"], content),
         "page_references": find_all_lower(PATTERNS.content["page_reference"], content),
-        "query_functions": find_all_lower(PATTERNS.content["query_function"], content),
         "references_general": find_all_lower(PATTERNS.content["reference"], content),
-        "simple_queries": find_all_lower(PATTERNS.content["simple_query"], content),
         "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], content),
         "tags": find_all_lower(PATTERNS.content["tag"], content),
         "inline_code_blocks": find_all_lower(PATTERNS.content["inline_code_block"], content),
         "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], content),
+        # Double curly braces family
         "macros": find_all_lower(PATTERNS.content["macro"], content),
+        "embeds": find_all_lower(PATTERNS.content["embed"], content),
+        "page_embeds": find_all_lower(PATTERNS.content["page_embed"], content),
+        "block_embeds": find_all_lower(PATTERNS.content["block_embed"], content),
+        "namespace_queries": find_all_lower(PATTERNS.content["namespace_query"], content),
+        "cards": find_all_lower(PATTERNS.content["card"], content),
+        "clozes": find_all_lower(PATTERNS.content["cloze"], content),
+        "simple_queries": find_all_lower(PATTERNS.content["simple_query"], content),
+        "query_functions": find_all_lower(PATTERNS.content["query_function"], content),
         "embed_video_urls": find_all_lower(PATTERNS.content["embed_video_url"], content),
+        "embed_twitter_tweets": find_all_lower(PATTERNS.content["embed_twitter_tweet"], content),
+        "embed_youtube_timestamps": find_all_lower(PATTERNS.content["embed_youtube_timestamp"], content),
+        "renderers": find_all_lower(PATTERNS.content["renderer"], content),
     }
 
     # Extract all properties: values pairs
@@ -228,12 +233,12 @@ def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[str, str, 
     return links, internet, alias_or_asset
 
 
-def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
+def is_primary_bullet_page_properties(primary_bullet: str) -> bool:
     """
     Process primary bullet data.
 
     Args:
-        primary_bullet (Dict[str, Any]): The primary bullet data.
+        primary_bullet (str): The primary bullet data.
 
     Returns:
         bool: True if the primary bullet is page properties, False otherwise.
@@ -251,28 +256,25 @@ def post_processing_content_namespaces(
     Post-process namespaces in the content data.
     """
     namespace_parts_list = name.split(ns_sep)
-    namespace_root = data["namespace_root"]
     namespace_level = data["namespace_level"]
+    ns_root = data["namespace_root"]
+    ns_parent = ns_sep.join(namespace_parts_list[:-1])
 
-    if namespace_root in content_data:
-        root_level = content_data[namespace_root].get("namespace_level", 0)
-        direct_level = 1
-        if direct_level > root_level:
-            content_data[namespace_root]["namespace_level"] = direct_level
-        content_data[namespace_root].setdefault("namespace_children", set())
-        content_data[namespace_root]["namespace_children"].add(name)
-        content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
+    if ns_root in content_data:
+        root = content_data[ns_root]
+        root_level = root.get("namespace_level", 0)
+        root["namespace_level"] = max(1, root_level)
+        root.setdefault("namespace_children", set()).add(name)
+        root["namespace_size"] = len(root["namespace_children"])
 
-    parent_joined = ns_sep.join(namespace_parts_list[:-1])
-    if namespace_level > 1:
-        if parent_joined in content_data:
-            parent_level = content_data[parent_joined].get("namespace_level", 0)
+    if namespace_level > 2:
+        if ns_parent in content_data:
+            parent = content_data[ns_parent]
+            parent_level = parent.get("namespace_level", 0)
             direct_level = namespace_level - 1
-            if direct_level > parent_level:
-                content_data[parent_joined]["namespace_level"] = direct_level
-            content_data[parent_joined].setdefault("namespace_children", set())
-            content_data[parent_joined]["namespace_children"].add(name)
-            content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
+            parent["namespace_level"] = max(direct_level, parent_level)
+            parent.setdefault("namespace_children", set()).add(name)
+            parent["namespace_size"] = len(parent["namespace_children"])
 
     return content_data
 

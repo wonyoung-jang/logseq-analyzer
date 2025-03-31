@@ -7,7 +7,6 @@ from .core import core_data_analysis, process_graph_files
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .logseq_move_files import handle_move_files, handle_move_directory
-from .process_namespaces import process_namespace_data
 from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
 
 
@@ -82,7 +81,8 @@ def run_app(**kwargs):
     #################################################################
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
-    summary_sorted_all = generate_sorted_summary_all(graph_data)
+    # summary_sorted_all = generate_sorted_summary_all(graph_data)
+    summary_sorted_all = {}
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(dangling_links)

@@ -50,17 +50,22 @@ class RegexPatterns:
             multiline_code_lang: Matches code blocks with language specification.
             reference: Matches block references.
             block_reference: Matches UUID block references.
-            embed: Matches embedded content.
-            page_embed: Matches embedded page references.
-            block_embed: Matches embedded block references.
-            namespace_query: Matches namespace queries.
-            cloze: Matches cloze deletions.
-            simple_query: Matches simple query syntax.
-            query_function: Matches query functions.
             advanced_command: Matches advanced org-mode commands.
             inline_code: Matches inline code syntax.
             dynamic_variable: Matches dynamic variables.
             macro: Matches macro syntax.
+                embed: Matches embedded content.
+                    page_embed: Matches embedded page references.
+                    block_embed: Matches embedded block references.
+                namespace_query: Matches namespace queries.
+                card: Matches card references.
+                cloze: Matches cloze deletions.
+                simple_query: Matches simple query syntax.
+                query_function: Matches query functions.
+                embed_video_url: Matches embedded video URLs.
+                embed_twitter_tweet: Matches embedded Twitter tweets.
+                embed_youtube_timestamp: Matches embedded YouTube timestamps.
+                renderer: Matches renderer syntax.
         """
         patterns = {
             "bullet": re.compile(
@@ -277,6 +282,43 @@ class RegexPatterns:
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
+            "advanced_command": re.compile(
+                r"""
+                \#\+BEGIN_          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "inline_code_block": re.compile(
+                r"""
+                `                   # One backtick
+                \w+                 # One or more word characters
+                .*?                 # Any characters (non-greedy)
+                `                   # One backtick
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "dynamic_variable": re.compile(
+                r"""
+                <%                  # Opening tag
+                \s*                 # Optional whitespace
+                .*?                 # Any characters (non-greedy)
+                \s*                 # Optional whitespace
+                %>                  # Closing tag
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "macro": re.compile(
+                r"""
+                \{\{                # Opening double braces
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
             "embed": re.compile(
                 r"""
                 \{\{embed\          # "{{embed" followed by space
@@ -317,6 +359,14 @@ class RegexPatterns:
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
+            "card": re.compile(
+                r"""
+                \{\{cards\          # "{{cards" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
             "cloze": re.compile(
                 r"""
                 \{\{cloze\          # "{{cloze" followed by space
@@ -341,46 +391,33 @@ class RegexPatterns:
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
-            "advanced_command": re.compile(
-                r"""
-                \#\+BEGIN_          # "#BEGIN_"
-                .*?                 # Any characters (non-greedy)
-                \#\+END_            # "#END_"
-                .*?                 # Any characters (non-greedy)
-                \n                  # Newline
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "inline_code_block": re.compile(
-                r"""
-                `                   # One backtick
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
-                `                   # One backtick
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "dynamic_variable": re.compile(
-                r"""
-                <%                 # Opening tag
-                \s*                # Optional whitespace
-                .*?                # Any characters (non-greedy)
-                \s*                # Optional whitespace
-                %>                 # Closing tag
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "macro": re.compile(
-                r"""
-                \{\{    # Opening double braces
-                .*?     # Any characters (non-greedy)
-                \}\}    # Closing double braces
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
             "embed_video_url": re.compile(
                 r"""
                 \{\{video\          # "{{video" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_twitter_tweet": re.compile(
+                r"""
+                \{\{tweet\          # "{{tweet" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_youtube_timestamp": re.compile(
+                r"""
+                \{\{youtube-timestamp\  # "{{youtube-timestamp" followed by space
+                .*?                     # Any characters (non-greedy)
+                \}\}                    # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "renderer": re.compile(
+                r"""
+                \{\{renderer\       # "{{renderer" followed by space
                 .*?                 # Any characters (non-greedy)
                 \}\}                # Closing double braces
                 """,

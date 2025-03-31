@@ -31,7 +31,7 @@ def write_output(
 
     logging.info("Writing %s as %s", filename_prefix, output_format)
     count = len(items)
-    filename = f"{filename_prefix}{output_format}" if count else f"{filename_prefix}_EMPTY{output_format}"
+    filename = f"{filename_prefix}{output_format}" if count else f"______EMPTY_{filename_prefix}{output_format}"
     output_dir = Path(output_dir)
 
     if type_output:
@@ -86,7 +86,7 @@ def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
             f.write(f"{indent}Key: {key}\n")
             if isinstance(values, (list, set)):
                 f.write(f"{indent}Values ({len(values)}):\n")
-                for index, value in enumerate(values):
+                for index, value in enumerate(values, start=1):
                     f.write(f"{indent}\t{index}\t-\t{value}\n")
                 f.write("\n")
                 continue
@@ -112,14 +112,14 @@ def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
                 f.write(f"{indent}{k:<60}: {v}\n")
         elif isinstance(data, (list, set)):
             try:
-                for index, item in enumerate(sorted(data)):
+                for index, item in enumerate(sorted(data), start=1):
                     if isinstance(item, (list, set, dict)):
                         f.write(f"{indent}{index}:\n")
                         write_recursive(f, item, indent_level + 1)
                         continue
                     f.write(f"{indent}{index}\t-\t{item}\n")
             except TypeError:
-                for index, item in enumerate(data):
+                for index, item in enumerate(data, start=1):
                     f.write(f"{indent}{index}\t-\t{item}\n")
         else:
             f.write(f"{indent}{data}\n")
