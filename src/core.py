@@ -4,6 +4,8 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import Any, Dict, List, Tuple
 
+from src.process_namespaces import process_namespace_data
+
 from ._global_objects import CACHE
 from .process_basic_file_data import process_single_file
 from .process_content_data import post_processing_content
@@ -34,7 +36,7 @@ def process_graph_files() -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
 
 def core_data_analysis(
     graph_meta_data: dict,
-) -> Tuple[dict, dict, dict, dict, dict]:
+) -> Tuple[dict, dict, dict, dict, dict, dict]:
     """
     Process the core data analysis for the Logseq Analyzer.
 
@@ -42,19 +44,21 @@ def core_data_analysis(
         graph_meta_data (dict): The graph data to analyze.
 
     Returns:
-        Tuple[dict, dict, dict, dict, dict]: A tuple containing:
+        Tuple[dict, dict, dict, dict, dict, dict]: A tuple containing:
             - Alphanumeric dictionary.
             - Alphanumeric dictionary with namespace.
             - Dangling links.
             - Processed graph data.
             - All references.
+            - Summary namespaces.
     """
     graph_data_post, alphanum_dictionary, alphanum_dictionary_ns, dangling_links, all_refs = post_processing_content(
         graph_meta_data
     )
 
-    graph_data = process_summary_data(graph_data_post, alphanum_dictionary, alphanum_dictionary_ns)
-    graph_data = dict(sorted(graph_data.items(), key=lambda item: item[0]))
+    raw_graph_data = process_summary_data(graph_data_post, alphanum_dictionary, alphanum_dictionary_ns)
+    graph_data = dict(sorted(raw_graph_data.items(), key=lambda item: item[0]))
+    summary_namespaces = process_namespace_data(graph_data, dangling_links)
 
     return (
         alphanum_dictionary,
@@ -62,4 +66,5 @@ def core_data_analysis(
         dangling_links,
         graph_data,
         all_refs,
+        summary_namespaces,
     )

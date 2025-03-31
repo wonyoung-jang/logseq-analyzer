@@ -38,29 +38,32 @@ def process_content_data(
         return data
 
     # Extract basic data
-    advanced_commands = find_all_lower(PATTERNS.content["advanced_command"], content)
-    assets = find_all_lower(PATTERNS.content["asset"], content)
-    block_embeds = find_all_lower(PATTERNS.content["block_embed"], content)
-    block_references = find_all_lower(PATTERNS.content["block_reference"], content)
-    blockquotes = find_all_lower(PATTERNS.content["blockquote"], content)
-    calc_blocks = find_all_lower(PATTERNS.content["calc_block"], content)
-    clozes = find_all_lower(PATTERNS.content["cloze"], content)
-    draws = find_all_lower(PATTERNS.content["draw"], content)
-    embeds = find_all_lower(PATTERNS.content["embed"], content)
-    flashcards = find_all_lower(PATTERNS.content["flashcard"], content)
-    multiline_code_blocks = find_all_lower(PATTERNS.content["multiline_code_block"], content)
-    multiline_code_langs = find_all_lower(PATTERNS.content["multiline_code_lang"], content)
-    namespace_queries = find_all_lower(PATTERNS.content["namespace_query"], content)
-    page_embeds = find_all_lower(PATTERNS.content["page_embed"], content)
-    page_references = find_all_lower(PATTERNS.content["page_reference"], content)
-    query_functions = find_all_lower(PATTERNS.content["query_function"], content)
-    references_general = find_all_lower(PATTERNS.content["reference"], content)
-    simple_queries = find_all_lower(PATTERNS.content["simple_query"], content)
-    tagged_backlinks = find_all_lower(PATTERNS.content["tagged_backlink"], content)
-    tags = find_all_lower(PATTERNS.content["tag"], content)
-    inline_code_blocks = find_all_lower(PATTERNS.content["inline_code_block"], content)
-    dynamic_variables = find_all_lower(PATTERNS.content["dynamic_variable"], content)
-    macros = find_all_lower(PATTERNS.content["macro"], content)
+    primary_data = {
+        "advanced_commands": find_all_lower(PATTERNS.content["advanced_command"], content),
+        "assets": find_all_lower(PATTERNS.content["asset"], content),
+        "block_embeds": find_all_lower(PATTERNS.content["block_embed"], content),
+        "block_references": find_all_lower(PATTERNS.content["block_reference"], content),
+        "blockquotes": find_all_lower(PATTERNS.content["blockquote"], content),
+        "calc_blocks": find_all_lower(PATTERNS.content["calc_block"], content),
+        "clozes": find_all_lower(PATTERNS.content["cloze"], content),
+        "draws": find_all_lower(PATTERNS.content["draw"], content),
+        "embeds": find_all_lower(PATTERNS.content["embed"], content),
+        "flashcards": find_all_lower(PATTERNS.content["flashcard"], content),
+        "multiline_code_blocks": find_all_lower(PATTERNS.content["multiline_code_block"], content),
+        "multiline_code_langs": find_all_lower(PATTERNS.content["multiline_code_lang"], content),
+        "namespace_queries": find_all_lower(PATTERNS.content["namespace_query"], content),
+        "page_embeds": find_all_lower(PATTERNS.content["page_embed"], content),
+        "page_references": find_all_lower(PATTERNS.content["page_reference"], content),
+        "query_functions": find_all_lower(PATTERNS.content["query_function"], content),
+        "references_general": find_all_lower(PATTERNS.content["reference"], content),
+        "simple_queries": find_all_lower(PATTERNS.content["simple_query"], content),
+        "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], content),
+        "tags": find_all_lower(PATTERNS.content["tag"], content),
+        "inline_code_blocks": find_all_lower(PATTERNS.content["inline_code_block"], content),
+        "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], content),
+        "macros": find_all_lower(PATTERNS.content["macro"], content),
+        "embed_video_urls": find_all_lower(PATTERNS.content["embed_video_url"], content),
+    }
 
     # Extract all properties: values pairs
     properties_values = {}
@@ -93,43 +96,22 @@ def process_content_data(
         embedded_links, "embedded"
     )
 
-    primary_data = {
-        "advanced_commands": advanced_commands,
-        "aliases": aliases,
-        "assets": assets,
-        "block_embeds": block_embeds,
-        "block_references": block_references,
-        "blockquotes": blockquotes,
-        "calc_blocks": calc_blocks,
-        "clozes": clozes,
-        "draws": draws,
-        "embedded_links_asset": embedded_links_asset,
-        "embedded_links_internet": embedded_links_internet,
-        "embedded_links_other": embedded_links_other,
-        "embeds": embeds,
-        "external_links_alias": external_links_alias,
-        "external_links_internet": external_links_internet,
-        "external_links_other": external_links_other,
-        "flashcards": flashcards,
-        "multiline_code_blocks": multiline_code_blocks,
-        "multiline_code_langs": multiline_code_langs,
-        "namespace_queries": namespace_queries,
-        "page_embeds": page_embeds,
-        "page_references": page_references,
-        "properties_block_builtin": properties_block_builtin,
-        "properties_block_user": properties_block_user,
-        "properties_page_builtin": properties_page_builtin,
-        "properties_page_user": properties_page_user,
-        "properties_values": properties_values,
-        "query_functions": query_functions,
-        "references_general": references_general,
-        "simple_queries": simple_queries,
-        "tagged_backlinks": tagged_backlinks,
-        "tags": tags,
-        "inline_code_blocks": inline_code_blocks,
-        "dynamic_variables": dynamic_variables,
-        "macros": macros,
-    }
+    primary_data.update(
+        {
+            "aliases": aliases,
+            "properties_block_builtin": properties_block_builtin,
+            "properties_block_user": properties_block_user,
+            "properties_page_builtin": properties_page_builtin,
+            "properties_page_user": properties_page_user,
+            "properties_values": properties_values,
+            "external_links_alias": external_links_alias,
+            "external_links_internet": external_links_internet,
+            "external_links_other": external_links_other,
+            "embedded_links_asset": embedded_links_asset,
+            "embedded_links_internet": embedded_links_internet,
+            "embedded_links_other": embedded_links_other,
+        }
+    )
 
     for key, value in primary_data.items():
         if value:
@@ -169,7 +151,7 @@ def find_all_lower(pattern: Pattern, text: str) -> List[str]:
     return [match.lower() for match in pattern.findall(text)]
 
 
-def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
+def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
     """Create alphanum dictionary from a list of strings."""
     alphanum_dict = defaultdict(set)
     for item in list_lookup:
@@ -183,8 +165,9 @@ def create_alphanum(list_lookup: List[str]) -> Dict[str, Set[str]]:
 
 def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
-    builtin_props = [prop for prop in properties if prop in CONFIG.get_built_in_properties()]
-    user_props = [prop for prop in properties if prop not in CONFIG.get_built_in_properties()]
+    built_in = CONFIG.get_built_in_properties()
+    builtin_props = [prop for prop in properties if prop in built_in]
+    user_props = [prop for prop in properties if prop not in built_in]
     return builtin_props, user_props
 
 
@@ -255,8 +238,8 @@ def is_primary_bullet_page_properties(primary_bullet: Dict[str, Any]) -> bool:
     Returns:
         bool: True if the primary bullet is page properties, False otherwise.
     """
-    primary_bullet = primary_bullet.strip()
-    if not primary_bullet or primary_bullet.startswith("#"):
+    bullet = primary_bullet.strip()
+    if not bullet or bullet.startswith("#"):
         return False
     return True
 
@@ -281,14 +264,15 @@ def post_processing_content_namespaces(
         content_data[namespace_root]["namespace_size"] = len(content_data[namespace_root]["namespace_children"])
 
     parent_joined = ns_sep.join(namespace_parts_list[:-1])
-    if parent_joined in content_data:
-        parent_level = content_data[parent_joined].get("namespace_level", 0)
-        direct_level = namespace_level - 1
-        if direct_level > parent_level:
-            content_data[parent_joined]["namespace_level"] = direct_level
-        content_data[parent_joined].setdefault("namespace_children", set())
-        content_data[parent_joined]["namespace_children"].add(name)
-        content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
+    if namespace_level > 1:
+        if parent_joined in content_data:
+            parent_level = content_data[parent_joined].get("namespace_level", 0)
+            direct_level = namespace_level - 1
+            if direct_level > parent_level:
+                content_data[parent_joined]["namespace_level"] = direct_level
+            content_data[parent_joined].setdefault("namespace_children", set())
+            content_data[parent_joined]["namespace_children"].add(name)
+            content_data[parent_joined]["namespace_size"] = len(content_data[parent_joined]["namespace_children"])
 
     return content_data
 
@@ -321,10 +305,11 @@ def post_processing_content(
             graph_data = post_processing_content_namespaces(graph_data, name, data, ns_sep)
 
         # Update aliases and linked references
-        unique_aliases.update(data.get("aliases", []))
+        found_aliases = data.get("aliases", [])
+        unique_aliases.update(found_aliases)
         ns_parent = data.get("namespace_parent", "")
         linked_references = [
-            list(unique_aliases),
+            found_aliases,
             data.get("draws", []),
             data.get("page_references", []),
             data.get("tags", []),
@@ -354,9 +339,13 @@ def post_processing_content(
     unique_aliases = set(sorted(unique_aliases))
     unique_linked_references = set(sorted(unique_linked_references))
     unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
+
+    # Create dangling links
     dangling_links = unique_linked_references.union(unique_linked_references_namespaces)
     dangling_links.difference_update(unique_filenames)
     dangling_links.difference_update(unique_aliases)
+
+    # Create alphanum dictionaries
     alphanum_dict = create_alphanum(unique_linked_references)
     alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 

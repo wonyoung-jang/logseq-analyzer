@@ -71,10 +71,8 @@ def run_app(**kwargs):
         dangling_links,
         graph_data,
         all_refs,
+        summary_namespaces,
     ) = core_data_analysis(graph_data_db)
-
-    # Namespaces analysis
-    summary_namespaces = process_namespace_data(graph_data, dangling_links)
 
     gui_instance.update_progress("process_files", 100)
     gui_instance.update_progress("summary", 20)

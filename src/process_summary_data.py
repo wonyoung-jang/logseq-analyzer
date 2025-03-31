@@ -337,6 +337,7 @@ def generate_summary_subsets(graph_data: Dict[str, Any]) -> Dict[str, Any]:
         "inline_code_blocks",
         "dynamic_variables",
         "macros",
+        "embed_video_urls",
     ]
 
     # for criteria in ALL_DATA_POINTS:

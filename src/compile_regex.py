@@ -60,6 +60,7 @@ class RegexPatterns:
             advanced_command: Matches advanced org-mode commands.
             inline_code: Matches inline code syntax.
             dynamic_variable: Matches dynamic variables.
+            macro: Matches macro syntax.
         """
         patterns = {
             "bullet": re.compile(
@@ -374,6 +375,14 @@ class RegexPatterns:
                 \{\{    # Opening double braces
                 .*?     # Any characters (non-greedy)
                 \}\}    # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_video_url": re.compile(
+                r"""
+                \{\{video\          # "{{video" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
