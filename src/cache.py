@@ -60,9 +60,9 @@ class Cache:
 
         self.cache["mod_tracker"] = mod_tracker
 
-    def clear_deleted_files(self) -> None:
+    def clear_deleted_files(self):
         """
-        Get the deleted files from the cache.
+        Clear the deleted files from the cache.
         """
         deleted_files = []
         self.cache.setdefault("___meta___graph_data", {})

@@ -360,13 +360,20 @@ class RegexPatterns:
                 re.IGNORECASE | re.VERBOSE,
             ),
             "dynamic_variable": re.compile(
-                # Syntax: <% variable %>
                 r"""
                 <%                 # Opening tag
                 \s*                # Optional whitespace
-                .%?                # Any characters (non-greedy)
+                .*?                # Any characters (non-greedy)
                 \s*                # Optional whitespace
                 %>                 # Closing tag
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "macro": re.compile(
+                r"""
+                \{\{    # Opening double braces
+                .*?     # Any characters (non-greedy)
+                \}\}    # Closing double braces
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),

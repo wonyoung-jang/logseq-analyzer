@@ -186,7 +186,7 @@ def extract_summary_subset_content(graph_data: Dict[str, Any], criteria) -> Dict
             for value in values:
                 subset_counter.setdefault(value, {})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                subset_counter[value].setdefault("found_in", set()).add(name)
+                subset_counter[value].setdefault("found_in", []).append(name)
     return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
 
@@ -298,6 +298,7 @@ def generate_summary_subsets(graph_data: Dict[str, Any]) -> Dict[str, Any]:
         "tags",
         "inline_code_blocks",
         "dynamic_variables",
+        "macros",
     ]
 
     # for criteria in ALL_DATA_POINTS:

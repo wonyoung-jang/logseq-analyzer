@@ -60,6 +60,7 @@ def process_content_data(
     tags = find_all_lower(PATTERNS.content["tag"], content)
     inline_code_blocks = find_all_lower(PATTERNS.content["inline_code_block"], content)
     dynamic_variables = find_all_lower(PATTERNS.content["dynamic_variable"], content)
+    macros = find_all_lower(PATTERNS.content["macro"], content)
 
     # Extract all properties: values pairs
     properties_values = {}
@@ -127,6 +128,7 @@ def process_content_data(
         "tags": tags,
         "inline_code_blocks": inline_code_blocks,
         "dynamic_variables": dynamic_variables,
+        "macros": macros,
     }
 
     for key, value in primary_data.items():
@@ -352,24 +354,10 @@ def post_processing_content(
     unique_aliases = set(sorted(unique_aliases))
     unique_linked_references = set(sorted(unique_linked_references))
     unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
-    unique_linked_references_all = unique_linked_references.union(unique_linked_references_namespaces)
-    dangling_links = unique_linked_references_all.copy()
+    dangling_links = unique_linked_references.union(unique_linked_references_namespaces)
     dangling_links.difference_update(unique_filenames)
     dangling_links.difference_update(unique_aliases)
     alphanum_dict = create_alphanum(unique_linked_references)
     alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 
     return content_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_linked_references
-
-
-def remove_double_brackets(text: str) -> str:
-    """
-    Remove double brackets from the text.
-
-    Args:
-        text (str): The text to process.
-
-    Returns:
-        str: The processed text without double brackets.
-    """
-    return text.replace("[[", "").replace("]]", "").strip()

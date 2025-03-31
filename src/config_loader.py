@@ -2,9 +2,9 @@
 Config class for loading and managing configuration files.
 """
 
+from pathlib import Path
 from typing import Set
 import configparser
-import os
 import re
 
 
@@ -32,7 +32,7 @@ class LogseqAnalyzerConfig:
             default_section="None",
             interpolation=configparser.ExtendedInterpolation(),
         )
-        if not os.path.exists(config_path):
+        if not Path(config_path).exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
         self.config.optionxform = lambda option: option
         self.config.read(config_path)

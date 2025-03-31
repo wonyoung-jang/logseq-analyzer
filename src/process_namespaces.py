@@ -22,13 +22,13 @@ from ._global_objects import PATTERNS, CONFIG
 from .process_summary_data import list_files_with_keys_and_values
 
 
-def process_namespace_data(graph_data: Dict[str, Any], dangling_links: List[str]) -> Dict[str, Any]:
+def process_namespace_data(graph_data: Dict[str, Any], dangling_links: Set[str]) -> Dict[str, Any]:
     """
     Process namespace data and perform extended analysis for the Logseq Analyzer.
 
     Args:
         graph_data (dict): The graph content data.
-        dangling_links (list): The list of dangling links.
+        dangling_links (set): The set of dangling links.
 
     Returns:
         dict: A dictionary containing namespace data and analysis results.

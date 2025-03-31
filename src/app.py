@@ -43,6 +43,8 @@ def run_app(**kwargs):
 
     if ANALYZER.args.graph_cache:
         CACHE.clear()
+    else:
+        CACHE.clear_deleted_files()
 
     # Set the configuration for the Logseq graph
     CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
@@ -55,9 +57,6 @@ def run_app(**kwargs):
     ################################################################
     # Phase 02: Process files
     ################################################################
-    # Check for deleted files and remove them from the database
-    CACHE.clear_deleted_files()
-
     # Process for only modified/new graph files
     graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_content_db = CACHE.get("___meta___graph_content", {})
