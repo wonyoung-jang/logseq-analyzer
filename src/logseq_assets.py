@@ -27,7 +27,7 @@ def handle_assets(
         if not data.get("assets"):
             continue
 
-        for asset in summary_data_subsets.get("___is_asset", []):
+        for asset in summary_data_subsets.get("___is_filetype_asset", []):
             asset_original_name = graph_data[asset]["name"]
 
             for asset_mention in data["assets"]:

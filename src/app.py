@@ -82,11 +82,11 @@ def run_app(**kwargs):
     # Generate summary
     summary_data_subsets = generate_summary_subsets(graph_data)
     # summary_sorted_all = generate_sorted_summary_all(graph_data)
-    summary_sorted_all = {}
+    summary_sorted_all = {}  # TODO
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(dangling_links)
-    process_journals_timelines(summary_data_subsets["___is_journal"], journals_dangling)
+    process_journals_timelines(summary_data_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
     gui_instance.update_progress("move_files", 20)

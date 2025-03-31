@@ -4,9 +4,8 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import Any, Dict, List, Tuple
 
-from src.process_namespaces import process_namespace_data
-
 from ._global_objects import CACHE
+from .process_namespaces import process_namespace_data
 from .process_basic_file_data import process_single_file
 from .process_content_data import post_processing_content
 from .process_summary_data import process_summary_data

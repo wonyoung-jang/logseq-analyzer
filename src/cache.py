@@ -47,9 +47,8 @@ class Cache:
         Get the modified files from the cache.
         """
         mod_tracker = self.cache.get("mod_tracker", {})
-        target_dirs = CONFIG.get_logseq_target_dirs()
 
-        for path in iter_files(GRAPH.directory, target_dirs):
+        for path in iter_files(GRAPH.directory, CONFIG.target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
 

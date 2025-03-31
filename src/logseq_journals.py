@@ -66,8 +66,8 @@ def convert_cljs_date_to_py(cljs_format: str) -> str:
         str: Python-style date format.
     """
     cljs_format = cljs_format.replace("o", "")
-    datetime_token_map = CONFIG.get_datetime_token_map()
-    datetime_token_pattern = CONFIG.get_datetime_token_pattern()
+    datetime_token_map = CONFIG.datetime_token_map
+    datetime_token_pattern = CONFIG.datetime_token_pattern
 
     def replace_token(match):
         token = match.group(0)

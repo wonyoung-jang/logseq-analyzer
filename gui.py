@@ -28,7 +28,6 @@ from PySide6.QtWidgets import (
 
 from src._global_objects import CONFIG
 from src.app import run_app
-from src.config_loader import LogseqAnalyzerConfig
 from src.reporting import write_output
 
 

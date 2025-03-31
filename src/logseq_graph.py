@@ -44,8 +44,11 @@ class LogseqGraph:
         self.logseq_config = {**LOGSEQ_DEFAULT_CONFIG_EDN_DATA, **user_config.config_edn_data}
         if args.global_config:
             self.global_config_file = Path(args.global_config)
-            global_config = LogseqConfig(args, self.global_config_file)
+            if not self.global_config_file.exists():
+                logging.warning("Global config file does not exist: %s", self.global_config_file)
+                raise FileNotFoundError(f"Global config file does not exist: {self.global_config_file}") from None
             CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
+            global_config = LogseqConfig(args, self.global_config_file)
             self.logseq_config.update(global_config.config_edn_data)
 
     def initialize_graph(self, args) -> None:

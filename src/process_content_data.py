@@ -170,7 +170,7 @@ def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
 
 def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
-    built_in = CONFIG.get_built_in_properties()
+    built_in = CONFIG.built_in_properties
     builtin_props = [prop for prop in properties if prop in built_in]
     user_props = [prop for prop in properties if prop not in built_in]
     return builtin_props, user_props

@@ -36,9 +36,14 @@ class LogseqAnalyzerConfig:
             raise FileNotFoundError(f"Config file not found: {config_path}")
         self.config.optionxform = lambda option: option
         self.config.read(config_path)
-        self._datetime_token_map = None
-        self._datetime_token_pattern = None
-        self._built_in_properties = None
+        self.target_dirs = None
+        self.built_in_properties = None
+        self.datetime_token_map = None
+        self.datetime_token_pattern = None
+        self.get_logseq_target_dirs()
+        self.get_built_in_properties()
+        self.get_datetime_token_map()
+        self.get_datetime_token_pattern()
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""
@@ -58,39 +63,26 @@ class LogseqAnalyzerConfig:
 
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""
-        if self._datetime_token_map is None:
-            self._datetime_token_map = self.get_section("DATETIME_TOKEN_MAP")
-        return self._datetime_token_map
+        self.datetime_token_map = self.get_section("DATETIME_TOKEN_MAP")
 
     def get_datetime_token_pattern(self):
         """Return a compiled regex pattern for datetime tokens"""
-        if self._datetime_token_pattern is None:
-            tokens = self.get_datetime_token_map().keys()
-            pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
-            self._datetime_token_pattern = re.compile(pattern)
-        return self._datetime_token_pattern
+        tokens = self.datetime_token_map.keys()
+        pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
+        self.datetime_token_pattern = re.compile(pattern)
 
     def get_built_in_properties(self):
         """Return the built-in properties as a frozenset"""
-        if self._built_in_properties is None:
-            properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
-            self._built_in_properties = frozenset(properties_str.split(","))
-        return self._built_in_properties
+        properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
+        self.built_in_properties = frozenset(properties_str.split(","))
 
     def write(self, file):
         """Write the config to a file-like object"""
         self.config.write(file)
 
-    def get_logseq_target_dirs(self) -> Set[str]:
+    def get_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""
-        target_dirs = {
-            self.get("TARGET_DIRS", "DIR_ASSETS"),
-            self.get("TARGET_DIRS", "DIR_DRAWS"),
-            self.get("TARGET_DIRS", "DIR_JOURNALS"),
-            self.get("TARGET_DIRS", "DIR_PAGES"),
-            self.get("TARGET_DIRS", "DIR_WHITEBOARDS"),
-        }
-        return target_dirs
+        self.target_dirs = set(self.get_section("TARGET_DIRS").values())
 
     def set_logseq_config_edn_data(self, config_edn_data: dict) -> None:
         """Set the Logseq configuration data."""

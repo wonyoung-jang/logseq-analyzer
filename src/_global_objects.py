@@ -22,15 +22,15 @@ def init_globals():
 
     from .logseq_analyzer import LogseqAnalyzer
 
-    ANALYZER = LogseqAnalyzer()
+    ANALYZER = LogseqAnalyzer()  # Requires CONFIG
 
     from .logseq_graph import LogseqGraph
 
-    GRAPH = LogseqGraph()
+    GRAPH = LogseqGraph()  # Requires CONFIG
 
     from .cache import Cache
 
-    CACHE = Cache(CONFIG.get("CONSTANTS", "CACHE"))
+    CACHE = Cache(CONFIG.get("CONSTANTS", "CACHE"))  # Requires CONFIG, GRAPH
 
 
 init_globals()
