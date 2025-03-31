@@ -294,13 +294,13 @@ def post_processing_content_namespaces(
 
 
 def post_processing_content(
-    content_data: Dict[str, Any],
+    graph_data: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
     """
     Post-process content data to extract linked references and namespaces.
 
     Args:
-        content_data (Dict[str, Any]): The content data to process.
+        graph_data (Dict[str, Any]): The content data to process.
 
     Returns:
         Tuple[Dict[str, Any], Dict[str, Set[str]], Dict[str, Set[str]], Set[str], Dict[str, Any]]:
@@ -314,11 +314,11 @@ def post_processing_content(
     # Process each file's content
     ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
 
-    for name, data in content_data.items():
+    for name, data in graph_data.items():
         # Process namespaces
         if ns_sep in name:
             unique_linked_references_namespaces.update([data["namespace_root"], name])
-            content_data = post_processing_content_namespaces(content_data, name, data, ns_sep)
+            graph_data = post_processing_content_namespaces(graph_data, name, data, ns_sep)
 
         # Update aliases and linked references
         unique_aliases.update(data.get("aliases", []))
@@ -350,7 +350,7 @@ def post_processing_content(
 
     # Create alphanum lookups and identify dangling links
     all_linked_references = dict(sorted(all_linked_references.items(), key=lambda item: item[1]["count"], reverse=True))
-    unique_filenames = set(sorted(content_data.keys()))
+    unique_filenames = set(sorted(graph_data.keys()))
     unique_aliases = set(sorted(unique_aliases))
     unique_linked_references = set(sorted(unique_linked_references))
     unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
@@ -360,4 +360,4 @@ def post_processing_content(
     alphanum_dict = create_alphanum(unique_linked_references)
     alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
 
-    return content_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_linked_references
+    return graph_data, alphanum_dict, alphanum_dict_ns, dangling_links, all_linked_references

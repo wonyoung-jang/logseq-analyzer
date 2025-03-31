@@ -23,11 +23,11 @@ def handle_assets(
             - List of assets that are backlinked.
             - List of assets that are not backlinked.
     """
-    for _, data in graph_data.items():
+    for name, data in graph_data.items():
         if not data.get("assets"):
             continue
 
-        for asset in summary_data_subsets["___is_asset"]:
+        for asset in summary_data_subsets.get("___is_asset", []):
             asset_original_name = graph_data[asset]["name"]
 
             for asset_mention in data["assets"]:

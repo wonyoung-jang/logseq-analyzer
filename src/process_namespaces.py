@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Set, Tuple
 import logging
 
 from ._global_objects import PATTERNS, CONFIG
-from .process_summary_data import list_files_with_keys_and_values
+from .process_summary_data import list_files_with_keys, list_files_without_keys
 
 
 def process_namespace_data(graph_data: Dict[str, Any], dangling_links: Set[str]) -> Dict[str, Any]:
@@ -35,14 +35,12 @@ def process_namespace_data(graph_data: Dict[str, Any], dangling_links: Set[str])
     """
     namespace_data_subset = {}
     # Find unique names that are not namespaces
-    namespace_data_subset["___meta___unique_names_not_namespace"] = list_files_with_keys_and_values(
-        graph_data, namespace_level=0
+    namespace_data_subset["___meta___unique_names_not_namespace"] = list_files_without_keys(
+        graph_data, "namespace_level"
     )
 
     # Find unique names that are namespaces
-    namespace_data_subset["___meta___unique_names_is_namespace"] = sorted(
-        [k for k, v in graph_data.items() if v.get("namespace_level")]
-    )
+    namespace_data_subset["___meta___unique_names_is_namespace"] = list_files_with_keys(graph_data, "namespace_level")
 
     namespace_data = {}
     for name in namespace_data_subset["___meta___unique_names_is_namespace"]:

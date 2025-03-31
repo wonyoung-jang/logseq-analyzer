@@ -8,9 +8,7 @@ from ._global_objects import CONFIG
 
 
 def process_summary_data(
-    graph_data: Dict[str, Any],
-    alphanum_dict: Dict[str, Set[str]],
-    alphanum_dict_ns: Dict[str, Set[str]],
+    graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], alphanum_dict_ns: Dict[str, Set[str]]
 ) -> Dict[str, Any]:
     """
     Process summary data for each file based on metadata and content analysis.
@@ -25,78 +23,104 @@ def process_summary_data(
     Returns:
         Dict[str, Any]: Summary data for each file.
     """
-    for name, meta_data in graph_data.items():
-        has_content = bool(meta_data["size"] > 0)
-        has_backlinks = False
-        has_external_links = False
-        has_embedded_links = False
-        if has_content:
-            has_backlinks = any(
-                meta_data.get(key)
-                for key in [
-                    "page_references",
-                    "tags",
-                    "tagged_backlinks",
-                    "properties_page_builtin",
-                    "properties_page_user",
-                    "properties_block_builtin",
-                    "properties_block_user",
-                ]
-            )
-            has_external_links = any(
-                meta_data.get(key)
-                for key in [
-                    "external_links",
-                    "external_links_internet",
-                    "external_links_alias",
-                ]
-            )
-            has_embedded_links = any(
-                meta_data.get(key)
-                for key in [
-                    "embedded_links",
-                    "embedded_links_internet",
-                    "embedded_links_asset",
-                ]
-            )
-        file_path_parent_name = meta_data["file_path_parent_name"]
-        file_path_parts = meta_data["file_path_parts"]
+    for name, data in graph_data.items():
+        has_content = data.get("size") > 0
+        has_backlinks = check_has_backlinks(data, has_content)
+        has_external_links = check_has_external_links(data, has_content)
+        has_embedded_links = check_has_embedded_links(data, has_content)
+
+        file_path_parent_name = data.get("file_path_parent_name")
+        file_path_parts = data.get("file_path_parts")
 
         file_type = determine_file_type(file_path_parent_name, file_path_parts)
 
-        is_backlinked = check_is_backlinked(name, meta_data, alphanum_dict)
-        is_backlinked_by_ns_only = False
-        if not is_backlinked:
-            is_backlinked_by_ns_only = check_is_backlinked(name, meta_data, alphanum_dict_ns)
+        is_backlinked = check_is_backlinked(name, data, alphanum_dict)
+        is_backlinked_by_ns_only = check_is_backlinked(name, data, alphanum_dict_ns, is_backlinked)
 
         node_type = "other"
         if file_type in ["journal", "page"]:
             node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
 
-        meta_data["file_type"] = file_type
-        meta_data["node_type"] = node_type
-        meta_data["has_content"] = has_content
-        meta_data["has_backlinks"] = has_backlinks
-        meta_data["has_external_links"] = has_external_links
-        meta_data["has_embedded_links"] = has_embedded_links
-        meta_data["is_backlinked"] = is_backlinked
-        meta_data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
-
+        data["file_type"] = file_type
+        data["node_type"] = node_type
+        data["has_content"] = has_content
+        data["has_backlinks"] = has_backlinks
+        data["has_external_links"] = has_external_links
+        data["has_embedded_links"] = has_embedded_links
+        data["is_backlinked"] = is_backlinked
+        data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
     return graph_data
 
 
-def check_is_backlinked(name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]]) -> bool:
+def check_has_backlinks(data, has_content) -> bool:
+    """
+    Helper function to check if a file has backlinks.
+    """
+    if not has_content:
+        return False
+
+    has_backlinks = any(
+        data.get(key)
+        for key in [
+            "page_references",
+            "tags",
+            "tagged_backlinks",
+            "properties_page_builtin",
+            "properties_page_user",
+            "properties_block_builtin",
+            "properties_block_user",
+        ]
+    )
+    return has_backlinks
+
+
+def check_has_external_links(data, has_content) -> bool:
+    """
+    Helper function to check if a file has external links.
+    """
+    if not has_content:
+        return False
+
+    has_external_links = any(
+        data.get(key)
+        for key in [
+            "external_links",
+            "external_links_internet",
+            "external_links_alias",
+            "external_links_other",
+        ]
+    )
+    return has_external_links
+
+
+def check_has_embedded_links(data, has_content) -> bool:
+    """
+    Helper function to check if a file has embedded links.
+    """
+    if not has_content:
+        return False
+
+    has_embedded_links = any(
+        data.get(key)
+        for key in [
+            "embedded_links",
+            "embedded_links_internet",
+            "embedded_links_asset",
+            "embedded_links_other",
+        ]
+    )
+    return has_embedded_links
+
+
+def check_is_backlinked(
+    name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], is_backlinked: bool = False
+) -> bool:
     """
     Helper function to check if a file is backlinked.
-
-    Args:
-        name (str): The file name.
-        graph_data (Dict[str, Any]): Graph data.
-        alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
-
-    Returns:
-        bool: True if the file is backlinked; otherwise, False.
     """
+    if is_backlinked:
+        return False
+
     id_key = graph_data["id"]
     if id_key in alphanum_dict:
         if name in alphanum_dict[id_key]:
@@ -107,13 +131,6 @@ def check_is_backlinked(name: str, graph_data: Dict[str, Any], alphanum_dict: Di
 def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) -> str:
     """
     Helper function to determine the file type based on the directory structure.
-
-    Args:
-        file_path_parent_name (str): The parent name of the file path.
-        file_path_parts (List[str]): Parts of the file path.
-
-    Returns:
-        str: The determined file type.
     """
     assets_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
     draws_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
@@ -141,7 +158,7 @@ def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
-    node_type = None
+    node_type = "other"
 
     if has_content:
         if is_backlinked:
@@ -197,11 +214,32 @@ def list_files_with_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
     return [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
 
 
+def list_files_without_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
+    """
+    Extract a subset of the summary data based on whether the keys do not exist.
+    """
+    return [k for k, v in graph_data.items() if all(v.get(key) is None for key in criteria)]
+
+
 def list_files_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
     """
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     """
     return [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
+
+
+def get_data_with_keys(graph_data: Dict[str, Any], *criteria) -> Dict[str, Any]:
+    """
+    Extract a subset of the summary data based on whether the keys exists.
+    """
+    return {k: v for k, v in graph_data.items() if all(v.get(key) for key in criteria)}
+
+
+def get_data_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> Dict[str, Any]:
+    """
+    Extract a subset of the summary data based on multiple criteria (key-value pairs).
+    """
+    return {k: v for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}
 
 
 def generate_summary_subsets(graph_data: Dict[str, Any]) -> Dict[str, Any]:
