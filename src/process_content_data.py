@@ -1,64 +1,12 @@
 """
-Process content data for Logseq with code block protection.
+Process content data for Logseq.
 """
 
 from collections import defaultdict
-import re
-import uuid
 from typing import Any, Dict, List, Pattern, Set, Tuple
 import logging
 
 from ._global_objects import PATTERNS, CONFIG
-
-
-def mask_code_blocks(content: str) -> Tuple[str, Dict[str, str]]:
-    """
-    Replace code blocks with placeholders to protect them from pattern matching.
-
-    Args:
-        content (str): The original content with code blocks.
-
-    Returns:
-        Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original code blocks.
-    """
-    code_blocks = {}
-
-    # Handle multiline code blocks (```code blocks```)
-    multiline_pattern = PATTERNS.content["multiline_code_block"]
-    masked_content = content
-
-    for match in multiline_pattern.finditer(content):
-        block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
-        code_blocks[block_id] = match.group(0)
-        masked_content = masked_content.replace(match.group(0), block_id)
-
-    # Handle inline code blocks (`code`)
-    inline_pattern = PATTERNS.content["inline_code_block"]
-
-    for match in inline_pattern.finditer(masked_content):
-        block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
-        code_blocks[block_id] = match.group(0)
-        # Replace in masked content
-        masked_content = masked_content.replace(match.group(0), block_id)
-
-    return masked_content, code_blocks
-
-
-def unmask_code_blocks(masked_content: str, code_blocks: Dict[str, str]) -> str:
-    """
-    Restore code blocks from placeholders.
-
-    Args:
-        masked_content (str): Content with code block placeholders.
-        code_blocks (Dict[str, str]): Mapping of placeholders to original code blocks.
-
-    Returns:
-        str: Original content with code blocks restored.
-    """
-    content = masked_content
-    for placeholder, code_block in code_blocks.items():
-        content = content.replace(placeholder, code_block)
-    return content
 
 
 def process_content_data(
@@ -69,7 +17,6 @@ def process_content_data(
 ) -> Dict[str, Any]:
     """
     Process content data to extract various elements like backlinks, tags, and properties.
-    Uses masking to protect code blocks from being processed.
 
     Args:
         data (Dict[str, Any]): The initial data dictionary.
@@ -90,83 +37,63 @@ def process_content_data(
     if not content:
         return data
 
-    # Mask code blocks to protect them from pattern matching
-    masked_content, code_blocks = mask_code_blocks(content)
-
-    # Extract code blocks separately before masking
-    multiline_code_blocks = find_all_lower(PATTERNS.content["multiline_code_block"], content)
-    multiline_code_langs = find_all_lower(PATTERNS.content["multiline_code_lang"], content)
-    inline_code_blocks = find_all_lower(PATTERNS.content["inline_code_block"], content)
-
-    # Extract basic data using masked content
+    # Extract basic data
     primary_data = {
-        "advanced_commands": find_all_lower(PATTERNS.content["advanced_command"], masked_content),
-        "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
-        "block_references": find_all_lower(PATTERNS.content["block_reference"], masked_content),
-        "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
-        "calc_blocks": find_all_lower(PATTERNS.content["calc_block"], masked_content),
-        "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
-        "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),
-        "multiline_code_blocks": multiline_code_blocks,
-        "multiline_code_langs": multiline_code_langs,
-        "page_references": find_all_lower(PATTERNS.content["page_reference"], masked_content),
-        "references_general": find_all_lower(PATTERNS.content["reference"], masked_content),
-        "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
-        "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
-        "inline_code_blocks": inline_code_blocks,
-        "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
+        "advanced_commands": find_all_lower(PATTERNS.content["advanced_command"], content),
+        "assets": find_all_lower(PATTERNS.content["asset"], content),
+        "block_references": find_all_lower(PATTERNS.content["block_reference"], content),
+        "blockquotes": find_all_lower(PATTERNS.content["blockquote"], content),
+        "calc_blocks": find_all_lower(PATTERNS.content["calc_block"], content),
+        "draws": find_all_lower(PATTERNS.content["draw"], content),
+        "flashcards": find_all_lower(PATTERNS.content["flashcard"], content),
+        "multiline_code_blocks": find_all_lower(PATTERNS.content["multiline_code_block"], content),
+        "multiline_code_langs": find_all_lower(PATTERNS.content["multiline_code_lang"], content),
+        "page_references": find_all_lower(PATTERNS.content["page_reference"], content),
+        "references_general": find_all_lower(PATTERNS.content["reference"], content),
+        "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], content),
+        "tags": find_all_lower(PATTERNS.content["tag"], content),
+        "inline_code_blocks": find_all_lower(PATTERNS.content["inline_code_block"], content),
+        "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], content),
         # Double curly braces family
-        "macros": find_all_lower(PATTERNS.content["macro"], masked_content),
-        "embeds": find_all_lower(PATTERNS.content["embed"], masked_content),
-        "page_embeds": find_all_lower(PATTERNS.content["page_embed"], masked_content),
-        "block_embeds": find_all_lower(PATTERNS.content["block_embed"], masked_content),
-        "namespace_queries": find_all_lower(PATTERNS.content["namespace_query"], masked_content),
-        "cards": find_all_lower(PATTERNS.content["card"], masked_content),
-        "clozes": find_all_lower(PATTERNS.content["cloze"], masked_content),
-        "simple_queries": find_all_lower(PATTERNS.content["simple_query"], masked_content),
-        "query_functions": find_all_lower(PATTERNS.content["query_function"], masked_content),
-        "embed_video_urls": find_all_lower(PATTERNS.content["embed_video_url"], masked_content),
-        "embed_twitter_tweets": find_all_lower(PATTERNS.content["embed_twitter_tweet"], masked_content),
-        "embed_youtube_timestamps": find_all_lower(PATTERNS.content["embed_youtube_timestamp"], masked_content),
-        "renderers": find_all_lower(PATTERNS.content["renderer"], masked_content),
+        "macros": find_all_lower(PATTERNS.content["macro"], content),
+        "embeds": find_all_lower(PATTERNS.content["embed"], content),
+        "page_embeds": find_all_lower(PATTERNS.content["page_embed"], content),
+        "block_embeds": find_all_lower(PATTERNS.content["block_embed"], content),
+        "namespace_queries": find_all_lower(PATTERNS.content["namespace_query"], content),
+        "cards": find_all_lower(PATTERNS.content["card"], content),
+        "clozes": find_all_lower(PATTERNS.content["cloze"], content),
+        "simple_queries": find_all_lower(PATTERNS.content["simple_query"], content),
+        "query_functions": find_all_lower(PATTERNS.content["query_function"], content),
+        "embed_video_urls": find_all_lower(PATTERNS.content["embed_video_url"], content),
+        "embed_twitter_tweets": find_all_lower(PATTERNS.content["embed_twitter_tweet"], content),
+        "embed_youtube_timestamps": find_all_lower(PATTERNS.content["embed_youtube_timestamp"], content),
+        "renderers": find_all_lower(PATTERNS.content["renderer"], content),
     }
 
     # Extract all properties: values pairs
     properties_values = {}
-    property_value_all = PATTERNS.content["property_value"].findall(masked_content)
+    property_value_all = PATTERNS.content["property_value"].findall(content)
     for prop, value in property_value_all:
-        # Unmask value before storing to preserve original format
-        unmasked_value = unmask_code_blocks(value, code_blocks)
-        properties_values.setdefault(prop, unmasked_value)
+        properties_values.setdefault(prop, value)
 
     aliases = properties_values.get("alias", "")
     if aliases:
-        # Process aliases on masked content to avoid code blocks
-        masked_aliases = mask_code_blocks(aliases)[0]
-        aliases = process_aliases(masked_aliases)
-
-    # Mask primary bullet for processing
-    masked_primary_bullet, primary_bullet_code_blocks = mask_code_blocks(primary_bullet)
+        aliases = process_aliases(aliases)
 
     # Extract page/block properties
     page_properties = []
-    primary_bullet_is_page_props = is_primary_bullet_page_properties(masked_primary_bullet)
+    primary_bullet_is_page_props = is_primary_bullet_page_properties(primary_bullet)
     if primary_bullet_is_page_props:
-        page_properties = find_all_lower(PATTERNS.content["property"], masked_primary_bullet)
-        # Create a masked version of content bullets
-        masked_content_bullets = []
-        for bullet in content_bullets:
-            masked_bullet, _ = mask_code_blocks(bullet)
-            masked_content_bullets.append(masked_bullet)
-        masked_content = "\n".join(masked_content_bullets)
-    block_properties = find_all_lower(PATTERNS.content["property"], masked_content)
+        page_properties = find_all_lower(PATTERNS.content["property"], primary_bullet)
+        content = "\n".join(content_bullets)
+    block_properties = find_all_lower(PATTERNS.content["property"], content)
 
     properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties)
     properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties)
 
-    # Process external and embedded links on masked content
-    external_links = find_all_lower(PATTERNS.content["external_link"], masked_content)
-    embedded_links = find_all_lower(PATTERNS.content["embedded_link"], masked_content)
+    # Process external and embedded links
+    external_links = find_all_lower(PATTERNS.content["external_link"], content)
+    embedded_links = find_all_lower(PATTERNS.content["embedded_link"], content)
     external_links_other, external_links_internet, external_links_alias = process_ext_emb_links(
         external_links, "external"
     )
@@ -198,12 +125,6 @@ def process_content_data(
     return data
 
 
-def find_all_lower(pattern: Pattern, text: str) -> List[str]:
-    """Find all matches of a regex pattern in the text, returning them in lowercase."""
-    return [match.lower() for match in pattern.findall(text)]
-
-
-# Rest of functions remain the same as in the original code
 def process_content_namespace_data(data: Dict[str, Any], ns_sep: str):
     """
     Process namespaces in the data dictionary.
@@ -228,6 +149,11 @@ def process_content_namespace_data(data: Dict[str, Any], ns_sep: str):
     for key, value in namespace_data.items():
         if value:
             yield key, value
+
+
+def find_all_lower(pattern: Pattern, text: str) -> List[str]:
+    """Find all matches of a regex pattern in the text, returning them in lowercase."""
+    return [match.lower() for match in pattern.findall(text)]
 
 
 def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
@@ -280,7 +206,7 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[List[str], List[str], List[str]]:
+def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[str, str, str]:
     """Process external and embedded links and categorize them."""
     links_internet_pattern = f"{links_type}_link_internet"
     links_sub_pattern = ""
@@ -291,17 +217,20 @@ def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[List[str],
 
     internet = []
     alias_or_asset = []
-    other = []
+    if links:
+        for _ in range(len(links)):
+            link = links[-1]
+            if PATTERNS.content[links_internet_pattern].match(link):
+                internet.append(link)
+                links.pop()
+                continue
 
-    for link in links:
-        if PATTERNS.content[links_internet_pattern].match(link):
-            internet.append(link)
-        elif PATTERNS.content[links_sub_pattern].match(link):
-            alias_or_asset.append(link)
-        else:
-            other.append(link)
+            if PATTERNS.content[links_sub_pattern].match(link):
+                alias_or_asset.append(link)
+                links.pop()
+                continue
 
-    return other, internet, alias_or_asset
+    return links, internet, alias_or_asset
 
 
 def is_primary_bullet_page_properties(primary_bullet: str) -> bool:
@@ -391,7 +320,7 @@ def post_processing_content(
             data.get("properties_page_user", []),
             data.get("properties_block_builtin", []),
             data.get("properties_block_user", []),
-            [ns_parent] if ns_parent else [],
+            [ns_parent],
         ]
 
         linked_references = [item for sublist in linked_references for item in sublist if item]
@@ -401,7 +330,7 @@ def post_processing_content(
             all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
             all_linked_references[item].setdefault("found_in", []).append(name)
 
-        if ns_parent and ns_parent in linked_references:
+        if ns_parent:
             linked_references.remove(ns_parent)
 
         unique_linked_references.update(linked_references)
