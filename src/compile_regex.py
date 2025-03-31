@@ -58,6 +58,8 @@ class RegexPatterns:
             simple_query: Matches simple query syntax.
             query_function: Matches query functions.
             advanced_command: Matches advanced org-mode commands.
+            inline_code: Matches inline code syntax.
+            dynamic_variable: Matches dynamic variables.
         """
         patterns = {
             "bullet": re.compile(
@@ -347,6 +349,26 @@ class RegexPatterns:
                 \n                  # Newline
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "inline_code_block": re.compile(
+                r"""
+                `                   # One backtick
+                \w+                 # One or more word characters
+                .*?                 # Any characters (non-greedy)
+                `                   # One backtick
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "dynamic_variable": re.compile(
+                # Syntax: <% variable %>
+                r"""
+                <%                 # Opening tag
+                \s*                # Optional whitespace
+                .%?                # Any characters (non-greedy)
+                \s*                # Optional whitespace
+                %>                 # Closing tag
+                """,
+                re.IGNORECASE | re.VERBOSE,
             ),
         }
         logging.info("Compiled regex patterns for content analysis.")

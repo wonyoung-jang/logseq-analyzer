@@ -58,6 +58,8 @@ def process_content_data(
     simple_queries = find_all_lower(PATTERNS.content["simple_query"], content)
     tagged_backlinks = find_all_lower(PATTERNS.content["tagged_backlink"], content)
     tags = find_all_lower(PATTERNS.content["tag"], content)
+    inline_code_blocks = find_all_lower(PATTERNS.content["inline_code_block"], content)
+    dynamic_variables = find_all_lower(PATTERNS.content["dynamic_variable"], content)
 
     # Extract all properties: values pairs
     properties_values = {}
@@ -123,6 +125,8 @@ def process_content_data(
         "simple_queries": simple_queries,
         "tagged_backlinks": tagged_backlinks,
         "tags": tags,
+        "inline_code_blocks": inline_code_blocks,
+        "dynamic_variables": dynamic_variables,
     }
 
     for key, value in primary_data.items():

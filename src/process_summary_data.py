@@ -296,6 +296,8 @@ def generate_summary_subsets(graph_data: Dict[str, Any]) -> Dict[str, Any]:
         "simple_queries",
         "tagged_backlinks",
         "tags",
+        "inline_code_blocks",
+        "dynamic_variables",
     ]
 
     # for criteria in ALL_DATA_POINTS:
