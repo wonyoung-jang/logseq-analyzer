@@ -3,7 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from ._global_objects import ANALYZER, CONFIG, CACHE, GRAPH
-from .core import core_data_analysis, process_graph_files
+from .logseq_all_files import LogseqAllFiles
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .logseq_move_files import handle_move_files, handle_move_directory
@@ -59,19 +59,24 @@ def run_app(**kwargs):
     # Process for only modified/new graph files
     graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_content_db = CACHE.get("___meta___graph_content", {})
-    graph_meta_data, graph_content_bullets = process_graph_files()
-    graph_data_db.update(graph_meta_data)
-    graph_content_db.update(graph_content_bullets)
+
+    graph = LogseqAllFiles()
+    graph.process_graph_files()
+    graph_data_db.update(graph.data)
+    graph.data = graph_data_db
+    graph_content_db.update(graph.content_bullets)
+    graph.content_bullets = graph_content_db
+    graph.post_processing_content()
+    graph.process_summary_data()
+    graph.process_namespace_data()
 
     # Core data analysis
-    (
-        alphanum_dict,
-        alphanum_dict_ns,
-        dangling_links,
-        graph_data,
-        all_refs,
-        summary_namespaces,
-    ) = core_data_analysis(graph_data_db)
+    alphanum_dict = graph.alphanum_dict
+    alphanum_dict_ns = graph.alphanum_dict_ns
+    dangling_links = graph.dangling_links
+    graph_data = graph.data
+    all_refs = graph.all_linked_references
+    summary_namespaces = graph.namespace_data
 
     gui_instance.update_progress("process_files", 100)
     gui_instance.update_progress("summary", 20)

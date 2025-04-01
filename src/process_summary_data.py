@@ -7,51 +7,6 @@ from typing import Any, Dict, List, Set
 from ._global_objects import CONFIG
 
 
-def process_summary_data(
-    graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], alphanum_dict_ns: Dict[str, Set[str]]
-) -> Dict[str, Any]:
-    """
-    Process summary data for each file based on metadata and content analysis.
-
-    Categorizes files and determines node types (root, leaf, branch, orphan).
-
-    Args:
-        graph_data (Dict[str, Any]): Metadata for each file.
-        alphanum_dict (Dict[str, Set[str]]): Dictionary for quick lookup of linked references.
-        alphanum_dict_ns (Dict[str, Set[str]]): Dictionary for quick lookup of linked references in namespaces.
-
-    Returns:
-        Dict[str, Any]: Summary data for each file.
-    """
-    for name, data in graph_data.items():
-        has_content = data.get("size") > 0
-        has_backlinks = check_has_backlinks(data, has_content)
-        has_external_links = check_has_external_links(data, has_content)
-        has_embedded_links = check_has_embedded_links(data, has_content)
-
-        file_path_parent_name = data.get("file_path_parent_name")
-        file_path_parts = data.get("file_path_parts")
-
-        file_type = determine_file_type(file_path_parent_name, file_path_parts)
-
-        is_backlinked = check_is_backlinked(name, data, alphanum_dict)
-        is_backlinked_by_ns_only = check_is_backlinked(name, data, alphanum_dict_ns, is_backlinked)
-
-        node_type = "other"
-        if file_type in ["journal", "page"]:
-            node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
-
-        data["file_type"] = file_type
-        data["node_type"] = node_type
-        data["has_content"] = has_content
-        data["has_backlinks"] = has_backlinks
-        data["has_external_links"] = has_external_links
-        data["has_embedded_links"] = has_embedded_links
-        data["is_backlinked"] = is_backlinked
-        data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
-    return graph_data
-
-
 def check_has_backlinks(data, has_content) -> bool:
     """
     Helper function to check if a file has backlinks.

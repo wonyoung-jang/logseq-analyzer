@@ -3,7 +3,6 @@ Config class for loading and managing configuration files.
 """
 
 from pathlib import Path
-from typing import Set
 import configparser
 import re
 
