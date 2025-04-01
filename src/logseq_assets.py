@@ -23,7 +23,7 @@ def handle_assets(
             - List of assets that are backlinked.
             - List of assets that are not backlinked.
     """
-    for name, data in graph_data.items():
+    for _, data in graph_data.items():
         if not data.get("assets"):
             continue
 

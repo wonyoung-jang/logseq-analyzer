@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import shelve
 
-from ._global_objects import CONFIG, GRAPH
+from ._global_objects import ANALYZER_CONFIG, GRAPH_CONFIG
 from .helpers import iter_files
 
 
@@ -48,7 +48,7 @@ class Cache:
         """
         mod_tracker = self.cache.get("mod_tracker", {})
 
-        for path in iter_files(GRAPH.directory, CONFIG.target_dirs):
+        for path in iter_files(GRAPH_CONFIG.directory, ANALYZER_CONFIG.target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
 

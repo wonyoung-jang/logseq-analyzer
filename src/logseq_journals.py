@@ -6,11 +6,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 import logging
 
-from ._global_objects import CONFIG
-from .reporting import ReportWriter
-
-
-JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
+from ._global_objects import ANALYZER_CONFIG
+from .report_writer import ReportWriter
 
 
 def process_logseq_journal_key(key: str) -> str:
@@ -23,20 +20,20 @@ def process_logseq_journal_key(key: str) -> str:
     Returns:
         str: Processed page title.
     """
-    journal_page_format = CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
-    journal_file_format = CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
+    journal_page_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
 
-    py_file_name_format = CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
+    py_file_name_format = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
     if not py_file_name_format:
         py_file_name_format = convert_cljs_date_to_py(journal_file_format)
-        CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+        ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
 
     py_page_title_no_ordinal = journal_page_format.replace("o", "")
 
-    py_page_title_format_base = CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
+    py_page_title_format_base = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
     if not py_page_title_format_base:
         py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
-        CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+        ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
     try:
         date_object = datetime.strptime(key, py_file_name_format)
@@ -65,8 +62,8 @@ def convert_cljs_date_to_py(cljs_format: str) -> str:
         str: Python-style date format.
     """
     cljs_format = cljs_format.replace("o", "")
-    datetime_token_map = CONFIG.datetime_token_map
-    datetime_token_pattern = CONFIG.datetime_token_pattern
+    datetime_token_map = ANALYZER_CONFIG.datetime_token_map
+    datetime_token_pattern = ANALYZER_CONFIG.datetime_token_pattern
 
     def replace_token(match):
         token = match.group(0)
@@ -96,29 +93,30 @@ def process_journals_timelines(journal_keys: List[str], dangling_journals: List[
     # Convert journal keys from strings to datetime objects
     processed_keys = process_journal_keys_to_datetime(journal_keys)
     complete_timeline, missing_keys = build_complete_timeline(dangling_journals, processed_keys)
+    journal_dir = ANALYZER_CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
 
     # Write out results to files.
-    ReportWriter("complete_timeline", complete_timeline, JOURNAL_DIR).write()
-    ReportWriter("processed_keys", processed_keys, JOURNAL_DIR).write()
-    ReportWriter("missing_keys", missing_keys, JOURNAL_DIR).write()
-    ReportWriter("dangling_journals", dangling_journals, JOURNAL_DIR).write()
+    ReportWriter("complete_timeline", complete_timeline, journal_dir).write()
+    ReportWriter("processed_keys", processed_keys, journal_dir).write()
+    ReportWriter("missing_keys", missing_keys, journal_dir).write()
+    ReportWriter("dangling_journals", dangling_journals, journal_dir).write()
 
     timeline_stats = {}
     timeline_stats["complete_timeline"] = get_date_stats(complete_timeline)
     timeline_stats["dangling_journals"] = get_date_stats(dangling_journals)
-    ReportWriter("timeline_stats", timeline_stats, JOURNAL_DIR).write()
+    ReportWriter("timeline_stats", timeline_stats, journal_dir).write()
 
     if timeline_stats["complete_timeline"]["first_date"] > timeline_stats["dangling_journals"]["first_date"]:
         dangling_journals_past = get_dangling_journals_past(
             dangling_journals, timeline_stats["complete_timeline"]["first_date"]
         )
-        ReportWriter("dangling_journals_past", dangling_journals_past, JOURNAL_DIR).write()
+        ReportWriter("dangling_journals_past", dangling_journals_past, journal_dir).write()
 
     if timeline_stats["complete_timeline"]["last_date"] < timeline_stats["dangling_journals"]["last_date"]:
         dangling_journals_future = get_dangling_journals_future(
             dangling_journals, timeline_stats["complete_timeline"]["last_date"]
         )
-        ReportWriter("dangling_journals_future", dangling_journals_future, JOURNAL_DIR).write()
+        ReportWriter("dangling_journals_future", dangling_journals_future, journal_dir).write()
 
 
 def process_journal_keys_to_datetime(journal_keys: List[str]) -> List[datetime]:

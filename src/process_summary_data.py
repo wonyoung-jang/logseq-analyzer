@@ -4,7 +4,7 @@ Process summary data for each file based on metadata and content analysis.
 
 from typing import Any, Dict, List, Set
 
-from ._global_objects import CONFIG
+from ._global_objects import ANALYZER_CONFIG
 
 
 def check_has_backlinks(data, has_content) -> bool:
@@ -87,11 +87,11 @@ def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) 
     """
     Helper function to determine the file type based on the directory structure.
     """
-    assets_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    draws_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
-    journals_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
-    pages_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES")
-    whiteboards_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
+    assets_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
+    draws_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
+    journals_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
+    pages_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES")
+    whiteboards_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
 
     file_type = None
 

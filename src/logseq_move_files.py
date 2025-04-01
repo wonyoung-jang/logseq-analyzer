@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import logging
 import shutil
 
-from ._global_objects import CONFIG
+from ._global_objects import ANALYZER_CONFIG
 from .helpers import get_or_create_subdir
 
 
@@ -131,7 +131,7 @@ def move_unlinked_assets(
         graph_meta_data (Dict[str, Any]): Metadata for each file.
         to_delete_dir (Path): The directory to move unlinked assets to.
     """
-    asset_dir = CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
+    asset_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
     to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, asset_dir)
 
     for name in summary_is_asset_not_backlinked:

@@ -2,9 +2,9 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from ._global_objects import ANALYZER, CONFIG, CACHE, GRAPH
-from .reporting import ReportWriter
-from .logseq_all_files import LogseqAllFiles
+from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
+from .report_writer import ReportWriter
+from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .logseq_move_files import handle_move_files, handle_move_directory
@@ -36,13 +36,12 @@ def run_app(**kwargs):
 
     gui_instance.update_progress("setup", 20)
 
-    # Parse command line arguments or GUI arguments
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()
     ANALYZER.create_log_file()
     ANALYZER.create_delete_directory()
-    GRAPH.initialize_graph(ANALYZER.args)
-    GRAPH.initialize_config(ANALYZER.args)
+    GRAPH_CONFIG.initialize_graph(ANALYZER.args)
+    GRAPH_CONFIG.initialize_config(ANALYZER.args)
 
     if ANALYZER.args.graph_cache:
         CACHE.clear()
@@ -50,9 +49,9 @@ def run_app(**kwargs):
         CACHE.clear_deleted_files()
 
     # Set the configuration for the Logseq graph
-    CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
-    CONFIG.set("CONSTANTS", "GRAPH_DIR", str(GRAPH.directory))
-    CONFIG.set_logseq_config_edn_data(GRAPH.logseq_config)
+    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
+    ANALYZER_CONFIG.set("CONSTANTS", "GRAPH_DIR", str(GRAPH_CONFIG.directory))
+    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.logseq_config)
 
     gui_instance.update_progress("setup", 100)
     gui_instance.update_progress("process_files", 20)
@@ -62,7 +61,7 @@ def run_app(**kwargs):
     ################################################################
     # Process for only modified/new graph files
 
-    graph = LogseqAllFiles()
+    graph = LogseqGraph()
     graph.process_graph_files()
     graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_data_db.update(graph.data)
@@ -101,13 +100,16 @@ def run_app(**kwargs):
             ANALYZER.args.move_unlinked_assets, graph.data, assets_not_backlinked, ANALYZER.delete_dir
         ),
         "moved_bak": handle_move_directory(
-            ANALYZER.args.move_bak, GRAPH.bak_dir, ANALYZER.delete_dir, CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
+            ANALYZER.args.move_bak,
+            GRAPH_CONFIG.bak_dir,
+            ANALYZER.delete_dir,
+            ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR"),
         ),
         "moved_recycle": handle_move_directory(
             ANALYZER.args.move_recycle,
-            GRAPH.recycle_dir,
+            GRAPH_CONFIG.recycle_dir,
             ANALYZER.delete_dir,
-            CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR"),
+            ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR"),
         ),
     }
 
@@ -118,25 +120,25 @@ def run_app(**kwargs):
     #####################################################################
     # Output writing
     output_data = []
-    output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
+    output_dir_meta = ANALYZER_CONFIG.get("OUTPUT_DIRS", "META")
     output_data.append(("___meta___alphanum_dict", graph.alphanum_dict, output_dir_meta))
     output_data.append(("___meta___alphanum_dict_ns", graph.alphanum_dict_ns, output_dir_meta))
     output_data.append(("___meta___graph_data", graph.data, output_dir_meta))
     output_data.append(("all_refs", graph.all_linked_references, output_dir_meta))
     output_data.append(("dangling_links", graph.dangling_links, output_dir_meta))
 
-    output_dir_summary = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
+    output_dir_summary = ANALYZER_CONFIG.get("OUTPUT_DIRS", "SUMMARY")
     for name, data in summary_data_subsets.items():
         output_data.append((name, data, output_dir_summary))
 
     for name, data in summary_sorted_all.items():
         output_data.append((name, data, output_dir_summary))
 
-    output_dir_namespace = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
+    output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     for name, data in graph.namespace_data.items():
         output_data.append((name, data, output_dir_namespace))
 
-    output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
+    output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
     output_data.append(("moved_files", moved_files, output_dir_assets))
     output_data.append(("assets_backlinked", assets_backlinked, output_dir_assets))
     output_data.append(("assets_not_backlinked", assets_not_backlinked, output_dir_assets))
@@ -172,4 +174,4 @@ def run_app(**kwargs):
 
     # TODO write config to file
     with open("user_config.ini", "w", encoding="utf-8") as config_file:
-        CONFIG.write(config_file)
+        ANALYZER_CONFIG.write(config_file)

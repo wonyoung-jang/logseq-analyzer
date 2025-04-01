@@ -9,13 +9,13 @@ import logging
 from ._global_objects import PATTERNS
 
 
-class LogseqConfig:
+class LogseqConfigEDN:
     """
     A class to handle Logseq configuration data.
     """
 
     def __init__(self, args: argparse.Namespace, config_file: Path):
-        """Initialize the LogseqConfig class."""
+        """Initialize the LogseqConfigEDN class."""
         self.args = args
         self.config_edn_content = None
         self.config_edn_data = None

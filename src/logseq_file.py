@@ -5,7 +5,7 @@ LogseqFile class to process Logseq files.
 from datetime import datetime
 import logging
 
-from ._global_objects import CONFIG, PATTERNS
+from ._global_objects import ANALYZER_CONFIG, PATTERNS
 from .process_content_data import find_all_lower, process_aliases, process_ext_emb_links, split_builtin_user_properties
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_basic_file_data import process_logseq_filename_key
@@ -111,7 +111,7 @@ class LogseqFile:
         Process content data to extract various elements like backlinks, tags, and properties.
         """
         # Process namespaces
-        ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
+        ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
         if ns_sep in self.data["name"]:
             for key, value in self.process_content_namespace_data(ns_sep):
                 self.data[key] = value

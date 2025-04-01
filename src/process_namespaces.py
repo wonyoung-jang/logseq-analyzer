@@ -18,7 +18,7 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Tuple
 import logging
 
-from ._global_objects import PATTERNS, CONFIG
+from ._global_objects import PATTERNS, ANALYZER_CONFIG
 
 
 def get_unique_namespaces_by_level(
@@ -147,7 +147,7 @@ def get_unique_conflicts(output_conflicts: Dict[str, List[str]]) -> Dict[str, Se
     Returns:
         dict: A dictionary mapping each namespace part to a set of unique pages.
     """
-    ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
+    ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
     unique_conflicts = {}
     for part, details in output_conflicts.items():
         level = int(part.split(" ")[-1])

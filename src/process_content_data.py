@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Pattern, Set, Tuple
 import logging
 
-from ._global_objects import PATTERNS, CONFIG
+from ._global_objects import PATTERNS, ANALYZER_CONFIG
 
 
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:
@@ -28,7 +28,7 @@ def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
 
 def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
-    built_in = CONFIG.built_in_properties
+    built_in = ANALYZER_CONFIG.built_in_properties
     builtin_props = [prop for prop in properties if prop in built_in]
     user_props = [prop for prop in properties if prop not in built_in]
     return builtin_props, user_props

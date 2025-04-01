@@ -7,7 +7,7 @@ from pathlib import Path
 import logging
 import shutil
 
-from ._global_objects import CONFIG
+from ._global_objects import ANALYZER_CONFIG
 
 
 class LogseqAnalyzer:
@@ -24,7 +24,7 @@ class LogseqAnalyzer:
 
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
-        self.output_dir = Path(CONFIG.get("ANALYZER", "OUTPUT_DIR"))
+        self.output_dir = Path(ANALYZER_CONFIG.get("ANALYZER", "OUTPUT_DIR"))
 
         if self.output_dir.exists() and self.output_dir.is_dir():
             try:
@@ -45,7 +45,7 @@ class LogseqAnalyzer:
 
     def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
-        log_path = CONFIG.get("ANALYZER", "LOG_FILE")
+        log_path = ANALYZER_CONFIG.get("ANALYZER", "LOG_FILE")
         self.log_file = Path(self.output_dir / log_path)
 
         if self.log_file.exists():
@@ -65,7 +65,7 @@ class LogseqAnalyzer:
         """
         Create a directory for deleted files.
         """
-        self.delete_dir = Path(CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
+        self.delete_dir = Path(ANALYZER_CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
         if not self.delete_dir.exists():
             logging.info("Creating directory: %s", self.delete_dir)
             self.delete_dir.mkdir(parents=True, exist_ok=True)

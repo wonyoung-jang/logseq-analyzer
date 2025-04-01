@@ -17,10 +17,6 @@ class RegexPatterns:
         self.dblcurly = {}
         self.advcommand = {}
         self.config = {}
-        self.compile_re_content()
-        self.compile_re_content_double_curly_brackets()
-        self.compile_re_content_advanced_command()
-        self.compile_re_config()
 
     def compile_re_content(self):
         """

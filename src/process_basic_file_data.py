@@ -4,7 +4,7 @@ Process basic file data for Logseq files.
 
 from urllib.parse import unquote
 
-from ._global_objects import CONFIG
+from ._global_objects import ANALYZER_CONFIG
 from .logseq_journals import process_logseq_journal_key
 
 
@@ -22,9 +22,9 @@ def process_logseq_filename_key(key: str, parent: str) -> str:
     Returns:
         str: Processed key name.
     """
-    ns_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
-    ns_file_sep = CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP")
-    dir_journals = CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
+    ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
+    ns_file_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP")
+    dir_journals = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
 
     if key.endswith(ns_file_sep):
         key = key.rstrip(ns_file_sep)

@@ -7,7 +7,7 @@ from typing import Any, TextIO
 import json
 import logging
 
-from ._global_objects import CONFIG, ANALYZER
+from ._global_objects import ANALYZER_CONFIG, ANALYZER
 
 
 class ReportWriter:
@@ -27,9 +27,9 @@ class ReportWriter:
         """
         Write the output to a file using a recursive helper to handle nested structures.
         """
-        json_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
-        txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
-        output_format = CONFIG.get("ANALYZER", "REPORT_FORMAT")
+        json_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
+        txt_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
+        output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
         logging.info("Writing %s as %s", self.filename_prefix, output_format)
         count = len(self.items)
