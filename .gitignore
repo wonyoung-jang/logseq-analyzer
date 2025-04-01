@@ -29,3 +29,4 @@ user_config.ini
 src/logseq_uri_gui.py
 src/query_data.py
 process_all_graph.py
+src/summary.py

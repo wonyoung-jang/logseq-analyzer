@@ -2,6 +2,7 @@
 LogseqFile class to process Logseq files.
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 
@@ -35,27 +36,7 @@ class LogseqFile:
         """
         self.get_single_file_content()
         self.get_single_file_metadata()
-        if self.content:
-            # Count characters
-            self.data["char_count"] = len(self.content)
-            # Count bullets
-            bullet_count = 0
-            if self.data["file_path_suffix"] == ".md":
-                bullet_content = PATTERNS.content["bullet"].split(self.content)
-                if len(bullet_content) > 1:
-                    self.primary_bullet = bullet_content[0].strip()
-                    self.content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
-                    empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
-                    bullet_count_empty = len(empty_bullets)
-                    bullet_count = len(self.content_bullets)
-                else:
-                    bullet_count = 0
-                    bullet_count_empty = 0
-                self.data["bullet_count"] = bullet_count
-                self.data["bullet_count_empty"] = bullet_count_empty
-            # Calculate bullet density
-            if bullet_count > 0:
-                self.data["bullet_density"] = round(self.data["char_count"] / bullet_count, 2)
+        self.process_bullet_data()
         self.process_content_data()
 
     def get_single_file_content(self):
@@ -105,6 +86,32 @@ class LogseqFile:
         self.data["uri"] = self.file_path.as_uri()
         self.data["logseq_url"] = convert_uri_to_logseq_url(self.data["uri"])
         self.data["size"] = stat.st_size
+
+    def process_bullet_data(self):
+        """
+        Process bullet data to extract metadata and content.
+        """
+        if self.content:
+            # Count characters
+            self.data["char_count"] = len(self.content)
+            # Count bullets
+            bullet_count = 0
+            if self.data["file_path_suffix"] == ".md":
+                bullet_content = PATTERNS.content["bullet"].split(self.content)
+                if len(bullet_content) > 1:
+                    self.primary_bullet = bullet_content[0].strip()
+                    self.content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
+                    empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
+                    bullet_count_empty = len(empty_bullets)
+                    bullet_count = len(self.content_bullets)
+                else:
+                    bullet_count = 0
+                    bullet_count_empty = 0
+                self.data["bullet_count"] = bullet_count
+                self.data["bullet_count_empty"] = bullet_count_empty
+            # Calculate bullet density
+            if bullet_count > 0:
+                self.data["bullet_density"] = round(self.data["char_count"] / bullet_count, 2)
 
     def process_content_data(self):
         """

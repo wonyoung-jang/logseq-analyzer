@@ -39,7 +39,6 @@ def check_has_external_links(data, has_content) -> bool:
     has_external_links = any(
         data.get(key)
         for key in [
-            "external_links",
             "external_links_internet",
             "external_links_alias",
             "external_links_other",
@@ -58,7 +57,6 @@ def check_has_embedded_links(data, has_content) -> bool:
     has_embedded_links = any(
         data.get(key)
         for key in [
-            "embedded_links",
             "embedded_links_internet",
             "embedded_links_asset",
             "embedded_links_other",
