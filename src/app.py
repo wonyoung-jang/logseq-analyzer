@@ -8,7 +8,7 @@ from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .logseq_move_files import handle_move_files, handle_move_directory
-from .process_summary_data import generate_sorted_summary_all, generate_summary_subsets
+from .process_summary_data import generate_sorted_summary_all
 
 
 class GUIInstanceDummy:
@@ -80,13 +80,14 @@ def run_app(**kwargs):
     # Phase 03: Process summaries
     #################################################################
     # Generate summary
-    summary_data_subsets = generate_summary_subsets(graph.data)
+    graph.generate_summary_file_subsets()
+    graph.generate_summary_data_subsets()
     # summary_sorted_all = generate_sorted_summary_all(graph_data)
     summary_sorted_all = {}  # TODO
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
-    process_journals_timelines(summary_data_subsets["___is_filetype_journal"], journals_dangling)
+    process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
     gui_instance.update_progress("move_files", 20)
@@ -94,7 +95,7 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
-    assets_backlinked, assets_not_backlinked = handle_assets(graph.data, summary_data_subsets)
+    assets_backlinked, assets_not_backlinked = handle_assets(graph.data, graph.summary_file_subsets)
     moved_files = {
         "moved_assets": handle_move_files(
             ANALYZER.args.move_unlinked_assets, graph.data, assets_not_backlinked, ANALYZER.delete_dir
@@ -119,35 +120,33 @@ def run_app(**kwargs):
     # Phase 05: Outputs
     #####################################################################
     # Output writing
-    output_data = []
     output_dir_meta = ANALYZER_CONFIG.get("OUTPUT_DIRS", "META")
-    output_data.append(("___meta___alphanum_dict", graph.alphanum_dict, output_dir_meta))
-    output_data.append(("___meta___alphanum_dict_ns", graph.alphanum_dict_ns, output_dir_meta))
-    output_data.append(("___meta___graph_data", graph.data, output_dir_meta))
-    output_data.append(("all_refs", graph.all_linked_references, output_dir_meta))
-    output_data.append(("dangling_links", graph.dangling_links, output_dir_meta))
-
     output_dir_summary = ANALYZER_CONFIG.get("OUTPUT_DIRS", "SUMMARY")
-    for name, data in summary_data_subsets.items():
-        output_data.append((name, data, output_dir_summary))
+    output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
+    output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
+    ReportWriter("___meta___alphanum_dict", graph.alphanum_dict, output_dir_meta).write()
+    ReportWriter("___meta___alphanum_dict_ns", graph.alphanum_dict_ns, output_dir_meta).write()
+    ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
+    ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
+    ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
+
+    for name, data in graph.summary_file_subsets.items():
+        ReportWriter(name, data, output_dir_summary).write()
+
+    for name, data in graph.summary_data_subsets.items():
+        ReportWriter(name, data, "summary_content_data").write()
 
     for name, data in summary_sorted_all.items():
-        output_data.append((name, data, output_dir_summary))
+        ReportWriter(name, data, output_dir_summary).write()
 
-    output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     for name, data in graph.namespace_data.items():
-        output_data.append((name, data, output_dir_namespace))
+        ReportWriter(name, data, output_dir_namespace).write()
 
-    output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
-    output_data.append(("moved_files", moved_files, output_dir_assets))
-    output_data.append(("assets_backlinked", assets_backlinked, output_dir_assets))
-    output_data.append(("assets_not_backlinked", assets_not_backlinked, output_dir_assets))
-
+    ReportWriter("moved_files", moved_files, output_dir_assets).write()
+    ReportWriter("assets_backlinked", assets_backlinked, output_dir_assets).write()
+    ReportWriter("assets_not_backlinked", assets_not_backlinked, output_dir_assets).write()
     if ANALYZER.args.write_graph:
-        output_data.append(("___meta___graph_content", graph_content_db, output_dir_meta))
-
-    for prefix, data, subdir in output_data:
-        ReportWriter(prefix, data, subdir).write()
+        ReportWriter("___meta___graph_content", graph_content_db, output_dir_meta).write()
 
     # Write output data to persistent storage
     shelve_output_data = {
@@ -159,7 +158,8 @@ def run_app(**kwargs):
         "all_refs": graph.all_linked_references,
         "dangling_links": graph.dangling_links,
         # General summary
-        **summary_data_subsets,
+        **graph.summary_file_subsets,
+        **graph.summary_data_subsets,
         **summary_sorted_all,
         # Namespaces summary
         **graph.namespace_data,

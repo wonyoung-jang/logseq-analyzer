@@ -2,13 +2,12 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
+from typing import Any, Dict
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
 from .process_content_data import create_alphanum, post_processing_content_namespaces
 from .process_summary_data import (
     check_has_backlinks,
-    check_has_embedded_links,
-    check_has_external_links,
     check_is_backlinked,
     determine_file_type,
     determine_node_type,
@@ -32,6 +31,8 @@ class LogseqGraph:
         self.all_linked_references = {}
         self.dangling_links = set()
         self.namespace_data = {}
+        self.summary_file_subsets = {}
+        self.summary_data_subsets = {}
 
     def process_graph_files(self):
         """
@@ -119,14 +120,12 @@ class LogseqGraph:
         """
         for name, data in self.data.items():
             has_content = data.get("size") > 0
-            has_backlinks = check_has_backlinks(data, has_content)
-            has_external_links = check_has_external_links(data, has_content)
-            has_embedded_links = check_has_embedded_links(data, has_content)
+            has_backlinks = check_has_backlinks(data)
 
-            file_path_parent_name = data.get("file_path_parent_name")
-            file_path_parts = data.get("file_path_parts")
-
-            file_type = determine_file_type(file_path_parent_name, file_path_parts)
+            file_type = determine_file_type(
+                data.get("file_path_parent_name"),
+                data.get("file_path_parts"),
+            )
 
             is_backlinked = check_is_backlinked(name, data, self.alphanum_dict)
             is_backlinked_by_ns_only = check_is_backlinked(name, data, self.alphanum_dict_ns, is_backlinked)
@@ -139,11 +138,8 @@ class LogseqGraph:
             data["node_type"] = node_type
             data["has_content"] = has_content
             data["has_backlinks"] = has_backlinks
-            data["has_external_links"] = has_external_links
-            data["has_embedded_links"] = has_embedded_links
             data["is_backlinked"] = is_backlinked
             data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
-        self.data = dict(sorted(self.data.items(), key=lambda item: item[0]))
 
     def process_namespace_data(self):
         """
@@ -186,3 +182,143 @@ class LogseqGraph:
                 "conflicts_parent_unique": ns.conflicts_parent_unique,
             },
         )
+
+    def generate_summary_file_subsets(self):
+        """
+        Generate summary subsets for the Logseq Analyzer.
+        """
+        summary_categories = {
+            # Process general categories
+            "___is_backlinked": {"is_backlinked": True},
+            "___is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
+            "___has_content": {"has_content": True},
+            "___has_backlinks": {"has_backlinks": True},
+            # Process file types
+            "___is_filetype_asset": {"file_type": "asset"},
+            "___is_filetype_draw": {"file_type": "draw"},
+            "___is_filetype_journal": {"file_type": "journal"},
+            "___is_filetype_page": {"file_type": "page"},
+            "___is_filetype_whiteboard": {"file_type": "whiteboard"},
+            "___is_filetype_other": {"file_type": "other"},
+            # Process nodes
+            "___is_node_orphan_true": {"node_type": "orphan_true"},
+            "___is_node_orphan_graph": {"node_type": "orphan_graph"},
+            "___is_node_orphan_namespace": {"node_type": "orphan_namespace"},
+            "___is_node_orphan_namespace_true": {"node_type": "orphan_namespace_true"},
+            "___is_node_root": {"node_type": "root"},
+            "___is_node_leaf": {"node_type": "leaf"},
+            "___is_node_branch": {"node_type": "branch"},
+            "___is_node_other": {"node_type": "other_node"},
+        }
+        for output_name, criteria in summary_categories.items():
+            self.summary_file_subsets[output_name] = self.list_files_with_keys_and_values(**criteria)
+
+        # Process file extensions
+        file_extensions = {}
+        for meta in self.data.values():
+            ext = meta.get("file_path_suffix")
+            if ext in file_extensions:
+                continue
+            file_extensions[ext] = True
+
+        file_ext_dict = {}
+        for ext in file_extensions:
+            output_name = f"_all_{ext}s"
+            criteria = {"file_path_suffix": ext}
+            file_ext_dict[output_name] = self.list_files_with_keys_and_values(**criteria)
+        self.summary_file_subsets["____file_extensions_dict"] = file_ext_dict
+
+    def list_files_with_keys_and_values(self, **criteria) -> list:
+        """
+        Extract a subset of the summary data based on multiple criteria (key-value pairs).
+        """
+        return [k for k, v in self.data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
+
+    def generate_summary_data_subsets(self):
+        """
+        Generate summary subsets for content data in the Logseq graph.
+        """
+        # Process content types
+        content_subset_tags_nodes = [
+            "advanced_commands",
+            "advanced_commands_export",
+            "advanced_commands_export_ascii",
+            "advanced_commands_export_latex",
+            "advanced_commands_caution",
+            "advanced_commands_center",
+            "advanced_commands_comment",
+            "advanced_commands_important",
+            "advanced_commands_note",
+            "advanced_commands_pinned",
+            "advanced_commands_query",
+            "advanced_commands_quote",
+            "advanced_commands_tip",
+            "advanced_commands_verse",
+            "advanced_commands_warning",
+            "aliases",
+            "assets",
+            "block_embeds",
+            "block_references",
+            "blockquotes",
+            "calc_blocks",
+            "clozes",
+            "draws",
+            "embeds",
+            "embedded_links_asset",
+            "embedded_links_internet",
+            "embedded_links_other",
+            "external_links_alias",
+            "external_links_internet",
+            "external_links_other",
+            "file_path_parts",
+            "flashcards",
+            "multiline_code_blocks",
+            "multiline_code_langs",
+            "namespace_queries",
+            "page_embeds",
+            "page_references",
+            "properties_block_builtin",
+            "properties_block_user",
+            "properties_page_builtin",
+            "properties_page_user",
+            "properties_values",
+            "query_functions",
+            "references_general",
+            "simple_queries",
+            "tagged_backlinks",
+            "tags",
+            "inline_code_blocks",
+            "dynamic_variables",
+            "macros",
+            "embed_video_urls",
+            "cards",
+            "embed_twitter_tweets",
+            "embed_youtube_timestamps",
+            "renderers",
+        ]
+
+        # for criteria in ALL_DATA_POINTS:
+        for criteria in content_subset_tags_nodes:
+            counts_output_name = f"_content_{criteria}"
+            self.summary_data_subsets[counts_output_name] = self.extract_summary_subset_content(criteria)
+
+    def extract_summary_subset_content(self, criteria) -> Dict[str, Any]:
+        """
+        Extract a subset of data based on a specific criteria.
+        Asks: What content matches the criteria? And where is it found? How many times?
+
+        Args:
+            criteria (str): The criteria for extraction.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
+        """
+        subset_counter = {}
+        for name, data in self.data.items():
+            values = data.get(criteria)
+            if values:
+                for value in values:
+                    subset_counter.setdefault(value, {})
+                    subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
+                    subset_counter[value].setdefault("found_in", []).append(name)
+        return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))

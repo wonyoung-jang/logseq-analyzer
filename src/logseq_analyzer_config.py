@@ -24,17 +24,17 @@ class LogseqAnalyzerConfig:
 
     def __init__(self, config_path="src/config.ini"):
         """Initialize the LogseqAnalyzerConfig class."""
-        self.config_path = config_path
+        self.config_path = Path(config_path)
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
             default_section="None",
             interpolation=configparser.ExtendedInterpolation(),
         )
-        if not Path(config_path).exists():
-            raise FileNotFoundError(f"Config file not found: {config_path}")
+        if not self.config_path.exists():
+            raise FileNotFoundError(f"Config file not found: {self.config_path}")
         self.config.optionxform = lambda option: option
-        self.config.read(config_path)
+        self.config.read(self.config_path)
         self.target_dirs = None
         self.built_in_properties = None
         self.datetime_token_map = None
@@ -48,7 +48,7 @@ class LogseqAnalyzerConfig:
         """Set a value in the config file"""
         if section not in self.config:
             self.config.add_section(section)
-        self.config.set(section, key, value)
+        self.config.set(section, key, str(value))
 
     def get_section(self, section):
         """Get a section from the config file as a dictionary"""
