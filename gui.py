@@ -28,7 +28,6 @@ from PySide6.QtWidgets import (
 
 from src._global_objects import CONFIG
 from src.app import run_app
-from src.reporting import write_output
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -243,10 +242,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         QApplication.processEvents()
 
         try:
-            output_data = run_app(**args_gui, gui_instance=self)
-            for prefix, data, subdir in output_data:
-                write_output(self.output_dir, prefix, data, subdir)
-
+            run_app(**args_gui, gui_instance=self)
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")

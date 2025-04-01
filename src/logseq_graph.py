@@ -34,13 +34,13 @@ class LogseqGraph:
         self.logseq_dir = Path()
         self.recycle_dir = Path()
         self.bak_dir = Path()
-        self.config_file = Path()
+        self.user_config_file = Path()
         self.global_config_file = Path()
         self.logseq_config = {}
 
     def initialize_config(self, args) -> None:
         """Initialize the Logseq configuration."""
-        user_config = LogseqConfig(args, self.config_file)
+        user_config = LogseqConfig(args, self.user_config_file)
         self.logseq_config = {**LOGSEQ_DEFAULT_CONFIG_EDN_DATA, **user_config.config_edn_data}
         if args.global_config:
             self.global_config_file = Path(args.global_config)
@@ -57,7 +57,7 @@ class LogseqGraph:
         self.logseq_dir = get_or_create_subdir(self.directory, DEFAULT_LOGSEQ_DIRECTORY)
         self.recycle_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_RECYCLE_DIRECTORY)
         self.bak_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_BACKUP_DIRECTORY)
-        self.config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
+        self.user_config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
 
     def validate_graph_dir(self, args) -> Path:
         """Validate if a path exists."""

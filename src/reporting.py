@@ -7,68 +7,71 @@ from typing import Any, TextIO
 import json
 import logging
 
-from ._global_objects import CONFIG
+from ._global_objects import CONFIG, ANALYZER
 
 
-def write_output(
-    output_dir: str,
-    filename_prefix: str,
-    items: Any,
-    type_output="",
-) -> None:
+class ReportWriter:
     """
-    Write the output to a file using a recursive helper to handle nested structures.
-
-    Args:
-        output_dir (str): The output directory.
-        filename_prefix (str): The prefix of the filename.
-        items (Any): The items to write.
-        type_output (str, optional): The type of output. Defaults to "".
+    A class to handle reporting and writing output to files.
     """
-    json_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
-    txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
-    output_format = CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
-    logging.info("Writing %s as %s", filename_prefix, output_format)
-    count = len(items)
-    filename = f"{filename_prefix}{output_format}" if count else f"______EMPTY_{filename_prefix}{output_format}"
-    output_dir = Path(output_dir)
+    def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
+        """
+        Initialize the ReportWriter class.
+        """
+        self.filename_prefix = filename_prefix
+        self.items = items
+        self.type_output = type_output
 
-    if type_output:
-        parent = output_dir / type_output
-        if not parent.exists():
-            parent.mkdir(parents=True, exist_ok=True)
-        out_path = Path(parent) / filename
-    else:
-        out_path = output_dir / filename
+    def write(self) -> None:
+        """
+        Write the output to a file using a recursive helper to handle nested structures.
+        """
+        json_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
+        txt_format = CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
+        output_format = CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
-    with out_path.open("w", encoding="utf-8") as f:
-        f.write(f"{filename} | Items: {count}\n\n")
-        write_recursive(f, items)
+        logging.info("Writing %s as %s", self.filename_prefix, output_format)
+        count = len(self.items)
+        filename = (
+            f"{self.filename_prefix}{output_format}" if count else f"______EMPTY_{self.filename_prefix}{output_format}"
+        )
 
-    if output_format == json_format:
-        try:
-            with out_path.open("w", encoding="utf-8") as f:
-                json.dump(items, f, indent=4)
-        except TypeError:
-            logging.error("Failed to write JSON for %s.", filename_prefix)
-            if out_path.exists():
-                out_path.unlink()
-            filename = f"{filename_prefix}{txt_format}"
-            if type_output:
-                out_path = Path(parent) / filename
+        if self.type_output:
+            parent = ANALYZER.output_dir / self.type_output
+            if not parent.exists():
+                parent.mkdir(parents=True, exist_ok=True)
+            out_path = Path(parent) / filename
+        else:
+            out_path = ANALYZER.output_dir / filename
+
+        with out_path.open("w", encoding="utf-8") as f:
+            f.write(f"{filename} | Items: {count}\n\n")
+            write_recursive(f, self.items)
+
+        if output_format == json_format:
+            try:
+                with out_path.open("w", encoding="utf-8") as f:
+                    json.dump(self.items, f, indent=4)
+            except TypeError:
+                logging.error("Failed to write JSON for %s.", self.filename_prefix)
+                if out_path.exists():
+                    out_path.unlink()
+                filename = f"{self.filename_prefix}{txt_format}"
+                if self.type_output:
+                    out_path = Path(parent) / filename
+                with out_path.open("w", encoding="utf-8") as f:
+                    f.write(f"{filename} | Items: {count}\n\n")
+                    write_recursive(f, self.items)
+        elif output_format == txt_format:
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
-                write_recursive(f, items)
-    elif output_format == txt_format:
-        with out_path.open("w", encoding="utf-8") as f:
-            f.write(f"{filename} | Items: {count}\n\n")
-            write_recursive(f, items)
-    else:
-        logging.error("Unsupported output format: %s. Defaulting to text.", output_format)
-        with out_path.open("w", encoding="utf-8") as f:
-            f.write(f"{filename} | Items: {count}\n\n")
-            write_recursive(f, items)
+                write_recursive(f, self.items)
+        else:
+            logging.error("Unsupported output format: %s. Defaulting to text.", output_format)
+            with out_path.open("w", encoding="utf-8") as f:
+                f.write(f"{filename} | Items: {count}\n\n")
+                write_recursive(f, self.items)
 
 
 def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:

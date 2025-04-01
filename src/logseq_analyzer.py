@@ -21,11 +21,8 @@ class LogseqAnalyzer:
         self.output_dir = None
         self.log_file = None
         self.delete_dir = None
-        self.create_output_directory()
-        self.create_log_file()
-        self.create_delete_directory()
 
-    def create_output_directory(self) -> None:
+    def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
         self.output_dir = Path(CONFIG.get("ANALYZER", "OUTPUT_DIR"))
 
@@ -46,7 +43,7 @@ class LogseqAnalyzer:
         except OSError as e:
             logging.error("Error creating output directory: %s", e)
 
-    def create_log_file(self) -> None:
+    def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
         log_path = CONFIG.get("ANALYZER", "LOG_FILE")
         self.log_file = Path(self.output_dir / log_path)
@@ -64,28 +61,18 @@ class LogseqAnalyzer:
         logging.debug("Logging initialized to %s", self.log_file)
         logging.info("Logseq Analyzer started.")
 
-    def create_delete_directory(self) -> Path:
+    def create_delete_directory(self):
         """
         Create a directory for deleted files.
-
-        Returns:
-            Path: The path to the delete directory.
         """
         self.delete_dir = Path(CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
         if not self.delete_dir.exists():
             logging.info("Creating directory: %s", self.delete_dir)
             self.delete_dir.mkdir(parents=True, exist_ok=True)
-        return self.delete_dir
 
-    def get_logseq_analyzer_args(self, **kwargs: dict) -> argparse.Namespace:
+    def get_logseq_analyzer_args(self, **kwargs: dict):
         """
         Setup the command line arguments for the Logseq Analyzer.
-
-        Args:
-            **kwargs: Keyword arguments for GUI mode.
-
-        Returns:
-            argparse.Namespace: Parsed command line arguments.
         """
         if kwargs:
             args = argparse.Namespace(

@@ -3,6 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from ._global_objects import ANALYZER, CONFIG, CACHE, GRAPH
+from .reporting import ReportWriter
 from .logseq_all_files import LogseqAllFiles
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
@@ -37,6 +38,9 @@ def run_app(**kwargs):
 
     # Parse command line arguments or GUI arguments
     ANALYZER.get_logseq_analyzer_args(**kwargs)
+    ANALYZER.create_output_directory()
+    ANALYZER.create_log_file()
+    ANALYZER.create_delete_directory()
     GRAPH.initialize_graph(ANALYZER.args)
     GRAPH.initialize_config(ANALYZER.args)
 
@@ -57,26 +61,18 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     # Process for only modified/new graph files
-    graph_data_db = CACHE.get("___meta___graph_data", {})
-    graph_content_db = CACHE.get("___meta___graph_content", {})
 
     graph = LogseqAllFiles()
     graph.process_graph_files()
+    graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_data_db.update(graph.data)
     graph.data = graph_data_db
+    graph_content_db = CACHE.get("___meta___graph_content", {})
     graph_content_db.update(graph.content_bullets)
     graph.content_bullets = graph_content_db
     graph.post_processing_content()
     graph.process_summary_data()
     graph.process_namespace_data()
-
-    # Core data analysis
-    alphanum_dict = graph.alphanum_dict
-    alphanum_dict_ns = graph.alphanum_dict_ns
-    dangling_links = graph.dangling_links
-    graph_data = graph.data
-    all_refs = graph.all_linked_references
-    summary_namespaces = graph.namespace_data
 
     gui_instance.update_progress("process_files", 100)
     gui_instance.update_progress("summary", 20)
@@ -85,12 +81,12 @@ def run_app(**kwargs):
     # Phase 03: Process summaries
     #################################################################
     # Generate summary
-    summary_data_subsets = generate_summary_subsets(graph_data)
+    summary_data_subsets = generate_summary_subsets(graph.data)
     # summary_sorted_all = generate_sorted_summary_all(graph_data)
     summary_sorted_all = {}  # TODO
 
     # TODO Process journal keys to create a timeline
-    journals_dangling = extract_journals_from_dangling_links(dangling_links)
+    journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
     process_journals_timelines(summary_data_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
@@ -99,10 +95,10 @@ def run_app(**kwargs):
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
-    assets_backlinked, assets_not_backlinked = handle_assets(graph_data, summary_data_subsets)
+    assets_backlinked, assets_not_backlinked = handle_assets(graph.data, summary_data_subsets)
     moved_files = {
         "moved_assets": handle_move_files(
-            ANALYZER.args.move_unlinked_assets, graph_data, assets_not_backlinked, ANALYZER.delete_dir
+            ANALYZER.args.move_unlinked_assets, graph.data, assets_not_backlinked, ANALYZER.delete_dir
         ),
         "moved_bak": handle_move_directory(
             ANALYZER.args.move_bak, GRAPH.bak_dir, ANALYZER.delete_dir, CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
@@ -123,12 +119,11 @@ def run_app(**kwargs):
     # Output writing
     output_data = []
     output_dir_meta = CONFIG.get("OUTPUT_DIRS", "META")
-    output_data.append(("___meta___alphanum_dict", alphanum_dict, output_dir_meta))
-    output_data.append(("___meta___alphanum_dict_ns", alphanum_dict_ns, output_dir_meta))
-    output_data.append(("___meta___config_edn_data", GRAPH.logseq_config, output_dir_meta))
-    output_data.append(("___meta___graph_data", graph_data, output_dir_meta))
-    output_data.append(("all_refs", all_refs, output_dir_meta))
-    output_data.append(("dangling_links", dangling_links, output_dir_meta))
+    output_data.append(("___meta___alphanum_dict", graph.alphanum_dict, output_dir_meta))
+    output_data.append(("___meta___alphanum_dict_ns", graph.alphanum_dict_ns, output_dir_meta))
+    output_data.append(("___meta___graph_data", graph.data, output_dir_meta))
+    output_data.append(("all_refs", graph.all_linked_references, output_dir_meta))
+    output_data.append(("dangling_links", graph.dangling_links, output_dir_meta))
 
     output_dir_summary = CONFIG.get("OUTPUT_DIRS", "SUMMARY")
     for name, data in summary_data_subsets.items():
@@ -138,7 +133,7 @@ def run_app(**kwargs):
         output_data.append((name, data, output_dir_summary))
 
     output_dir_namespace = CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
-    for name, data in summary_namespaces.items():
+    for name, data in graph.namespace_data.items():
         output_data.append((name, data, output_dir_namespace))
 
     output_dir_assets = CONFIG.get("OUTPUT_DIRS", "ASSETS")
@@ -149,21 +144,23 @@ def run_app(**kwargs):
     if ANALYZER.args.write_graph:
         output_data.append(("___meta___graph_content", graph_content_db, output_dir_meta))
 
+    for prefix, data, subdir in output_data:
+        ReportWriter(prefix, data, subdir).write()
+
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
-        "___meta___alphanum_dict_ns": alphanum_dict_ns,
-        "___meta___alphanum_dict": alphanum_dict,
-        "___meta___config_edn_data": GRAPH.logseq_config,
+        "___meta___alphanum_dict_ns": graph.alphanum_dict_ns,
+        "___meta___alphanum_dict": graph.alphanum_dict,
         "___meta___graph_content": graph_content_db,
-        "___meta___graph_data": graph_data,
-        "all_refs": all_refs,
-        "dangling_links": dangling_links,
+        "___meta___graph_data": graph.data,
+        "all_refs": graph.all_linked_references,
+        "dangling_links": graph.dangling_links,
         # General summary
         **summary_data_subsets,
         **summary_sorted_all,
         # Namespaces summary
-        **summary_namespaces,
+        **graph.namespace_data,
         # Move files and assets
         "moved_files": moved_files,
         "assets_backlinked": assets_backlinked,
@@ -176,5 +173,3 @@ def run_app(**kwargs):
     # TODO write config to file
     with open("user_config.ini", "w", encoding="utf-8") as config_file:
         CONFIG.write(config_file)
-
-    return output_data

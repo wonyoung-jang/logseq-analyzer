@@ -7,10 +7,9 @@ from typing import List, Optional, Tuple, Union
 import logging
 
 from ._global_objects import CONFIG
-from .reporting import write_output
+from .reporting import ReportWriter
 
 
-OUTPUT_DIR = CONFIG.get("ANALYZER", "OUTPUT_DIR")
 JOURNAL_DIR = CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
 
 
@@ -99,27 +98,27 @@ def process_journals_timelines(journal_keys: List[str], dangling_journals: List[
     complete_timeline, missing_keys = build_complete_timeline(dangling_journals, processed_keys)
 
     # Write out results to files.
-    write_output(OUTPUT_DIR, "complete_timeline", complete_timeline, JOURNAL_DIR)
-    write_output(OUTPUT_DIR, "processed_keys", processed_keys, JOURNAL_DIR)
-    write_output(OUTPUT_DIR, "missing_keys", missing_keys, JOURNAL_DIR)
-    write_output(OUTPUT_DIR, "dangling_journals", dangling_journals, JOURNAL_DIR)
+    ReportWriter("complete_timeline", complete_timeline, JOURNAL_DIR).write()
+    ReportWriter("processed_keys", processed_keys, JOURNAL_DIR).write()
+    ReportWriter("missing_keys", missing_keys, JOURNAL_DIR).write()
+    ReportWriter("dangling_journals", dangling_journals, JOURNAL_DIR).write()
 
     timeline_stats = {}
     timeline_stats["complete_timeline"] = get_date_stats(complete_timeline)
     timeline_stats["dangling_journals"] = get_date_stats(dangling_journals)
-    write_output(OUTPUT_DIR, "timeline_stats", timeline_stats, JOURNAL_DIR)
+    ReportWriter("timeline_stats", timeline_stats, JOURNAL_DIR).write()
 
     if timeline_stats["complete_timeline"]["first_date"] > timeline_stats["dangling_journals"]["first_date"]:
         dangling_journals_past = get_dangling_journals_past(
             dangling_journals, timeline_stats["complete_timeline"]["first_date"]
         )
-        write_output(OUTPUT_DIR, "dangling_journals_past", dangling_journals_past, JOURNAL_DIR)
+        ReportWriter("dangling_journals_past", dangling_journals_past, JOURNAL_DIR).write()
 
     if timeline_stats["complete_timeline"]["last_date"] < timeline_stats["dangling_journals"]["last_date"]:
         dangling_journals_future = get_dangling_journals_future(
             dangling_journals, timeline_stats["complete_timeline"]["last_date"]
         )
-        write_output(OUTPUT_DIR, "dangling_journals_future", dangling_journals_future, JOURNAL_DIR)
+        ReportWriter("dangling_journals_future", dangling_journals_future, JOURNAL_DIR).write()
 
 
 def process_journal_keys_to_datetime(journal_keys: List[str]) -> List[datetime]:
