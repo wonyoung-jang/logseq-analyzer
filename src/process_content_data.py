@@ -39,7 +39,23 @@ def process_content_data(
 
     # Extract basic data
     primary_data = {
+        # Advanced commands
         "advanced_commands": find_all_lower(PATTERNS.content["advanced_command"], content),
+        "advanced_commands_export": find_all_lower(PATTERNS.content["advanced_command_export"], content),
+        "advanced_commands_export_ascii": find_all_lower(PATTERNS.content["advanced_command_export_ascii"], content),
+        "advanced_commands_export_latex": find_all_lower(PATTERNS.content["advanced_command_export_latex"], content),
+        "advanced_commands_caution": find_all_lower(PATTERNS.content["advanced_command_caution"], content),
+        "advanced_commands_center": find_all_lower(PATTERNS.content["advanced_command_center"], content),
+        "advanced_commands_comment": find_all_lower(PATTERNS.content["advanced_command_comment"], content),
+        "advanced_commands_important": find_all_lower(PATTERNS.content["advanced_command_important"], content),
+        "advanced_commands_note": find_all_lower(PATTERNS.content["advanced_command_note"], content),
+        "advanced_commands_pinned": find_all_lower(PATTERNS.content["advanced_command_pinned"], content),
+        "advanced_commands_query": find_all_lower(PATTERNS.content["advanced_command_query"], content),
+        "advanced_commands_quote": find_all_lower(PATTERNS.content["advanced_command_quote"], content),
+        "advanced_commands_tip": find_all_lower(PATTERNS.content["advanced_command_tip"], content),
+        "advanced_commands_verse": find_all_lower(PATTERNS.content["advanced_command_verse"], content),
+        "advanced_commands_warning": find_all_lower(PATTERNS.content["advanced_command_warning"], content),
+        # Basic content
         "assets": find_all_lower(PATTERNS.content["asset"], content),
         "block_references": find_all_lower(PATTERNS.content["block_reference"], content),
         "blockquotes": find_all_lower(PATTERNS.content["blockquote"], content),

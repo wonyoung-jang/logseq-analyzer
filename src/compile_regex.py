@@ -37,22 +37,23 @@ class RegexPatterns:
             property_values: Matches property key-value pairs.
             asset: Matches references to assets.
             draw: Matches references to Excalidraw drawings.
-            external_link: Matches markdown external links.
-            external_link_internet: Matches external links to websites.
-            external_link_alias: Matches aliased external links.
-            embedded_link: Matches embedded content links.
-            embedded_link_internet: Matches embedded internet content.
-            embedded_link_asset: Matches embedded asset references.
             blockquote: Matches blockquote syntax.
             flashcard: Matches flashcard syntax.
-            multiline_code_block: Matches code blocks.
-            calc_block: Matches calculation blocks.
-            multiline_code_lang: Matches code blocks with language specification.
-            reference: Matches block references.
-            block_reference: Matches UUID block references.
-            advanced_command: Matches advanced org-mode commands.
-            inline_code: Matches inline code syntax.
             dynamic_variable: Matches dynamic variables.
+
+            external_link: Matches markdown external links.
+                external_link_internet: Matches external links to websites.
+                external_link_alias: Matches aliased external links.
+            embedded_link: Matches embedded content links.
+                embedded_link_internet: Matches embedded internet content.
+                embedded_link_asset: Matches embedded asset references.
+            reference: Matches block references.
+                block_reference: Matches UUID block references.
+            inline_code: Matches inline code syntax.
+                multiline_code_block: Matches code blocks.
+                calc_block: Matches calculation blocks.
+                multiline_code_lang: Matches code blocks with language specification.
+            advanced_command: Matches advanced org-mode commands.
             macro: Matches macro syntax.
                 embed: Matches embedded content.
                     page_embed: Matches embedded page references.
@@ -292,6 +293,150 @@ class RegexPatterns:
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
+            "advanced_command_export": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT    # "#BEGIN_EXPORT"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_EXPORT      # "#END_EXPORT"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_export_ascii": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT ascii"
+                \s+?                    # Single space
+                ascii                   # "ascii"
+                .*?                     # Any characters (non-greedy)
+                \#\+END_EXPORT          # "#END_EXPORT"
+                .*?                     # Any characters (non-greedy)
+                \n                      # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_export_latex": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT latex"
+                \s+?                    # Single space
+                latex                   # "latex"                
+                .*?                     # Any characters (non-greedy)
+                \#\+END_EXPORT          # "#END_EXPORT"
+                .*?                     # Any characters (non-greedy)
+                \n                      # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_caution": re.compile(
+                r"""
+                \#\+BEGIN_CAUTION          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_CAUTION      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_center": re.compile(
+                r"""
+                \#\+BEGIN_CENTER          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_CENTER      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_comment": re.compile(
+                r"""
+                \#\+BEGIN_COMMENT         # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_COMMENT      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_important": re.compile(
+                r"""
+                \#\+BEGIN_IMPORTANT          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_IMPORTANT            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_note": re.compile(
+                r"""
+                \#\+BEGIN_NOTE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_NOTE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_pinned": re.compile(
+                r"""
+                \#\+BEGIN_PINNED          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_PINNED            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_query": re.compile(
+                r"""
+                \#\+BEGIN_QUERY          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_QUERY            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_quote": re.compile(
+                r"""
+                \#\+BEGIN_QUOTE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_QUOTE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_tip": re.compile(
+                r"""
+                \#\+BEGIN_TIP          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_TIP            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_verse": re.compile(
+                r"""
+                \#\+BEGIN_VERSE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_VERSE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_warning": re.compile(
+                r"""
+                \#\+BEGIN_WARNING          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_WARNING            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
             "inline_code_block": re.compile(
                 r"""
                 `                   # One backtick
@@ -520,4 +665,327 @@ class RegexPatterns:
             ),
         }
         logging.info("Compiled regex patterns for configuration analysis.")
+        return patterns
+
+    def compile_re_content_double_curly_brackets(self) -> Dict[str, Pattern]:
+        """
+        Compile and return a dictionary of frequently used regex patterns.
+
+        Returns:
+            Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
+
+        Overview of Patterns:
+            macro: Matches macro syntax.
+                embed: Matches embedded content.
+                    page_embed: Matches embedded page references.
+                    block_embed: Matches embedded block references.
+                namespace_query: Matches namespace queries.
+                card: Matches card references.
+                cloze: Matches cloze deletions.
+                simple_query: Matches simple query syntax.
+                query_function: Matches query functions.
+                embed_video_url: Matches embedded video URLs.
+                embed_twitter_tweet: Matches embedded Twitter tweets.
+                embed_youtube_timestamp: Matches embedded YouTube timestamps.
+                renderer: Matches renderer syntax.
+        """
+        patterns = {
+            "macro": re.compile(
+                r"""
+                \{\{                # Opening double braces
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed": re.compile(
+                r"""
+                \{\{embed\          # "{{embed" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "page_embed": re.compile(
+                r"""
+                \{\{embed\          # "{{embed" followed by space
+                \[\[                # Opening double brackets
+                .*?                 # Any characters (non-greedy)
+                \]\]                # Closing double brackets
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "block_embed": re.compile(
+                r"""
+                \{\{embed\          # "{{embed" followed by space
+                \(\(                # Opening double parentheses
+                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{12}        # 12 hex digits
+                \)\)                # Closing double parentheses
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "namespace_query": re.compile(
+                r"""
+                \{\{namespace\      # "{{namespace" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "card": re.compile(
+                r"""
+                \{\{cards\          # "{{cards" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "cloze": re.compile(
+                r"""
+                \{\{cloze\          # "{{cloze" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "simple_query": re.compile(
+                r"""
+                \{\{query\          # "{{query" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "query_function": re.compile(
+                r"""
+                \{\{function\       # "{{function" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_video_url": re.compile(
+                r"""
+                \{\{video\          # "{{video" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_twitter_tweet": re.compile(
+                r"""
+                \{\{tweet\          # "{{tweet" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embed_youtube_timestamp": re.compile(
+                r"""
+                \{\{youtube-timestamp\  # "{{youtube-timestamp" followed by space
+                .*?                     # Any characters (non-greedy)
+                \}\}                    # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "renderer": re.compile(
+                r"""
+                \{\{renderer\       # "{{renderer" followed by space
+                .*?                 # Any characters (non-greedy)
+                \}\}                # Closing double braces
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+        }
+        logging.info("Compiled regex patterns for content analysis.")
+        return patterns
+
+    def compile_re_content_advanced_command(self) -> Dict[str, Pattern]:
+        """
+        Compile and return a dictionary of frequently used regex patterns.
+
+        Returns:
+            Dict[str, Pattern]: A dictionary mapping descriptive names to compiled regex patterns.
+
+        Overview of Patterns:
+            advanced_command: Matches advanced org-mode commands.
+                export
+                    ascii
+                    latex
+                    ...
+                caution
+                center
+                comment
+                important
+                note
+                pinned
+                query
+                quote
+                tip
+                verse
+                warning
+        """
+        patterns = {
+            "advanced_command": re.compile(
+                r"""
+                \#\+BEGIN_          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_export": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT    # "#BEGIN_EXPORT"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_EXPORT      # "#END_EXPORT"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_export_ascii": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT ascii"
+                \s+?                    # Single space
+                ascii                   # "ascii"
+                .*?                     # Any characters (non-greedy)
+                \#\+END_EXPORT          # "#END_EXPORT"
+                .*?                     # Any characters (non-greedy)
+                \n                      # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_export_latex": re.compile(
+                r"""
+                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT latex"
+                \s+?                    # Single space
+                latex                   # "latex"                
+                .*?                     # Any characters (non-greedy)
+                \#\+END_EXPORT          # "#END_EXPORT"
+                .*?                     # Any characters (non-greedy)
+                \n                      # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_caution": re.compile(
+                r"""
+                \#\+BEGIN_CAUTION          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_CAUTION      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_center": re.compile(
+                r"""
+                \#\+BEGIN_CENTER          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_CENTER      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_comment": re.compile(
+                r"""
+                \#\+BEGIN_COMMENT         # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_COMMENT      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_important": re.compile(
+                r"""
+                \#\+BEGIN_IMPORTANT          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_IMPORTANT            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_note": re.compile(
+                r"""
+                \#\+BEGIN_NOTE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_NOTE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_pinned": re.compile(
+                r"""
+                \#\+BEGIN_PINNED          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_PINNED            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_query": re.compile(
+                r"""
+                \#\+BEGIN_QUERY          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_QUERY            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_quote": re.compile(
+                r"""
+                \#\+BEGIN_QUOTE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_QUOTE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_tip": re.compile(
+                r"""
+                \#\+BEGIN_TIP          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_TIP            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_verse": re.compile(
+                r"""
+                \#\+BEGIN_VERSE          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_VERSE            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "advanced_command_warning": re.compile(
+                r"""
+                \#\+BEGIN_WARNING          # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_WARNING            # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+        }
+        logging.info("Compiled regex patterns for content analysis.")
         return patterns
