@@ -3,16 +3,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
-from .process_namespaces import (
-    analyze_namespace_details,
-    analyze_namespace_queries,
-    detect_non_namespace_conflicts,
-    detect_parent_depth_conflicts,
-    extract_unique_namespace_parts,
-    get_unique_conflicts,
-    get_unique_namespaces_by_level,
-    visualize_namespace_hierarchy,
-)
+from .namespace_analyzer import NamespaceAnalyzer
 from .process_content_data import create_alphanum, post_processing_content_namespaces
 from .process_summary_data import (
     check_has_backlinks,
@@ -21,8 +12,6 @@ from .process_summary_data import (
     check_is_backlinked,
     determine_file_type,
     determine_node_type,
-    list_files_with_keys,
-    list_files_without_keys,
 )
 from .logseq_file import LogseqFile
 
@@ -160,62 +149,40 @@ class LogseqGraph:
         """
         Process namespace data and perform extended analysis for the Logseq Analyzer.
         """
-        # Find unique names that are not namespaces
-        self.namespace_data["___meta___unique_names_not_namespace"] = list_files_without_keys(
-            self.data, "namespace_level"
-        )
-
-        # Find unique names that are namespaces
-        self.namespace_data["___meta___unique_names_is_namespace"] = list_files_with_keys(self.data, "namespace_level")
-
-        namespace_data = {}
-        for name in self.namespace_data["___meta___unique_names_is_namespace"]:
-            namespace_data[name] = {k: v for k, v in self.data[name].items() if "namespace" in k and v}
-
-        namespace_parts = {k: v["namespace_parts"] for k, v in namespace_data.items() if v.get("namespace_parts")}
-        unique_namespace_parts = extract_unique_namespace_parts(namespace_parts)
-        namespace_details = analyze_namespace_details(namespace_parts)
-        unique_namespaces_per_level = get_unique_namespaces_by_level(namespace_parts, namespace_details)
-        self.namespace_data["namespace_queries"] = analyze_namespace_queries(self.data, namespace_data)
-        self.namespace_data["namespace_hierarchy"] = visualize_namespace_hierarchy(namespace_parts)
+        ns = NamespaceAnalyzer(self.data, self.dangling_links)
+        ns.create_namespace_parts()
+        ns.extract_unique_namespace_parts()
+        ns.analyze_namespace_details()
+        ns.get_unique_namespaces_by_level()
+        ns.analyze_namespace_queries()
+        ns.visualize_namespace_hierarchy()
 
         ##################################
         # 01 Conflicts With Existing Pages
         ##################################
-        # Potential non-namespace pages are those that are in the namespace data
-        potential_non_namespace = unique_namespace_parts.intersection(
-            self.namespace_data["___meta___unique_names_not_namespace"]
-        )
-
-        # Potential dangling links are those that are in the namespace data
-        potential_dangling = unique_namespace_parts.intersection(self.dangling_links)
-
-        # Detect conflicts with non-namespace pages and dangling links
-        conflicts_non_namespace, conflicts_dangling = detect_non_namespace_conflicts(
-            namespace_parts, potential_non_namespace, potential_dangling
-        )
+        ns.detect_non_namespace_conflicts()
 
         #########################################
         # 02 Parts that Appear at Multiple Depths
         #########################################
-        self.namespace_data["conflicts_parent_depth"] = detect_parent_depth_conflicts(namespace_parts)
-        self.namespace_data["conflicts_parents_unique"] = get_unique_conflicts(
-            self.namespace_data["conflicts_parent_depth"]
-        )
+        ns.detect_parent_depth_conflicts()
+        ns.get_unique_conflicts()
 
         ###########################
         # 03 Output Namespace Data
         ###########################
         self.namespace_data.update(
             {
-                "___meta___namespace_data": namespace_data,
-                "___meta___namespace_parts": namespace_parts,
-                "conflicts_dangling": conflicts_dangling,
-                "conflicts_non_namespace": conflicts_non_namespace,
-                "namespace_details": namespace_details,
-                "unique_namespace_parts": unique_namespace_parts,
-                "unique_namespaces_per_level": unique_namespaces_per_level,
+                "___meta___namespace_data": ns.namespace_data,
+                "___meta___namespace_parts": ns.namespace_parts,
+                "unique_namespace_parts": ns.unique_namespace_parts,
+                "namespace_details": ns.namespace_details,
+                "unique_namespaces_per_level": ns.unique_namespaces_per_level,
+                "namespace_queries": ns.namespace_queries,
+                "namespace_hierarchy": ns.tree,
+                "conflicts_non_namespace": ns.conflicts_non_namespace,
+                "conflicts_dangling": ns.conflicts_dangling,
+                "conflicts_parent_depth": ns.conflicts_parent_depth,
+                "conflicts_parent_unique": ns.conflicts_parent_unique,
             },
         )
-
-        return self.namespace_data
