@@ -68,12 +68,12 @@ def check_has_embedded_links(data, has_content) -> bool:
 
 
 def check_is_backlinked(
-    name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], is_backlinked: bool = False
+    name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], is_backlinked_not_ns: bool = False
 ) -> bool:
     """
     Helper function to check if a file is backlinked.
     """
-    if is_backlinked:
+    if is_backlinked_not_ns:
         return False
 
     id_key = graph_data["id"]
