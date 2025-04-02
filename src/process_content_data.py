@@ -3,7 +3,7 @@ Process content data for Logseq.
 """
 
 from collections import defaultdict
-from typing import Any, Dict, List, Pattern, Set, Tuple
+from typing import Dict, List, Pattern, Set, Tuple
 import logging
 
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
@@ -89,33 +89,3 @@ def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[str, str, 
                 continue
 
     return links, internet, alias_or_asset
-
-
-def post_processing_content_namespaces(
-    content_data: Dict[str, Any], name: str, data: Dict[str, Any], ns_sep: str
-) -> Dict[str, Any]:
-    """
-    Post-process namespaces in the content data.
-    """
-    namespace_parts_list = name.split(ns_sep)
-    namespace_level = data["namespace_level"]
-    ns_root = data["namespace_root"]
-    ns_parent = ns_sep.join(namespace_parts_list[:-1])
-
-    if ns_root in content_data:
-        root = content_data[ns_root]
-        root_level = root.get("namespace_level", 0)
-        root["namespace_level"] = max(1, root_level)
-        root.setdefault("namespace_children", set()).add(name)
-        root["namespace_size"] = len(root["namespace_children"])
-
-    if namespace_level > 2:
-        if ns_parent in content_data:
-            parent = content_data[ns_parent]
-            parent_level = parent.get("namespace_level", 0)
-            direct_level = namespace_level - 1
-            parent["namespace_level"] = max(direct_level, parent_level)
-            parent.setdefault("namespace_children", set()).add(name)
-            parent["namespace_size"] = len(parent["namespace_children"])
-
-    return content_data

@@ -3,9 +3,10 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from typing import Any, Dict
+
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
-from .process_content_data import create_alphanum, post_processing_content_namespaces
+from .process_content_data import create_alphanum
 from .process_summary_data import (
     check_has_backlinks,
     check_is_backlinked,
@@ -33,6 +34,13 @@ class LogseqGraph:
         self.namespace_data = {}
         self.summary_file_subsets = {}
         self.summary_data_subsets = {}
+        self.files = []
+
+    def keys(self) -> list:
+        """
+        Get all keys from the data dictionary.
+        """
+        return self.data.keys()
 
     def process_graph_files(self):
         """
@@ -43,17 +51,17 @@ class LogseqGraph:
             file.process_single_file()
 
             name = file.data.get("name")
-            if name in self.data:
+            if self.data.get(name):
                 name = file.data.get("name_secondary")
 
             self.data[name] = file.data
             self.content_bullets[name] = file.content_bullets
+            self.files.append(file)
 
     def post_processing_content(self):
         """
         Post-process the content data for all files.
         """
-        self.all_linked_references = {}
         unique_linked_references = set()
         unique_linked_references_namespaces = set()
         unique_aliases = set()
@@ -65,7 +73,7 @@ class LogseqGraph:
             # Process namespaces
             if ns_sep in name:
                 unique_linked_references_namespaces.update([data["namespace_root"], name])
-                self.data = post_processing_content_namespaces(self.data, name, data, ns_sep)
+                self.post_processing_content_namespaces(name, data, ns_sep)
 
             # Update aliases and linked references
             found_aliases = data.get("aliases", [])
@@ -100,19 +108,40 @@ class LogseqGraph:
         self.all_linked_references = dict(
             sorted(self.all_linked_references.items(), key=lambda item: item[1]["count"], reverse=True)
         )
-        unique_filenames = set(sorted(self.data.keys()))
-        unique_aliases = set(sorted(unique_aliases))
-        unique_linked_references = set(sorted(unique_linked_references))
-        unique_linked_references_namespaces = set(sorted(unique_linked_references_namespaces))
 
         # Create dangling links
         self.dangling_links = unique_linked_references.union(unique_linked_references_namespaces)
-        self.dangling_links.difference_update(unique_filenames)
-        self.dangling_links.difference_update(unique_aliases)
+        self.dangling_links.difference_update(self.keys(), unique_aliases)
+        self.dangling_links = set(sorted(self.dangling_links))
 
         # Create alphanum dictionaries
         self.alphanum_dict = create_alphanum(unique_linked_references)
         self.alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
+
+    def post_processing_content_namespaces(self, name: str, data: Dict[str, Any], ns_sep: str):
+        """
+        Post-process namespaces in the content data.
+        """
+        namespace_parts_list = name.split(ns_sep)
+        namespace_level = data["namespace_level"]
+        ns_root = data["namespace_root"]
+        ns_parent = ns_sep.join(namespace_parts_list[:-1])
+
+        if ns_root in self.data:
+            root = self.data[ns_root]
+            root_level = root.get("namespace_level", 0)
+            root["namespace_level"] = max(1, root_level)
+            root.setdefault("namespace_children", set()).add(name)
+            root["namespace_size"] = len(root["namespace_children"])
+
+        if namespace_level > 2:
+            if ns_parent in self.data:
+                parent = self.data[ns_parent]
+                parent_level = parent.get("namespace_level", 0)
+                direct_level = namespace_level - 1
+                parent["namespace_level"] = max(direct_level, parent_level)
+                parent.setdefault("namespace_children", set()).add(name)
+                parent["namespace_size"] = len(parent["namespace_children"])
 
     def process_summary_data(self):
         """
@@ -153,20 +182,14 @@ class LogseqGraph:
         ns.analyze_namespace_queries()
         ns.visualize_namespace_hierarchy()
 
-        ##################################
         # 01 Conflicts With Existing Pages
-        ##################################
         ns.detect_non_namespace_conflicts()
 
-        #########################################
         # 02 Parts that Appear at Multiple Depths
-        #########################################
         ns.detect_parent_depth_conflicts()
         ns.get_unique_conflicts()
 
-        ###########################
         # 03 Output Namespace Data
-        ###########################
         self.namespace_data.update(
             {
                 "___meta___namespace_data": ns.namespace_data,

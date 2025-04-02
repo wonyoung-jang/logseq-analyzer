@@ -137,29 +137,3 @@ def get_data_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> Dic
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     """
     return {k: v for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}
-
-
-def generate_sorted_summary_all(graph_data: Dict[str, Any], count: int = 0, reverse: bool = True) -> Dict[str, Any]:
-    """
-    Generate a sorted summary for the Logseq Analyzer.
-
-    Args:
-        graph_data (dict): The graph data to analyze.
-    """
-    flipped_data = {}
-    for name, data in graph_data.items():
-        for key, value in data.items():
-            key = f"_pages_with_{key}"
-            if value:
-                if isinstance(value, (list, dict, set, tuple)):
-                    flipped_data.setdefault(key, {})[name] = len(value)
-                else:
-                    flipped_data.setdefault(key, {})[name] = value
-
-    for key, value in flipped_data.items():
-        sorted_data = dict(sorted(value.items(), key=lambda item: item[1], reverse=reverse))
-        value = sorted_data
-        if count > 0:
-            value = dict(sorted_data.items()[:count])
-
-    return flipped_data

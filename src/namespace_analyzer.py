@@ -17,9 +17,8 @@ Problems:
 from collections import Counter, defaultdict
 import logging
 
-from src.process_summary_data import list_files_with_keys, list_files_without_keys
-
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
+from .process_summary_data import list_files_with_keys, list_files_without_keys
 
 
 class NamespaceAnalyzer:

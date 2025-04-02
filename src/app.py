@@ -8,7 +8,6 @@ from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
 from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
 from .logseq_move_files import handle_move_files, handle_move_directory
-from .process_summary_data import generate_sorted_summary_all
 
 
 class GUIInstanceDummy:
@@ -82,8 +81,6 @@ def run_app(**kwargs):
     # Generate summary
     graph.generate_summary_file_subsets()
     graph.generate_summary_data_subsets()
-    # summary_sorted_all = generate_sorted_summary_all(graph_data)
-    summary_sorted_all = {}  # TODO
 
     # TODO Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
@@ -129,15 +126,13 @@ def run_app(**kwargs):
     ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
     ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
+    ReportWriter("graph_files", graph.files, output_dir_meta).write()
 
     for name, data in graph.summary_file_subsets.items():
         ReportWriter(name, data, output_dir_summary).write()
 
     for name, data in graph.summary_data_subsets.items():
         ReportWriter(name, data, "summary_content_data").write()
-
-    for name, data in summary_sorted_all.items():
-        ReportWriter(name, data, output_dir_summary).write()
 
     for name, data in graph.namespace_data.items():
         ReportWriter(name, data, output_dir_namespace).write()
@@ -160,13 +155,14 @@ def run_app(**kwargs):
         # General summary
         **graph.summary_file_subsets,
         **graph.summary_data_subsets,
-        **summary_sorted_all,
         # Namespaces summary
         **graph.namespace_data,
         # Move files and assets
         "moved_files": moved_files,
         "assets_backlinked": assets_backlinked,
         "assets_not_backlinked": assets_not_backlinked,
+        # Other
+        "graph_files": graph.files,
     }
 
     CACHE.update(shelve_output_data)

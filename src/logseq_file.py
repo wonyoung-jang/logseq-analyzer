@@ -2,7 +2,6 @@
 LogseqFile class to process Logseq files.
 """
 
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 
@@ -24,11 +23,18 @@ class LogseqFile:
         Args:
             file_path (str): The path to the Logseq file.
         """
+        self.id = ()
         self.file_path = file_path
         self.content = ""
         self.data = {}
         self.primary_bullet = ""
         self.content_bullets = []
+
+    def __repr__(self):
+        """
+        Return a string representation of the LogseqFile object.
+        """
+        return f"LogseqFile({self.id[1], self.data['file_path_suffix']})"
 
     def process_single_file(self):
         """
@@ -56,7 +62,6 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
-        self.data = {}
         stat = self.file_path.stat()
         parent = self.file_path.parent.name.lower()
         name = process_logseq_filename_key(self.file_path.stem, parent)
@@ -71,6 +76,8 @@ class LogseqFile:
             date_created = stat.st_ctime
             logging.warning("st_birthtime not available for %s. Using st_ctime instead.", self.file_path)
 
+        self.id = (self.file_path, name)
+
         self.data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
         self.data["name"] = name
         self.data["name_secondary"] = name_secondary
@@ -84,7 +91,9 @@ class LogseqFile:
         self.data["time_existed"] = now - date_created
         self.data["time_unmodified"] = now - date_modified
         self.data["uri"] = self.file_path.as_uri()
-        self.data["logseq_url"] = convert_uri_to_logseq_url(self.data["uri"])
+        logseq_url = convert_uri_to_logseq_url(self.data["uri"])
+        if logseq_url:
+            self.data["logseq_url"] = logseq_url
         self.data["size"] = stat.st_size
 
     def process_bullet_data(self):
@@ -199,12 +208,8 @@ class LogseqFile:
         # Process external and embedded links
         external_links = find_all_lower(PATTERNS.content["external_link"], self.content)
         embedded_links = find_all_lower(PATTERNS.content["embedded_link"], self.content)
-        external_links_other, external_links_internet, external_links_alias = process_ext_emb_links(
-            external_links, "external"
-        )
-        embedded_links_other, embedded_links_internet, embedded_links_asset = process_ext_emb_links(
-            embedded_links, "embedded"
-        )
+        ext_links_other, ext_links_internet, ext_links_alias = process_ext_emb_links(external_links, "external")
+        emb_links_other, emb_links_internet, emb_links_asset = process_ext_emb_links(embedded_links, "embedded")
 
         primary_data.update(
             {
@@ -214,12 +219,12 @@ class LogseqFile:
                 "properties_page_builtin": properties_page_builtin,
                 "properties_page_user": properties_page_user,
                 "properties_values": properties_values,
-                "external_links_alias": external_links_alias,
-                "external_links_internet": external_links_internet,
-                "external_links_other": external_links_other,
-                "embedded_links_asset": embedded_links_asset,
-                "embedded_links_internet": embedded_links_internet,
-                "embedded_links_other": embedded_links_other,
+                "external_links_alias": ext_links_alias,
+                "external_links_internet": ext_links_internet,
+                "external_links_other": ext_links_other,
+                "embedded_links_asset": emb_links_asset,
+                "embedded_links_internet": emb_links_internet,
+                "embedded_links_other": emb_links_other,
             }
         )
 
