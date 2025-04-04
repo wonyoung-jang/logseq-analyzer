@@ -31,7 +31,7 @@ def run_app(**kwargs):
     # Get GUI instance if available
     gui_instance = kwargs.get("gui_instance", GUIInstanceDummy())
     gui_instance.update_progress("setup", 20)
-    
+
     PATTERNS.compile_re_content()
     PATTERNS.compile_re_content_double_curly_brackets()
     PATTERNS.compile_re_content_advanced_command()

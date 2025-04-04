@@ -95,6 +95,9 @@ class LogseqFile:
         self.data["time_unmodified"] = ls_filestats.time_unmodified
         self.data["size"] = ls_filestats.size
 
+        self.data["logseq_filename_object"] = ls_filename
+        self.data["logseq_filestats_object"] = ls_filestats
+
     def process_bullet_data(self):
         """
         Process bullet data to extract metadata and content.

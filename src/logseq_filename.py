@@ -2,6 +2,7 @@
 This module handles processing of Logseq filenames based on their parent directory.
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -10,20 +11,23 @@ from urllib.parse import unquote
 from ._global_objects import ANALYZER_CONFIG
 
 
+@dataclass
 class LogseqFilename:
     """Class for processing Logseq filenames based on their parent directory."""
 
-    def __init__(self, file_path: Path):
+    file_path: Path
+
+    def __post_init__(self):
         """Initialize the LogseqFilename class."""
-        self.original_name = file_path.stem
-        self.key = file_path.stem.lower()
-        self.parent = file_path.parent.name.lower()
+        self.original_name = self.file_path.stem
+        self.key = self.file_path.stem.lower()
+        self.parent = self.file_path.parent.name.lower()
         self.process_logseq_filename()
         self.id = self.key[:2] if len(self.key) > 1 else f"!{self.key[0]}"
-        self.suffix = file_path.suffix.lower() if file_path.suffix else None
-        self.file_path_parts = list(file_path.parts)
+        self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
+        self.file_path_parts = list(self.file_path.parts)
         self.name_secondary = f"{self.key} {self.parent} + {self.suffix}"
-        self.uri = file_path.as_uri()
+        self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
 
     def process_logseq_filename(self):
