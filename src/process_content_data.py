@@ -64,28 +64,41 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_ext_emb_links(links: List[str], links_type: str) -> Tuple[str, str, str]:
-    """Process external and embedded links and categorize them."""
-    links_internet_pattern = f"{links_type}_link_internet"
-    links_sub_pattern = ""
-    if links_type == "external":
-        links_sub_pattern = f"{links_type}_link_alias"
-    elif links_type == "embedded":
-        links_sub_pattern = f"{links_type}_link_asset"
-
+def process_external_links(links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+    """Process external links and categorize them."""
     internet = []
-    alias_or_asset = []
+    alias = []
     if links:
         for _ in range(len(links)):
             link = links[-1]
-            if PATTERNS.content[links_internet_pattern].match(link):
+            if PATTERNS.content["external_link_internet"].match(link):
                 internet.append(link)
                 links.pop()
                 continue
 
-            if PATTERNS.content[links_sub_pattern].match(link):
-                alias_or_asset.append(link)
+            if PATTERNS.content["external_link_alias"].match(link):
+                alias.append(link)
                 links.pop()
                 continue
 
-    return links, internet, alias_or_asset
+    return links, internet, alias
+
+
+def process_embedded_links(links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+    """Process embedded links and categorize them."""
+    internet = []
+    asset = []
+    if links:
+        for _ in range(len(links)):
+            link = links[-1]
+            if PATTERNS.content["embedded_link_internet"].match(link):
+                internet.append(link)
+                links.pop()
+                continue
+
+            if PATTERNS.content["embedded_link_asset"].match(link):
+                asset.append(link)
+                links.pop()
+                continue
+
+    return links, internet, asset

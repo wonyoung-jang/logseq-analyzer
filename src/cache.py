@@ -19,33 +19,23 @@ class Cache:
         self.cache = shelve.open(cache_path, protocol=5)
 
     def close(self):
-        """
-        Close the cache file.
-        """
+        """Close the cache file."""
         self.cache.close()
 
     def update(self, data):
-        """
-        Update the cache with new data.
-        """
+        """Update the cache with new data."""
         self.cache.update(data)
 
     def get(self, key, default=None):
-        """
-        Get a value from the cache.
-        """
+        """Get a value from the cache."""
         return self.cache.get(key, default)
 
     def clear(self):
-        """
-        Clear the cache.
-        """
+        """Clear the cache."""
         self.cache.clear()
 
     def iter_modified_files(self):
-        """
-        Get the modified files from the cache.
-        """
+        """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
 
         for path in iter_files(GRAPH_CONFIG.directory, ANALYZER_CONFIG.target_dirs):
@@ -60,9 +50,7 @@ class Cache:
         self.cache["mod_tracker"] = mod_tracker
 
     def clear_deleted_files(self):
-        """
-        Clear the deleted files from the cache.
-        """
+        """Clear the deleted files from the cache."""
         deleted_files = []
         self.cache.setdefault("___meta___graph_data", {})
         self.cache.setdefault("___meta___graph_content", {})

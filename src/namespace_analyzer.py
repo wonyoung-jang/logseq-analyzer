@@ -48,7 +48,7 @@ class NamespaceAnalyzer:
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
 
-    def create_namespace_parts(self):
+    def init_ns_parts(self):
         """
         Create namespace parts from the data.
         """
@@ -59,7 +59,7 @@ class NamespaceAnalyzer:
             k: v["namespace_parts"] for k, v in self.namespace_data.items() if v.get("namespace_parts")
         }
 
-    def extract_unique_namespace_parts(self):
+    def get_unique_ns_parts(self):
         """
         Analyze the levels of namespace parts across all entries.
         """
@@ -67,7 +67,7 @@ class NamespaceAnalyzer:
             self.unique_namespace_parts.update(parts.keys())
         return self.unique_namespace_parts
 
-    def analyze_namespace_details(self):
+    def analyze_ns_details(self):
         """
         Perform extended analysis on namespace parts.
         """
@@ -84,7 +84,7 @@ class NamespaceAnalyzer:
             "level_distribution": dict(level_distribution),
         }
 
-    def get_unique_namespaces_by_level(self):
+    def get_unique_ns_by_levels(self):
         """
         Get unique namespaces by level.
         """
@@ -93,7 +93,7 @@ class NamespaceAnalyzer:
             for part, level in parts.items():
                 self.unique_namespaces_per_level[level].add(part)
 
-    def analyze_namespace_queries(self):
+    def analyze_ns_queries(self):
         """
         Analyze namespace queries.
         """
@@ -122,7 +122,7 @@ class NamespaceAnalyzer:
             sorted(self.namespace_queries.items(), key=lambda item: item[1]["size"], reverse=True)
         )
 
-    def visualize_namespace_hierarchy(self):
+    def build_ns_tree(self):
         """
         Build a tree-like structure of namespaces.
         """
@@ -134,7 +134,7 @@ class NamespaceAnalyzer:
                     current_level[part] = {}
                 current_level = current_level[part]
 
-    def detect_non_namespace_conflicts(self):
+    def detect_non_ns_conflicts(self):
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
@@ -180,7 +180,7 @@ class NamespaceAnalyzer:
                     i["entry"] for i in details["entries"] if i["level"] == level
                 ]
 
-    def get_unique_conflicts(self):
+    def get_unique_parent_conflicts(self):
         """
         Get unique conflicts for each namespace part.
         """

@@ -175,19 +175,19 @@ class LogseqGraph:
         Process namespace data and perform extended analysis for the Logseq Analyzer.
         """
         ns = NamespaceAnalyzer(self.data, self.dangling_links)
-        ns.create_namespace_parts()
-        ns.extract_unique_namespace_parts()
-        ns.analyze_namespace_details()
-        ns.get_unique_namespaces_by_level()
-        ns.analyze_namespace_queries()
-        ns.visualize_namespace_hierarchy()
+        ns.init_ns_parts()
+        ns.get_unique_ns_parts()
+        ns.analyze_ns_details()
+        ns.get_unique_ns_by_levels()
+        ns.analyze_ns_queries()
+        ns.build_ns_tree()
 
         # 01 Conflicts With Existing Pages
-        ns.detect_non_namespace_conflicts()
+        ns.detect_non_ns_conflicts()
 
         # 02 Parts that Appear at Multiple Depths
         ns.detect_parent_depth_conflicts()
-        ns.get_unique_conflicts()
+        ns.get_unique_parent_conflicts()
 
         # 03 Output Namespace Data
         self.namespace_data.update(

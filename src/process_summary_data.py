@@ -42,10 +42,12 @@ def check_is_backlinked(
         return False
 
     id_key = graph_data["id"]
-    if id_key in alphanum_dict:
-        if name in alphanum_dict[id_key]:
-            return True
-    return False
+    if id_key not in alphanum_dict:
+        return False
+    if name not in alphanum_dict[id_key]:
+        return False
+
+    return True
 
 
 def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) -> str:

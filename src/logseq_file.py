@@ -4,9 +4,16 @@ LogseqFile class to process Logseq files.
 
 from datetime import datetime
 import logging
+from pathlib import Path
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
-from .process_content_data import find_all_lower, process_aliases, process_ext_emb_links, split_builtin_user_properties
+from .process_content_data import (
+    find_all_lower,
+    process_aliases,
+    process_embedded_links,
+    process_external_links,
+    split_builtin_user_properties,
+)
 from .logseq_uri_convert import convert_uri_to_logseq_url
 from .process_basic_file_data import process_logseq_filename_key
 
@@ -16,12 +23,12 @@ class LogseqFile:
     A class to represent a Logseq file.
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: Path):
         """
         Initialize the LogseqFile object.
 
         Args:
-            file_path (str): The path to the Logseq file.
+            file_path (Path): The path to the Logseq file.
         """
         self.id = ()
         self.file_path = file_path
@@ -208,8 +215,8 @@ class LogseqFile:
         # Process external and embedded links
         external_links = find_all_lower(PATTERNS.content["external_link"], self.content)
         embedded_links = find_all_lower(PATTERNS.content["embedded_link"], self.content)
-        ext_links_other, ext_links_internet, ext_links_alias = process_ext_emb_links(external_links, "external")
-        emb_links_other, emb_links_internet, emb_links_asset = process_ext_emb_links(embedded_links, "embedded")
+        ext_links_other, ext_links_internet, ext_links_alias = process_external_links(external_links)
+        emb_links_other, emb_links_internet, emb_links_asset = process_embedded_links(embedded_links)
 
         primary_data.update(
             {
