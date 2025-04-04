@@ -2,7 +2,7 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
+from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
@@ -34,6 +34,19 @@ def run_app(**kwargs):
         gui_instance = kwargs["gui_instance"]
 
     gui_instance.update_progress("setup", 20)
+    
+    PATTERNS.compile_re_content()
+    PATTERNS.compile_re_content_double_curly_brackets()
+    PATTERNS.compile_re_content_advanced_command()
+    PATTERNS.compile_re_config()
+    PATTERNS.compile_re_ext_links()
+    PATTERNS.compile_re_emb_links()
+    PATTERNS.compile_re_code()
+
+    ANALYZER_CONFIG.get_logseq_target_dirs()
+    ANALYZER_CONFIG.get_built_in_properties()
+    ANALYZER_CONFIG.get_datetime_token_map()
+    ANALYZER_CONFIG.get_datetime_token_pattern()
 
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()

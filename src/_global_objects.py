@@ -15,21 +15,10 @@ def initialize_global_objects():
     from .regex_patterns import RegexPatterns
 
     PATTERNS = RegexPatterns()
-    PATTERNS.compile_re_content()
-    PATTERNS.compile_re_content_double_curly_brackets()
-    PATTERNS.compile_re_content_advanced_command()
-    PATTERNS.compile_re_config()
-    PATTERNS.compile_re_ext_links()
-    PATTERNS.compile_re_emb_links()
-    PATTERNS.compile_re_code()
 
     from .logseq_analyzer_config import LogseqAnalyzerConfig
 
     ANALYZER_CONFIG = LogseqAnalyzerConfig()
-    ANALYZER_CONFIG.get_logseq_target_dirs()
-    ANALYZER_CONFIG.get_built_in_properties()
-    ANALYZER_CONFIG.get_datetime_token_map()
-    ANALYZER_CONFIG.get_datetime_token_pattern()
 
     from .logseq_analyzer import LogseqAnalyzer
 
