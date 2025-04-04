@@ -14,6 +14,8 @@ class RegexPatterns:
     def __init__(self):
         """Initialize the RegexPatterns class."""
         self.content = {}
+        self.ext_links = {}
+        self.emb_links = {}
         self.dblcurly = {}
         self.advcommand = {}
         self.config = {}
@@ -34,13 +36,6 @@ class RegexPatterns:
             blockquote: Matches blockquote syntax.
             flashcard: Matches flashcard syntax.
             dynamic_variable: Matches dynamic variables.
-
-            external_link: Matches markdown external links.
-                external_link_internet: Matches external links to websites.
-                external_link_alias: Matches aliased external links.
-            embedded_link: Matches embedded content links.
-                embedded_link_internet: Matches embedded internet content.
-                embedded_link_asset: Matches embedded asset references.
             reference: Matches block references.
                 block_reference: Matches UUID block references.
             inline_code: Matches inline code syntax.
@@ -121,81 +116,6 @@ class RegexPatterns:
                 draws/(.+?)         # Literal "draws/" followed by capture group
                 \.excalidraw        # Literal ".excalidraw"
                 \]\]                # Closing double brackets
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                .*?                # Any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_internet": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                http.*?            # "http" followed by any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_alias": re.compile(
-                r"""
-                (?<!\!)                # Negative lookbehind: not preceded by !
-                \[                     # Opening bracket
-                .*?                    # Any characters (non-greedy)
-                \]                     # Closing bracket
-                \(                     # Opening parenthesis
-                [\[\[|\(\(]            # Either [[ or ((
-                .*?                    # Any characters (non-greedy)
-                [\]\]|\)\)]            # Either ]] or ))
-                .*?                    # Any characters (non-greedy)
-                \)                     # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                .*                  # Any characters
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_internet": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                http.*              # "http" followed by any characters
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_asset": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                \.\./assets/.*      # "../assets/" followed by any characters
-                \)                  # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -284,6 +204,105 @@ class RegexPatterns:
             ),
         }
         logging.info("Compiled regex patterns for content analysis.")
+
+    def compile_re_emb_links(self):
+        """
+        Compile and return a dictionary of regex patterns for embedded links.
+
+        Overview of Patterns:
+            embedded_link: Matches embedded content links.
+                embedded_link_internet: Matches embedded internet content.
+                embedded_link_asset: Matches embedded asset references.
+        """
+        self.emb_links = {
+            "embedded_link": re.compile(
+                r"""
+                \!                  # Exclamation mark
+                \[                  # Opening bracket
+                .*?                 # Any characters (non-greedy)
+                \]                  # Closing bracket
+                \(                  # Opening parenthesis
+                .*                  # Any characters
+                \)                  # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embedded_link_internet": re.compile(
+                r"""
+                \!                  # Exclamation mark
+                \[                  # Opening bracket
+                .*?                 # Any characters (non-greedy)
+                \]                  # Closing bracket
+                \(                  # Opening parenthesis
+                http.*              # "http" followed by any characters
+                \)                  # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "embedded_link_asset": re.compile(
+                r"""
+                \!                  # Exclamation mark
+                \[                  # Opening bracket
+                .*?                 # Any characters (non-greedy)
+                \]                  # Closing bracket
+                \(                  # Opening parenthesis
+                \.\./assets/.*      # "../assets/" followed by any characters
+                \)                  # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+        }
+
+    def compile_re_ext_links(self):
+        """
+        Compile and return a dictionary of regex patterns for external links.
+
+        Overview of Patterns:
+            external_link: Matches markdown-style external links.
+                external_link_internet: Matches external links to websites (http/https).
+                external_link_alias: Matches aliased external links (e.g., nested links).
+        """
+        self.ext_links = {
+            "external_link": re.compile(
+                r"""
+                (?<!\!)            # Negative lookbehind: not preceded by !
+                \[                 # Opening bracket
+                .*?                # Any characters (non-greedy)
+                \]                 # Closing bracket
+                \(                 # Opening parenthesis
+                .*?                # Any characters (non-greedy)
+                \)                 # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "external_link_internet": re.compile(
+                r"""
+                (?<!\!)            # Negative lookbehind: not preceded by !
+                \[                 # Opening bracket
+                .*?                # Any characters (non-greedy)
+                \]                 # Closing bracket
+                \(                 # Opening parenthesis
+                http.*?            # "http" followed by any characters (non-greedy)
+                \)                 # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "external_link_alias": re.compile(
+                r"""
+                (?<!\!)                # Negative lookbehind: not preceded by !
+                \[                     # Opening bracket
+                .*?                    # Any characters (non-greedy)
+                \]                     # Closing bracket
+                \(                     # Opening parenthesis
+                [\[\[|\(\(]            # Either [[ or ((
+                .*?                    # Any characters (non-greedy)
+                [\]\]|\)\)]            # Either ]] or ))
+                .*?                    # Any characters (non-greedy)
+                \)                     # Closing parenthesis
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+        }
 
     def compile_re_config(self):
         """

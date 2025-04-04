@@ -19,6 +19,8 @@ def initialize_global_objects():
     PATTERNS.compile_re_content_double_curly_brackets()
     PATTERNS.compile_re_content_advanced_command()
     PATTERNS.compile_re_config()
+    PATTERNS.compile_re_ext_links()
+    PATTERNS.compile_re_emb_links()
 
     from .logseq_analyzer_config import LogseqAnalyzerConfig
 

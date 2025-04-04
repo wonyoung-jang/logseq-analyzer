@@ -198,7 +198,7 @@ class LogseqFile:
         for prop, value in property_value_all:
             properties_values.setdefault(prop, value)
 
-        aliases = properties_values.get("alias", "")
+        aliases = properties_values.get("alias")
         if aliases:
             aliases = process_aliases(aliases)
 
@@ -213,8 +213,8 @@ class LogseqFile:
         properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties)
 
         # Process external and embedded links
-        external_links = find_all_lower(PATTERNS.content["external_link"], self.content)
-        embedded_links = find_all_lower(PATTERNS.content["embedded_link"], self.content)
+        external_links = find_all_lower(PATTERNS.ext_links["external_link"], self.content)
+        embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], self.content)
         ext_links_other, ext_links_internet, ext_links_alias = process_external_links(external_links)
         emb_links_other, emb_links_internet, emb_links_asset = process_embedded_links(embedded_links)
 

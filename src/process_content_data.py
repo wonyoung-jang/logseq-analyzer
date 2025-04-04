@@ -71,12 +71,12 @@ def process_external_links(links: List[str]) -> Tuple[List[str], List[str], List
     if links:
         for _ in range(len(links)):
             link = links[-1]
-            if PATTERNS.content["external_link_internet"].match(link):
+            if PATTERNS.ext_links["external_link_internet"].match(link):
                 internet.append(link)
                 links.pop()
                 continue
 
-            if PATTERNS.content["external_link_alias"].match(link):
+            if PATTERNS.ext_links["external_link_alias"].match(link):
                 alias.append(link)
                 links.pop()
                 continue
@@ -91,12 +91,12 @@ def process_embedded_links(links: List[str]) -> Tuple[List[str], List[str], List
     if links:
         for _ in range(len(links)):
             link = links[-1]
-            if PATTERNS.content["embedded_link_internet"].match(link):
+            if PATTERNS.emb_links["embedded_link_internet"].match(link):
                 internet.append(link)
                 links.pop()
                 continue
 
-            if PATTERNS.content["embedded_link_asset"].match(link):
+            if PATTERNS.emb_links["embedded_link_asset"].match(link):
                 asset.append(link)
                 links.pop()
                 continue
