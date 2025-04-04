@@ -21,6 +21,7 @@ def initialize_global_objects():
     PATTERNS.compile_re_config()
     PATTERNS.compile_re_ext_links()
     PATTERNS.compile_re_emb_links()
+    PATTERNS.compile_re_code()
 
     from .logseq_analyzer_config import LogseqAnalyzerConfig
 

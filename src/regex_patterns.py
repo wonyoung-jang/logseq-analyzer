@@ -19,6 +19,54 @@ class RegexPatterns:
         self.dblcurly = {}
         self.advcommand = {}
         self.config = {}
+        self.code = {}
+
+    def compile_re_code(self):
+        """
+        Compile regex patterns for code blocks and related syntax.
+
+        Overview of Patterns:
+            multiline_code_block: Matches multi-line code blocks enclosed in triple backticks.
+            calc_block: Matches calc blocks enclosed in triple backticks with "calc".
+            multiline_code_lang: Matches multi-line code blocks with a specific language defined.
+            inline_code_block: Matches inline code blocks enclosed in single backticks.
+        """
+        self.code = {
+            "multiline_code_block": re.compile(
+                r"""
+                ```                 # Three backticks
+                .*?                 # Any characters (non-greedy)
+                ```                 # Three backticks
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "calc_block": re.compile(
+                r"""
+                ```calc             # Three backticks followed by "calc"
+                .*?                 # Any characters (non-greedy)
+                ```                 # Three backticks
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "multiline_code_lang": re.compile(
+                r"""
+                ```                 # Three backticks
+                \w+                 # One or more word characters
+                .*?                 # Any characters (non-greedy)
+                ```                 # Three backticks
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "inline_code_block": re.compile(
+                r"""
+                `                   # One backtick
+                \w+                 # One or more word characters
+                .*?                 # Any characters (non-greedy)
+                `                   # One backtick
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+        }
 
     def compile_re_content(self):
         """
@@ -38,10 +86,6 @@ class RegexPatterns:
             dynamic_variable: Matches dynamic variables.
             reference: Matches block references.
                 block_reference: Matches UUID block references.
-            inline_code: Matches inline code syntax.
-                multiline_code_block: Matches code blocks.
-                calc_block: Matches calculation blocks.
-                multiline_code_lang: Matches code blocks with language specification.
         """
         self.content = {
             "bullet": re.compile(
@@ -136,31 +180,6 @@ class RegexPatterns:
                 """,
                 re.MULTILINE | re.IGNORECASE | re.VERBOSE,
             ),
-            "multiline_code_block": re.compile(
-                r"""
-                ```                 # Three backticks
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "calc_block": re.compile(
-                r"""
-                ```calc             # Three backticks followed by "calc"
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "multiline_code_lang": re.compile(
-                r"""
-                ```                 # Three backticks
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
             "reference": re.compile(
                 r"""
                 (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
@@ -180,15 +199,6 @@ class RegexPatterns:
                 [0-9a-f]{4}-        # 4 hex digits followed by hyphen
                 [0-9a-f]{12}        # 12 hex digits
                 \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "inline_code_block": re.compile(
-                r"""
-                `                   # One backtick
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
-                `                   # One backtick
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
