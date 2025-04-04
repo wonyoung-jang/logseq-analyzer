@@ -7,31 +7,33 @@ from typing import Generator, Set
 import logging
 
 
-def iter_files(directory: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
+class FileSystem:
     """
-    Recursively iterate over files in the given directory.
-
-    If target_dirs is provided, only yield files that reside within directories
-    whose names are in the target_dirs set.
-
-    Args:
-        directory (Path): The root directory to search.
-        target_dirs (Set[str]): Set of allowed parent directory names.
-
-    Yields:
-        Path: File paths that match the criteria.
+    A simple class to encapsulate file system operations for easier mocking/testing.
     """
-    for root, dirs, files in Path.walk(directory):
-        root_path = Path(root)
-        if root_path == directory:
-            continue
 
-        if root_path.name in target_dirs:
-            for file in files:
-                yield root_path / file
-        else:
-            logging.info("Skipping directory %s outside target directories", root_path)
-            dirs.clear()
+    def __init__(self, root_dir: Path, target_dirs: Set[str]):
+        """
+        Initialize the FileSystem class.
+        """
+        self.root_dir = root_dir
+        self.target_dirs = target_dirs
+
+    def iter_files(self) -> Generator[Path, None, None]:
+        """
+        Recursively iterate over files in the root directory.
+        """
+        for root, dirs, files in Path.walk(self.root_dir):
+            path_root = Path(root)
+            if path_root == self.root_dir:
+                continue
+
+            if path_root.name in self.target_dirs:
+                for file in files:
+                    yield path_root / file
+            else:
+                logging.info("Skipping directory %s outside target directories", path_root)
+                dirs.clear()
 
 
 def get_sub_file_or_folder(parent: Path, child: str) -> Path:

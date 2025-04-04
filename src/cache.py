@@ -5,7 +5,7 @@ import logging
 import shelve
 
 from ._global_objects import ANALYZER_CONFIG, GRAPH_CONFIG
-from .helpers import iter_files
+from .helpers import FileSystem
 
 
 class Cache:
@@ -37,8 +37,9 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
+        filesystem = FileSystem(GRAPH_CONFIG.directory, ANALYZER_CONFIG.target_dirs)
 
-        for path in iter_files(GRAPH_CONFIG.directory, ANALYZER_CONFIG.target_dirs):
+        for path in filesystem.iter_files():
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
 

@@ -2,7 +2,6 @@
 LogseqFile class to process Logseq files.
 """
 
-from datetime import datetime
 import logging
 from pathlib import Path
 
@@ -14,8 +13,8 @@ from .process_content_data import (
     process_external_links,
     split_builtin_user_properties,
 )
-from .logseq_uri_convert import convert_uri_to_logseq_url
-from .process_basic_file_data import process_logseq_filename_key
+from .logseq_filestats import LogseqFilestats
+from .logseq_filename import LogseqFilename
 
 
 class LogseqFile:
@@ -30,7 +29,9 @@ class LogseqFile:
         Args:
             file_path (Path): The path to the Logseq file.
         """
-        self.id = ()
+        self.logseq_filename = None
+        self.logseq_filestats = None
+
         self.file_path = file_path
         self.content = ""
         self.data = {}
@@ -41,7 +42,7 @@ class LogseqFile:
         """
         Return a string representation of the LogseqFile object.
         """
-        return f"LogseqFile({self.id[1], self.data['file_path_suffix']})"
+        return f"LogseqFile({self.data['name'], self.data['file_path_suffix']})"
 
     def process_single_file(self):
         """
@@ -69,39 +70,30 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
-        stat = self.file_path.stat()
-        parent = self.file_path.parent.name.lower()
-        name = process_logseq_filename_key(self.file_path.stem, parent)
-        suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
-        name_secondary = f"{name} {parent} + {suffix}".lower()
-        now = datetime.now().timestamp()
-        date_modified = stat.st_mtime
+        ls_filename = LogseqFilename(self.file_path)
+        self.logseq_filename = ls_filename
 
-        try:
-            date_created = stat.st_birthtime
-        except AttributeError:
-            date_created = stat.st_ctime
-            logging.warning("st_birthtime not available for %s. Using st_ctime instead.", self.file_path)
+        ls_filestats = LogseqFilestats(self.file_path)
+        self.logseq_filestats = ls_filestats
 
-        self.id = (self.file_path, name)
-
-        self.data["id"] = name[:2] if len(name) > 1 else f"!{name[0]}"
-        self.data["name"] = name
-        self.data["name_secondary"] = name_secondary
         self.data["file_path"] = str(self.file_path)
-        self.data["file_path_parent_name"] = parent
-        self.data["file_path_name"] = name
-        self.data["file_path_suffix"] = suffix if suffix else None
-        self.data["file_path_parts"] = list(self.file_path.parts)
-        self.data["date_created"] = date_created
-        self.data["date_modified"] = date_modified
-        self.data["time_existed"] = now - date_created
-        self.data["time_unmodified"] = now - date_modified
-        self.data["uri"] = self.file_path.as_uri()
-        logseq_url = convert_uri_to_logseq_url(self.data["uri"])
-        if logseq_url:
-            self.data["logseq_url"] = logseq_url
-        self.data["size"] = stat.st_size
+
+        self.data["id"] = ls_filename.id
+        self.data["name"] = ls_filename.key
+        self.data["name_secondary"] = ls_filename.name_secondary
+        self.data["original_name"] = ls_filename.original_name
+        self.data["file_path_parent_name"] = ls_filename.parent
+        self.data["file_path_suffix"] = ls_filename.suffix
+        self.data["file_path_parts"] = ls_filename.file_path_parts
+        self.data["uri"] = ls_filename.uri
+        if ls_filename.logseq_url:
+            self.data["logseq_url"] = ls_filename.logseq_url
+
+        self.data["date_created"] = ls_filestats.date_created
+        self.data["date_modified"] = ls_filestats.date_modified
+        self.data["time_existed"] = ls_filestats.time_existed
+        self.data["time_unmodified"] = ls_filestats.time_unmodified
+        self.data["size"] = ls_filestats.size
 
     def process_bullet_data(self):
         """
