@@ -29,10 +29,7 @@ def run_app(**kwargs):
     # Phase 01: Setup
     ###################################################################
     # Get GUI instance if available
-    gui_instance = GUIInstanceDummy()
-    if kwargs.get("gui_instance"):
-        gui_instance = kwargs["gui_instance"]
-
+    gui_instance = kwargs.get("gui_instance", GUIInstanceDummy())
     gui_instance.update_progress("setup", 20)
     
     PATTERNS.compile_re_content()
