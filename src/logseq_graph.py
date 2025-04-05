@@ -320,7 +320,6 @@ class LogseqGraph:
             "renderers",
         ]
 
-        # for criteria in ALL_DATA_POINTS:
         for criteria in content_subset_tags_nodes:
             counts_output_name = f"_content_{criteria}"
             self.summary_data_subsets[counts_output_name] = self.extract_summary_subset_content(criteria)

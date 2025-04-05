@@ -18,9 +18,7 @@ from .logseq_filename import LogseqFilename
 
 
 class LogseqFile:
-    """
-    A class to represent a Logseq file.
-    """
+    """A class to represent a Logseq file."""
 
     def __init__(self, file_path: Path):
         """
