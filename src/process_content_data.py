@@ -28,9 +28,8 @@ def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
 
 def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
-    built_in = ANALYZER_CONFIG.built_in_properties
-    builtin_props = [prop for prop in properties if prop in built_in]
-    user_props = [prop for prop in properties if prop not in built_in]
+    builtin_props = [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties]
+    user_props = [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties]
     return builtin_props, user_props
 
 
@@ -64,41 +63,41 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_external_links(links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+def process_external_links(external_links: List[str]) -> Tuple[List[str], List[str], List[str]]:
     """Process external links and categorize them."""
     internet = []
     alias = []
-    if links:
-        for _ in range(len(links)):
-            link = links[-1]
+    if external_links:
+        for _ in range(len(external_links)):
+            link = external_links[-1]
             if PATTERNS.ext_links["external_link_internet"].match(link):
                 internet.append(link)
-                links.pop()
+                external_links.pop()
                 continue
 
             if PATTERNS.ext_links["external_link_alias"].match(link):
                 alias.append(link)
-                links.pop()
+                external_links.pop()
                 continue
 
-    return links, internet, alias
+    return external_links, internet, alias
 
 
-def process_embedded_links(links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+def process_embedded_links(embedded_links: List[str]) -> Tuple[List[str], List[str], List[str]]:
     """Process embedded links and categorize them."""
     internet = []
     asset = []
-    if links:
-        for _ in range(len(links)):
-            link = links[-1]
+    if embedded_links:
+        for _ in range(len(embedded_links)):
+            link = embedded_links[-1]
             if PATTERNS.emb_links["embedded_link_internet"].match(link):
                 internet.append(link)
-                links.pop()
+                embedded_links.pop()
                 continue
 
             if PATTERNS.emb_links["embedded_link_asset"].match(link):
                 asset.append(link)
-                links.pop()
+                embedded_links.pop()
                 continue
 
-    return links, internet, asset
+    return embedded_links, internet, asset
