@@ -49,6 +49,7 @@ def run_app(**kwargs):
     ANALYZER.create_output_directory()
     ANALYZER.create_log_file()
     ANALYZER.create_delete_directory()
+
     GRAPH_CONFIG.initialize_graph(ANALYZER.args)
     GRAPH_CONFIG.initialize_config(ANALYZER.args)
 

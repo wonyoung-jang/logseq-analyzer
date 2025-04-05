@@ -36,12 +36,6 @@ class LogseqFile:
         self.primary_bullet = ""
         self.content_bullets = []
 
-    def __repr__(self):
-        """
-        Return a string representation of the LogseqFile object.
-        """
-        return f"LogseqFile({self.data['name'], self.data['file_path_suffix']})"
-
     def process_single_file(self):
         """
         Process a single file: extract metadata, read content, and compute content-based metrics.
@@ -105,19 +99,24 @@ class LogseqFile:
             self.data["char_count"] = len(self.content)
             # Count bullets
             bullet_count = 0
-            if self.data["file_path_suffix"] == ".md":
-                bullet_content = PATTERNS.content["bullet"].split(self.content)
-                if len(bullet_content) > 1:
-                    self.primary_bullet = bullet_content[0].strip()
-                    self.content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
-                    empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
-                    bullet_count_empty = len(empty_bullets)
-                    bullet_count = len(self.content_bullets)
+            # if self.data["file_path_suffix"] == ".md":
+            bullet_content = PATTERNS.content["bullet"].split(self.content)
+            bullet_count_empty = 0
+            if len(bullet_content) > 1:
+                self.primary_bullet = bullet_content[0].strip()
+                self.content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
+                empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
+                bullet_count_empty = len(empty_bullets)
+                bullet_count = len(self.content_bullets)
+            if len(bullet_content) == 1:
+                only_bullet = bullet_content[0].strip()
+                if not only_bullet:
+                    bullet_count_empty = 1
                 else:
-                    bullet_count = 0
-                    bullet_count_empty = 0
-                self.data["bullet_count"] = bullet_count
-                self.data["bullet_count_empty"] = bullet_count_empty
+                    self.primary_bullet = only_bullet
+                    bullet_count = 1
+            self.data["bullet_count"] = bullet_count
+            self.data["bullet_count_empty"] = bullet_count_empty
             # Calculate bullet density
             if bullet_count > 0:
                 self.data["bullet_density"] = round(self.data["char_count"] / bullet_count, 2)

@@ -18,17 +18,19 @@ class LogseqFilestats:
         """Post-initialization method to set file statistics attributes."""
 
         stat = self.file_path.stat()
-        now = datetime.now().timestamp()
 
-        self.file_count = stat.st_nlink
         self.size = stat.st_size
-        self.date_modified = stat.st_mtime
 
+        now = datetime.now().timestamp()
         try:
             self.date_created = stat.st_birthtime
         except AttributeError:
             self.date_created = stat.st_ctime
             logging.warning("st_birthtime not available for %s. Using st_ctime instead.", self.file_path)
-
+        self.date_modified = stat.st_mtime
         self.time_existed = now - self.date_created
         self.time_unmodified = now - self.date_modified
+        self.read_date_created = datetime.fromtimestamp(self.date_created)
+        self.read_date_modified = datetime.fromtimestamp(self.date_modified)
+        self.read_time_existed = datetime.fromtimestamp(self.time_existed)
+        self.read_time_unmodified = datetime.fromtimestamp(self.time_unmodified)

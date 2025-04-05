@@ -22,16 +22,8 @@ class LogseqConfigEDN:
         self.clean_logseq_config_edn_content(config_file)
         self.get_config_edn_data_for_analysis()
 
-    def clean_logseq_config_edn_content(self, config_file: Path) -> str:
-        """
-        Extract EDN configuration data from a Logseq configuration file.
-
-        Args:
-            folder_path (Path): The path to the Logseq graph folder.
-
-        Returns:
-            str: The content of the configuration file.
-        """
+    def clean_logseq_config_edn_content(self, config_file: Path):
+        """Extract EDN configuration data from a Logseq configuration file."""
         with config_file.open("r", encoding="utf-8") as f:
             self.config_edn_content = ""
             for line in f.readlines():
@@ -43,12 +35,7 @@ class LogseqConfigEDN:
                 self.config_edn_content += f"{line}\n"
 
     def get_config_edn_data_for_analysis(self):
-        """
-        Extract EDN configuration data from a Logseq configuration file.
-
-        Returns:
-            dict: A dictionary containing the extracted configuration data.
-        """
+        """Extract EDN configuration data from a Logseq configuration file."""
         if not self.config_edn_content:
             logging.warning("No config.edn content found.")
             self.config_edn_data = {}

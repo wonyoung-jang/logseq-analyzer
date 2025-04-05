@@ -18,13 +18,6 @@ HAS_BACKLINKS = [
 ]
 
 
-def has_key_with_values(data, *keys) -> bool:
-    """
-    Generalized helper function to check if any of the specified keys in the data have values.
-    """
-    return any(data.get(key) for key in keys)
-
-
 def check_has_backlinks(data) -> bool:
     """
     Helper function to check if a file has backlinks.
@@ -125,17 +118,3 @@ def list_files_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> L
     Extract a subset of the summary data based on multiple criteria (key-value pairs).
     """
     return [k for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
-
-
-def get_data_with_keys(graph_data: Dict[str, Any], *criteria) -> Dict[str, Any]:
-    """
-    Extract a subset of the summary data based on whether the keys exists.
-    """
-    return {k: v for k, v in graph_data.items() if all(v.get(key) for key in criteria)}
-
-
-def get_data_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> Dict[str, Any]:
-    """
-    Extract a subset of the summary data based on multiple criteria (key-value pairs).
-    """
-    return {k: v for k, v in graph_data.items() if all(v.get(key) == expected for key, expected in criteria.items())}

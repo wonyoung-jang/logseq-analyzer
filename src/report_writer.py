@@ -15,6 +15,10 @@ class ReportWriter:
     A class to handle reporting and writing output to files.
     """
 
+    json_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
+    txt_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
+    output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
+
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
         Initialize the ReportWriter class.
@@ -40,14 +44,14 @@ class ReportWriter:
                 if isinstance(values, (list, set)):
                     f.write(f"{indent}Values ({len(values)}):\n")
                     for index, value in enumerate(values, start=1):
-                        f.write(f"{indent}\t{index}\t-\t{value}\n")
+                        f.write(f"{indent}\t{index} ({type(value)})\t|\t{value}\n")
                     f.write("\n")
                     continue
 
                 if isinstance(values, dict):
                     for k, v in values.items():
                         if not isinstance(v, (list, set, dict)):
-                            f.write(f"{indent}\t{k:<60}: {v}\n")
+                            f.write(f"{indent}\t{k:<60}: ({type(v)}) {v}\n")
                             continue
                         f.write(f"{indent}\t{k:<60}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 2)
@@ -62,7 +66,7 @@ class ReportWriter:
                         f.write(f"{indent}{k}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 1)
                         continue
-                    f.write(f"{indent}{k:<60}: {v}\n")
+                    f.write(f"{indent}{k:<60}: ({type(v)}) {v}\n")
             elif isinstance(data, (list, set)):
                 try:
                     for index, item in enumerate(sorted(data), start=1):
@@ -70,25 +74,23 @@ class ReportWriter:
                             f.write(f"{indent}{index}:\n")
                             ReportWriter.write_recursive(f, item, indent_level + 1)
                             continue
-                        f.write(f"{indent}{index}\t-\t{item}\n")
+                        f.write(f"{indent}{index} ({type(item)})\t|\t{item}\n")
                 except TypeError:
                     for index, item in enumerate(data, start=1):
-                        f.write(f"{indent}{index}\t-\t{item}\n")
+                        f.write(f"{indent}{index} ({type(item)})\t|\t{item}\n")
             else:
-                f.write(f"{indent}{data}\n")
+                f.write(f"{indent}({type(data)}) {data}\n")
 
     def write(self) -> None:
         """
         Write the output to a file using a recursive helper to handle nested structures.
         """
-        json_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
-        txt_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
-        output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
-
-        logging.info("Writing %s as %s", self.filename_prefix, output_format)
+        logging.info("Writing %s as %s", self.filename_prefix, ReportWriter.output_format)
         count = len(self.items)
         filename = (
-            f"{self.filename_prefix}{output_format}" if count else f"______EMPTY_{self.filename_prefix}{output_format}"
+            f"{self.filename_prefix}{ReportWriter.output_format}"
+            if count
+            else f"______EMPTY_{self.filename_prefix}{ReportWriter.output_format}"
         )
 
         if self.type_output:
@@ -99,13 +101,8 @@ class ReportWriter:
         else:
             out_path = ANALYZER.output_dir / filename
 
-        # First try writing in text format using the recursive writer
-        with out_path.open("w", encoding="utf-8") as f:
-            f.write(f"{filename} | Items: {count}\n\n")
-            ReportWriter.write_recursive(f, self.items)
-
         # For JSON format, re-open and dump JSON if that is the requested format
-        if output_format == json_format:
+        if ReportWriter.output_format == ReportWriter.json_format:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -113,18 +110,18 @@ class ReportWriter:
                 logging.error("Failed to write JSON for %s.", self.filename_prefix)
                 if out_path.exists():
                     out_path.unlink()
-                filename = f"{self.filename_prefix}{txt_format}"
+                filename = f"{self.filename_prefix}{ReportWriter.txt_format}"
                 if self.type_output:
                     out_path = Path(parent) / filename
                 with out_path.open("w", encoding="utf-8") as f:
-                    f.write(f"{filename} | Items: {count}\n\n")
+                    f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif output_format == txt_format:
+        elif ReportWriter.output_format == ReportWriter.txt_format:
             with out_path.open("w", encoding="utf-8") as f:
-                f.write(f"{filename} | Items: {count}\n\n")
+                f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                 ReportWriter.write_recursive(f, self.items)
         else:
-            logging.error("Unsupported output format: %s. Defaulting to text.", output_format)
+            logging.error("Unsupported output format: %s. Defaulting to text.", ReportWriter.output_format)
             with out_path.open("w", encoding="utf-8") as f:
-                f.write(f"{filename} | Items: {count}\n\n")
+                f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                 ReportWriter.write_recursive(f, self.items)
