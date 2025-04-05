@@ -293,7 +293,6 @@ class LogseqGraph:
             "external_links_alias",
             "external_links_internet",
             "external_links_other",
-            "file_path_parts",
             "flashcards",
             "multiline_code_blocks",
             "multiline_code_langs",

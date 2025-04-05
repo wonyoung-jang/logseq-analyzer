@@ -10,16 +10,6 @@ import re
 class LogseqAnalyzerConfig:
     """
     A class to handle configuration file loading and management.
-
-    This class uses the configparser module to read and write configuration files.
-    It provides methods to get and set configuration values, as well as to retrieve
-    specific sections and properties from the configuration file.
-
-    Attributes:
-        config (configparser.ConfigParser): The configparser instance for handling the configuration file.
-        _datetime_token_map (dict): A dictionary mapping datetime tokens to their values.
-        _datetime_token_pattern (re.Pattern): A compiled regex pattern for datetime tokens.
-        _built_in_properties (frozenset): A frozenset of built-in properties defined in the configuration file.
     """
 
     def __init__(self, config_path="src/config.ini"):

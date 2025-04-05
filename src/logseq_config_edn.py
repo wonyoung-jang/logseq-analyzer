@@ -17,14 +17,15 @@ class LogseqConfigEDN:
     def __init__(self, args: argparse.Namespace, config_file: Path):
         """Initialize the LogseqConfigEDN class."""
         self.args = args
+        self.config_file = config_file
         self.config_edn_content = None
         self.config_edn_data = None
-        self.clean_logseq_config_edn_content(config_file)
+        self.clean_logseq_config_edn_content()
         self.get_config_edn_data_for_analysis()
 
-    def clean_logseq_config_edn_content(self, config_file: Path):
+    def clean_logseq_config_edn_content(self):
         """Extract EDN configuration data from a Logseq configuration file."""
-        with config_file.open("r", encoding="utf-8") as f:
+        with self.config_file.open("r", encoding="utf-8") as f:
             self.config_edn_content = ""
             for line in f.readlines():
                 line = line.strip()

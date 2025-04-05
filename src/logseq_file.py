@@ -2,8 +2,8 @@
 LogseqFile class to process Logseq files.
 """
 
-import logging
 from pathlib import Path
+
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
 from .process_content_data import (
@@ -13,6 +13,7 @@ from .process_content_data import (
     process_external_links,
     split_builtin_user_properties,
 )
+from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename
 
@@ -40,23 +41,21 @@ class LogseqFile:
         """
         Process a single file: extract metadata, read content, and compute content-based metrics.
         """
-        self.get_single_file_content()
         self.get_single_file_metadata()
-        self.process_bullet_data()
+        ls_bullets = LogseqBullets(self.file_path)
+        ls_bullets.get_content()
+        ls_bullets.get_char_count()
+        ls_bullets.get_bullet_content()
+        ls_bullets.get_primary_bullet()
+        ls_bullets.get_bullet_density()
+        self.content = ls_bullets.content
+        self.content_bullets = ls_bullets.content_bullets
+        self.primary_bullet = ls_bullets.primary_bullet
+        self.data["char_count"] = ls_bullets.char_count
+        self.data["bullet_count"] = ls_bullets.bullet_count
+        self.data["bullet_count_empty"] = ls_bullets.bullet_count_empty
+        self.data["bullet_density"] = ls_bullets.bullet_density
         self.process_content_data()
-
-    def get_single_file_content(self):
-        """
-        Read the text content of a file.
-        """
-        try:
-            self.content = self.file_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            logging.warning("File not found: %s", self.file_path)
-        except IsADirectoryError:
-            logging.warning("Path is a directory, not a file: %s", self.file_path)
-        except UnicodeDecodeError:
-            logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
 
     def get_single_file_metadata(self):
         """
@@ -87,39 +86,8 @@ class LogseqFile:
         self.data["time_unmodified"] = ls_filestats.time_unmodified
         self.data["size"] = ls_filestats.size
 
-        self.data["logseq_filename_object"] = ls_filename
-        self.data["logseq_filestats_object"] = ls_filestats
-
-    def process_bullet_data(self):
-        """
-        Process bullet data to extract metadata and content.
-        """
-        if self.content:
-            # Count characters
-            self.data["char_count"] = len(self.content)
-            # Count bullets
-            bullet_count = 0
-            # if self.data["file_path_suffix"] == ".md":
-            bullet_content = PATTERNS.content["bullet"].split(self.content)
-            bullet_count_empty = 0
-            if len(bullet_content) > 1:
-                self.primary_bullet = bullet_content[0].strip()
-                self.content_bullets = [bullet.strip() for bullet in bullet_content[1:] if bullet.strip()]
-                empty_bullets = [bullet.strip() for bullet in bullet_content[1:] if not bullet.strip()]
-                bullet_count_empty = len(empty_bullets)
-                bullet_count = len(self.content_bullets)
-            if len(bullet_content) == 1:
-                only_bullet = bullet_content[0].strip()
-                if not only_bullet:
-                    bullet_count_empty = 1
-                else:
-                    self.primary_bullet = only_bullet
-                    bullet_count = 1
-            self.data["bullet_count"] = bullet_count
-            self.data["bullet_count_empty"] = bullet_count_empty
-            # Calculate bullet density
-            if bullet_count > 0:
-                self.data["bullet_density"] = round(self.data["char_count"] / bullet_count, 2)
+        self.data["logseq_filename_object"] = ls_filename.__dict__
+        self.data["logseq_filestats_object"] = ls_filestats.__dict__
 
     def process_content_data(self):
         """
@@ -129,7 +97,7 @@ class LogseqFile:
         ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
         if ns_sep in self.data["name"]:
             for key, value in self.process_content_namespace_data(ns_sep):
-                self.data[key] = value
+                self.data.setdefault(key, value)
 
         # If no content, return self.data
         if not self.content:
@@ -164,6 +132,7 @@ class LogseqFile:
             "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], self.content),
             "tags": find_all_lower(PATTERNS.content["tag"], self.content),
             "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], self.content),
+            # Code family (escapes others)
             "multiline_code_blocks": find_all_lower(PATTERNS.code["multiline_code_block"], self.content),
             "multiline_code_langs": find_all_lower(PATTERNS.code["multiline_code_lang"], self.content),
             "calc_blocks": find_all_lower(PATTERNS.code["calc_block"], self.content),
