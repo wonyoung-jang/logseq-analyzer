@@ -320,8 +320,17 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.restoreGeometry(self.settings.value("geometry", b""))
 
 
+def resource_path(relative_path):
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(os.path.abspath(".")) / relative_path
+
+
 if __name__ == "__main__":
     app = QApplication()
     gui = LogseqAnalyzerGUI()
     gui.show()
+    with open(resource_path("logseq-analyzer-theme.qss"), "r") as f:
+        style = f.read()
+        gui.setStyleSheet(style)
     sys.exit(app.exec())
