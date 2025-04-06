@@ -2,6 +2,7 @@
 Config class for loading and managing configuration files.
 """
 
+import logging
 from pathlib import Path
 import configparser
 import re
@@ -14,17 +15,19 @@ class LogseqAnalyzerConfig:
 
     def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""
-        self.config_path = Path("configuration") / "config.ini"
+        config_path = Path("configuration") / "config.ini"
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
-            default_section="None",
+            default_section="",
             interpolation=configparser.ExtendedInterpolation(),
+            empty_lines_in_values=False,
+            allow_unnamed_section=True,
         )
-        if not self.config_path.exists():
-            raise FileNotFoundError(f"Config file not found: {self.config_path}")
+        if not config_path.exists():
+            raise FileNotFoundError(f"Config file not found: {config_path}")
         self.config.optionxform = lambda option: option
-        self.config.read(self.config_path)
+        self.config.read(config_path)
         self.target_dirs = None
         self.built_in_properties = None
         self.datetime_token_map = None
@@ -65,18 +68,38 @@ class LogseqAnalyzerConfig:
         """Write the config to a file-like object"""
         self.config.write(file)
 
+    def set_logseq_config_edn_data(self, gc, report_format: str):
+        """Set the Logseq configuration data."""
+        self.set("ANALYZER", "REPORT_FORMAT", report_format)
+        self.set("CONST", "GRAPH_DIR", gc.directory)
+        self.set("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT", gc.ls_config["journal_page_title_format"])
+        self.set("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT", gc.ls_config["journal_file_name_format"])
+        self.set("LOGSEQ_CONFIG", "DIR_PAGES", gc.ls_config["pages_directory"])
+        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", gc.ls_config["journals_directory"])
+        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", gc.ls_config["whiteboards_directory"])
+        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", gc.ls_config["file_name_format"])
+        if self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar":
+            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
+
     def get_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""
         self.target_dirs = set(self.get_section("TARGET_DIRS").values())
 
-    def set_logseq_config_edn_data(self, config_edn_data: dict) -> None:
-        """Set the Logseq configuration data."""
-        self.set("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT", config_edn_data["journal_page_title_format"])
-        self.set("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT", config_edn_data["journal_file_name_format"])
-        self.set("LOGSEQ_CONFIG", "DIR_PAGES", config_edn_data["pages_directory"])
-        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", config_edn_data["journals_directory"])
-        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", config_edn_data["whiteboards_directory"])
-        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", config_edn_data["file_name_format"])
-        ns_fmt = self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT")
-        if ns_fmt == ":triple-lowbar":
-            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
+    def validate_analyzer_dirs(self):
+        """
+        Validate the target directories against the built-in properties.
+
+        graph/
+        ├── assets/
+        ├── draws/
+        ├── journals/
+        ├── pages/
+        ├── whiteboards/
+        """
+        for dir_name in self.target_dirs:
+            try:
+                targetpath = Path(self.get("CONST", "GRAPH_DIR")) / dir_name
+                targetpath.resolve(strict=True)
+                logging.info("Target directory exists: %s", dir_name)
+            except FileNotFoundError:
+                logging.error("Target directory does not exist: %s", dir_name)

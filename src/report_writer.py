@@ -15,8 +15,8 @@ class ReportWriter:
     A class to handle reporting and writing output to files.
     """
 
-    json_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_JSON")
-    txt_format = ANALYZER_CONFIG.get("CONSTANTS", "REPORT_FORMAT_TXT")
+    json_format = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
+    txt_format = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
     output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:

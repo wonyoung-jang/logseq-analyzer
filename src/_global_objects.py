@@ -30,7 +30,7 @@ def initialize_global_objects():
 
     from .cache import Cache
 
-    CACHE = Cache(ANALYZER_CONFIG.get("CONSTANTS", "CACHE"))  # Requires ANALYZER_CONFIG, GRAPH_CONFIG
+    CACHE = Cache(ANALYZER_CONFIG.get("CONST", "CACHE"))  # Requires ANALYZER_CONFIG, GRAPH_CONFIG
 
 
 initialize_global_objects()

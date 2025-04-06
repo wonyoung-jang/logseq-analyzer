@@ -41,7 +41,6 @@ def run_app(**kwargs):
     PATTERNS.compile_re_emb_links()
     PATTERNS.compile_re_code()
 
-    ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
@@ -51,18 +50,15 @@ def run_app(**kwargs):
     ANALYZER.create_log_file()
     ANALYZER.create_delete_directory()
 
-    GRAPH_CONFIG.initialize_graph(ANALYZER.args)
+    GRAPH_CONFIG.initialize_graph(ANALYZER.args.graph_folder)
     GRAPH_CONFIG.initialize_config(ANALYZER.args)
 
-    if ANALYZER.args.graph_cache:
-        CACHE.clear()
-    else:
-        CACHE.clear_deleted_files()
+    CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
 
     # Set the configuration for the Logseq graph
-    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
-    ANALYZER_CONFIG.set("CONSTANTS", "GRAPH_DIR", GRAPH_CONFIG.directory)
-    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.logseq_config)
+    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
+    ANALYZER_CONFIG.get_logseq_target_dirs()
+    ANALYZER_CONFIG.validate_analyzer_dirs()
 
     gui_instance.update_progress("setup", 100)
     gui_instance.update_progress("process_files", 20)
@@ -113,13 +109,13 @@ def run_app(**kwargs):
             ANALYZER.args.move_bak,
             GRAPH_CONFIG.bak_dir,
             ANALYZER.delete_dir,
-            ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR"),
+            ANALYZER_CONFIG.get("CONST", "BAK_DIR"),
         ),
         "moved_recycle": handle_move_directory(
             ANALYZER.args.move_recycle,
             GRAPH_CONFIG.recycle_dir,
             ANALYZER.delete_dir,
-            ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR"),
+            ANALYZER_CONFIG.get("CONST", "RECYCLE_DIR"),
         ),
     }
 

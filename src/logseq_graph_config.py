@@ -6,13 +6,9 @@ from pathlib import Path
 import logging
 
 from ._global_objects import ANALYZER_CONFIG
-from .helpers import get_sub_file_or_folder
+from .helpers import get_file_or_folder
 from .logseq_config_edn import LogseqConfigEDN
 
-DEFAULT_LOGSEQ_DIRECTORY = ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
-DEFAULT_RECYCLE_DIRECTORY = ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "RECYCLE_DIR")
-DEFAULT_BACKUP_DIRECTORY = ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "BAK_DIR")
-DEFAULT_CONFIG_FILE = ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "CONFIG_FILE")
 LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
     "journal_page_title_format": "MMM do, yyyy",
     "journal_file_name_format": "yyyy_MM_dd",
@@ -35,9 +31,9 @@ class LogseqGraphConfig:
         self.recycle_dir = Path()
         self.bak_dir = Path()
         self.user_config_file = Path()
-        self.logseq_config = {}
+        self.ls_config = {}
 
-    def initialize_graph(self, args) -> None:
+    def initialize_graph(self, graph_folder) -> None:
         """
         Initialize the Logseq graph directories.
 
@@ -47,35 +43,31 @@ class LogseqGraphConfig:
             ├── bak/
             ├── config.edn
         """
-        self.validate_graph_dir(args)
-        self.logseq_dir = get_sub_file_or_folder(self.directory, DEFAULT_LOGSEQ_DIRECTORY)
-        self.recycle_dir = get_sub_file_or_folder(self.logseq_dir, DEFAULT_RECYCLE_DIRECTORY)
-        self.bak_dir = get_sub_file_or_folder(self.logseq_dir, DEFAULT_BACKUP_DIRECTORY)
-        self.user_config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
+        self.directory = get_file_or_folder(graph_folder)
+        logging.info("Graph directory: %s", self.directory)
+        self.logseq_dir = get_file_or_folder(self.directory / ANALYZER_CONFIG.get("CONST", "LOGSEQ_DIR"))
+        logging.info("Logseq directory: %s", self.logseq_dir)
+        self.recycle_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "RECYCLE_DIR"))
+        logging.info("Recycle directory: %s", self.recycle_dir)
+        self.bak_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "BAK_DIR"))
+        logging.info("Bak directory: %s", self.bak_dir)
+        self.user_config_file = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "CONFIG_FILE"))
+        logging.info("User config file: %s", self.user_config_file)
 
     def initialize_config(self, args) -> None:
         """Initialize the Logseq configuration."""
         user_config = LogseqConfigEDN(args, self.user_config_file)
         user_config.clean_logseq_config_edn_content()
         user_config.get_config_edn_data_for_analysis()
-        self.logseq_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
-        self.logseq_config.update(user_config.config_edn_data)
+        self.ls_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
+        self.ls_config.update(user_config.config_edn_data)
+        del user_config
         if args.global_config:
-            global_config_file = Path(args.global_config)
-            if not global_config_file.exists():
-                logging.warning("Global config file does not exist: %s", global_config_file)
-                raise FileNotFoundError(f"Global config file does not exist: {global_config_file}") from None
+            global_config_file = get_file_or_folder(Path(args.global_config))
+            logging.info("Global config file: %s", global_config_file)
             ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
             global_config = LogseqConfigEDN(args, global_config_file)
             global_config.clean_logseq_config_edn_content()
             global_config.get_config_edn_data_for_analysis()
-            self.logseq_config.update(global_config.config_edn_data)
-
-    def validate_graph_dir(self, args) -> Path:
-        """Validate if a path exists."""
-        self.directory = Path(args.graph_folder)
-        try:
-            self.directory.resolve(strict=True)
-        except FileNotFoundError:
-            logging.warning("Path does not exist: %s", self.directory)
-            raise FileNotFoundError(f"Path does not exist: {self.directory}") from None
+            self.ls_config.update(global_config.config_edn_data)
+            del global_config

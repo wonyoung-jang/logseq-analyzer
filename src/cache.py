@@ -30,6 +30,13 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
+    def choose_cache_clear(self, graph_cache: bool = False):
+        """Choose whether to clear the cache based on the graph_cache flag."""
+        if graph_cache:
+            self.clear()
+        else:
+            self.clear_deleted_files()
+
     def clear(self):
         """Clear the cache."""
         self.cache.clear()

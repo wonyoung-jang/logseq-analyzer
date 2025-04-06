@@ -78,7 +78,7 @@ class LogseqFilename:
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        len_graph_dir = len(Path(ANALYZER_CONFIG.get("CONSTANTS", "GRAPH_DIR")).parts)
+        len_graph_dir = len(Path(ANALYZER_CONFIG.get("CONST", "GRAPH_DIR")).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
         if target_segment[:-1] not in ("page", "block-id"):

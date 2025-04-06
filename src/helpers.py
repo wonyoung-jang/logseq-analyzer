@@ -36,24 +36,25 @@ class FileSystem:
                 dirs.clear()
 
 
-def get_sub_file_or_folder(parent: Path, child: str) -> Path:
+def get_file_or_folder(path: Path) -> Path:
     """
-    Get the path to a specific subfolder.
+    Get the path to an existing path.
 
     Args:
-        parent (Path): The path to the parent folder.
-        child (str): The name of the target subfolder (e.g., "recycle", "bak", etc.).
+        path (Path): The path
 
     Returns:
-        Path: The path to the specified subfolder or None if not found.
+        Path: The path to the specified path or None if not found.
     """
-    target = parent / child
+    if isinstance(path, str):
+        path = Path(path)
 
-    if not parent.exists() or not target.exists():
-        logging.warning("Subfolder does not exist: %s", target)
-        return Path()
-
-    return target
+    try:
+        path.resolve(strict=True)
+        return path
+    except FileNotFoundError:
+        logging.warning("Path does not exist: %s", path)
+        return None
 
 
 def get_or_create_subdir(parent: Path, child: str) -> Path:
