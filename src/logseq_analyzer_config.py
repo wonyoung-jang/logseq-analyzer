@@ -84,18 +84,7 @@ class LogseqAnalyzerConfig:
     def get_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""
         self.target_dirs = set(self.get_section("TARGET_DIRS").values())
-
-    def validate_analyzer_dirs(self):
-        """
-        Validate the target directories against the built-in properties.
-
-        graph/
-        ├── assets/
-        ├── draws/
-        ├── journals/
-        ├── pages/
-        ├── whiteboards/
-        """
+        # Validate target directories
         for dir_name in self.target_dirs:
             try:
                 targetpath = Path(self.get("CONST", "GRAPH_DIR")) / dir_name

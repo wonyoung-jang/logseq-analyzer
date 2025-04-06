@@ -58,16 +58,14 @@ def run_app(**kwargs):
     # Set the configuration for the Logseq graph
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
     ANALYZER_CONFIG.get_logseq_target_dirs()
-    ANALYZER_CONFIG.validate_analyzer_dirs()
 
     gui_instance.update_progress("setup", 100)
-    gui_instance.update_progress("process_files", 20)
 
     ################################################################
     # Phase 02: Process files
     ################################################################
+    gui_instance.update_progress("process_files", 20)
     # Process for only modified/new graph files
-
     graph = LogseqGraph()
     graph.process_graph_files()
     graph_data_db = CACHE.get("___meta___graph_data", {})
@@ -84,11 +82,11 @@ def run_app(**kwargs):
     graph.process_namespace_data()
 
     gui_instance.update_progress("process_files", 100)
-    gui_instance.update_progress("summary", 20)
 
     #################################################################
     # Phase 03: Process summaries
     #################################################################
+    gui_instance.update_progress("summary", 20)
     # Generate summary
     graph.generate_summary_file_subsets()
     graph.generate_summary_data_subsets()
@@ -98,11 +96,12 @@ def run_app(**kwargs):
     process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
-    gui_instance.update_progress("move_files", 20)
 
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
+    gui_instance.update_progress("move_files", 20)
+
     assets_backlinked, assets_not_backlinked = handle_assets(graph.data, graph.summary_file_subsets)
     moved_files = {
         "moved_assets": handle_move_files(

@@ -57,49 +57,28 @@ def get_file_or_folder(path: Path) -> Path:
         return None
 
 
-def get_or_create_subdir(parent: Path, child: str) -> Path:
+def get_or_create_file_or_folder(path: Path) -> Path:
     """
-    Get a subdirectory or create it if it doesn't exist.
+    Get a path or create it if it doesn't exist.
 
     Args:
-        parent (Path): The path to the parent folder.
-        child (str): The name of the target subfolder.
+        path (Path): The path to the target file or folder.
 
     Returns:
-        Path: The path to the specified subfolder.
-    """
-    target = parent / child
-
-    if not parent.exists():
-        logging.warning("Parent folder does not exist: %s", parent)
-
-    if not target.exists():
-        try:
-            target.mkdir(parents=True, exist_ok=True)
-            logging.info("Created subdirectory: %s", target)
-        except PermissionError:
-            logging.error("Permission denied to create subdirectory: %s", target)
-        except OSError as e:
-            logging.error("Error creating subdirectory: %s", e)
-    else:
-        logging.info("Subdirectory already exists: %s", target)
-
-    return target
-
-
-def path_validator(path: str) -> bool:
-    """
-    Validate if a given path exists.
-
-    Args:
-        path (str): The path to validate.
-
-    Returns:
-        bool: True if the path exists, False otherwise.
+        Path: The path to the specified file or folder.
     """
     try:
-        Path(path).resolve(strict=True)
-        return True
+        path.resolve(strict=True)
+        return path
     except FileNotFoundError:
-        logging.warning("Path does not exist: %s", path)
-        return False
+        logging.info("Creating path: %s", path)
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            logging.info("Created path: %s", path)
+            return path
+        except PermissionError:
+            logging.error("Permission denied to create path: %s", path)
+            return None
+        except OSError as e:
+            logging.error("Error creating path: %s", e)
+            return None

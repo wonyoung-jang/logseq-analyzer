@@ -8,7 +8,7 @@ import logging
 import shutil
 
 from ._global_objects import ANALYZER_CONFIG
-from .helpers import get_or_create_subdir
+from .helpers import get_or_create_file_or_folder
 
 
 def handle_move_files(
@@ -85,7 +85,7 @@ def get_all_folder_content(
             return [], []
 
     if target_subdir:
-        target_dir = get_or_create_subdir(target_dir, target_subdir)
+        target_dir = get_or_create_file_or_folder(target_dir / target_subdir)
 
     moved_content = []
     moved_content_names = []
@@ -132,7 +132,7 @@ def move_unlinked_assets(
         to_delete_dir (Path): The directory to move unlinked assets to.
     """
     asset_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    to_delete_asset_subdir = get_or_create_subdir(to_delete_dir, asset_dir)
+    to_delete_asset_subdir = get_or_create_file_or_folder(to_delete_dir / asset_dir)
 
     for name in summary_is_asset_not_backlinked:
         file_path = Path(graph_meta_data[name]["file_path"])

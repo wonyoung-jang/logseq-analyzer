@@ -110,7 +110,7 @@ class RegexPatterns:
                 r"""
                 \#          # Hash character
                 \[\[        # Opening double brackets
-                ([^\]]+)    # Capture group: anything except closing bracket
+                ([^\]]+?)   # Capture group: anything except closing bracket (non-greedy)
                 \]\]        # Closing double brackets
                 (?=\s+|\])  # Positive lookahead: whitespace or closing bracket
                 """,
@@ -130,7 +130,7 @@ class RegexPatterns:
                 ^                   # Start of line
                 (?!\s*-\s)          # Negative lookahead: not a bullet
                 \s*?                # Optional whitespace
-                ([A-Za-z0-9_-]+)    # Capture group: alphanumeric, underscore, or hyphen
+                ([A-Za-z0-9_-]+?)   # Capture group: alphanumeric, underscore, or hyphen (non-greedy)
                 (?=::)              # Positive lookahead: double colon
                 """,
                 re.MULTILINE | re.IGNORECASE | re.VERBOSE,
@@ -140,9 +140,10 @@ class RegexPatterns:
                 ^                   # Start of line
                 (?!\s*-\s)          # Negative lookahead: not a bullet
                 \s*?                # Optional whitespace
-                ([A-Za-z0-9_-]+)    # Capture group 1: Alphanumeric, underscore, or hyphen
+                ([A-Za-z0-9_-]+?)   # Capture group 1: Alphanumeric, underscore, or hyphen (non-greedy)
                 ::                  # Literal ::
                 (.*)                # Capture group 2: Any characters
+                $                   # End of line
                 """,
                 re.MULTILINE | re.IGNORECASE | re.VERBOSE,
             ),
@@ -232,7 +233,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \]                  # Closing bracket
                 \(                  # Opening parenthesis
-                .*                  # Any characters
+                .*?                 # Any characters (non-greedy)
                 \)                  # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,
@@ -244,7 +245,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \]                  # Closing bracket
                 \(                  # Opening parenthesis
-                http.*              # "http" followed by any characters
+                http.*?             # "http" followed by any characters (non-greedy)
                 \)                  # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,
@@ -256,7 +257,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \]                  # Closing bracket
                 \(                  # Opening parenthesis
-                \.\./assets/.*      # "../assets/" followed by any characters
+                \.\./assets/.*?     # "../assets/" followed by any characters (non-greedy)
                 \)                  # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,

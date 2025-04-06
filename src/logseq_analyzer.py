@@ -26,12 +26,12 @@ class LogseqAnalyzer:
         """Setup the output directory for the Logseq Analyzer."""
         self.output_dir = Path(ANALYZER_CONFIG.get("ANALYZER", "OUTPUT_DIR"))
 
-        if self.output_dir.exists() and self.output_dir.is_dir():
+        if self.output_dir.exists():
             try:
                 shutil.rmtree(self.output_dir)
                 logging.info("Removed existing output directory: %s", self.output_dir)
-            except IsADirectoryError:
-                logging.error("Output directory is not empty: %s", self.output_dir)
+            except PermissionError:
+                logging.error("Permission denied to remove output directory: %s", self.output_dir)
 
         try:
             self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -45,11 +45,11 @@ class LogseqAnalyzer:
 
     def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
-        log_path = ANALYZER_CONFIG.get("ANALYZER", "LOG_FILE")
-        self.log_file = Path(self.output_dir / log_path)
+        self.log_file = Path(self.output_dir) / ANALYZER_CONFIG.get("ANALYZER", "LOG_FILE")
 
         if self.log_file.exists():
             self.log_file.unlink()
+
         logging.basicConfig(
             filename=self.log_file,
             level=logging.DEBUG,
