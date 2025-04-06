@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 
 from ._global_objects import ANALYZER_CONFIG
-from .helpers import get_or_create_subdir, get_sub_file_or_folder
+from .helpers import get_sub_file_or_folder
 from .logseq_config_edn import LogseqConfigEDN
 
 DEFAULT_LOGSEQ_DIRECTORY = ANALYZER_CONFIG.get("LOGSEQ_FILESYSTEM", "LOGSEQ_DIR")
@@ -38,17 +38,28 @@ class LogseqGraphConfig:
         self.logseq_config = {}
 
     def initialize_graph(self, args) -> None:
-        """Initialize the Logseq graph directories."""
+        """
+        Initialize the Logseq graph directories.
+
+        graph/
+        ├── logseq/
+            ├── .recycle/
+            ├── bak/
+            ├── config.edn
+        """
         self.validate_graph_dir(args)
-        self.logseq_dir = get_or_create_subdir(self.directory, DEFAULT_LOGSEQ_DIRECTORY)
-        self.recycle_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_RECYCLE_DIRECTORY)
-        self.bak_dir = get_or_create_subdir(self.logseq_dir, DEFAULT_BACKUP_DIRECTORY)
+        self.logseq_dir = get_sub_file_or_folder(self.directory, DEFAULT_LOGSEQ_DIRECTORY)
+        self.recycle_dir = get_sub_file_or_folder(self.logseq_dir, DEFAULT_RECYCLE_DIRECTORY)
+        self.bak_dir = get_sub_file_or_folder(self.logseq_dir, DEFAULT_BACKUP_DIRECTORY)
         self.user_config_file = get_sub_file_or_folder(self.logseq_dir, DEFAULT_CONFIG_FILE)
 
     def initialize_config(self, args) -> None:
         """Initialize the Logseq configuration."""
         user_config = LogseqConfigEDN(args, self.user_config_file)
-        self.logseq_config = {**LOGSEQ_DEFAULT_CONFIG_EDN_DATA, **user_config.config_edn_data}
+        user_config.clean_logseq_config_edn_content()
+        user_config.get_config_edn_data_for_analysis()
+        self.logseq_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
+        self.logseq_config.update(user_config.config_edn_data)
         if args.global_config:
             global_config_file = Path(args.global_config)
             if not global_config_file.exists():
@@ -56,6 +67,8 @@ class LogseqGraphConfig:
                 raise FileNotFoundError(f"Global config file does not exist: {global_config_file}") from None
             ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
             global_config = LogseqConfigEDN(args, global_config_file)
+            global_config.clean_logseq_config_edn_content()
+            global_config.get_config_edn_data_for_analysis()
             self.logseq_config.update(global_config.config_edn_data)
 
     def validate_graph_dir(self, args) -> Path:

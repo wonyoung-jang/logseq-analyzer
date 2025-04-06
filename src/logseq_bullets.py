@@ -36,8 +36,7 @@ class LogseqBullets:
 
     def get_char_count(self):
         """Get character count of content"""
-        if self.content:
-            self.char_count = len(self.content)
+        self.char_count = len(self.content)
 
     def get_bullet_content(self):
         """Get all bullets split into a list"""
@@ -65,5 +64,5 @@ class LogseqBullets:
 
     def get_bullet_density(self):
         """ "Calculate bullet density: ~Char count / Bullet count"""
-        if self.bullet_count > 0:
+        if self.bullet_count:
             self.bullet_density = round(self.char_count / self.bullet_count, 2)

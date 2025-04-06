@@ -12,9 +12,9 @@ class LogseqAnalyzerConfig:
     A class to handle configuration file loading and management.
     """
 
-    def __init__(self, config_path="src/config.ini"):
+    def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""
-        self.config_path = Path(config_path)
+        self.config_path = Path("configuration") / "config.ini"
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),

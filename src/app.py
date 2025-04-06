@@ -2,6 +2,7 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
+from pathlib import Path
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
@@ -179,6 +180,6 @@ def run_app(**kwargs):
     CACHE.update(shelve_output_data)
     CACHE.close()
 
-    # TODO write config to file
-    with open("user_config.ini", "w", encoding="utf-8") as config_file:
+    # Write user config to file
+    with open(f"{Path('configuration')}/user_config.ini", "w", encoding="utf-8") as config_file:
         ANALYZER_CONFIG.write(config_file)

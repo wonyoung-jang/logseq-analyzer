@@ -10,7 +10,6 @@
 */__pycache__/*
 *output*/*
 *output/*
-*tests/*
 build/
 config_user.ini
 dist/
@@ -21,12 +20,14 @@ Makefile
 output*/*
 output/*
 persistence.py
+process_all_graph.py
 profile_output*
 source/conf.py
 source/index.rst
-to_delete/*
-user_config.ini
 src/logseq_uri_gui.py
 src/query_data.py
-process_all_graph.py
 src/summary.py
+src/tests/*
+to_delete/*
+user_config.ini
+logseq-analyzer-cache

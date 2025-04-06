@@ -154,6 +154,8 @@ class LogseqGraph:
             data["node_type"] = node_type
             data["is_backlinked"] = is_backlinked
             data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
+            if is_backlinked_by_ns_only:
+                data["is_backlinked"] = False
 
     def process_namespace_data(self):
         """

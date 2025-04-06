@@ -18,15 +18,12 @@ class LogseqConfigEDN:
         """Initialize the LogseqConfigEDN class."""
         self.args = args
         self.config_file = config_file
-        self.config_edn_content = None
-        self.config_edn_data = None
-        self.clean_logseq_config_edn_content()
-        self.get_config_edn_data_for_analysis()
+        self.config_edn_content = ""
+        self.config_edn_data = {}
 
     def clean_logseq_config_edn_content(self):
         """Extract EDN configuration data from a Logseq configuration file."""
         with self.config_file.open("r", encoding="utf-8") as f:
-            self.config_edn_content = ""
             for line in f.readlines():
                 line = line.strip()
                 if not line or line.startswith(";"):
@@ -39,7 +36,7 @@ class LogseqConfigEDN:
         """Extract EDN configuration data from a Logseq configuration file."""
         if not self.config_edn_content:
             logging.warning("No config.edn content found.")
-            self.config_edn_data = {}
+            return
 
         config_edn_data = {
             "journal_page_title_format": None,

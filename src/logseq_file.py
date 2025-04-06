@@ -4,8 +4,6 @@ LogseqFile class to process Logseq files.
 
 from pathlib import Path
 
-from src.process_summary_data import determine_file_type
-
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
 from .process_content_data import (
@@ -15,6 +13,7 @@ from .process_content_data import (
     process_external_links,
     split_builtin_user_properties,
 )
+from .process_summary_data import determine_file_type
 from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename

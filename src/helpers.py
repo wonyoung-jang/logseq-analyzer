@@ -71,7 +71,6 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
 
     if not parent.exists():
         logging.warning("Parent folder does not exist: %s", parent)
-        return Path()
 
     if not target.exists():
         try:
@@ -85,3 +84,21 @@ def get_or_create_subdir(parent: Path, child: str) -> Path:
         logging.info("Subdirectory already exists: %s", target)
 
     return target
+
+
+def path_validator(path: str) -> bool:
+    """
+    Validate if a given path exists.
+
+    Args:
+        path (str): The path to validate.
+
+    Returns:
+        bool: True if the path exists, False otherwise.
+    """
+    try:
+        Path(path).resolve(strict=True)
+        return True
+    except FileNotFoundError:
+        logging.warning("Path does not exist: %s", path)
+        return False
