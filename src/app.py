@@ -76,6 +76,9 @@ def run_app(**kwargs):
     graph_content_db = CACHE.get("___meta___graph_content", {})
     graph_content_db.update(graph.content_bullets)
     graph.content_bullets = graph_content_db
+    graph_files_db = CACHE.get("graph_files", [])
+    graph_files = [f for f in graph.files if f not in graph_files_db]
+    graph.files = graph_files + graph_files_db
     graph.post_processing_content()
     graph.process_summary_data()
     graph.process_namespace_data()

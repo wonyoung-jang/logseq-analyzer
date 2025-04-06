@@ -44,14 +44,14 @@ class ReportWriter:
                 if isinstance(values, (list, set)):
                     f.write(f"{indent}Values ({len(values)}):\n")
                     for index, value in enumerate(values, start=1):
-                        f.write(f"{indent}\t{index} ({type(value).__qualname__})\t|\t{value}\n")
+                        f.write(f"{indent}\t{index}\t|\t{value} ({type(value).__qualname__})\n")
                     f.write("\n")
                     continue
 
                 if isinstance(values, dict):
                     for k, v in values.items():
                         if not isinstance(v, (list, set, dict)):
-                            f.write(f"{indent}\t{k:<60}: ({type(v).__qualname__}) {v}\n")
+                            f.write(f"{indent}\t{k:<60}: {v} ({type(v).__qualname__})\n")
                             continue
                         f.write(f"{indent}\t{k:<60}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 2)
@@ -66,7 +66,7 @@ class ReportWriter:
                         f.write(f"{indent}{k}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 1)
                         continue
-                    f.write(f"{indent}{k:<60}: ({type(v).__qualname__}) {v}\n")
+                    f.write(f"{indent}{k:<60}: {v} ({type(v).__qualname__})\n")
             elif isinstance(data, (list, set)):
                 try:
                     for index, item in enumerate(sorted(data), start=1):
@@ -74,12 +74,12 @@ class ReportWriter:
                             f.write(f"{indent}{index}:\n")
                             ReportWriter.write_recursive(f, item, indent_level + 1)
                             continue
-                        f.write(f"{indent}{index} ({type(item).__qualname__})\t|\t{item}\n")
+                        f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
                 except TypeError:
                     for index, item in enumerate(data, start=1):
-                        f.write(f"{indent}{index} ({type(item).__qualname__})\t|\t{item}\n")
+                        f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
             else:
-                f.write(f"{indent}({type(data).__qualname__}) {data}\n")
+                f.write(f"{indent}{data} ({type(data).__qualname__})\n")
 
     def write(self) -> None:
         """
