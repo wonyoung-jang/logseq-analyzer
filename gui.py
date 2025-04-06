@@ -321,6 +321,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
 
 def resource_path(relative_path):
+    """Get the absolute path to the resource."""
     if hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS) / relative_path
     return Path(os.path.abspath(".")) / relative_path
@@ -330,7 +331,7 @@ if __name__ == "__main__":
     app = QApplication()
     gui = LogseqAnalyzerGUI()
     gui.show()
-    with open(resource_path("logseq-analyzer-theme.qss"), "r") as f:
+    with open(resource_path("logseq-analyzer-theme.qss"), "r", encoding="utf-8") as f:
         style = f.read()
         gui.setStyleSheet(style)
     sys.exit(app.exec())

@@ -65,7 +65,6 @@ def process_external_links(external_links: List[str]) -> Tuple[List[str], List[s
                 alias.append(link)
                 external_links.pop()
                 continue
-
     return external_links, internet, alias
 
 
@@ -85,5 +84,4 @@ def process_embedded_links(embedded_links: List[str]) -> Tuple[List[str], List[s
                 asset.append(link)
                 embedded_links.pop()
                 continue
-
     return embedded_links, internet, asset
