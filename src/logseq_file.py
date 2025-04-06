@@ -34,6 +34,9 @@ class LogseqFile:
         self.data = {}
         self.primary_bullet = ""
         self.content_bullets = []
+        self.bullets = None
+        self.filename = None
+        self.filestats = None
 
     def process_single_file(self):
         """
@@ -46,6 +49,7 @@ class LogseqFile:
         ls_bullets.get_bullet_content()
         ls_bullets.get_primary_bullet()
         ls_bullets.get_bullet_density()
+        self.bullets = ls_bullets
         self.content = ls_bullets.content
         self.content_bullets = ls_bullets.content_bullets
         self.primary_bullet = ls_bullets.primary_bullet
@@ -62,11 +66,12 @@ class LogseqFile:
         """
         ls_filename = LogseqFilename(self.file_path)
         ls_filestats = LogseqFilestats(self.file_path)
-
+        self.filename = ls_filename
+        self.filestats = ls_filestats
         self.data["file_path"] = str(self.file_path)
 
         self.data["id"] = ls_filename.id
-        self.data["name"] = ls_filename.key
+        self.data["name"] = ls_filename.name
         self.data["name_secondary"] = ls_filename.name_secondary
         self.data["file_path_suffix"] = ls_filename.suffix
         self.data["uri"] = ls_filename.uri

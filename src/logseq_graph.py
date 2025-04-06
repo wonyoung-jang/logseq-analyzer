@@ -2,7 +2,7 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
@@ -28,7 +28,7 @@ class LogseqGraph:
         self.namespace_data = {}
         self.summary_file_subsets = {}
         self.summary_data_subsets = {}
-        self.files = []
+        self.files: List[LogseqFile] = []
 
     def keys(self) -> list:
         """
@@ -63,26 +63,24 @@ class LogseqGraph:
         # Process each file's content
         ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
 
-        for name, data in self.data.items():
-            # Process namespaces
-            if ns_sep in name:
-                unique_linked_references_namespaces.update([data["namespace_root"], name])
-                self.post_processing_content_namespaces(name, data, ns_sep)
+        for file in self.files:
+            if ns_sep in file.filename.name:
+                unique_linked_references_namespaces.update([file.data["namespace_root"], file.filename.name])
+                self.post_processing_content_namespaces(file.filename.name, file.data, ns_sep)
 
-            # Update aliases and linked references
-            found_aliases = data.get("aliases", [])
+            found_aliases = file.data.get("aliases", [])
             unique_aliases.update(found_aliases)
-            ns_parent = data.get("namespace_parent", "")
+            ns_parent = file.data.get("namespace_parent", "")
             linked_references = [
                 found_aliases,
-                data.get("draws", []),
-                data.get("page_references", []),
-                data.get("tags", []),
-                data.get("tagged_backlinks", []),
-                data.get("properties_page_builtin", []),
-                data.get("properties_page_user", []),
-                data.get("properties_block_builtin", []),
-                data.get("properties_block_user", []),
+                file.data.get("draws", []),
+                file.data.get("page_references", []),
+                file.data.get("tags", []),
+                file.data.get("tagged_backlinks", []),
+                file.data.get("properties_page_builtin", []),
+                file.data.get("properties_page_user", []),
+                file.data.get("properties_block_builtin", []),
+                file.data.get("properties_block_user", []),
                 [ns_parent],
             ]
 
@@ -91,7 +89,7 @@ class LogseqGraph:
             for item in linked_references:
                 self.all_linked_references.setdefault(item, {})
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
-                self.all_linked_references[item].setdefault("found_in", []).append(name)
+                self.all_linked_references[item].setdefault("found_in", []).append(file.filename.name)
 
             if ns_parent:
                 linked_references.remove(ns_parent)
@@ -108,7 +106,6 @@ class LogseqGraph:
         self.dangling_links.difference_update(self.keys(), unique_aliases)
         self.dangling_links = set(sorted(self.dangling_links))
 
-        # Create alphanum dictionaries
         self.unique_linked_references = unique_linked_references
         self.unique_linked_references_namespaces = unique_linked_references_namespaces
 
@@ -141,21 +138,24 @@ class LogseqGraph:
         """
         Process summary data for each file based on metadata and content analysis.
         """
-        for name, data in self.data.items():
-            is_backlinked = check_is_backlinked(name, self.unique_linked_references)
-            is_backlinked_by_ns_only = check_is_backlinked(name, self.unique_linked_references_namespaces)
+        for file in self.files:
+            is_backlinked = check_is_backlinked(file.filename.name, self.unique_linked_references)
+            is_backlinked_by_ns_only = check_is_backlinked(file.filename.name, self.unique_linked_references_namespaces)
 
             node_type = "other"
-            if data.get("file_type") in ["journal", "page"]:
+            if file.data.get("file_type") in ("journal", "page"):
                 node_type = determine_node_type(
-                    data.get("has_content"), is_backlinked, is_backlinked_by_ns_only, data.get("has_backlinks")
+                    file.data.get("has_content"),
+                    is_backlinked,
+                    is_backlinked_by_ns_only,
+                    file.data.get("has_backlinks"),
                 )
 
-            data["node_type"] = node_type
-            data["is_backlinked"] = is_backlinked
-            data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
+            file.data["node_type"] = node_type
+            file.data["is_backlinked"] = is_backlinked
+            file.data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
             if is_backlinked_by_ns_only:
-                data["is_backlinked"] = False
+                file.data["is_backlinked"] = False
 
     def process_namespace_data(self):
         """
@@ -322,11 +322,10 @@ class LogseqGraph:
             Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for name, data in self.data.items():
-            values = data.get(criteria)
-            if values:
-                for value in values:
+        for file in self.files:
+            if file.data.get(criteria):
+                for value in file.data[criteria]:
                     subset_counter.setdefault(value, {})
                     subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                    subset_counter[value].setdefault("found_in", []).append(name)
+                    subset_counter[value].setdefault("found_in", []).append(file.filename.name)
         return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))

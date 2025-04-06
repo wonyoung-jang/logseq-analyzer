@@ -20,13 +20,13 @@ class LogseqFilename:
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
         self.original_name = self.file_path.stem
-        self.key = self.file_path.stem.lower()
+        self.name = self.file_path.stem.lower()
         self.parent = self.file_path.parent.name.lower()
         self.process_logseq_filename()
-        self.id = self.key[:2] if len(self.key) > 1 else f"!{self.key[0]}"
+        self.id = self.name[:2] if len(self.name) > 1 else f"!{self.name[0]}"
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
         self.file_path_parts = self.file_path.parts
-        self.name_secondary = f"{self.key} {self.parent} + {self.suffix}"
+        self.name_secondary = f"{self.name} {self.parent} + {self.suffix}"
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
 
@@ -36,13 +36,13 @@ class LogseqFilename:
         ns_file_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP")
         dir_journals = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
 
-        if self.key.endswith(ns_file_sep):
-            self.key = self.key.rstrip(ns_file_sep)
+        if self.name.endswith(ns_file_sep):
+            self.name = self.name.rstrip(ns_file_sep)
 
         if self.parent == dir_journals:
             self.process_logseq_journal_key()
         else:
-            self.key = unquote(self.key).replace(ns_file_sep, ns_sep)
+            self.name = unquote(self.name).replace(ns_file_sep, ns_sep)
 
     def process_logseq_journal_key(self) -> str:
         """Process the journal key to create a page title."""
@@ -62,7 +62,7 @@ class LogseqFilename:
             ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
         try:
-            date_object = datetime.strptime(self.key, py_file_name_format)
+            date_object = datetime.strptime(self.name, py_file_name_format)
             page_title_base = date_object.strftime(py_page_title_format_base).lower()
             if "o" in journal_page_format:
                 day_number = date_object.day
@@ -70,10 +70,10 @@ class LogseqFilename:
                 page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
             else:
                 page_title = page_title_base
-            self.key = page_title.replace("'", "")
+            self.name = page_title.replace("'", "")
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", self.key, py_file_name_format, e)
-            self.key = self.key
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", self.name, py_file_name_format, e)
+            self.name = self.name
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
