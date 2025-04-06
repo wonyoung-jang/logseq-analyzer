@@ -6,11 +6,7 @@ from typing import Any, Dict
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
-from .process_summary_data import (
-    check_is_backlinked,
-    determine_file_type,
-    determine_node_type,
-)
+from .process_summary_data import check_is_backlinked, determine_node_type
 from .logseq_file import LogseqFile
 
 

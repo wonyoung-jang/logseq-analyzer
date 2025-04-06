@@ -18,24 +18,17 @@ def check_is_backlinked(name: str, lookup: Set[str]) -> bool:
         return False
 
 
-def determine_file_type(parent_dir: str) -> str:
+def determine_file_type(parent: str) -> str:
     """
     Helper function to determine the file type based on the directory structure.
     """
-    file_type = None
-    if parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS"):
-        file_type = "asset"
-    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS"):
-        file_type = "draw"
-    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS"):
-        file_type = "journal"
-    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES"):
-        file_type = "page"
-    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS"):
-        file_type = "whiteboard"
-    else:
-        file_type = "other"
-    return file_type
+    return {
+        ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS"): "asset",
+        ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS"): "draw",
+        ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS"): "journal",
+        ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES"): "page",
+        ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS"): "whiteboard",
+    }.get(parent, "other")
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:

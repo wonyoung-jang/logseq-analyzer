@@ -2,9 +2,7 @@
 Process content data for Logseq.
 """
 
-from collections import defaultdict
-from typing import Dict, List, Pattern, Set, Tuple
-import logging
+from typing import List, Pattern, Tuple
 
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
 
