@@ -25,7 +25,7 @@ class LogseqFilename:
         self.process_logseq_filename()
         self.id = self.key[:2] if len(self.key) > 1 else f"!{self.key[0]}"
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
-        self.file_path_parts = list(self.file_path.parts)
+        self.file_path_parts = self.file_path.parts
         self.name_secondary = f"{self.key} {self.parent} + {self.suffix}"
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()

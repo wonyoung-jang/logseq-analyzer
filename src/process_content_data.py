@@ -14,18 +14,6 @@ def find_all_lower(pattern: Pattern, text: str) -> List[str]:
     return [match.lower() for match in pattern.findall(text)]
 
 
-def create_alphanum(list_lookup: Set[str]) -> Dict[str, Set[str]]:
-    """Create alphanum dictionary from a list of strings."""
-    alphanum_dict = defaultdict(set)
-    for item in list_lookup:
-        if item:
-            id_key = item[:2] if len(item) > 1 else f"!{item[0]}"
-            alphanum_dict[id_key].add(item)
-        else:
-            logging.error("Empty item: %s", item)
-    return alphanum_dict
-
-
 def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
     """Helper function to split properties into built-in and user-defined."""
     builtin_props = [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties]

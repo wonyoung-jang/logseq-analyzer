@@ -7,74 +7,40 @@ from typing import Any, Dict, List, Set
 from ._global_objects import ANALYZER_CONFIG
 
 
-HAS_BACKLINKS = [
-    "page_references",
-    "tags",
-    "tagged_backlinks",
-    "properties_page_builtin",
-    "properties_page_user",
-    "properties_block_builtin",
-    "properties_block_user",
-]
-
-
-def check_has_backlinks(data) -> bool:
-    """
-    Helper function to check if a file has backlinks.
-    """
-    return any(data.get(key) for key in HAS_BACKLINKS)
-
-
-def check_is_backlinked(
-    name: str, graph_data: Dict[str, Any], alphanum_dict: Dict[str, Set[str]], is_backlinked_not_ns: bool = False
-) -> bool:
+def check_is_backlinked(name: str, lookup: Set[str]) -> bool:
     """
     Helper function to check if a file is backlinked.
     """
-    if is_backlinked_not_ns:
+    try:
+        lookup.remove(name)
+        return True
+    except KeyError:
         return False
 
-    id_key = graph_data["id"]
-    if id_key not in alphanum_dict:
-        return False
-    if name not in alphanum_dict[id_key]:
-        return False
 
-    return True
-
-
-def determine_file_type(file_path_parent_name: str, file_path_parts: List[str]) -> str:
+def determine_file_type(parent_dir: str) -> str:
     """
     Helper function to determine the file type based on the directory structure.
     """
-    assets_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    draws_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS")
-    journals_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
-    pages_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES")
-    whiteboards_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS")
-
     file_type = None
-
-    if file_path_parent_name == assets_dir or assets_dir in file_path_parts:
+    if parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS"):
         file_type = "asset"
-    elif file_path_parent_name == draws_dir:
+    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_DRAWS"):
         file_type = "draw"
-    elif file_path_parent_name == journals_dir:
+    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS"):
         file_type = "journal"
-    elif file_path_parent_name == pages_dir:
+    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_PAGES"):
         file_type = "page"
-    elif file_path_parent_name == whiteboards_dir:
+    elif parent_dir == ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS"):
         file_type = "whiteboard"
     else:
         file_type = "other"
-
     return file_type
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
     """Helper function to determine node type based on summary data."""
     node_type = "other"
-
     if has_content:
         if is_backlinked:
             if has_backlinks:
@@ -95,7 +61,6 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
                 node_type = "orphan_true"
         else:
             node_type = "leaf"
-
     return node_type
 
 

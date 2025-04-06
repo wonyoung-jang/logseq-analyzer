@@ -60,7 +60,7 @@ def run_app(**kwargs):
 
     # Set the configuration for the Logseq graph
     ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
-    ANALYZER_CONFIG.set("CONSTANTS", "GRAPH_DIR", str(GRAPH_CONFIG.directory))
+    ANALYZER_CONFIG.set("CONSTANTS", "GRAPH_DIR", GRAPH_CONFIG.directory)
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.logseq_config)
 
     gui_instance.update_progress("setup", 100)
@@ -132,8 +132,8 @@ def run_app(**kwargs):
     output_dir_summary = ANALYZER_CONFIG.get("OUTPUT_DIRS", "SUMMARY")
     output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
-    ReportWriter("___meta___alphanum_dict", graph.alphanum_dict, output_dir_meta).write()
-    ReportWriter("___meta___alphanum_dict_ns", graph.alphanum_dict_ns, output_dir_meta).write()
+    ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
+    ReportWriter("___meta___unique_linked_refs_ns", graph.unique_linked_references_namespaces, output_dir_meta).write()
     ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
     ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
@@ -157,8 +157,8 @@ def run_app(**kwargs):
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
-        "___meta___alphanum_dict_ns": graph.alphanum_dict_ns,
-        "___meta___alphanum_dict": graph.alphanum_dict,
+        "___meta___unique_linked_refs_ns": graph.unique_linked_references_namespaces,
+        "___meta___unique_linked_refs": graph.unique_linked_references,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph.data,
         "all_refs": graph.all_linked_references,

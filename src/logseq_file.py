@@ -4,6 +4,8 @@ LogseqFile class to process Logseq files.
 
 from pathlib import Path
 
+from src.process_summary_data import determine_file_type
+
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
 from .process_content_data import (
@@ -28,9 +30,6 @@ class LogseqFile:
         Args:
             file_path (Path): The path to the Logseq file.
         """
-        self.logseq_filename = None
-        self.logseq_filestats = None
-
         self.file_path = file_path
         self.content = ""
         self.data = {}
@@ -55,6 +54,7 @@ class LogseqFile:
         self.data["bullet_count"] = ls_bullets.bullet_count
         self.data["bullet_count_empty"] = ls_bullets.bullet_count_empty
         self.data["bullet_density"] = ls_bullets.bullet_density
+        self.data["logseq_bullets_object"] = ls_bullets
         self.process_content_data()
 
     def get_single_file_metadata(self):
@@ -62,32 +62,22 @@ class LogseqFile:
         Extract metadata from a file.
         """
         ls_filename = LogseqFilename(self.file_path)
-        self.logseq_filename = ls_filename
-
         ls_filestats = LogseqFilestats(self.file_path)
-        self.logseq_filestats = ls_filestats
 
         self.data["file_path"] = str(self.file_path)
 
         self.data["id"] = ls_filename.id
         self.data["name"] = ls_filename.key
         self.data["name_secondary"] = ls_filename.name_secondary
-        self.data["original_name"] = ls_filename.original_name
-        self.data["file_path_parent_name"] = ls_filename.parent
         self.data["file_path_suffix"] = ls_filename.suffix
-        self.data["file_path_parts"] = ls_filename.file_path_parts
         self.data["uri"] = ls_filename.uri
         if ls_filename.logseq_url:
             self.data["logseq_url"] = ls_filename.logseq_url
 
-        self.data["date_created"] = ls_filestats.date_created
-        self.data["date_modified"] = ls_filestats.date_modified
-        self.data["time_existed"] = ls_filestats.time_existed
-        self.data["time_unmodified"] = ls_filestats.time_unmodified
-        self.data["size"] = ls_filestats.size
-
         self.data["logseq_filename_object"] = ls_filename.__dict__
         self.data["logseq_filestats_object"] = ls_filestats.__dict__
+        self.data["has_content"] = ls_filestats.size > 0
+        self.data["file_type"] = determine_file_type(ls_filename.parent)
 
     def process_content_data(self):
         """
@@ -99,7 +89,7 @@ class LogseqFile:
             for key, value in self.process_content_namespace_data(ns_sep):
                 self.data.setdefault(key, value)
 
-        # If no content, return self.data
+        # If no content, return
         if not self.content:
             return
 
@@ -196,9 +186,14 @@ class LogseqFile:
             }
         )
 
+        self.data.setdefault("has_backlinks", False)
         for key, value in primary_data.items():
             if value:
-                self.data[key] = value
+                self.data.setdefault(key, value)
+                if self.data.get("has_backlinks"):
+                    continue
+                if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+                    self.data["has_backlinks"] = True
 
     def process_content_namespace_data(self, ns_sep: str):
         """

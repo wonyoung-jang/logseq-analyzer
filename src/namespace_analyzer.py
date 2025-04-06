@@ -24,10 +24,6 @@ from .process_summary_data import list_files_with_keys, list_files_without_keys
 class NamespaceAnalyzer:
     """
     Class for analyzing namespace data in Logseq.
-
-    Attributes:
-        namespace_parts (dict): Dictionary mapping entry names to their namespace parts.
-        namespace_details (dict): Dictionary containing details about namespaces.
     """
 
     def __init__(self, data, dangling_links):
@@ -113,13 +109,15 @@ class NamespaceAnalyzer:
                 self.namespace_queries[q]["found_in"] = self.namespace_queries[q].get("found_in", [])
                 self.namespace_queries[q]["found_in"].append(entry)
                 self.namespace_queries[q]["namespace"] = page_ref
-                self.namespace_queries[q]["size"] = self.namespace_data.get(page_ref, {}).get("namespace_size", 0)
+                self.namespace_queries[q]["namespace_size"] = self.namespace_data.get(page_ref, {}).get(
+                    "namespace_size", 0
+                )
                 self.namespace_queries[q]["uri"] = self.data[entry].get("uri", "")
                 self.namespace_queries[q]["logseq_url"] = self.data[entry].get("logseq_url", "")
 
         # Sort the queries by size in descending order
         self.namespace_queries = dict(
-            sorted(self.namespace_queries.items(), key=lambda item: item[1]["size"], reverse=True)
+            sorted(self.namespace_queries.items(), key=lambda item: item[1]["namespace_size"], reverse=True)
         )
 
     def build_ns_tree(self):

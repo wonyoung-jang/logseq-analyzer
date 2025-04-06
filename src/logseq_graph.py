@@ -6,9 +6,7 @@ from typing import Any, Dict
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
-from .process_content_data import create_alphanum
 from .process_summary_data import (
-    check_has_backlinks,
     check_is_backlinked,
     determine_file_type,
     determine_node_type,
@@ -27,8 +25,8 @@ class LogseqGraph:
         """
         self.data = {}
         self.content_bullets = {}
-        self.alphanum_dict = {}
-        self.alphanum_dict_ns = {}
+        self.unique_linked_references = set()
+        self.unique_linked_references_namespaces = set()
         self.all_linked_references = {}
         self.dangling_links = set()
         self.namespace_data = {}
@@ -115,8 +113,8 @@ class LogseqGraph:
         self.dangling_links = set(sorted(self.dangling_links))
 
         # Create alphanum dictionaries
-        self.alphanum_dict = create_alphanum(unique_linked_references)
-        self.alphanum_dict_ns = create_alphanum(unique_linked_references_namespaces)
+        self.unique_linked_references = unique_linked_references
+        self.unique_linked_references_namespaces = unique_linked_references_namespaces
 
     def post_processing_content_namespaces(self, name: str, data: Dict[str, Any], ns_sep: str):
         """
@@ -148,25 +146,16 @@ class LogseqGraph:
         Process summary data for each file based on metadata and content analysis.
         """
         for name, data in self.data.items():
-            has_content = data.get("size") > 0
-            has_backlinks = check_has_backlinks(data)
-
-            file_type = determine_file_type(
-                data.get("file_path_parent_name"),
-                data.get("file_path_parts"),
-            )
-
-            is_backlinked = check_is_backlinked(name, data, self.alphanum_dict)
-            is_backlinked_by_ns_only = check_is_backlinked(name, data, self.alphanum_dict_ns, is_backlinked)
+            is_backlinked = check_is_backlinked(name, self.unique_linked_references)
+            is_backlinked_by_ns_only = check_is_backlinked(name, self.unique_linked_references_namespaces)
 
             node_type = "other"
-            if file_type in ["journal", "page"]:
-                node_type = determine_node_type(has_content, is_backlinked, is_backlinked_by_ns_only, has_backlinks)
+            if data.get("file_type") in ["journal", "page"]:
+                node_type = determine_node_type(
+                    data.get("has_content"), is_backlinked, is_backlinked_by_ns_only, data.get("has_backlinks")
+                )
 
-            data["file_type"] = file_type
             data["node_type"] = node_type
-            data["has_content"] = has_content
-            data["has_backlinks"] = has_backlinks
             data["is_backlinked"] = is_backlinked
             data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
 
