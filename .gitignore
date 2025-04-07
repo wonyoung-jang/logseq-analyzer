@@ -7,7 +7,7 @@
 *.prof
 *.spec
 *.txt
-*/__pycache__/*
+__pycache__
 *output*/*
 *output/*
 build/
@@ -27,7 +27,6 @@ source/index.rst
 src/logseq_uri_gui.py
 src/query_data.py
 src/summary.py
-src/tests/*
 to_delete/*
 user_config.ini
 logseq-analyzer-cache
