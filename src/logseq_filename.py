@@ -2,12 +2,11 @@
 This module handles processing of Logseq filenames based on their parent directory.
 """
 
-from calendar import c
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from pathlib import Path
 from urllib.parse import unquote
+import logging
 
 from ._global_objects import ANALYZER_CONFIG
 

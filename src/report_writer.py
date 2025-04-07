@@ -44,14 +44,16 @@ class ReportWriter:
                 if isinstance(values, (list, set)):
                     f.write(f"{indent}Values ({len(values)}):\n")
                     for index, value in enumerate(values, start=1):
-                        f.write(f"{indent}\t{index}\t|\t{value} ({type(value).__qualname__})\n")
+                        # f.write(f"{indent}\t{index}\t|\t{value} ({type(value).__qualname__})\n")
+                        f.write(f"{indent}\t{index}\t|\t{value}\n")
                     f.write("\n")
                     continue
 
                 if isinstance(values, dict):
                     for k, v in values.items():
                         if not isinstance(v, (list, set, dict)):
-                            f.write(f"{indent}\t{k:<60}: {v} ({type(v).__qualname__})\n")
+                            # f.write(f"{indent}\t{k:<60}: {v} ({type(v).__qualname__})\n")
+                            f.write(f"{indent}\t{k:<60}: {v}\n")
                             continue
                         f.write(f"{indent}\t{k:<60}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 2)
@@ -66,7 +68,8 @@ class ReportWriter:
                         f.write(f"{indent}{k}:\n")
                         ReportWriter.write_recursive(f, v, indent_level + 1)
                         continue
-                    f.write(f"{indent}{k:<60}: {v} ({type(v).__qualname__})\n")
+                    # f.write(f"{indent}{k:<60}: {v} ({type(v).__qualname__})\n")
+                    f.write(f"{indent}{k:<60}: {v}\n")
             elif isinstance(data, (list, set)):
                 try:
                     for index, item in enumerate(sorted(data), start=1):
@@ -74,12 +77,15 @@ class ReportWriter:
                             f.write(f"{indent}{index}:\n")
                             ReportWriter.write_recursive(f, item, indent_level + 1)
                             continue
-                        f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
+                        # f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
+                        f.write(f"{indent}{index}\t|\t{item}\n")
                 except TypeError:
                     for index, item in enumerate(data, start=1):
-                        f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
+                        # f.write(f"{indent}{index}\t|\t{item} ({type(item).__qualname__})\n")
+                        f.write(f"{indent}{index}\t|\t{item}\n")
             else:
-                f.write(f"{indent}{data} ({type(data).__qualname__})\n")
+                # f.write(f"{indent}{data} ({type(data).__qualname__})\n")
+                f.write(f"{indent}{data}\n")
 
     def write(self) -> None:
         """
@@ -114,14 +120,17 @@ class ReportWriter:
                 if self.type_output:
                     out_path = Path(parent) / filename
                 with out_path.open("w", encoding="utf-8") as f:
-                    f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                    # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                    f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
         elif ReportWriter.output_format == ReportWriter.txt_format:
             with out_path.open("w", encoding="utf-8") as f:
-                f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)
         else:
             logging.error("Unsupported output format: %s. Defaulting to text.", ReportWriter.output_format)
             with out_path.open("w", encoding="utf-8") as f:
-                f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
+                f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)

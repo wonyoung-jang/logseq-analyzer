@@ -8,6 +8,7 @@ import logging
 import shutil
 
 from ._global_objects import ANALYZER_CONFIG
+from .helpers import get_or_create_file_or_folder
 
 
 class LogseqAnalyzer:
@@ -25,31 +26,19 @@ class LogseqAnalyzer:
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
         self.output_dir = Path(ANALYZER_CONFIG.get("ANALYZER", "OUTPUT_DIR"))
-
         if self.output_dir.exists():
             try:
                 shutil.rmtree(self.output_dir)
                 logging.info("Removed existing output directory: %s", self.output_dir)
+                self.output_dir = get_or_create_file_or_folder(self.output_dir)
             except PermissionError:
                 logging.error("Permission denied to remove output directory: %s", self.output_dir)
-
-        try:
-            self.output_dir.mkdir(parents=True, exist_ok=True)
-            logging.info("Created output directory: %s", self.output_dir)
-        except FileExistsError:
-            logging.error("Output directory already exists: %s", self.output_dir)
-        except PermissionError:
-            logging.error("Permission denied to create output directory: %s", self.output_dir)
-        except OSError as e:
-            logging.error("Error creating output directory: %s", e)
 
     def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
         self.log_file = Path(self.output_dir) / ANALYZER_CONFIG.get("ANALYZER", "LOG_FILE")
-
         if self.log_file.exists():
             self.log_file.unlink()
-
         logging.basicConfig(
             filename=self.log_file,
             level=logging.DEBUG,
@@ -65,10 +54,7 @@ class LogseqAnalyzer:
         """
         Create a directory for deleted files.
         """
-        self.delete_dir = Path(ANALYZER_CONFIG.get("ANALYZER", "TO_DELETE_DIR"))
-        if not self.delete_dir.exists():
-            logging.info("Creating directory: %s", self.delete_dir)
-            self.delete_dir.mkdir(parents=True, exist_ok=True)
+        self.delete_dir = get_or_create_file_or_folder(Path(ANALYZER_CONFIG.get("ANALYZER", "TO_DELETE_DIR")))
 
     def get_logseq_analyzer_args(self, **kwargs: dict):
         """

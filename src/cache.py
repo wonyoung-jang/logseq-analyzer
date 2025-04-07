@@ -13,10 +13,9 @@ class Cache:
     Cache class to manage caching of modified files and directories.
     """
 
-    def __init__(self, cache_path: str = None):
+    def __init__(self):
         """Initialize the Cache class."""
-        self.cache_path = cache_path
-        self.cache = shelve.open(cache_path, protocol=5)
+        self.cache = shelve.open(ANALYZER_CONFIG.get("CONST", "CACHE"), protocol=5)
 
     def close(self):
         """Close the cache file."""

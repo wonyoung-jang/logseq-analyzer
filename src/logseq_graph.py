@@ -236,7 +236,7 @@ class LogseqGraph:
         for ext in file_extensions:
             output_name = f"_all_{ext}s"
             criteria = {"file_path_suffix": ext}
-            file_ext_dict[output_name] = self.list_files_with_keys_and_values(**criteria)
+            file_ext_dict[output_name] = self.list_files_with_keys_and_values(file_path_suffix=ext)
         self.summary_file_subsets["____file_extensions_dict"] = file_ext_dict
 
     def list_files_with_keys_and_values(self, **criteria) -> list:

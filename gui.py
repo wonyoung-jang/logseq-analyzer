@@ -331,7 +331,7 @@ if __name__ == "__main__":
     app = QApplication()
     gui = LogseqAnalyzerGUI()
     gui.show()
-    with open(resource_path("logseq-analyzer-theme.qss"), "r", encoding="utf-8") as f:
-        style = f.read()
-        gui.setStyleSheet(style)
+    # with open(resource_path("logseq-analyzer-theme.qss"), "r", encoding="utf-8") as f:
+    #     style = f.read()
+    #     gui.setStyleSheet(style)
     sys.exit(app.exec())
