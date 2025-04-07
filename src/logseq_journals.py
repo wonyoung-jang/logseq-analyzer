@@ -60,7 +60,11 @@ def process_journal_keys_to_datetime(journal_keys: List[str]) -> List[datetime]:
     processed_keys = []
     for key in journal_keys:
         try:
-            date_obj = datetime.strptime(key, "%Y-%m-%d %A")
+            if any(ordinal in key for ordinal in ("st", "nd", "rd", "th")):
+                key = key.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
+            date_obj = datetime.strptime(
+                key, ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", "")
+            )
             processed_keys.append(date_obj)
         except ValueError as e:
             logging.warning("Invalid date format for key: %s. Error: %s", key, e)
@@ -154,10 +158,14 @@ def extract_journals_from_dangling_links(dangling_links: List[str]) -> List[date
     journal_keys = []
     for link in dangling_links:
         try:
-            date_obj = datetime.strptime(link, "%Y-%m-%d %A")
+            if any(ordinal in link for ordinal in ("st", "nd", "rd", "th")):
+                link = link.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
+            date_obj = datetime.strptime(
+                link, ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", "")
+            )
             journal_keys.append(date_obj)
-        except ValueError:
-            continue
+        except ValueError as e:
+            logging.debug("Invalid date format for key: %s. Error: %s", link, e)
     journal_keys.sort()
     return journal_keys
 

@@ -42,7 +42,8 @@ class LogseqGraph:
         """
         for file_path in CACHE.iter_modified_files():
             file = LogseqFile(file_path)
-            file.process_single_file()
+            file.get_single_file_metadata()
+            file.process_content_data()
 
             name = file.data.get("name")
             if self.data.get(name):

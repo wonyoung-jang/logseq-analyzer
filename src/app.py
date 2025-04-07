@@ -92,8 +92,8 @@ def run_app(**kwargs):
     graph.generate_summary_data_subsets()
 
     # TODO Process journal keys to create a timeline
-    # journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
-    # process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
+    journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
+    process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
 

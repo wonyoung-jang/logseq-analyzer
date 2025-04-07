@@ -149,8 +149,9 @@ class RegexPatterns:
             ),
             "asset": re.compile(
                 r"""
-                \.\./assets/    # ../assets/ literal string
-                (.*)            # Capture group: anything
+                assets/         # /assets/ literal string
+                (.*?)           # Capture group: anything except newline (non-greedy)
+                \)              # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -257,7 +258,9 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \]                  # Closing bracket
                 \(                  # Opening parenthesis
-                \.\./assets/.*?     # "../assets/" followed by any characters (non-greedy)
+                .*?                 # Any characters (non-greedy)
+                assets/             # Literal "assets/"
+                .*?                 # Any characters (non-greedy)
                 \)                  # Closing parenthesis
                 """,
                 re.IGNORECASE | re.VERBOSE,

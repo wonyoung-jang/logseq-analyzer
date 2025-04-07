@@ -3,6 +3,7 @@ LogseqFile class to process Logseq files.
 """
 
 from pathlib import Path
+from typing import Generator
 
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
@@ -38,36 +39,18 @@ class LogseqFile:
         self.filename = None
         self.filestats = None
 
-    def process_single_file(self):
-        """
-        Process a single file: extract metadata, read content, and compute content-based metrics.
-        """
-        self.get_single_file_metadata()
-        ls_bullets = LogseqBullets(self.file_path)
-        ls_bullets.get_content()
-        ls_bullets.get_char_count()
-        ls_bullets.get_bullet_content()
-        ls_bullets.get_primary_bullet()
-        ls_bullets.get_bullet_density()
-        self.bullets = ls_bullets
-        self.content = ls_bullets.content
-        self.content_bullets = ls_bullets.content_bullets
-        self.primary_bullet = ls_bullets.primary_bullet
-        self.data["char_count"] = ls_bullets.char_count
-        self.data["bullet_count"] = ls_bullets.bullet_count
-        self.data["bullet_count_empty"] = ls_bullets.bullet_count_empty
-        self.data["bullet_density"] = ls_bullets.bullet_density
-        self.data["logseq_bullets_object"] = ls_bullets
-        self.process_content_data()
-
     def get_single_file_metadata(self):
         """
         Extract metadata from a file.
         """
         ls_filename = LogseqFilename(self.file_path)
         ls_filestats = LogseqFilestats(self.file_path)
+        ls_bullets = LogseqBullets(self.file_path)
+
         self.filename = ls_filename
         self.filestats = ls_filestats
+        self.bullets = ls_bullets
+
         self.data["file_path"] = str(self.file_path)
 
         self.data["id"] = ls_filename.id
@@ -82,6 +65,20 @@ class LogseqFile:
         self.data["logseq_filestats_object"] = ls_filestats.__dict__
         self.data["has_content"] = ls_filestats.size > 0
         self.data["file_type"] = determine_file_type(ls_filename.parent)
+
+        ls_bullets.get_content()
+        ls_bullets.get_char_count()
+        ls_bullets.get_bullet_content()
+        ls_bullets.get_primary_bullet()
+        ls_bullets.get_bullet_density()
+        self.content = ls_bullets.content
+        self.content_bullets = ls_bullets.content_bullets
+        self.primary_bullet = ls_bullets.primary_bullet
+        self.data["char_count"] = ls_bullets.char_count
+        self.data["bullet_count"] = ls_bullets.bullet_count
+        self.data["bullet_count_empty"] = ls_bullets.bullet_count_empty
+        self.data["bullet_density"] = ls_bullets.bullet_density
+        self.data["logseq_bullets_object"] = ls_bullets
 
     def process_content_data(self):
         """
@@ -199,7 +196,7 @@ class LogseqFile:
                 if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
                     self.data["has_backlinks"] = True
 
-    def process_content_namespace_data(self, ns_sep: str):
+    def process_content_namespace_data(self, ns_sep: str) -> Generator[str, str, None]:
         """
         Process namespaces in the data dictionary.
         """

@@ -2,6 +2,7 @@
 This module handles processing of Logseq filenames based on their parent directory.
 """
 
+from calendar import c
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -67,7 +68,9 @@ class LogseqFilename:
             if "o" in journal_page_format:
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
-                page_title = page_title_base.replace(f"{day_number}", day_with_ordinal)
+                page_title = page_title_base.replace(
+                    f"{day_number}", day_with_ordinal, 1
+                )  # Just 1st occurrence, may break with odd implementations
             else:
                 page_title = page_title_base
             self.name = page_title.replace("'", "")
@@ -107,15 +110,12 @@ class LogseqFilename:
             str: Python-style date format.
         """
         cljs_format = cljs_format.replace("o", "")
-        datetime_token_map = ANALYZER_CONFIG.datetime_token_map
-        datetime_token_pattern = ANALYZER_CONFIG.datetime_token_pattern
 
         def replace_token(match):
             token = match.group(0)
-            return datetime_token_map.get(token, token)
+            return ANALYZER_CONFIG.datetime_token_map.get(token, token)
 
-        py_format = datetime_token_pattern.sub(replace_token, cljs_format)
-        return py_format
+        return ANALYZER_CONFIG.datetime_token_pattern.sub(replace_token, cljs_format)
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):
