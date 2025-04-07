@@ -9,14 +9,15 @@ import logging
 
 from ._global_objects import ANALYZER_CONFIG, ANALYZER
 
+JSON_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
+TXT_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
+
 
 class ReportWriter:
     """
     A class to handle reporting and writing output to files.
     """
 
-    json_format = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
-    txt_format = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
     output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
@@ -108,7 +109,7 @@ class ReportWriter:
             out_path = ANALYZER.output_dir / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
-        if ReportWriter.output_format == ReportWriter.json_format:
+        if ReportWriter.output_format == JSON_FORMAT:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -116,14 +117,14 @@ class ReportWriter:
                 logging.error("Failed to write JSON for %s.", self.filename_prefix)
                 if out_path.exists():
                     out_path.unlink()
-                filename = f"{self.filename_prefix}{ReportWriter.txt_format}"
+                filename = f"{self.filename_prefix}{TXT_FORMAT}"
                 if self.type_output:
                     out_path = Path(parent) / filename
                 with out_path.open("w", encoding="utf-8") as f:
                     # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                     f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif ReportWriter.output_format == ReportWriter.txt_format:
+        elif ReportWriter.output_format == TXT_FORMAT:
             with out_path.open("w", encoding="utf-8") as f:
                 # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                 f.write(f"{filename} | Items: {count}\n\n")
