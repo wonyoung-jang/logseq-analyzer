@@ -35,7 +35,6 @@ def handle_move_files(
             return unlinked_assets
         unlinked_assets = ["=== Simulated only ==="] + unlinked_assets
         return unlinked_assets
-
     return []
 
 
@@ -52,6 +51,10 @@ def handle_move_directory(argument: bool, target_dir: Path, to_delete_dir: Path,
     Returns:
         List[str]: A list of moved files or an empty list if no files were moved.
     """
+    # print the arguments
+    if not target_dir:
+        return []
+
     moved, moved_names = get_all_folder_content(target_dir, to_delete_dir, default_dir)
 
     if moved:
@@ -60,7 +63,6 @@ def handle_move_directory(argument: bool, target_dir: Path, to_delete_dir: Path,
             return moved_names
         moved_names = ["=== Simulated only ==="] + moved_names
         return moved_names
-
     return []
 
 
@@ -134,8 +136,12 @@ def move_unlinked_assets(
         to_delete_dir (Path): The directory to move unlinked assets to.
     """
     asset_dir = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_ASSETS")
-    to_delete_asset_subdir = get_or_create_file_or_folder(to_delete_dir / asset_dir)
 
+    if not asset_dir:
+        logging.error("No asset directory found in configuration.")
+        return
+
+    to_delete_asset_subdir = get_or_create_file_or_folder(to_delete_dir / asset_dir)
     for name in summary_is_asset_not_backlinked:
         file_path = Path(graph_meta_data[name]["file_path"])
         new_path = to_delete_asset_subdir / file_path.name

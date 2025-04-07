@@ -108,6 +108,15 @@ def get_date_stats(timeline):
     """
     Get statistics about the timeline.
     """
+    if not timeline:
+        return {
+            "first_date": 0,
+            "last_date": 0,
+            "days": 0,
+            "weeks": 0,
+            "months": 0,
+            "years": 0,
+        }
     first_date = min(timeline)
     last_date = max(timeline)
     days, weeks, months, years = get_date_ranges(last_date, first_date)
