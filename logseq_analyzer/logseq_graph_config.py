@@ -66,6 +66,3 @@ class LogseqGraphConfig:
             ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
             with global_config_file.open("r", encoding="utf-8") as f:
                 self.ls_config.update(loads(f.read()))
-
-        for key, value in self.ls_config.items():
-            print(f"{key}: {value}")

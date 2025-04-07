@@ -23,4 +23,4 @@ dist/
 logseq-analyzer-output/
 to_delete/
 configuration/user_config.ini
-logseq-analyzer-cache
+logseq-analyzer-cache*
