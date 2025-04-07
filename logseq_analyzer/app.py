@@ -10,6 +10,7 @@ from .logseq_assets import handle_assets
 from .logseq_journals import (
     extract_journals_from_dangling_links,
     process_journals_timelines,
+    set_journal_py_formatting,
 )
 from .logseq_move_files import handle_move_files, handle_move_directory
 
@@ -55,6 +56,7 @@ def run_app(**kwargs):
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
     ANALYZER_CONFIG.get_logseq_target_dirs()
     CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
+    set_journal_py_formatting()
 
     gui_instance.update_progress("setup", 100)
     ################################################################
@@ -64,15 +66,23 @@ def run_app(**kwargs):
     # Process for only modified/new graph files
     graph = LogseqGraph()
     graph.process_graph_files()
+
     graph_data_db = CACHE.get("___meta___graph_data", {})
     graph_data_db.update(graph.data)
     graph.data = graph_data_db
+
     graph_content_db = CACHE.get("___meta___graph_content", {})
     graph_content_db.update(graph.content_bullets)
     graph.content_bullets = graph_content_db
+
     graph_files_db = CACHE.get("graph_files", [])
     graph_files = [f for f in graph.files if f not in graph_files_db]
     graph.files = graph_files + graph_files_db
+
+    graph_dangling_links_db = CACHE.get("dangling_links", set())
+    graph_dangling_links = [d for d in graph.dangling_links if d not in graph_dangling_links_db]
+    graph.dangling_links = set(graph_dangling_links + list(graph_dangling_links_db))
+
     graph.post_processing_content()
     graph.process_summary_data()
     graph.process_namespace_data()
@@ -86,7 +96,7 @@ def run_app(**kwargs):
     graph.generate_summary_file_subsets()
     graph.generate_summary_data_subsets()
 
-    # TODO Process journal keys to create a timeline
+    # Process journal keys to create a timeline
     journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
     process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
 

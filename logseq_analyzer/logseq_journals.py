@@ -3,11 +3,47 @@ Process logseq journals.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 import logging
 
 from ._global_objects import ANALYZER_CONFIG
 from .report_writer import ReportWriter
+
+
+def set_journal_py_formatting():
+    """
+    Set the formatting for journal files and pages in Python format.
+    """
+    journal_page_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
+    journal_file_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
+    py_file_name_format = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
+    if not py_file_name_format:
+        py_file_name_format = convert_cljs_date_to_py(journal_file_format)
+        ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+    py_page_title_no_ordinal = journal_page_format.replace("o", "")
+    py_page_title_format_base = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
+    if not py_page_title_format_base:
+        py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
+        ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+
+
+def convert_cljs_date_to_py(cljs_format) -> str:
+    """
+    Convert a Clojure-style date format to a Python-style date format.
+
+    Args:
+        cljs_format (str): Clojure-style date format.
+
+    Returns:
+        str: Python-style date format.
+    """
+    cljs_format = cljs_format.replace("o", "")
+
+    def replace_token(match):
+        token = match.group(0)
+        return ANALYZER_CONFIG.datetime_token_map.get(token, token)
+
+    return ANALYZER_CONFIG.datetime_token_pattern.sub(replace_token, cljs_format)
 
 
 def process_journals_timelines(journal_keys: List[str], dangling_journals: List[Union[str, datetime]]) -> None:
@@ -153,14 +189,14 @@ def get_dangling_journals_future(dangling_links: List[str], timeline_end: dateti
     return dangling_journals_future
 
 
-def extract_journals_from_dangling_links(dangling_links: List[str]) -> List[datetime]:
+def extract_journals_from_dangling_links(dangling_links: Set[str]) -> List[datetime]:
     """
-    Extract and sort journal keys from a list of dangling link strings.
+    Extract and sort journal keys from a set of dangling link strings.
 
     Only keys that match the journal format "%Y-%m-%d %A" are considered.
 
     Args:
-        dangling_links (List[str]): List of dangling link strings.
+        dangling_links (Set[str]): Set of dangling link strings.
 
     Returns:
         List[datetime]: Sorted list of journal datetime objects.

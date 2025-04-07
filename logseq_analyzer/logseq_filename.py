@@ -47,19 +47,8 @@ class LogseqFilename:
     def process_logseq_journal_key(self) -> str:
         """Process the journal key to create a page title."""
         journal_page_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
-        journal_file_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
-
         py_file_name_format = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
-        if not py_file_name_format:
-            py_file_name_format = LogseqFilename.convert_cljs_date_to_py(journal_file_format)
-            ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
-
-        py_page_title_no_ordinal = journal_page_format.replace("o", "")
-
         py_page_title_format_base = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
-        if not py_page_title_format_base:
-            py_page_title_format_base = LogseqFilename.convert_cljs_date_to_py(py_page_title_no_ordinal)
-            ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
         try:
             date_object = datetime.strptime(self.name, py_file_name_format)
@@ -101,25 +90,6 @@ class LogseqFilename:
         encoded_path = path_with_slashes
         target_segment = target_segment[:-1]
         return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
-
-    @staticmethod
-    def convert_cljs_date_to_py(cljs_format) -> str:
-        """
-        Convert a Clojure-style date format to a Python-style date format.
-
-        Args:
-            cljs_format (str): Clojure-style date format.
-
-        Returns:
-            str: Python-style date format.
-        """
-        cljs_format = cljs_format.replace("o", "")
-
-        def replace_token(match):
-            token = match.group(0)
-            return ANALYZER_CONFIG.datetime_token_map.get(token, token)
-
-        return ANALYZER_CONFIG.datetime_token_pattern.sub(replace_token, cljs_format)
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

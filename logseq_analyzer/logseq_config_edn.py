@@ -24,7 +24,7 @@ class LogseqConfigEDN:
     def clean_logseq_config_edn_content(self):
         """Extract EDN configuration data from a Logseq configuration file."""
         with self.config_file.open("r", encoding="utf-8") as f:
-            for line in f.readlines():
+            for line in f:
                 line = line.strip()
                 if not line or line.startswith(";"):
                     continue
