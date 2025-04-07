@@ -110,9 +110,9 @@ class RegexPatterns:
                 r"""
                 \#          # Hash character
                 \[\[        # Opening double brackets
-                ([^\]]+?)   # Capture group: anything except closing bracket (non-greedy)
+                ([^\]\]]+?) # Capture group: anything except closing brackets (non-greedy)
                 \]\]        # Closing double brackets
-                (?=\s+|\])  # Positive lookahead: whitespace or closing bracket
+                (?!)
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -120,8 +120,8 @@ class RegexPatterns:
                 r"""
                 \#              # Hash character
                 (?!\[\[)        # Negative lookahead: not followed by [[
-                (\w+)           # Capture group: word characters
-                (?=\s+|\b])     # Positive lookahead: whitespace or word boundary with ]
+                ([^\s#]+)       # Capture group: anything except whitespace or hash
+                (?!\s*-\s)      # Negative lookahead: not followed by whitespace and hyphen
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),

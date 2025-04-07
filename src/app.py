@@ -40,24 +40,18 @@ def run_app(**kwargs):
     PATTERNS.compile_re_ext_links()
     PATTERNS.compile_re_emb_links()
     PATTERNS.compile_re_code()
-
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
-
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()
     ANALYZER.create_log_file()
     ANALYZER.create_delete_directory()
-
     GRAPH_CONFIG.initialize_graph(ANALYZER.args.graph_folder)
     GRAPH_CONFIG.initialize_config(ANALYZER.args)
-
-    CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
-
-    # Set the configuration for the Logseq graph
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
     ANALYZER_CONFIG.get_logseq_target_dirs()
+    CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
 
     gui_instance.update_progress("setup", 100)
 
