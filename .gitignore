@@ -1,32 +1,26 @@
 .*/*
-.pylintrc
 *.code-workspace
-*.dat
 *.json
 *.log
-*.prof
 *.spec
 *.txt
+.*/
 __pycache__
-*output*/*
-*output/*
+
+# Pylint
+.pylintrc
+
+# cProfile
+*.dat
+*.prof
+
+# Pyinstaller
 build/
-config_user.ini
 dist/
-logseq_api_cache/*
-logseqanalyzerdata*
-make.bat
-Makefile
-output*/*
-output/*
-persistence.py
-process_all_graph.py
-profile_output*
-source/conf.py
-source/index.rst
-src/logseq_uri_gui.py
-src/query_data.py
-src/summary.py
-to_delete/*
-user_config.ini
+
+# Logseq Analyzer specific files
+~notes/
+logseq-analyzer-output/
+to_delete/
+configuration/user_config.ini
 logseq-analyzer-cache
