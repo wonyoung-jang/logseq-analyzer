@@ -110,7 +110,7 @@ class RegexPatterns:
                 r"""
                 \#          # Hash character
                 \[\[        # Opening double brackets
-                ([^\]]+?) # Capture group: anything except closing brackets (non-greedy)
+                [^\]\#]+?   # Anything except closing brackets or hash (non-greedy)
                 \]\]        # Closing double brackets
                 """,
                 re.IGNORECASE | re.VERBOSE,
@@ -119,8 +119,8 @@ class RegexPatterns:
                 r"""
                 \#              # Hash character
                 (?!\[\[)        # Negative lookahead: not followed by [[
-                ([^\s#]+)       # Capture group: anything except whitespace or hash
-                (?!\s*-\s)      # Negative lookahead: not followed by whitespace and hyphen
+                [^\]\#\s]+?     # Anything except closing brackets, hash, or whitespace (non-greedy)
+                (?=\s|$)        # Followed by whitespace or end of line
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -148,7 +148,7 @@ class RegexPatterns:
             ),
             "asset": re.compile(
                 r"""
-                assets/         # /assets/ literal string
+                assets/         # assets/ literal string
                 (.*?)           # Capture group: anything except newline (non-greedy)
                 \)              # Closing parenthesis
                 """,
@@ -156,7 +156,7 @@ class RegexPatterns:
             ),
             "draw": re.compile(
                 r"""
-                (?<!\#)              # Negative lookbehind: not preceded by #
+                (?<!\#)             # Negative lookbehind: not preceded by #
                 \[\[                # Opening double brackets
                 draws/(.+?)         # Literal "draws/" followed by capture group
                 \.excalidraw        # Literal ".excalidraw"

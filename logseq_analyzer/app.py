@@ -29,11 +29,11 @@ class GUIInstanceDummy:
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
 
+    # Get GUI instance if available
+    gui_instance = kwargs.get("gui_instance", GUIInstanceDummy())
     ###################################################################
     # Phase 01: Setup
     ###################################################################
-    # Get GUI instance if available
-    gui_instance = kwargs.get("gui_instance", GUIInstanceDummy())
     gui_instance.update_progress("setup", 20)
 
     PATTERNS.compile_re_content()
@@ -57,7 +57,6 @@ def run_app(**kwargs):
     CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
 
     gui_instance.update_progress("setup", 100)
-
     ################################################################
     # Phase 02: Process files
     ################################################################
@@ -79,7 +78,6 @@ def run_app(**kwargs):
     graph.process_namespace_data()
 
     gui_instance.update_progress("process_files", 100)
-
     #################################################################
     # Phase 03: Process summaries
     #################################################################
@@ -93,7 +91,6 @@ def run_app(**kwargs):
     process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
 
     gui_instance.update_progress("summary", 100)
-
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
@@ -122,7 +119,6 @@ def run_app(**kwargs):
     }
 
     gui_instance.update_progress("move_files", 100)
-
     #####################################################################
     # Phase 05: Outputs
     #####################################################################

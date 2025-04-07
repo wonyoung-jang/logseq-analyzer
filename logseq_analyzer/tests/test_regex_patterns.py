@@ -19,11 +19,17 @@ def test_compile_re_code_populates_code_dict(rp):
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
+        ("```\nprint('hello')\n```", "multiline_code_block", True),
         ("```print('hello')\n```", "multiline_code_block", True),
         ("```calc 1+1\n```", "calc_block", True),
+        ("```\ncalc 1+1\n```", "calc_block", False),
         ("```python\nx=1\n```", "multiline_code_lang", True),
+        ("```\npython\nx=1\n```", "multiline_code_lang", False),
         ("`x=1`", "inline_code_block", True),
+        ("`x\n=1`", "inline_code_block", False),
         ("no backticks here", "multiline_code_block", False),
+        ("one `backtick here", "multiline_code_block", False),
+        ("one `backtick here", "inline_code_block", False),
     ],
 )
 def test_code_patterns(rp, text, key, should_match):
