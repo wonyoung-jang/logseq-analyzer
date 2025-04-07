@@ -19,6 +19,8 @@ from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename
 
+NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
+
 
 class LogseqFile:
     """A class to represent a Logseq file."""
@@ -43,51 +45,46 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
-        ls_filename = LogseqFilename(self.file_path)
-        ls_filestats = LogseqFilestats(self.file_path)
-        ls_bullets = LogseqBullets(self.file_path)
-
-        self.filename = ls_filename
-        self.filestats = ls_filestats
-        self.bullets = ls_bullets
+        self.filename = LogseqFilename(self.file_path)
+        self.filestats = LogseqFilestats(self.file_path)
+        self.bullets = LogseqBullets(self.file_path)
 
         self.data["file_path"] = str(self.file_path)
 
-        self.data["id"] = ls_filename.id
-        self.data["name"] = ls_filename.name
-        self.data["name_secondary"] = ls_filename.name_secondary
-        self.data["file_path_suffix"] = ls_filename.suffix
-        self.data["uri"] = ls_filename.uri
-        if ls_filename.logseq_url:
-            self.data["logseq_url"] = ls_filename.logseq_url
+        self.data["id"] = self.filename.id
+        self.data["name"] = self.filename.name
+        self.data["name_secondary"] = self.filename.name_secondary
+        self.data["file_path_suffix"] = self.filename.suffix
+        self.data["uri"] = self.filename.uri
+        if self.filename.logseq_url:
+            self.data["logseq_url"] = self.filename.logseq_url
 
-        self.data["logseq_filename_object"] = ls_filename.__dict__
-        self.data["logseq_filestats_object"] = ls_filestats.__dict__
-        self.data["has_content"] = ls_filestats.size > 0
-        self.data["file_type"] = determine_file_type(ls_filename.parent)
+        self.data["logseq_filename_object"] = self.filename.__dict__
+        self.data["logseq_filestats_object"] = self.filestats.__dict__
+        self.data["has_content"] = self.filestats.size > 0
+        self.data["file_type"] = determine_file_type(self.filename.parent)
 
-        ls_bullets.get_content()
-        ls_bullets.get_char_count()
-        ls_bullets.get_bullet_content()
-        ls_bullets.get_primary_bullet()
-        ls_bullets.get_bullet_density()
-        self.content = ls_bullets.content
-        self.content_bullets = ls_bullets.content_bullets
-        self.primary_bullet = ls_bullets.primary_bullet
-        self.data["char_count"] = ls_bullets.char_count
-        self.data["bullet_count"] = ls_bullets.bullet_count
-        self.data["bullet_count_empty"] = ls_bullets.bullet_count_empty
-        self.data["bullet_density"] = ls_bullets.bullet_density
-        self.data["logseq_bullets_object"] = ls_bullets
+        self.bullets.get_content()
+        self.bullets.get_char_count()
+        self.bullets.get_bullet_content()
+        self.bullets.get_primary_bullet()
+        self.bullets.get_bullet_density()
+        self.content = self.bullets.content
+        self.content_bullets = self.bullets.content_bullets
+        self.primary_bullet = self.bullets.primary_bullet
+        self.data["logseq_bullets_object"] = {
+            k: v
+            for k, v in self.bullets.__dict__.items()
+            if k not in ("content", "content_bullets", "all_bullets", "primary_bullet") and v
+        }
 
     def process_content_data(self):
         """
         Process content data to extract various elements like backlinks, tags, and properties.
         """
         # Process namespaces
-        ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
-        if ns_sep in self.data["name"]:
-            for key, value in self.process_content_namespace_data(ns_sep):
+        if self.filename.is_namespace:
+            for key, value in self.process_content_namespace_data():
                 self.data.setdefault(key, value)
 
         # If no content, return
@@ -192,24 +189,23 @@ class LogseqFile:
         for key, value in primary_data.items():
             if value:
                 self.data.setdefault(key, value)
-                if self.data.get("has_backlinks"):
-                    continue
-                if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
-                    self.data["has_backlinks"] = True
+                if not self.data.get("has_backlinks"):
+                    if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+                        self.data["has_backlinks"] = True
 
-    def process_content_namespace_data(self, ns_sep: str) -> Generator[str, str, None]:
+    def process_content_namespace_data(self) -> Generator[str, str, None]:
         """
         Process namespaces in the data dictionary.
         """
-        namespace_parts_list = self.data["name"].split(ns_sep)
-        namespace_level = len(namespace_parts_list)
-        namespace_root = namespace_parts_list[0]
-        namespace_stem = namespace_parts_list[-1]
+        ns_parts_list = self.filename.name.split(NS_SEP)
+        namespace_level = len(ns_parts_list)
+        namespace_root = ns_parts_list[0]
+        namespace_stem = ns_parts_list[-1]
         namespace_parent = namespace_root
         if namespace_level > 2:
-            namespace_parent = namespace_parts_list[-2]
+            namespace_parent = ns_parts_list[-2]
 
-        namespace_parts = {part: level for level, part in enumerate(namespace_parts_list, start=1)}
+        namespace_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
         namespace_data = {
             "namespace_root": namespace_root,
             "namespace_parent": namespace_parent,

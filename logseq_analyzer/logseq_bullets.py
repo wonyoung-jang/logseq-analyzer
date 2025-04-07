@@ -16,7 +16,7 @@ class LogseqBullets:
         self.file_path = file_path
         self.content = ""
         self.primary_bullet = ""
-        self.bullet_content = []
+        self.all_bullets = []
         self.content_bullets = []
         self.char_count = 0
         self.bullet_count = 0
@@ -41,20 +41,20 @@ class LogseqBullets:
     def get_bullet_content(self):
         """Get all bullets split into a list"""
         if self.content:
-            self.bullet_content = PATTERNS.content["bullet"].split(self.content)
+            self.all_bullets = PATTERNS.content["bullet"].split(self.content)
 
     def get_primary_bullet(self):
         """Get the Logseq primary bullet if available"""
-        if len(self.bullet_content) == 1:
-            primary = self.bullet_content[-1].strip()
+        if len(self.all_bullets) == 1:
+            primary = self.all_bullets[-1].strip()
             if primary:
                 self.primary_bullet = primary
                 self.bullet_count = 1
             else:
                 self.bullet_count_empty = 1
-        elif len(self.bullet_content) > 1:
-            self.primary_bullet = self.bullet_content[0].strip()
-            for bullet in self.bullet_content[1:]:
+        elif len(self.all_bullets) > 1:
+            self.primary_bullet = self.all_bullets[0].strip()
+            for bullet in self.all_bullets[1:]:
                 stripped_bullet = bullet.strip()
                 if not stripped_bullet:
                     self.bullet_count_empty += 1

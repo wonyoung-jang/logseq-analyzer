@@ -9,6 +9,8 @@ from .namespace_analyzer import NamespaceAnalyzer
 from .process_summary_data import check_is_backlinked, determine_node_type
 from .logseq_file import LogseqFile
 
+NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
+
 
 class LogseqGraph:
     """
@@ -62,12 +64,10 @@ class LogseqGraph:
         unique_aliases = set()
 
         # Process each file's content
-        ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
-
         for file in self.files:
-            if ns_sep in file.filename.name:
+            if file.filename.is_namespace:
                 unique_linked_references_namespaces.update([file.data["namespace_root"], file.filename.name])
-                self.post_processing_content_namespaces(file.filename.name, file.data, ns_sep)
+                self.post_processing_content_namespaces(file.filename.name, file.data)
 
             found_aliases = file.data.get("aliases", [])
             unique_aliases.update(found_aliases)
@@ -114,14 +114,14 @@ class LogseqGraph:
         self.unique_linked_references = unique_linked_references
         self.unique_linked_references_namespaces = unique_linked_references_namespaces
 
-    def post_processing_content_namespaces(self, name: str, data: Dict[str, Any], ns_sep: str):
+    def post_processing_content_namespaces(self, name: str, data: Dict[str, Any]):
         """
         Post-process namespaces in the content data.
         """
-        namespace_parts_list = name.split(ns_sep)
+        namespace_parts_list = name.split(NS_SEP)
         namespace_level = data["namespace_level"]
         ns_root = data["namespace_root"]
-        ns_parent = ns_sep.join(namespace_parts_list[:-1])
+        ns_parent = NS_SEP.join(namespace_parts_list[:-1])
 
         if ns_root in self.data:
             root = self.data[ns_root]
@@ -166,7 +166,7 @@ class LogseqGraph:
         """
         Process namespace data and perform extended analysis for the Logseq Analyzer.
         """
-        ns = NamespaceAnalyzer(self.data, self.dangling_links)
+        ns = NamespaceAnalyzer(self.files, self.data, self.dangling_links)
         ns.init_ns_parts()
         ns.get_unique_ns_parts()
         ns.analyze_ns_details()

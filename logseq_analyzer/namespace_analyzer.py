@@ -15,10 +15,14 @@ Problems:
 """
 
 from collections import Counter, defaultdict
+from typing import List
 import logging
 
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
-from .process_summary_data import list_files_with_keys, list_files_without_keys
+from .logseq_file import LogseqFile
+from .process_summary_data import list_files_without_keys, yield_files_with_keys
+
+NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
 
 class NamespaceAnalyzer:
@@ -26,21 +30,22 @@ class NamespaceAnalyzer:
     Class for analyzing namespace data in Logseq.
     """
 
-    def __init__(self, data, dangling_links):
+    def __init__(self, files: List[LogseqFile], data, dangling_links):
         """
         Initialize the NamespaceAnalyzer instance.
         """
+        self.files = files
         self.data = data
         self.dangling_links = dangling_links
         self.namespace_data = {}
         self.namespace_parts = {}
         self.unique_namespace_parts = set()
         self.namespace_details = {}
-        self.unique_namespaces_per_level = {}
+        self.unique_namespaces_per_level = defaultdict(set)
         self.namespace_queries = {}
         self.tree = {}
-        self.conflicts_non_namespace = {}
-        self.conflicts_dangling = {}
+        self.conflicts_non_namespace = defaultdict(list)
+        self.conflicts_dangling = defaultdict(list)
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
 
@@ -48,8 +53,7 @@ class NamespaceAnalyzer:
         """
         Create namespace parts from the data.
         """
-        is_namespace = list_files_with_keys(self.data, "namespace_level")
-        for name in is_namespace:
+        for name in yield_files_with_keys(self.data, "namespace_level"):
             self.namespace_data.setdefault(
                 name,
                 {k: v for k, v in self.data[name].items() if "namespace" in k and v},
@@ -64,7 +68,6 @@ class NamespaceAnalyzer:
         """
         for parts in self.namespace_parts.values():
             self.unique_namespace_parts.update(parts.keys())
-        return self.unique_namespace_parts
 
     def analyze_ns_details(self):
         """
@@ -87,7 +90,6 @@ class NamespaceAnalyzer:
         """
         Get unique namespaces by level.
         """
-        self.unique_namespaces_per_level = defaultdict(set)
         for parts in self.namespace_parts.values():
             for part, level in parts.items():
                 self.unique_namespaces_per_level[level].add(part)
@@ -96,8 +98,7 @@ class NamespaceAnalyzer:
         """
         Analyze namespace queries.
         """
-        self.namespace_queries = {}
-        for entry, data in self.data.items():
+        for name, data in self.data.items():
             got_ns_queries = data.get("namespace_queries")
             if not got_ns_queries:
                 continue
@@ -109,14 +110,13 @@ class NamespaceAnalyzer:
 
                 page_ref = page_refs[0]
                 self.namespace_queries[q] = self.namespace_queries.get(q, {})
-                self.namespace_queries[q]["found_in"] = self.namespace_queries[q].get("found_in", [])
-                self.namespace_queries[q]["found_in"].append(entry)
+                self.namespace_queries[q].setdefault("found_in", []).append(name)
                 self.namespace_queries[q]["namespace"] = page_ref
                 self.namespace_queries[q]["namespace_size"] = self.namespace_data.get(page_ref, {}).get(
                     "namespace_size", 0
                 )
-                self.namespace_queries[q]["uri"] = self.data[entry].get("uri", "")
-                self.namespace_queries[q]["logseq_url"] = self.data[entry].get("logseq_url", "")
+                self.namespace_queries[q]["uri"] = self.data[name].get("uri", "")
+                self.namespace_queries[q]["logseq_url"] = self.data[name].get("logseq_url", "")
 
         # Sort the queries by size in descending order
         self.namespace_queries = dict(
@@ -146,8 +146,6 @@ class NamespaceAnalyzer:
         non_ns_names = list_files_without_keys(self.data, "namespace_level")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(self.dangling_links)
-        self.conflicts_non_namespace = defaultdict(list)
-        self.conflicts_dangling = defaultdict(list)
         for entry, parts in self.namespace_parts.items():
             for part in parts:
                 if part in potential_non_ns_names:
@@ -192,12 +190,11 @@ class NamespaceAnalyzer:
         """
         Get unique conflicts for each namespace part.
         """
-        ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
         for part, details in self.conflicts_parent_depth.items():
             level = int(part.split(" ")[-1])
             unique_pages = set()
             for page in details:
-                parts = page.split(ns_sep)
+                parts = page.split(NS_SEP)
                 up_to_level = parts[:level]
-                unique_pages.add(ns_sep.join(up_to_level))
+                unique_pages.add(NS_SEP.join(up_to_level))
             self.conflicts_parent_unique[part] = unique_pages

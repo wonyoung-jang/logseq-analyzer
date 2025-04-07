@@ -10,6 +10,8 @@ import logging
 
 from ._global_objects import ANALYZER_CONFIG
 
+NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
+
 
 @dataclass
 class LogseqFilename:
@@ -29,10 +31,10 @@ class LogseqFilename:
         self.name_secondary = f"{self.name} {self.parent} + {self.suffix}"
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
+        self.is_namespace = NS_SEP in self.name
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        ns_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_SEP")
         ns_file_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP")
         dir_journals = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
 
@@ -42,7 +44,7 @@ class LogseqFilename:
         if self.parent == dir_journals:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(ns_file_sep, ns_sep)
+            self.name = unquote(self.name).replace(ns_file_sep, NS_SEP)
 
     def process_logseq_journal_key(self) -> str:
         """Process the journal key to create a page title."""
