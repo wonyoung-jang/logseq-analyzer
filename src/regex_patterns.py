@@ -110,9 +110,8 @@ class RegexPatterns:
                 r"""
                 \#          # Hash character
                 \[\[        # Opening double brackets
-                ([^\]\]]+?) # Capture group: anything except closing brackets (non-greedy)
+                ([^\]]+?) # Capture group: anything except closing brackets (non-greedy)
                 \]\]        # Closing double brackets
-                (?!)
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -636,6 +635,16 @@ class RegexPatterns:
                 \#\+BEGIN_COMMENT         # "#BEGIN_"
                 .*?                 # Any characters (non-greedy)
                 \#\+END_COMMENT      # "#END_"
+                .*?                 # Any characters (non-greedy)
+                \n                  # Newline
+                """,
+                re.DOTALL | re.IGNORECASE | re.VERBOSE,
+            ),
+            "example": re.compile(
+                r"""
+                \#\+BEGIN_EXAMPLE   # "#BEGIN_"
+                .*?                 # Any characters (non-greedy)
+                \#\+END_EXAMPLE     # "#END_"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,

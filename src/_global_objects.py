@@ -2,7 +2,13 @@
 This module initializes global objects used throughout the application.
 """
 
-PATTERNS, ANALYZER_CONFIG, ANALYZER, GRAPH_CONFIG, CACHE = (None, None, None, None, None)
+PATTERNS, ANALYZER_CONFIG, ANALYZER, GRAPH_CONFIG, CACHE = (
+    None,
+    None,
+    None,
+    None,
+    None,
+)
 
 
 def initialize_global_objects():

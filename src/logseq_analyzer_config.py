@@ -72,8 +72,16 @@ class LogseqAnalyzerConfig:
         """Set the Logseq configuration data."""
         self.set("ANALYZER", "REPORT_FORMAT", report_format)
         self.set("CONST", "GRAPH_DIR", gc.directory)
-        self.set("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT", gc.ls_config["journal_page_title_format"])
-        self.set("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT", gc.ls_config["journal_file_name_format"])
+        self.set(
+            "LOGSEQ_CONFIG",
+            "JOURNAL_PAGE_TITLE_FORMAT",
+            gc.ls_config["journal_page_title_format"],
+        )
+        self.set(
+            "LOGSEQ_CONFIG",
+            "JOURNAL_FILE_NAME_FORMAT",
+            gc.ls_config["journal_file_name_format"],
+        )
         self.set("LOGSEQ_CONFIG", "DIR_PAGES", gc.ls_config["pages_directory"])
         self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", gc.ls_config["journals_directory"])
         self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", gc.ls_config["whiteboards_directory"])

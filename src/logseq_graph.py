@@ -99,7 +99,11 @@ class LogseqGraph:
 
         # Create alphanum lookups and identify dangling links
         self.all_linked_references = dict(
-            sorted(self.all_linked_references.items(), key=lambda item: item[1]["count"], reverse=True)
+            sorted(
+                self.all_linked_references.items(),
+                key=lambda item: item[1]["count"],
+                reverse=True,
+            )
         )
 
         # Create dangling links
@@ -258,6 +262,7 @@ class LogseqGraph:
             "advanced_commands_caution",
             "advanced_commands_center",
             "advanced_commands_comment",
+            "advanced_commands_example",
             "advanced_commands_important",
             "advanced_commands_note",
             "advanced_commands_pinned",

@@ -49,7 +49,9 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
-def process_external_links(external_links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+def process_external_links(
+    external_links: List[str],
+) -> Tuple[List[str], List[str], List[str]]:
     """Process external links and categorize them."""
     internet = []
     alias = []
@@ -68,7 +70,9 @@ def process_external_links(external_links: List[str]) -> Tuple[List[str], List[s
     return external_links, internet, alias
 
 
-def process_embedded_links(embedded_links: List[str]) -> Tuple[List[str], List[str], List[str]]:
+def process_embedded_links(
+    embedded_links: List[str],
+) -> Tuple[List[str], List[str], List[str]]:
     """Process embedded links and categorize them."""
     internet = []
     asset = []

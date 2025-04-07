@@ -104,6 +104,7 @@ class LogseqFile:
             "advanced_commands_caution": find_all_lower(PATTERNS.advcommand["caution"], self.content),
             "advanced_commands_center": find_all_lower(PATTERNS.advcommand["center"], self.content),
             "advanced_commands_comment": find_all_lower(PATTERNS.advcommand["comment"], self.content),
+            "advanced_commands_example": find_all_lower(PATTERNS.advcommand["example"], self.content),
             "advanced_commands_important": find_all_lower(PATTERNS.advcommand["important"], self.content),
             "advanced_commands_note": find_all_lower(PATTERNS.advcommand["note"], self.content),
             "advanced_commands_pinned": find_all_lower(PATTERNS.advcommand["pinned"], self.content),

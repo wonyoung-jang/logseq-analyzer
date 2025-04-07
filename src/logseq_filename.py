@@ -74,7 +74,12 @@ class LogseqFilename:
                 page_title = page_title_base
             self.name = page_title.replace("'", "")
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", self.name, py_file_name_format, e)
+            logging.warning(
+                "Failed to parse date from key '%s', format `%s`: %s",
+                self.name,
+                py_file_name_format,
+                e,
+            )
             self.name = self.name
 
     def convert_uri_to_logseq_url(self):

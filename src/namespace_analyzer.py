@@ -50,7 +50,10 @@ class NamespaceAnalyzer:
         """
         is_namespace = list_files_with_keys(self.data, "namespace_level")
         for name in is_namespace:
-            self.namespace_data.setdefault(name, {k: v for k, v in self.data[name].items() if "namespace" in k and v})
+            self.namespace_data.setdefault(
+                name,
+                {k: v for k, v in self.data[name].items() if "namespace" in k and v},
+            )
         self.namespace_parts = {
             k: v["namespace_parts"] for k, v in self.namespace_data.items() if v.get("namespace_parts")
         }
@@ -117,7 +120,11 @@ class NamespaceAnalyzer:
 
         # Sort the queries by size in descending order
         self.namespace_queries = dict(
-            sorted(self.namespace_queries.items(), key=lambda item: item[1]["namespace_size"], reverse=True)
+            sorted(
+                self.namespace_queries.items(),
+                key=lambda item: item[1]["namespace_size"],
+                reverse=True,
+            )
         )
 
     def build_ns_tree(self):
@@ -169,7 +176,10 @@ class NamespaceAnalyzer:
         conflicts = {}
         for part, levels in part_levels.items():
             if len(levels) > 1:
-                conflicts[part] = {"levels": sorted(list(levels)), "entries": part_entries[part]}
+                conflicts[part] = {
+                    "levels": sorted(list(levels)),
+                    "entries": part_entries[part],
+                }
 
         # Split so it's dict[part level] = [list of parts]
         for part, details in conflicts.items():

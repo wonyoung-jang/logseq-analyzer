@@ -7,7 +7,10 @@ from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PAT
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_assets import handle_assets
-from .logseq_journals import extract_journals_from_dangling_links, process_journals_timelines
+from .logseq_journals import (
+    extract_journals_from_dangling_links,
+    process_journals_timelines,
+)
 from .logseq_move_files import handle_move_files, handle_move_directory
 
 
@@ -99,7 +102,10 @@ def run_app(**kwargs):
     assets_backlinked, assets_not_backlinked = handle_assets(graph.data, graph.summary_file_subsets)
     moved_files = {
         "moved_assets": handle_move_files(
-            ANALYZER.args.move_unlinked_assets, graph.data, assets_not_backlinked, ANALYZER.delete_dir
+            ANALYZER.args.move_unlinked_assets,
+            graph.data,
+            assets_not_backlinked,
+            ANALYZER.delete_dir,
         ),
         "moved_bak": handle_move_directory(
             ANALYZER.args.move_bak,
@@ -126,7 +132,11 @@ def run_app(**kwargs):
     output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
-    ReportWriter("___meta___unique_linked_refs_ns", graph.unique_linked_references_namespaces, output_dir_meta).write()
+    ReportWriter(
+        "___meta___unique_linked_refs_ns",
+        graph.unique_linked_references_namespaces,
+        output_dir_meta,
+    ).write()
     ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
     ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()

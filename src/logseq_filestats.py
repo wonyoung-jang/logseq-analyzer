@@ -26,7 +26,10 @@ class LogseqFilestats:
             date_created = datetime.fromtimestamp(stat.st_birthtime)
         except AttributeError:
             date_created = datetime.fromtimestamp(stat.st_ctime)
-            logging.warning("st_birthtime not available for %s. Using st_ctime instead.", self.file_path)
+            logging.warning(
+                "st_birthtime not available for %s. Using st_ctime instead.",
+                self.file_path,
+            )
         date_modified = datetime.fromtimestamp(stat.st_mtime)
         self.time_existed = (now - date_created).total_seconds()
         self.time_unmodified = (now - date_modified).total_seconds()

@@ -129,7 +129,10 @@ class ReportWriter:
                 f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)
         else:
-            logging.error("Unsupported output format: %s. Defaulting to text.", ReportWriter.output_format)
+            logging.error(
+                "Unsupported output format: %s. Defaulting to text.",
+                ReportWriter.output_format,
+            )
             with out_path.open("w", encoding="utf-8") as f:
                 # f.write(f"{filename} | Items: {count} | Type: {type(self.items)}\n\n")
                 f.write(f"{filename} | Items: {count}\n\n")

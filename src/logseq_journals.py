@@ -63,7 +63,8 @@ def process_journal_keys_to_datetime(journal_keys: List[str]) -> List[datetime]:
             if any(ordinal in key for ordinal in ("st", "nd", "rd", "th")):
                 key = key.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
             date_obj = datetime.strptime(
-                key, ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", "")
+                key,
+                ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", ""),
             )
             processed_keys.append(date_obj)
         except ValueError as e:
@@ -161,7 +162,8 @@ def extract_journals_from_dangling_links(dangling_links: List[str]) -> List[date
             if any(ordinal in link for ordinal in ("st", "nd", "rd", "th")):
                 link = link.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
             date_obj = datetime.strptime(
-                link, ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", "")
+                link,
+                ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT").replace("#", ""),
             )
             journal_keys.append(date_obj)
         except ValueError as e:

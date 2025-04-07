@@ -121,7 +121,9 @@ def move_all_folder_content(moved_content: List[Tuple]) -> None:
 
 
 def move_unlinked_assets(
-    summary_is_asset_not_backlinked: Dict[str, Any], graph_meta_data: Dict[str, Any], to_delete_dir: Path
+    summary_is_asset_not_backlinked: Dict[str, Any],
+    graph_meta_data: Dict[str, Any],
+    to_delete_dir: Path,
 ) -> None:
     """
     Move unlinked assets to a separate directory.
