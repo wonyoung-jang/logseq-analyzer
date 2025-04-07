@@ -7,15 +7,15 @@ import logging
 
 from ._global_objects import ANALYZER_CONFIG
 from .helpers import get_file_or_folder
-from .logseq_config_edn import LogseqConfigEDN
+from .logseq_config_edn import loads
 
 LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
-    "journal_page_title_format": "MMM do, yyyy",
-    "journal_file_name_format": "yyyy_MM_dd",
-    "journals_directory": "journals",
-    "pages_directory": "pages",
-    "whiteboards_directory": "whiteboards",
-    "file_name_format": ":legacy",
+    ":journal/page-title-format": "MMM do, yyyy",
+    ":journal/file-name-format": "yyyy_MM_dd",
+    ":journals-directory": "journals",
+    ":pages-directory": "pages",
+    ":whiteboards-directory": "whiteboards",
+    ":file/name-format": ":legacy",
 }
 
 
@@ -56,18 +56,16 @@ class LogseqGraphConfig:
 
     def initialize_config(self, args) -> None:
         """Initialize the Logseq configuration."""
-        user_config = LogseqConfigEDN(args, self.user_config_file)
-        user_config.clean_logseq_config_edn_content()
-        user_config.get_config_edn_data_for_analysis()
         self.ls_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
-        self.ls_config.update(user_config.config_edn_data)
-        del user_config
+        with self.user_config_file.open("r", encoding="utf-8") as f:
+            self.ls_config.update(loads(f.read()))
+
         if args.global_config:
             global_config_file = get_file_or_folder(Path(args.global_config))
             logging.info("Global config file: %s", global_config_file)
             ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
-            global_config = LogseqConfigEDN(args, global_config_file)
-            global_config.clean_logseq_config_edn_content()
-            global_config.get_config_edn_data_for_analysis()
-            self.ls_config.update(global_config.config_edn_data)
-            del global_config
+            with global_config_file.open("r", encoding="utf-8") as f:
+                self.ls_config.update(loads(f.read()))
+
+        for key, value in self.ls_config.items():
+            print(f"{key}: {value}")

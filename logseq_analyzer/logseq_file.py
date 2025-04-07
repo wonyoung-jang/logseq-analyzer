@@ -145,6 +145,11 @@ class LogseqFile:
             "renderers": find_all_lower(PATTERNS.dblcurly["renderer"], self.content),
         }
 
+        if self.filename.name == "hls__al_sweigart_-_beyond_the_basic_stuff_1695156308292_0":
+            print(primary_data.get("assets"))
+            for line in self.content.splitlines():
+                print(line.strip())
+
         # Extract all properties: values pairs
         properties_values = {}
         property_value_all = PATTERNS.content["property_value"].findall(self.content)

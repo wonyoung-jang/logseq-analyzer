@@ -114,45 +114,6 @@ def test_ext_links_patterns(rp, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-# Test compilation of config patterns
-def test_compile_re_config_populates_config_dict(rp):
-    rp.compile_re_config()
-    assert "journal_page_title_format_pattern" in rp.config
-    assert isinstance(rp.config["journal_page_title_format_pattern"], re.Pattern)
-
-
-@pytest.mark.parametrize(
-    "text,key,should_match",
-    [
-        (
-            ':journal/page-title-format "%Y-%m-%d"',
-            "journal_page_title_format_pattern",
-            True,
-        ),
-        (
-            ':journal/file-name-format "%Y-%m-%d"',
-            "journal_file_name_format_pattern",
-            True,
-        ),
-        (":feature/enable-journals? true", "feature_enable_journals_pattern", True),
-        (
-            ":feature/enable-whiteboards? false",
-            "feature_enable_whiteboards_pattern",
-            True,
-        ),
-        (':pages-directory "pages"', "pages_directory_pattern", True),
-        (':journals-directory "journals"', "journals_directory_pattern", True),
-        (':whiteboards-directory "whiteboards"', "whiteboards_directory_pattern", True),
-        (":file/name-format %Y%m%d", "file_name_format_pattern", True),
-        ("invalid config line", "pages_directory_pattern", False),
-    ],
-)
-def test_config_patterns(rp, text, key, should_match):
-    rp.compile_re_config()
-    pattern = rp.config[key]
-    assert bool(pattern.search(text)) is should_match
-
-
 # Test compilation of double-curly content patterns
 def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
     rp.compile_re_content_double_curly_brackets()

@@ -1,57 +1,218 @@
 """
-Logseq configuration module.
+Parse EDN (Extensible Data Notation) data from Logseq configuration files.
 """
 
-from pathlib import Path
-import argparse
-import logging
+import re
+import ast
 
-from ._global_objects import PATTERNS
+# Simple EDN tokenizer and parser to convert EDN data into Python types.
+TOKEN_REGEX = re.compile(
+    r"""
+    "(?:\\.|[^"\\])*"         | # strings
+    \#\{                      | # set literal
+    \{|\}|\[|\]|\(|\)         | # delimiters
+    [^"\s\{\}\[\]\(\),]+        # atoms (numbers, symbols, keywords, etc.)
+    """,
+    re.VERBOSE,
+)
+
+
+def tokenize(edn_str):
+    """
+    Yield EDN tokens, skipping comments, whitespace, and commas.
+    Comments start with ';' and run to end-of-line.
+    Commas are treated as whitespace per EDN spec.
+    """
+    edn_str = re.sub(r";.*", "", edn_str)
+    for match in TOKEN_REGEX.finditer(edn_str):
+        tok = match.group().strip()
+        if not tok or tok == ",":
+            continue
+        yield tok
 
 
 class LogseqConfigEDN:
     """
-    A class to handle Logseq configuration data.
+    A simple EDN parser that converts EDN data into Python data structures.
     """
 
-    def __init__(self, args: argparse.Namespace, config_file: Path):
-        """Initialize the LogseqConfigEDN class."""
-        self.args = args
-        self.config_file = config_file
-        self.config_edn_content = ""
-        self.config_edn_data = {}
+    def __init__(self, tokens):
+        """
+        Initialize the parser with a list of tokens.
+        """
+        self.tokens = list(tokens)
+        self.pos = 0
 
-    def clean_logseq_config_edn_content(self):
-        """Extract EDN configuration data from a Logseq configuration file."""
-        with self.config_file.open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith(";"):
-                    continue
-                if ";" in line:
-                    line = line.split(";")[0].strip()
-                self.config_edn_content += f"{line}\n"
+    def peek(self):
+        """
+        Return the next token without advancing the position.
+        """
+        return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def get_config_edn_data_for_analysis(self):
-        """Extract EDN configuration data from a Logseq configuration file."""
-        if not self.config_edn_content:
-            logging.warning("No config.edn content found.")
-            return
+    def next(self):
+        """
+        Return the next token and advance the position.
+        """
+        tok = self.peek()
+        self.pos += 1
+        return tok
 
-        config_edn_data = {
-            "journal_page_title_format": None,
-            "journal_file_name_format": None,
-            "journals_directory": None,
-            "pages_directory": None,
-            "whiteboards_directory": None,
-            "file_name_format": None,
-        }
+    def parse(self):
+        """
+        Parse the entire EDN input and return the resulting Python object.
+        """
+        value = self.parse_value()
+        if self.peek() is not None:
+            raise ValueError(f"Unexpected extra EDN data: {self.peek()}")
+        return value
 
-        for key in config_edn_data:
-            pattern = PATTERNS.config.get(f"{key}_pattern")
-            if pattern:
-                match = pattern.search(self.config_edn_content)
-                if match:
-                    config_edn_data[key] = match.group(1)
+    def parse_value(self):
+        """
+        Parse a single EDN value.
+        """
+        tok = self.peek()
+        if tok is None:
+            raise ValueError("Unexpected end of EDN input")
+        # Dispatch by token
+        if tok == "{":
+            return self.parse_map()
+        if tok == "[":
+            return self.parse_vector()
+        if tok == "(":
+            return self.parse_list()
+        if tok == "#{":
+            return self.parse_set()
+        if tok.startswith('"'):
+            return self.parse_string()
+        if tok in ("true", "false", "nil"):
+            return self.parse_literal()
+        # Number, keyword, or symbol
+        if self.is_number(tok):
+            return self.parse_number()
+        if tok.startswith(":"):
+            return self.parse_keyword()
+        return self.parse_symbol()
 
-        self.config_edn_data = {k: v for k, v in config_edn_data.items() if v is not None}
+    def parse_map(self):
+        """
+        Parse a map (dictionary) from EDN.
+        """
+        self.next()  # Consume '{'
+        result = {}
+        while True:
+            tok = self.peek()
+            if tok == "}":
+                self.next()
+                break
+            # Parse key and value
+            key = self.parse_value()
+            val = self.parse_value()
+            # Convert unhashable keys to hashable types
+            if isinstance(key, dict):
+                key = frozenset(key.items())
+            elif isinstance(key, list):
+                key = tuple(key)
+            elif isinstance(key, set):
+                key = frozenset(key)
+            result[key] = val
+        return result
+
+    def parse_vector(self):
+        """
+        Parse a vector (list) from EDN.
+        """
+        self.next()
+        result = []
+        while True:
+            tok = self.peek()
+            if tok == "]":
+                self.next()
+                break
+            result.append(self.parse_value())
+        return result
+
+    def parse_list(self):
+        """
+        Parse a list from EDN.
+        """
+        self.next()
+        result = []
+        while True:
+            tok = self.peek()
+            if tok == ")":
+                self.next()
+                break
+            result.append(self.parse_value())
+        return result
+
+    def parse_set(self):
+        """
+        Parse a set from EDN.
+        """
+        self.next()  # Consume '#{'
+        result = set()
+        while True:
+            tok = self.peek()
+            if tok == "}":
+                self.next()
+                break
+            result.add(self.parse_value())
+        return result
+
+    def parse_string(self):
+        """
+        Parse a string from EDN.
+        """
+        tok = self.next()
+        # Use ast.literal_eval for escape handling
+        return ast.literal_eval(tok)
+
+    def parse_literal(self):
+        """
+        Parse a literal value from EDN.
+        """
+        tok = self.next()
+        if tok == "true":
+            return True
+        if tok == "false":
+            return False
+        if tok == "nil":
+            return None
+
+    def is_number(self, tok):
+        """
+        Check if the token is a valid number (integer or float).
+        """
+        return re.fullmatch(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", tok) is not None
+
+    def parse_number(self):
+        """
+        Parse a number (integer or float) from EDN.
+        """
+        tok = self.next()
+        if "." in tok or "e" in tok or "E" in tok:
+            return float(tok)
+        return int(tok)
+
+    def parse_keyword(self):
+        """
+        Parse a keyword from EDN.
+        """
+        tok = self.next()
+        return tok
+
+    def parse_symbol(self):
+        """
+        Parse a symbol from EDN.
+        """
+        tok = self.next()
+        return tok
+
+
+def loads(edn_str):
+    """
+    Parse an EDN-formatted string and return the corresponding Python data structure.
+    """
+    tokens = tokenize(edn_str)
+    parser = LogseqConfigEDN(tokens)
+    return parser.parse()

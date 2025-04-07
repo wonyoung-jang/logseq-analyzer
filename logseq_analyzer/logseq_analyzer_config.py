@@ -75,17 +75,17 @@ class LogseqAnalyzerConfig:
         self.set(
             "LOGSEQ_CONFIG",
             "JOURNAL_PAGE_TITLE_FORMAT",
-            gc.ls_config["journal_page_title_format"],
+            gc.ls_config.get(":journal/page-title-format"),
         )
         self.set(
             "LOGSEQ_CONFIG",
             "JOURNAL_FILE_NAME_FORMAT",
-            gc.ls_config["journal_file_name_format"],
+            gc.ls_config.get(":journal/file-name-format"),
         )
-        self.set("LOGSEQ_CONFIG", "DIR_PAGES", gc.ls_config["pages_directory"])
-        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", gc.ls_config["journals_directory"])
-        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", gc.ls_config["whiteboards_directory"])
-        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", gc.ls_config["file_name_format"])
+        self.set("LOGSEQ_CONFIG", "DIR_PAGES", gc.ls_config.get(":pages-directory"))
+        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", gc.ls_config.get(":journals-directory"))
+        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", gc.ls_config.get(":whiteboards-directory"))
+        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", gc.ls_config.get(":file/name-format"))
         if self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar":
             self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
 

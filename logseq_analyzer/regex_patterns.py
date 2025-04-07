@@ -1,5 +1,5 @@
 """
-Compile frequently used regex patterns for Logseq content and configuration.
+Compile frequently used regex patterns for Logseq content.
 """
 
 import logging
@@ -8,7 +8,7 @@ import re
 
 class RegexPatterns:
     """
-    Class to hold regex patterns for Logseq content and configuration.
+    Class to hold regex patterns for Logseq content.
     """
 
     def __init__(self):
@@ -18,7 +18,6 @@ class RegexPatterns:
         self.emb_links = {}
         self.dblcurly = {}
         self.advcommand = {}
-        self.config = {}
         self.code = {}
 
     def compile_re_code(self):
@@ -149,8 +148,7 @@ class RegexPatterns:
             "asset": re.compile(
                 r"""
                 assets/         # assets/ literal string
-                (.*?)           # Capture group: anything except newline (non-greedy)
-                \)              # Closing parenthesis
+                (.+)            # Capture group: anything except newline (non-greedy)
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
@@ -316,97 +314,6 @@ class RegexPatterns:
                 re.IGNORECASE | re.VERBOSE,
             ),
         }
-
-    def compile_re_config(self):
-        """
-        Compile and return a dictionary of regex patterns for Logseq configuration.
-
-        Overview of Patterns:
-            journal_page_title_pattern: Matches the journal page title format.
-            journal_file_name_pattern: Matches the journal file name format.
-            feature_enable_journals_pattern: Matches the enable journals feature setting.
-            feature_enable_whiteboards_pattern: Matches the enable whiteboards feature setting.
-            pages_directory_pattern: Matches the pages directory setting.
-            journals_directory_pattern: Matches the journals directory setting.
-            whiteboards_directory_pattern: Matches the whiteboards directory setting.
-            file_name_format_pattern: Matches the file name format setting.
-        """
-        self.config = {
-            # Pattern to match journal page title format in verbose mode.
-            "journal_page_title_format_pattern": re.compile(
-                r"""
-                :journal/page-title-format  # Literal text for journal page title format.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for any characters except double quotes.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match journal file name format.
-            "journal_file_name_format_pattern": re.compile(
-                r"""
-                
-                :journal/file-name-format    # Literal text for journal file name format.
-                \s+                          # One or more whitespace characters.
-                "([^"]+)"                    # Capture group for file name format.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match whether journals feature is enabled (true or false).
-            "feature_enable_journals_pattern": re.compile(
-                r"""
-                :feature/enable-journals\?   # Literal text for enabling journals feature.
-                \s+                          # One or more whitespace characters.
-                (true|false)                 # Capture group for 'true' or 'false'.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match whether whiteboards feature is enabled (true or false).
-            "feature_enable_whiteboards_pattern": re.compile(
-                r"""
-                :feature/enable-whiteboards\?  # Literal text for enabling whiteboards feature.
-                \s+                           # One or more whitespace characters.
-                (true|false)                  # Capture group for 'true' or 'false'.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the pages directory.
-            "pages_directory_pattern": re.compile(
-                r"""
-                :pages-directory             # Literal text for pages directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the journals directory.
-            "journals_directory_pattern": re.compile(
-                r"""
-                :journals-directory          # Literal text for journals directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match the whiteboards directory.
-            "whiteboards_directory_pattern": re.compile(
-                r"""
-                :whiteboards-directory       # Literal text for whiteboards directory.
-                \s+                         # One or more whitespace characters.
-                "([^"]+)"                   # Capture group for the directory path.
-                """,
-                re.VERBOSE,
-            ),
-            # Pattern to match file name format.
-            "file_name_format_pattern": re.compile(
-                r"""
-                :file/name-format            # Literal text for file name format.
-                \s+                          # One or more whitespace characters.
-                (.+)                         # Capture group for the file name format.
-                """,
-                re.VERBOSE,
-            ),
-        }
-        logging.info("Compiled regex patterns for configuration analysis.")
 
     def compile_re_content_double_curly_brackets(self):
         """

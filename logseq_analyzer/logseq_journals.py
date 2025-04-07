@@ -146,8 +146,8 @@ def get_date_stats(timeline):
     """
     if not timeline:
         return {
-            "first_date": 0,
-            "last_date": 0,
+            "first_date": datetime.min,
+            "last_date": datetime.min,
             "days": 0,
             "weeks": 0,
             "months": 0,
