@@ -4,6 +4,8 @@ LogseqFile class to process Logseq files.
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Dict, Tuple
+import uuid
 
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
@@ -71,18 +73,6 @@ class LogseqFile:
             if attr not in ("content", "content_bullets", "all_bullets", "primary_bullet"):
                 setattr(self, attr, value)
 
-    def determine_file_type(self) -> str:
-        """
-        Helper function to determine the file type based on the directory structure.
-        """
-        return {
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_ASSETS"]: "asset",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_DRAWS"]: "draw",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_JOURNALS"]: "journal",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_PAGES"]: "page",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_WHITEBOARDS"]: "whiteboard",
-        }.get(self.filename.parent, "other")
-
     def process_content_data(self):
         """
         Process content data to extract various elements like backlinks, tags, and properties.
@@ -91,80 +81,96 @@ class LogseqFile:
         if not self.content:
             return
 
+        # Mask code blocks to avoid interference with pattern matching
+        masked_content, code_blocks = self.mask_code_blocks(self.content)
+
+        # Code family (escapes others)
+        multiline_code_blocks = find_all_lower(PATTERNS.code["multiline_code_block"], self.content)
+        multiline_code_langs = find_all_lower(PATTERNS.code["multiline_code_lang"], self.content)
+        calc_blocks = find_all_lower(PATTERNS.code["calc_block"], self.content)
+        inline_code_blocks = find_all_lower(PATTERNS.code["inline_code_block"], self.content)
+
         # Extract basic self.data
         primary_data = {
+            # Code blocks
+            "multiline_code_blocks": multiline_code_blocks,
+            "multiline_code_langs": multiline_code_langs,
+            "calc_blocks": calc_blocks,
+            "inline_code_blocks": inline_code_blocks,
             # Advanced commands
-            "advanced_commands": find_all_lower(PATTERNS.advcommand["_all"], self.content),
-            "advanced_commands_export": find_all_lower(PATTERNS.advcommand["export"], self.content),
-            "advanced_commands_export_ascii": find_all_lower(PATTERNS.advcommand["export_ascii"], self.content),
-            "advanced_commands_export_latex": find_all_lower(PATTERNS.advcommand["export_latex"], self.content),
-            "advanced_commands_caution": find_all_lower(PATTERNS.advcommand["caution"], self.content),
-            "advanced_commands_center": find_all_lower(PATTERNS.advcommand["center"], self.content),
-            "advanced_commands_comment": find_all_lower(PATTERNS.advcommand["comment"], self.content),
-            "advanced_commands_example": find_all_lower(PATTERNS.advcommand["example"], self.content),
-            "advanced_commands_important": find_all_lower(PATTERNS.advcommand["important"], self.content),
-            "advanced_commands_note": find_all_lower(PATTERNS.advcommand["note"], self.content),
-            "advanced_commands_pinned": find_all_lower(PATTERNS.advcommand["pinned"], self.content),
-            "advanced_commands_query": find_all_lower(PATTERNS.advcommand["query"], self.content),
-            "advanced_commands_quote": find_all_lower(PATTERNS.advcommand["quote"], self.content),
-            "advanced_commands_tip": find_all_lower(PATTERNS.advcommand["tip"], self.content),
-            "advanced_commands_verse": find_all_lower(PATTERNS.advcommand["verse"], self.content),
-            "advanced_commands_warning": find_all_lower(PATTERNS.advcommand["warning"], self.content),
+            "advanced_commands": find_all_lower(PATTERNS.advcommand["_all"], masked_content),
+            "advanced_commands_export": find_all_lower(PATTERNS.advcommand["export"], masked_content),
+            "advanced_commands_export_ascii": find_all_lower(PATTERNS.advcommand["export_ascii"], masked_content),
+            "advanced_commands_export_latex": find_all_lower(PATTERNS.advcommand["export_latex"], masked_content),
+            "advanced_commands_caution": find_all_lower(PATTERNS.advcommand["caution"], masked_content),
+            "advanced_commands_center": find_all_lower(PATTERNS.advcommand["center"], masked_content),
+            "advanced_commands_comment": find_all_lower(PATTERNS.advcommand["comment"], masked_content),
+            "advanced_commands_example": find_all_lower(PATTERNS.advcommand["example"], masked_content),
+            "advanced_commands_important": find_all_lower(PATTERNS.advcommand["important"], masked_content),
+            "advanced_commands_note": find_all_lower(PATTERNS.advcommand["note"], masked_content),
+            "advanced_commands_pinned": find_all_lower(PATTERNS.advcommand["pinned"], masked_content),
+            "advanced_commands_query": find_all_lower(PATTERNS.advcommand["query"], masked_content),
+            "advanced_commands_quote": find_all_lower(PATTERNS.advcommand["quote"], masked_content),
+            "advanced_commands_tip": find_all_lower(PATTERNS.advcommand["tip"], masked_content),
+            "advanced_commands_verse": find_all_lower(PATTERNS.advcommand["verse"], masked_content),
+            "advanced_commands_warning": find_all_lower(PATTERNS.advcommand["warning"], masked_content),
             # Basic content
-            "assets": find_all_lower(PATTERNS.content["asset"], self.content),
-            "block_references": find_all_lower(PATTERNS.content["block_reference"], self.content),
-            "blockquotes": find_all_lower(PATTERNS.content["blockquote"], self.content),
-            "draws": find_all_lower(PATTERNS.content["draw"], self.content),
-            "flashcards": find_all_lower(PATTERNS.content["flashcard"], self.content),
-            "page_references": find_all_lower(PATTERNS.content["page_reference"], self.content),
-            "references_general": find_all_lower(PATTERNS.content["reference"], self.content),
-            "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], self.content),
-            "tags": find_all_lower(PATTERNS.content["tag"], self.content),
-            "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], self.content),
-            # Code family (escapes others)
-            "multiline_code_blocks": find_all_lower(PATTERNS.code["multiline_code_block"], self.content),
-            "multiline_code_langs": find_all_lower(PATTERNS.code["multiline_code_lang"], self.content),
-            "calc_blocks": find_all_lower(PATTERNS.code["calc_block"], self.content),
-            "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
+            "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
+            "block_references": find_all_lower(PATTERNS.content["block_reference"], masked_content),
+            "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
+            "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
+            "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),
+            "page_references": find_all_lower(PATTERNS.content["page_reference"], masked_content),
+            "references_general": find_all_lower(PATTERNS.content["reference"], masked_content),
+            "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
+            "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
+            "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
             # Double curly braces family
-            "macros": find_all_lower(PATTERNS.dblcurly["macro"], self.content),
-            "embeds": find_all_lower(PATTERNS.dblcurly["embed"], self.content),
-            "page_embeds": find_all_lower(PATTERNS.dblcurly["page_embed"], self.content),
-            "block_embeds": find_all_lower(PATTERNS.dblcurly["block_embed"], self.content),
-            "namespace_queries": find_all_lower(PATTERNS.dblcurly["namespace_query"], self.content),
-            "cards": find_all_lower(PATTERNS.dblcurly["card"], self.content),
-            "clozes": find_all_lower(PATTERNS.dblcurly["cloze"], self.content),
-            "simple_queries": find_all_lower(PATTERNS.dblcurly["simple_query"], self.content),
-            "query_functions": find_all_lower(PATTERNS.dblcurly["query_function"], self.content),
-            "embed_video_urls": find_all_lower(PATTERNS.dblcurly["embed_video_url"], self.content),
-            "embed_twitter_tweets": find_all_lower(PATTERNS.dblcurly["embed_twitter_tweet"], self.content),
-            "embed_youtube_timestamps": find_all_lower(PATTERNS.dblcurly["embed_youtube_timestamp"], self.content),
-            "renderers": find_all_lower(PATTERNS.dblcurly["renderer"], self.content),
+            "macros": find_all_lower(PATTERNS.dblcurly["macro"], masked_content),
+            "embeds": find_all_lower(PATTERNS.dblcurly["embed"], masked_content),
+            "page_embeds": find_all_lower(PATTERNS.dblcurly["page_embed"], masked_content),
+            "block_embeds": find_all_lower(PATTERNS.dblcurly["block_embed"], masked_content),
+            "namespace_queries": find_all_lower(PATTERNS.dblcurly["namespace_query"], masked_content),
+            "cards": find_all_lower(PATTERNS.dblcurly["card"], masked_content),
+            "clozes": find_all_lower(PATTERNS.dblcurly["cloze"], masked_content),
+            "simple_queries": find_all_lower(PATTERNS.dblcurly["simple_query"], masked_content),
+            "query_functions": find_all_lower(PATTERNS.dblcurly["query_function"], masked_content),
+            "embed_video_urls": find_all_lower(PATTERNS.dblcurly["embed_video_url"], masked_content),
+            "embed_twitter_tweets": find_all_lower(PATTERNS.dblcurly["embed_twitter_tweet"], masked_content),
+            "embed_youtube_timestamps": find_all_lower(PATTERNS.dblcurly["embed_youtube_timestamp"], masked_content),
+            "renderers": find_all_lower(PATTERNS.dblcurly["renderer"], masked_content),
         }
 
         # Extract all properties: values pairs
         properties_values = {}
-        property_value_all = PATTERNS.content["property_value"].findall(self.content)
+        property_value_all = PATTERNS.content["property_value"].findall(masked_content)
         for prop, value in property_value_all:
-            properties_values.setdefault(prop, value)
+            unmasked_value = self.unmask_code_blocks(value, code_blocks)
+            properties_values.setdefault(prop, unmasked_value)
 
         aliases = properties_values.get("alias")
         if aliases:
-            aliases = process_aliases(aliases)
+            masked_aliases = self.unmask_code_blocks(aliases, code_blocks)
+            aliases = process_aliases(masked_aliases)
 
         # Extract page/block properties
         page_properties = []
         if self.is_primary_bullet_page_properties():
-            page_properties = find_all_lower(PATTERNS.content["property"], self.primary_bullet)
-            self.content = "\n".join(self.content_bullets)
-        block_properties = find_all_lower(PATTERNS.content["property"], self.content)
+            masked_primary_bullet, _ = self.mask_code_blocks(self.primary_bullet)
+            page_properties = find_all_lower(PATTERNS.content["property"], masked_primary_bullet)
+            masked_content_bullets = []
+            for bullet in self.content_bullets:
+                masked_bullet, _ = self.mask_code_blocks(bullet)
+                masked_content_bullets.append(masked_bullet)
+            masked_content = "\n".join(masked_content_bullets)
+        block_properties = find_all_lower(PATTERNS.content["property"], masked_content)
 
         properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties)
         properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties)
 
         # Process external and embedded links
-        external_links = find_all_lower(PATTERNS.ext_links["external_link"], self.content)
-        embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], self.content)
+        external_links = find_all_lower(PATTERNS.ext_links["external_link"], masked_content)
+        embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], masked_content)
         ext_links_other, ext_links_internet, ext_links_alias = process_external_links(external_links)
         emb_links_other, emb_links_internet, emb_links_asset = process_embedded_links(embedded_links)
 
@@ -201,6 +207,18 @@ class LogseqFile:
             return False
         return True
 
+    def determine_file_type(self) -> str:
+        """
+        Helper function to determine the file type based on the directory structure.
+        """
+        return {
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_ASSETS"]: "asset",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_DRAWS"]: "draw",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_JOURNALS"]: "journal",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_PAGES"]: "page",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_WHITEBOARDS"]: "whiteboard",
+        }.get(self.filename.parent, "other")
+
     def determine_node_type(self) -> str:
         """Helper function to determine node type based on summary data."""
         return {
@@ -217,6 +235,52 @@ class LogseqFile:
             (True, False, False, False): "orphan_graph",
             (False, False, False, False): "orphan_true",
         }.get((self.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
+
+    def mask_code_blocks(self, content: str) -> Tuple[str, Dict[str, str]]:
+        """
+        Replace code blocks with placeholders to protect them from pattern matching.
+
+        Args:
+            content (str): The content to mask.
+
+        Returns:
+            Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original code blocks.
+        """
+        # First mask multiline code blocks
+        code_blocks = {}
+        masked_content = content
+
+        # Handle multiline code blocks first (```code blocks```)
+        for match in PATTERNS.code["multiline_code_block"].finditer(content):
+            block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
+            code_blocks[block_id] = match.group(0)
+            # Replace in masked content
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        # Then handle inline code blocks (`code`)
+        for match in PATTERNS.code["inline_code_block"].finditer(masked_content):
+            block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
+            code_blocks[block_id] = match.group(0)
+            # Replace in masked content
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        return masked_content, code_blocks
+
+    def unmask_code_blocks(self, masked_content: str, code_blocks: Dict[str, str]) -> str:
+        """
+        Restore code blocks from placeholders.
+
+        Args:
+            masked_content (str): Content with code block placeholders.
+            code_blocks (Dict[str, str]): Mapping of placeholders to original code blocks.
+
+        Returns:
+            str: Original content with code blocks restored.
+        """
+        content = masked_content
+        for placeholder, code_block in code_blocks.items():
+            content = content.replace(placeholder, code_block)
+        return content
 
 
 @dataclass
