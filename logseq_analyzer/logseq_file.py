@@ -84,19 +84,13 @@ class LogseqFile:
         # Mask code blocks to avoid interference with pattern matching
         masked_content, code_blocks = self.mask_code_blocks(self.content)
 
-        # Code family (escapes others)
-        multiline_code_blocks = find_all_lower(PATTERNS.code["multiline_code_block"], self.content)
-        multiline_code_langs = find_all_lower(PATTERNS.code["multiline_code_lang"], self.content)
-        calc_blocks = find_all_lower(PATTERNS.code["calc_block"], self.content)
-        inline_code_blocks = find_all_lower(PATTERNS.code["inline_code_block"], self.content)
-
-        # Extract basic self.data
+        # Extract basic data
         primary_data = {
             # Code blocks
-            "multiline_code_blocks": multiline_code_blocks,
-            "multiline_code_langs": multiline_code_langs,
-            "calc_blocks": calc_blocks,
-            "inline_code_blocks": inline_code_blocks,
+            "multiline_code_blocks": find_all_lower(PATTERNS.code["multiline_code_block"], self.content),
+            "multiline_code_langs": find_all_lower(PATTERNS.code["multiline_code_lang"], self.content),
+            "calc_blocks": find_all_lower(PATTERNS.code["calc_block"], self.content),
+            "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
             # Advanced commands
             "advanced_commands": find_all_lower(PATTERNS.advcommand["_all"], masked_content),
             "advanced_commands_export": find_all_lower(PATTERNS.advcommand["export"], masked_content),
