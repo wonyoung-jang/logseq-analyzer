@@ -47,29 +47,31 @@ class NamespaceAnalyzer:
         self.conflicts_dangling = defaultdict(list)
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
+        self._part_levels = defaultdict(set)
+        self._part_entries = defaultdict(list)
 
     def init_ns_parts(self):
         """
         Create namespace parts from the data.
         """
-        for file in yield_files_with_keys(self.files, "ns_level"):
-            self.namespace_data.setdefault(file.name, {k: v for k, v in file.__dict__.items() if "ns_" in k and v})
-        self.namespace_parts = {k: v["ns_parts"] for k, v in self.namespace_data.items() if v.get("ns_parts")}
-
-    def analyze_ns_details(self):
-        """
-        Perform extended analysis on namespace parts.
-        """
         level_distribution = Counter()
-        for _, parts in self.namespace_parts.items():
+        for file in yield_files_with_keys(self.files, "ns_level"):
             current_level = self.tree
+            meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
+            self.namespace_data[file.name] = meta
+            parts = meta.get("ns_parts")
+            if not parts:
+                continue
+            self.namespace_parts[file.name] = parts
             for part, level in parts.items():
-                self.unique_namespaces_per_level[level].add(part)
                 self.unique_namespace_parts.add(part)
+                self.unique_namespaces_per_level[level].add(part)
                 level_distribution[level] += 1
                 if part not in current_level:
                     current_level[part] = {}
                 current_level = current_level[part]
+                self._part_levels[part].add(level)
+                self._part_entries[part].append({"entry": file.name, "level": level})
 
         max_depth = max(level_distribution) if level_distribution else 0
 
@@ -126,45 +128,22 @@ class NamespaceAnalyzer:
     def detect_parent_depth_conflicts(self):
         """
         Identify namespace parts that appear at different depths (levels) across entries.
-
-        For each namespace part, we collect the levels at which it appears as well as
-        the associated entries. Parts that occur at more than one depth are flagged
-        as potential conflicts.
         """
-        # Mapping from namespace part to a set of levels and associated entries
-        part_levels = defaultdict(set)
-        part_entries = defaultdict(list)
+        for part, levels in self._part_levels.items():
+            # Filter out parts that only occur at a single depth.
+            if len(levels) < 2:
+                continue
 
-        for entry, parts in self.namespace_parts.items():
-            for part, level in parts.items():
-                part_levels[part].add(level)
-                part_entries[part].append({"entry": entry, "level": level})
+            details = self._part_entries[part]
+            for level in sorted(levels):
+                key = f"{part} {level}"
+                entries = [i["entry"] for i in details if i["level"] == level]
+                self.conflicts_parent_depth[key] = entries
 
-        # Filter out parts that only occur at a single depth.
-        conflicts = {}
-        for part, levels in part_levels.items():
-            if len(levels) > 1:
-                conflicts[part] = {
-                    "levels": sorted(list(levels)),
-                    "entries": part_entries[part],
-                }
-
-        # Split so it's dict[part level] = [list of parts]
-        for part, details in conflicts.items():
-            for level in details["levels"]:
-                self.conflicts_parent_depth[f"{part} {level}"] = [
-                    i["entry"] for i in details["entries"] if i["level"] == level
-                ]
-
-    def get_unique_parent_conflicts(self):
-        """
-        Get unique conflicts for each namespace part.
-        """
-        for part, details in self.conflicts_parent_depth.items():
-            level = int(part.split(" ")[-1])
-            unique_pages = set()
-            for page in details:
-                parts = page.split(NS_SEP)
-                up_to_level = parts[:level]
-                unique_pages.add(NS_SEP.join(up_to_level))
-            self.conflicts_parent_unique[part] = unique_pages
+                level = int(key.split(" ")[-1])
+                unique_pages = set()
+                for page in entries:
+                    parts = page.split(NS_SEP)
+                    up_to_level = parts[:level]
+                    unique_pages.add(NS_SEP.join(up_to_level))
+                self.conflicts_parent_unique[key] = unique_pages

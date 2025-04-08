@@ -47,17 +47,11 @@ class LogseqGraph:
         """
         for file_path in CACHE.iter_modified_files():
             file = LogseqFile(file_path)
-
-            name = file.name
-            if self.data.get(name):
-                name = file.name_secondary
-
-            self.data[name] = file.__dict__
-            self.content_bullets[name] = file.content_bullets
-
-            self.names_to_hashes[file.name].append(file.hash)
             self.files.append(file)
+            self.data[file.hash] = file.__dict__
+            self.content_bullets[file.hash] = file.content_bullets
             self.hashed_files[file.hash] = file
+            self.names_to_hashes[file.name].append(file.hash)
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
@@ -110,7 +104,7 @@ class LogseqGraph:
 
         # Create dangling links
         self.dangling_links = self.unique_linked_references.union(self.unique_linked_references_ns)
-        self.dangling_links.difference_update(self.keys(), unique_aliases)
+        self.dangling_links.difference_update(self.names_to_hashes.keys(), unique_aliases)
         self.dangling_links = set(sorted(self.dangling_links))
 
     def post_processing_content_namespaces(self, file: LogseqFile):

@@ -96,11 +96,9 @@ def run_app(**kwargs):
 
     graph_ns = NamespaceAnalyzer(graph)
     graph_ns.init_ns_parts()
-    graph_ns.analyze_ns_details()
     graph_ns.analyze_ns_queries()
     graph_ns.detect_non_ns_conflicts()
     graph_ns.detect_parent_depth_conflicts()
-    graph_ns.get_unique_parent_conflicts()
     namespace_data = {
         "___meta___namespace_data": graph_ns.namespace_data,
         "___meta___namespace_parts": graph_ns.namespace_parts,
