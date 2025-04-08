@@ -38,39 +38,25 @@ class LogseqFile:
         self.data = {}
         self.primary_bullet = ""
         self.content_bullets = []
-        self.file_type = ""
         self.has_content = False
         self.has_backlinks = False
-        self.filename = LogseqFilename(self.file_path)
-        self.filestats = LogseqFilestats(self.file_path)
-        self.bullets = LogseqBullets(self.file_path)
-        self.hash = LogseqFileHash(self.filename)
-        self.get_single_file_metadata()
+        self.init_file_data()
+        self.hash = LogseqFileHash(self)
         self.process_content_data()
 
     def __repr__(self) -> str:
-        return f"LogseqFile(name={self.filename.name}, path={self.file_path})"
+        return f"LogseqFile(name={self.name}, path={self.file_path})"
 
-    def get_single_file_metadata(self):
+    def init_file_data(self):
         """
         Extract metadata from a file.
         """
-        self.uri = self.filename.uri
-        if self.filename.logseq_url:
-            self.logseq_url = self.filename.logseq_url
-
-        self.has_content = self.filestats.size > 0
-        self.file_type = self.determine_file_type()
-        self.content = self.bullets.content
-        self.content_bullets = self.bullets.content_bullets
-        self.primary_bullet = self.bullets.primary_bullet
-
-        for attr, value in self.filename.__dict__.items():
+        for attr, value in LogseqFilename(self.file_path).__dict__.items():
             setattr(self, attr, value)
-        for attr, value in self.filestats.__dict__.items():
+        for attr, value in LogseqFilestats(self.file_path).__dict__.items():
             setattr(self, attr, value)
-        for attr, value in self.bullets.__dict__.items():
-            if attr not in ("content", "content_bullets", "all_bullets", "primary_bullet"):
+        for attr, value in LogseqBullets(self.file_path).__dict__.items():
+            if attr not in ("all_bullets"):
                 setattr(self, attr, value)
 
     def process_content_data(self):
@@ -187,7 +173,7 @@ class LogseqFile:
 
         for key, value in primary_data.items():
             if value:
-                self.data.setdefault(key, value)
+                self.data[key] = value
                 if not self.has_backlinks:
                     if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
                         self.has_backlinks = True
@@ -200,18 +186,6 @@ class LogseqFile:
         if not bullet or bullet.startswith("#"):
             return False
         return True
-
-    def determine_file_type(self) -> str:
-        """
-        Helper function to determine the file type based on the directory structure.
-        """
-        return {
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_ASSETS"]: "asset",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_DRAWS"]: "draw",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_JOURNALS"]: "journal",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_PAGES"]: "page",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_WHITEBOARDS"]: "whiteboard",
-        }.get(self.filename.parent, "other")
 
     def determine_node_type(self) -> str:
         """Helper function to determine node type based on summary data."""
@@ -281,7 +255,7 @@ class LogseqFile:
 class LogseqFileHash:
     """A class to represent a Logseq file hash."""
 
-    filename: LogseqFilename
+    file: LogseqFile
 
     def __repr__(self):
         """
@@ -293,7 +267,7 @@ class LogseqFileHash:
         """
         Return the key for the LogseqFileHash object.
         """
-        return (self.filename.name, self.filename.parent, self.filename.suffix)
+        return (self.file.name, self.file.parent, self.file.suffix)
 
     def __hash__(self):
         """

@@ -94,7 +94,7 @@ class LogseqGraph:
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
                 self.all_linked_references[item].setdefault("found_in", []).append(file.name)
 
-            if getattr(file, "ns_parent", ""):
+            if hasattr(file, "ns_parent"):
                 linked_references.remove(file.ns_parent)
 
             self.unique_linked_references.update(linked_references)
@@ -128,7 +128,7 @@ class LogseqGraph:
                 ns_root_file.ns_level = 1
                 if not hasattr(ns_root_file, "ns_children"):
                     ns_root_file.ns_children = set()
-                ns_root_file.ns_children.add(file.filename.name)
+                ns_root_file.ns_children.add(file.name)
                 ns_root_file.ns_size = len(ns_root_file.ns_children)
 
         if self.names_to_hashes.get(ns_parent) and ns_level > 2:
@@ -139,7 +139,7 @@ class LogseqGraph:
                 ns_parent_file.ns_level = max(direct_level, ns_parent_level)
                 if not hasattr(ns_parent_file, "ns_children"):
                     ns_parent_file.ns_children = set()
-                ns_parent_file.ns_children.add(file.filename.name)
+                ns_parent_file.ns_children.add(file.name)
                 ns_parent_file.ns_size = len(ns_parent_file.ns_children)
 
     def process_summary_data(self):
@@ -296,7 +296,7 @@ class LogseqGraph:
                 for value in file.data[criteria]:
                     subset_counter.setdefault(value, {})
                     subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                    subset_counter[value].setdefault("found_in", []).append(file.filename.name)
+                    subset_counter[value].setdefault("found_in", []).append(file.name)
         return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
     def handle_assets(self):

@@ -24,3 +24,5 @@ logseq-analyzer-output/
 to_delete/
 configuration/user_config.ini
 logseq-analyzer-cache*
+setup.cfg
+setup.py

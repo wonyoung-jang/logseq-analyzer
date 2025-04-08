@@ -31,6 +31,7 @@ class LogseqFilename:
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
         self.is_namespace = NS_SEP in self.name
+        self.file_type = self.determine_file_type()
         self.get_namespace_name_data()
 
     def process_logseq_filename(self):
@@ -115,6 +116,18 @@ class LogseqFilename:
             for key, value in namespace_name_data.items():
                 if value:
                     setattr(self, key, value)
+
+    def determine_file_type(self) -> str:
+        """
+        Helper function to determine the file type based on the directory structure.
+        """
+        return {
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_ASSETS"]: "asset",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_DRAWS"]: "draw",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_JOURNALS"]: "journal",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_PAGES"]: "page",
+            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_WHITEBOARDS"]: "whiteboard",
+        }.get(self.parent, "other")
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

@@ -79,9 +79,17 @@ def run_app(**kwargs):
     graph_files = [f for f in graph.files if f not in graph_files_db]
     graph.files = graph_files + graph_files_db
 
+    graph_hashed_files_db = CACHE.get("graph_hashed_files", {})
+    graph_hashed_files_db.update(graph.hashed_files)
+    graph.hashed_files = graph_hashed_files_db
+
+    graph_names_to_hashes_db = CACHE.get("graph_names_to_hashes", {})
+    graph_names_to_hashes_db.update(graph.names_to_hashes)
+    graph.names_to_hashes = graph_names_to_hashes_db
+
     graph_dangling_links_db = CACHE.get("dangling_links", set())
-    graph_dangling_links = [d for d in graph.dangling_links if d not in graph_dangling_links_db]
-    graph.dangling_links = set(graph_dangling_links + list(graph_dangling_links_db))
+    graph_dangling_links = {d for d in graph.dangling_links if d not in graph_dangling_links_db}
+    graph.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
 
     graph.post_processing_content()
     graph.process_summary_data()

@@ -20,6 +20,7 @@ class LogseqFilestats:
         stat = self.file_path.stat()
 
         self.size = stat.st_size
+        self.has_content = self.size > 0
 
         now = datetime.now()
         try:
