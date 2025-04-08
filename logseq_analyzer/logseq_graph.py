@@ -2,7 +2,7 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
@@ -31,6 +31,8 @@ class LogseqGraph:
         self.summary_file_subsets = {}
         self.summary_data_subsets = {}
         self.files: List[LogseqFile] = []
+        self.assets_backlinked = []
+        self.assets_not_backlinked = []
 
     def keys(self) -> list:
         """
@@ -168,11 +170,8 @@ class LogseqGraph:
         """
         ns = NamespaceAnalyzer(self.files, self.data, self.dangling_links)
         ns.init_ns_parts()
-        ns.get_unique_ns_parts()
         ns.analyze_ns_details()
-        ns.get_unique_ns_by_levels()
         ns.analyze_ns_queries()
-        ns.build_ns_tree()
 
         # 01 Conflicts With Existing Pages
         ns.detect_non_ns_conflicts()
@@ -335,3 +334,32 @@ class LogseqGraph:
                     subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
                     subset_counter[value].setdefault("found_in", []).append(file.filename.name)
         return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
+
+    def handle_assets(self):
+        """
+        Handle assets for the Logseq Analyzer.
+        """
+        for _, data in self.data.items():
+            if not data.get("assets"):
+                continue
+
+            for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
+                if self.data[asset]["is_backlinked"]:
+                    continue
+                asset_original_name = self.data[asset]["name"]
+                for asset_mention in data["assets"]:
+                    if asset in asset_mention or asset_original_name in asset_mention:
+                        self.data[asset]["is_backlinked"] = True
+                        break
+
+        asset_backlinked_kwargs = {
+            "is_backlinked": True,
+            "file_type": "asset",
+        }
+        asset_not_backlinked_kwargs = {
+            "is_backlinked": False,
+            "file_type": "asset",
+        }
+
+        self.assets_backlinked = self.list_files_with_keys_and_values(**asset_backlinked_kwargs)
+        self.assets_not_backlinked = self.list_files_with_keys_and_values(**asset_not_backlinked_kwargs)

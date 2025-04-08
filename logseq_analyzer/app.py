@@ -6,7 +6,6 @@ from pathlib import Path
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
-from .logseq_assets import handle_assets
 from .logseq_journals import (
     extract_journals_from_dangling_links,
     process_journals_timelines,
@@ -105,12 +104,12 @@ def run_app(**kwargs):
     #####################################################################
     gui_instance.update_progress("move_files", 20)
 
-    assets_backlinked, assets_not_backlinked = handle_assets(graph.data, graph.summary_file_subsets)
+    graph.handle_assets()
     moved_files = {
         "moved_assets": handle_move_files(
             ANALYZER.args.move_unlinked_assets,
             graph.data,
-            assets_not_backlinked,
+            graph.assets_not_backlinked,
             ANALYZER.delete_dir,
         ),
         "moved_bak": handle_move_directory(
@@ -157,8 +156,8 @@ def run_app(**kwargs):
         ReportWriter(name, data, output_dir_namespace).write()
 
     ReportWriter("moved_files", moved_files, output_dir_assets).write()
-    ReportWriter("assets_backlinked", assets_backlinked, output_dir_assets).write()
-    ReportWriter("assets_not_backlinked", assets_not_backlinked, output_dir_assets).write()
+    ReportWriter("assets_backlinked", graph.assets_backlinked, output_dir_assets).write()
+    ReportWriter("assets_not_backlinked", graph.assets_not_backlinked, output_dir_assets).write()
     if ANALYZER.args.write_graph:
         ReportWriter("___meta___graph_content", graph_content_db, output_dir_meta).write()
 
@@ -178,8 +177,8 @@ def run_app(**kwargs):
         **graph.namespace_data,
         # Move files and assets
         "moved_files": moved_files,
-        "assets_backlinked": assets_backlinked,
-        "assets_not_backlinked": assets_not_backlinked,
+        "assets_backlinked": graph.assets_backlinked,
+        "assets_not_backlinked": graph.assets_not_backlinked,
         # Other
         "graph_files": graph.files,
     }

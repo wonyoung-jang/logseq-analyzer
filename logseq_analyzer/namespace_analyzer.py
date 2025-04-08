@@ -62,22 +62,20 @@ class NamespaceAnalyzer:
             k: v["namespace_parts"] for k, v in self.namespace_data.items() if v.get("namespace_parts")
         }
 
-    def get_unique_ns_parts(self):
-        """
-        Analyze the levels of namespace parts across all entries.
-        """
-        for parts in self.namespace_parts.values():
-            self.unique_namespace_parts.update(parts.keys())
-
     def analyze_ns_details(self):
         """
         Perform extended analysis on namespace parts.
         """
         level_distribution = Counter()
-
         for _, parts in self.namespace_parts.items():
-            for _, level in parts.items():
+            current_level = self.tree
+            for part, level in parts.items():
+                self.unique_namespaces_per_level[level].add(part)
+                self.unique_namespace_parts.add(part)
                 level_distribution[level] += 1
+                if part not in current_level:
+                    current_level[part] = {}
+                current_level = current_level[part]
 
         max_depth = max(level_distribution) if level_distribution else 0
 
@@ -85,14 +83,6 @@ class NamespaceAnalyzer:
             "max_depth": max_depth,
             "level_distribution": dict(level_distribution),
         }
-
-    def get_unique_ns_by_levels(self):
-        """
-        Get unique namespaces by level.
-        """
-        for parts in self.namespace_parts.values():
-            for part, level in parts.items():
-                self.unique_namespaces_per_level[level].add(part)
 
     def analyze_ns_queries(self):
         """
@@ -126,18 +116,6 @@ class NamespaceAnalyzer:
                 reverse=True,
             )
         )
-
-    def build_ns_tree(self):
-        """
-        Build a tree-like structure of namespaces.
-        """
-        for _, parts in self.namespace_parts.items():
-            current_level = self.tree
-            for part_level in parts.items():
-                part = part_level[0]
-                if part not in current_level:
-                    current_level[part] = {}
-                current_level = current_level[part]
 
     def detect_non_ns_conflicts(self):
         """
