@@ -32,6 +32,8 @@ class LogseqFilename:
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
         self.is_namespace = NS_SEP in self.name
+        self.namespace_data = {}
+        self.get_namespace_name_data()
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
@@ -92,6 +94,32 @@ class LogseqFilename:
         encoded_path = path_with_slashes
         target_segment = target_segment[:-1]
         return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+
+    def get_namespace_name_data(self):
+        """Get the namespace name data."""
+        if self.is_namespace:
+            ns_parts_list = self.name.split(NS_SEP)
+            ns_level = len(ns_parts_list)
+            ns_root = ns_parts_list[0]
+            ns_stem = ns_parts_list[-1]
+            ns_parent = ns_root
+            if ns_level > 2:
+                ns_parent = ns_parts_list[-2]
+            ns_parent_full = NS_SEP.join(ns_parts_list[:-1])
+            ns_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
+            namespace_name_data = {
+                "ns_parts": ns_parts,
+                "ns_level": ns_level,
+                "ns_root": ns_root,
+                "ns_parent": ns_parent,
+                "ns_parent_full": ns_parent_full,
+                "ns_stem": ns_stem,
+            }
+            for key, value in namespace_name_data.items():
+                if value:
+                    self.namespace_data[key] = value
+        else:
+            del self.namespace_data
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

@@ -3,6 +3,8 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from pathlib import Path
+
+from .namespace_analyzer import NamespaceAnalyzer
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
@@ -83,7 +85,27 @@ def run_app(**kwargs):
 
     graph.post_processing_content()
     graph.process_summary_data()
-    graph.process_namespace_data()
+
+    graph_ns = NamespaceAnalyzer(graph.files, graph.data, graph.dangling_links)
+    graph_ns.init_ns_parts()
+    graph_ns.analyze_ns_details()
+    graph_ns.analyze_ns_queries()
+    graph_ns.detect_non_ns_conflicts()
+    graph_ns.detect_parent_depth_conflicts()
+    graph_ns.get_unique_parent_conflicts()
+    namespace_data = {
+        "___meta___namespace_data": graph_ns.namespace_data,
+        "___meta___namespace_parts": graph_ns.namespace_parts,
+        "unique_namespace_parts": graph_ns.unique_namespace_parts,
+        "namespace_details": graph_ns.namespace_details,
+        "unique_namespaces_per_level": graph_ns.unique_namespaces_per_level,
+        "namespace_queries": graph_ns.namespace_queries,
+        "namespace_hierarchy": graph_ns.tree,
+        "conflicts_non_namespace": graph_ns.conflicts_non_namespace,
+        "conflicts_dangling": graph_ns.conflicts_dangling,
+        "conflicts_parent_depth": graph_ns.conflicts_parent_depth,
+        "conflicts_parent_unique": graph_ns.conflicts_parent_unique,
+    }
 
     gui_instance.update_progress("process_files", 100)
     #################################################################
@@ -145,6 +167,7 @@ def run_app(**kwargs):
     ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
     ReportWriter("graph_files", graph.files, output_dir_meta).write()
+    ReportWriter("graph_hashed_files", graph.hashed_files, output_dir_meta).write()
 
     for name, data in graph.summary_file_subsets.items():
         ReportWriter(name, data, output_dir_summary).write()
@@ -152,7 +175,7 @@ def run_app(**kwargs):
     for name, data in graph.summary_data_subsets.items():
         ReportWriter(name, data, "summary_content_data").write()
 
-    for name, data in graph.namespace_data.items():
+    for name, data in namespace_data.items():
         ReportWriter(name, data, output_dir_namespace).write()
 
     ReportWriter("moved_files", moved_files, output_dir_assets).write()
@@ -174,13 +197,14 @@ def run_app(**kwargs):
         **graph.summary_file_subsets,
         **graph.summary_data_subsets,
         # Namespaces summary
-        **graph.namespace_data,
+        **namespace_data,
         # Move files and assets
         "moved_files": moved_files,
         "assets_backlinked": graph.assets_backlinked,
         "assets_not_backlinked": graph.assets_not_backlinked,
         # Other
         "graph_files": graph.files,
+        "graph_hashed_files": graph.hashed_files,
     }
 
     CACHE.update(shelve_output_data)

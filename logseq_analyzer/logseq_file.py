@@ -2,6 +2,7 @@
 LogseqFile class to process Logseq files.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Generator
 
@@ -37,18 +38,18 @@ class LogseqFile:
         self.data = {}
         self.primary_bullet = ""
         self.content_bullets = []
-        self.bullets = None
-        self.filename = None
-        self.filestats = None
+        self.filename = LogseqFilename(file_path)
+        self.filestats = LogseqFilestats(file_path)
+        self.bullets = LogseqBullets(file_path)
+        self.hash = LogseqFileHash(self.filename)
+
+    def __repr__(self) -> str:
+        return f"LogseqFile(name={self.filename.name}, path={self.file_path})"
 
     def get_single_file_metadata(self):
         """
         Extract metadata from a file.
         """
-        self.filename = LogseqFilename(self.file_path)
-        self.filestats = LogseqFilestats(self.file_path)
-        self.bullets = LogseqBullets(self.file_path)
-
         self.data["file_path"] = str(self.file_path)
 
         self.data["id"] = self.filename.id
@@ -63,7 +64,6 @@ class LogseqFile:
         self.data["logseq_filestats_object"] = self.filestats.__dict__
         self.data["has_content"] = self.filestats.size > 0
         self.data["file_type"] = determine_file_type(self.filename.parent)
-
         self.bullets.get_content()
         self.bullets.get_char_count()
         self.bullets.get_bullet_content()
@@ -226,3 +226,36 @@ class LogseqFile:
         if not bullet or bullet.startswith("#"):
             return False
         return True
+
+
+@dataclass
+class LogseqFileHash:
+    """A class to represent a Logseq file hash."""
+
+    filename: LogseqFilename
+
+    def __repr__(self):
+        """
+        Return the string representation of the LogseqFileHash object.
+        """
+        return f"LogseqFileHash(key={self.__key()}, hash={self.__hash__()})"
+
+    def __key(self):
+        """
+        Return the key for the LogseqFileHash object.
+        """
+        return (self.filename.name, self.filename.parent, self.filename.suffix)
+
+    def __hash__(self):
+        """
+        Return the hash of the LogseqFileHash object.
+        """
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        """
+        Check if two LogseqFileHash objects are equal.
+        """
+        if isinstance(other, LogseqFileHash):
+            return self.__key() == other.__key()
+        return NotImplemented
