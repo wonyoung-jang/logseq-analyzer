@@ -15,11 +15,10 @@ Problems:
 """
 
 from collections import Counter, defaultdict
-from typing import List
 import logging
 
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
-from .logseq_file import LogseqFile
+from .logseq_graph import LogseqGraph
 from .process_summary_data import list_files_without_keys, yield_files_with_keys
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
@@ -30,13 +29,13 @@ class NamespaceAnalyzer:
     Class for analyzing namespace data in Logseq.
     """
 
-    def __init__(self, files: List[LogseqFile], data, dangling_links):
+    def __init__(self, graph: LogseqGraph):
         """
         Initialize the NamespaceAnalyzer instance.
         """
-        self.files = files
-        self.data = data
-        self.dangling_links = dangling_links
+        self.files = graph.files
+        self.data = graph.data
+        self.dangling_links = graph.dangling_links
         self.namespace_data = {}
         self.namespace_parts = {}
         self.unique_namespace_parts = set()
@@ -100,24 +99,6 @@ class NamespaceAnalyzer:
                 self.namespace_queries[q]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
                 self.namespace_queries[q]["uri"] = getattr(file, "uri", "")
                 self.namespace_queries[q]["logseq_url"] = getattr(file, "logseq_url", "")
-
-        for name, data in self.data.items():
-            got_ns_queries = data.get("namespace_queries")
-            if not got_ns_queries:
-                continue
-            for q in got_ns_queries:
-                page_refs = PATTERNS.content["page_reference"].findall(q)
-                if len(page_refs) != 1:
-                    logging.warning("Invalid references found in query: %s", q)
-                    continue
-
-                page_ref = page_refs[0]
-                self.namespace_queries.setdefault(q, {})
-                self.namespace_queries[q].setdefault("found_in", []).append(name)
-                self.namespace_queries[q]["namespace"] = page_ref
-                self.namespace_queries[q]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
-                self.namespace_queries[q]["uri"] = self.data[name].get("uri", "")
-                self.namespace_queries[q]["logseq_url"] = self.data[name].get("logseq_url", "")
 
         # Sort the queries by size in descending order
         self.namespace_queries = dict(

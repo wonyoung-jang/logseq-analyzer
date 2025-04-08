@@ -86,7 +86,7 @@ def run_app(**kwargs):
     graph.post_processing_content()
     graph.process_summary_data()
 
-    graph_ns = NamespaceAnalyzer(graph.files, graph.data, graph.dangling_links)
+    graph_ns = NamespaceAnalyzer(graph)
     graph_ns.init_ns_parts()
     graph_ns.analyze_ns_details()
     graph_ns.analyze_ns_queries()
