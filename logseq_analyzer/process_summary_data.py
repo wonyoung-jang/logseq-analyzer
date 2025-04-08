@@ -44,7 +44,7 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
     return node_type
 
 
-def yield_files_with_keys(files: Dict[str, Any], *criteria) -> Generator[str, None, None]:
+def yield_files_with_keys(files: List[LogseqFile], *criteria) -> Generator[str, None, None]:
     """
     Extract a subset of the summary data based on whether the keys exists.
     """
@@ -78,7 +78,7 @@ def list_files_with_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
     return [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
 
 
-def list_files_without_keys(files: List[Any], *criteria) -> List[str]:
+def list_files_without_keys(files: List[LogseqFile], *criteria) -> List[str]:
     """
     Extract a subset of the summary data based on whether the keys do not exist.
     """
