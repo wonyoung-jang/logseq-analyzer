@@ -5,7 +5,6 @@ Logseq Graph Class
 from pathlib import Path
 import logging
 
-from ._global_objects import ANALYZER_CONFIG
 from .helpers import get_file_or_folder
 from .logseq_config_edn import loads
 
@@ -24,8 +23,10 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
-    def __init__(self):
+    def __init__(self, analyzer_config, analyzer):
         """Initialize the LogseqGraphConfig class."""
+        self.analyzer_config = analyzer_config
+        self.analyzer = analyzer
         self.directory = Path()
         self.logseq_dir = Path()
         self.recycle_dir = Path()
@@ -33,7 +34,7 @@ class LogseqGraphConfig:
         self.user_config_file = Path()
         self.ls_config = {}
 
-    def initialize_graph(self, graph_folder) -> None:
+    def initialize_graph(self) -> None:
         """
         Initialize the Logseq graph directories.
 
@@ -43,26 +44,26 @@ class LogseqGraphConfig:
             ├── bak/
             ├── config.edn
         """
-        self.directory = get_file_or_folder(graph_folder)
+        self.directory = get_file_or_folder(self.analyzer.args.graph_folder)
         logging.info("Graph directory: %s", self.directory)
-        self.logseq_dir = get_file_or_folder(self.directory / ANALYZER_CONFIG.get("CONST", "LOGSEQ_DIR"))
+        self.logseq_dir = get_file_or_folder(self.directory / self.analyzer_config.get("CONST", "LOGSEQ_DIR"))
         logging.info("Logseq directory: %s", self.logseq_dir)
-        self.recycle_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "RECYCLE_DIR"))
+        self.recycle_dir = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "RECYCLE_DIR"))
         logging.info("Recycle directory: %s", self.recycle_dir)
-        self.bak_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "BAK_DIR"))
+        self.bak_dir = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "BAK_DIR"))
         logging.info("Bak directory: %s", self.bak_dir)
-        self.user_config_file = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "CONFIG_FILE"))
+        self.user_config_file = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "CONFIG_FILE"))
         logging.info("User config file: %s", self.user_config_file)
 
-    def initialize_config(self, args) -> None:
+    def initialize_config(self) -> None:
         """Initialize the Logseq configuration."""
         self.ls_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
         with self.user_config_file.open("r", encoding="utf-8") as f:
             self.ls_config.update(loads(f.read()))
 
-        if args.global_config:
-            global_config_file = get_file_or_folder(Path(args.global_config))
+        if self.analyzer.args.global_config:
+            self.analyzer_config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", self.analyzer.args.global_config)
+            global_config_file = get_file_or_folder(Path(self.analyzer.args.global_config))
             logging.info("Global config file: %s", global_config_file)
-            ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
             with global_config_file.open("r", encoding="utf-8") as f:
                 self.ls_config.update(loads(f.read()))
