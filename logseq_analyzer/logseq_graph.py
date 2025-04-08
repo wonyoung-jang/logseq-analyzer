@@ -2,11 +2,12 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
+from collections import defaultdict
 from typing import Any, Dict, List
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
 from .process_summary_data import check_is_backlinked, determine_node_type
-from .logseq_file import LogseqFile
+from .logseq_file import LogseqFile, LogseqFileHash
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
@@ -23,7 +24,7 @@ class LogseqGraph:
         self.data = {}
         self.content_bullets = {}
         self.unique_linked_references = set()
-        self.unique_linked_references_namespaces = set()
+        self.unique_linked_references_ns = set()
         self.all_linked_references = {}
         self.dangling_links = set()
         self.summary_file_subsets = {}
@@ -31,7 +32,8 @@ class LogseqGraph:
         self.assets_backlinked = []
         self.assets_not_backlinked = []
         self.files: List[LogseqFile] = []
-        self.hashed_files = {}
+        self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
+        self.names_to_hashes = defaultdict(list)
 
     def keys(self) -> list:
         """
@@ -45,32 +47,31 @@ class LogseqGraph:
         """
         for file_path in CACHE.iter_modified_files():
             file = LogseqFile(file_path)
-            file.get_single_file_metadata()
-            file.process_content_data()
 
-            name = file.data.get("name")
+            name = file.name
             if self.data.get(name):
-                name = file.data.get("name_secondary")
+                name = file.name_secondary
 
-            self.data[name] = file.data
+            self.data[name] = file.__dict__
             self.content_bullets[name] = file.content_bullets
+
+            self.names_to_hashes[file.name].append(file.hash)
             self.files.append(file)
             self.hashed_files[file.hash] = file
+            delattr(file, "content_bullets")
+            delattr(file, "content")
+            delattr(file, "primary_bullet")
 
     def post_processing_content(self):
         """
         Post-process the content data for all files.
         """
-        self.unique_linked_references = set()
-        self.unique_linked_references_ns = set()
         unique_aliases = set()
 
         # Process each file's content
         for file in self.files:
-            ns_parent = ""
-            if file.filename.is_namespace:
+            if file.is_namespace:
                 self.post_processing_content_namespaces(file)
-                ns_parent = file.filename.namespace_data["ns_parent"]
 
             found_aliases = file.data.get("aliases", [])
             unique_aliases.update(found_aliases)
@@ -84,17 +85,17 @@ class LogseqGraph:
                 file.data.get("properties_page_user", []),
                 file.data.get("properties_block_builtin", []),
                 file.data.get("properties_block_user", []),
-                [ns_parent],
+                [getattr(file, "ns_parent", "")],
             ]
             linked_references = [item for sublist in linked_references for item in sublist if item]
 
             for item in linked_references:
                 self.all_linked_references.setdefault(item, {})
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
-                self.all_linked_references[item].setdefault("found_in", []).append(file.filename.name)
+                self.all_linked_references[item].setdefault("found_in", []).append(file.name)
 
-            if ns_parent:
-                linked_references.remove(ns_parent)
+            if getattr(file, "ns_parent", ""):
+                linked_references.remove(file.ns_parent)
 
             self.unique_linked_references.update(linked_references)
 
@@ -116,46 +117,51 @@ class LogseqGraph:
         """
         Post-process namespaces in the content data.
         """
-        ns_level = file.filename.namespace_data["ns_level"]
-        ns_root = file.filename.namespace_data["ns_root"]
-        ns_parent = file.filename.namespace_data["ns_parent_full"]
-        self.unique_linked_references_ns.update([ns_root, file.filename.name])
+        ns_level = file.ns_level
+        ns_root = file.ns_root
+        ns_parent = file.ns_parent_full
+        self.unique_linked_references_ns.update([ns_root, file.name])
 
-        if self.data.get(ns_root):
-            root_level = self.data[ns_root].get("namespace_level", 0)
-            self.data[ns_root]["namespace_level"] = max(1, root_level)
-            self.data[ns_root].setdefault("namespace_children", set()).add(file.filename.name)
-            self.data[ns_root]["namespace_size"] = len(self.data[ns_root]["namespace_children"])
+        if self.names_to_hashes.get(ns_root):
+            for hash_ in self.names_to_hashes[ns_root]:
+                ns_root_file = self.hashed_files.get(hash_)
+                ns_root_file.ns_level = 1
+                if not hasattr(ns_root_file, "ns_children"):
+                    ns_root_file.ns_children = set()
+                ns_root_file.ns_children.add(file.filename.name)
+                ns_root_file.ns_size = len(ns_root_file.ns_children)
 
-        if self.data.get(ns_parent) and ns_level > 2:
-            parent_level = self.data[ns_parent].get("namespace_level", 0)
-            direct_level = ns_level - 1
-            self.data[ns_parent]["namespace_level"] = max(direct_level, parent_level)
-            self.data[ns_parent].setdefault("namespace_children", set()).add(file.filename.name)
-            self.data[ns_parent]["namespace_size"] = len(self.data[ns_parent]["namespace_children"])
+        if self.names_to_hashes.get(ns_parent) and ns_level > 2:
+            for hash_ in self.names_to_hashes[ns_parent]:
+                ns_parent_file = self.hashed_files.get(hash_)
+                ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
+                direct_level = ns_level - 1
+                ns_parent_file.ns_level = max(direct_level, ns_parent_level)
+                if not hasattr(ns_parent_file, "ns_children"):
+                    ns_parent_file.ns_children = set()
+                ns_parent_file.ns_children.add(file.filename.name)
+                ns_parent_file.ns_size = len(ns_parent_file.ns_children)
 
     def process_summary_data(self):
         """
         Process summary data for each file based on metadata and content analysis.
         """
         for file in self.files:
-            is_backlinked = check_is_backlinked(file.filename.name, self.unique_linked_references)
-            is_backlinked_by_ns_only = check_is_backlinked(file.filename.name, self.unique_linked_references_namespaces)
-
+            is_backlinked = check_is_backlinked(file.name, self.unique_linked_references)
+            is_backlinked_by_ns_only = check_is_backlinked(file.name, self.unique_linked_references_ns)
             node_type = "other"
-            if file.data.get("file_type") in ("journal", "page"):
+            if file.file_type in ("journal", "page"):
                 node_type = determine_node_type(
-                    file.data.get("has_content"),
+                    file.has_content,
                     is_backlinked,
                     is_backlinked_by_ns_only,
-                    file.data.get("has_backlinks"),
+                    file.has_backlinks,
                 )
-
-            file.data["node_type"] = node_type
-            file.data["is_backlinked"] = is_backlinked
-            file.data["is_backlinked_by_ns_only"] = is_backlinked_by_ns_only
+            file.node_type = node_type
+            file.is_backlinked = is_backlinked
+            file.is_backlinked_by_ns_only = is_backlinked_by_ns_only
             if is_backlinked_by_ns_only:
-                file.data["is_backlinked"] = False
+                file.is_backlinked = False
 
     def generate_summary_file_subsets(self):
         """
@@ -189,8 +195,8 @@ class LogseqGraph:
 
         # Process file extensions
         file_extensions = set()
-        for _, data in self.data.items():
-            ext = data.get("file_path_suffix")
+        for file in self.files:
+            ext = file.suffix
             if ext in file_extensions:
                 continue
             file_extensions.add(ext)
@@ -198,7 +204,7 @@ class LogseqGraph:
         file_ext_dict = {}
         for ext in file_extensions:
             output_name = f"_all_{ext}s"
-            criteria = {"file_path_suffix": ext}
+            criteria = {"suffix": ext}
             file_ext_dict[output_name] = self.list_files_with_keys_and_values(**criteria)
         self.summary_file_subsets["____file_extensions_dict"] = file_ext_dict
 
@@ -206,7 +212,11 @@ class LogseqGraph:
         """
         Extract a subset of the summary data based on multiple criteria (key-value pairs).
         """
-        return [k for k, v in self.data.items() if all(v.get(key) == expected for key, expected in criteria.items())]
+        result = []
+        for file in self.files:
+            if all(getattr(file, key) == expected for key, expected in criteria.items()):
+                result.append(file.name)
+        return result
 
     def generate_summary_data_subsets(self):
         """
@@ -303,12 +313,17 @@ class LogseqGraph:
             if not file.data.get("assets"):
                 continue
             for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
-                if self.data[asset]["is_backlinked"]:
+                asset_hash = self.names_to_hashes.get(asset)
+                if not asset_hash:
                     continue
-                for asset_mention in file.data["assets"]:
-                    if asset in asset_mention or file.filename.name in asset_mention:
-                        self.data[asset]["is_backlinked"] = True
-                        break
+                for hash_ in asset_hash:
+                    asset_file = self.hashed_files.get(hash_)
+                    if not asset_file or asset_file.is_backlinked:
+                        continue
+                    for asset_mention in file.data["assets"]:
+                        if asset_file.name in asset_mention or file.name in asset_mention:
+                            asset_file.is_backlinked = True
+                            break
 
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}

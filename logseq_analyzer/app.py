@@ -160,7 +160,7 @@ def run_app(**kwargs):
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
     ReportWriter(
         "___meta___unique_linked_refs_ns",
-        graph.unique_linked_references_namespaces,
+        graph.unique_linked_references_ns,
         output_dir_meta,
     ).write()
     ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
@@ -168,6 +168,7 @@ def run_app(**kwargs):
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
     ReportWriter("graph_files", graph.files, output_dir_meta).write()
     ReportWriter("graph_hashed_files", graph.hashed_files, output_dir_meta).write()
+    ReportWriter("graph_names_to_hashes", graph.names_to_hashes, output_dir_meta).write()
 
     for name, data in graph.summary_file_subsets.items():
         ReportWriter(name, data, output_dir_summary).write()
@@ -187,7 +188,7 @@ def run_app(**kwargs):
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
-        "___meta___unique_linked_refs_ns": graph.unique_linked_references_namespaces,
+        "___meta___unique_linked_refs_ns": graph.unique_linked_references_ns,
         "___meta___unique_linked_refs": graph.unique_linked_references,
         "___meta___graph_content": graph_content_db,
         "___meta___graph_data": graph.data,
@@ -205,6 +206,7 @@ def run_app(**kwargs):
         # Other
         "graph_files": graph.files,
         "graph_hashed_files": graph.hashed_files,
+        "graph_names_to_hashes": graph.names_to_hashes,
     }
 
     CACHE.update(shelve_output_data)

@@ -25,14 +25,12 @@ class LogseqFilename:
         self.name = self.file_path.stem.lower()
         self.parent = self.file_path.parent.name.lower()
         self.process_logseq_filename()
-        self.id = self.name[:2] if len(self.name) > 1 else f"!{self.name[0]}"
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
         self.file_path_parts = self.file_path.parts
         self.name_secondary = f"{self.name} {self.parent} + {self.suffix}"
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
         self.is_namespace = NS_SEP in self.name
-        self.namespace_data = {}
         self.get_namespace_name_data()
 
     def process_logseq_filename(self):
@@ -73,7 +71,6 @@ class LogseqFilename:
                 py_file_name_format,
                 e,
             )
-            self.name = self.name
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
@@ -117,9 +114,7 @@ class LogseqFilename:
             }
             for key, value in namespace_name_data.items():
                 if value:
-                    self.namespace_data[key] = value
-        else:
-            del self.namespace_data
+                    setattr(self, key, value)
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

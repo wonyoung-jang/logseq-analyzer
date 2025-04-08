@@ -53,14 +53,9 @@ class NamespaceAnalyzer:
         """
         Create namespace parts from the data.
         """
-        for name in yield_files_with_keys(self.data, "namespace_level"):
-            self.namespace_data.setdefault(
-                name,
-                {k: v for k, v in self.data[name].items() if "namespace" in k and v},
-            )
-        self.namespace_parts = {
-            k: v["namespace_parts"] for k, v in self.namespace_data.items() if v.get("namespace_parts")
-        }
+        for file in yield_files_with_keys(self.files, "ns_level"):
+            self.namespace_data.setdefault(file.name, {k: v for k, v in file.__dict__.items() if "ns_" in k and v})
+        self.namespace_parts = {k: v["ns_parts"] for k, v in self.namespace_data.items() if v.get("ns_parts")}
 
     def analyze_ns_details(self):
         """
@@ -88,6 +83,24 @@ class NamespaceAnalyzer:
         """
         Analyze namespace queries.
         """
+        for file in self.files:
+            got_ns_queries = file.data.get("namespace_queries")
+            if not got_ns_queries:
+                continue
+            for q in got_ns_queries:
+                page_refs = PATTERNS.content["page_reference"].findall(q)
+                if len(page_refs) != 1:
+                    logging.warning("Invalid references found in query: %s", q)
+                    continue
+
+                page_ref = page_refs[0]
+                self.namespace_queries.setdefault(q, {})
+                self.namespace_queries[q].setdefault("found_in", []).append(file.name)
+                self.namespace_queries[q]["namespace"] = page_ref
+                self.namespace_queries[q]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
+                self.namespace_queries[q]["uri"] = getattr(file, "uri", "")
+                self.namespace_queries[q]["logseq_url"] = getattr(file, "logseq_url", "")
+
         for name, data in self.data.items():
             got_ns_queries = data.get("namespace_queries")
             if not got_ns_queries:
@@ -99,12 +112,10 @@ class NamespaceAnalyzer:
                     continue
 
                 page_ref = page_refs[0]
-                self.namespace_queries[q] = self.namespace_queries.get(q, {})
+                self.namespace_queries.setdefault(q, {})
                 self.namespace_queries[q].setdefault("found_in", []).append(name)
                 self.namespace_queries[q]["namespace"] = page_ref
-                self.namespace_queries[q]["namespace_size"] = self.namespace_data.get(page_ref, {}).get(
-                    "namespace_size", 0
-                )
+                self.namespace_queries[q]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
                 self.namespace_queries[q]["uri"] = self.data[name].get("uri", "")
                 self.namespace_queries[q]["logseq_url"] = self.data[name].get("logseq_url", "")
 
@@ -112,7 +123,7 @@ class NamespaceAnalyzer:
         self.namespace_queries = dict(
             sorted(
                 self.namespace_queries.items(),
-                key=lambda item: item[1]["namespace_size"],
+                key=lambda item: item[1]["ns_size"],
                 reverse=True,
             )
         )
@@ -121,7 +132,7 @@ class NamespaceAnalyzer:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
-        non_ns_names = list_files_without_keys(self.data, "namespace_level")
+        non_ns_names = list_files_without_keys(self.files, "ns_level")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(self.dangling_links)
         for entry, parts in self.namespace_parts.items():

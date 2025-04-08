@@ -27,10 +27,6 @@ class LogseqBullets:
         """Read the text content of a file."""
         try:
             self.content = self.file_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            logging.warning("File not found: %s", self.file_path)
-        except IsADirectoryError:
-            logging.warning("Path is a directory, not a file: %s", self.file_path)
         except UnicodeDecodeError:
             logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
 

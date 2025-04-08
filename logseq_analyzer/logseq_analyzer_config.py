@@ -2,10 +2,12 @@
 Config class for loading and managing configuration files.
 """
 
-import logging
 from pathlib import Path
+import logging
 import configparser
 import re
+
+from .helpers import get_file_or_folder
 
 
 class LogseqAnalyzerConfig:
@@ -49,6 +51,11 @@ class LogseqAnalyzerConfig:
             return dict(self.config[section])
         return {}
 
+    def get_built_in_properties(self):
+        """Return the built-in properties as a frozenset"""
+        properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
+        self.built_in_properties = frozenset(properties_str.split(","))
+
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""
         self.datetime_token_map = self.get_section("DATETIME_TOKEN_MAP")
@@ -58,11 +65,6 @@ class LogseqAnalyzerConfig:
         tokens = self.datetime_token_map.keys()
         pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
         self.datetime_token_pattern = re.compile(pattern)
-
-    def get_built_in_properties(self):
-        """Return the built-in properties as a frozenset"""
-        properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
-        self.built_in_properties = frozenset(properties_str.split(","))
 
     def write(self, file):
         """Write the config to a file-like object"""
@@ -95,8 +97,7 @@ class LogseqAnalyzerConfig:
         # Validate target directories
         for dir_name in self.target_dirs:
             try:
-                targetpath = Path(self.get("CONST", "GRAPH_DIR")) / dir_name
-                targetpath.resolve(strict=True)
+                get_file_or_folder(Path(self.get("CONST", "GRAPH_DIR")) / dir_name)
                 logging.info("Target directory exists: %s", dir_name)
             except FileNotFoundError:
                 logging.error("Target directory does not exist: %s", dir_name)

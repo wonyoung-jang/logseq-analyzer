@@ -4,7 +4,7 @@ Process summary data for each file based on metadata and content analysis.
 
 from typing import Any, Dict, Generator, List, Set
 
-from ._global_objects import ANALYZER_CONFIG
+from .logseq_file import LogseqFile
 
 
 def check_is_backlinked(name: str, lookup: Set[str]) -> bool:
@@ -16,19 +16,6 @@ def check_is_backlinked(name: str, lookup: Set[str]) -> bool:
         return True
     except KeyError:
         return False
-
-
-def determine_file_type(parent: str) -> str:
-    """
-    Helper function to determine the file type based on the directory structure.
-    """
-    return {
-        ANALYZER_CONFIG.get("TARGET_DIRS", "DIR_ASSETS"): "asset",
-        ANALYZER_CONFIG.get("TARGET_DIRS", "DIR_DRAWS"): "draw",
-        ANALYZER_CONFIG.get("TARGET_DIRS", "DIR_JOURNALS"): "journal",
-        ANALYZER_CONFIG.get("TARGET_DIRS", "DIR_PAGES"): "page",
-        ANALYZER_CONFIG.get("TARGET_DIRS", "DIR_WHITEBOARDS"): "whiteboard",
-    }.get(parent, "other")
 
 
 def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
@@ -57,13 +44,13 @@ def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns
     return node_type
 
 
-def yield_files_with_keys(graph_data: Dict[str, Any], *criteria) -> Generator[str, None, None]:
+def yield_files_with_keys(files: Dict[str, Any], *criteria) -> Generator[str, None, None]:
     """
     Extract a subset of the summary data based on whether the keys exists.
     """
-    for k, v in graph_data.items():
-        if all(v.get(key) for key in criteria):
-            yield k
+    for file in files:
+        if all(hasattr(file, key) for key in criteria):
+            yield file
 
 
 def yield_files_without_keys(graph_data: Dict[str, Any], *criteria) -> Generator[str, None, None]:
@@ -91,11 +78,11 @@ def list_files_with_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
     return [k for k, v in graph_data.items() if all(v.get(key) for key in criteria)]
 
 
-def list_files_without_keys(graph_data: Dict[str, Any], *criteria) -> List[str]:
+def list_files_without_keys(files: List[Any], *criteria) -> List[str]:
     """
     Extract a subset of the summary data based on whether the keys do not exist.
     """
-    return [k for k, v in graph_data.items() if all(v.get(key) is None for key in criteria)]
+    return [file.name for file in files if all(not hasattr(file, key) for key in criteria)]
 
 
 def list_files_with_keys_and_values(graph_data: Dict[str, Any], **criteria) -> List[str]:
