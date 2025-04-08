@@ -4,8 +4,8 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 
-from .namespace_analyzer import NamespaceAnalyzer
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
+from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_journals import (
@@ -74,10 +74,6 @@ def run_app(**kwargs):
     graph_content_db = CACHE.get("___meta___graph_content", {})
     graph_content_db.update(graph.content_bullets)
     graph.content_bullets = graph_content_db
-
-    graph_files_db = CACHE.get("graph_files", [])
-    graph_files = [f for f in graph.files if f not in graph_files_db]
-    graph.files = graph_files + graph_files_db
 
     graph_hashed_files_db = CACHE.get("graph_hashed_files", {})
     graph_hashed_files_db.update(graph.hashed_files)
@@ -172,7 +168,6 @@ def run_app(**kwargs):
     ReportWriter("___meta___graph_data", graph.data, output_dir_meta).write()
     ReportWriter("all_refs", graph.all_linked_references, output_dir_meta).write()
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
-    ReportWriter("graph_files", graph.files, output_dir_meta).write()
     ReportWriter("graph_hashed_files", graph.hashed_files, output_dir_meta).write()
     ReportWriter("graph_names_to_hashes", graph.names_to_hashes, output_dir_meta).write()
 
@@ -210,7 +205,6 @@ def run_app(**kwargs):
         "assets_backlinked": graph.assets_backlinked,
         "assets_not_backlinked": graph.assets_not_backlinked,
         # Other
-        "graph_files": graph.files,
         "graph_hashed_files": graph.hashed_files,
         "graph_names_to_hashes": graph.names_to_hashes,
     }

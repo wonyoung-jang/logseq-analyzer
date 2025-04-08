@@ -3,10 +3,9 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
-from .process_summary_data import check_is_backlinked
 from .logseq_file import LogseqFile, LogseqFileHash
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
@@ -31,7 +30,6 @@ class LogseqGraph:
         self.summary_data_subsets = {}
         self.assets_backlinked = []
         self.assets_not_backlinked = []
-        self.files: List[LogseqFile] = []
         self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
         self.names_to_hashes = defaultdict(list)
 
@@ -47,7 +45,6 @@ class LogseqGraph:
         """
         for file_path in CACHE.iter_modified_files():
             file = LogseqFile(file_path)
-            self.files.append(file)
             self.data[file.hash] = file.__dict__
             self.content_bullets[file.hash] = file.content_bullets
             self.hashed_files[file.hash] = file
@@ -63,7 +60,7 @@ class LogseqGraph:
         unique_aliases = set()
 
         # Process each file's content
-        for file in self.files:
+        for _, file in self.hashed_files.items():
             if file.is_namespace:
                 self.post_processing_content_namespaces(file)
 
@@ -140,9 +137,9 @@ class LogseqGraph:
         """
         Process summary data for each file based on metadata and content analysis.
         """
-        for file in self.files:
-            is_backlinked = check_is_backlinked(file.name, self.unique_linked_references)
-            is_backlinked_by_ns_only = check_is_backlinked(file.name, self.unique_linked_references_ns)
+        for _, file in self.hashed_files.items():
+            is_backlinked = file.check_is_backlinked(self.unique_linked_references)
+            is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
             file.is_backlinked = is_backlinked
             file.is_backlinked_by_ns_only = is_backlinked_by_ns_only
             if is_backlinked and is_backlinked_by_ns_only:
@@ -183,7 +180,7 @@ class LogseqGraph:
 
         # Process file extensions
         file_extensions = set()
-        for file in self.files:
+        for _, file in self.hashed_files.items():
             ext = file.suffix
             if ext in file_extensions:
                 continue
@@ -201,7 +198,7 @@ class LogseqGraph:
         Extract a subset of the summary data based on multiple criteria (key-value pairs).
         """
         result = []
-        for file in self.files:
+        for _, file in self.hashed_files.items():
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
                 result.append(file.name)
         return result
@@ -285,7 +282,7 @@ class LogseqGraph:
             Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for file in self.files:
+        for _, file in self.hashed_files.items():
             if file.data.get(criteria):
                 for value in file.data[criteria]:
                     subset_counter.setdefault(value, {})
@@ -297,7 +294,7 @@ class LogseqGraph:
         """
         Handle assets for the Logseq Analyzer.
         """
-        for file in self.files:
+        for hash_, file in self.hashed_files.items():
             if not file.data.get("assets"):
                 continue
             for asset in self.summary_file_subsets.get("___is_filetype_asset", []):

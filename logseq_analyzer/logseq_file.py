@@ -4,7 +4,7 @@ LogseqFile class to process Logseq files.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Set, Tuple
 import uuid
 
 
@@ -249,6 +249,16 @@ class LogseqFile:
         for placeholder, code_block in code_blocks.items():
             content = content.replace(placeholder, code_block)
         return content
+
+    def check_is_backlinked(self, lookup: Set[str]) -> bool:
+        """
+        Helper function to check if a file is backlinked.
+        """
+        try:
+            lookup.remove(self.name)
+            return True
+        except KeyError:
+            return False
 
 
 @dataclass
