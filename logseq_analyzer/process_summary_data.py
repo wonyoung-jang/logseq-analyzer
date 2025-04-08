@@ -18,32 +18,6 @@ def check_is_backlinked(name: str, lookup: Set[str]) -> bool:
         return False
 
 
-def determine_node_type(has_content: bool, is_backlinked: bool, is_backlinked_ns: bool, has_backlinks: bool) -> str:
-    """Helper function to determine node type based on summary data."""
-    node_type = "other"
-    if has_content:
-        if is_backlinked:
-            if has_backlinks:
-                node_type = "branch"
-            else:
-                node_type = "leaf"
-        elif has_backlinks:
-            node_type = "root"
-        elif is_backlinked_ns:
-            node_type = "orphan_namespace"
-        else:
-            node_type = "orphan_graph"
-    else:  # No content
-        if not is_backlinked:
-            if is_backlinked_ns:
-                node_type = "orphan_namespace_true"
-            else:
-                node_type = "orphan_true"
-        else:
-            node_type = "leaf"
-    return node_type
-
-
 def yield_files_with_keys(files: List[LogseqFile], *criteria) -> Generator[str, None, None]:
     """
     Extract a subset of the summary data based on whether the keys exists.

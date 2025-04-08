@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Any, Dict, List
 
 from ._global_objects import CACHE, ANALYZER_CONFIG
-from .process_summary_data import check_is_backlinked, determine_node_type
+from .process_summary_data import check_is_backlinked
 from .logseq_file import LogseqFile, LogseqFileHash
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
@@ -149,19 +149,13 @@ class LogseqGraph:
         for file in self.files:
             is_backlinked = check_is_backlinked(file.name, self.unique_linked_references)
             is_backlinked_by_ns_only = check_is_backlinked(file.name, self.unique_linked_references_ns)
-            node_type = "other"
-            if file.file_type in ("journal", "page"):
-                node_type = determine_node_type(
-                    file.has_content,
-                    is_backlinked,
-                    is_backlinked_by_ns_only,
-                    file.has_backlinks,
-                )
-            file.node_type = node_type
             file.is_backlinked = is_backlinked
             file.is_backlinked_by_ns_only = is_backlinked_by_ns_only
-            if is_backlinked_by_ns_only:
+            if is_backlinked and is_backlinked_by_ns_only:
                 file.is_backlinked = False
+            file.node_type = "other"
+            if file.file_type in ("journal", "page"):
+                file.node_type = file.determine_node_type()
 
     def generate_summary_file_subsets(self):
         """
@@ -188,7 +182,7 @@ class LogseqGraph:
             "___is_node_root": {"node_type": "root"},
             "___is_node_leaf": {"node_type": "leaf"},
             "___is_node_branch": {"node_type": "branch"},
-            "___is_node_other": {"node_type": "other_node"},
+            "___is_node_other": {"node_type": "other"},
         }
         for output_name, criteria in summary_categories.items():
             self.summary_file_subsets[output_name] = self.list_files_with_keys_and_values(**criteria)

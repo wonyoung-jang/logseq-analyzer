@@ -201,31 +201,6 @@ class LogseqFile:
                     if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
                         self.has_backlinks = True
 
-    def process_content_namespace_data(self) -> Generator[str, str, None]:
-        """
-        Process namespaces in the data dictionary.
-        """
-        ns_parts_list = self.filename.name.split(NS_SEP)
-        ns_level = len(ns_parts_list)
-        ns_root = ns_parts_list[0]
-        ns_stem = ns_parts_list[-1]
-        ns_parent = ns_root
-        if ns_level > 2:
-            ns_parent = ns_parts_list[-2]
-
-        ns_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-        ns_data = {
-            "namespace_root": ns_root,
-            "namespace_parent": ns_parent,
-            "namespace_stem": ns_stem,
-            "namespace_parts": ns_parts,
-            "namespace_level": ns_level,
-        }
-
-        for key, value in ns_data.items():
-            if value:
-                yield key, value
-
     def is_primary_bullet_page_properties(self) -> bool:
         """
         Process primary bullet data.
@@ -234,6 +209,23 @@ class LogseqFile:
         if not bullet or bullet.startswith("#"):
             return False
         return True
+
+    def determine_node_type(self) -> str:
+        """Helper function to determine node type based on summary data."""
+        return {
+            (True, True, True, True): "branch",
+            (True, True, False, True): "branch",
+            (True, True, True, False): "leaf",
+            (True, True, False, False): "leaf",
+            (False, True, True, False): "leaf",
+            (False, True, False, False): "leaf",
+            (True, False, True, True): "root",
+            (True, False, False, True): "root",
+            (True, False, True, False): "orphan_namespace",
+            (False, False, True, False): "orphan_namespace_true",
+            (True, False, False, False): "orphan_graph",
+            (False, False, False, False): "orphan_true",
+        }.get((self.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
 
 
 @dataclass
