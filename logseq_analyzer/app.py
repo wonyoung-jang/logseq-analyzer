@@ -144,10 +144,8 @@ def run_app(**kwargs):
     ReportWriter("complete_timeline", graph_journals.complete_timeline, journal_dir).write()
     ReportWriter("missing_keys", graph_journals.missing_keys, journal_dir).write()
     ReportWriter("timeline_stats", graph_journals.timeline_stats, journal_dir).write()
-    if hasattr(graph_journals, "dangling_journals_past"):
-        ReportWriter("dangling_journals_past", graph_journals.dangling_journals_past, journal_dir).write()
-    if hasattr(graph_journals, "dangling_journals_future"):
-        ReportWriter("dangling_journals_future", graph_journals.dangling_journals_future, journal_dir).write()
+    ReportWriter("dangling_journals_past", graph_journals.dangling_journals_past, journal_dir).write()
+    ReportWriter("dangling_journals_future", graph_journals.dangling_journals_future, journal_dir).write()
     # Meta
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
     ReportWriter(

@@ -3,7 +3,7 @@ Process logseq journals.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 import logging
 
 from ._global_objects import ANALYZER_CONFIG
@@ -25,6 +25,8 @@ class LogseqJournals:
         self.complete_timeline = []
         self.missing_keys = []
         self.timeline_stats = {}
+        self.dangling_journals_past = []
+        self.dangling_journals_future = []
 
     def extract_journals_from_dangling_links(self):
         """
@@ -47,19 +49,14 @@ class LogseqJournals:
         """
         Process journal keys to build the complete timeline and detect missing entries.
         """
-        # Convert journal keys from strings to datetime objects
         self.process_journal_keys_to_datetime()
         self.build_complete_timeline()
         self.timeline_stats["complete_timeline"] = LogseqJournals.get_date_stats(self.complete_timeline)
         self.timeline_stats["dangling_journals"] = LogseqJournals.get_date_stats(self.dangling_journals)
-        complete_timeline_first_date = self.timeline_stats["complete_timeline"]["first_date"]
-        dangling_journals_first_date = self.timeline_stats["dangling_journals"]["first_date"]
-        complete_timeline_last_date = self.timeline_stats["complete_timeline"]["last_date"]
-        dangling_journals_last_date = self.timeline_stats["dangling_journals"]["last_date"]
-        if complete_timeline_first_date > dangling_journals_first_date:
-            self.dangling_journals_past = self.get_dangling_journals_past(complete_timeline_first_date)
-        if complete_timeline_last_date < dangling_journals_last_date:
-            self.dangling_journals_future = self.get_dangling_journals_future(complete_timeline_last_date)
+        self.get_dangling_journals_outside_range(
+            self.timeline_stats["complete_timeline"]["first_date"],
+            self.timeline_stats["complete_timeline"]["last_date"],
+        )
 
     def process_journal_keys_to_datetime(self):
         """
@@ -128,7 +125,7 @@ class LogseqJournals:
         first_date = min(timeline)
         last_date = max(timeline)
         days, weeks, months, years = LogseqJournals.get_date_ranges(last_date, first_date)
-        journal_stats = {
+        return {
             "first_date": first_date,
             "last_date": last_date,
             "days": days,
@@ -136,7 +133,6 @@ class LogseqJournals:
             "months": months,
             "years": years,
         }
-        return journal_stats
 
     @staticmethod
     def get_date_ranges(
@@ -155,25 +151,17 @@ class LogseqJournals:
         years = round(days / 365, 2)
         return days, weeks, months, years
 
-    def get_dangling_journals_past(self, timeline_start: datetime) -> List[datetime]:
-        """
-        Get dangling journals that are before the timeline start date.
-        """
-        dangling_journals_past = []
-        for link in self.dangling_journals:
-            if link < timeline_start:
-                dangling_journals_past.append(link)
-        return dangling_journals_past
-
-    def get_dangling_journals_future(self, timeline_end: datetime) -> List[datetime]:
+    def get_dangling_journals_outside_range(self, timeline_start: datetime, timeline_end: datetime):
         """
         Get dangling journals that are after the timeline end date.
         """
-        dangling_journals_future = []
         for link in self.dangling_journals:
+            if link < timeline_start:
+                self.dangling_journals_past.append(link)
+                continue
             if link > timeline_end:
-                dangling_journals_future.append(link)
-        return dangling_journals_future
+                self.dangling_journals_future.append(link)
+                continue
 
 
 def set_journal_py_formatting():
@@ -182,13 +170,11 @@ def set_journal_py_formatting():
     """
     journal_page_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
     journal_file_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
-    py_file_name_format = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
-    if not py_file_name_format:
+    if not ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT"):
         py_file_name_format = convert_cljs_date_to_py(journal_file_format)
         ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
     py_page_title_no_ordinal = journal_page_format.replace("o", "")
-    py_page_title_format_base = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
-    if not py_page_title_format_base:
+    if not ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT"):
         py_page_title_format_base = convert_cljs_date_to_py(py_page_title_no_ordinal)
         ANALYZER_CONFIG.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
 
@@ -196,17 +182,14 @@ def set_journal_py_formatting():
 def convert_cljs_date_to_py(cljs_format) -> str:
     """
     Convert a Clojure-style date format to a Python-style date format.
-
-    Args:
-        cljs_format (str): Clojure-style date format.
-
-    Returns:
-        str: Python-style date format.
     """
     cljs_format = cljs_format.replace("o", "")
-
-    def replace_token(match):
-        token = match.group(0)
-        return ANALYZER_CONFIG.datetime_token_map.get(token, token)
-
     return ANALYZER_CONFIG.datetime_token_pattern.sub(replace_token, cljs_format)
+
+
+def replace_token(match):
+    """
+    Replace a date token with its corresponding Python format.
+    """
+    token = match.group(0)
+    return ANALYZER_CONFIG.datetime_token_map.get(token, token)

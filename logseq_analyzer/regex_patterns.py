@@ -475,9 +475,9 @@ class RegexPatterns:
         self.advcommand = {
             "_all": re.compile(
                 r"""
-                \#\+BEGIN_          # "#BEGIN_"
+                \#\+BEGIN_          # "#+BEGIN_"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_            # "#END_"
+                \#\+END_            # "#+END_"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -485,9 +485,9 @@ class RegexPatterns:
             ),
             "export": re.compile(
                 r"""
-                \#\+BEGIN_EXPORT    # "#BEGIN_EXPORT"
+                \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_EXPORT      # "#END_EXPORT"
+                \#\+END_EXPORT      # "#+END_EXPORT"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -495,11 +495,11 @@ class RegexPatterns:
             ),
             "export_ascii": re.compile(
                 r"""
-                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT ascii"
+                \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
                 \s+?                    # Single space
                 ascii                   # "ascii"
                 .*?                     # Any characters (non-greedy)
-                \#\+END_EXPORT          # "#END_EXPORT"
+                \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
                 \n                      # Newline
                 """,
@@ -507,11 +507,11 @@ class RegexPatterns:
             ),
             "export_latex": re.compile(
                 r"""
-                \#\+BEGIN_EXPORT        # "#BEGIN_EXPORT latex"
+                \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
                 \s+?                    # Single space
-                latex                   # "latex"                
+                latex                   # "latex"
                 .*?                     # Any characters (non-greedy)
-                \#\+END_EXPORT          # "#END_EXPORT"
+                \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
                 \n                      # Newline
                 """,
@@ -519,9 +519,9 @@ class RegexPatterns:
             ),
             "caution": re.compile(
                 r"""
-                \#\+BEGIN_CAUTION          # "#BEGIN_"
+                \#\+BEGIN_CAUTION   # "#+BEGIN_CAUTION"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_CAUTION      # "#END_"
+                \#\+END_CAUTION     # "#+END_CAUTION"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -529,9 +529,9 @@ class RegexPatterns:
             ),
             "center": re.compile(
                 r"""
-                \#\+BEGIN_CENTER          # "#BEGIN_"
+                \#\+BEGIN_CENTER    # "#+BEGIN_CENTER"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_CENTER      # "#END_"
+                \#\+END_CENTER      # "#+END_CENTER"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -539,9 +539,9 @@ class RegexPatterns:
             ),
             "comment": re.compile(
                 r"""
-                \#\+BEGIN_COMMENT         # "#BEGIN_"
+                \#\+BEGIN_COMMENT   # "#+BEGIN_COMMENT"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_COMMENT      # "#END_"
+                \#\+END_COMMENT     # "#+END_COMMENT"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -549,9 +549,9 @@ class RegexPatterns:
             ),
             "example": re.compile(
                 r"""
-                \#\+BEGIN_EXAMPLE   # "#BEGIN_"
+                \#\+BEGIN_EXAMPLE   # "#+BEGIN_EXAMPLE"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_EXAMPLE     # "#END_"
+                \#\+END_EXAMPLE     # "#+END_EXAMPLE"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -559,9 +559,9 @@ class RegexPatterns:
             ),
             "important": re.compile(
                 r"""
-                \#\+BEGIN_IMPORTANT          # "#BEGIN_"
+                \#\+BEGIN_IMPORTANT # "#+BEGIN_IMPORTANT"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_IMPORTANT            # "#END_"
+                \#\+END_IMPORTANT   # "#+END_IMPORTANT"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -569,9 +569,9 @@ class RegexPatterns:
             ),
             "note": re.compile(
                 r"""
-                \#\+BEGIN_NOTE          # "#BEGIN_"
+                \#\+BEGIN_NOTE      # "#+BEGIN_NOTE"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_NOTE            # "#END_"
+                \#\+END_NOTE        # "#+END_NOTE"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -579,9 +579,9 @@ class RegexPatterns:
             ),
             "pinned": re.compile(
                 r"""
-                \#\+BEGIN_PINNED          # "#BEGIN_"
+                \#\+BEGIN_PINNED    # "#+BEGIN_PINNED"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_PINNED            # "#END_"
+                \#\+END_PINNED      # "#+END_PINNED"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -589,9 +589,9 @@ class RegexPatterns:
             ),
             "query": re.compile(
                 r"""
-                \#\+BEGIN_QUERY          # "#BEGIN_"
+                \#\+BEGIN_QUERY     # "#+BEGIN_QUERY"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_QUERY            # "#END_"
+                \#\+END_QUERY       # "#+END_QUERY"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -599,9 +599,9 @@ class RegexPatterns:
             ),
             "quote": re.compile(
                 r"""
-                \#\+BEGIN_QUOTE          # "#BEGIN_"
+                \#\+BEGIN_QUOTE     # "#+BEGIN_QUOTE"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_QUOTE            # "#END_"
+                \#\+END_QUOTE       # "#+END_QUOTE"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -609,9 +609,9 @@ class RegexPatterns:
             ),
             "tip": re.compile(
                 r"""
-                \#\+BEGIN_TIP          # "#BEGIN_"
+                \#\+BEGIN_TIP       # "#+BEGIN_TIP"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_TIP            # "#END_"
+                \#\+END_TIP         # "#+END_TIP"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -619,9 +619,9 @@ class RegexPatterns:
             ),
             "verse": re.compile(
                 r"""
-                \#\+BEGIN_VERSE          # "#BEGIN_"
+                \#\+BEGIN_VERSE     # "#+BEGIN_VERSE"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_VERSE            # "#END_"
+                \#\+END_VERSE       # "#+END_VERSE"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,
@@ -629,9 +629,9 @@ class RegexPatterns:
             ),
             "warning": re.compile(
                 r"""
-                \#\+BEGIN_WARNING          # "#BEGIN_"
+                \#\+BEGIN_WARNING   # "#+BEGIN_WARNING"
                 .*?                 # Any characters (non-greedy)
-                \#\+END_WARNING            # "#END_"
+                \#\+END_WARNING     # "#+END_WARNING"
                 .*?                 # Any characters (non-greedy)
                 \n                  # Newline
                 """,

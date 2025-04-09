@@ -48,7 +48,7 @@ class LogseqGraph:
             self.data[file.hash] = file.__dict__
             self.content_bullets[file.hash] = file.content_bullets
             self.hashed_files[file.hash] = file
-            self.names_to_hashes[file.name].append(file.hash)
+            self.names_to_hashes[file.path.name].append(file.hash)
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
@@ -61,7 +61,7 @@ class LogseqGraph:
 
         # Process each file's content
         for _, file in self.hashed_files.items():
-            if file.is_namespace:
+            if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
 
             found_aliases = file.data.get("aliases", [])

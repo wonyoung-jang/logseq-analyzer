@@ -28,28 +28,33 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path = file_path
+        self.path = LogseqFilename(self.file_path)
+        self.stat = LogseqFilestats(self.file_path)
+        self.bullets = LogseqBullets(self.file_path)
         self.content = ""
         self.data = {}
         self.primary_bullet = ""
         self.content_bullets = []
         self.has_content = False
         self.has_backlinks = False
+        self.is_backlinked = False
+        self.is_backlinked_by_ns_only = False
         self.init_file_data()
         self.hash = LogseqFileHash(self)
         self.process_content_data()
 
     def __repr__(self) -> str:
-        return f"LogseqFile(name={self.name}, path={self.file_path})"
+        return f"LogseqFile(name={self.path.name}, path={self.file_path})"
 
     def init_file_data(self):
         """
         Extract metadata from a file.
         """
-        for attr, value in LogseqFilename(self.file_path).__dict__.items():
+        for attr, value in self.path.__dict__.items():
             setattr(self, attr, value)
-        for attr, value in LogseqFilestats(self.file_path).__dict__.items():
+        for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
-        for attr, value in LogseqBullets(self.file_path).__dict__.items():
+        for attr, value in self.bullets.__dict__.items():
             if attr not in ("all_bullets"):
                 setattr(self, attr, value)
 
@@ -225,7 +230,7 @@ class LogseqFile:
         Helper function to check if a file is backlinked.
         """
         try:
-            lookup.remove(self.name)
+            lookup.remove(self.path.name)
             return True
         except KeyError:
             return False
@@ -234,17 +239,18 @@ class LogseqFile:
     def process_external_links(results: List[str]):
         """Process external links and categorize them."""
         external_links_family = defaultdict(list)
-        if results:
-            for _ in range(len(results)):
-                result = results[-1]
-                if PATTERNS.ext_links["external_link_internet"].match(result):
-                    external_links_family["external_links_internet"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.ext_links["external_link_alias"].match(result):
-                    external_links_family["external_links_alias"].append(result)
-                    results.pop()
-                    continue
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.ext_links["external_link_internet"].match(result):
+                external_links_family["external_links_internet"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.ext_links["external_link_alias"].match(result):
+                external_links_family["external_links_alias"].append(result)
+                results.pop()
+                continue
         external_links_family["external_links_other"] = results
         return external_links_family
 
@@ -252,17 +258,18 @@ class LogseqFile:
     def process_embedded_links(results: List[str]):
         """Process embedded links and categorize them."""
         embedded_links_family = defaultdict(list)
-        if results:
-            for _ in range(len(results)):
-                result = results[-1]
-                if PATTERNS.emb_links["embedded_link_internet"].match(result):
-                    embedded_links_family["embedded_links_internet"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.emb_links["embedded_link_asset"].match(result):
-                    embedded_links_family["embedded_links_asset"].append(result)
-                    results.pop()
-                    continue
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.emb_links["embedded_link_internet"].match(result):
+                embedded_links_family["embedded_links_internet"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.emb_links["embedded_link_asset"].match(result):
+                embedded_links_family["embedded_links_asset"].append(result)
+                results.pop()
+                continue
         embedded_links_family["embedded_links_other"] = results
         return embedded_links_family
 
@@ -277,56 +284,57 @@ class LogseqFile:
     def process_double_curly_braces(results: List[str]):
         """Process double curly braces and extract relevant data."""
         double_curly_family = defaultdict(list)
-        if results:
-            for _ in range(len(results)):
-                result = results[-1]
-                if PATTERNS.dblcurly["embed"].match(result):
-                    double_curly_family["embeds"].append(result)
-                    results.pop()
-                    if PATTERNS.dblcurly["page_embed"].match(result):
-                        double_curly_family["page_embeds"].append(result)
-                        double_curly_family["embeds"].remove(result)
-                        continue
-                    if PATTERNS.dblcurly["block_embed"].match(result):
-                        double_curly_family["block_embeds"].append(result)
-                        double_curly_family["embeds"].remove(result)
-                        continue
-                if PATTERNS.dblcurly["namespace_query"].match(result):
-                    double_curly_family["namespace_queries"].append(result)
-                    results.pop()
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.dblcurly["embed"].match(result):
+                double_curly_family["embeds"].append(result)
+                results.pop()
+                if PATTERNS.dblcurly["page_embed"].match(result):
+                    double_curly_family["page_embeds"].append(result)
+                    double_curly_family["embeds"].remove(result)
                     continue
-                if PATTERNS.dblcurly["card"].match(result):
-                    double_curly_family["cards"].append(result)
-                    results.pop()
+                if PATTERNS.dblcurly["block_embed"].match(result):
+                    double_curly_family["block_embeds"].append(result)
+                    double_curly_family["embeds"].remove(result)
                     continue
-                if PATTERNS.dblcurly["cloze"].match(result):
-                    double_curly_family["clozes"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["simple_query"].match(result):
-                    double_curly_family["simple_queries"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["query_function"].match(result):
-                    double_curly_family["query_functions"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["embed_video_url"].match(result):
-                    double_curly_family["embed_video_urls"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["embed_twitter_tweet"].match(result):
-                    double_curly_family["embed_twitter_tweets"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["embed_youtube_timestamp"].match(result):
-                    double_curly_family["embed_youtube_timestamps"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.dblcurly["renderer"].match(result):
-                    double_curly_family["renderers"].append(result)
-                    results.pop()
-                    continue
+            if PATTERNS.dblcurly["namespace_query"].match(result):
+                double_curly_family["namespace_queries"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["card"].match(result):
+                double_curly_family["cards"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["cloze"].match(result):
+                double_curly_family["clozes"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["simple_query"].match(result):
+                double_curly_family["simple_queries"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["query_function"].match(result):
+                double_curly_family["query_functions"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["embed_video_url"].match(result):
+                double_curly_family["embed_video_urls"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["embed_twitter_tweet"].match(result):
+                double_curly_family["embed_twitter_tweets"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["embed_youtube_timestamp"].match(result):
+                double_curly_family["embed_youtube_timestamps"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.dblcurly["renderer"].match(result):
+                double_curly_family["renderers"].append(result)
+                results.pop()
+                continue
         double_curly_family["macros"] = results
         return double_curly_family
 
@@ -334,68 +342,69 @@ class LogseqFile:
     def process_advanced_commands(results: List[str]):
         """Process advanced commands and extract relevant data."""
         advanced_command_family = defaultdict(list)
-        if results:
-            for _ in range(len(results)):
-                result = results[-1]
-                if PATTERNS.advcommand["export"].match(result):
-                    advanced_command_family["advanced_commands_export"].append(result)
-                    results.pop()
-                    if PATTERNS.advcommand["export_ascii"].match(result):
-                        advanced_command_family["advanced_commands_export_ascii"].append(result)
-                        advanced_command_family["advanced_commands_export"].pop()
-                        continue
-                    if PATTERNS.advcommand["export_latex"].match(result):
-                        advanced_command_family["advanced_commands_export_latex"].append(result)
-                        advanced_command_family["advanced_commands_export"].pop()
-                        continue
-                if PATTERNS.advcommand["caution"].match(result):
-                    advanced_command_family["advanced_commands_caution"].append(result)
-                    results.pop()
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.advcommand["export"].match(result):
+                advanced_command_family["advanced_commands_export"].append(result)
+                results.pop()
+                if PATTERNS.advcommand["export_ascii"].match(result):
+                    advanced_command_family["advanced_commands_export_ascii"].append(result)
+                    advanced_command_family["advanced_commands_export"].pop()
                     continue
-                if PATTERNS.advcommand["center"].match(result):
-                    advanced_command_family["advanced_commands_center"].append(result)
-                    results.pop()
+                if PATTERNS.advcommand["export_latex"].match(result):
+                    advanced_command_family["advanced_commands_export_latex"].append(result)
+                    advanced_command_family["advanced_commands_export"].pop()
                     continue
-                if PATTERNS.advcommand["comment"].match(result):
-                    advanced_command_family["advanced_commands_comment"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["example"].match(result):
-                    advanced_command_family["advanced_commands_example"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["important"].match(result):
-                    advanced_command_family["advanced_commands_important"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["note"].match(result):
-                    advanced_command_family["advanced_commands_note"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["pinned"].match(result):
-                    advanced_command_family["advanced_commands_pinned"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["query"].match(result):
-                    advanced_command_family["advanced_commands_query"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["quote"].match(result):
-                    advanced_command_family["advanced_commands_quote"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["tip"].match(result):
-                    advanced_command_family["advanced_commands_tip"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["verse"].match(result):
-                    advanced_command_family["advanced_commands_verse"].append(result)
-                    results.pop()
-                    continue
-                if PATTERNS.advcommand["warning"].match(result):
-                    advanced_command_family["advanced_commands_warning"].append(result)
-                    results.pop()
-                    continue
+            if PATTERNS.advcommand["caution"].match(result):
+                advanced_command_family["advanced_commands_caution"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["center"].match(result):
+                advanced_command_family["advanced_commands_center"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["comment"].match(result):
+                advanced_command_family["advanced_commands_comment"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["example"].match(result):
+                advanced_command_family["advanced_commands_example"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["important"].match(result):
+                advanced_command_family["advanced_commands_important"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["note"].match(result):
+                advanced_command_family["advanced_commands_note"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["pinned"].match(result):
+                advanced_command_family["advanced_commands_pinned"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["query"].match(result):
+                advanced_command_family["advanced_commands_query"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["quote"].match(result):
+                advanced_command_family["advanced_commands_quote"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["tip"].match(result):
+                advanced_command_family["advanced_commands_tip"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["verse"].match(result):
+                advanced_command_family["advanced_commands_verse"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.advcommand["warning"].match(result):
+                advanced_command_family["advanced_commands_warning"].append(result)
+                results.pop()
+                continue
         advanced_command_family["advanced_commands"] = results
         return advanced_command_family
 
@@ -416,7 +425,7 @@ class LogseqFileHash:
         """
         Return the key for the LogseqFileHash object.
         """
-        return (self.file.name, self.file.parent, self.file.suffix)
+        return (self.file.path.name, self.file.path.parent, self.file.path.suffix)
 
     def __hash__(self):
         """
