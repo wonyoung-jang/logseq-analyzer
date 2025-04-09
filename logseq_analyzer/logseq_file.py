@@ -2,6 +2,7 @@
 LogseqFile class to process Logseq files.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
@@ -98,23 +99,9 @@ class LogseqFile:
             "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
             "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
             "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
-            # Double curly braces family
-            "macros": find_all_lower(PATTERNS.dblcurly["_all"], masked_content),
-            "embeds": find_all_lower(PATTERNS.dblcurly["embed"], masked_content),
-            "page_embeds": find_all_lower(PATTERNS.dblcurly["page_embed"], masked_content),
-            "block_embeds": find_all_lower(PATTERNS.dblcurly["block_embed"], masked_content),
-            "namespace_queries": find_all_lower(PATTERNS.dblcurly["namespace_query"], masked_content),
-            "cards": find_all_lower(PATTERNS.dblcurly["card"], masked_content),
-            "clozes": find_all_lower(PATTERNS.dblcurly["cloze"], masked_content),
-            "simple_queries": find_all_lower(PATTERNS.dblcurly["simple_query"], masked_content),
-            "query_functions": find_all_lower(PATTERNS.dblcurly["query_function"], masked_content),
-            "embed_video_urls": find_all_lower(PATTERNS.dblcurly["embed_video_url"], masked_content),
-            "embed_twitter_tweets": find_all_lower(PATTERNS.dblcurly["embed_twitter_tweet"], masked_content),
-            "embed_youtube_timestamps": find_all_lower(PATTERNS.dblcurly["embed_youtube_timestamp"], masked_content),
-            "renderers": find_all_lower(PATTERNS.dblcurly["renderer"], masked_content),
         }
 
-        # Extract all properties: values pairs
+        # Aliases and property:values
         properties_values = {}
         property_value_all = PATTERNS.content["property_value"].findall(masked_content)
         for prop, value in property_value_all:
@@ -126,7 +113,7 @@ class LogseqFile:
             masked_aliases = self.unmask_code_blocks(aliases, code_blocks)
             aliases = process_aliases(masked_aliases)
 
-        # Extract page/block properties
+        # Properties
         page_properties = []
         if self.is_primary_bullet_page_properties():
             masked_primary_bullet, _ = self.mask_code_blocks(self.primary_bullet)
@@ -137,23 +124,26 @@ class LogseqFile:
                 masked_content_bullets.append(masked_bullet)
             masked_content = "\n".join(masked_content_bullets)
         block_properties = find_all_lower(PATTERNS.content["property"], masked_content)
+        prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
+        prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
 
-        properties_page_builtin, properties_page_user = LogseqFile.split_builtin_user_properties(page_properties)
-        properties_block_builtin, properties_block_user = LogseqFile.split_builtin_user_properties(block_properties)
-
-        # Process external and embedded links
+        # External and embedded links
         external_links = find_all_lower(PATTERNS.ext_links["external_link"], masked_content)
         embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], masked_content)
         ext_links_other, ext_links_internet, ext_links_alias = LogseqFile.process_external_links(external_links)
         emb_links_other, emb_links_internet, emb_links_asset = LogseqFile.process_embedded_links(embedded_links)
 
+        # Process double curly braces
+        double_curly = find_all_lower(PATTERNS.dblcurly["_all"], masked_content)
+        double_curly_family = LogseqFile.process_double_curly_braces(double_curly)
+        primary_data.update(double_curly_family)
         primary_data.update(
             {
                 "aliases": aliases,
-                "properties_block_builtin": properties_block_builtin,
-                "properties_block_user": properties_block_user,
-                "properties_page_builtin": properties_page_builtin,
-                "properties_page_user": properties_page_user,
+                "properties_block_builtin": prop_block_builtin,
+                "properties_block_user": prop_block_user,
+                "properties_page_builtin": prop_page_builtin,
+                "properties_page_user": prop_page_user,
                 "properties_values": properties_values,
                 "external_links_alias": ext_links_alias,
                 "external_links_internet": ext_links_internet,
@@ -301,6 +291,63 @@ class LogseqFile:
         builtin_props = [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties]
         user_props = [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties]
         return builtin_props, user_props
+
+    @staticmethod
+    def process_double_curly_braces(results: List[str]):
+        """Process double curly braces and extract relevant data."""
+        double_curly_family = defaultdict(list)
+        if results:
+            for _ in range(len(results)):
+                result = results[-1]
+                if PATTERNS.dblcurly["embed"].match(result):
+                    double_curly_family["embeds"].append(result)
+                    results.pop()
+                    if PATTERNS.dblcurly["page_embed"].match(result):
+                        double_curly_family["page_embeds"].append(result)
+                        double_curly_family["embeds"].remove(result)
+                        continue
+                    if PATTERNS.dblcurly["block_embed"].match(result):
+                        double_curly_family["block_embeds"].append(result)
+                        double_curly_family["embeds"].remove(result)
+                        continue
+                if PATTERNS.dblcurly["namespace_query"].match(result):
+                    double_curly_family["namespace_queries"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["card"].match(result):
+                    double_curly_family["cards"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["cloze"].match(result):
+                    double_curly_family["clozes"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["simple_query"].match(result):
+                    double_curly_family["simple_queries"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["query_function"].match(result):
+                    double_curly_family["query_functions"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["embed_video_url"].match(result):
+                    double_curly_family["embed_video_urls"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["embed_twitter_tweet"].match(result):
+                    double_curly_family["embed_twitter_tweets"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["embed_youtube_timestamp"].match(result):
+                    double_curly_family["embed_youtube_timestamps"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.dblcurly["renderer"].match(result):
+                    double_curly_family["renderers"].append(result)
+                    results.pop()
+                    continue
+        double_curly_family["macros"] = results
+        return double_curly_family
 
 
 @dataclass
