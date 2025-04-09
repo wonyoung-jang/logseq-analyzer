@@ -71,23 +71,6 @@ class LogseqFile:
             "multiline_code_langs": find_all_lower(PATTERNS.code["multiline_code_lang"], self.content),
             "calc_blocks": find_all_lower(PATTERNS.code["calc_block"], self.content),
             "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
-            # Advanced commands
-            "advanced_commands": find_all_lower(PATTERNS.advcommand["_all"], masked_content),
-            "advanced_commands_export": find_all_lower(PATTERNS.advcommand["export"], masked_content),
-            "advanced_commands_export_ascii": find_all_lower(PATTERNS.advcommand["export_ascii"], masked_content),
-            "advanced_commands_export_latex": find_all_lower(PATTERNS.advcommand["export_latex"], masked_content),
-            "advanced_commands_caution": find_all_lower(PATTERNS.advcommand["caution"], masked_content),
-            "advanced_commands_center": find_all_lower(PATTERNS.advcommand["center"], masked_content),
-            "advanced_commands_comment": find_all_lower(PATTERNS.advcommand["comment"], masked_content),
-            "advanced_commands_example": find_all_lower(PATTERNS.advcommand["example"], masked_content),
-            "advanced_commands_important": find_all_lower(PATTERNS.advcommand["important"], masked_content),
-            "advanced_commands_note": find_all_lower(PATTERNS.advcommand["note"], masked_content),
-            "advanced_commands_pinned": find_all_lower(PATTERNS.advcommand["pinned"], masked_content),
-            "advanced_commands_query": find_all_lower(PATTERNS.advcommand["query"], masked_content),
-            "advanced_commands_quote": find_all_lower(PATTERNS.advcommand["quote"], masked_content),
-            "advanced_commands_tip": find_all_lower(PATTERNS.advcommand["tip"], masked_content),
-            "advanced_commands_verse": find_all_lower(PATTERNS.advcommand["verse"], masked_content),
-            "advanced_commands_warning": find_all_lower(PATTERNS.advcommand["warning"], masked_content),
             # Basic content
             "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
             "block_references": find_all_lower(PATTERNS.content["block_reference"], masked_content),
@@ -101,7 +84,7 @@ class LogseqFile:
             "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
         }
 
-        # Aliases and property:values
+        # Process aliases and property:values
         properties_values = {}
         property_value_all = PATTERNS.content["property_value"].findall(masked_content)
         for prop, value in property_value_all:
@@ -113,7 +96,7 @@ class LogseqFile:
             masked_aliases = self.unmask_code_blocks(aliases, code_blocks)
             aliases = process_aliases(masked_aliases)
 
-        # Properties
+        # Process properties
         page_properties = []
         if self.is_primary_bullet_page_properties():
             masked_primary_bullet, _ = self.mask_code_blocks(self.primary_bullet)
@@ -127,7 +110,7 @@ class LogseqFile:
         prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
         prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
 
-        # External and embedded links
+        # Process external and embedded links
         external_links = find_all_lower(PATTERNS.ext_links["external_link"], masked_content)
         embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], masked_content)
         ext_links_other, ext_links_internet, ext_links_alias = LogseqFile.process_external_links(external_links)
@@ -137,6 +120,12 @@ class LogseqFile:
         double_curly = find_all_lower(PATTERNS.dblcurly["_all"], masked_content)
         double_curly_family = LogseqFile.process_double_curly_braces(double_curly)
         primary_data.update(double_curly_family)
+
+        # Process advanced commands
+        advanced_commands = find_all_lower(PATTERNS.advcommand["_all"], masked_content)
+        advanced_command_family = LogseqFile.process_advanced_commands(advanced_commands)
+        primary_data.update(advanced_command_family)
+
         primary_data.update(
             {
                 "aliases": aliases,
@@ -348,6 +337,75 @@ class LogseqFile:
                     continue
         double_curly_family["macros"] = results
         return double_curly_family
+
+    @staticmethod
+    def process_advanced_commands(results: List[str]):
+        """Process advanced commands and extract relevant data."""
+        advanced_command_family = defaultdict(list)
+        if results:
+            for _ in range(len(results)):
+                result = results[-1]
+                if PATTERNS.advcommand["export"].match(result):
+                    advanced_command_family["advanced_commands_export"].append(result)
+                    results.pop()
+                    if PATTERNS.advcommand["export_ascii"].match(result):
+                        advanced_command_family["advanced_commands_export_ascii"].append(result)
+                        advanced_command_family["advanced_commands_export"].pop()
+                        continue
+                    if PATTERNS.advcommand["export_latex"].match(result):
+                        advanced_command_family["advanced_commands_export_latex"].append(result)
+                        advanced_command_family["advanced_commands_export"].pop()
+                        continue
+                if PATTERNS.advcommand["caution"].match(result):
+                    advanced_command_family["advanced_commands_caution"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["center"].match(result):
+                    advanced_command_family["advanced_commands_center"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["comment"].match(result):
+                    advanced_command_family["advanced_commands_comment"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["example"].match(result):
+                    advanced_command_family["advanced_commands_example"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["important"].match(result):
+                    advanced_command_family["advanced_commands_important"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["note"].match(result):
+                    advanced_command_family["advanced_commands_note"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["pinned"].match(result):
+                    advanced_command_family["advanced_commands_pinned"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["query"].match(result):
+                    advanced_command_family["advanced_commands_query"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["quote"].match(result):
+                    advanced_command_family["advanced_commands_quote"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["tip"].match(result):
+                    advanced_command_family["advanced_commands_tip"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["verse"].match(result):
+                    advanced_command_family["advanced_commands_verse"].append(result)
+                    results.pop()
+                    continue
+                if PATTERNS.advcommand["warning"].match(result):
+                    advanced_command_family["advanced_commands_warning"].append(result)
+                    results.pop()
+                    continue
+        advanced_command_family["advanced_commands"] = results
+        return advanced_command_family
 
 
 @dataclass
