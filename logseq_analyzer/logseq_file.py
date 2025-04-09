@@ -60,7 +60,6 @@ class LogseqFile:
             if attr not in ("all_bullets"):
                 setattr(self, attr, value)
 
-    # TODO mask all "parent" patterns
     def process_content_data(self):
         """
         Process content data to extract various elements like backlinks, tags, and properties.
