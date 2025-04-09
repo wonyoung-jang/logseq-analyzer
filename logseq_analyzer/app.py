@@ -8,11 +8,7 @@ from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PAT
 from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
-from .logseq_journals import (
-    extract_journals_from_dangling_links,
-    process_journals_timelines,
-    set_journal_py_formatting,
-)
+from .logseq_journals import LogseqJournals, set_journal_py_formatting
 from .logseq_move_files import handle_move_files, handle_move_directory
 
 
@@ -119,8 +115,9 @@ def run_app(**kwargs):
     graph.generate_summary_data_subsets()
 
     # Process journal keys to create a timeline
-    journals_dangling = extract_journals_from_dangling_links(graph.dangling_links)
-    process_journals_timelines(graph.summary_file_subsets["___is_filetype_journal"], journals_dangling)
+    graph_journals = LogseqJournals(graph)
+    graph_journals.extract_journals_from_dangling_links()
+    graph_journals.process_journals_timelines()
 
     gui_instance.update_progress("summary", 100)
     #####################################################################
@@ -159,6 +156,18 @@ def run_app(**kwargs):
     output_dir_summary = ANALYZER_CONFIG.get("OUTPUT_DIRS", "SUMMARY")
     output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
+    journal_dir = ANALYZER_CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
+    # Journals
+    ReportWriter("dangling_journals", graph_journals.dangling_journals, journal_dir).write()
+    ReportWriter("processed_keys", graph_journals.processed_keys, journal_dir).write()
+    ReportWriter("complete_timeline", graph_journals.complete_timeline, journal_dir).write()
+    ReportWriter("missing_keys", graph_journals.missing_keys, journal_dir).write()
+    ReportWriter("timeline_stats", graph_journals.timeline_stats, journal_dir).write()
+    if hasattr(graph_journals, "dangling_journals_past"):
+        ReportWriter("dangling_journals_past", graph_journals.dangling_journals_past, journal_dir).write()
+    if hasattr(graph_journals, "dangling_journals_future"):
+        ReportWriter("dangling_journals_future", graph_journals.dangling_journals_future, journal_dir).write()
+    # Meta
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
     ReportWriter(
         "___meta___unique_linked_refs_ns",
@@ -170,22 +179,20 @@ def run_app(**kwargs):
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
     ReportWriter("graph_hashed_files", graph.hashed_files, output_dir_meta).write()
     ReportWriter("graph_names_to_hashes", graph.names_to_hashes, output_dir_meta).write()
-
+    # Summary
     for name, data in graph.summary_file_subsets.items():
         ReportWriter(name, data, output_dir_summary).write()
-
     for name, data in graph.summary_data_subsets.items():
         ReportWriter(name, data, "summary_content_data").write()
-
+    # Namespace
     for name, data in namespace_data.items():
         ReportWriter(name, data, output_dir_namespace).write()
-
+    # Move files and assets
     ReportWriter("moved_files", moved_files, output_dir_assets).write()
     ReportWriter("assets_backlinked", graph.assets_backlinked, output_dir_assets).write()
     ReportWriter("assets_not_backlinked", graph.assets_not_backlinked, output_dir_assets).write()
     if ANALYZER.args.write_graph:
         ReportWriter("___meta___graph_content", graph_content_db, output_dir_meta).write()
-
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs

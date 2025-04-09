@@ -17,20 +17,6 @@ TOKEN_REGEX = re.compile(
 )
 
 
-def tokenize(edn_str):
-    """
-    Yield EDN tokens, skipping comments, whitespace, and commas.
-    Comments start with ';' and run to end-of-line.
-    Commas are treated as whitespace per EDN spec.
-    """
-    edn_str = re.sub(r";.*", "", edn_str)
-    for match in TOKEN_REGEX.finditer(edn_str):
-        tok = match.group().strip()
-        if not tok or tok == ",":
-            continue
-        yield tok
-
-
 class LogseqConfigEDN:
     """
     A simple EDN parser that converts EDN data into Python data structures.
@@ -216,3 +202,17 @@ def loads(edn_str):
     tokens = tokenize(edn_str)
     parser = LogseqConfigEDN(tokens)
     return parser.parse()
+
+
+def tokenize(edn_str):
+    """
+    Yield EDN tokens, skipping comments, whitespace, and commas.
+    Comments start with ';' and run to end-of-line.
+    Commas are treated as whitespace per EDN spec.
+    """
+    edn_str = re.sub(r";.*", "", edn_str)
+    for match in TOKEN_REGEX.finditer(edn_str):
+        tok = match.group().strip()
+        if not tok or tok == ",":
+            continue
+        yield tok

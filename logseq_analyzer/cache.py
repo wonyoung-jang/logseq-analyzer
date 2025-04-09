@@ -44,7 +44,9 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
-        for path in FileSystem(self.graph_config.directory, self.analyzer_config.target_dirs).iter_files():
+        graph_dir = self.graph_config.directory
+        target_dirs = self.analyzer_config.target_dirs
+        for path in FileSystem(graph_dir, target_dirs).iter_files():
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
             if last_date_mod is None or last_date_mod != curr_date_mod:

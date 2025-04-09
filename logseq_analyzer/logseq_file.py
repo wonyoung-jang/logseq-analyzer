@@ -4,21 +4,15 @@ LogseqFile class to process Logseq files.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Set, Tuple
+from typing import Dict, List, Set, Tuple
 import uuid
 
 
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
-from .process_content_data import (
-    find_all_lower,
-    process_aliases,
-    process_embedded_links,
-    process_external_links,
-    split_builtin_user_properties,
-)
 from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename
+from .helpers import find_all_lower, process_aliases
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
@@ -106,7 +100,7 @@ class LogseqFile:
             "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
             "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
             # Double curly braces family
-            "macros": find_all_lower(PATTERNS.dblcurly["macro"], masked_content),
+            "macros": find_all_lower(PATTERNS.dblcurly["_all"], masked_content),
             "embeds": find_all_lower(PATTERNS.dblcurly["embed"], masked_content),
             "page_embeds": find_all_lower(PATTERNS.dblcurly["page_embed"], masked_content),
             "block_embeds": find_all_lower(PATTERNS.dblcurly["block_embed"], masked_content),
@@ -126,7 +120,7 @@ class LogseqFile:
         property_value_all = PATTERNS.content["property_value"].findall(masked_content)
         for prop, value in property_value_all:
             unmasked_value = self.unmask_code_blocks(value, code_blocks)
-            properties_values.setdefault(prop, unmasked_value)
+            properties_values[prop] = unmasked_value
 
         aliases = properties_values.get("alias")
         if aliases:
@@ -145,14 +139,14 @@ class LogseqFile:
             masked_content = "\n".join(masked_content_bullets)
         block_properties = find_all_lower(PATTERNS.content["property"], masked_content)
 
-        properties_page_builtin, properties_page_user = split_builtin_user_properties(page_properties)
-        properties_block_builtin, properties_block_user = split_builtin_user_properties(block_properties)
+        properties_page_builtin, properties_page_user = LogseqFile.split_builtin_user_properties(page_properties)
+        properties_block_builtin, properties_block_user = LogseqFile.split_builtin_user_properties(block_properties)
 
         # Process external and embedded links
         external_links = find_all_lower(PATTERNS.ext_links["external_link"], masked_content)
         embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], masked_content)
-        ext_links_other, ext_links_internet, ext_links_alias = process_external_links(external_links)
-        emb_links_other, emb_links_internet, emb_links_asset = process_embedded_links(embedded_links)
+        ext_links_other, ext_links_internet, ext_links_alias = LogseqFile.process_external_links(external_links)
+        emb_links_other, emb_links_internet, emb_links_asset = LogseqFile.process_embedded_links(embedded_links)
 
         primary_data.update(
             {
@@ -259,6 +253,55 @@ class LogseqFile:
             return True
         except KeyError:
             return False
+
+    @staticmethod
+    def process_external_links(
+        external_links: List[str],
+    ) -> Tuple[List[str], List[str], List[str]]:
+        """Process external links and categorize them."""
+        internet = []
+        alias = []
+        if external_links:
+            for _ in range(len(external_links)):
+                link = external_links[-1]
+                if PATTERNS.ext_links["external_link_internet"].match(link):
+                    internet.append(link)
+                    external_links.pop()
+                    continue
+
+                if PATTERNS.ext_links["external_link_alias"].match(link):
+                    alias.append(link)
+                    external_links.pop()
+                    continue
+        return external_links, internet, alias
+
+    @staticmethod
+    def process_embedded_links(
+        embedded_links: List[str],
+    ) -> Tuple[List[str], List[str], List[str]]:
+        """Process embedded links and categorize them."""
+        internet = []
+        asset = []
+        if embedded_links:
+            for _ in range(len(embedded_links)):
+                link = embedded_links[-1]
+                if PATTERNS.emb_links["embedded_link_internet"].match(link):
+                    internet.append(link)
+                    embedded_links.pop()
+                    continue
+
+                if PATTERNS.emb_links["embedded_link_asset"].match(link):
+                    asset.append(link)
+                    embedded_links.pop()
+                    continue
+        return embedded_links, internet, asset
+
+    @staticmethod
+    def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
+        """Helper function to split properties into built-in and user-defined."""
+        builtin_props = [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties]
+        user_props = [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties]
+        return builtin_props, user_props
 
 
 @dataclass

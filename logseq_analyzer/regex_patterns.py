@@ -335,7 +335,7 @@ class RegexPatterns:
                 renderer: Matches renderer syntax.
         """
         self.dblcurly = {
-            "macro": re.compile(
+            "_all": re.compile(
                 r"""
                 \{\{                # Opening double braces
                 .*?                 # Any characters (non-greedy)

@@ -8,6 +8,7 @@ from .logseq_analyzer import LogseqAnalyzer
 from .logseq_graph_config import LogseqGraphConfig
 from .cache import Cache
 
+
 PATTERNS = RegexPatterns()
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 ANALYZER = LogseqAnalyzer(ANALYZER_CONFIG)

@@ -117,14 +117,14 @@ def test_ext_links_patterns(rp, text, key, should_match):
 # Test compilation of double-curly content patterns
 def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
     rp.compile_re_content_double_curly_brackets()
-    assert "macro" in rp.dblcurly
-    assert isinstance(rp.dblcurly["macro"], re.Pattern)
+    assert "_all" in rp.dblcurly
+    assert isinstance(rp.dblcurly["_all"], re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("{{macro}}", "macro", True),
+        ("{{macro}}", "_all", True),
         ("{{embed [[Page]]}}", "embed", True),
         ("{{embed [[Page]]}}", "page_embed", True),
         ("{{embed ((123e4567-e89b-12d3-a456-426614174000))}}", "block_embed", True),
@@ -137,7 +137,7 @@ def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
         ("{{tweet foo}}", "embed_twitter_tweet", True),
         ("{{youtube-timestamp foo}}", "embed_youtube_timestamp", True),
         ("{{renderer foo}}", "renderer", True),
-        ("no curly here", "macro", False),
+        ("no curly here", "_all", False),
     ],
 )
 def test_dblcurly_patterns(rp, text, key, should_match):
@@ -219,7 +219,7 @@ def test_advcommand_patterns(rp, text, key, should_match):
             "![alt](assets/img.png)",
         ),
         # double-curly patterns
-        ("compile_re_content_double_curly_brackets", "dblcurly", "macro", "{{macro}}", 0, "{{macro}}"),
+        ("compile_re_content_double_curly_brackets", "dblcurly", "_all", "{{macro}}", 0, "{{macro}}"),
         (
             "compile_re_content_double_curly_brackets",
             "dblcurly",
