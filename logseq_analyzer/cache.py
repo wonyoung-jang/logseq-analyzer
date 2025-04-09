@@ -12,8 +12,9 @@ class Cache:
     Cache class to manage caching of modified files and directories.
     """
 
-    def __init__(self, analyzer_config, graph_config):
+    def __init__(self, analyzer, analyzer_config, graph_config):
         """Initialize the Cache class."""
+        self.analyzer = analyzer
         self.analyzer_config = analyzer_config
         self.graph_config = graph_config
         self.cache = shelve.open(self.analyzer_config.get("CONST", "CACHE"), protocol=5)
@@ -30,9 +31,9 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
-    def choose_cache_clear(self, graph_cache: bool = False):
+    def choose_cache_clear(self):
         """Choose whether to clear the cache based on the graph_cache flag."""
-        if graph_cache:
+        if self.analyzer.args.graph_cache:
             self.clear()
         else:
             self.clear_deleted_files()

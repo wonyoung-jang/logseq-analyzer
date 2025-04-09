@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import logging
 
 from ._global_objects import ANALYZER_CONFIG
+from .logseq_graph import LogseqGraph
 
 
 class LogseqJournals:
@@ -14,7 +15,7 @@ class LogseqJournals:
     LogseqJournals class to handle journal files and their processing.
     """
 
-    def __init__(self, graph):
+    def __init__(self, graph: LogseqGraph):
         """
         Initialize the LogseqJournals class.
         """

@@ -109,7 +109,7 @@ class RegexPatterns:
                 r"""
                 \#          # Hash character
                 \[\[        # Opening double brackets
-                [^\]\#]+?   # Anything except closing brackets or hash (non-greedy)
+                ([^\]\#]+?) # Anything except closing brackets or hash (non-greedy)
                 \]\]        # Closing double brackets
                 """,
                 re.IGNORECASE | re.VERBOSE,
@@ -118,7 +118,7 @@ class RegexPatterns:
                 r"""
                 \#              # Hash character
                 (?!\[\[)        # Negative lookahead: not followed by [[
-                [^\]\#\s]+?     # Anything except closing brackets, hash, or whitespace (non-greedy)
+                ([^\]\#\s]+?)   # Anything except closing brackets, hash, or whitespace (non-greedy)
                 (?=\s|$)        # Followed by whitespace or end of line
                 """,
                 re.IGNORECASE | re.VERBOSE,

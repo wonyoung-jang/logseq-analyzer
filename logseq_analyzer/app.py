@@ -52,7 +52,7 @@ def run_app(**kwargs):
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
     ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.set_journal_py_formatting()
-    CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
+    CACHE.choose_cache_clear()
 
     gui_instance.update_progress("setup", 100)
     ################################################################
@@ -115,8 +115,8 @@ def run_app(**kwargs):
     graph.generate_summary_data_subsets()
 
     # Process journal keys to create a timeline
-    graph_journals = LogseqJournals(graph)
-    graph_journals.process_journals_timelines()
+    journals = LogseqJournals(graph)
+    journals.process_journals_timelines()
 
     gui_instance.update_progress("summary", 100)
     #####################################################################
@@ -138,13 +138,13 @@ def run_app(**kwargs):
     output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
     journal_dir = ANALYZER_CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
     # Journals
-    ReportWriter("dangling_journals", graph_journals.dangling_journals, journal_dir).write()
-    ReportWriter("processed_keys", graph_journals.processed_keys, journal_dir).write()
-    ReportWriter("complete_timeline", graph_journals.complete_timeline, journal_dir).write()
-    ReportWriter("missing_keys", graph_journals.missing_keys, journal_dir).write()
-    ReportWriter("timeline_stats", graph_journals.timeline_stats, journal_dir).write()
-    ReportWriter("dangling_journals_past", graph_journals.dangling_journals_past, journal_dir).write()
-    ReportWriter("dangling_journals_future", graph_journals.dangling_journals_future, journal_dir).write()
+    ReportWriter("dangling_journals", journals.dangling_journals, journal_dir).write()
+    ReportWriter("processed_keys", journals.processed_keys, journal_dir).write()
+    ReportWriter("complete_timeline", journals.complete_timeline, journal_dir).write()
+    ReportWriter("missing_keys", journals.missing_keys, journal_dir).write()
+    ReportWriter("timeline_stats", journals.timeline_stats, journal_dir).write()
+    ReportWriter("dangling_journals_past", journals.dangling_journals_past, journal_dir).write()
+    ReportWriter("dangling_journals_future", journals.dangling_journals_future, journal_dir).write()
     # Meta
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
     ReportWriter(

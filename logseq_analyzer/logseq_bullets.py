@@ -2,18 +2,21 @@
 Module for LogseqBullets class
 """
 
-import logging
+from dataclasses import dataclass
 from pathlib import Path
+import logging
 
 from ._global_objects import PATTERNS
 
 
+@dataclass
 class LogseqBullets:
     """LogseqBullets class"""
 
-    def __init__(self, file_path: Path):
+    file_path: Path
+
+    def __post_init__(self):
         """Initialize the LogseqBullets class"""
-        self.file_path = file_path
         self.content = ""
         self.primary_bullet = ""
         self.all_bullets = []
@@ -22,11 +25,13 @@ class LogseqBullets:
         self.bullet_count = 0
         self.bullet_count_empty = 0
         self.bullet_density = 0
+        self.has_page_properties = False
         self.get_content()
         self.get_char_count()
         self.get_bullet_content()
         self.get_primary_bullet()
         self.get_bullet_density()
+        self.is_primary_bullet_page_properties()
 
     def get_content(self):
         """Read the text content of a file."""
@@ -67,3 +72,11 @@ class LogseqBullets:
         """ "Calculate bullet density: ~Char count / Bullet count"""
         if self.bullet_count:
             self.bullet_density = round(self.char_count / self.bullet_count, 2)
+
+    def is_primary_bullet_page_properties(self):
+        """
+        Process primary bullet data.
+        """
+        bullet = self.primary_bullet.strip()
+        if bullet and not bullet.startswith("#"):
+            self.has_page_properties = True

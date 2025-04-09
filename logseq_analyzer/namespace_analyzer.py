@@ -20,6 +20,7 @@ import logging
 
 from ._global_objects import PATTERNS, ANALYZER_CONFIG
 from .logseq_graph import LogseqGraph
+from .logseq_filename import LogseqFilename
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
@@ -73,12 +74,8 @@ class NamespaceAnalyzer:
                 self._part_levels[part].add(level)
                 self._part_entries[part].append({"entry": file.name, "level": level})
 
-        max_depth = max(level_distribution) if level_distribution else 0
-
-        self.namespace_details = {
-            "max_depth": max_depth,
-            "level_distribution": dict(level_distribution),
-        }
+        self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
+        self.namespace_details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(self):
         """
@@ -148,7 +145,7 @@ class NamespaceAnalyzer:
                     unique_pages.add(NS_SEP.join(up_to_level))
                 self.conflicts_parent_unique[key] = unique_pages
 
-    def yield_files_with_keys(self, *criteria) -> Generator[str, None, None]:
+    def yield_files_with_keys(self, *criteria) -> Generator[LogseqFilename, None, None]:
         """
         Extract a subset of the summary data based on whether the keys exists.
         """

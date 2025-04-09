@@ -39,6 +39,8 @@ class LogseqFile:
         self.has_backlinks = False
         self.is_backlinked = False
         self.is_backlinked_by_ns_only = False
+        self.node_type = "other"
+        self.file_type = "other"
         self.init_file_data()
         self.hash = LogseqFileHash(self)
         self.process_content_data()
@@ -58,6 +60,7 @@ class LogseqFile:
             if attr not in ("all_bullets"):
                 setattr(self, attr, value)
 
+    # TODO mask all "parent" patterns
     def process_content_data(self):
         """
         Process content data to extract various elements like backlinks, tags, and properties.
@@ -67,7 +70,7 @@ class LogseqFile:
             return
 
         # Mask code blocks to avoid interference with pattern matching
-        masked_content, code_blocks = self.mask_code_blocks(self.content)
+        masked_content, masked_blocks = self.mask_code_blocks(self.content)
 
         # Extract basic data
         primary_data = {
@@ -91,19 +94,17 @@ class LogseqFile:
 
         # Process aliases and property:values
         properties_values = {}
-        property_value_all = PATTERNS.content["property_value"].findall(masked_content)
+        property_value_all = PATTERNS.content["property_value"].findall(self.content)
         for prop, value in property_value_all:
-            unmasked_value = self.unmask_code_blocks(value, code_blocks)
-            properties_values[prop] = unmasked_value
+            properties_values[prop] = value
 
         aliases = properties_values.get("alias")
         if aliases:
-            masked_aliases = self.unmask_code_blocks(aliases, code_blocks)
-            aliases = process_aliases(masked_aliases)
+            aliases = process_aliases(aliases)
 
         # Process properties
         page_properties = []
-        if self.is_primary_bullet_page_properties():
+        if self.bullets.has_page_properties:
             masked_primary_bullet, _ = self.mask_code_blocks(self.primary_bullet)
             page_properties = find_all_lower(PATTERNS.content["property"], masked_primary_bullet)
             masked_content_bullets = []
@@ -111,27 +112,27 @@ class LogseqFile:
                 masked_bullet, _ = self.mask_code_blocks(bullet)
                 masked_content_bullets.append(masked_bullet)
             masked_content = "\n".join(masked_content_bullets)
-        block_properties = find_all_lower(PATTERNS.content["property"], masked_content)
+        block_properties = find_all_lower(PATTERNS.content["property"], self.content)
         prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
         prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
 
         # Process external links
-        external_links = find_all_lower(PATTERNS.ext_links["_all"], masked_content)
+        external_links = find_all_lower(PATTERNS.ext_links["_all"], self.content)
         external_links_family = LogseqFile.process_external_links(external_links)
         primary_data.update(external_links_family)
 
         # Process embedded links
-        embedded_links = find_all_lower(PATTERNS.emb_links["_all"], masked_content)
+        embedded_links = find_all_lower(PATTERNS.emb_links["_all"], self.content)
         embedded_links_family = LogseqFile.process_embedded_links(embedded_links)
         primary_data.update(embedded_links_family)
 
         # Process double curly braces
-        double_curly = find_all_lower(PATTERNS.dblcurly["_all"], masked_content)
+        double_curly = find_all_lower(PATTERNS.dblcurly["_all"], self.content)
         double_curly_family = LogseqFile.process_double_curly_braces(double_curly)
         primary_data.update(double_curly_family)
 
         # Process advanced commands
-        advanced_commands = find_all_lower(PATTERNS.advcommand["_all"], masked_content)
+        advanced_commands = find_all_lower(PATTERNS.advcommand["_all"], self.content)
         advanced_command_family = LogseqFile.process_advanced_commands(advanced_commands)
         primary_data.update(advanced_command_family)
 
@@ -152,15 +153,6 @@ class LogseqFile:
                 if not self.has_backlinks:
                     if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
                         self.has_backlinks = True
-
-    def is_primary_bullet_page_properties(self) -> bool:
-        """
-        Process primary bullet data.
-        """
-        bullet = self.primary_bullet.strip()
-        if not bullet or bullet.startswith("#"):
-            return False
-        return True
 
     def determine_node_type(self) -> str:
         """Helper function to determine node type based on summary data."""
@@ -189,25 +181,40 @@ class LogseqFile:
         Returns:
             Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original code blocks.
         """
-        # First mask multiline code blocks
-        code_blocks = {}
+        masked_blocks = {}
         masked_content = content
 
-        # Handle multiline code blocks first (```code blocks```)
         for match in PATTERNS.code["multiline_code_block"].finditer(content):
             block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
-            code_blocks[block_id] = match.group(0)
-            # Replace in masked content
+            masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        # Then handle inline code blocks (`code`)
         for match in PATTERNS.code["inline_code_block"].finditer(masked_content):
             block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
-            code_blocks[block_id] = match.group(0)
-            # Replace in masked content
+            masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        return masked_content, code_blocks
+        for match in PATTERNS.advcommand["_all"].finditer(masked_content):
+            block_id = f"__ADV_COMMAND_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        for match in PATTERNS.dblcurly["_all"].finditer(masked_content):
+            block_id = f"__DOUBLE_CURLY_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        for match in PATTERNS.emb_links["_all"].finditer(masked_content):
+            block_id = f"__EMB_LINK_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        for match in PATTERNS.ext_links["_all"].finditer(masked_content):
+            block_id = f"__EXT_LINK_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
+        return masked_content, masked_blocks
 
     def unmask_code_blocks(self, masked_content: str, code_blocks: Dict[str, str]) -> str:
         """

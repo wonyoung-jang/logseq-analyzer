@@ -73,17 +73,17 @@ def test_content_patterns(rp, text, key, should_match):
 # Test compilation of embedded links patterns
 def test_compile_re_emb_links_populates_emb_links_dict(rp):
     rp.compile_re_emb_links()
-    assert "embedded_link" in rp.emb_links
-    assert isinstance(rp.emb_links["embedded_link"], re.Pattern)
+    assert "_all" in rp.emb_links
+    assert isinstance(rp.emb_links["_all"], re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("![alt](url)", "embedded_link", True),
+        ("![alt](url)", "_all", True),
         ("![alt](http://example.com)", "embedded_link_internet", True),
         ("![alt](assets/img.png)", "embedded_link_asset", True),
-        ("[not embedded](url)", "embedded_link", False),
+        ("[not embedded](url)", "_all", False),
     ],
 )
 def test_emb_links_patterns(rp, text, key, should_match):
@@ -95,17 +95,17 @@ def test_emb_links_patterns(rp, text, key, should_match):
 # Test compilation of external links patterns
 def test_compile_re_ext_links_populates_ext_links_dict(rp):
     rp.compile_re_ext_links()
-    assert "external_link" in rp.ext_links
-    assert isinstance(rp.ext_links["external_link"], re.Pattern)
+    assert "_all" in rp.ext_links
+    assert isinstance(rp.ext_links["_all"], re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("[Link](url)", "external_link", True),
+        ("[Link](url)", "_all", True),
         ("[Link](http://example.com)", "external_link_internet", True),
         ("[Alias]([[Page]])", "external_link_alias", True),
-        ("![Embedded](url)", "external_link", False),
+        ("![Embedded](url)", "_all", False),
     ],
 )
 def test_ext_links_patterns(rp, text, key, should_match):

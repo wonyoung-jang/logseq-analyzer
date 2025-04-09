@@ -33,12 +33,6 @@ class LogseqGraph:
         self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
         self.names_to_hashes = defaultdict(list)
 
-    def keys(self) -> list:
-        """
-        Get all keys from the data dictionary.
-        """
-        return self.data.keys()
-
     def process_graph_files(self):
         """
         Process all files in the Logseq graph folder.
@@ -83,14 +77,13 @@ class LogseqGraph:
             for item in linked_references:
                 self.all_linked_references.setdefault(item, {})
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
-                self.all_linked_references[item].setdefault("found_in", []).append(file.name)
+                self.all_linked_references[item].setdefault("found_in", []).append(file.path.name)
 
             if hasattr(file, "ns_parent"):
                 linked_references.remove(file.ns_parent)
 
             self.unique_linked_references.update(linked_references)
 
-        # Create alphanum lookups and identify dangling links
         self.all_linked_references = dict(
             sorted(
                 self.all_linked_references.items(),
@@ -101,7 +94,8 @@ class LogseqGraph:
 
         # Create dangling links
         self.dangling_links = self.unique_linked_references.union(self.unique_linked_references_ns)
-        self.dangling_links.difference_update(self.names_to_hashes.keys(), unique_aliases)
+        self.dangling_links.difference_update(self.names_to_hashes.keys())
+        self.dangling_links.difference_update(unique_aliases)
         self.dangling_links = set(sorted(self.dangling_links))
 
     def post_processing_content_namespaces(self, file: LogseqFile):
@@ -111,7 +105,7 @@ class LogseqGraph:
         ns_level = file.ns_level
         ns_root = file.ns_root
         ns_parent = file.ns_parent_full
-        self.unique_linked_references_ns.update([ns_root, file.name])
+        self.unique_linked_references_ns.update([ns_root, file.path.name])
 
         if self.names_to_hashes.get(ns_root):
             for hash_ in self.names_to_hashes[ns_root]:
@@ -119,7 +113,7 @@ class LogseqGraph:
                 ns_root_file.ns_level = 1
                 if not hasattr(ns_root_file, "ns_children"):
                     ns_root_file.ns_children = set()
-                ns_root_file.ns_children.add(file.name)
+                ns_root_file.ns_children.add(file.path.name)
                 ns_root_file.ns_size = len(ns_root_file.ns_children)
 
         if self.names_to_hashes.get(ns_parent) and ns_level > 2:
@@ -130,7 +124,7 @@ class LogseqGraph:
                 ns_parent_file.ns_level = max(direct_level, ns_parent_level)
                 if not hasattr(ns_parent_file, "ns_children"):
                     ns_parent_file.ns_children = set()
-                ns_parent_file.ns_children.add(file.name)
+                ns_parent_file.ns_children.add(file.path.name)
                 ns_parent_file.ns_size = len(ns_parent_file.ns_children)
 
     def process_summary_data(self):
@@ -138,13 +132,10 @@ class LogseqGraph:
         Process summary data for each file based on metadata and content analysis.
         """
         for _, file in self.hashed_files.items():
-            is_backlinked = file.check_is_backlinked(self.unique_linked_references)
-            is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
-            file.is_backlinked = is_backlinked
-            file.is_backlinked_by_ns_only = is_backlinked_by_ns_only
-            if is_backlinked and is_backlinked_by_ns_only:
+            file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
+            file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
+            if file.is_backlinked and file.is_backlinked_by_ns_only:
                 file.is_backlinked = False
-            file.node_type = "other"
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
 
@@ -181,7 +172,7 @@ class LogseqGraph:
         # Process file extensions
         file_extensions = set()
         for _, file in self.hashed_files.items():
-            ext = file.suffix
+            ext = file.path.suffix
             if ext in file_extensions:
                 continue
             file_extensions.add(ext)
@@ -200,7 +191,7 @@ class LogseqGraph:
         result = []
         for _, file in self.hashed_files.items():
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
-                result.append(file.name)
+                result.append(file.path.name)
         return result
 
     def generate_summary_data_subsets(self):
@@ -287,7 +278,7 @@ class LogseqGraph:
                 for value in file.data[criteria]:
                     subset_counter.setdefault(value, {})
                     subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                    subset_counter[value].setdefault("found_in", []).append(file.name)
+                    subset_counter[value].setdefault("found_in", []).append(file.path.name)
         return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
     def handle_assets(self):
@@ -295,7 +286,7 @@ class LogseqGraph:
         Handle assets for the Logseq Analyzer.
         """
         for hash_, file in self.hashed_files.items():
-            if not file.data.get("assets"):
+            if not file.data.get("embedded_link_assets"):
                 continue
             for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
                 asset_hash = self.names_to_hashes.get(asset)
@@ -305,8 +296,8 @@ class LogseqGraph:
                     asset_file = self.hashed_files.get(hash_)
                     if not asset_file or asset_file.is_backlinked:
                         continue
-                    for asset_mention in file.data["assets"]:
-                        if asset_file.name in asset_mention or file.name in asset_mention:
+                    for asset_mention in file.data["embedded_link_assets"]:
+                        if asset_file.path.name in asset_mention or file.path.name in asset_mention:
                             asset_file.is_backlinked = True
                             break
 
