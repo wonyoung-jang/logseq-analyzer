@@ -110,11 +110,15 @@ class LogseqFile:
         prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
         prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
 
-        # Process external and embedded links
-        external_links = find_all_lower(PATTERNS.ext_links["external_link"], masked_content)
-        embedded_links = find_all_lower(PATTERNS.emb_links["embedded_link"], masked_content)
-        ext_links_other, ext_links_internet, ext_links_alias = LogseqFile.process_external_links(external_links)
-        emb_links_other, emb_links_internet, emb_links_asset = LogseqFile.process_embedded_links(embedded_links)
+        # Process external links
+        external_links = find_all_lower(PATTERNS.ext_links["_all"], masked_content)
+        external_links_family = LogseqFile.process_external_links(external_links)
+        primary_data.update(external_links_family)
+
+        # Process embedded links
+        embedded_links = find_all_lower(PATTERNS.emb_links["_all"], masked_content)
+        embedded_links_family = LogseqFile.process_embedded_links(embedded_links)
+        primary_data.update(embedded_links_family)
 
         # Process double curly braces
         double_curly = find_all_lower(PATTERNS.dblcurly["_all"], masked_content)
@@ -134,12 +138,6 @@ class LogseqFile:
                 "properties_page_builtin": prop_page_builtin,
                 "properties_page_user": prop_page_user,
                 "properties_values": properties_values,
-                "external_links_alias": ext_links_alias,
-                "external_links_internet": ext_links_internet,
-                "external_links_other": ext_links_other,
-                "embedded_links_asset": emb_links_asset,
-                "embedded_links_internet": emb_links_internet,
-                "embedded_links_other": emb_links_other,
             }
         )
 
@@ -233,46 +231,40 @@ class LogseqFile:
             return False
 
     @staticmethod
-    def process_external_links(
-        external_links: List[str],
-    ) -> Tuple[List[str], List[str], List[str]]:
+    def process_external_links(results: List[str]):
         """Process external links and categorize them."""
-        internet = []
-        alias = []
-        if external_links:
-            for _ in range(len(external_links)):
-                link = external_links[-1]
-                if PATTERNS.ext_links["external_link_internet"].match(link):
-                    internet.append(link)
-                    external_links.pop()
+        external_links_family = defaultdict(list)
+        if results:
+            for _ in range(len(results)):
+                result = results[-1]
+                if PATTERNS.ext_links["external_link_internet"].match(result):
+                    external_links_family["external_links_internet"].append(result)
+                    results.pop()
                     continue
-
-                if PATTERNS.ext_links["external_link_alias"].match(link):
-                    alias.append(link)
-                    external_links.pop()
+                if PATTERNS.ext_links["external_link_alias"].match(result):
+                    external_links_family["external_links_alias"].append(result)
+                    results.pop()
                     continue
-        return external_links, internet, alias
+        external_links_family["external_links_other"] = results
+        return external_links_family
 
     @staticmethod
-    def process_embedded_links(
-        embedded_links: List[str],
-    ) -> Tuple[List[str], List[str], List[str]]:
+    def process_embedded_links(results: List[str]):
         """Process embedded links and categorize them."""
-        internet = []
-        asset = []
-        if embedded_links:
-            for _ in range(len(embedded_links)):
-                link = embedded_links[-1]
-                if PATTERNS.emb_links["embedded_link_internet"].match(link):
-                    internet.append(link)
-                    embedded_links.pop()
+        embedded_links_family = defaultdict(list)
+        if results:
+            for _ in range(len(results)):
+                result = results[-1]
+                if PATTERNS.emb_links["embedded_link_internet"].match(result):
+                    embedded_links_family["embedded_links_internet"].append(result)
+                    results.pop()
                     continue
-
-                if PATTERNS.emb_links["embedded_link_asset"].match(link):
-                    asset.append(link)
-                    embedded_links.pop()
+                if PATTERNS.emb_links["embedded_link_asset"].match(result):
+                    embedded_links_family["embedded_links_asset"].append(result)
+                    results.pop()
                     continue
-        return embedded_links, internet, asset
+        embedded_links_family["embedded_links_other"] = results
+        return embedded_links_family
 
     @staticmethod
     def split_builtin_user_properties(properties: list) -> Tuple[list, list]:

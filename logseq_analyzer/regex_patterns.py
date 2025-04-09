@@ -224,7 +224,7 @@ class RegexPatterns:
                 embedded_link_asset: Matches embedded asset references.
         """
         self.emb_links = {
-            "embedded_link": re.compile(
+            "_all": re.compile(
                 r"""
                 \!                  # Exclamation mark
                 \[                  # Opening bracket
@@ -274,7 +274,7 @@ class RegexPatterns:
                 external_link_alias: Matches aliased external links (e.g., nested links).
         """
         self.ext_links = {
-            "external_link": re.compile(
+            "_all": re.compile(
                 r"""
                 (?<!\!)            # Negative lookbehind: not preceded by !
                 \[                 # Opening bracket
