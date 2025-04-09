@@ -9,7 +9,7 @@ from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_journals import LogseqJournals, set_journal_py_formatting
-from .logseq_move_files import handle_move_files, handle_move_directory
+from .logseq_file_mover import LogseqFileMover
 
 
 class GUIInstanceDummy:
@@ -126,26 +126,7 @@ def run_app(**kwargs):
     gui_instance.update_progress("move_files", 20)
 
     graph.handle_assets()
-    moved_files = {
-        "moved_assets": handle_move_files(
-            ANALYZER.args.move_unlinked_assets,
-            graph.data,
-            graph.assets_not_backlinked,
-            ANALYZER.delete_dir,
-        ),
-        "moved_bak": handle_move_directory(
-            ANALYZER.args.move_bak,
-            GRAPH_CONFIG.bak_dir,
-            ANALYZER.delete_dir,
-            ANALYZER_CONFIG.get("CONST", "BAK_DIR"),
-        ),
-        "moved_recycle": handle_move_directory(
-            ANALYZER.args.move_recycle,
-            GRAPH_CONFIG.recycle_dir,
-            ANALYZER.delete_dir,
-            ANALYZER_CONFIG.get("CONST", "RECYCLE_DIR"),
-        ),
-    }
+    logseq_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
 
     gui_instance.update_progress("move_files", 100)
     #####################################################################
@@ -188,7 +169,7 @@ def run_app(**kwargs):
     for name, data in namespace_data.items():
         ReportWriter(name, data, output_dir_namespace).write()
     # Move files and assets
-    ReportWriter("moved_files", moved_files, output_dir_assets).write()
+    ReportWriter("moved_files", logseq_assets_handler.moved_files, output_dir_assets).write()
     ReportWriter("assets_backlinked", graph.assets_backlinked, output_dir_assets).write()
     ReportWriter("assets_not_backlinked", graph.assets_not_backlinked, output_dir_assets).write()
     if ANALYZER.args.write_graph:
@@ -208,7 +189,7 @@ def run_app(**kwargs):
         # Namespaces summary
         **namespace_data,
         # Move files and assets
-        "moved_files": moved_files,
+        "moved_files": logseq_assets_handler.moved_files,
         "assets_backlinked": graph.assets_backlinked,
         "assets_not_backlinked": graph.assets_not_backlinked,
         # Other

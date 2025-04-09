@@ -4,8 +4,8 @@ This module defines the LogseqFilestats class, which is used to gather file stat
 
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from pathlib import Path
+import logging
 
 
 @dataclass

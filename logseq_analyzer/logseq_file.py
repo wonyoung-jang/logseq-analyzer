@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
 
-
 from ._global_objects import ANALYZER_CONFIG, PATTERNS
 from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
