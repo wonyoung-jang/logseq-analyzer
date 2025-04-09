@@ -101,3 +101,31 @@ class LogseqAnalyzerConfig:
                 logging.info("Target directory exists: %s", dir_name)
             except FileNotFoundError:
                 logging.error("Target directory does not exist: %s", dir_name)
+
+    def set_journal_py_formatting(self):
+        """
+        Set the formatting for journal files and pages in Python format.
+        """
+        journal_page_format = self.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
+        journal_file_format = self.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
+        if not self.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT"):
+            py_file_name_format = self.convert_cljs_date_to_py(journal_file_format)
+            self.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+        py_page_title_no_ordinal = journal_page_format.replace("o", "")
+        if not self.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT"):
+            py_page_title_format_base = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
+            self.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+
+    def convert_cljs_date_to_py(self, cljs_format) -> str:
+        """
+        Convert a Clojure-style date format to a Python-style date format.
+        """
+        cljs_format = cljs_format.replace("o", "")
+        return self.datetime_token_pattern.sub(self.replace_token, cljs_format)
+
+    def replace_token(self, match):
+        """
+        Replace a date token with its corresponding Python format.
+        """
+        token = match.group(0)
+        return self.datetime_token_map.get(token, token)

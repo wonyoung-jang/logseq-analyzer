@@ -8,7 +8,7 @@ from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PAT
 from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
-from .logseq_journals import LogseqJournals, set_journal_py_formatting
+from .logseq_journals import LogseqJournals
 from .logseq_file_mover import LogseqFileMover
 
 
@@ -51,8 +51,8 @@ def run_app(**kwargs):
     GRAPH_CONFIG.initialize_config()
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG, ANALYZER.args.report_format)
     ANALYZER_CONFIG.get_logseq_target_dirs()
+    ANALYZER_CONFIG.set_journal_py_formatting()
     CACHE.choose_cache_clear(ANALYZER.args.graph_cache)
-    set_journal_py_formatting()
 
     gui_instance.update_progress("setup", 100)
     ################################################################
@@ -116,7 +116,6 @@ def run_app(**kwargs):
 
     # Process journal keys to create a timeline
     graph_journals = LogseqJournals(graph)
-    graph_journals.extract_journals_from_dangling_links()
     graph_journals.process_journals_timelines()
 
     gui_instance.update_progress("summary", 100)
