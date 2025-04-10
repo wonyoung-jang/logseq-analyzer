@@ -15,12 +15,9 @@ class Cache:
     Cache class to manage caching of modified files and directories.
     """
 
-    def __init__(self, analyzer, analyzer_config, graph_config):
+    def __init__(self):
         """Initialize the Cache class."""
-        self.analyzer = analyzer
-        self.analyzer_config = analyzer_config
-        self.graph_config = graph_config
-        self.cache = shelve.open(self.analyzer_config.get("CONST", "CACHE"), protocol=5)
+        self.cache = shelve.open(ANALYZER_CONFIG.get("CONST", "CACHE"), protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -36,7 +33,7 @@ class Cache:
 
     def choose_cache_clear(self):
         """Choose whether to clear the cache based on the graph_cache flag."""
-        if self.analyzer.args.graph_cache:
+        if ANALYZER.args.graph_cache:
             self.clear()
         else:
             self.clear_deleted_files()
@@ -48,8 +45,8 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
-        graph_dir = self.graph_config.directory
-        target_dirs = self.analyzer_config.target_dirs
+        graph_dir = GRAPH_CONFIG.directory
+        target_dirs = ANALYZER_CONFIG.target_dirs
         for path in FileSystem(graph_dir, target_dirs).iter_files():
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
@@ -77,4 +74,4 @@ class Cache:
             self.cache["___meta___graph_content"].pop(file, None)
 
 
-CACHE = Cache(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG)
+CACHE = Cache()

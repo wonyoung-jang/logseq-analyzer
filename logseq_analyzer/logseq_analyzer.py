@@ -16,9 +16,8 @@ class LogseqAnalyzer:
     A class to analyze Logseq data.
     """
 
-    def __init__(self, analyzer_config):
+    def __init__(self):
         """Initialize the LogseqAnalyzer class."""
-        self.analyzer_config = analyzer_config
         self.args = None
         self.output_dir = None
         self.log_file = None
@@ -26,18 +25,18 @@ class LogseqAnalyzer:
 
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
-        self.output_dir = Path(self.analyzer_config.get("ANALYZER", "OUTPUT_DIR"))
-        if self.output_dir.exists():
+        output_dir = Path(ANALYZER_CONFIG.config["ANALYZER"]["OUTPUT_DIR"])
+        if output_dir.exists():
             try:
-                shutil.rmtree(self.output_dir)
-                logging.info("Removed existing output directory: %s", self.output_dir)
-                self.output_dir = get_or_create_file_or_folder(self.output_dir)
+                shutil.rmtree(output_dir)
+                logging.info("Removed existing output directory: %s", output_dir)
+                self.output_dir = get_or_create_file_or_folder(output_dir)
             except PermissionError:
-                logging.error("Permission denied to remove output directory: %s", self.output_dir)
+                logging.error("Permission denied to remove output directory: %s", output_dir)
 
     def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
-        self.log_file = Path(self.output_dir) / self.analyzer_config.get("ANALYZER", "LOG_FILE")
+        self.log_file = Path(self.output_dir) / ANALYZER_CONFIG.config["ANALYZER"]["LOG_FILE"]
         if self.log_file.exists():
             self.log_file.unlink()
         logging.basicConfig(
@@ -55,7 +54,7 @@ class LogseqAnalyzer:
         """
         Create a directory for deleted files.
         """
-        self.delete_dir = get_or_create_file_or_folder(Path(self.analyzer_config.get("ANALYZER", "TO_DELETE_DIR")))
+        self.delete_dir = get_or_create_file_or_folder(Path(ANALYZER_CONFIG.config["ANALYZER"]["TO_DELETE_DIR"]))
 
     def get_logseq_analyzer_args(self, **kwargs: dict):
         """
@@ -126,4 +125,4 @@ class LogseqAnalyzer:
             self.args = parser.parse_args()
 
 
-ANALYZER = LogseqAnalyzer(ANALYZER_CONFIG)
+ANALYZER = LogseqAnalyzer()

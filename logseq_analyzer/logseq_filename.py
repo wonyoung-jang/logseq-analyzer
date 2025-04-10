@@ -36,27 +36,24 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        ns_file_sep = ANALYZER_CONFIG.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP")
-        dir_journals = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "DIR_JOURNALS")
+        if self.name.endswith(ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
+            self.name = self.name.rstrip(ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
 
-        if self.name.endswith(ns_file_sep):
-            self.name = self.name.rstrip(ns_file_sep)
-
-        if self.parent == dir_journals:
+        if self.parent == ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(ns_file_sep, NS_SEP)
+            self.name = unquote(self.name).replace(
+                ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP
+            )
 
     def process_logseq_journal_key(self) -> str:
         """Process the journal key to create a page title."""
-        journal_page_format = ANALYZER_CONFIG.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
-        py_file_name_format = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT")
-        py_page_title_format_base = ANALYZER_CONFIG.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT")
-
         try:
-            date_object = datetime.strptime(self.name, py_file_name_format)
-            page_title_base = date_object.strftime(py_page_title_format_base).lower()
-            if "o" in journal_page_format:
+            date_object = datetime.strptime(self.name, ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"])
+            page_title_base = date_object.strftime(
+                ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]
+            ).lower()
+            if "o" in ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["JOURNAL_PAGE_TITLE_FORMAT"]:
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(
@@ -69,20 +66,20 @@ class LogseqFilename:
             logging.warning(
                 "Failed to parse date from key '%s', format `%s`: %s",
                 self.name,
-                py_file_name_format,
+                ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"],
                 e,
             )
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        len_graph_dir = len(Path(ANALYZER_CONFIG.get("CONST", "GRAPH_DIR")).parts)
+        graph_dir = ANALYZER_CONFIG.config["CONST"]["GRAPH_DIR"]
+        len_graph_dir = len(Path(graph_dir).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
         if target_segment[:-1] not in ("page", "block-id"):
             return ""
-
-        prefix = f"file:///C:/Logseq/{target_segment}/"
+        prefix = f"file:///{str(graph_dir)}/{target_segment}/"
         if not self.uri.startswith(prefix):
             return ""
 
