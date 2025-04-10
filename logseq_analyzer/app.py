@@ -3,11 +3,12 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
-from .namespace_analyzer import NamespaceAnalyzer
+from .logseq_namespaces import LogseqNamespaces
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_journals import LogseqJournals
 from .logseq_file_mover import LogseqFileMover
+import logging
 
 
 class GUIInstanceDummy:
@@ -19,7 +20,7 @@ class GUIInstanceDummy:
 
     def update_progress(self, phase, percentage):
         """Simulate updating progress in a GUI."""
-        print(f"Phase: {phase}, Progress: {percentage}%")
+        logging.info("Updating progress: %s - %d%%", phase, percentage)
 
 
 def run_app(**kwargs):
@@ -31,7 +32,6 @@ def run_app(**kwargs):
     # Phase 01: Setup
     ###################################################################
     gui_instance.update_progress("setup", 20)
-
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
@@ -45,32 +45,25 @@ def run_app(**kwargs):
     ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.set_journal_py_formatting()
     CACHE.choose_cache_clear()
-
     gui_instance.update_progress("setup", 100)
     ################################################################
     # Phase 02: Process files
     ################################################################
     gui_instance.update_progress("process_files", 20)
-
     graph = LogseqGraph(CACHE)
-
     gui_instance.update_progress("process_files", 100)
     #################################################################
     # Phase 03: Process summaries
     #################################################################
     gui_instance.update_progress("summary", 20)
-
-    graph_ns = NamespaceAnalyzer(graph)
+    graph_ns = LogseqNamespaces(graph)
     journals = LogseqJournals(graph)
-
     gui_instance.update_progress("summary", 100)
     #####################################################################
     # Phase 04: Move files to a delete directory (optional)
     #####################################################################
     gui_instance.update_progress("move_files", 20)
-
     logseq_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
-
     gui_instance.update_progress("move_files", 100)
     #####################################################################
     # Phase 05: Outputs
@@ -80,15 +73,15 @@ def run_app(**kwargs):
     output_dir_summary = ANALYZER_CONFIG.get("OUTPUT_DIRS", "SUMMARY")
     output_dir_namespace = ANALYZER_CONFIG.get("OUTPUT_DIRS", "NAMESPACE")
     output_dir_assets = ANALYZER_CONFIG.get("OUTPUT_DIRS", "ASSETS")
-    journal_dir = ANALYZER_CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
+    output_dir_journal = ANALYZER_CONFIG.get("OUTPUT_DIRS", "LOGSEQ_JOURNALS")
     # Journals
-    ReportWriter("dangling_journals", journals.dangling_journals, journal_dir).write()
-    ReportWriter("processed_keys", journals.processed_keys, journal_dir).write()
-    ReportWriter("complete_timeline", journals.complete_timeline, journal_dir).write()
-    ReportWriter("missing_keys", journals.missing_keys, journal_dir).write()
-    ReportWriter("timeline_stats", journals.timeline_stats, journal_dir).write()
-    ReportWriter("dangling_journals_past", journals.dangling_journals_past, journal_dir).write()
-    ReportWriter("dangling_journals_future", journals.dangling_journals_future, journal_dir).write()
+    ReportWriter("dangling_journals", journals.dangling_journals, output_dir_journal).write()
+    ReportWriter("processed_keys", journals.processed_keys, output_dir_journal).write()
+    ReportWriter("complete_timeline", journals.complete_timeline, output_dir_journal).write()
+    ReportWriter("missing_keys", journals.missing_keys, output_dir_journal).write()
+    ReportWriter("timeline_stats", journals.timeline_stats, output_dir_journal).write()
+    ReportWriter("dangling_journals_past", journals.dangling_journals_past, output_dir_journal).write()
+    ReportWriter("dangling_journals_future", journals.dangling_journals_future, output_dir_journal).write()
     # Meta
     ReportWriter("___meta___unique_linked_refs", graph.unique_linked_references, output_dir_meta).write()
     ReportWriter(

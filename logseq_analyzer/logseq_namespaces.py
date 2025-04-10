@@ -25,7 +25,7 @@ from .logseq_filename import LogseqFilename
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
 
-class NamespaceAnalyzer:
+class LogseqNamespaces:
     """
     Class for analyzing namespace data in Logseq.
     """

@@ -7,6 +7,8 @@ import logging
 
 from .helpers import get_file_or_folder
 from .logseq_config_edn import loads
+from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .logseq_analyzer import LogseqAnalyzer
 
 LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
     ":journal/page-title-format": "MMM do, yyyy",
@@ -23,7 +25,7 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
-    def __init__(self, analyzer_config, analyzer):
+    def __init__(self, analyzer_config: LogseqAnalyzerConfig, analyzer: LogseqAnalyzer):
         """Initialize the LogseqGraphConfig class."""
         self.analyzer_config = analyzer_config
         self.analyzer = analyzer
@@ -46,12 +48,16 @@ class LogseqGraphConfig:
         """
         self.directory = get_file_or_folder(self.analyzer.args.graph_folder)
         logging.info("Graph directory: %s", self.directory)
+
         self.logseq_dir = get_file_or_folder(self.directory / self.analyzer_config.get("CONST", "LOGSEQ_DIR"))
         logging.info("Logseq directory: %s", self.logseq_dir)
+
         self.recycle_dir = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "RECYCLE_DIR"))
         logging.info("Recycle directory: %s", self.recycle_dir)
+
         self.bak_dir = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "BAK_DIR"))
         logging.info("Bak directory: %s", self.bak_dir)
+
         self.user_config_file = get_file_or_folder(self.logseq_dir / self.analyzer_config.get("CONST", "CONFIG_FILE"))
         logging.info("User config file: %s", self.user_config_file)
 
