@@ -657,3 +657,6 @@ class RegexPatterns:
             ),
         }
         logging.info("Compiled regex patterns for content analysis.")
+
+
+PATTERNS = RegexPatterns()

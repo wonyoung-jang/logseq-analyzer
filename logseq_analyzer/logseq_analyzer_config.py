@@ -38,6 +38,9 @@ class LogseqAnalyzerConfig:
         self.built_in_properties = None
         self.datetime_token_map = None
         self.datetime_token_pattern = None
+        self.get_built_in_properties()
+        self.get_datetime_token_map()
+        self.get_datetime_token_pattern()
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""
@@ -138,3 +141,6 @@ class LogseqAnalyzerConfig:
         """
         token = match.group(0)
         return self.datetime_token_map.get(token, token)
+
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()

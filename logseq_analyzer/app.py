@@ -2,12 +2,15 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
 from .logseq_namespaces import LogseqNamespaces
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
 from .logseq_journals import LogseqJournals
 from .logseq_file_mover import LogseqFileMover
+from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_analyzer import ANALYZER
+from .logseq_graph_config import GRAPH_CONFIG
+from .cache import CACHE
 import logging
 
 

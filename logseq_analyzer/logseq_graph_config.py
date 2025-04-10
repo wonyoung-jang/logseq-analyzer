@@ -7,8 +7,8 @@ import logging
 
 from .helpers import get_file_or_folder
 from .logseq_config_edn import loads
-from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_analyzer import LogseqAnalyzer
+from .logseq_analyzer_config import LogseqAnalyzerConfig, ANALYZER_CONFIG
+from .logseq_analyzer import LogseqAnalyzer, ANALYZER
 
 LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
     ":journal/page-title-format": "MMM do, yyyy",
@@ -73,3 +73,6 @@ class LogseqGraphConfig:
             logging.info("Global config file: %s", global_config_file)
             with global_config_file.open("r", encoding="utf-8") as f:
                 self.ls_config.update(loads(f.read()))
+
+
+GRAPH_CONFIG = LogseqGraphConfig(ANALYZER_CONFIG, ANALYZER)

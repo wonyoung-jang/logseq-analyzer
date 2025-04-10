@@ -5,6 +5,9 @@ import logging
 import shelve
 
 from .helpers import FileSystem
+from .logseq_analyzer import ANALYZER
+from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_graph_config import GRAPH_CONFIG
 
 
 class Cache:
@@ -72,3 +75,6 @@ class Cache:
         for file in deleted_files:
             self.cache["___meta___graph_data"].pop(file, None)
             self.cache["___meta___graph_content"].pop(file, None)
+
+
+CACHE = Cache(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG)

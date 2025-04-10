@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import logging
 
-from ._global_objects import PATTERNS
+from .regex_patterns import PATTERNS
 
 
 @dataclass

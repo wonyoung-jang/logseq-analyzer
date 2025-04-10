@@ -5,7 +5,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Any, Dict
 
-from ._global_objects import ANALYZER_CONFIG
+from .logseq_analyzer_config import ANALYZER_CONFIG
 from .logseq_file import LogseqFile, LogseqFileHash
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")

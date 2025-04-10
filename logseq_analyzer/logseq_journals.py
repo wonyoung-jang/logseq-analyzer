@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 import logging
 
-from ._global_objects import ANALYZER_CONFIG
+from .logseq_analyzer_config import ANALYZER_CONFIG
 from .logseq_graph import LogseqGraph
 
 

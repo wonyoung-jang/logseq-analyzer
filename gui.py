@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from logseq_analyzer._global_objects import ANALYZER_CONFIG
+from logseq_analyzer.logseq_analyzer_config import ANALYZER_CONFIG
 from logseq_analyzer.app import run_app
 
 

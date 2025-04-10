@@ -18,9 +18,10 @@ from collections import Counter, defaultdict
 from typing import Generator, List
 import logging
 
-from ._global_objects import PATTERNS, ANALYZER_CONFIG
 from .logseq_graph import LogseqGraph
 from .logseq_filename import LogseqFilename
+from .regex_patterns import PATTERNS
+from .logseq_analyzer_config import ANALYZER_CONFIG
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
