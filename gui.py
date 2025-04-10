@@ -117,13 +117,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Creates and returns the layout for progress bars."""
         progress_bars_layout = QFormLayout()
         self.setup_progress_bar = self.create_progress_bar()
-        self.process_files_progress_bar = self.create_progress_bar()
-        self.summary_progress_bar = self.create_progress_bar()
-        self.move_files_progress_bar = self.create_progress_bar()
-        progress_bars_layout.addRow("Setup:", self.setup_progress_bar)
-        progress_bars_layout.addRow("Process Files:", self.process_files_progress_bar)
-        progress_bars_layout.addRow("Summarizing:", self.summary_progress_bar)
-        progress_bars_layout.addRow("Move Files:", self.move_files_progress_bar)
+        progress_bars_layout.addRow("Progress:", self.setup_progress_bar)
         return progress_bars_layout
 
     def create_progress_bar(self):
@@ -236,9 +230,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # Reset progress bars before starting
         self.setup_progress_bar.setValue(0)
-        self.process_files_progress_bar.setValue(0)
-        self.summary_progress_bar.setValue(0)
-        self.move_files_progress_bar.setValue(0)
         QApplication.processEvents()
 
         try:
@@ -262,14 +253,8 @@ class LogseqAnalyzerGUI(QMainWindow):
     def update_progress(self, phase_name, progress_value):
         """Updates the progress bar for a given phase."""
         progress_bar = None
-        if phase_name == "setup":
+        if phase_name == "progress":
             progress_bar = self.setup_progress_bar
-        elif phase_name == "process_files":
-            progress_bar = self.process_files_progress_bar
-        elif phase_name == "summary":
-            progress_bar = self.summary_progress_bar
-        elif phase_name == "move_files":
-            progress_bar = self.move_files_progress_bar
 
         if progress_bar:
             progress_bar.setValue(progress_value)

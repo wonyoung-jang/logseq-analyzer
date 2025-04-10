@@ -22,6 +22,9 @@ class LogseqAnalyzer:
         self.output_dir = None
         self.log_file = None
         self.delete_dir = None
+        self.get_built_in_properties()
+        self.get_datetime_token_map()
+        self.get_datetime_token_pattern()
 
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""

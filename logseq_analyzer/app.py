@@ -31,10 +31,7 @@ def run_app(**kwargs):
     ###################################################################
     # Phase 01: Setup
     ###################################################################
-    gui_instance.update_progress("setup", 20)
-    ANALYZER_CONFIG.get_built_in_properties()
-    ANALYZER_CONFIG.get_datetime_token_map()
-    ANALYZER_CONFIG.get_datetime_token_pattern()
+    gui_instance.update_progress("progress", 10)
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()
     ANALYZER.create_log_file()
@@ -45,26 +42,15 @@ def run_app(**kwargs):
     ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.set_journal_py_formatting()
     CACHE.choose_cache_clear()
-    gui_instance.update_progress("setup", 100)
-    ################################################################
-    # Phase 02: Process files
-    ################################################################
-    gui_instance.update_progress("process_files", 20)
+    gui_instance.update_progress("progress", 20)
     graph = LogseqGraph(CACHE)
-    gui_instance.update_progress("process_files", 100)
-    #################################################################
-    # Phase 03: Process summaries
-    #################################################################
-    gui_instance.update_progress("summary", 20)
+    gui_instance.update_progress("progress", 30)
     graph_ns = LogseqNamespaces(graph)
+    gui_instance.update_progress("progress", 40)
     journals = LogseqJournals(graph)
-    gui_instance.update_progress("summary", 100)
-    #####################################################################
-    # Phase 04: Move files to a delete directory (optional)
-    #####################################################################
-    gui_instance.update_progress("move_files", 20)
+    gui_instance.update_progress("progress", 60)
     logseq_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
-    gui_instance.update_progress("move_files", 100)
+    gui_instance.update_progress("progress", 80)
     #####################################################################
     # Phase 05: Outputs
     #####################################################################
@@ -149,3 +135,4 @@ def run_app(**kwargs):
     CACHE.close()
     # Write user config to file
     ANALYZER_CONFIG.write_to_file()
+    gui_instance.update_progress("progress", 100)
