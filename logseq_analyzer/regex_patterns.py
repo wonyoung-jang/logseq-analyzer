@@ -13,12 +13,54 @@ class RegexPatterns:
 
     def __init__(self):
         """Initialize the RegexPatterns class."""
+        self.dblparen = {}
         self.content = {}
         self.ext_links = {}
         self.emb_links = {}
         self.dblcurly = {}
         self.advcommand = {}
         self.code = {}
+        self.compile_re_content()
+        self.compile_re_content_double_curly_brackets()
+        self.compile_re_content_advanced_command()
+        self.compile_re_ext_links()
+        self.compile_re_emb_links()
+        self.compile_re_code()
+        self.compile_re_dblparen()
+
+    def compile_re_dblparen(self):
+        """
+        Compile regex patterns for double parentheses.
+
+        Overview of Patterns:
+            reference: Matches block references.
+                block_reference: Matches UUID block references.
+        """
+        self.dblparen = {
+            "_all": re.compile(
+                r"""
+                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+                \(\(                # Opening double parentheses
+                .*?                 # Any characters (non-greedy)
+                \)\)                # Closing double parentheses
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            "block_reference": re.compile(
+                r"""
+                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+                \(\(                # Opening double parentheses
+                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+                [0-9a-f]{12}        # 12 hex digits
+                \)\)                # Closing double parentheses
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
+        }
+        logging.info("Compiled regex patterns for double parentheses.")
 
     def compile_re_code(self):
         """
@@ -83,8 +125,6 @@ class RegexPatterns:
             blockquote: Matches blockquote syntax.
             flashcard: Matches flashcard syntax.
             dynamic_variable: Matches dynamic variables.
-            reference: Matches block references.
-                block_reference: Matches UUID block references.
         """
         self.content = {
             "bullet": re.compile(
@@ -178,28 +218,6 @@ class RegexPatterns:
                 .*                  # Any characters
                 """,
                 re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-            ),
-            "reference": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                .*?                 # Any characters (non-greedy)
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "block_reference": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{12}        # 12 hex digits
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
             ),
             "dynamic_variable": re.compile(
                 r"""

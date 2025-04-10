@@ -28,6 +28,7 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path = file_path
+        self.masked_blocks = {}
         self.path = LogseqFilename(self.file_path)
         self.stat = LogseqFilestats(self.file_path)
         self.bullets = LogseqBullets(self.file_path)
@@ -70,6 +71,7 @@ class LogseqFile:
 
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_code_blocks(self.content)
+        self.masked_blocks = masked_blocks
 
         # Extract basic data
         primary_data = {
@@ -80,12 +82,10 @@ class LogseqFile:
             "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
             # Basic content
             "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
-            "block_references": find_all_lower(PATTERNS.content["block_reference"], masked_content),
             "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
             "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
             "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),
             "page_references": find_all_lower(PATTERNS.content["page_reference"], masked_content),
-            "references_general": find_all_lower(PATTERNS.content["reference"], masked_content),
             "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
             "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
             "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
@@ -114,6 +114,11 @@ class LogseqFile:
         block_properties = find_all_lower(PATTERNS.content["property"], self.content)
         prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
         prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
+
+        # Process double parentheses
+        double_paren_pattern = find_all_lower(PATTERNS.dblparen["_all"], self.content)
+        double_paren_family = LogseqFile.process_double_parens(double_paren_pattern)
+        primary_data.update(double_paren_family)
 
         # Process external links
         external_links = find_all_lower(PATTERNS.ext_links["_all"], self.content)
@@ -213,6 +218,11 @@ class LogseqFile:
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
+        for match in PATTERNS.dblparen["_all"].finditer(masked_content):
+            block_id = f"__DBLPAREN_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
         return masked_content, masked_blocks
 
     def unmask_code_blocks(self, masked_content: str, code_blocks: Dict[str, str]) -> str:
@@ -240,6 +250,21 @@ class LogseqFile:
             return True
         except KeyError:
             return False
+
+    @staticmethod
+    def process_double_parens(results: List[str]):
+        """Process double parentheses and categorize them."""
+        double_paren_family = defaultdict(list)
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.dblparen["block_reference"].match(result):
+                double_paren_family["block_references"].append(result)
+                results.pop()
+                continue
+        double_paren_family["references_general"] = results
+        return double_paren_family
 
     @staticmethod
     def process_external_links(results: List[str]):

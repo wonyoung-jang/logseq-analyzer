@@ -4,7 +4,7 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 
-from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG, PATTERNS
+from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
 from .logseq_graph import LogseqGraph
@@ -34,12 +34,6 @@ def run_app(**kwargs):
     ###################################################################
     gui_instance.update_progress("setup", 20)
 
-    PATTERNS.compile_re_content()
-    PATTERNS.compile_re_content_double_curly_brackets()
-    PATTERNS.compile_re_content_advanced_command()
-    PATTERNS.compile_re_ext_links()
-    PATTERNS.compile_re_emb_links()
-    PATTERNS.compile_re_code()
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
@@ -157,6 +151,7 @@ def run_app(**kwargs):
     ReportWriter("dangling_links", graph.dangling_links, output_dir_meta).write()
     ReportWriter("graph_hashed_files", graph.hashed_files, output_dir_meta).write()
     ReportWriter("graph_names_to_hashes", graph.names_to_hashes, output_dir_meta).write()
+    ReportWriter("graph_masked_blocks", graph.masked_blocks, output_dir_meta).write()
     # Summary
     for name, data in graph.summary_file_subsets.items():
         ReportWriter(name, data, output_dir_summary).write()

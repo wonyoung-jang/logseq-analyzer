@@ -32,6 +32,7 @@ class LogseqGraph:
         self.assets_not_backlinked = []
         self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
         self.names_to_hashes = defaultdict(list)
+        self.masked_blocks = {}
 
     def process_graph_files(self):
         """
@@ -43,6 +44,7 @@ class LogseqGraph:
             self.content_bullets[file.hash] = file.content_bullets
             self.hashed_files[file.hash] = file
             self.names_to_hashes[file.path.name].append(file.hash)
+            self.masked_blocks[file.hash] = file.masked_blocks
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
