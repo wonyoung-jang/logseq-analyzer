@@ -28,7 +28,6 @@ class LogseqJournals:
         self.timeline_stats = {}
         self.dangling_journals_past = []
         self.dangling_journals_future = []
-        self.process_journals_timelines()
 
     def process_journals_timelines(self) -> None:
         """

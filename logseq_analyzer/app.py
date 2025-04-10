@@ -68,14 +68,17 @@ class GUIInstanceDummy:
 
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
-    gui_instance = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
-    gui_instance.update_progress(Phase.PROGRESS.value, 10)
+    gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
+    gui.update_progress(Phase.PROGRESS.value, 10)
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()
     ANALYZER.create_log_file()
     ANALYZER.create_delete_directory()
     GRAPH_CONFIG.initialize_graph()
     GRAPH_CONFIG.initialize_config()
+    ANALYZER_CONFIG.get_built_in_properties()
+    ANALYZER_CONFIG.get_datetime_token_map()
+    ANALYZER_CONFIG.get_datetime_token_pattern()
     ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
     ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", GRAPH_CONFIG.directory)
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
@@ -85,19 +88,40 @@ def run_app(**kwargs):
         CACHE.clear()
     else:
         CACHE.clear_deleted_files()
-    gui_instance.update_progress(Phase.PROGRESS.value, 20)
+    gui.update_progress(Phase.PROGRESS.value, 20)
 
     graph = LogseqGraph(CACHE)
-    gui_instance.update_progress(Phase.PROGRESS.value, 30)
+    graph.process_graph_files()
+    gui.update_progress(Phase.PROGRESS.value, 30)
+
+    graph.update_graph_files_with_cache()
+    gui.update_progress(Phase.PROGRESS.value, 40)
+
+    graph.post_processing_content()
+    gui.update_progress(Phase.PROGRESS.value, 50)
+
+    graph.process_summary_data()
+    gui.update_progress(Phase.PROGRESS.value, 60)
+
+    graph.generate_summary_file_subsets()
+    gui.update_progress(Phase.PROGRESS.value, 70)
+
+    graph.generate_summary_data_subsets()
+    gui.update_progress(Phase.PROGRESS.value, 80)
 
     graph_namespaces = LogseqNamespaces(graph)
-    gui_instance.update_progress(Phase.PROGRESS.value, 40)
+    graph_namespaces.init_ns_parts()
+    graph_namespaces.analyze_ns_queries()
+    graph_namespaces.detect_non_ns_conflicts()
+    graph_namespaces.detect_parent_depth_conflicts()
+    gui.update_progress(Phase.PROGRESS.value, 85)
 
     graph_journals = LogseqJournals(graph)
-    gui_instance.update_progress(Phase.PROGRESS.value, 60)
+    graph_journals.process_journals_timelines()
+    gui.update_progress(Phase.PROGRESS.value, 90)
 
     graph_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
-    gui_instance.update_progress(Phase.PROGRESS.value, 80)
+    gui.update_progress(Phase.PROGRESS.value, 95)
 
     # Output writing
     # Meta
@@ -182,4 +206,4 @@ def run_app(**kwargs):
         CACHE.close()
     finally:
         ANALYZER_CONFIG.write_to_file()
-    gui_instance.update_progress(Phase.PROGRESS.value, 100)
+    gui.update_progress(Phase.PROGRESS.value, 100)

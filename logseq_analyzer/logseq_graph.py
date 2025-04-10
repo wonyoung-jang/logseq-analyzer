@@ -34,12 +34,6 @@ class LogseqGraph:
         self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
         self.names_to_hashes = defaultdict(list)
         self.masked_blocks = {}
-        self.process_graph_files()
-        self.update_graph_files_with_cache()
-        self.post_processing_content()
-        self.process_summary_data()
-        self.generate_summary_file_subsets()
-        self.generate_summary_data_subsets()
 
     def process_graph_files(self):
         """
