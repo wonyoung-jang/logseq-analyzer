@@ -77,7 +77,7 @@ def run_app(**kwargs):
     GRAPH_CONFIG.initialize_graph()
     GRAPH_CONFIG.initialize_config()
     ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
-    ANALYZER_CONFIG.set("CONST", "GRAPH_DIR", GRAPH_CONFIG.directory)
+    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", GRAPH_CONFIG.directory)
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
     ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.set_journal_py_formatting()

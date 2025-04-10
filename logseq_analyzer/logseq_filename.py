@@ -73,7 +73,7 @@ class LogseqFilename:
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        graph_dir = ANALYZER_CONFIG.config["CONST"]["GRAPH_DIR"]
+        graph_dir = ANALYZER_CONFIG.config["ANALYZER"]["GRAPH_DIR"]
         len_graph_dir = len(Path(graph_dir).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]

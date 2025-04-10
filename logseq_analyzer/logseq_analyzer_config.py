@@ -104,7 +104,7 @@ class LogseqAnalyzerConfig:
         # Validate target directories
         for dir_name in self.target_dirs:
             try:
-                get_file_or_folder(Path(self.get("CONST", "GRAPH_DIR")) / dir_name)
+                get_file_or_folder(Path(self.get("ANALYZER", "GRAPH_DIR")) / dir_name)
                 logging.info("Target directory exists: %s", dir_name)
             except FileNotFoundError:
                 logging.error("Target directory does not exist: %s", dir_name)
