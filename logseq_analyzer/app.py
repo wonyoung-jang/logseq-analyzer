@@ -68,12 +68,7 @@ class GUIInstanceDummy:
 
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
-
-    # Get GUI instance if available
     gui_instance = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
-    ###################################################################
-    # Phase 01: Setup
-    ###################################################################
     gui_instance.update_progress(Phase.PROGRESS.value, 10)
     ANALYZER.get_logseq_analyzer_args(**kwargs)
     ANALYZER.create_output_directory()
@@ -94,9 +89,6 @@ def run_app(**kwargs):
     gui_instance.update_progress(Phase.PROGRESS.value, 60)
     logseq_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
     gui_instance.update_progress(Phase.PROGRESS.value, 80)
-    #####################################################################
-    # Phase 05: Outputs
-    #####################################################################
     # Output writing
     output_dir_meta = ANALYZER_CONFIG.config["OUTPUT_DIRS"]["META"]
     output_dir_summary = ANALYZER_CONFIG.config["OUTPUT_DIRS"]["SUMMARY"]
@@ -180,9 +172,9 @@ def run_app(**kwargs):
         Output.ASSETS_BACKLINKED.value: graph.assets_backlinked,
         Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
     }
-    # Update the cache with the new data
-    CACHE.update(shelve_output_data)
-    CACHE.close()
-    # Write user config to file
-    ANALYZER_CONFIG.write_to_file()
+    try:
+        CACHE.update(shelve_output_data)
+        CACHE.close()
+    finally:
+        ANALYZER_CONFIG.write_to_file()
     gui_instance.update_progress(Phase.PROGRESS.value, 100)
