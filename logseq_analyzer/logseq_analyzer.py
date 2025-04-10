@@ -25,7 +25,7 @@ class LogseqAnalyzer:
 
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
-        output_dir = Path(ANALYZER_CONFIG.config["ANALYZER"]["OUTPUT_DIR"])
+        output_dir = Path(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
         if output_dir.exists():
             try:
                 shutil.rmtree(output_dir)
@@ -36,7 +36,7 @@ class LogseqAnalyzer:
 
     def create_log_file(self):
         """Setup logging configuration for the Logseq Analyzer."""
-        self.log_file = Path(self.output_dir) / ANALYZER_CONFIG.config["ANALYZER"]["LOG_FILE"]
+        self.log_file = Path(self.output_dir) / ANALYZER_CONFIG.config["CONST"]["LOG_FILE"]
         if self.log_file.exists():
             self.log_file.unlink()
         logging.basicConfig(
@@ -54,7 +54,7 @@ class LogseqAnalyzer:
         """
         Create a directory for deleted files.
         """
-        self.delete_dir = get_or_create_file_or_dir(Path(ANALYZER_CONFIG.config["ANALYZER"]["TO_DELETE_DIR"]))
+        self.delete_dir = get_or_create_file_or_dir(Path(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"]))
 
     def get_logseq_analyzer_args(self, **kwargs: dict):
         """
