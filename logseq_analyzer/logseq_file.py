@@ -71,7 +71,7 @@ class LogseqFile:
             return
 
         # Mask code blocks to avoid interference with pattern matching
-        masked_content, masked_blocks = self.mask_code_blocks(self.content)
+        masked_content, masked_blocks = self.mask_blocks(self.content)
         self.masked_blocks = masked_blocks
 
         # Extract basic data
@@ -95,23 +95,22 @@ class LogseqFile:
         for prop, value in property_value_all:
             properties_values[prop] = value
 
-        aliases = properties_values.get("alias")
-        if aliases:
+        if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
 
         # Process properties
         page_properties = []
         if self.bullets.has_page_properties:
-            masked_primary_bullet, _ = self.mask_code_blocks(self.primary_bullet)
+            masked_primary_bullet, _ = self.mask_blocks(self.primary_bullet)
             page_properties = find_all_lower(PATTERNS.content["property"], masked_primary_bullet)
             masked_content_bullets = []
             for bullet in self.content_bullets:
-                masked_bullet, _ = self.mask_code_blocks(bullet)
+                masked_bullet, _ = self.mask_blocks(bullet)
                 masked_content_bullets.append(masked_bullet)
             masked_content = "\n".join(masked_content_bullets)
         block_properties = find_all_lower(PATTERNS.content["property"], self.content)
-        prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
-        prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
+        page_props = LogseqFile.split_builtin_user_properties(page_properties)
+        block_props = LogseqFile.split_builtin_user_properties(block_properties)
 
         # Process code blocks
         code_pattern = find_all_lower(PATTERNS.code["_all"], self.content)
@@ -146,10 +145,10 @@ class LogseqFile:
         primary_data.update(
             {
                 "aliases": aliases,
-                "properties_block_builtin": prop_block_builtin,
-                "properties_block_user": prop_block_user,
-                "properties_page_builtin": prop_page_builtin,
-                "properties_page_user": prop_page_user,
+                "properties_block_builtin": block_props["built_in"],
+                "properties_block_user": block_props["user_props"],
+                "properties_page_builtin": page_props["built_in"],
+                "properties_page_user": page_props["user_props"],
                 "properties_values": properties_values,
             }
         )
@@ -178,15 +177,15 @@ class LogseqFile:
             (False, False, False, False): "orphan_true",
         }.get((self.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
 
-    def mask_code_blocks(self, content: str) -> Tuple[str, Dict[str, str]]:
+    def mask_blocks(self, content: str) -> Tuple[str, Dict[str, str]]:
         """
-        Replace code blocks with placeholders to protect them from pattern matching.
+        Mask code blocks and other patterns in the content.
 
         Args:
             content (str): The content to mask.
 
         Returns:
-            Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original code blocks.
+            Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original blocks.
         """
         masked_blocks = {}
         masked_content = content
@@ -228,20 +227,20 @@ class LogseqFile:
 
         return masked_content, masked_blocks
 
-    def unmask_code_blocks(self, masked_content: str, code_blocks: Dict[str, str]) -> str:
+    def unmask_blocks(self, masked_content: str, masked_blocks: Dict[str, str]) -> str:
         """
-        Restore code blocks from placeholders.
+        Restore the original content by replacing placeholders with their blocks.
 
         Args:
             masked_content (str): Content with code block placeholders.
-            code_blocks (Dict[str, str]): Mapping of placeholders to original code blocks.
+            masked_blocks (Dict[str, str]): Mapping of placeholders to original code blocks.
 
         Returns:
             str: Original content with code blocks restored.
         """
         content = masked_content
-        for placeholder, code_block in code_blocks.items():
-            content = content.replace(placeholder, code_block)
+        for placeholder, block in masked_blocks.items():
+            content = content.replace(placeholder, block)
         return content
 
     def check_is_backlinked(self, lookup: Set[str]) -> bool:
@@ -327,11 +326,13 @@ class LogseqFile:
         return embedded_links_family
 
     @staticmethod
-    def split_builtin_user_properties(properties: list) -> Tuple[list, list]:
+    def split_builtin_user_properties(properties: list) -> Dict[str, List[str]]:
         """Helper function to split properties into built-in and user-defined."""
-        builtin_props = [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties]
-        user_props = [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties]
-        return builtin_props, user_props
+        properties_dict = {
+            "built_in": [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties],
+            "user_props": [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties],
+        }
+        return properties_dict
 
     @staticmethod
     def process_double_curly_braces(results: List[str]):

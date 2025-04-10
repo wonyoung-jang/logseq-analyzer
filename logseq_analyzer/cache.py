@@ -17,7 +17,7 @@ class Cache:
 
     def __init__(self):
         """Initialize the Cache class."""
-        self.cache = shelve.open(ANALYZER_CONFIG.get("CONST", "CACHE"), protocol=5)
+        self.cache = shelve.open(ANALYZER_CONFIG.config["CONST"]["CACHE"], protocol=5)
 
     def close(self):
         """Close the cache file."""

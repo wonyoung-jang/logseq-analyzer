@@ -7,7 +7,7 @@ from pathlib import Path
 import logging
 import shutil
 
-from .helpers import get_or_create_file_or_folder
+from .helpers import get_or_create_file_or_dir
 from .logseq_analyzer_config import ANALYZER_CONFIG
 
 
@@ -30,7 +30,7 @@ class LogseqAnalyzer:
             try:
                 shutil.rmtree(output_dir)
                 logging.info("Removed existing output directory: %s", output_dir)
-                self.output_dir = get_or_create_file_or_folder(output_dir)
+                self.output_dir = get_or_create_file_or_dir(output_dir)
             except PermissionError:
                 logging.error("Permission denied to remove output directory: %s", output_dir)
 
@@ -54,7 +54,7 @@ class LogseqAnalyzer:
         """
         Create a directory for deleted files.
         """
-        self.delete_dir = get_or_create_file_or_folder(Path(ANALYZER_CONFIG.config["ANALYZER"]["TO_DELETE_DIR"]))
+        self.delete_dir = get_or_create_file_or_dir(Path(ANALYZER_CONFIG.config["ANALYZER"]["TO_DELETE_DIR"]))
 
     def get_logseq_analyzer_args(self, **kwargs: dict):
         """

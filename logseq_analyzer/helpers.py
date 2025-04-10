@@ -57,7 +57,7 @@ def get_file_or_folder(path: Path) -> Path:
         return None
 
 
-def get_or_create_file_or_folder(path: Path) -> Path:
+def get_or_create_file_or_dir(path: Path) -> Path:
     """
     Get a path or create it if it doesn't exist.
 

@@ -11,7 +11,7 @@ from .logseq_analyzer import LogseqAnalyzer
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_graph_config import LogseqGraphConfig
 from .logseq_graph import LogseqGraph
-from .helpers import get_or_create_file_or_folder
+from .helpers import get_or_create_file_or_dir
 
 
 class LogseqFileMover:
@@ -84,7 +84,7 @@ class LogseqFileMover:
             logging.error("No asset directory found in configuration.")
             return
 
-        to_delete_asset_subdir = get_or_create_file_or_folder(self.analyzer.delete_dir / asset_dir)
+        to_delete_asset_subdir = get_or_create_file_or_dir(self.analyzer.delete_dir / asset_dir)
         for name in self.graph.assets_not_backlinked:
             file_path = Path(self.graph.data[name]["file_path"])
             new_path = to_delete_asset_subdir / file_path.name
@@ -103,7 +103,7 @@ class LogseqFileMover:
                 return [], []
 
         if target_subdir:
-            self.analyzer.delete_dir = get_or_create_file_or_folder(self.analyzer.delete_dir / target_subdir)
+            self.analyzer.delete_dir = get_or_create_file_or_dir(self.analyzer.delete_dir / target_subdir)
 
         moved_content = []
         moved_content_names = []
