@@ -3,15 +3,12 @@ Config class for loading and managing configuration files.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Dict
 import logging
 import configparser
 import re
 
 from .helpers import get_file_or_folder
-
-if TYPE_CHECKING:
-    from .logseq_graph_config import LogseqGraphConfig
 
 
 class LogseqAnalyzerConfig:
@@ -82,24 +79,22 @@ class LogseqAnalyzerConfig:
         with open(f"{Path('configuration')}/user_config.ini", "w", encoding="utf-8") as config_file:
             self.write(config_file)
 
-    def set_logseq_config_edn_data(self, graph_config: "LogseqGraphConfig", report_format: str):
+    def set_logseq_config_edn_data(self, ls_config: Dict[str, str]):
         """Set the Logseq configuration data."""
-        self.set("ANALYZER", "REPORT_FORMAT", report_format)
-        self.set("CONST", "GRAPH_DIR", graph_config.directory)
         self.set(
             "LOGSEQ_CONFIG",
             "JOURNAL_PAGE_TITLE_FORMAT",
-            graph_config.ls_config.get(":journal/page-title-format"),
+            ls_config.get(":journal/page-title-format"),
         )
         self.set(
             "LOGSEQ_CONFIG",
             "JOURNAL_FILE_NAME_FORMAT",
-            graph_config.ls_config.get(":journal/file-name-format"),
+            ls_config.get(":journal/file-name-format"),
         )
-        self.set("LOGSEQ_CONFIG", "DIR_PAGES", graph_config.ls_config.get(":pages-directory"))
-        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", graph_config.ls_config.get(":journals-directory"))
-        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", graph_config.ls_config.get(":whiteboards-directory"))
-        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", graph_config.ls_config.get(":file/name-format"))
+        self.set("LOGSEQ_CONFIG", "DIR_PAGES", ls_config.get(":pages-directory"))
+        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory"))
+        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory"))
+        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ls_config.get(":file/name-format"))
         if self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar":
             self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
 

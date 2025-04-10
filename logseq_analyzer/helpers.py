@@ -7,33 +7,21 @@ from typing import Generator, Set, List, Pattern
 import logging
 
 
-class FileSystem:
+def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
     """
-    A simple class to encapsulate file system operations for easier mocking/testing.
+    Recursively iterate over files in the root directory.
     """
+    for root, dirs, files in Path.walk(root_dir):
+        path_root = Path(root)
+        if path_root == root_dir:
+            continue
 
-    def __init__(self, root_dir: Path, target_dirs: Set[str]):
-        """
-        Initialize the FileSystem class.
-        """
-        self.root_dir = root_dir
-        self.target_dirs = target_dirs
-
-    def iter_files(self) -> Generator[Path, None, None]:
-        """
-        Recursively iterate over files in the root directory.
-        """
-        for root, dirs, files in Path.walk(self.root_dir):
-            path_root = Path(root)
-            if path_root == self.root_dir:
-                continue
-
-            if path_root.name in self.target_dirs:
-                for file in files:
-                    yield path_root / file
-            else:
-                logging.info("Skipping directory %s outside target directories", path_root)
-                dirs.clear()
+        if path_root.name in target_dirs:
+            for file in files:
+                yield path_root / file
+        else:
+            logging.info("Skipping directory %s outside target directories", path_root)
+            dirs.clear()
 
 
 def get_file_or_folder(path: Path) -> Path:

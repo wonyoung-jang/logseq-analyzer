@@ -4,8 +4,7 @@ from pathlib import Path
 import logging
 import shelve
 
-from .helpers import FileSystem
-from .logseq_analyzer import ANALYZER
+from .helpers import iter_files
 from .logseq_analyzer_config import ANALYZER_CONFIG
 from .logseq_graph_config import GRAPH_CONFIG
 
@@ -31,13 +30,6 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
-    def choose_cache_clear(self):
-        """Choose whether to clear the cache based on the graph_cache flag."""
-        if ANALYZER.args.graph_cache:
-            self.clear()
-        else:
-            self.clear_deleted_files()
-
     def clear(self):
         """Clear the cache."""
         self.cache.clear()
@@ -47,7 +39,7 @@ class Cache:
         mod_tracker = self.cache.get("mod_tracker", {})
         graph_dir = GRAPH_CONFIG.directory
         target_dirs = ANALYZER_CONFIG.target_dirs
-        for path in FileSystem(graph_dir, target_dirs).iter_files():
+        for path in iter_files(graph_dir, target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
             if last_date_mod is None or last_date_mod != curr_date_mod:
