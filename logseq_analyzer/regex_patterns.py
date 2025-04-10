@@ -73,7 +73,7 @@ class RegexPatterns:
             inline_code_block: Matches inline code blocks enclosed in single backticks.
         """
         self.code = {
-            "multiline_code_block": re.compile(
+            "_all": re.compile(
                 r"""
                 ```                 # Three backticks
                 .*?                 # Any characters (non-greedy)

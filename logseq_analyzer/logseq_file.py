@@ -76,9 +76,6 @@ class LogseqFile:
         # Extract basic data
         primary_data = {
             # Code blocks
-            "multiline_code_blocks": find_all_lower(PATTERNS.code["multiline_code_block"], self.content),
-            "multiline_code_langs": find_all_lower(PATTERNS.code["multiline_code_lang"], self.content),
-            "calc_blocks": find_all_lower(PATTERNS.code["calc_block"], self.content),
             "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
             # Basic content
             "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
@@ -114,6 +111,11 @@ class LogseqFile:
         block_properties = find_all_lower(PATTERNS.content["property"], self.content)
         prop_page_builtin, prop_page_user = LogseqFile.split_builtin_user_properties(page_properties)
         prop_block_builtin, prop_block_user = LogseqFile.split_builtin_user_properties(block_properties)
+
+        # Process code blocks
+        code_pattern = find_all_lower(PATTERNS.code["_all"], self.content)
+        code_family = LogseqFile.process_code_blocks(code_pattern)
+        primary_data.update(code_family)
 
         # Process double parentheses
         double_paren_pattern = find_all_lower(PATTERNS.dblparen["_all"], self.content)
@@ -188,7 +190,7 @@ class LogseqFile:
         masked_blocks = {}
         masked_content = content
 
-        for match in PATTERNS.code["multiline_code_block"].finditer(content):
+        for match in PATTERNS.code["_all"].finditer(content):
             block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
@@ -250,6 +252,25 @@ class LogseqFile:
             return True
         except KeyError:
             return False
+
+    @staticmethod
+    def process_code_blocks(results: List[str]):
+        """Process code blocks and categorize them."""
+        code_family = defaultdict(list)
+        if not results:
+            return {}
+        for _ in range(len(results)):
+            result = results[-1]
+            if PATTERNS.code["calc_block"].match(result):
+                code_family["calc_blocks"].append(result)
+                results.pop()
+                continue
+            if PATTERNS.code["multiline_code_lang"].match(result):
+                code_family["multiline_code_langs"].append(result)
+                results.pop()
+                continue
+        code_family["multiline_code_blocks"] = results
+        return code_family
 
     @staticmethod
     def process_double_parens(results: List[str]):

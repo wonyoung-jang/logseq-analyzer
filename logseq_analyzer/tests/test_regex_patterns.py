@@ -12,23 +12,23 @@ def rp():
 def test_compile_re_code_populates_code_dict(rp):
     rp.compile_re_code()
     assert isinstance(rp.code, dict)
-    assert "multiline_code_block" in rp.code
-    assert isinstance(rp.code["multiline_code_block"], re.Pattern)
+    assert "_all" in rp.code
+    assert isinstance(rp.code["_all"], re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("```\nprint('hello')\n```", "multiline_code_block", True),
-        ("```print('hello')\n```", "multiline_code_block", True),
+        ("```\nprint('hello')\n```", "_all", True),
+        ("```print('hello')\n```", "_all", True),
         ("```calc 1+1\n```", "calc_block", True),
         ("```\ncalc 1+1\n```", "calc_block", False),
         ("```python\nx=1\n```", "multiline_code_lang", True),
         ("```\npython\nx=1\n```", "multiline_code_lang", False),
         ("`x=1`", "inline_code_block", True),
         ("`x\n=1`", "inline_code_block", False),
-        ("no backticks here", "multiline_code_block", False),
-        ("one `backtick here", "multiline_code_block", False),
+        ("no backticks here", "_all", False),
+        ("one `backtick here", "_all", False),
         ("one `backtick here", "inline_code_block", False),
     ],
 )
@@ -58,8 +58,6 @@ def test_compile_re_content_populates_content_dict(rp):
         ("[[draws/sketch.excalidraw]]", "draw", True),
         ("- > quote", "blockquote", True),
         ("- Q? #card", "flashcard", True),
-        ("((ref))", "reference", True),
-        ("((123e4567-e89b-12d3-a456-426614174000))", "block_reference", True),
         ("<% var %>", "dynamic_variable", True),
         ("no match here", "page_reference", False),
     ],
@@ -67,6 +65,26 @@ def test_compile_re_content_populates_content_dict(rp):
 def test_content_patterns(rp, text, key, should_match):
     rp.compile_re_content()
     pattern = rp.content[key]
+    assert bool(pattern.search(text)) is should_match
+
+
+# Test compilation of double-parentheses patterns
+def test_compile_re_dblparen_populates_dblparen_dict(rp):
+    rp.compile_re_dblparen()
+    assert "_all" in rp.dblparen
+    assert isinstance(rp.dblparen["_all"], re.Pattern)
+
+
+@pytest.mark.parametrize(
+    "text,key,should_match",
+    [
+        ("((123e4567-e89b-12d3-a456 stf))", "_all", True),
+        ("((123e4567-e89b-12d3-a456-426614174000))", "block_reference", True),
+    ],
+)
+def test_dblparen_patterns(rp, text, key, should_match):
+    rp.compile_re_dblparen()
+    pattern = rp.dblparen[key]
     assert bool(pattern.search(text)) is should_match
 
 
@@ -194,7 +212,7 @@ def test_advcommand_patterns(rp, text, key, should_match):
         # patterns without capture groups → test full match
         (
             "compile_re_content",
-            "content",
+            "dblparen",
             "block_reference",
             "((123e4567-e89b-12d3-a456-426614174000))",
             0,
