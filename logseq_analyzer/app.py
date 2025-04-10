@@ -2,8 +2,6 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from pathlib import Path
-
 from ._global_objects import ANALYZER, ANALYZER_CONFIG, CACHE, GRAPH_CONFIG
 from .namespace_analyzer import NamespaceAnalyzer
 from .report_writer import ReportWriter
@@ -53,64 +51,17 @@ def run_app(**kwargs):
     # Phase 02: Process files
     ################################################################
     gui_instance.update_progress("process_files", 20)
-    # Process for only modified/new graph files
-    graph = LogseqGraph()
-    graph.process_graph_files()
 
-    graph_data_db = CACHE.get("___meta___graph_data", {})
-    graph_data_db.update(graph.data)
-    graph.data = graph_data_db
-
-    graph_content_db = CACHE.get("___meta___graph_content", {})
-    graph_content_db.update(graph.content_bullets)
-    graph.content_bullets = graph_content_db
-
-    graph_hashed_files_db = CACHE.get("graph_hashed_files", {})
-    graph_hashed_files_db.update(graph.hashed_files)
-    graph.hashed_files = graph_hashed_files_db
-
-    graph_names_to_hashes_db = CACHE.get("graph_names_to_hashes", {})
-    graph_names_to_hashes_db.update(graph.names_to_hashes)
-    graph.names_to_hashes = graph_names_to_hashes_db
-
-    graph_dangling_links_db = CACHE.get("dangling_links", set())
-    graph_dangling_links = {d for d in graph.dangling_links if d not in graph_dangling_links_db}
-    graph.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
-
-    graph.post_processing_content()
-    graph.process_summary_data()
-
-    graph_ns = NamespaceAnalyzer(graph)
-    graph_ns.init_ns_parts()
-    graph_ns.analyze_ns_queries()
-    graph_ns.detect_non_ns_conflicts()
-    graph_ns.detect_parent_depth_conflicts()
-    namespace_data = {
-        "___meta___namespace_data": graph_ns.namespace_data,
-        "___meta___namespace_parts": graph_ns.namespace_parts,
-        "unique_namespace_parts": graph_ns.unique_namespace_parts,
-        "namespace_details": graph_ns.namespace_details,
-        "unique_namespaces_per_level": graph_ns.unique_namespaces_per_level,
-        "namespace_queries": graph_ns.namespace_queries,
-        "namespace_hierarchy": graph_ns.tree,
-        "conflicts_non_namespace": graph_ns.conflicts_non_namespace,
-        "conflicts_dangling": graph_ns.conflicts_dangling,
-        "conflicts_parent_depth": graph_ns.conflicts_parent_depth,
-        "conflicts_parent_unique": graph_ns.conflicts_parent_unique,
-    }
+    graph = LogseqGraph(CACHE)
 
     gui_instance.update_progress("process_files", 100)
     #################################################################
     # Phase 03: Process summaries
     #################################################################
     gui_instance.update_progress("summary", 20)
-    # Generate summary
-    graph.generate_summary_file_subsets()
-    graph.generate_summary_data_subsets()
 
-    # Process journal keys to create a timeline
+    graph_ns = NamespaceAnalyzer(graph)
     journals = LogseqJournals(graph)
-    journals.process_journals_timelines()
 
     gui_instance.update_progress("summary", 100)
     #####################################################################
@@ -118,7 +69,6 @@ def run_app(**kwargs):
     #####################################################################
     gui_instance.update_progress("move_files", 20)
 
-    graph.handle_assets()
     logseq_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
 
     gui_instance.update_progress("move_files", 100)
@@ -158,6 +108,19 @@ def run_app(**kwargs):
     for name, data in graph.summary_data_subsets.items():
         ReportWriter(name, data, "summary_content_data").write()
     # Namespace
+    namespace_data = {
+        "___meta___namespace_data": graph_ns.namespace_data,
+        "___meta___namespace_parts": graph_ns.namespace_parts,
+        "unique_namespace_parts": graph_ns.unique_namespace_parts,
+        "namespace_details": graph_ns.namespace_details,
+        "unique_namespaces_per_level": graph_ns.unique_namespaces_per_level,
+        "namespace_queries": graph_ns.namespace_queries,
+        "namespace_hierarchy": graph_ns.tree,
+        "conflicts_non_namespace": graph_ns.conflicts_non_namespace,
+        "conflicts_dangling": graph_ns.conflicts_dangling,
+        "conflicts_parent_depth": graph_ns.conflicts_parent_depth,
+        "conflicts_parent_unique": graph_ns.conflicts_parent_unique,
+    }
     for name, data in namespace_data.items():
         ReportWriter(name, data, output_dir_namespace).write()
     # Move files and assets
@@ -165,13 +128,13 @@ def run_app(**kwargs):
     ReportWriter("assets_backlinked", graph.assets_backlinked, output_dir_assets).write()
     ReportWriter("assets_not_backlinked", graph.assets_not_backlinked, output_dir_assets).write()
     if ANALYZER.args.write_graph:
-        ReportWriter("___meta___graph_content", graph_content_db, output_dir_meta).write()
+        ReportWriter("___meta___graph_content", graph.content_bullets, output_dir_meta).write()
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
         "___meta___unique_linked_refs_ns": graph.unique_linked_references_ns,
         "___meta___unique_linked_refs": graph.unique_linked_references,
-        "___meta___graph_content": graph_content_db,
+        "___meta___graph_content": graph.content_bullets,
         "___meta___graph_data": graph.data,
         "all_refs": graph.all_linked_references,
         "dangling_links": graph.dangling_links,
@@ -188,10 +151,8 @@ def run_app(**kwargs):
         "graph_hashed_files": graph.hashed_files,
         "graph_names_to_hashes": graph.names_to_hashes,
     }
-
+    # Update the cache with the new data
     CACHE.update(shelve_output_data)
     CACHE.close()
-
     # Write user config to file
-    with open(f"{Path('configuration')}/user_config.ini", "w", encoding="utf-8") as config_file:
-        ANALYZER_CONFIG.write(config_file)
+    ANALYZER_CONFIG.write_to_file()

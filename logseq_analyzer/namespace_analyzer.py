@@ -50,6 +50,10 @@ class NamespaceAnalyzer:
         self.conflicts_parent_unique = {}
         self._part_levels = defaultdict(set)
         self._part_entries = defaultdict(list)
+        self.init_ns_parts()
+        self.analyze_ns_queries()
+        self.detect_non_ns_conflicts()
+        self.detect_parent_depth_conflicts()
 
     def init_ns_parts(self):
         """

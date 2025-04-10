@@ -5,7 +5,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Any, Dict
 
-from ._global_objects import CACHE, ANALYZER_CONFIG
+from ._global_objects import ANALYZER_CONFIG
 from .logseq_file import LogseqFile, LogseqFileHash
 
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
@@ -16,10 +16,11 @@ class LogseqGraph:
     Class to handle all Logseq files in the graph directory.
     """
 
-    def __init__(self):
+    def __init__(self, cache):
         """
         Initialize the LogseqGraph instance.
         """
+        self.cache = cache
         self.data = {}
         self.content_bullets = {}
         self.unique_linked_references = set()
@@ -33,12 +34,18 @@ class LogseqGraph:
         self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
         self.names_to_hashes = defaultdict(list)
         self.masked_blocks = {}
+        self.process_graph_files()
+        self.update_graph_files_with_cache()
+        self.post_processing_content()
+        self.process_summary_data()
+        self.generate_summary_file_subsets()
+        self.generate_summary_data_subsets()
 
     def process_graph_files(self):
         """
         Process all files in the Logseq graph folder.
         """
-        for file_path in CACHE.iter_modified_files():
+        for file_path in self.cache.iter_modified_files():
             file = LogseqFile(file_path)
             self.data[file.hash] = file.__dict__
             self.content_bullets[file.hash] = file.content_bullets
@@ -48,6 +55,27 @@ class LogseqGraph:
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
+
+    def update_graph_files_with_cache(self):
+        graph_data_db = self.cache.get("___meta___graph_data", {})
+        graph_data_db.update(self.data)
+        self.data = graph_data_db
+
+        graph_content_db = self.cache.get("___meta___graph_content", {})
+        graph_content_db.update(self.content_bullets)
+        self.content_bullets = graph_content_db
+
+        graph_hashed_files_db = self.cache.get("graph_hashed_files", {})
+        graph_hashed_files_db.update(self.hashed_files)
+        self.hashed_files = graph_hashed_files_db
+
+        graph_names_to_hashes_db = self.cache.get("graph_names_to_hashes", {})
+        graph_names_to_hashes_db.update(self.names_to_hashes)
+        self.names_to_hashes = graph_names_to_hashes_db
+
+        graph_dangling_links_db = self.cache.get("dangling_links", set())
+        graph_dangling_links = {d for d in self.dangling_links if d not in graph_dangling_links_db}
+        self.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
 
     def post_processing_content(self):
         """

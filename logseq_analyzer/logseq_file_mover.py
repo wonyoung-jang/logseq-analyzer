@@ -33,6 +33,7 @@ class LogseqFileMover:
         self.analyzer_config = analyzer_config
         self.graph_config = graph_config
         self.graph = graph
+        self.graph.handle_assets()
         self.moved_files = {
             "moved_assets": self.handle_move_files(),
             "moved_bak": self.handle_move_directory(

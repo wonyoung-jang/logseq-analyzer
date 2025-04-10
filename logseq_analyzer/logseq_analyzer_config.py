@@ -70,6 +70,11 @@ class LogseqAnalyzerConfig:
         """Write the config to a file-like object"""
         self.config.write(file)
 
+    def write_to_file(self):
+        """Write the config to a file"""
+        with open(f"{Path('configuration')}/user_config.ini", "w", encoding="utf-8") as config_file:
+            self.write(config_file)
+
     def set_logseq_config_edn_data(self, gc, report_format: str):
         """Set the Logseq configuration data."""
         self.set("ANALYZER", "REPORT_FORMAT", report_format)
