@@ -20,7 +20,7 @@ import logging
 
 from .logseq_graph import LogseqGraph
 from .logseq_filename import LogseqFilename
-from .regex_patterns import RegexPatterns
+from .utils.patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 
 

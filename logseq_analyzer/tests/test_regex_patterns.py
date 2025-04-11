@@ -1,6 +1,6 @@
 import re
 import pytest
-from ..regex_patterns import RegexPatterns
+from ..utils.patterns import RegexPatterns
 
 
 @pytest.fixture

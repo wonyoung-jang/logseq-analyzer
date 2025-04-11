@@ -26,10 +26,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..logseq_analyzer_config import LogseqAnalyzerConfig
+from ..logseq_path_validator import LogseqAnalyzerPathValidator
 from ..app import run_app
-
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -40,15 +38,12 @@ class LogseqAnalyzerGUI(QMainWindow):
         super().__init__()
         self.setWindowTitle("Logseq Analyzer")
         self.resize(500, 500)
-        self.output_dir = None
-
+        self._paths = LogseqAnalyzerPathValidator()
         # Central Widget and Layout
         central_widget = QWidget()
         main_layout = QGridLayout(central_widget)
         self.setCentralWidget(central_widget)
-
         self.setup_ui(main_layout)
-
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
 
@@ -174,23 +169,19 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        if not self.output_dir.exists():
-            self.output_dir.mkdir(parents=True, exist_ok=True)
-
-        if self.output_dir.exists():
-            self.output_dir = Path(self.output_dir).resolve()
+        if self._paths.dir_output.path.exists():
+            output_dir = self._paths.dir_output.path.resolve()
             if sys.platform.startswith("win"):
-                os.startfile(self.output_dir)
+                os.startfile(output_dir)
             elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", self.output_dir])
+                subprocess.call(["open", output_dir])
             else:
-                subprocess.call(["xdg-open", self.output_dir])
+                subprocess.call(["xdg-open", output_dir])
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        delete_dir = Path(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
-        if delete_dir.exists():
-            delete_dir = Path(delete_dir).resolve()
+        if self._paths.dir_delete.path.exists():
+            delete_dir = self._paths.dir_delete.path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(delete_dir)
             elif sys.platform.startswith("darwin"):
@@ -200,8 +191,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        log_file_path = Path(ANALYZER_CONFIG.config["CONST"]["LOG_FILE"])
-        if log_file_path.exists():
+        if self._paths.file_log.path.exists():
+            log_file_path = self._paths.file_log.path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
             elif sys.platform.startswith("darwin"):
@@ -236,7 +227,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         try:
             run_app(**args_gui, gui_instance=self)
-            self.output_dir = Path(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")

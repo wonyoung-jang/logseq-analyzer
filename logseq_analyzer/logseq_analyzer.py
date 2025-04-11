@@ -93,23 +93,3 @@ class LogseqAnalyzerArguments:
         for key, value in vars(args).items():
             if hasattr(self, key):
                 setattr(self, key, value)
-
-
-class LogseqAnalyzer:
-    """
-    A class to analyze Logseq data.
-    """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        """Initialize the LogseqAnalyzer class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.output_dir = None

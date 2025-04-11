@@ -11,8 +11,8 @@ import uuid
 from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename
-from .helpers import find_all_lower, process_aliases
-from .regex_patterns import RegexPatterns
+from .utils.helpers import find_all_lower, process_aliases
+from .utils.patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 
 PATTERNS = RegexPatterns()

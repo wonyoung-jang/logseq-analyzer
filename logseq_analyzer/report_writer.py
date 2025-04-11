@@ -7,11 +7,10 @@ from typing import Any, TextIO
 import json
 import logging
 
-from .logseq_analyzer import LogseqAnalyzer
+from .logseq_path_validator import LogseqAnalyzerPathValidator
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
-ANALYZER = LogseqAnalyzer()
 JSON_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_JSON"]
 TXT_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_TXT"]
 
@@ -25,6 +24,7 @@ class ReportWriter:
         """
         Initialize the ReportWriter class.
         """
+        self._paths = LogseqAnalyzerPathValidator()
         self.filename_prefix = filename_prefix
         self.items = items
         self.type_output = type_output
@@ -97,12 +97,12 @@ class ReportWriter:
         )
 
         if self.type_output:
-            parent = ANALYZER.output_dir / self.type_output
+            parent = self._paths.dir_output.path / self.type_output
             if not parent.exists():
                 parent.mkdir(parents=True, exist_ok=True)
             out_path = Path(parent) / filename
         else:
-            out_path = ANALYZER.output_dir / filename
+            out_path = self._paths.dir_output.path / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
         if self.output_format == JSON_FORMAT:

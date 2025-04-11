@@ -9,9 +9,8 @@ import logging
 import shelve
 
 
-from .helpers import iter_files
+from .utils.helpers import iter_files
 from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_graph_config import LogseqGraphConfig
 from .logseq_path_validator import LogseqAnalyzerPathValidator
 
 

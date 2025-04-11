@@ -6,9 +6,9 @@ from enum import Enum
 from pathlib import Path
 
 from .logseq_path_validator import LogseqAnalyzerPathValidator
-from .regex_patterns import RegexPatterns
+from .utils.patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_analyzer import LogseqAnalyzer, LogseqAnalyzerArguments
+from .logseq_analyzer import LogseqAnalyzerArguments
 from .logseq_graph_config import LogseqGraphConfig
 from .cache import Cache
 from .logseq_graph import LogseqGraph
@@ -19,7 +19,6 @@ from .report_writer import ReportWriter
 import logging
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
-ANALYZER = LogseqAnalyzer()
 GRAPH_CONFIG = LogseqGraphConfig()
 CACHE = Cache()
 PATTERNS = RegexPatterns()
@@ -120,28 +119,27 @@ def run_app(**kwargs):
 
     gui.update_progress(Phase.PROGRESS.value, 10)
 
-    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
-    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
-
     paths = LogseqAnalyzerPathValidator()
-    paths.initialize()
-    paths.validate()
-
-    ANALYZER.output_dir = paths.dir_output.path
+    paths.validate_analyzer_paths()
     setup_logging(paths.file_log.path)
 
-    GRAPH_CONFIG.user_config_file = paths.file_config.path
-    GRAPH_CONFIG.initialize_config_edns(args.global_config)
+    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
+    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+    paths.validate_graph_paths()
 
+    if args.global_config:
+        ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
+        paths.validate_global_config_path()
+        GRAPH_CONFIG.global_config_file = paths.file_config_global.path
+    GRAPH_CONFIG.user_config_file = paths.file_config.path
+    GRAPH_CONFIG.initialize_config_edns()
+    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
+    paths.validate_target_paths()
+
+    ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
-
-    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
-
-    paths.validate_target_dirs()
-    ANALYZER_CONFIG.get_logseq_target_dirs()
-
     ANALYZER_CONFIG.set_journal_py_formatting()
 
     if args.graph_cache:

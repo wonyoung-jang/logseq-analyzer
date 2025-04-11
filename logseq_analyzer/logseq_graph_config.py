@@ -2,12 +2,8 @@
 Logseq Graph Class
 """
 
-from pathlib import Path
-
-from .helpers import get_file_or_folder
 from .logseq_config_edn import loads
-from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .default_logseq_config_edn import DEFAULT_LOGSEQ_CONFIG_EDN
+from .utils.default_logseq_config_edn import DEFAULT_LOGSEQ_CONFIG_EDN
 
 
 class LogseqGraphConfig:
@@ -29,17 +25,15 @@ class LogseqGraphConfig:
             self._initialized = True
             self.ls_config = DEFAULT_LOGSEQ_CONFIG_EDN
             self.user_config_file = None
+            self.global_config_file = None
 
-    def initialize_config_edns(self, global_config: str):
+    def initialize_config_edns(self):
         """Initialize the Logseq configuration."""
-        la_config = LogseqAnalyzerConfig()
         with self.user_config_file.open("r", encoding="utf-8") as user_config:
             parsed_user_config = loads(user_config.read())
             self.ls_config.update(parsed_user_config)
 
-        if global_config:
-            la_config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", global_config)
-            global_config_file = get_file_or_folder(Path(global_config))
-            with global_config_file.open("r", encoding="utf-8") as global_config:
+        if self.global_config_file:
+            with self.global_config_file.open("r", encoding="utf-8") as global_config:
                 parsed_global_config = loads(global_config.read())
                 self.ls_config.update(parsed_global_config)

@@ -24,27 +24,6 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
             dirs.clear()
 
 
-def get_file_or_folder(path: Path) -> Path:
-    """
-    Get the path to an existing path.
-
-    Args:
-        path (Path): The path
-
-    Returns:
-        Path: The path to the specified path or None if not found.
-    """
-    if isinstance(path, str):
-        path = Path(path)
-
-    try:
-        path.resolve(strict=True)
-        return path
-    except FileNotFoundError:
-        logging.warning("Path does not exist: %s", path)
-        return None
-
-
 def get_or_create_file_or_dir(path: Path) -> Path:
     """
     Get a path or create it if it doesn't exist.

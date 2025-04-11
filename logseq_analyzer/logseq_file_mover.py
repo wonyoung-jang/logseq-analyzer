@@ -11,7 +11,7 @@ from .filesystem import File
 from .logseq_analyzer import LogseqAnalyzerArguments
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_graph import LogseqGraph
-from .helpers import get_or_create_file_or_dir
+from .utils.helpers import get_or_create_file_or_dir
 
 
 class LogseqFileMover:
