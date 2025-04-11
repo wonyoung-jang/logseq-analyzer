@@ -11,7 +11,7 @@ import logging
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
+NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
 
 
 @dataclass

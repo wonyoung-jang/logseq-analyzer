@@ -188,7 +188,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        delete_dir = Path(ANALYZER_CONFIG.get("CONST", "TO_DELETE_DIR"))
+        delete_dir = Path(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
         if delete_dir.exists():
             delete_dir = Path(delete_dir).resolve()
             if sys.platform.startswith("win"):
@@ -200,7 +200,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        log_file_path = Path(self.output_dir) / ANALYZER_CONFIG.get("CONST", "LOG_FILE")
+        log_file_path = Path(self.output_dir) / ANALYZER_CONFIG.config["CONST"]["LOG_FILE"]
         if log_file_path.exists():
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
@@ -236,7 +236,7 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         try:
             run_app(**args_gui, gui_instance=self)
-            self.output_dir = Path(ANALYZER_CONFIG.get("CONST", "OUTPUT_DIR"))
+            self.output_dir = Path(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")

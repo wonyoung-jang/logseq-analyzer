@@ -12,16 +12,14 @@ from .logseq_analyzer_config import LogseqAnalyzerConfig
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 ANALYZER = LogseqAnalyzer()
-JSON_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
-TXT_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
+JSON_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_JSON"]
+TXT_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_TXT"]
 
 
 class ReportWriter:
     """
     A class to handle reporting and writing output to files.
     """
-
-    output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
@@ -30,6 +28,7 @@ class ReportWriter:
         self.filename_prefix = filename_prefix
         self.items = items
         self.type_output = type_output
+        self.output_format = ANALYZER_CONFIG.config["ANALYZER"]["REPORT_FORMAT"]
 
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
@@ -89,12 +88,12 @@ class ReportWriter:
         """
         Write the output to a file using a recursive helper to handle nested structures.
         """
-        logging.info("Writing %s as %s", self.filename_prefix, ReportWriter.output_format)
+        logging.info("Writing %s as %s", self.filename_prefix, self.output_format)
         count = len(self.items)
         filename = (
-            f"{self.filename_prefix}{ReportWriter.output_format}"
+            f"{self.filename_prefix}{self.output_format}"
             if count
-            else f"______EMPTY_{self.filename_prefix}{ReportWriter.output_format}"
+            else f"______EMPTY_{self.filename_prefix}{self.output_format}"
         )
 
         if self.type_output:
@@ -106,7 +105,7 @@ class ReportWriter:
             out_path = ANALYZER.output_dir / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
-        if ReportWriter.output_format == JSON_FORMAT:
+        if self.output_format == JSON_FORMAT:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -120,14 +119,14 @@ class ReportWriter:
                 with out_path.open("w", encoding="utf-8") as f:
                     f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif ReportWriter.output_format == TXT_FORMAT:
+        elif self.output_format == TXT_FORMAT:
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)
         else:
             logging.error(
                 "Unsupported output format: %s. Defaulting to text.",
-                ReportWriter.output_format,
+                self.output_format,
             )
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")

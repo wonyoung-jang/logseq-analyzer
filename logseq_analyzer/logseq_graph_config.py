@@ -60,16 +60,16 @@ class LogseqGraphConfig:
         self.directory = get_file_or_folder(ANALYZER.args.graph_folder)
         logging.info("Graph directory: %s", self.directory)
 
-        self.logseq_dir = get_file_or_folder(self.directory / ANALYZER_CONFIG.get("CONST", "LOGSEQ_DIR"))
+        self.logseq_dir = get_file_or_folder(self.directory / ANALYZER_CONFIG.config["CONST"]["LOGSEQ_DIR"])
         logging.info("Logseq directory: %s", self.logseq_dir)
 
-        self.recycle_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "RECYCLE_DIR"))
+        self.recycle_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"])
         logging.info("Recycle directory: %s", self.recycle_dir)
 
-        self.bak_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "BAK_DIR"))
+        self.bak_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["BAK_DIR"])
         logging.info("Bak directory: %s", self.bak_dir)
 
-        self.user_config_file = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.get("CONST", "CONFIG_FILE"))
+        self.user_config_file = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["CONFIG_FILE"])
         logging.info("User config file: %s", self.user_config_file)
 
     def initialize_config(self) -> None:

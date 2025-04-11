@@ -9,7 +9,7 @@ from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_file import LogseqFile, LogseqFileHash
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
+NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
 
 
 class LogseqGraph:
