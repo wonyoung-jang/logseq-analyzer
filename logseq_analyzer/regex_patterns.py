@@ -11,22 +11,25 @@ class RegexPatterns:
     Class to hold regex patterns for Logseq content.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         """Initialize the RegexPatterns class."""
-        self.dblparen = {}
-        self.content = {}
-        self.ext_links = {}
-        self.emb_links = {}
-        self.dblcurly = {}
-        self.advcommand = {}
-        self.code = {}
-        self.compile_re_content()
-        self.compile_re_content_double_curly_brackets()
-        self.compile_re_content_advanced_command()
-        self.compile_re_ext_links()
-        self.compile_re_emb_links()
-        self.compile_re_code()
-        self.compile_re_dblparen()
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.dblparen = {}
+            self.content = {}
+            self.ext_links = {}
+            self.emb_links = {}
+            self.dblcurly = {}
+            self.advcommand = {}
+            self.code = {}
 
     def compile_re_dblparen(self):
         """

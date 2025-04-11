@@ -1,12 +1,19 @@
-"""This module handles caching mechanisms for the application."""
+"""
+This module handles caching mechanisms for the application.
+
+Imported once in app.py
+"""
 
 from pathlib import Path
 import logging
 import shelve
 
 from .helpers import iter_files
-from .logseq_analyzer_config import ANALYZER_CONFIG
-from .logseq_graph_config import GRAPH_CONFIG
+from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .logseq_graph_config import LogseqGraphConfig
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
+GRAPH_CONFIG = LogseqGraphConfig()
 
 
 class Cache:
@@ -14,9 +21,19 @@ class Cache:
     Cache class to manage caching of modified files and directories.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        """Initialize the Cache class."""
-        self.cache = shelve.open(ANALYZER_CONFIG.config["CONST"]["CACHE"], protocol=5)
+        """Initialize the class."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.cache = shelve.open(ANALYZER_CONFIG.config["CONST"]["CACHE"], protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -64,6 +81,3 @@ class Cache:
         for file in deleted_files:
             self.cache["___meta___graph_data"].pop(file, None)
             self.cache["___meta___graph_content"].pop(file, None)
-
-
-CACHE = Cache()

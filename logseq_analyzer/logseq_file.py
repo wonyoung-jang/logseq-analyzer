@@ -12,9 +12,11 @@ from .logseq_bullets import LogseqBullets
 from .logseq_filestats import LogseqFilestats
 from .logseq_filename import LogseqFilename
 from .helpers import find_all_lower, process_aliases
-from .regex_patterns import PATTERNS
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .regex_patterns import RegexPatterns
+from .logseq_analyzer_config import LogseqAnalyzerConfig
 
+PATTERNS = RegexPatterns()
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
 

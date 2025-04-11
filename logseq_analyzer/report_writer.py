@@ -7,9 +7,11 @@ from typing import Any, TextIO
 import json
 import logging
 
-from .logseq_analyzer import ANALYZER
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_analyzer import LogseqAnalyzer
+from .logseq_analyzer_config import LogseqAnalyzerConfig
 
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
+ANALYZER = LogseqAnalyzer()
 JSON_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
 TXT_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
 

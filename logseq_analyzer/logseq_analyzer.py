@@ -8,7 +8,9 @@ import logging
 import shutil
 
 from .helpers import get_or_create_file_or_dir
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_analyzer_config import LogseqAnalyzerConfig
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
 
 
 class LogseqAnalyzer:
@@ -16,12 +18,22 @@ class LogseqAnalyzer:
     A class to analyze Logseq data.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         """Initialize the LogseqAnalyzer class."""
-        self.args = None
-        self.output_dir = None
-        self.log_file = None
-        self.delete_dir = None
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.args = None
+            self.output_dir = None
+            self.log_file = None
+            self.delete_dir = None
 
     def create_output_directory(self):
         """Setup the output directory for the Logseq Analyzer."""
@@ -123,6 +135,3 @@ class LogseqAnalyzer:
             )
 
             self.args = parser.parse_args()
-
-
-ANALYZER = LogseqAnalyzer()

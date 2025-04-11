@@ -16,25 +16,35 @@ class LogseqAnalyzerConfig:
     A class to handle configuration file loading and management.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """Implement singleton pattern."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""
-        config_path = Path("configuration") / "config.ini"
-        self.config = configparser.ConfigParser(
-            allow_no_value=True,
-            inline_comment_prefixes=("#", ";"),
-            default_section="",
-            interpolation=configparser.ExtendedInterpolation(),
-            empty_lines_in_values=False,
-            allow_unnamed_section=True,
-        )
-        if not config_path.exists():
-            raise FileNotFoundError(f"Config file not found: {config_path}")
-        self.config.optionxform = lambda option: option
-        self.config.read(config_path)
-        self.target_dirs = None
-        self.built_in_properties = None
-        self.datetime_token_map = None
-        self.datetime_token_pattern = None
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            config_path = Path("configuration") / "config.ini"
+            self.config = configparser.ConfigParser(
+                allow_no_value=True,
+                inline_comment_prefixes=("#", ";"),
+                default_section="",
+                interpolation=configparser.ExtendedInterpolation(),
+                empty_lines_in_values=False,
+                allow_unnamed_section=True,
+            )
+            if not config_path.exists():
+                raise FileNotFoundError(f"Config file not found: {config_path}")
+            self.config.optionxform = lambda option: option
+            self.config.read(config_path)
+            self.target_dirs = None
+            self.built_in_properties = None
+            self.datetime_token_map = None
+            self.datetime_token_pattern = None
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""
@@ -133,6 +143,3 @@ class LogseqAnalyzerConfig:
         """
         token = match.group(0)
         return self.datetime_token_map.get(token, token)
-
-
-ANALYZER_CONFIG = LogseqAnalyzerConfig()

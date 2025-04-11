@@ -7,8 +7,11 @@ import logging
 
 from .helpers import get_file_or_folder
 from .logseq_config_edn import loads
-from .logseq_analyzer_config import ANALYZER_CONFIG
-from .logseq_analyzer import ANALYZER
+from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .logseq_analyzer import LogseqAnalyzer
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
+ANALYZER = LogseqAnalyzer()
 
 LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
     ":journal/page-title-format": "MMM do, yyyy",
@@ -25,14 +28,24 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
-        self.directory = Path()
-        self.logseq_dir = Path()
-        self.recycle_dir = Path()
-        self.bak_dir = Path()
-        self.user_config_file = Path()
-        self.ls_config = {}
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.directory = None
+            self.logseq_dir = None
+            self.recycle_dir = None
+            self.bak_dir = None
+            self.user_config_file = None
+            self.ls_config = {}
 
     def initialize_graph(self) -> None:
         """
@@ -71,6 +84,3 @@ class LogseqGraphConfig:
             logging.info("Global config file: %s", global_config_file)
             with global_config_file.open("r", encoding="utf-8") as f:
                 self.ls_config.update(loads(f.read()))
-
-
-GRAPH_CONFIG = LogseqGraphConfig()

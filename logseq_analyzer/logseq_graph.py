@@ -5,9 +5,10 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Any, Dict
 
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_file import LogseqFile, LogseqFileHash
 
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
 
@@ -16,24 +17,34 @@ class LogseqGraph:
     Class to handle all Logseq files in the graph directory.
     """
 
+    _instance = None
+
+    def __new__(cls, *args):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, cache):
         """
         Initialize the LogseqGraph instance.
         """
-        self.cache = cache
-        self.data = {}
-        self.content_bullets = {}
-        self.unique_linked_references = set()
-        self.unique_linked_references_ns = set()
-        self.all_linked_references = {}
-        self.dangling_links = set()
-        self.summary_file_subsets = {}
-        self.summary_data_subsets = {}
-        self.assets_backlinked = []
-        self.assets_not_backlinked = []
-        self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
-        self.names_to_hashes = defaultdict(list)
-        self.masked_blocks = {}
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.cache = cache
+            self.data = {}
+            self.content_bullets = {}
+            self.unique_linked_references = set()
+            self.unique_linked_references_ns = set()
+            self.all_linked_references = {}
+            self.dangling_links = set()
+            self.summary_file_subsets = {}
+            self.summary_data_subsets = {}
+            self.assets_backlinked = []
+            self.assets_not_backlinked = []
+            self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
+            self.names_to_hashes = defaultdict(list)
+            self.masked_blocks = {}
 
     def process_graph_files(self):
         """

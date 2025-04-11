@@ -9,7 +9,6 @@ import shutil
 
 from .logseq_analyzer import LogseqAnalyzer
 from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_graph_config import LogseqGraphConfig
 from .logseq_graph import LogseqGraph
 from .helpers import get_or_create_file_or_dir
 
@@ -19,34 +18,29 @@ class LogseqFileMover:
     Class to handle moving files in a Logseq graph directory.
     """
 
+    _instance = None
+
+    def __new__(cls, *args):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(
         self,
         analyzer: LogseqAnalyzer,
         analyzer_config: LogseqAnalyzerConfig,
-        graph_config: LogseqGraphConfig,
         graph: LogseqGraph,
     ):
         """
         Initialize the LogseqFileMover class.
         """
-        self.analyzer = analyzer
-        self.analyzer_config = analyzer_config
-        self.graph_config = graph_config
-        self.graph = graph
-        self.graph.handle_assets()
-        self.moved_files = {
-            "moved_assets": self.handle_move_files(),
-            "moved_bak": self.handle_move_directory(
-                self.analyzer.args.move_bak,
-                self.graph_config.bak_dir,
-                self.analyzer_config.config["CONST"]["BAK_DIR"],
-            ),
-            "moved_recycle": self.handle_move_directory(
-                self.analyzer.args.move_recycle,
-                self.graph_config.recycle_dir,
-                self.analyzer_config.config["CONST"]["RECYCLE_DIR"],
-            ),
-        }
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.analyzer = analyzer
+            self.analyzer_config = analyzer_config
+            self.graph = graph
+            self.moved_files = {}
 
     def handle_move_files(self) -> List[str]:
         """

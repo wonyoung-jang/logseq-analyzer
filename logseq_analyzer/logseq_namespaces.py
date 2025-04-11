@@ -20,9 +20,11 @@ import logging
 
 from .logseq_graph import LogseqGraph
 from .logseq_filename import LogseqFilename
-from .regex_patterns import PATTERNS
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .regex_patterns import RegexPatterns
+from .logseq_analyzer_config import LogseqAnalyzerConfig
 
+PATTERNS = RegexPatterns()
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
 NS_SEP = ANALYZER_CONFIG.get("CONST", "NAMESPACE_SEP")
 
 
@@ -31,26 +33,36 @@ class LogseqNamespaces:
     Class for analyzing namespace data in Logseq.
     """
 
+    _instance = None
+
+    def __new__(cls, *args):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, graph: LogseqGraph):
         """
         Initialize the NamespaceAnalyzer instance.
         """
-        self.hashed_files = graph.hashed_files
-        self.data = graph.data
-        self.dangling_links = graph.dangling_links
-        self.namespace_data = {}
-        self.namespace_parts = {}
-        self.unique_namespace_parts = set()
-        self.namespace_details = {}
-        self.unique_namespaces_per_level = defaultdict(set)
-        self.namespace_queries = {}
-        self.tree = {}
-        self.conflicts_non_namespace = defaultdict(list)
-        self.conflicts_dangling = defaultdict(list)
-        self.conflicts_parent_depth = {}
-        self.conflicts_parent_unique = {}
-        self._part_levels = defaultdict(set)
-        self._part_entries = defaultdict(list)
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self._part_levels = defaultdict(set)
+            self._part_entries = defaultdict(list)
+            self.hashed_files = graph.hashed_files
+            self.data = graph.data
+            self.dangling_links = graph.dangling_links
+            self.namespace_data = {}
+            self.namespace_parts = {}
+            self.unique_namespace_parts = set()
+            self.namespace_details = {}
+            self.unique_namespaces_per_level = defaultdict(set)
+            self.namespace_queries = {}
+            self.tree = {}
+            self.conflicts_non_namespace = defaultdict(list)
+            self.conflicts_dangling = defaultdict(list)
+            self.conflicts_parent_depth = {}
+            self.conflicts_parent_unique = {}
 
     def init_ns_parts(self):
         """

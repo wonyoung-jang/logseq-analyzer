@@ -4,16 +4,30 @@ This module contains the main application logic for the Logseq analyzer.
 
 from enum import Enum
 
-from .logseq_analyzer_config import ANALYZER_CONFIG
-from .logseq_analyzer import ANALYZER
-from .logseq_graph_config import GRAPH_CONFIG
-from .cache import CACHE
+from .regex_patterns import RegexPatterns
+from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .logseq_analyzer import LogseqAnalyzer
+from .logseq_graph_config import LogseqGraphConfig
+from .cache import Cache
 from .logseq_graph import LogseqGraph
 from .logseq_file_mover import LogseqFileMover
 from .logseq_journals import LogseqJournals
 from .logseq_namespaces import LogseqNamespaces
 from .report_writer import ReportWriter
 import logging
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
+ANALYZER = LogseqAnalyzer()
+GRAPH_CONFIG = LogseqGraphConfig()
+CACHE = Cache()
+PATTERNS = RegexPatterns()
+PATTERNS.compile_re_content()
+PATTERNS.compile_re_content_double_curly_brackets()
+PATTERNS.compile_re_content_advanced_command()
+PATTERNS.compile_re_ext_links()
+PATTERNS.compile_re_emb_links()
+PATTERNS.compile_re_code()
+PATTERNS.compile_re_dblparen()
 
 
 class Phase(Enum):
@@ -120,7 +134,20 @@ def run_app(**kwargs):
     graph_journals.process_journals_timelines()
     gui.update_progress(Phase.PROGRESS.value, 90)
 
-    graph_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, GRAPH_CONFIG, graph)
+    graph_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, graph)
+    graph.handle_assets()
+    graph_assets_handler.moved_files["moved_assets"] = (graph_assets_handler.handle_move_files(),)
+    graph_assets_handler.moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
+        ANALYZER.args.move_bak,
+        GRAPH_CONFIG.bak_dir,
+        ANALYZER_CONFIG.config["CONST"]["BAK_DIR"],
+    )
+    graph_assets_handler.moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
+        ANALYZER.args.move_recycle,
+        GRAPH_CONFIG.recycle_dir,
+        ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"],
+    )
+
     gui.update_progress(Phase.PROGRESS.value, 95)
 
     # Output writing

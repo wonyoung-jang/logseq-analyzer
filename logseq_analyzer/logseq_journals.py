@@ -6,8 +6,10 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 import logging
 
-from .logseq_analyzer_config import ANALYZER_CONFIG
+from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_graph import LogseqGraph
+
+ANALYZER_CONFIG = LogseqAnalyzerConfig()
 
 
 class LogseqJournals:
@@ -15,19 +17,29 @@ class LogseqJournals:
     LogseqJournals class to handle journal files and their processing.
     """
 
+    _instance = None
+
+    def __new__(cls, *args):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, graph: LogseqGraph):
         """
         Initialize the LogseqJournals class.
         """
-        self.dangling_links = graph.dangling_links
-        self.journal_keys = graph.summary_file_subsets["___is_filetype_journal"]
-        self.dangling_journals = []
-        self.processed_keys = []
-        self.complete_timeline = []
-        self.missing_keys = []
-        self.timeline_stats = {}
-        self.dangling_journals_past = []
-        self.dangling_journals_future = []
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.dangling_links = graph.dangling_links
+            self.journal_keys = graph.summary_file_subsets["___is_filetype_journal"]
+            self.dangling_journals = []
+            self.processed_keys = []
+            self.complete_timeline = []
+            self.missing_keys = []
+            self.timeline_stats = {}
+            self.dangling_journals_past = []
+            self.dangling_journals_future = []
 
     def process_journals_timelines(self) -> None:
         """
