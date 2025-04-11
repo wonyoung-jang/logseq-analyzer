@@ -129,11 +129,11 @@ class LogseqFilename:
         Helper function to determine the file type based on the directory structure.
         """
         return {
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_ASSETS"]: "asset",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_DRAWS"]: "draw",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_JOURNALS"]: "journal",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_PAGES"]: "page",
-            ANALYZER_CONFIG.config["TARGET_DIRS"]["DIR_WHITEBOARDS"]: "whiteboard",
+            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
+            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
+            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
+            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
+            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
     @staticmethod

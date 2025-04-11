@@ -318,7 +318,9 @@ class LogseqGraph:
         Handle assets for the Logseq Analyzer.
         """
         for hash_, file in self.hashed_files.items():
-            if not file.data.get("embedded_link_assets"):
+            (emb_link_asset := file.data.get("embedded_links_asset"))
+            (asset_captured := file.data.get("assets"))
+            if not emb_link_asset and not asset_captured:
                 continue
             for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
                 asset_hash = self.names_to_hashes.get(asset)
@@ -328,10 +330,16 @@ class LogseqGraph:
                     asset_file = self.hashed_files.get(hash_)
                     if not asset_file or asset_file.is_backlinked:
                         continue
-                    for asset_mention in file.data["embedded_link_assets"]:
-                        if asset_file.path.name in asset_mention or file.path.name in asset_mention:
-                            asset_file.is_backlinked = True
-                            break
+                    if emb_link_asset:
+                        for asset_mention in emb_link_asset:
+                            if asset_file.path.name in asset_mention or file.path.name in asset_mention:
+                                asset_file.is_backlinked = True
+                                break
+                    if asset_captured:
+                        for asset_mention in asset_captured:
+                            if asset_file.path.name in asset_mention or file.path.name in asset_mention:
+                                asset_file.is_backlinked = True
+                                break
 
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}

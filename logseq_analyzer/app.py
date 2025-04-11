@@ -5,7 +5,7 @@ This module contains the main application logic for the Logseq analyzer.
 from enum import Enum
 from pathlib import Path
 
-from .filesystem import File
+from .logseq_path_validator import LogseqAnalyzerPathValidator
 from .regex_patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_analyzer import LogseqAnalyzer, LogseqAnalyzerArguments
@@ -82,83 +82,6 @@ class GUIInstanceDummy:
         logging.info("Updating progress: %s - %d%%", phase, percentage)
 
 
-class LogseqAnalyzerPathValidator:
-    """Class to validate paths in the Logseq analyzer."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        """Initialize the path validator."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-
-            self.dir_graph = None
-
-            self.dir_logseq = None
-            self.dir_recycle = None
-            self.dir_bak = None
-
-            self.dir_assets = None
-            self.dir_draws = None
-            self.dir_journals = None
-            self.dir_pages = None
-            self.dir_whiteboards = None
-
-            self.dir_output = None
-
-            self.dir_delete = None
-            self.dir_delete_bak = None
-            self.dir_delete_recycle = None
-            self.dir_delete_assets = None
-
-            self.file_config_global = None
-            self.file_config = None
-            self.file_cache = None
-            self.file_log = None
-
-    def initialize(self):
-        self.dir_graph = File(ANALYZER_CONFIG.config["ANALYZER"]["GRAPH_DIR"])
-        self.dir_logseq = File(ANALYZER_CONFIG.config["CONST"]["LOGSEQ_DIR"])
-        self.dir_recycle = File(ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"])
-        self.dir_bak = File(ANALYZER_CONFIG.config["CONST"]["BAK_DIR"])
-
-        self.dir_assets = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["ASSETS_DIR"])
-        self.dir_draws = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["DRAWS_DIR"])
-        self.dir_journals = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["JOURNALS_DIR"])
-        self.dir_pages = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["PAGES_DIR"])
-        self.dir_whiteboards = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["WHITEBOARDS_DIR"])
-
-        self.dir_output = File(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
-        self.dir_delete = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
-        self.dir_delete_bak = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_BAK_DIR"])
-        self.dir_delete_recycle = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_RECYCLE_DIR"])
-        self.dir_delete_assets = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_ASSETS_DIR"])
-
-        self.file_config_global = File(ANALYZER_CONFIG.config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
-        self.file_config = File(ANALYZER_CONFIG.config["CONST"]["CONFIG_FILE"])
-        self.file_cache = File(ANALYZER_CONFIG.config["CONST"]["CACHE"])
-        self.file_log = File(ANALYZER_CONFIG.config["CONST"]["LOG_FILE"])
-
-
-def check_all_files():
-    """Check all files in the Logseq graph."""
-    args = LogseqAnalyzerArguments()
-    graph_dir = File(args.graph_folder)
-    graph_dir.validate()
-
-    cache = File(ANALYZER_CONFIG.config["CONST"]["CACHE"])
-    cache.get_or_create()
-
-    to_delete_dir = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
-    to_delete_dir.get_or_create()
-
-
 def setup_gui(**kwargs):
     """Setup the GUI for the Logseq analyzer."""
     gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
@@ -194,28 +117,31 @@ def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
     gui = setup_gui(**kwargs)
     args = setup_args(**kwargs)
+
     gui.update_progress(Phase.PROGRESS.value, 10)
 
-    logseq_paths = LogseqAnalyzerPathValidator()
-
-    output_dir = File(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
-    output_dir.initialize_dir()
-    ANALYZER.output_dir = output_dir.path
-
-    log_file = File(ANALYZER_CONFIG.config["CONST"]["LOG_FILE"])
-    log_file.initialize_file()
-    setup_logging(log_file.path)
-
     ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
-    GRAPH_CONFIG.initialize_graph_structure()
+    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+
+    paths = LogseqAnalyzerPathValidator()
+    paths.initialize()
+    paths.validate()
+
+    ANALYZER.output_dir = paths.dir_output.path
+    setup_logging(paths.file_log.path)
+
+    GRAPH_CONFIG.user_config_file = paths.file_config.path
     GRAPH_CONFIG.initialize_config_edns(args.global_config)
 
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
-    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
+
+    paths.validate_target_dirs()
     ANALYZER_CONFIG.get_logseq_target_dirs()
+
     ANALYZER_CONFIG.set_journal_py_formatting()
 
     if args.graph_cache:
@@ -255,17 +181,17 @@ def run_app(**kwargs):
     graph_journals.process_journals_timelines()
     gui.update_progress(Phase.PROGRESS.value, 90)
 
-    graph_assets_handler = LogseqFileMover()
     graph.handle_assets()
-    graph_assets_handler.moved_files["moved_assets"] = (graph_assets_handler.handle_move_files(),)
+    graph_assets_handler = LogseqFileMover()
+    graph_assets_handler.moved_files["moved_assets"] = graph_assets_handler.handle_move_files()
     graph_assets_handler.moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
         args.move_bak,
-        GRAPH_CONFIG.bak_dir,
+        paths.dir_bak.path,
         ANALYZER_CONFIG.config["CONST"]["BAK_DIR"],
     )
     graph_assets_handler.moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
         args.move_recycle,
-        GRAPH_CONFIG.recycle_dir,
+        paths.dir_recycle.path,
         ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"],
     )
 

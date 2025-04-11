@@ -4,11 +4,9 @@ Config class for loading and managing configuration files.
 
 from pathlib import Path
 from typing import Dict
-import logging
 import configparser
 import re
 
-from .helpers import get_file_or_folder
 from .filesystem import File
 
 
@@ -98,23 +96,22 @@ class LogseqAnalyzerConfig:
             "JOURNAL_FILE_NAME_FORMAT",
             ls_config.get(":journal/file-name-format"),
         )
-        self.set("LOGSEQ_CONFIG", "DIR_PAGES", ls_config.get(":pages-directory"))
-        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory"))
-        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory"))
+        self.set("LOGSEQ_CONFIG", "DIR_PAGES", ls_config.get(":pages-directory", "pages"))
+        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory", "journals"))
+        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory", "whiteboards"))
         self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ls_config.get(":file/name-format"))
         if self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar":
             self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
 
     def get_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""
-        self.target_dirs = set(self.get_section("TARGET_DIRS").values())
-        # Validate target directories
-        for dir_name in self.target_dirs:
-            try:
-                get_file_or_folder(Path(self.get("ANALYZER", "GRAPH_DIR")) / dir_name)
-                logging.info("Target directory exists: %s", dir_name)
-            except FileNotFoundError:
-                logging.error("Target directory does not exist: %s", dir_name)
+        self.target_dirs = {
+            self.config["LOGSEQ_CONFIG"]["DIR_ASSETS"],
+            self.config["LOGSEQ_CONFIG"]["DIR_DRAWS"],
+            self.config["LOGSEQ_CONFIG"]["DIR_PAGES"],
+            self.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"],
+            self.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"],
+        }
 
     def set_journal_py_formatting(self):
         """

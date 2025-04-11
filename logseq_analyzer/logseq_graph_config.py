@@ -28,28 +28,7 @@ class LogseqGraphConfig:
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self.ls_config = DEFAULT_LOGSEQ_CONFIG_EDN
-            self.directory = None
-            self.logseq_dir = None
-            self.recycle_dir = None
-            self.bak_dir = None
             self.user_config_file = None
-
-    def initialize_graph_structure(self):
-        """
-        Initialize the Logseq graph directories.
-
-        graph/
-        ├── logseq/
-            ├── .recycle/
-            ├── bak/
-            ├── config.edn
-        """
-        la_config = LogseqAnalyzerConfig()
-        self.directory = get_file_or_folder(la_config.config["ANALYZER"]["GRAPH_DIR"])
-        self.logseq_dir = get_file_or_folder(la_config.config["CONST"]["LOGSEQ_DIR"])
-        self.recycle_dir = get_file_or_folder(la_config.config["CONST"]["RECYCLE_DIR"])
-        self.bak_dir = get_file_or_folder(la_config.config["CONST"]["BAK_DIR"])
-        self.user_config_file = get_file_or_folder(la_config.config["CONST"]["CONFIG_FILE"])
 
     def initialize_config_edns(self, global_config: str):
         """Initialize the Logseq configuration."""

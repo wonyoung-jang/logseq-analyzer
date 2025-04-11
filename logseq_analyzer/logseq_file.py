@@ -81,7 +81,7 @@ class LogseqFile:
             # Code blocks
             "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
             # Basic content
-            "assets": find_all_lower(PATTERNS.content["asset"], masked_content),
+            "assets": find_all_lower(PATTERNS.content["asset"], self.content),
             "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
             "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
             "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),

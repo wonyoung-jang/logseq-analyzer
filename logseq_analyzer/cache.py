@@ -8,9 +8,11 @@ from pathlib import Path
 import logging
 import shelve
 
+
 from .helpers import iter_files
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_graph_config import LogseqGraphConfig
+from .logseq_path_validator import LogseqAnalyzerPathValidator
 
 
 class Cache:
@@ -51,9 +53,9 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
-        graph_dir = LogseqGraphConfig().directory
+        paths = LogseqAnalyzerPathValidator()
         target_dirs = LogseqAnalyzerConfig().target_dirs
-        for path in iter_files(graph_dir, target_dirs):
+        for path in iter_files(paths.dir_graph.path, target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))
             if last_date_mod is None or last_date_mod != curr_date_mod:
