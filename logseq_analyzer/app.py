@@ -3,10 +3,12 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from enum import Enum
+from pathlib import Path
 
+from .filesystem import File
 from .regex_patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_analyzer import LogseqAnalyzer
+from .logseq_analyzer import LogseqAnalyzer, LogseqAnalyzerArguments
 from .logseq_graph_config import LogseqGraphConfig
 from .cache import Cache
 from .logseq_graph import LogseqGraph
@@ -80,28 +82,147 @@ class GUIInstanceDummy:
         logging.info("Updating progress: %s - %d%%", phase, percentage)
 
 
+class LogseqAnalyzerPathValidator:
+    """Class to validate paths in the Logseq analyzer."""
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the path validator."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+
+            self.dir_graph = None
+
+            self.dir_logseq = None
+            self.dir_recycle = None
+            self.dir_bak = None
+
+            self.dir_assets = None
+            self.dir_draws = None
+            self.dir_journals = None
+            self.dir_pages = None
+            self.dir_whiteboards = None
+
+            self.dir_output = None
+
+            self.dir_delete = None
+            self.dir_delete_bak = None
+            self.dir_delete_recycle = None
+            self.dir_delete_assets = None
+
+            self.file_config_global = None
+            self.file_config = None
+            self.file_cache = None
+            self.file_log = None
+
+    def initialize(self):
+        self.dir_graph = File(ANALYZER_CONFIG.config["ANALYZER"]["GRAPH_DIR"])
+        self.dir_logseq = File(ANALYZER_CONFIG.config["CONST"]["LOGSEQ_DIR"])
+        self.dir_recycle = File(ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"])
+        self.dir_bak = File(ANALYZER_CONFIG.config["CONST"]["BAK_DIR"])
+
+        self.dir_assets = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["ASSETS_DIR"])
+        self.dir_draws = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["DRAWS_DIR"])
+        self.dir_journals = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["JOURNALS_DIR"])
+        self.dir_pages = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["PAGES_DIR"])
+        self.dir_whiteboards = File(ANALYZER_CONFIG.config["TARGET_DIRS"]["WHITEBOARDS_DIR"])
+
+        self.dir_output = File(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
+        self.dir_delete = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
+        self.dir_delete_bak = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_BAK_DIR"])
+        self.dir_delete_recycle = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_RECYCLE_DIR"])
+        self.dir_delete_assets = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_ASSETS_DIR"])
+
+        self.file_config_global = File(ANALYZER_CONFIG.config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
+        self.file_config = File(ANALYZER_CONFIG.config["CONST"]["CONFIG_FILE"])
+        self.file_cache = File(ANALYZER_CONFIG.config["CONST"]["CACHE"])
+        self.file_log = File(ANALYZER_CONFIG.config["CONST"]["LOG_FILE"])
+
+
+def check_all_files():
+    """Check all files in the Logseq graph."""
+    args = LogseqAnalyzerArguments()
+    graph_dir = File(args.graph_folder)
+    graph_dir.validate()
+
+    cache = File(ANALYZER_CONFIG.config["CONST"]["CACHE"])
+    cache.get_or_create()
+
+    to_delete_dir = File(ANALYZER_CONFIG.config["CONST"]["TO_DELETE_DIR"])
+    to_delete_dir.get_or_create()
+
+
+def setup_gui(**kwargs):
+    """Setup the GUI for the Logseq analyzer."""
+    gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
+    gui.update_progress(Phase.PROGRESS.value, 5)
+    return gui
+
+
+def setup_args(**kwargs):
+    """Setup the command line arguments for the Logseq analyzer."""
+    args = LogseqAnalyzerArguments()
+    if kwargs:
+        args.set_gui_args(**kwargs)
+    else:
+        args.set_cli_args()
+    return args
+
+
+def setup_logging(log_file: Path):
+    """Setup logging configuration for the Logseq Analyzer."""
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        encoding="utf-8",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        force=True,
+    )
+    logging.debug("Logging initialized to %s", log_file)
+    logging.info("Logseq Analyzer started.")
+
+
 def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
-    gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
+    gui = setup_gui(**kwargs)
+    args = setup_args(**kwargs)
     gui.update_progress(Phase.PROGRESS.value, 10)
-    ANALYZER.get_logseq_analyzer_args(**kwargs)
-    ANALYZER.create_output_directory()
-    ANALYZER.create_log_file()
-    ANALYZER.create_delete_directory()
-    GRAPH_CONFIG.initialize_graph()
-    GRAPH_CONFIG.initialize_config()
+
+    logseq_paths = LogseqAnalyzerPathValidator()
+
+    output_dir = File(ANALYZER_CONFIG.config["CONST"]["OUTPUT_DIR"])
+    output_dir.initialize_dir()
+    ANALYZER.output_dir = output_dir.path
+
+    log_file = File(ANALYZER_CONFIG.config["CONST"]["LOG_FILE"])
+    log_file.initialize_file()
+    setup_logging(log_file.path)
+
+    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
+    GRAPH_CONFIG.initialize_graph_structure()
+    GRAPH_CONFIG.initialize_config_edns(args.global_config)
+
     ANALYZER_CONFIG.get_built_in_properties()
     ANALYZER_CONFIG.get_datetime_token_map()
     ANALYZER_CONFIG.get_datetime_token_pattern()
-    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", ANALYZER.args.report_format)
-    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", GRAPH_CONFIG.directory)
+    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
     ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
     ANALYZER_CONFIG.get_logseq_target_dirs()
     ANALYZER_CONFIG.set_journal_py_formatting()
-    if ANALYZER.args.graph_cache:
+
+    if args.graph_cache:
         CACHE.clear()
     else:
         CACHE.clear_deleted_files()
+
     gui.update_progress(Phase.PROGRESS.value, 20)
 
     graph = LogseqGraph()
@@ -138,12 +259,12 @@ def run_app(**kwargs):
     graph.handle_assets()
     graph_assets_handler.moved_files["moved_assets"] = (graph_assets_handler.handle_move_files(),)
     graph_assets_handler.moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
-        ANALYZER.args.move_bak,
+        args.move_bak,
         GRAPH_CONFIG.bak_dir,
         ANALYZER_CONFIG.config["CONST"]["BAK_DIR"],
     )
     graph_assets_handler.moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
-        ANALYZER.args.move_recycle,
+        args.move_recycle,
         GRAPH_CONFIG.recycle_dir,
         ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"],
     )
@@ -162,7 +283,7 @@ def run_app(**kwargs):
         Output.GRAPH_NAMES_TO_HASHES.value: graph.names_to_hashes,
         Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
     }
-    if ANALYZER.args.write_graph:
+    if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
     for name, data in meta_reports.items():
         ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["META"]).write()

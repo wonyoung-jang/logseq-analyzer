@@ -27,3 +27,4 @@ logseq-analyzer-cache*
 setup.cfg
 setup.py
 logseq_analyzer/data.py
+doc/

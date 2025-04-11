@@ -9,6 +9,7 @@ import configparser
 import re
 
 from .helpers import get_file_or_folder
+from .filesystem import File
 
 
 class LogseqAnalyzerConfig:
@@ -28,7 +29,8 @@ class LogseqAnalyzerConfig:
         """Initialize the LogseqAnalyzerConfig class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            config_path = Path("configuration") / "config.ini"
+            config_path = File("configuration/config.ini")
+            config_path.validate()
             self.config = configparser.ConfigParser(
                 allow_no_value=True,
                 inline_comment_prefixes=("#", ";"),
@@ -37,10 +39,8 @@ class LogseqAnalyzerConfig:
                 empty_lines_in_values=False,
                 allow_unnamed_section=True,
             )
-            if not config_path.exists():
-                raise FileNotFoundError(f"Config file not found: {config_path}")
             self.config.optionxform = lambda option: option
-            self.config.read(config_path)
+            self.config.read(config_path.path)
             self.target_dirs = None
             self.built_in_properties = None
             self.datetime_token_map = None
