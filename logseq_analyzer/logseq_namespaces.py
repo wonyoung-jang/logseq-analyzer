@@ -23,10 +23,6 @@ from .logseq_filename import LogseqFilename
 from .regex_patterns import RegexPatterns
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 
-PATTERNS = RegexPatterns()
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
-
 
 class LogseqNamespaces:
     """
@@ -35,17 +31,18 @@ class LogseqNamespaces:
 
     _instance = None
 
-    def __new__(cls, *args):
+    def __new__(cls):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, graph: LogseqGraph):
+    def __init__(self):
         """
         Initialize the NamespaceAnalyzer instance.
         """
         if not hasattr(self, "_initialized"):
+            graph = LogseqGraph()
             self._initialized = True
             self._part_levels = defaultdict(set)
             self._part_entries = defaultdict(list)
@@ -94,12 +91,13 @@ class LogseqNamespaces:
         """
         Analyze namespace queries.
         """
+        patterns = RegexPatterns()
         for _, file in self.hashed_files.items():
             got_ns_queries = file.data.get("namespace_queries")
             if not got_ns_queries:
                 continue
             for q in got_ns_queries:
-                page_refs = PATTERNS.content["page_reference"].findall(q)
+                page_refs = patterns.content["page_reference"].findall(q)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", q)
                     continue
@@ -139,6 +137,8 @@ class LogseqNamespaces:
         """
         Identify namespace parts that appear at different depths (levels) across entries.
         """
+        ac = LogseqAnalyzerConfig()
+        ns_sep = ac.config["CONST"]["NAMESPACE_SEP"]
         for part, levels in self._part_levels.items():
             # Filter out parts that only occur at a single depth.
             if len(levels) < 2:
@@ -153,9 +153,9 @@ class LogseqNamespaces:
                 level = int(key.rsplit(" ", maxsplit=1)[-1])
                 unique_pages = set()
                 for page in entries:
-                    parts = page.split(NS_SEP)
+                    parts = page.split(ns_sep)
                     up_to_level = parts[:level]
-                    unique_pages.add(NS_SEP.join(up_to_level))
+                    unique_pages.add(ns_sep.join(up_to_level))
                 self.conflicts_parent_unique[key] = unique_pages
 
     def yield_files_with_keys(self, *criteria) -> Generator[LogseqFilename, None, None]:

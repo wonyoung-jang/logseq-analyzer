@@ -10,18 +10,6 @@ from .logseq_config_edn import loads
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_analyzer import LogseqAnalyzer
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-ANALYZER = LogseqAnalyzer()
-
-LOGSEQ_DEFAULT_CONFIG_EDN_DATA = {
-    ":journal/page-title-format": "MMM do, yyyy",
-    ":journal/file-name-format": "yyyy_MM_dd",
-    ":journals-directory": "journals",
-    ":pages-directory": "pages",
-    ":whiteboards-directory": "whiteboards",
-    ":file/name-format": ":legacy",
-}
-
 
 class LogseqGraphConfig:
     """
@@ -57,30 +45,44 @@ class LogseqGraphConfig:
             ├── bak/
             ├── config.edn
         """
-        self.directory = get_file_or_folder(ANALYZER.args.graph_folder)
+        la = LogseqAnalyzer()
+        la_config = LogseqAnalyzerConfig()
+
+        self.directory = get_file_or_folder(la.args.graph_folder)
         logging.info("Graph directory: %s", self.directory)
 
-        self.logseq_dir = get_file_or_folder(self.directory / ANALYZER_CONFIG.config["CONST"]["LOGSEQ_DIR"])
+        self.logseq_dir = get_file_or_folder(self.directory / la_config.config["CONST"]["LOGSEQ_DIR"])
         logging.info("Logseq directory: %s", self.logseq_dir)
 
-        self.recycle_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"])
+        self.recycle_dir = get_file_or_folder(self.logseq_dir / la_config.config["CONST"]["RECYCLE_DIR"])
         logging.info("Recycle directory: %s", self.recycle_dir)
 
-        self.bak_dir = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["BAK_DIR"])
+        self.bak_dir = get_file_or_folder(self.logseq_dir / la_config.config["CONST"]["BAK_DIR"])
         logging.info("Bak directory: %s", self.bak_dir)
 
-        self.user_config_file = get_file_or_folder(self.logseq_dir / ANALYZER_CONFIG.config["CONST"]["CONFIG_FILE"])
+        self.user_config_file = get_file_or_folder(self.logseq_dir / la_config.config["CONST"]["CONFIG_FILE"])
         logging.info("User config file: %s", self.user_config_file)
 
     def initialize_config(self) -> None:
         """Initialize the Logseq configuration."""
-        self.ls_config = LOGSEQ_DEFAULT_CONFIG_EDN_DATA
+        la = LogseqAnalyzer()
+        la_config = LogseqAnalyzerConfig()
+        logseq_default_config_edn_data = {
+            ":journal/page-title-format": "MMM do, yyyy",
+            ":journal/file-name-format": "yyyy_MM_dd",
+            ":journals-directory": "journals",
+            ":pages-directory": "pages",
+            ":whiteboards-directory": "whiteboards",
+            ":file/name-format": ":legacy",
+        }
+
+        self.ls_config = logseq_default_config_edn_data
         with self.user_config_file.open("r", encoding="utf-8") as f:
             self.ls_config.update(loads(f.read()))
 
-        if ANALYZER.args.global_config:
-            ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", ANALYZER.args.global_config)
-            global_config_file = get_file_or_folder(Path(ANALYZER.args.global_config))
+        if la.args.global_config:
+            la_config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", la.args.global_config)
+            global_config_file = get_file_or_folder(Path(la.args.global_config))
             logging.info("Global config file: %s", global_config_file)
             with global_config_file.open("r", encoding="utf-8") as f:
                 self.ls_config.update(loads(f.read()))

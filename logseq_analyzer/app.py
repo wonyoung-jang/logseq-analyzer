@@ -104,7 +104,7 @@ def run_app(**kwargs):
         CACHE.clear_deleted_files()
     gui.update_progress(Phase.PROGRESS.value, 20)
 
-    graph = LogseqGraph(CACHE)
+    graph = LogseqGraph()
     graph.process_graph_files()
     gui.update_progress(Phase.PROGRESS.value, 30)
 
@@ -123,18 +123,18 @@ def run_app(**kwargs):
     graph.generate_summary_data_subsets()
     gui.update_progress(Phase.PROGRESS.value, 80)
 
-    graph_namespaces = LogseqNamespaces(graph)
+    graph_namespaces = LogseqNamespaces()
     graph_namespaces.init_ns_parts()
     graph_namespaces.analyze_ns_queries()
     graph_namespaces.detect_non_ns_conflicts()
     graph_namespaces.detect_parent_depth_conflicts()
     gui.update_progress(Phase.PROGRESS.value, 85)
 
-    graph_journals = LogseqJournals(graph)
+    graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
     gui.update_progress(Phase.PROGRESS.value, 90)
 
-    graph_assets_handler = LogseqFileMover(ANALYZER, ANALYZER_CONFIG, graph)
+    graph_assets_handler = LogseqFileMover()
     graph.handle_assets()
     graph_assets_handler.moved_files["moved_assets"] = (graph_assets_handler.handle_move_files(),)
     graph_assets_handler.moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(

@@ -20,26 +20,21 @@ class LogseqFileMover:
 
     _instance = None
 
-    def __new__(cls, *args):
+    def __new__(cls):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(
-        self,
-        analyzer: LogseqAnalyzer,
-        analyzer_config: LogseqAnalyzerConfig,
-        graph: LogseqGraph,
-    ):
+    def __init__(self):
         """
         Initialize the LogseqFileMover class.
         """
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.analyzer = analyzer
-            self.analyzer_config = analyzer_config
-            self.graph = graph
+            self.analyzer = LogseqAnalyzer()
+            self.analyzer_config = LogseqAnalyzerConfig()
+            self.graph = LogseqGraph()
             self.moved_files = {}
 
     def handle_move_files(self) -> List[str]:

@@ -5,11 +5,8 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Any, Dict
 
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .cache import Cache
 from .logseq_file import LogseqFile, LogseqFileHash
-
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
 
 
 class LogseqGraph:
@@ -19,19 +16,19 @@ class LogseqGraph:
 
     _instance = None
 
-    def __new__(cls, *args):
+    def __new__(cls):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, cache):
+    def __init__(self):
         """
         Initialize the LogseqGraph instance.
         """
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.cache = cache
+            self.cache = Cache()
             self.data = {}
             self.content_bullets = {}
             self.unique_linked_references = set()

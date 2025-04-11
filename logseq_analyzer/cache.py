@@ -12,9 +12,6 @@ from .helpers import iter_files
 from .logseq_analyzer_config import LogseqAnalyzerConfig
 from .logseq_graph_config import LogseqGraphConfig
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-GRAPH_CONFIG = LogseqGraphConfig()
-
 
 class Cache:
     """
@@ -33,7 +30,7 @@ class Cache:
         """Initialize the class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.cache = shelve.open(ANALYZER_CONFIG.config["CONST"]["CACHE"], protocol=5)
+            self.cache = shelve.open(LogseqAnalyzerConfig().config["CONST"]["CACHE"], protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -54,8 +51,8 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
-        graph_dir = GRAPH_CONFIG.directory
-        target_dirs = ANALYZER_CONFIG.target_dirs
+        graph_dir = LogseqGraphConfig().directory
+        target_dirs = LogseqAnalyzerConfig().target_dirs
         for path in iter_files(graph_dir, target_dirs):
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str(path))

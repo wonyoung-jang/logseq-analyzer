@@ -19,17 +19,18 @@ class LogseqJournals:
 
     _instance = None
 
-    def __new__(cls, *args):
+    def __new__(cls):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, graph: LogseqGraph):
+    def __init__(self):
         """
         Initialize the LogseqJournals class.
         """
         if not hasattr(self, "_initialized"):
+            graph = LogseqGraph()
             self._initialized = True
             self.dangling_links = graph.dangling_links
             self.journal_keys = graph.summary_file_subsets["___is_filetype_journal"]

@@ -20,6 +20,16 @@ class LogseqFilename:
 
     file_path: Path
 
+    original_name: str = None
+    name: str = None
+    parent: str = None
+    suffix: str = None
+    parts: tuple = None
+    uri: str = None
+    logseq_url: str = None
+    is_namespace: bool = None
+    file_type: str = None
+
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
         self.original_name = self.file_path.stem
@@ -27,8 +37,7 @@ class LogseqFilename:
         self.parent = self.file_path.parent.name.lower()
         self.process_logseq_filename()
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
-        self.file_path_parts = self.file_path.parts
-        self.name_secondary = f"{self.name} {self.parent} + {self.suffix}"
+        self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
         self.logseq_url = self.convert_uri_to_logseq_url()
         self.is_namespace = NS_SEP in self.name

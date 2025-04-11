@@ -481,7 +481,7 @@ class LogseqFileHash:
         """
         Return the key for the LogseqFileHash object.
         """
-        return (self.file.path.name, self.file.path.parent, self.file.path.suffix)
+        return self.file.path.parts
 
     def __hash__(self):
         """
