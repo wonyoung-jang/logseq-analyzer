@@ -104,8 +104,7 @@ class RegexPatterns:
             "inline_code_block": re.compile(
                 r"""
                 `                   # One backtick
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
+                .+?                 # One or more characters (non-greedy)
                 `                   # One backtick
                 """,
                 re.IGNORECASE | re.VERBOSE,
@@ -522,7 +521,7 @@ class RegexPatterns:
                 .*?                     # Any characters (non-greedy)
                 \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
-                (?:\n|$)            # Newline or end-of-file
+                (?:\n|$)                # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -534,7 +533,7 @@ class RegexPatterns:
                 .*?                     # Any characters (non-greedy)
                 \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
-                (?:\n|$)            # Newline or end-of-file
+                (?:\n|$)                # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
