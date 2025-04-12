@@ -8,12 +8,12 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
 
-from .bullets import LogseqBullets
-from .stats import LogseqFilestats
-from .name import LogseqFilename
+from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import RegexPatterns
-from ..config.analyzer_config import LogseqAnalyzerConfig
+from .bullets import LogseqBullets
+from .name import LogseqFilename
+from .stats import LogseqFilestats
 
 PATTERNS = RegexPatterns()
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
@@ -60,6 +60,13 @@ class LogseqFile:
             setattr(self, attr, value)
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
+        
+        self.bullets.get_content()
+        self.bullets.get_char_count()
+        self.bullets.get_bullet_content()
+        self.bullets.get_primary_bullet()
+        self.bullets.get_bullet_density()
+        self.bullets.is_primary_bullet_page_properties()
         for attr, value in self.bullets.__dict__.items():
             if attr not in ("all_bullets"):
                 setattr(self, attr, value)

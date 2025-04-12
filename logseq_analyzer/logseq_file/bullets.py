@@ -28,12 +28,6 @@ class LogseqBullets:
         self.bullet_count_empty = 0
         self.bullet_density = 0
         self.has_page_properties = False
-        self.get_content()
-        self.get_char_count()
-        self.get_bullet_content()
-        self.get_primary_bullet()
-        self.get_bullet_density()
-        self.is_primary_bullet_page_properties()
 
     def get_content(self):
         """Read the text content of a file."""
