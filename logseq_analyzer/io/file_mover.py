@@ -7,11 +7,11 @@ from typing import List, Optional, Tuple
 import logging
 import shutil
 
-from .filesystem import File
-from ..config.arguments import LogseqAnalyzerArguments
-from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..analysis.graph import LogseqGraph
+from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..config.arguments import LogseqAnalyzerArguments
 from ..utils.helpers import get_or_create_file_or_dir
+from .filesystem import File
 
 
 class LogseqFileMover:

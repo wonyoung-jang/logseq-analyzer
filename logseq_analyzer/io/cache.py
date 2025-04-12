@@ -8,9 +8,8 @@ from pathlib import Path
 import logging
 import shelve
 
-
-from ..utils.helpers import iter_files
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..utils.helpers import iter_files
 from .path_validator import LogseqAnalyzerPathValidator
 
 

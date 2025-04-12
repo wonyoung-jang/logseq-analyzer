@@ -60,7 +60,7 @@ class LogseqFile:
             setattr(self, attr, value)
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
-        
+
         self.bullets.get_content()
         self.bullets.get_char_count()
         self.bullets.get_bullet_content()

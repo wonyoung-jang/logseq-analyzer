@@ -2,8 +2,8 @@
 Path Validator for Logseq Analyzer
 """
 
-from .filesystem import File
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from .filesystem import File
 
 
 class LogseqAnalyzerPathValidator:

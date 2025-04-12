@@ -206,7 +206,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Run the analysis with the provided arguments."""
         args_gui = {
             "graph_folder": self.graph_folder_input.text(),
-            "global_config_file": self.global_config_input.text(),
+            "global_config": self.global_config_input.text(),
             "move_assets": self.move_assets_checkbox.isChecked(),
             "move_bak": self.move_bak_checkbox.isChecked(),
             "move_recycle": self.move_recycle_checkbox.isChecked(),
@@ -272,7 +272,7 @@ class LogseqAnalyzerGUI(QMainWindow):
     def save_settings(self):
         """Save current settings using QSettings."""
         self.settings.setValue("graph_folder", self.graph_folder_input.text())
-        self.settings.setValue("global_config_file", self.global_config_input.text())
+        self.settings.setValue("global_config", self.global_config_input.text())
         self.settings.setValue("move_assets", self.move_assets_checkbox.isChecked())
         self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
         self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
@@ -284,7 +284,7 @@ class LogseqAnalyzerGUI(QMainWindow):
     def load_settings(self):
         """Load settings using QSettings."""
         self.graph_folder_input.setText(self.settings.value("graph_folder", ""))
-        self.global_config_input.setText(self.settings.value("global_config_file", ""))
+        self.global_config_input.setText(self.settings.value("global_config", ""))
         self.move_assets_checkbox.setChecked(self.settings.value("move_assets", False, type=bool))
         self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
         self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))

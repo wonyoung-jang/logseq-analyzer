@@ -114,6 +114,8 @@ def run_app(**kwargs):
     paths.validate_analyzer_paths()
     analyzer_config.set("ANALYZER", "REPORT_FORMAT", args.report_format)
     paths.validate_graph_paths()
+    for arg in args.__dict__:
+        print(arg, args.__dict__[arg])
     if args.global_config:
         analyzer_config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
         paths.validate_global_config_path()

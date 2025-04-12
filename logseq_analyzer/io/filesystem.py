@@ -44,6 +44,7 @@ class File:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
+            logging.info("Path exists: %s", self.path)
         except FileNotFoundError:
             try:
                 self.path.mkdir(parents=True, exist_ok=True)
@@ -57,6 +58,7 @@ class File:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
+            logging.info("Path exists: %s", self.path)
         except FileNotFoundError:
             try:
                 self.path.touch(exist_ok=True)
@@ -78,6 +80,7 @@ class File:
             logging.error("Error deleting path: %s", e)
         finally:
             self.get_or_create_dir()
+            logging.info("Created path: %s", self.path)
 
     def initialize_file(self):
         """Initialize the file or directory."""
@@ -91,3 +94,4 @@ class File:
             logging.error("Error deleting path: %s", e)
         finally:
             self.get_or_create_file()
+            logging.info("Created path: %s", self.path)
