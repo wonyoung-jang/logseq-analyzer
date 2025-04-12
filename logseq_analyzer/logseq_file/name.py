@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 import logging
 
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from ..config.analyzer_config import LogseqAnalyzerConfig
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]

@@ -2,8 +2,8 @@
 Logseq Graph Class
 """
 
-from .logseq_config_edn import loads
-from .utils.default_logseq_config_edn import DEFAULT_LOGSEQ_CONFIG_EDN
+from .edn_parser import loads
+from .default_logseq_config_edn import DEFAULT_LOGSEQ_CONFIG_EDN
 
 
 class LogseqGraphConfig:

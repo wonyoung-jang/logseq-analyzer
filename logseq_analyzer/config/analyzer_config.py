@@ -7,7 +7,7 @@ from typing import Dict
 import configparser
 import re
 
-from .filesystem import File
+from ..io.filesystem import File
 
 
 class LogseqAnalyzerConfig:

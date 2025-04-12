@@ -1,5 +1,5 @@
 from .filesystem import File
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from ..config.analyzer_config import LogseqAnalyzerConfig
 
 
 class LogseqAnalyzerPathValidator:
@@ -46,31 +46,37 @@ class LogseqAnalyzerPathValidator:
         """Initialize the path validator."""
         self.file_cache = File(self._ac.config["CONST"]["CACHE"])
 
+    def validate_output_dir_and_logging(self):
+        """Validate the output directory and logging."""
+        self.dir_output = File(self._ac.config["CONST"]["OUTPUT_DIR"])
+        self.file_log = File(self._ac.config["CONST"]["LOG_FILE"])
+        self.dir_output.initialize_dir()  # Clear all and create
+        self.file_log.initialize_file()  # Delete and create
+
+    def validate_graph_logseq_config_paths(self):
+        """Validate the graph and Logseq configuration paths."""
+        self.dir_graph = File(self._ac.config["ANALYZER"]["GRAPH_DIR"])
+        self.dir_logseq = File(self._ac.config["CONST"]["LOGSEQ_DIR"])
+        self.file_config = File(self._ac.config["CONST"]["CONFIG_FILE"])
+        self.dir_graph.validate()  # Must exist
+        self.dir_logseq.validate()  # Must exist
+        self.file_config.validate()  # Must exist
+
     def validate_analyzer_paths(self):
         """Validate the analyzer paths."""
-        self.dir_output = File(self._ac.config["CONST"]["OUTPUT_DIR"])
         self.dir_delete = File(self._ac.config["CONST"]["TO_DELETE_DIR"])
         self.dir_delete_bak = File(self._ac.config["CONST"]["TO_DELETE_BAK_DIR"])
         self.dir_delete_recycle = File(self._ac.config["CONST"]["TO_DELETE_RECYCLE_DIR"])
         self.dir_delete_assets = File(self._ac.config["CONST"]["TO_DELETE_ASSETS_DIR"])
-        self.file_log = File(self._ac.config["CONST"]["LOG_FILE"])
-        self.dir_output.initialize_dir()  # Clear all and create
         self.dir_delete.get_or_create_dir()  # Create if it doesn't exist
         self.dir_delete_bak.get_or_create_dir()  # Create if it doesn't exist
         self.dir_delete_recycle.get_or_create_dir()  # Create if it doesn't exist
         self.dir_delete_assets.get_or_create_dir()  # Create if it doesn't exist
-        self.file_log.initialize_file()  # Delete and create
 
     def validate_graph_paths(self):
         """Validate the graph paths."""
-        self.dir_graph = File(self._ac.config["ANALYZER"]["GRAPH_DIR"])
-        self.dir_logseq = File(self._ac.config["CONST"]["LOGSEQ_DIR"])
         self.dir_recycle = File(self._ac.config["CONST"]["RECYCLE_DIR"])
         self.dir_bak = File(self._ac.config["CONST"]["BAK_DIR"])
-        self.file_config = File(self._ac.config["CONST"]["CONFIG_FILE"])
-        self.dir_graph.validate()  # Must exist
-        self.file_config.validate()  # Must exist
-        self.dir_logseq.validate()  # Must exist
         self.dir_recycle.get_or_create_dir()  # Create if it doesn't exist
         self.dir_bak.get_or_create_dir()  # Create if it doesn't exist
 

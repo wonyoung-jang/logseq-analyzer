@@ -18,10 +18,10 @@ from collections import Counter, defaultdict
 from typing import Generator, List
 import logging
 
-from .logseq_graph import LogseqGraph
-from .logseq_filename import LogseqFilename
-from .utils.patterns import RegexPatterns
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .graph import LogseqGraph
+from ..logseq_file.name import LogseqFilename
+from ..utils.patterns import RegexPatterns
+from ..config.analyzer_config import LogseqAnalyzerConfig
 
 
 class LogseqNamespaces:

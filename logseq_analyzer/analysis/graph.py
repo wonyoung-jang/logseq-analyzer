@@ -5,8 +5,8 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Any, Dict
 
-from .cache import Cache
-from .logseq_file import LogseqFile, LogseqFileHash
+from ..io.cache import Cache
+from ..logseq_file.file import LogseqFile, LogseqFileHash
 
 
 class LogseqGraph:

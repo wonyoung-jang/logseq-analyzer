@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 import logging
 
-from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_graph import LogseqGraph
+from ..config.analyzer_config import LogseqAnalyzerConfig
+from .graph import LogseqGraph
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 

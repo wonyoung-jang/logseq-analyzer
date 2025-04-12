@@ -8,12 +8,12 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
 
-from .logseq_bullets import LogseqBullets
-from .logseq_filestats import LogseqFilestats
-from .logseq_filename import LogseqFilename
-from .utils.helpers import find_all_lower, process_aliases
-from .utils.patterns import RegexPatterns
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .bullets import LogseqBullets
+from .stats import LogseqFilestats
+from .name import LogseqFilename
+from ..utils.helpers import find_all_lower, process_aliases
+from ..utils.patterns import RegexPatterns
+from ..config.analyzer_config import LogseqAnalyzerConfig
 
 PATTERNS = RegexPatterns()
 ANALYZER_CONFIG = LogseqAnalyzerConfig()

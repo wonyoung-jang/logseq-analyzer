@@ -9,9 +9,9 @@ import logging
 import shelve
 
 
-from .utils.helpers import iter_files
-from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_path_validator import LogseqAnalyzerPathValidator
+from ..utils.helpers import iter_files
+from ..config.analyzer_config import LogseqAnalyzerConfig
+from .path_validator import LogseqAnalyzerPathValidator
 
 
 class Cache:

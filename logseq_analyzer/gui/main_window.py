@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..logseq_path_validator import LogseqAnalyzerPathValidator
+from ..io.path_validator import LogseqAnalyzerPathValidator
 from ..app import run_app
 
 

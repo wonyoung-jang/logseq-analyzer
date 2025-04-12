@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import logging
 
-from .utils.patterns import RegexPatterns
+from ..utils.patterns import RegexPatterns
 
 PATTERNS = RegexPatterns()
 

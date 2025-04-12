@@ -7,8 +7,8 @@ from typing import Any, TextIO
 import json
 import logging
 
-from .logseq_path_validator import LogseqAnalyzerPathValidator
-from .logseq_analyzer_config import LogseqAnalyzerConfig
+from .path_validator import LogseqAnalyzerPathValidator
+from ..config.analyzer_config import LogseqAnalyzerConfig
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 JSON_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_JSON"]

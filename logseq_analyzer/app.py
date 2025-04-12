@@ -4,23 +4,20 @@ This module contains the main application logic for the Logseq analyzer.
 
 from enum import Enum
 from pathlib import Path
-
-from .logseq_path_validator import LogseqAnalyzerPathValidator
-from .utils.patterns import RegexPatterns
-from .logseq_analyzer_config import LogseqAnalyzerConfig
-from .logseq_analyzer import LogseqAnalyzerArguments
-from .logseq_graph_config import LogseqGraphConfig
-from .cache import Cache
-from .logseq_graph import LogseqGraph
-from .logseq_file_mover import LogseqFileMover
-from .logseq_journals import LogseqJournals
-from .logseq_namespaces import LogseqNamespaces
-from .report_writer import ReportWriter
 import logging
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-GRAPH_CONFIG = LogseqGraphConfig()
-CACHE = Cache()
+from .analysis.graph import LogseqGraph
+from .analysis.journals import LogseqJournals
+from .analysis.namespaces import LogseqNamespaces
+from .config.analyzer_config import LogseqAnalyzerConfig
+from .config.arguments import LogseqAnalyzerArguments
+from .config.graph_config import LogseqGraphConfig
+from .io.cache import Cache
+from .io.file_mover import LogseqFileMover
+from .io.path_validator import LogseqAnalyzerPathValidator
+from .io.report_writer import ReportWriter
+from .utils.patterns import RegexPatterns
+
 PATTERNS = RegexPatterns()
 PATTERNS.compile_re_content()
 PATTERNS.compile_re_content_double_curly_brackets()
@@ -116,37 +113,35 @@ def run_app(**kwargs):
     """Main function to run the Logseq analyzer."""
     gui = setup_gui(**kwargs)
     args = setup_args(**kwargs)
-
-    gui.update_progress(Phase.PROGRESS.value, 10)
-
     paths = LogseqAnalyzerPathValidator()
-    paths.validate_analyzer_paths()
+    paths.validate_output_dir_and_logging()
     setup_logging(paths.file_log.path)
-
-    ANALYZER_CONFIG.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
-    ANALYZER_CONFIG.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+    ac = LogseqAnalyzerConfig()
+    gc = LogseqGraphConfig()
+    cache = Cache()
+    ac.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
+    paths.validate_graph_logseq_config_paths()
+    gui.update_progress(Phase.PROGRESS.value, 10)
+    paths.validate_analyzer_paths()
+    ac.set("ANALYZER", "REPORT_FORMAT", args.report_format)
     paths.validate_graph_paths()
-
     if args.global_config:
-        ANALYZER_CONFIG.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
+        ac.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
         paths.validate_global_config_path()
-        GRAPH_CONFIG.global_config_file = paths.file_config_global.path
-    GRAPH_CONFIG.user_config_file = paths.file_config.path
-    GRAPH_CONFIG.initialize_config_edns()
-    ANALYZER_CONFIG.set_logseq_config_edn_data(GRAPH_CONFIG.ls_config)
+        gc.global_config_file = paths.file_config_global.path
+    gc.user_config_file = paths.file_config.path
+    gc.initialize_config_edns()
+    ac.set_logseq_config_edn_data(gc.ls_config)
     paths.validate_target_paths()
-
-    ANALYZER_CONFIG.get_logseq_target_dirs()
-    ANALYZER_CONFIG.get_built_in_properties()
-    ANALYZER_CONFIG.get_datetime_token_map()
-    ANALYZER_CONFIG.get_datetime_token_pattern()
-    ANALYZER_CONFIG.set_journal_py_formatting()
-
+    ac.get_logseq_target_dirs()
+    ac.get_built_in_properties()
+    ac.get_datetime_token_map()
+    ac.get_datetime_token_pattern()
+    ac.set_journal_py_formatting()
     if args.graph_cache:
-        CACHE.clear()
+        cache.clear()
     else:
-        CACHE.clear_deleted_files()
-
+        cache.clear_deleted_files()
     gui.update_progress(Phase.PROGRESS.value, 20)
 
     graph = LogseqGraph()
@@ -181,18 +176,18 @@ def run_app(**kwargs):
 
     graph.handle_assets()
     graph_assets_handler = LogseqFileMover()
-    graph_assets_handler.moved_files["moved_assets"] = graph_assets_handler.handle_move_files()
-    graph_assets_handler.moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
+    moved_files = graph_assets_handler.moved_files
+    moved_files["moved_assets"] = graph_assets_handler.handle_move_files()
+    moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
         args.move_bak,
         paths.dir_bak.path,
-        ANALYZER_CONFIG.config["CONST"]["BAK_DIR"],
+        ac.config["CONST"]["BAK_DIR"],
     )
-    graph_assets_handler.moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
+    moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
         args.move_recycle,
         paths.dir_recycle.path,
-        ANALYZER_CONFIG.config["CONST"]["RECYCLE_DIR"],
+        ac.config["CONST"]["RECYCLE_DIR"],
     )
-
     gui.update_progress(Phase.PROGRESS.value, 95)
 
     # Output writing
@@ -210,7 +205,7 @@ def run_app(**kwargs):
     if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
     for name, data in meta_reports.items():
-        ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["META"]).write()
+        ReportWriter(name, data, ac.config["OUTPUT_DIRS"]["META"]).write()
     # Journals
     journals_report = {
         Output.DANGLING_JOURNALS.value: graph_journals.dangling_journals,
@@ -222,10 +217,10 @@ def run_app(**kwargs):
         Output.DANGLING_JOURNALS_FUTURE.value: graph_journals.dangling_journals_future,
     }
     for name, data in journals_report.items():
-        ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["LOGSEQ_JOURNALS"]).write()
+        ReportWriter(name, data, ac.config["OUTPUT_DIRS"]["LOGSEQ_JOURNALS"]).write()
     # Summary
     for name, data in graph.summary_file_subsets.items():
-        ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["SUMMARY"]).write()
+        ReportWriter(name, data, ac.config["OUTPUT_DIRS"]["SUMMARY"]).write()
     for name, data in graph.summary_data_subsets.items():
         ReportWriter(name, data, "summary_content_data").write()
     # Namespace
@@ -243,7 +238,7 @@ def run_app(**kwargs):
         Output.CONFLICTS_PARENT_UNIQUE.value: graph_namespaces.conflicts_parent_unique,
     }
     for name, data in namespace_reports.items():
-        ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["NAMESPACE"]).write()
+        ReportWriter(name, data, ac.config["OUTPUT_DIRS"]["NAMESPACE"]).write()
     # Move files and assets
     moved_files_reports = {
         Output.MOVED_FILES.value: graph_assets_handler.moved_files,
@@ -251,7 +246,7 @@ def run_app(**kwargs):
         Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
     }
     for name, data in moved_files_reports.items():
-        ReportWriter(name, data, ANALYZER_CONFIG.config["OUTPUT_DIRS"]["ASSETS"]).write()
+        ReportWriter(name, data, ac.config["OUTPUT_DIRS"]["ASSETS"]).write()
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs
@@ -274,8 +269,8 @@ def run_app(**kwargs):
         Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
     }
     try:
-        CACHE.update(shelve_output_data)
-        CACHE.close()
+        cache.update(shelve_output_data)
+        cache.close()
     finally:
-        ANALYZER_CONFIG.write_to_file()
+        ac.write_to_file()
     gui.update_progress(Phase.PROGRESS.value, 100)
