@@ -2,7 +2,6 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from enum import Enum
 from pathlib import Path
 import logging
 
@@ -16,57 +15,8 @@ from .io.cache import Cache
 from .io.file_mover import LogseqFileMover
 from .io.path_validator import LogseqAnalyzerPathValidator
 from .io.report_writer import ReportWriter
+from .utils.enums import Phase, Output
 from .utils.patterns import RegexPatterns
-
-PATTERNS = RegexPatterns()
-PATTERNS.compile_re_content()
-PATTERNS.compile_re_content_double_curly_brackets()
-PATTERNS.compile_re_content_advanced_command()
-PATTERNS.compile_re_ext_links()
-PATTERNS.compile_re_emb_links()
-PATTERNS.compile_re_code()
-PATTERNS.compile_re_dblparen()
-
-
-class Phase(Enum):
-    """Phase of the application."""
-
-    GUI_INSTANCE = "gui_instance"
-
-
-class Output(Enum):
-    """Output types for the Logseq Analyzer."""
-
-    DANGLING_JOURNALS = "dangling_journals"
-    PROCESSED_KEYS = "processed_keys"
-    COMPLETE_TIMELINE = "complete_timeline"
-    MISSING_KEYS = "missing_keys"
-    TIMELINE_STATS = "timeline_stats"
-    DANGLING_JOURNALS_PAST = "dangling_journals_past"
-    DANGLING_JOURNALS_FUTURE = "dangling_journals_future"
-    META_UNIQUE_LINKED_REFS = "___meta___unique_linked_refs"
-    META_UNIQUE_LINKED_REFS_NS = "___meta___unique_linked_refs_ns"
-    GRAPH_DATA = "___meta___graph_data"
-    GRAPH_CONTENT = "___meta___graph_content"
-    ALL_REFS = "all_refs"
-    DANGLING_LINKS = "dangling_links"
-    GRAPH_HASHED_FILES = "graph_hashed_files"
-    GRAPH_NAMES_TO_HASHES = "graph_names_to_hashes"
-    GRAPH_MASKED_BLOCKS = "graph_masked_blocks"
-    NAMESPACE_DATA = "___meta___namespace_data"
-    NAMESPACE_PARTS = "___meta___namespace_parts"
-    UNIQUE_NAMESPACE_PARTS = "unique_namespace_parts"
-    NAMESPACE_DETAILS = "namespace_details"
-    UNIQUE_NAMESPACES_PER_LEVEL = "unique_namespaces_per_level"
-    NAMESPACE_QUERIES = "namespace_queries"
-    NAMESPACE_HIERARCHY = "namespace_hierarchy"
-    CONFLICTS_NON_NAMESPACE = "conflicts_non_namespace"
-    CONFLICTS_DANGLING = "conflicts_dangling"
-    CONFLICTS_PARENT_DEPTH = "conflicts_parent_depth"
-    CONFLICTS_PARENT_UNIQUE = "conflicts_parent_unique"
-    MOVED_FILES = "moved_files"
-    ASSETS_BACKLINKED = "assets_backlinked"
-    ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
 
 
 class GUIInstanceDummy:
@@ -105,6 +55,15 @@ def run_app(**kwargs):
     paths = LogseqAnalyzerPathValidator()
     paths.validate_output_dir_and_logging()
     setup_logging(paths.file_log.path)
+    # --- #
+    patterns = RegexPatterns()
+    patterns.compile_re_content()
+    patterns.compile_re_content_double_curly_brackets()
+    patterns.compile_re_content_advanced_command()
+    patterns.compile_re_ext_links()
+    patterns.compile_re_emb_links()
+    patterns.compile_re_code()
+    patterns.compile_re_dblparen()
     analyzer_config = LogseqAnalyzerConfig()
     graph_config = LogseqGraphConfig()
     cache = Cache()
@@ -114,8 +73,6 @@ def run_app(**kwargs):
     paths.validate_analyzer_paths()
     analyzer_config.set("ANALYZER", "REPORT_FORMAT", args.report_format)
     paths.validate_graph_paths()
-    for arg in args.__dict__:
-        print(arg, args.__dict__[arg])
     if args.global_config:
         analyzer_config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
         paths.validate_global_config_path()

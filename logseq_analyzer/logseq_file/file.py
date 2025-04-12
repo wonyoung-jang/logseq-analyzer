@@ -409,62 +409,62 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.advcommand["export"].match(result):
+            if PATTERNS.advcommand["export"].search(result):
                 advanced_command_family["advanced_commands_export"].append(result)
                 results.pop()
-                if PATTERNS.advcommand["export_ascii"].match(result):
+                if PATTERNS.advcommand["export_ascii"].search(result):
                     advanced_command_family["advanced_commands_export_ascii"].append(result)
                     advanced_command_family["advanced_commands_export"].pop()
                     continue
-                if PATTERNS.advcommand["export_latex"].match(result):
+                if PATTERNS.advcommand["export_latex"].search(result):
                     advanced_command_family["advanced_commands_export_latex"].append(result)
                     advanced_command_family["advanced_commands_export"].pop()
                     continue
-            if PATTERNS.advcommand["caution"].match(result):
+            if PATTERNS.advcommand["caution"].search(result):
                 advanced_command_family["advanced_commands_caution"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["center"].match(result):
+            if PATTERNS.advcommand["center"].search(result):
                 advanced_command_family["advanced_commands_center"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["comment"].match(result):
+            if PATTERNS.advcommand["comment"].search(result):
                 advanced_command_family["advanced_commands_comment"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["example"].match(result):
+            if PATTERNS.advcommand["example"].search(result):
                 advanced_command_family["advanced_commands_example"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["important"].match(result):
+            if PATTERNS.advcommand["important"].search(result):
                 advanced_command_family["advanced_commands_important"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["note"].match(result):
+            if PATTERNS.advcommand["note"].search(result):
                 advanced_command_family["advanced_commands_note"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["pinned"].match(result):
+            if PATTERNS.advcommand["pinned"].search(result):
                 advanced_command_family["advanced_commands_pinned"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["query"].match(result):
+            if PATTERNS.advcommand["query"].search(result):
                 advanced_command_family["advanced_commands_query"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["quote"].match(result):
+            if PATTERNS.advcommand["quote"].search(result):
                 advanced_command_family["advanced_commands_quote"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["tip"].match(result):
+            if PATTERNS.advcommand["tip"].search(result):
                 advanced_command_family["advanced_commands_tip"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["verse"].match(result):
+            if PATTERNS.advcommand["verse"].search(result):
                 advanced_command_family["advanced_commands_verse"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["warning"].match(result):
+            if PATTERNS.advcommand["warning"].search(result):
                 advanced_command_family["advanced_commands_warning"].append(result)
                 results.pop()
                 continue

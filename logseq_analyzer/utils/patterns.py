@@ -500,7 +500,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_            # "#+END_"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -510,31 +510,31 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_EXPORT      # "#+END_EXPORT"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
             "export_ascii": re.compile(
                 r"""
                 \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
-                \s+?                    # Single space
+                \s{1}                   # Single space
                 ascii                   # "ascii"
                 .*?                     # Any characters (non-greedy)
                 \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
-                \n                      # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
             "export_latex": re.compile(
                 r"""
                 \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
-                \s+?                    # Single space
+                \s{1}                   # Single space
                 latex                   # "latex"
                 .*?                     # Any characters (non-greedy)
                 \#\+END_EXPORT          # "#+END_EXPORT"
                 .*?                     # Any characters (non-greedy)
-                \n                      # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -544,7 +544,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_CAUTION     # "#+END_CAUTION"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -554,7 +554,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_CENTER      # "#+END_CENTER"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -564,7 +564,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_COMMENT     # "#+END_COMMENT"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -574,7 +574,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_EXAMPLE     # "#+END_EXAMPLE"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -584,7 +584,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_IMPORTANT   # "#+END_IMPORTANT"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -594,7 +594,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_NOTE        # "#+END_NOTE"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -604,7 +604,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_PINNED      # "#+END_PINNED"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -614,7 +614,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_QUERY       # "#+END_QUERY"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -624,7 +624,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_QUOTE       # "#+END_QUOTE"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -634,7 +634,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_TIP         # "#+END_TIP"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -644,7 +644,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_VERSE       # "#+END_VERSE"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
@@ -654,7 +654,7 @@ class RegexPatterns:
                 .*?                 # Any characters (non-greedy)
                 \#\+END_WARNING     # "#+END_WARNING"
                 .*?                 # Any characters (non-greedy)
-                \n                  # Newline
+                (?:\n|$)            # Newline or end-of-file
                 """,
                 re.DOTALL | re.IGNORECASE | re.VERBOSE,
             ),
