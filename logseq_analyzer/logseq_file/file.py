@@ -87,8 +87,10 @@ class LogseqFile:
         primary_data = {
             # Code blocks
             "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
-            # Basic content
+            # Captures from all content
             "assets": find_all_lower(PATTERNS.content["asset"], self.content),
+            "any_links": find_all_lower(PATTERNS.content["any_link"], self.content),
+            # Basic content
             "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
             "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
             "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),
@@ -234,6 +236,11 @@ class LogseqFile:
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
+        for match in PATTERNS.content["any_link"].finditer(masked_content):
+            block_id = f"__ANY_LINK_{uuid.uuid4()}__"
+            masked_blocks[block_id] = match.group(0)
+            masked_content = masked_content.replace(match.group(0), block_id)
+
         return masked_content, masked_blocks
 
     def unmask_blocks(self, masked_content: str, masked_blocks: Dict[str, str]) -> str:
@@ -270,11 +277,11 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.code["calc_block"].match(result):
+            if PATTERNS.code["calc_block"].search(result):
                 code_family["calc_blocks"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.code["multiline_code_lang"].match(result):
+            if PATTERNS.code["multiline_code_lang"].search(result):
                 code_family["multiline_code_langs"].append(result)
                 results.pop()
                 continue
@@ -289,7 +296,7 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.dblparen["block_reference"].match(result):
+            if PATTERNS.dblparen["block_reference"].search(result):
                 double_paren_family["block_references"].append(result)
                 results.pop()
                 continue
@@ -304,11 +311,11 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.ext_links["external_link_internet"].match(result):
+            if PATTERNS.ext_links["external_link_internet"].search(result):
                 external_links_family["external_links_internet"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.ext_links["external_link_alias"].match(result):
+            if PATTERNS.ext_links["external_link_alias"].search(result):
                 external_links_family["external_links_alias"].append(result)
                 results.pop()
                 continue
@@ -323,11 +330,11 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.emb_links["embedded_link_internet"].match(result):
+            if PATTERNS.emb_links["embedded_link_internet"].search(result):
                 embedded_links_family["embedded_links_internet"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.emb_links["embedded_link_asset"].match(result):
+            if PATTERNS.emb_links["embedded_link_asset"].search(result):
                 embedded_links_family["embedded_links_asset"].append(result)
                 results.pop()
                 continue
@@ -351,50 +358,50 @@ class LogseqFile:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.dblcurly["embed"].match(result):
+            if PATTERNS.dblcurly["embed"].search(result):
                 double_curly_family["embeds"].append(result)
                 results.pop()
-                if PATTERNS.dblcurly["page_embed"].match(result):
+                if PATTERNS.dblcurly["page_embed"].search(result):
                     double_curly_family["page_embeds"].append(result)
                     double_curly_family["embeds"].remove(result)
                     continue
-                if PATTERNS.dblcurly["block_embed"].match(result):
+                if PATTERNS.dblcurly["block_embed"].search(result):
                     double_curly_family["block_embeds"].append(result)
                     double_curly_family["embeds"].remove(result)
                     continue
-            if PATTERNS.dblcurly["namespace_query"].match(result):
+            if PATTERNS.dblcurly["namespace_query"].search(result):
                 double_curly_family["namespace_queries"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["card"].match(result):
+            if PATTERNS.dblcurly["card"].search(result):
                 double_curly_family["cards"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["cloze"].match(result):
+            if PATTERNS.dblcurly["cloze"].search(result):
                 double_curly_family["clozes"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["simple_query"].match(result):
+            if PATTERNS.dblcurly["simple_query"].search(result):
                 double_curly_family["simple_queries"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["query_function"].match(result):
+            if PATTERNS.dblcurly["query_function"].search(result):
                 double_curly_family["query_functions"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_video_url"].match(result):
+            if PATTERNS.dblcurly["embed_video_url"].search(result):
                 double_curly_family["embed_video_urls"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_twitter_tweet"].match(result):
+            if PATTERNS.dblcurly["embed_twitter_tweet"].search(result):
                 double_curly_family["embed_twitter_tweets"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_youtube_timestamp"].match(result):
+            if PATTERNS.dblcurly["embed_youtube_timestamp"].search(result):
                 double_curly_family["embed_youtube_timestamps"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["renderer"].match(result):
+            if PATTERNS.dblcurly["renderer"].search(result):
                 double_curly_family["renderers"].append(result)
                 results.pop()
                 continue

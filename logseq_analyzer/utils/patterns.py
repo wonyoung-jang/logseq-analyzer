@@ -231,6 +231,26 @@ class RegexPatterns:
                 """,
                 re.IGNORECASE | re.VERBOSE,
             ),
+            "any_link": re.compile(
+                r"""
+                \b                                          # word boundary
+                (?:                                       
+                    (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
+                    (?:\S+(?::\S*)?@)?                      #   optional user:pass@
+                    (?:                                     
+                        \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
+                        |
+                        \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
+                        |
+                        (?:[A-Z0-9-]+\.)+[A-Z]{2,}          #   domain name
+                    )
+                    (?::\d{2,5})?                           #   optional port
+                    (?:/[^\s]*)?                            #   optional path/query/fragment
+                )
+                \b                                          # word boundary
+                """,
+                re.IGNORECASE | re.VERBOSE,
+            ),
         }
         logging.info("Compiled regex patterns for content analysis.")
 

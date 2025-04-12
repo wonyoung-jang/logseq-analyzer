@@ -87,18 +87,15 @@ class LogseqFilename:
         len_graph_dir = len(Path(graph_dir).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
-        if target_segment[:-1] not in ("page", "block-id"):
-            return ""
-        prefix = f"file:///{str(graph_dir)}/{target_segment}/"
-        if not self.uri.startswith(prefix):
-            return ""
-
-        len_suffix = len(Path(self.uri).suffix)
-        path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
-        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
-        encoded_path = path_with_slashes
-        target_segment = target_segment[:-1]
-        return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+        if target_segment[:-1] in ("page", "block-id"):
+            prefix = f"file:///{str(graph_dir)}/{target_segment}/"
+            if self.uri.startswith(prefix):
+                len_suffix = len(Path(self.uri).suffix)
+                path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
+                path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
+                encoded_path = path_with_slashes
+                target_segment = target_segment[:-1]
+                return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
     def get_namespace_name_data(self):
         """Get the namespace name data."""
