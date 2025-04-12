@@ -29,10 +29,14 @@ PATTERNS.compile_re_dblparen()
 
 
 class Phase(Enum):
+    """Phase of the application."""
+
     GUI_INSTANCE = "gui_instance"
 
 
 class Output(Enum):
+    """Output types for the Logseq Analyzer."""
+
     DANGLING_JOURNALS = "dangling_journals"
     PROCESSED_KEYS = "processed_keys"
     COMPLETE_TIMELINE = "complete_timeline"
@@ -178,8 +182,6 @@ def run_app(**kwargs):
     }
     if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
-    for name, data in meta_reports.items():
-        ReportWriter(name, data, analyzer_config.config["OUTPUT_DIRS"]["META"]).write()
     # Journals
     journals_report = {
         Output.DANGLING_JOURNALS.value: graph_journals.dangling_journals,
@@ -190,13 +192,6 @@ def run_app(**kwargs):
         Output.DANGLING_JOURNALS_PAST.value: graph_journals.dangling_journals_past,
         Output.DANGLING_JOURNALS_FUTURE.value: graph_journals.dangling_journals_future,
     }
-    for name, data in journals_report.items():
-        ReportWriter(name, data, analyzer_config.config["OUTPUT_DIRS"]["LOGSEQ_JOURNALS"]).write()
-    # Summary
-    for name, data in graph.summary_file_subsets.items():
-        ReportWriter(name, data, analyzer_config.config["OUTPUT_DIRS"]["SUMMARY"]).write()
-    for name, data in graph.summary_data_subsets.items():
-        ReportWriter(name, data, "summary_content_data").write()
     # Namespace
     namespace_reports = {
         Output.NAMESPACE_DATA.value: graph_namespaces.namespace_data,
@@ -211,16 +206,24 @@ def run_app(**kwargs):
         Output.CONFLICTS_PARENT_DEPTH.value: graph_namespaces.conflicts_parent_depth,
         Output.CONFLICTS_PARENT_UNIQUE.value: graph_namespaces.conflicts_parent_unique,
     }
-    for name, data in namespace_reports.items():
-        ReportWriter(name, data, analyzer_config.config["OUTPUT_DIRS"]["NAMESPACE"]).write()
     # Move files and assets
     moved_files_reports = {
         Output.MOVED_FILES.value: graph_assets_handler.moved_files,
         Output.ASSETS_BACKLINKED.value: graph.assets_backlinked,
         Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
     }
-    for name, data in moved_files_reports.items():
-        ReportWriter(name, data, analyzer_config.config["OUTPUT_DIRS"]["ASSETS"]).write()
+    # Writing
+    all_outputs = [
+        (meta_reports, analyzer_config.config["OUTPUT_DIRS"]["META"]),
+        (journals_report, analyzer_config.config["OUTPUT_DIRS"]["LOGSEQ_JOURNALS"]),
+        (graph.summary_file_subsets, analyzer_config.config["OUTPUT_DIRS"]["SUMMARY"]),
+        (graph.summary_data_subsets, "summary_content_data"),
+        (namespace_reports, analyzer_config.config["OUTPUT_DIRS"]["NAMESPACE"]),
+        (moved_files_reports, analyzer_config.config["OUTPUT_DIRS"]["ASSETS"]),
+    ]
+    for report, output_dir in all_outputs:
+        for name, data in report.items():
+            ReportWriter(name, data, output_dir).write()
     # Write output data to persistent storage
     shelve_output_data = {
         # Main meta outputs

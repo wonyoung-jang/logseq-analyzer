@@ -7,9 +7,7 @@ import argparse
 
 
 class LogseqAnalyzerArguments:
-    """
-    A class to represent command line arguments for the Logseq Analyzer.
-    """
+    """A class to represent command line arguments for the Logseq Analyzer."""
 
     _instance = None
 
@@ -33,23 +31,20 @@ class LogseqAnalyzerArguments:
             self.report_format: str = None
 
     def setup_args(self, **kwargs):
-        """
-        Set up command line arguments and GUI arguments.
-        """
+        """Set up command line arguments and GUI arguments."""
         if kwargs:
             self.set_gui_args(**kwargs)
         else:
             self.set_cli_args()
 
     def set_gui_args(self, **kwargs):
+        """Set arguments if provided as keyword arguments from GUI."""
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
 
     def set_cli_args(self):
-        """
-        Parse command line arguments and set them as attributes.
-        """
+        """Parse command line arguments and set them as attributes."""
         parser = argparse.ArgumentParser(description="Logseq Analyzer")
         parser.add_argument(
             "-g",

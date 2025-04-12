@@ -10,9 +10,7 @@ from ..logseq_file.file import LogseqFile, LogseqFileHash
 
 
 class LogseqGraph:
-    """
-    Class to handle all Logseq files in the graph directory.
-    """
+    """Class to handle all Logseq files in the graph directory."""
 
     _instance = None
 
@@ -23,9 +21,7 @@ class LogseqGraph:
         return cls._instance
 
     def __init__(self):
-        """
-        Initialize the LogseqGraph instance.
-        """
+        """Initialize the LogseqGraph instance."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self.cache = Cache()
@@ -44,9 +40,7 @@ class LogseqGraph:
             self.masked_blocks = {}
 
     def process_graph_files(self):
-        """
-        Process all files in the Logseq graph folder.
-        """
+        """Process all files in the Logseq graph folder."""
         for file_path in self.cache.iter_modified_files():
             file = LogseqFile(file_path)
             self.data[file.hash] = file.__dict__
@@ -59,6 +53,7 @@ class LogseqGraph:
             delattr(file, "primary_bullet")
 
     def update_graph_files_with_cache(self):
+        """Update the graph files with cached data."""
         graph_data_db = self.cache.get("___meta___graph_data", {})
         graph_data_db.update(self.data)
         self.data = graph_data_db
@@ -80,9 +75,7 @@ class LogseqGraph:
         self.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
 
     def post_processing_content(self):
-        """
-        Post-process the content data for all files.
-        """
+        """Post-process the content data for all files."""
         unique_aliases = set()
 
         # Process each file's content
@@ -131,9 +124,7 @@ class LogseqGraph:
         self.dangling_links = set(sorted(self.dangling_links))
 
     def post_processing_content_namespaces(self, file: LogseqFile):
-        """
-        Post-process namespaces in the content data.
-        """
+        """Post-process namespaces in the content data."""
         ns_level = file.ns_level
         ns_root = file.ns_root
         ns_parent = file.ns_parent_full
@@ -160,9 +151,7 @@ class LogseqGraph:
                 ns_parent_file.ns_size = len(ns_parent_file.ns_children)
 
     def process_summary_data(self):
-        """
-        Process summary data for each file based on metadata and content analysis.
-        """
+        """Process summary data for each file based on metadata and content analysis."""
         for _, file in self.hashed_files.items():
             file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
@@ -172,9 +161,7 @@ class LogseqGraph:
                 file.node_type = file.determine_node_type()
 
     def generate_summary_file_subsets(self):
-        """
-        Generate summary subsets for the Logseq Analyzer.
-        """
+        """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = {
             # Process general categories
             "___is_backlinked": {"is_backlinked": True},
@@ -227,9 +214,7 @@ class LogseqGraph:
         return result
 
     def generate_summary_data_subsets(self):
-        """
-        Generate summary subsets for content data in the Logseq graph.
-        """
+        """Generate summary subsets for content data in the Logseq graph."""
         # Process content types
         content_subset_tags_nodes = [
             "advanced_commands_caution",
@@ -314,13 +299,11 @@ class LogseqGraph:
         return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
 
     def handle_assets(self):
-        """
-        Handle assets for the Logseq Analyzer.
-        """
+        """Handle assets for the Logseq Analyzer."""
         for hash_, file in self.hashed_files.items():
-            (emb_link_asset := file.data.get("embedded_links_asset"))
-            (asset_captured := file.data.get("assets"))
-            if not emb_link_asset and not asset_captured:
+            emb_link_asset = file.data.get("embedded_links_asset")
+            asset_captured = file.data.get("assets")
+            if not (emb_link_asset or asset_captured):
                 continue
             for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
                 asset_hash = self.names_to_hashes.get(asset)

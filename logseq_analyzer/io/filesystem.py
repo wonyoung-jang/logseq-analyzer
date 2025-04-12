@@ -1,57 +1,47 @@
+"""
+File system operations for Logseq Analyzer.
+"""
+
 from pathlib import Path
 import logging
 import shutil
 
 
 class File:
-    """
-    A class to represent a file in the Logseq Analyzer.
-    """
+    """A class to represent a file in the Logseq Analyzer."""
 
     def __init__(self, path):
-        """
-        Initialize the File class with a path.
-        """
+        """Initialize the File class with a path."""
         self.path = path
 
     # Getter for path property
     @property
     def path(self):
-        """
-        Get the path of the file.
-        """
+        """Get the path of the file."""
         return self._path
 
     # Setter for path property
     @path.setter
     def path(self, value):
-        """
-        Set the path of the file.
-        """
+        """Set the path of the file."""
         if isinstance(value, str):
             value = Path(value)
         self._path = value
 
     @path.deleter
     def path(self):
-        """
-        Delete the path of the file.
-        """
+        """Delete the path of the file."""
         del self._path
 
     def validate(self):
-        """
-        Validate the file path.
-        """
+        """Validate the file path."""
         if not self.path.exists():
             logging.error("File does not exist: %s", self.path)
             raise FileNotFoundError(f"File does not exist: {self.path}")
         logging.info("File exists: %s", self.path)
 
     def get_or_create_dir(self):
-        """
-        Get a path or create it if it doesn't exist.
-        """
+        """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
         except FileNotFoundError:
@@ -64,9 +54,7 @@ class File:
                 logging.error("Error creating path: %s", e)
 
     def get_or_create_file(self):
-        """
-        Get a path or create it if it doesn't exist.
-        """
+        """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
         except FileNotFoundError:
@@ -79,9 +67,7 @@ class File:
                 logging.error("Error creating path: %s", e)
 
     def initialize_dir(self):
-        """
-        Initialize the directory.
-        """
+        """Initialize the directory."""
         try:
             if self.path.exists():
                 shutil.rmtree(self.path)
@@ -94,9 +80,7 @@ class File:
             self.get_or_create_dir()
 
     def initialize_file(self):
-        """
-        Initialize the file or directory.
-        """
+        """Initialize the file or directory."""
         try:
             if self.path.exists():
                 self.path.unlink()
