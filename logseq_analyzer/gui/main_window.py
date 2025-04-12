@@ -242,12 +242,9 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.delete_button.setEnabled(True)
             self.log_button.setEnabled(True)
 
-    def update_progress(self, phase_name, progress_value):
+    def update_progress(self, progress_value=0):
         """Updates the progress bar for a given phase."""
-        progress_bar = None
-        if phase_name == "progress":
-            progress_bar = self.setup_progress_bar
-
+        progress_bar = self.setup_progress_bar
         if progress_bar:
             progress_bar.setValue(progress_value)
             QApplication.processEvents()

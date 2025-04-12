@@ -32,6 +32,15 @@ class LogseqAnalyzerArguments:
             self.graph_cache: bool = None
             self.report_format: str = None
 
+    def setup_args(self, **kwargs):
+        """
+        Set up command line arguments and GUI arguments.
+        """
+        if kwargs:
+            self.set_gui_args(**kwargs)
+        else:
+            self.set_cli_args()
+
     def set_gui_args(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):
