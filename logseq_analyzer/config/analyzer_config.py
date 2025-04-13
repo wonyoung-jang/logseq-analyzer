@@ -5,7 +5,6 @@ Config class for loading and managing configuration files.
 from pathlib import Path
 from typing import Dict
 import configparser
-import re
 
 from ..io.filesystem import File
 
@@ -47,8 +46,6 @@ class LogseqAnalyzerConfig:
             self.config.optionxform = lambda_optionxform
             self.config.read(config_path.path)
             self.target_dirs = None
-            self.datetime_token_map = None
-            self.datetime_token_pattern = None
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""
@@ -65,16 +62,6 @@ class LogseqAnalyzerConfig:
         if section in self.config:
             return dict(self.config[section])
         return {}
-
-    def get_datetime_token_map(self):
-        """Return the datetime token mapping as a dictionary"""
-        self.datetime_token_map = self.get_section("DATETIME_TOKEN_MAP")
-
-    def get_datetime_token_pattern(self):
-        """Return a compiled regex pattern for datetime tokens"""
-        tokens = self.datetime_token_map.keys()
-        pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
-        self.datetime_token_pattern = re.compile(pattern)
 
     def write(self, file):
         """Write the config to a file-like object"""
@@ -113,31 +100,3 @@ class LogseqAnalyzerConfig:
             self.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"],
             self.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"],
         }
-
-    def set_journal_py_formatting(self):
-        """
-        Set the formatting for journal files and pages in Python format.
-        """
-        journal_page_format = self.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
-        journal_file_format = self.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
-        if not self.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT"):
-            py_file_name_format = self.convert_cljs_date_to_py(journal_file_format)
-            self.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
-        py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        if not self.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT"):
-            py_page_title_format_base = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
-            self.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
-
-    def convert_cljs_date_to_py(self, cljs_format) -> str:
-        """
-        Convert a Clojure-style date format to a Python-style date format.
-        """
-        cljs_format = cljs_format.replace("o", "")
-        return self.datetime_token_pattern.sub(self.replace_token, cljs_format)
-
-    def replace_token(self, match):
-        """
-        Replace a date token with its corresponding Python format.
-        """
-        token = match.group(0)
-        return self.datetime_token_map.get(token, token)

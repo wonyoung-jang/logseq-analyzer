@@ -5,6 +5,8 @@ This module contains the main application logic for the Logseq analyzer.
 from pathlib import Path
 import logging
 
+from .config.datetime_tokens import LogseqDateTimeTokens
+
 from .analysis.graph import LogseqGraph
 from .analysis.summary_files import LogseqFileSummarizer
 from .analysis.summary_content import LogseqContentSummarizer
@@ -77,9 +79,10 @@ def run_app(**kwargs):
     paths.validate_target_paths()
     # --- #
     analyzer_config.get_logseq_target_dirs()
-    analyzer_config.get_datetime_token_map()
-    analyzer_config.get_datetime_token_pattern()
-    analyzer_config.set_journal_py_formatting()
+    datetime_tokens = LogseqDateTimeTokens(analyzer_config)
+    datetime_tokens.get_datetime_token_map()
+    datetime_tokens.set_datetime_token_pattern()
+    datetime_tokens.set_journal_py_formatting()
     if args.graph_cache:
         cache.clear()
     else:
