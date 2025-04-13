@@ -58,18 +58,10 @@ def run_app(**kwargs):
     paths.validate_output_dir_and_logging()
     setup_logging(paths.file_log.path)
     # --- #
-    patterns = RegexPatterns()
-    patterns.compile_re_content()
-    patterns.compile_re_content_double_curly_brackets()
-    patterns.compile_re_content_advanced_command()
-    patterns.compile_re_ext_links()
-    patterns.compile_re_emb_links()
-    patterns.compile_re_code()
-    patterns.compile_re_dblparen()
     analyzer_config = LogseqAnalyzerConfig()
     graph_config = LogseqGraphConfig()
     paths.validate_cache()
-    cache = Cache()
+    cache = Cache(paths.file_cache.path)
     analyzer_config.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
     paths.validate_graph_logseq_config_paths()
     progress(10)
@@ -84,6 +76,15 @@ def run_app(**kwargs):
     graph_config.initialize_config_edns()
     analyzer_config.set_logseq_config_edn_data(graph_config.ls_config)
     paths.validate_target_paths()
+    # --- #
+    patterns = RegexPatterns()
+    patterns.compile_re_content()
+    patterns.compile_re_content_double_curly_brackets()
+    patterns.compile_re_content_advanced_command()
+    patterns.compile_re_ext_links()
+    patterns.compile_re_emb_links()
+    patterns.compile_re_code()
+    patterns.compile_re_dblparen()
     analyzer_config.get_logseq_target_dirs()
     analyzer_config.get_built_in_properties()
     analyzer_config.get_datetime_token_map()
@@ -177,14 +178,14 @@ def run_app(**kwargs):
         Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
     }
     # Writing
-    all_outputs = [
+    all_outputs = (
         (meta_reports, analyzer_config.config["OUTPUT"]["META"]),
         (journal_reports, analyzer_config.config["OUTPUT"]["JOURNALS"]),
         (summary_files.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_FILE"]),
         (summary_content.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_CONTENT"]),
         (namespace_reports, analyzer_config.config["OUTPUT"]["NAMESPACES"]),
         (moved_files_reports, analyzer_config.config["OUTPUT"]["ASSETS"]),
-    ]
+    )
     for report, output_dir in all_outputs:
         for name, data in report.items():
             ReportWriter(name, data, output_dir).write()

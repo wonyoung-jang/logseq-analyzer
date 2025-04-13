@@ -93,7 +93,7 @@ class ReportWriter:
         filename = (
             f"{self.filename_prefix}{self.output_format}"
             if count
-            else f"______EMPTY_{self.filename_prefix}{self.output_format}"
+            else f"___EMPTY___{self.filename_prefix}{self.output_format}"
         )
 
         if self.type_output:

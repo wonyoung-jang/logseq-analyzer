@@ -7,6 +7,7 @@ from typing import Dict
 
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
+from ..utils.enums import Output, Criteria
 
 
 class LogseqGraph:
@@ -57,23 +58,23 @@ class LogseqGraph:
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
-        graph_data_db = self.cache.get("___meta___graph_data", {})
+        graph_data_db = self.cache.get(Output.GRAPH_DATA.value, {})
         graph_data_db.update(self.data)
         self.data = graph_data_db
 
-        graph_content_db = self.cache.get("___meta___graph_content", {})
+        graph_content_db = self.cache.get(Output.GRAPH_CONTENT.value, {})
         graph_content_db.update(self.content_bullets)
         self.content_bullets = graph_content_db
 
-        graph_hashed_files_db = self.cache.get("graph_hashed_files", {})
+        graph_hashed_files_db = self.cache.get(Output.GRAPH_HASHED_FILES.value, {})
         graph_hashed_files_db.update(self.hashed_files)
         self.hashed_files = graph_hashed_files_db
 
-        graph_names_to_hashes_db = self.cache.get("graph_names_to_hashes", {})
+        graph_names_to_hashes_db = self.cache.get(Output.GRAPH_NAMES_TO_HASHES.value, {})
         graph_names_to_hashes_db.update(self.names_to_hashes)
         self.names_to_hashes = graph_names_to_hashes_db
 
-        graph_dangling_links_db = self.cache.get("dangling_links", set())
+        graph_dangling_links_db = self.cache.get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in graph_dangling_links_db}
         self.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
 
@@ -86,18 +87,18 @@ class LogseqGraph:
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
 
-            found_aliases = file.data.get("aliases", [])
+            found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
                 found_aliases,
-                file.data.get("draws", []),
-                file.data.get("page_references", []),
-                file.data.get("tags", []),
-                file.data.get("tagged_backlinks", []),
-                file.data.get("properties_page_builtin", []),
-                file.data.get("properties_page_user", []),
-                file.data.get("properties_block_builtin", []),
-                file.data.get("properties_block_user", []),
+                file.data.get(Criteria.DRAWS.value, []),
+                file.data.get(Criteria.PAGE_REFERENCES.value, []),
+                file.data.get(Criteria.TAGS.value, []),
+                file.data.get(Criteria.TAGGED_BACKLINKS.value, []),
+                file.data.get(Criteria.PROPERTIES_PAGE_BUILTIN.value, []),
+                file.data.get(Criteria.PROPERTIES_PAGE_USER.value, []),
+                file.data.get(Criteria.PROPERTIES_BLOCK_BUILTIN.value, []),
+                file.data.get(Criteria.PROPERTIES_BLOCK_USER.value, []),
                 [getattr(file, "ns_parent", "")],
             ]
             linked_references = [item for sublist in linked_references for item in sublist if item]
@@ -174,8 +175,8 @@ class LogseqGraph:
     def handle_assets(self, asset_files: list):
         """Handle assets for the Logseq Analyzer."""
         for hash_, file in self.hashed_files.items():
-            emb_link_asset = file.data.get("embedded_links_asset")
-            asset_captured = file.data.get("assets")
+            emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value)
+            asset_captured = file.data.get(Criteria.ASSETS.value)
             if not (emb_link_asset or asset_captured):
                 continue
             for asset in asset_files:

@@ -116,26 +116,24 @@ class LogseqJournals:
         """
         Get statistics about the timeline.
         """
-        if not timeline:
-            return {
-                "first_date": datetime.min,
-                "last_date": datetime.min,
-                "days": 0,
-                "weeks": 0,
-                "months": 0,
-                "years": 0,
-            }
-        first_date = min(timeline)
-        last_date = max(timeline)
-        days, weeks, months, years = LogseqJournals.get_date_ranges(last_date, first_date)
-        return {
-            "first_date": first_date,
-            "last_date": last_date,
-            "days": days,
-            "weeks": weeks,
-            "months": months,
-            "years": years,
+        date_stats = {
+            "first_date": datetime.min,
+            "last_date": datetime.min,
+            "days": 0,
+            "weeks": 0,
+            "months": 0,
+            "years": 0,
         }
+        if not timeline:
+            return date_stats
+        date_stats["first_date"] = min(timeline)
+        date_stats["last_date"] = max(timeline)
+        days, weeks, months, years = LogseqJournals.get_date_ranges(date_stats["last_date"], date_stats["first_date"])
+        date_stats["days"] = days
+        date_stats["weeks"] = weeks
+        date_stats["months"] = months
+        date_stats["years"] = years
+        return date_stats
 
     @staticmethod
     def get_date_ranges(

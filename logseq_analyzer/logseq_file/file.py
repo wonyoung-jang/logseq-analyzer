@@ -10,6 +10,7 @@ import uuid
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import RegexPatterns
+from ..utils.enums import Criteria
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
@@ -95,18 +96,18 @@ class LogseqFile:
         # Extract basic data
         primary_data = {
             # Code blocks
-            "inline_code_blocks": find_all_lower(PATTERNS.code["inline_code_block"], self.content),
+            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(PATTERNS.code["inline_code_block"], self.content),
             # Captures from all content
-            "assets": find_all_lower(PATTERNS.content["asset"], self.content),
-            "any_links": find_all_lower(PATTERNS.content["any_link"], self.content),
+            Criteria.ASSETS.value: find_all_lower(PATTERNS.content["asset"], self.content),
+            Criteria.ANY_LINKS.value: find_all_lower(PATTERNS.content["any_link"], self.content),
             # Basic content
-            "blockquotes": find_all_lower(PATTERNS.content["blockquote"], masked_content),
-            "draws": find_all_lower(PATTERNS.content["draw"], masked_content),
-            "flashcards": find_all_lower(PATTERNS.content["flashcard"], masked_content),
-            "page_references": find_all_lower(PATTERNS.content["page_reference"], masked_content),
-            "tagged_backlinks": find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
-            "tags": find_all_lower(PATTERNS.content["tag"], masked_content),
-            "dynamic_variables": find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
+            Criteria.BLOCKQUOTES.value: find_all_lower(PATTERNS.content["blockquote"], masked_content),
+            Criteria.DRAWS.value: find_all_lower(PATTERNS.content["draw"], masked_content),
+            Criteria.FLASHCARDS.value: find_all_lower(PATTERNS.content["flashcard"], masked_content),
+            Criteria.PAGE_REFERENCES.value: find_all_lower(PATTERNS.content["page_reference"], masked_content),
+            Criteria.TAGGED_BACKLINKS.value: find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
+            Criteria.TAGS.value: find_all_lower(PATTERNS.content["tag"], masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
         }
 
         # Process aliases and property:values
@@ -156,12 +157,12 @@ class LogseqFile:
 
         primary_data.update(
             {
-                "aliases": aliases,
-                "properties_block_builtin": block_props["built_in"],
-                "properties_block_user": block_props["user_props"],
-                "properties_page_builtin": page_props["built_in"],
-                "properties_page_user": page_props["user_props"],
-                "properties_values": properties_values,
+                Criteria.ALIASES.value: aliases,
+                Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props["built_in"],
+                Criteria.PROPERTIES_BLOCK_USER.value: block_props["user_props"],
+                Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props["built_in"],
+                Criteria.PROPERTIES_PAGE_USER.value: page_props["user_props"],
+                Criteria.PROPERTIES_VALUES.value: properties_values,
             }
         )
 

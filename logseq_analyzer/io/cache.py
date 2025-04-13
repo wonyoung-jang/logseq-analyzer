@@ -20,19 +20,19 @@ class Cache:
 
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, *args):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, cache_path: Path = None):
         """Initialize the class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self._paths = LogseqAnalyzerPathValidator()
             self._la_config = LogseqAnalyzerConfig()
-            self.cache = shelve.open(self._paths.file_cache.path, protocol=5)
+            self.cache = shelve.open(cache_path, protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -45,10 +45,6 @@ class Cache:
     def get(self, key, default=None):
         """Get a value from the cache."""
         return self.cache.get(key, default)
-
-    def clear(self):
-        """Clear the cache."""
-        self.cache.clear()
 
     def iter_modified_files(self):
         """Get the modified files from the cache."""
@@ -63,6 +59,10 @@ class Cache:
                 logging.debug("File modified: %s", path)
                 yield path
         self.cache["mod_tracker"] = mod_tracker
+
+    def clear(self):
+        """Clear the cache."""
+        self.cache.clear()
 
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""

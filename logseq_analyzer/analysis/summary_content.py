@@ -4,6 +4,7 @@ Logseq Content Summarizer Module
 
 from typing import Any, Dict
 from .graph import LogseqGraph
+from ..utils.enums import Criteria
 
 
 class LogseqContentSummarizer:
@@ -27,66 +28,8 @@ class LogseqContentSummarizer:
 
     def generate_summary(self):
         """Generate summary subsets for content data in the Logseq graph."""
-        content_subset_tags_nodes = [
-            "advanced_commands_caution",
-            "advanced_commands_center",
-            "advanced_commands_comment",
-            "advanced_commands_example",
-            "advanced_commands_export_ascii",
-            "advanced_commands_export_latex",
-            "advanced_commands_export",
-            "advanced_commands_important",
-            "advanced_commands_note",
-            "advanced_commands_pinned",
-            "advanced_commands_query",
-            "advanced_commands_quote",
-            "advanced_commands_tip",
-            "advanced_commands_verse",
-            "advanced_commands_warning",
-            "advanced_commands",
-            "aliases",
-            "any_links",
-            "assets",
-            "block_embeds",
-            "block_references",
-            "blockquotes",
-            "calc_blocks",
-            "cards",
-            "clozes",
-            "draws",
-            "dynamic_variables",
-            "embed_twitter_tweets",
-            "embed_video_urls",
-            "embed_youtube_timestamps",
-            "embedded_links_asset",
-            "embedded_links_internet",
-            "embedded_links_other",
-            "embeds",
-            "external_links_alias",
-            "external_links_internet",
-            "external_links_other",
-            "flashcards",
-            "inline_code_blocks",
-            "macros",
-            "multiline_code_blocks",
-            "multiline_code_langs",
-            "namespace_queries",
-            "page_embeds",
-            "page_references",
-            "properties_block_builtin",
-            "properties_block_user",
-            "properties_page_builtin",
-            "properties_page_user",
-            "properties_values",
-            "query_functions",
-            "references_general",
-            "renderers",
-            "simple_queries",
-            "tagged_backlinks",
-            "tags",
-        ]
-        for criteria in content_subset_tags_nodes:
-            self.subsets[f"content_{criteria}"] = self.extract_summary_subset_content(criteria)
+        for criteria in list(Criteria):
+            self.subsets[f"content_{criteria.value}"] = self.extract_summary_subset_content(criteria.value)
 
     def extract_summary_subset_content(self, criteria) -> Dict[str, Any]:
         """

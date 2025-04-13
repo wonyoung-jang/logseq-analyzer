@@ -29,29 +29,29 @@ class LogseqFileSummarizer:
         """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = {
             # Process general categories
-            SummaryFiles.IS_BACKLINKED.value: {"is_backlinked": True},
-            SummaryFiles.IS_BACKLINKED_BY_NS_ONLY.value: {"is_backlinked_by_ns_only": True},
-            SummaryFiles.HAS_CONTENT.value: {"has_content": True},
-            SummaryFiles.HAS_BACKLINKS.value: {"has_backlinks": True},
+            SummaryFiles.IS_BACKLINKED: {"is_backlinked": True},
+            SummaryFiles.IS_BACKLINKED_BY_NS_ONLY: {"is_backlinked_by_ns_only": True},
+            SummaryFiles.HAS_CONTENT: {"has_content": True},
+            SummaryFiles.HAS_BACKLINKS: {"has_backlinks": True},
             # Process file types
-            SummaryFiles.FILETYPE_ASSET.value: {"file_type": "asset"},
-            SummaryFiles.FILETYPE_DRAW.value: {"file_type": "draw"},
-            SummaryFiles.FILETYPE_JOURNAL.value: {"file_type": "journal"},
-            SummaryFiles.FILETYPE_PAGE.value: {"file_type": "page"},
-            SummaryFiles.FILETYPE_WHITEBOARD.value: {"file_type": "whiteboard"},
-            SummaryFiles.FILETYPE_OTHER.value: {"file_type": "other"},
+            SummaryFiles.FILETYPE_ASSET: {"file_type": "asset"},
+            SummaryFiles.FILETYPE_DRAW: {"file_type": "draw"},
+            SummaryFiles.FILETYPE_JOURNAL: {"file_type": "journal"},
+            SummaryFiles.FILETYPE_PAGE: {"file_type": "page"},
+            SummaryFiles.FILETYPE_WHITEBOARD: {"file_type": "whiteboard"},
+            SummaryFiles.FILETYPE_OTHER: {"file_type": "other"},
             # Process nodes
-            SummaryFiles.NODE_ORPHAN_TRUE.value: {"node_type": "orphan_true"},
-            SummaryFiles.NODE_ORPHAN_GRAPH.value: {"node_type": "orphan_graph"},
-            SummaryFiles.NODE_ORPHAN_NAMESPACE.value: {"node_type": "orphan_namespace"},
-            SummaryFiles.NODE_ORPHAN_NAMESPACE_TRUE.value: {"node_type": "orphan_namespace_true"},
-            SummaryFiles.NODE_ROOT.value: {"node_type": "root"},
-            SummaryFiles.NODE_LEAF.value: {"node_type": "leaf"},
-            SummaryFiles.NODE_BRANCH.value: {"node_type": "branch"},
-            SummaryFiles.NODE_OTHER.value: {"node_type": "other"},
+            SummaryFiles.NODE_ORPHAN_TRUE: {"node_type": "orphan_true"},
+            SummaryFiles.NODE_ORPHAN_GRAPH: {"node_type": "orphan_graph"},
+            SummaryFiles.NODE_ORPHAN_NAMESPACE: {"node_type": "orphan_namespace"},
+            SummaryFiles.NODE_ORPHAN_NAMESPACE_TRUE: {"node_type": "orphan_namespace_true"},
+            SummaryFiles.NODE_ROOT: {"node_type": "root"},
+            SummaryFiles.NODE_LEAF: {"node_type": "leaf"},
+            SummaryFiles.NODE_BRANCH: {"node_type": "branch"},
+            SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         for output_name, criteria in summary_categories.items():
-            self.subsets[output_name] = self.list_files_with_keys_and_values(**criteria)
+            self.subsets[output_name.value] = self.list_files_with_keys_and_values(**criteria)
 
         # Process file extensions
         file_extensions = set()
