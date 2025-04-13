@@ -9,7 +9,7 @@ import uuid
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import find_all_lower, process_aliases
-from ..utils.patterns import RegexPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, DoubleParenthesesPatterns
+from ..utils.patterns import RegexPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, DoubleParenthesesPatterns, CodePatterns
 from ..utils.enums import Criteria
 from .bullets import LogseqBullets
 from .name import LogseqFilename
@@ -48,6 +48,7 @@ class LogseqFile:
         self.embedded_links = EmbeddedLinksPatterns()
         self.external_links = ExternalLinksPatterns()
         self.double_parentheses = DoubleParenthesesPatterns()
+        self.code = CodePatterns()
 
     def __repr__(self) -> str:
         return f"LogseqFile(name={self.path.name}, path={self.file_path})"
@@ -99,7 +100,7 @@ class LogseqFile:
         # Extract basic data
         primary_data = {
             # Code blocks
-            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(PATTERNS.code["inline_code_block"], self.content),
+            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(self.code.inline_code_block, self.content),
             # Captures from all content
             Criteria.ASSETS.value: find_all_lower(PATTERNS.content["asset"], self.content),
             Criteria.ANY_LINKS.value: find_all_lower(PATTERNS.content["any_link"], self.content),
@@ -129,8 +130,8 @@ class LogseqFile:
         block_props = LogseqFile.split_builtin_user_properties(block_properties)
 
         # Process code blocks
-        code_pattern = find_all_lower(PATTERNS.code["_all"], self.content)
-        code_family = LogseqFile.process_code_blocks(code_pattern)
+        code_pattern = find_all_lower(self.code.all, self.content)
+        code_family = self.process_code_blocks(code_pattern)
         primary_data.update(code_family)
 
         # Process double parentheses
@@ -206,12 +207,12 @@ class LogseqFile:
         masked_blocks = {}
         masked_content = content
 
-        for match in PATTERNS.code["_all"].finditer(content):
+        for match in self.code.all.finditer(content):
             block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.code["inline_code_block"].finditer(masked_content):
+        for match in self.code.inline_code_block.finditer(masked_content):
             block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
@@ -274,19 +275,18 @@ class LogseqFile:
         except KeyError:
             return False
 
-    @staticmethod
-    def process_code_blocks(results: List[str]):
+    def process_code_blocks(self, results: List[str]):
         """Process code blocks and categorize them."""
         code_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.code["calc_block"].search(result):
+            if self.code.calc_block.search(result):
                 code_family["calc_blocks"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.code["multiline_code_lang"].search(result):
+            if self.code.multiline_code_lang.search(result):
                 code_family["multiline_code_langs"].append(result)
                 results.pop()
                 continue

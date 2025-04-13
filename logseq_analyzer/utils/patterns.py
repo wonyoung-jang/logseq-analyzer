@@ -26,53 +26,6 @@ class RegexPatterns:
             self.content = {}
             self.dblcurly = {}
             self.advcommand = {}
-            self.code = {}
-
-    def compile_re_code(self):
-        """
-        Compile regex patterns for code blocks and related syntax.
-
-        Overview of Patterns:
-            multiline_code_block: Matches multi-line code blocks enclosed in triple backticks.
-            calc_block: Matches calc blocks enclosed in triple backticks with "calc".
-            multiline_code_lang: Matches multi-line code blocks with a specific language defined.
-            inline_code_block: Matches inline code blocks enclosed in single backticks.
-        """
-        self.code = {
-            "_all": re.compile(
-                r"""
-                ```                 # Three backticks
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "calc_block": re.compile(
-                r"""
-                ```calc             # Three backticks followed by "calc"
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "multiline_code_lang": re.compile(
-                r"""
-                ```                 # Three backticks
-                \w+                 # One or more word characters
-                .*?                 # Any characters (non-greedy)
-                ```                 # Three backticks
-                """,
-                re.DOTALL | re.IGNORECASE | re.VERBOSE,
-            ),
-            "inline_code_block": re.compile(
-                r"""
-                `                   # One backtick
-                .+?                 # One or more characters (non-greedy)
-                `                   # One backtick
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-        }
 
     def compile_re_content(self):
         """
@@ -541,6 +494,72 @@ class RegexPatterns:
             ),
         }
         logging.info("Compiled regex patterns for content analysis.")
+
+
+class CodePatterns:
+    """
+    Class to hold regex patterns for code blocks in Logseq content.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the CodePatterns class."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.all = None
+            self.multiline_code_lang = None
+            self.calc_block = None
+            self.inline_code_block = None
+            self.initialize_patterns()
+
+    def initialize_patterns(self):
+        """
+        Compile and return a dictionary of regex patterns for code blocks.
+
+        Overview of Patterns:
+            all: Matches all code blocks.
+        """
+        self.all = re.compile(
+            r"""
+            ```                 # Three backticks
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
+        )
+        self.multiline_code_lang = re.compile(
+            r"""
+            ```                 # Three backticks
+            \w+                 # One or more word characters
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
+        )
+        self.calc_block = re.compile(
+            r"""
+            ```calc             # Three backticks followed by "calc"
+            .*?                 # Any characters (non-greedy)
+            ```                 # Three backticks
+            """,
+            re.DOTALL | re.IGNORECASE | re.VERBOSE,
+        )
+        self.inline_code_block = re.compile(
+            r"""
+            `                   # One backtick
+            .+?                 # One or more characters (non-greedy)
+            `                   # One backtick
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        logging.info("Compiled CodePatterns")
 
 
 class DoubleParenthesesPatterns:

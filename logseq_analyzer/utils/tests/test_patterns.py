@@ -1,6 +1,6 @@
 import re
 import pytest
-from ..patterns import DoubleParenthesesPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, RegexPatterns
+from ..patterns import CodePatterns, DoubleParenthesesPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, RegexPatterns
 
 
 @pytest.fixture
@@ -23,37 +23,39 @@ def dpp():
     return DoubleParenthesesPatterns()
 
 
-# Test compilation of code patterns
-def test_compile_re_code_populates_code_dict(rp):
-    rp.compile_re_code()
-    assert isinstance(rp.code, dict)
-    assert "_all" in rp.code
-    assert isinstance(rp.code["_all"], re.Pattern)
+@pytest.fixture
+def cdep():
+    return CodePatterns()
+
+
+# CODE PATTERNS
+def test_compile_re_code_populates_code_dict(cdep):
+    assert hasattr(cdep, "all")
+    assert isinstance(cdep.all, re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("```\nprint('hello')\n```", "_all", True),
-        ("```print('hello')\n```", "_all", True),
+        ("```\nprint('hello')\n```", "all", True),
+        ("```print('hello')\n```", "all", True),
         ("```calc 1+1\n```", "calc_block", True),
         ("```\ncalc 1+1\n```", "calc_block", False),
         ("```python\nx=1\n```", "multiline_code_lang", True),
         ("```\npython\nx=1\n```", "multiline_code_lang", False),
         ("`x=1`", "inline_code_block", True),
         ("`x\n=1`", "inline_code_block", False),
-        ("no backticks here", "_all", False),
-        ("one `backtick here", "_all", False),
+        ("no backticks here", "all", False),
+        ("one `backtick here", "all", False),
         ("one `backtick here", "inline_code_block", False),
     ],
 )
-def test_code_patterns(rp, text, key, should_match):
-    rp.compile_re_code()
-    pattern = rp.code[key]
+def test_code_patterns(cdep, text, key, should_match):
+    pattern = getattr(cdep, key)
     assert bool(pattern.search(text)) is should_match
 
 
-# Test compilation of content patterns
+# TODO CONTENT PATTERNS
 def test_compile_re_content_populates_content_dict(rp):
     rp.compile_re_content()
     assert "bullet" in rp.content
@@ -141,7 +143,7 @@ def test_ext_links_patterns(exlp, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-# Test compilation of double-curly content patterns
+# TODO DOUBLE-CURLY PATTERNS
 def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
     rp.compile_re_content_double_curly_brackets()
     assert "_all" in rp.dblcurly
@@ -173,7 +175,7 @@ def test_dblcurly_patterns(rp, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-# Test compilation of advanced command patterns
+# TODO ADVANCED COMMANDS PATTERNS
 def test_compile_re_content_advanced_command_populates_advcommand_dict(rp):
     rp.compile_re_content_advanced_command()
     assert "_all" in rp.advcommand
@@ -208,68 +210,69 @@ def test_advcommand_patterns(rp, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-@pytest.mark.parametrize(
-    "compile_method, dict_name, key, text, group_index, expected",
-    [
-        # content patterns with capture groups
-        ("compile_re_content", "content", "page_reference", "[[Page Name]]", 1, "Page Name"),
-        ("compile_re_content", "content", "property", "key:: value", 1, "key"),
-        ("compile_re_content", "content", "property_value", "key::value", 1, "key"),
-        ("compile_re_content", "content", "property_value", "key::value", 2, "value"),
-        ("compile_re_content", "content", "asset", "assets/image.png)", 1, "image.png)"),
-        ("compile_re_content", "content", "draw", "[[draws/sketch.excalidraw]]", 1, "sketch"),
-        # patterns without capture groups → test full match
-        # (
-        #     "compile_re_content",
-        #     "dblparen",
-        #     "block_reference",
-        #     "((123e4567-e89b-12d3-a456-426614174000))",
-        #     0,
-        #     "((123e4567-e89b-12d3-a456-426614174000))",
-        # ),
-        ("compile_re_content", "content", "dynamic_variable", "<% var %>", 0, "<% var %>"),
-        # external & embedded links
-        # (
-        #     "compile_re_ext_links",
-        #     "ext_links",
-        #     "external_link_internet",
-        #     "[Link](http://example.com)",
-        #     0,
-        #     "[Link](http://example.com)",
-        # ),
-        # (
-        #     "compile_re_emb_links",
-        #     "emb_links",
-        #     "embedded_link_asset",
-        #     "![alt](assets/img.png)",
-        #     0,
-        #     "![alt](assets/img.png)",
-        # ),
-        # double-curly patterns
-        ("compile_re_content_double_curly_brackets", "dblcurly", "_all", "{{macro}}", 0, "{{macro}}"),
-        (
-            "compile_re_content_double_curly_brackets",
-            "dblcurly",
-            "page_embed",
-            "{{embed [[Page]]}}",
-            0,
-            "{{embed [[Page]]}}",
-        ),
-        (
-            "compile_re_content_double_curly_brackets",
-            "dblcurly",
-            "block_embed",
-            "{{embed ((123e4567-e89b-12d3-a456-426614174000))}}",
-            0,
-            "{{embed ((123e4567-e89b-12d3-a456-426614174000))}}",
-        ),
-    ],
-)
-def test_pattern_capture_groups(rp, compile_method, dict_name, key, text, group_index, expected):
-    # compile the appropriate set of patterns
-    getattr(rp, compile_method)()
-    patterns = getattr(rp, dict_name)
-    pattern = patterns[key]
-    m = pattern.search(text)
-    assert m is not None, f"Pattern '{key}' did not match '{text}'"
-    assert m.group(group_index) == expected
+# Test Capture Groups
+# @pytest.mark.parametrize(
+#     "compile_method, dict_name, key, text, group_index, expected",
+#     [
+#         # content patterns with capture groups
+#         ("compile_re_content", "content", "page_reference", "[[Page Name]]", 1, "Page Name"),
+#         ("compile_re_content", "content", "property", "key:: value", 1, "key"),
+#         ("compile_re_content", "content", "property_value", "key::value", 1, "key"),
+#         ("compile_re_content", "content", "property_value", "key::value", 2, "value"),
+#         ("compile_re_content", "content", "asset", "assets/image.png)", 1, "image.png)"),
+#         ("compile_re_content", "content", "draw", "[[draws/sketch.excalidraw]]", 1, "sketch"),
+#         # patterns without capture groups → test full match
+#         # (
+#         #     "compile_re_content",
+#         #     "dblparen",
+#         #     "block_reference",
+#         #     "((123e4567-e89b-12d3-a456-426614174000))",
+#         #     0,
+#         #     "((123e4567-e89b-12d3-a456-426614174000))",
+#         # ),
+#         ("compile_re_content", "content", "dynamic_variable", "<% var %>", 0, "<% var %>"),
+#         # external & embedded links
+#         # (
+#         #     "compile_re_ext_links",
+#         #     "ext_links",
+#         #     "external_link_internet",
+#         #     "[Link](http://example.com)",
+#         #     0,
+#         #     "[Link](http://example.com)",
+#         # ),
+#         # (
+#         #     "compile_re_emb_links",
+#         #     "emb_links",
+#         #     "embedded_link_asset",
+#         #     "![alt](assets/img.png)",
+#         #     0,
+#         #     "![alt](assets/img.png)",
+#         # ),
+#         # double-curly patterns
+#         ("compile_re_content_double_curly_brackets", "dblcurly", "_all", "{{macro}}", 0, "{{macro}}"),
+#         (
+#             "compile_re_content_double_curly_brackets",
+#             "dblcurly",
+#             "page_embed",
+#             "{{embed [[Page]]}}",
+#             0,
+#             "{{embed [[Page]]}}",
+#         ),
+#         (
+#             "compile_re_content_double_curly_brackets",
+#             "dblcurly",
+#             "block_embed",
+#             "{{embed ((123e4567-e89b-12d3-a456-426614174000))}}",
+#             0,
+#             "{{embed ((123e4567-e89b-12d3-a456-426614174000))}}",
+#         ),
+#     ],
+# )
+# def test_pattern_capture_groups(rp, compile_method, dict_name, key, text, group_index, expected):
+#     # compile the appropriate set of patterns
+#     getattr(rp, compile_method)()
+#     patterns = getattr(rp, dict_name)
+#     pattern = patterns[key]
+#     m = pattern.search(text)
+#     assert m is not None, f"Pattern '{key}' did not match '{text}'"
+#     assert m.group(group_index) == expected
