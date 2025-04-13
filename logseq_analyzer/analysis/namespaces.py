@@ -20,7 +20,7 @@ import logging
 
 from .graph import LogseqGraph
 from ..logseq_file.name import LogseqFilename
-from ..utils.patterns import RegexPatterns
+from ..utils.patterns import ContentPatterns
 from ..config.analyzer_config import LogseqAnalyzerConfig
 
 
@@ -60,6 +60,7 @@ class LogseqNamespaces:
             self.conflicts_dangling = defaultdict(list)
             self.conflicts_parent_depth = {}
             self.conflicts_parent_unique = {}
+            self.content_patterns = ContentPatterns()
 
     def init_ns_parts(self):
         """
@@ -91,13 +92,12 @@ class LogseqNamespaces:
         """
         Analyze namespace queries.
         """
-        patterns = RegexPatterns()
         for _, file in self.hashed_files.items():
             got_ns_queries = file.data.get("namespace_queries")
             if not got_ns_queries:
                 continue
             for q in got_ns_queries:
-                page_refs = patterns.content["page_reference"].findall(q)
+                page_refs = self.content_patterns.page_reference.findall(q)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", q)
                     continue

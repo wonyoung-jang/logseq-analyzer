@@ -1,11 +1,14 @@
 import re
 import pytest
-from ..patterns import CodePatterns, DoubleParenthesesPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, RegexPatterns
-
-
-@pytest.fixture
-def rp():
-    return RegexPatterns()
+from ..patterns import (
+    AdvancedCommandPatterns,
+    CodePatterns,
+    ContentPatterns,
+    DoubleCurlyBracketsPatterns,
+    DoubleParenthesesPatterns,
+    EmbeddedLinksPatterns,
+    ExternalLinksPatterns,
+)
 
 
 @pytest.fixture
@@ -26,6 +29,21 @@ def dpp():
 @pytest.fixture
 def cdep():
     return CodePatterns()
+
+
+@pytest.fixture
+def conp():
+    return ContentPatterns()
+
+
+@pytest.fixture
+def dcbp():
+    return DoubleCurlyBracketsPatterns()
+
+
+@pytest.fixture
+def acp():
+    return AdvancedCommandPatterns()
 
 
 # CODE PATTERNS
@@ -55,11 +73,10 @@ def test_code_patterns(cdep, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-# TODO CONTENT PATTERNS
-def test_compile_re_content_populates_content_dict(rp):
-    rp.compile_re_content()
-    assert "bullet" in rp.content
-    assert isinstance(rp.content["bullet"], re.Pattern)
+# CONTENT PATTERNS
+def test_compile_re_content_populates_content_dict(conp):
+    assert hasattr(conp, "bullet")
+    assert isinstance(conp.bullet, re.Pattern)
 
 
 @pytest.mark.parametrize(
@@ -77,11 +94,11 @@ def test_compile_re_content_populates_content_dict(rp):
         ("- Q? #card", "flashcard", True),
         ("<% var %>", "dynamic_variable", True),
         ("no match here", "page_reference", False),
+        ("http://example.com", "any_link", True),
     ],
 )
-def test_content_patterns(rp, text, key, should_match):
-    rp.compile_re_content()
-    pattern = rp.content[key]
+def test_content_patterns(conp, text, key, should_match):
+    pattern = getattr(conp, key)
     assert bool(pattern.search(text)) is should_match
 
 
@@ -143,17 +160,16 @@ def test_ext_links_patterns(exlp, text, key, should_match):
     assert bool(pattern.search(text)) is should_match
 
 
-# TODO DOUBLE-CURLY PATTERNS
-def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
-    rp.compile_re_content_double_curly_brackets()
-    assert "_all" in rp.dblcurly
-    assert isinstance(rp.dblcurly["_all"], re.Pattern)
+# DOUBLE-CURLY PATTERNS
+def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(dcbp):
+    assert hasattr(dcbp, "all")
+    assert isinstance(dcbp.all, re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
-        ("{{macro}}", "_all", True),
+        ("{{macro}}", "all", True),
         ("{{embed [[Page]]}}", "embed", True),
         ("{{embed [[Page]]}}", "page_embed", True),
         ("{{embed ((123e4567-e89b-12d3-a456-426614174000))}}", "block_embed", True),
@@ -166,25 +182,24 @@ def test_compile_re_content_double_curly_brackets_populates_dblcurly_dict(rp):
         ("{{tweet foo}}", "embed_twitter_tweet", True),
         ("{{youtube-timestamp foo}}", "embed_youtube_timestamp", True),
         ("{{renderer foo}}", "renderer", True),
-        ("no curly here", "_all", False),
+        ("no curly here", "all", False),
     ],
 )
-def test_dblcurly_patterns(rp, text, key, should_match):
-    rp.compile_re_content_double_curly_brackets()
-    pattern = rp.dblcurly[key]
+def test_dblcurly_patterns(dcbp, text, key, should_match):
+    pattern = getattr(dcbp, key)
     assert bool(pattern.search(text)) is should_match
 
 
-# TODO ADVANCED COMMANDS PATTERNS
-def test_compile_re_content_advanced_command_populates_advcommand_dict(rp):
-    rp.compile_re_content_advanced_command()
-    assert "_all" in rp.advcommand
-    assert isinstance(rp.advcommand["_all"], re.Pattern)
+# ADVANCED COMMANDS PATTERNS
+def test_compile_re_content_advanced_command_populates_advcommand_dict(acp):
+    assert hasattr(acp, "all")
+    assert isinstance(acp.all, re.Pattern)
 
 
 @pytest.mark.parametrize(
     "text,key,should_match",
     [
+        ("#+BEGIN_something\ncontent\n#+END_something\n", "all", True),
         ("#+BEGIN_EXPORT\ncontent\n#+END_EXPORT\n", "export", True),
         ("#+BEGIN_EXPORT ascii\ntext\n#+END_EXPORT\n", "export_ascii", True),
         ("#+BEGIN_EXPORT latex\ntext\n#+END_EXPORT\n", "export_latex", True),
@@ -204,9 +219,8 @@ def test_compile_re_content_advanced_command_populates_advcommand_dict(rp):
         ("random text", "export", False),
     ],
 )
-def test_advcommand_patterns(rp, text, key, should_match):
-    rp.compile_re_content_advanced_command()
-    pattern = rp.advcommand[key]
+def test_advcommand_patterns(acp, text, key, should_match):
+    pattern = getattr(acp, key)
     assert bool(pattern.search(text)) is should_match
 
 

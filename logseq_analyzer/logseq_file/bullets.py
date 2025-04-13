@@ -6,9 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import logging
 
-from ..utils.patterns import RegexPatterns
-
-PATTERNS = RegexPatterns()
+from ..utils.patterns import ContentPatterns
 
 
 @dataclass
@@ -37,6 +35,7 @@ class LogseqBullets:
         self.bullet_count_empty = 0
         self.bullet_density = 0
         self.has_page_properties = False
+        self.content_patterns = ContentPatterns()
 
     def get_content(self):
         """Read the text content of a file."""
@@ -52,7 +51,7 @@ class LogseqBullets:
     def get_bullet_content(self):
         """Get all bullets split into a list"""
         if self.content:
-            self.all_bullets = PATTERNS.content["bullet"].split(self.content)
+            self.all_bullets = self.content_patterns.bullet.split(self.content)
 
     def get_primary_bullet(self):
         """Get the Logseq primary bullet if available"""

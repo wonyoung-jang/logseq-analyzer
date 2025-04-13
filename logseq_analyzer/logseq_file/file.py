@@ -9,13 +9,20 @@ import uuid
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import find_all_lower, process_aliases
-from ..utils.patterns import RegexPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, DoubleParenthesesPatterns, CodePatterns
+from ..utils.patterns import (
+    AdvancedCommandPatterns,
+    ContentPatterns,
+    DoubleCurlyBracketsPatterns,
+    EmbeddedLinksPatterns,
+    ExternalLinksPatterns,
+    DoubleParenthesesPatterns,
+    CodePatterns,
+)
 from ..utils.enums import Criteria
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
 
-PATTERNS = RegexPatterns()
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
 NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
 
@@ -49,6 +56,9 @@ class LogseqFile:
         self.external_links = ExternalLinksPatterns()
         self.double_parentheses = DoubleParenthesesPatterns()
         self.code = CodePatterns()
+        self.content_patterns = ContentPatterns()
+        self.double_curly_brackets = DoubleCurlyBracketsPatterns()
+        self.advanced_commands = AdvancedCommandPatterns()
 
     def __repr__(self) -> str:
         return f"LogseqFile(name={self.path.name}, path={self.file_path})"
@@ -102,20 +112,20 @@ class LogseqFile:
             # Code blocks
             Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(self.code.inline_code_block, self.content),
             # Captures from all content
-            Criteria.ASSETS.value: find_all_lower(PATTERNS.content["asset"], self.content),
-            Criteria.ANY_LINKS.value: find_all_lower(PATTERNS.content["any_link"], self.content),
+            Criteria.ASSETS.value: find_all_lower(self.content_patterns.asset, self.content),
+            Criteria.ANY_LINKS.value: find_all_lower(self.content_patterns.any_link, self.content),
             # Basic content
-            Criteria.BLOCKQUOTES.value: find_all_lower(PATTERNS.content["blockquote"], masked_content),
-            Criteria.DRAWS.value: find_all_lower(PATTERNS.content["draw"], masked_content),
-            Criteria.FLASHCARDS.value: find_all_lower(PATTERNS.content["flashcard"], masked_content),
-            Criteria.PAGE_REFERENCES.value: find_all_lower(PATTERNS.content["page_reference"], masked_content),
-            Criteria.TAGGED_BACKLINKS.value: find_all_lower(PATTERNS.content["tagged_backlink"], masked_content),
-            Criteria.TAGS.value: find_all_lower(PATTERNS.content["tag"], masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: find_all_lower(PATTERNS.content["dynamic_variable"], masked_content),
+            Criteria.BLOCKQUOTES.value: find_all_lower(self.content_patterns.blockquote, masked_content),
+            Criteria.DRAWS.value: find_all_lower(self.content_patterns.draw, masked_content),
+            Criteria.FLASHCARDS.value: find_all_lower(self.content_patterns.flashcard, masked_content),
+            Criteria.PAGE_REFERENCES.value: find_all_lower(self.content_patterns.page_reference, masked_content),
+            Criteria.TAGGED_BACKLINKS.value: find_all_lower(self.content_patterns.tagged_backlink, masked_content),
+            Criteria.TAGS.value: find_all_lower(self.content_patterns.tag, masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: find_all_lower(self.content_patterns.dynamic_variable, masked_content),
         }
 
         # Process aliases and property:values
-        property_value_all = PATTERNS.content["property_value"].findall(self.content)
+        property_value_all = self.content_patterns.property_value.findall(self.content)
         properties_values = dict(property_value_all)
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
@@ -123,9 +133,9 @@ class LogseqFile:
         # Process properties
         page_properties = []
         if self.bullets.has_page_properties:
-            page_properties = find_all_lower(PATTERNS.content["property"], self.primary_bullet)
+            page_properties = find_all_lower(self.content_patterns.property, self.primary_bullet)
             self.content = "\n".join(self.content_bullets)
-        block_properties = find_all_lower(PATTERNS.content["property"], self.content)
+        block_properties = find_all_lower(self.content_patterns.property, self.content)
         page_props = LogseqFile.split_builtin_user_properties(page_properties)
         block_props = LogseqFile.split_builtin_user_properties(block_properties)
 
@@ -150,13 +160,13 @@ class LogseqFile:
         primary_data.update(embedded_links_family)
 
         # Process double curly braces
-        double_curly = find_all_lower(PATTERNS.dblcurly["_all"], self.content)
-        double_curly_family = LogseqFile.process_double_curly_braces(double_curly)
+        double_curly = find_all_lower(self.double_curly_brackets.all, self.content)
+        double_curly_family = self.process_double_curly_braces(double_curly)
         primary_data.update(double_curly_family)
 
         # Process advanced commands
-        advanced_commands = find_all_lower(PATTERNS.advcommand["_all"], self.content)
-        advanced_command_family = LogseqFile.process_advanced_commands(advanced_commands)
+        advanced_commands = find_all_lower(self.advanced_commands.all, self.content)
+        advanced_command_family = self.process_advanced_commands(advanced_commands)
         primary_data.update(advanced_command_family)
 
         primary_data.update(
@@ -217,12 +227,12 @@ class LogseqFile:
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.advcommand["_all"].finditer(masked_content):
+        for match in self.advanced_commands.all.finditer(masked_content):
             block_id = f"__ADV_COMMAND_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.dblcurly["_all"].finditer(masked_content):
+        for match in self.double_curly_brackets.all.finditer(masked_content):
             block_id = f"__DOUBLE_CURLY_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
@@ -242,7 +252,7 @@ class LogseqFile:
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.content["any_link"].finditer(masked_content):
+        for match in self.content_patterns.any_link.finditer(masked_content):
             block_id = f"__ANY_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
@@ -352,128 +362,126 @@ class LogseqFile:
         }
         return properties_dict
 
-    @staticmethod
-    def process_double_curly_braces(results: List[str]):
+    def process_double_curly_braces(self, results: List[str]):
         """Process double curly braces and extract relevant data."""
         double_curly_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.dblcurly["embed"].search(result):
+            if self.double_curly_brackets.embed.search(result):
                 double_curly_family["embeds"].append(result)
                 results.pop()
-                if PATTERNS.dblcurly["page_embed"].search(result):
+                if self.double_curly_brackets.page_embed.search(result):
                     double_curly_family["page_embeds"].append(result)
                     double_curly_family["embeds"].remove(result)
                     continue
-                if PATTERNS.dblcurly["block_embed"].search(result):
+                if self.double_curly_brackets.block_embed.search(result):
                     double_curly_family["block_embeds"].append(result)
                     double_curly_family["embeds"].remove(result)
                     continue
-            if PATTERNS.dblcurly["namespace_query"].search(result):
+            if self.double_curly_brackets.namespace_query.search(result):
                 double_curly_family["namespace_queries"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["card"].search(result):
+            if self.double_curly_brackets.card.search(result):
                 double_curly_family["cards"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["cloze"].search(result):
+            if self.double_curly_brackets.cloze.search(result):
                 double_curly_family["clozes"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["simple_query"].search(result):
+            if self.double_curly_brackets.simple_query.search(result):
                 double_curly_family["simple_queries"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["query_function"].search(result):
+            if self.double_curly_brackets.query_function.search(result):
                 double_curly_family["query_functions"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_video_url"].search(result):
+            if self.double_curly_brackets.embed_video_url.search(result):
                 double_curly_family["embed_video_urls"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_twitter_tweet"].search(result):
+            if self.double_curly_brackets.embed_twitter_tweet.search(result):
                 double_curly_family["embed_twitter_tweets"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["embed_youtube_timestamp"].search(result):
+            if self.double_curly_brackets.embed_youtube_timestamp.search(result):
                 double_curly_family["embed_youtube_timestamps"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.dblcurly["renderer"].search(result):
+            if self.double_curly_brackets.renderer.search(result):
                 double_curly_family["renderers"].append(result)
                 results.pop()
                 continue
         double_curly_family["macros"] = results
         return double_curly_family
 
-    @staticmethod
-    def process_advanced_commands(results: List[str]):
+    def process_advanced_commands(self, results: List[str]):
         """Process advanced commands and extract relevant data."""
         advanced_command_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.advcommand["export"].search(result):
+            if self.advanced_commands.export.search(result):
                 advanced_command_family["advanced_commands_export"].append(result)
                 results.pop()
-                if PATTERNS.advcommand["export_ascii"].search(result):
+                if self.advanced_commands.export_ascii.search(result):
                     advanced_command_family["advanced_commands_export_ascii"].append(result)
                     advanced_command_family["advanced_commands_export"].pop()
                     continue
-                if PATTERNS.advcommand["export_latex"].search(result):
+                if self.advanced_commands.export_latex.search(result):
                     advanced_command_family["advanced_commands_export_latex"].append(result)
                     advanced_command_family["advanced_commands_export"].pop()
                     continue
-            if PATTERNS.advcommand["caution"].search(result):
+            if self.advanced_commands.caution.search(result):
                 advanced_command_family["advanced_commands_caution"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["center"].search(result):
+            if self.advanced_commands.center.search(result):
                 advanced_command_family["advanced_commands_center"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["comment"].search(result):
+            if self.advanced_commands.comment.search(result):
                 advanced_command_family["advanced_commands_comment"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["example"].search(result):
+            if self.advanced_commands.example.search(result):
                 advanced_command_family["advanced_commands_example"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["important"].search(result):
+            if self.advanced_commands.important.search(result):
                 advanced_command_family["advanced_commands_important"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["note"].search(result):
+            if self.advanced_commands.note.search(result):
                 advanced_command_family["advanced_commands_note"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["pinned"].search(result):
+            if self.advanced_commands.pinned.search(result):
                 advanced_command_family["advanced_commands_pinned"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["query"].search(result):
+            if self.advanced_commands.query.search(result):
                 advanced_command_family["advanced_commands_query"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["quote"].search(result):
+            if self.advanced_commands.quote.search(result):
                 advanced_command_family["advanced_commands_quote"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["tip"].search(result):
+            if self.advanced_commands.tip.search(result):
                 advanced_command_family["advanced_commands_tip"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["verse"].search(result):
+            if self.advanced_commands.verse.search(result):
                 advanced_command_family["advanced_commands_verse"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.advcommand["warning"].search(result):
+            if self.advanced_commands.warning.search(result):
                 advanced_command_family["advanced_commands_warning"].append(result)
                 results.pop()
                 continue

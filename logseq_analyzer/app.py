@@ -18,7 +18,6 @@ from .io.file_mover import LogseqFileMover
 from .io.path_validator import LogseqAnalyzerPathValidator
 from .io.report_writer import ReportWriter
 from .utils.enums import Phase, Output
-from .utils.patterns import RegexPatterns
 
 
 class GUIInstanceDummy:
@@ -77,10 +76,6 @@ def run_app(**kwargs):
     analyzer_config.set_logseq_config_edn_data(graph_config.ls_config)
     paths.validate_target_paths()
     # --- #
-    patterns = RegexPatterns()
-    patterns.compile_re_content()
-    patterns.compile_re_content_double_curly_brackets()
-    patterns.compile_re_content_advanced_command()
     analyzer_config.get_logseq_target_dirs()
     analyzer_config.get_built_in_properties()
     analyzer_config.get_datetime_token_map()
