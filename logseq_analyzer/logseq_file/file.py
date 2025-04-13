@@ -9,7 +9,7 @@ import uuid
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import find_all_lower, process_aliases
-from ..utils.patterns import RegexPatterns
+from ..utils.patterns import RegexPatterns, EmbeddedLinksPatterns, ExternalLinksPatterns, DoubleParenthesesPatterns
 from ..utils.enums import Criteria
 from .bullets import LogseqBullets
 from .name import LogseqFilename
@@ -45,6 +45,9 @@ class LogseqFile:
         self.is_backlinked_by_ns_only = False
         self.node_type = "other"
         self.file_type = "other"
+        self.embedded_links = EmbeddedLinksPatterns()
+        self.external_links = ExternalLinksPatterns()
+        self.double_parentheses = DoubleParenthesesPatterns()
 
     def __repr__(self) -> str:
         return f"LogseqFile(name={self.path.name}, path={self.file_path})"
@@ -131,18 +134,18 @@ class LogseqFile:
         primary_data.update(code_family)
 
         # Process double parentheses
-        double_paren_pattern = find_all_lower(PATTERNS.dblparen["_all"], self.content)
-        double_paren_family = LogseqFile.process_double_parens(double_paren_pattern)
+        double_paren_pattern = find_all_lower(self.double_parentheses.all, self.content)
+        double_paren_family = self.process_double_parens(double_paren_pattern)
         primary_data.update(double_paren_family)
 
         # Process external links
-        external_links = find_all_lower(PATTERNS.ext_links["_all"], self.content)
-        external_links_family = LogseqFile.process_external_links(external_links)
+        external_links = find_all_lower(self.external_links.all, self.content)
+        external_links_family = self.process_external_links(external_links)
         primary_data.update(external_links_family)
 
         # Process embedded links
-        embedded_links = find_all_lower(PATTERNS.emb_links["_all"], self.content)
-        embedded_links_family = LogseqFile.process_embedded_links(embedded_links)
+        embedded_links = find_all_lower(self.embedded_links.all, self.content)
+        embedded_links_family = self.process_embedded_links(embedded_links)
         primary_data.update(embedded_links_family)
 
         # Process double curly braces
@@ -223,17 +226,17 @@ class LogseqFile:
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.emb_links["_all"].finditer(masked_content):
+        for match in self.embedded_links.all.finditer(masked_content):
             block_id = f"__EMB_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.ext_links["_all"].finditer(masked_content):
+        for match in self.external_links.all.finditer(masked_content):
             block_id = f"__EXT_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in PATTERNS.dblparen["_all"].finditer(masked_content):
+        for match in self.double_parentheses.all.finditer(masked_content):
             block_id = f"__DBLPAREN_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
@@ -290,53 +293,50 @@ class LogseqFile:
         code_family["multiline_code_blocks"] = results
         return code_family
 
-    @staticmethod
-    def process_double_parens(results: List[str]):
+    def process_double_parens(self, results: List[str]):
         """Process double parentheses and categorize them."""
         double_paren_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.dblparen["block_reference"].search(result):
+            if self.double_parentheses.block_reference.search(result):
                 double_paren_family["block_references"].append(result)
                 results.pop()
                 continue
         double_paren_family["references_general"] = results
         return double_paren_family
 
-    @staticmethod
-    def process_external_links(results: List[str]):
+    def process_external_links(self, results: List[str]):
         """Process external links and categorize them."""
         external_links_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.ext_links["external_link_internet"].search(result):
+            if self.external_links.internet.search(result):
                 external_links_family["external_links_internet"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.ext_links["external_link_alias"].search(result):
+            if self.external_links.alias.search(result):
                 external_links_family["external_links_alias"].append(result)
                 results.pop()
                 continue
         external_links_family["external_links_other"] = results
         return external_links_family
 
-    @staticmethod
-    def process_embedded_links(results: List[str]):
+    def process_embedded_links(self, results: List[str]):
         """Process embedded links and categorize them."""
         embedded_links_family = defaultdict(list)
         if not results:
             return {}
         for _ in range(len(results)):
             result = results[-1]
-            if PATTERNS.emb_links["embedded_link_internet"].search(result):
+            if self.embedded_links.internet.search(result):
                 embedded_links_family["embedded_links_internet"].append(result)
                 results.pop()
                 continue
-            if PATTERNS.emb_links["embedded_link_asset"].search(result):
+            if self.embedded_links.asset.search(result):
                 embedded_links_family["embedded_links_asset"].append(result)
                 results.pop()
                 continue

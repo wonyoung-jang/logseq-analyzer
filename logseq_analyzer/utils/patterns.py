@@ -23,47 +23,10 @@ class RegexPatterns:
         """Initialize the RegexPatterns class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.dblparen = {}
             self.content = {}
-            self.ext_links = {}
-            self.emb_links = {}
             self.dblcurly = {}
             self.advcommand = {}
             self.code = {}
-
-    def compile_re_dblparen(self):
-        """
-        Compile regex patterns for double parentheses.
-
-        Overview of Patterns:
-            reference: Matches block references.
-                block_reference: Matches UUID block references.
-        """
-        self.dblparen = {
-            "_all": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                .*?                 # Any characters (non-greedy)
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "block_reference": re.compile(
-                r"""
-                (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-                \(\(                # Opening double parentheses
-                [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-                [0-9a-f]{12}        # 12 hex digits
-                \)\)                # Closing double parentheses
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-        }
-        logging.info("Compiled regex patterns for double parentheses.")
 
     def compile_re_code(self):
         """
@@ -253,107 +216,6 @@ class RegexPatterns:
             ),
         }
         logging.info("Compiled regex patterns for content analysis.")
-
-    def compile_re_emb_links(self):
-        """
-        Compile and return a dictionary of regex patterns for embedded links.
-
-        Overview of Patterns:
-            embedded_link: Matches embedded content links.
-                embedded_link_internet: Matches embedded internet content.
-                embedded_link_asset: Matches embedded asset references.
-        """
-        self.emb_links = {
-            "_all": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                .*?                 # Any characters (non-greedy)
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_internet": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                http.*?             # "http" followed by any characters (non-greedy)
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "embedded_link_asset": re.compile(
-                r"""
-                \!                  # Exclamation mark
-                \[                  # Opening bracket
-                .*?                 # Any characters (non-greedy)
-                \]                  # Closing bracket
-                \(                  # Opening parenthesis
-                .*?                 # Any characters (non-greedy)
-                assets/             # Literal "assets/"
-                .*?                 # Any characters (non-greedy)
-                \)                  # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-        }
-
-    def compile_re_ext_links(self):
-        """
-        Compile and return a dictionary of regex patterns for external links.
-
-        Overview of Patterns:
-            external_link: Matches markdown-style external links.
-                external_link_internet: Matches external links to websites (http/https).
-                external_link_alias: Matches aliased external links (e.g., nested links).
-        """
-        self.ext_links = {
-            "_all": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                .*?                # Any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_internet": re.compile(
-                r"""
-                (?<!\!)            # Negative lookbehind: not preceded by !
-                \[                 # Opening bracket
-                .*?                # Any characters (non-greedy)
-                \]                 # Closing bracket
-                \(                 # Opening parenthesis
-                http.*?            # "http" followed by any characters (non-greedy)
-                \)                 # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-            "external_link_alias": re.compile(
-                r"""
-                (?<!\!)                # Negative lookbehind: not preceded by !
-                \[                     # Opening bracket
-                .*?                    # Any characters (non-greedy)
-                \]                     # Closing bracket
-                \(                     # Opening parenthesis
-                [\[\[|\(\(]            # Either [[ or ((
-                .*?                    # Any characters (non-greedy)
-                [\]\]|\)\)]            # Either ]] or ))
-                .*?                    # Any characters (non-greedy)
-                \)                     # Closing parenthesis
-                """,
-                re.IGNORECASE | re.VERBOSE,
-            ),
-        }
 
     def compile_re_content_double_curly_brackets(self):
         """
@@ -681,4 +543,200 @@ class RegexPatterns:
         logging.info("Compiled regex patterns for content analysis.")
 
 
-PATTERNS = RegexPatterns()
+class DoubleParenthesesPatterns:
+    """
+    Class to hold regex patterns for double parentheses in Logseq content.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the DoubleParenthesesPatterns class."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.all = None
+            self.block_reference = None
+            self.initialize_patterns()
+
+    def initialize_patterns(self):
+        """
+        Compile and return a dictionary of regex patterns for double parentheses.
+
+        Overview of Patterns:
+            all: Matches ((...)).
+                block_reference: Matches UUID block references.
+        """
+        self.all = re.compile(
+            r"""
+            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+            \(\(                # Opening double parentheses
+            .*?                 # Any characters (non-greedy)
+            \)\)                # Closing double parentheses
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        self.block_reference = re.compile(
+            r"""
+            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+            \(\(                # Opening double parentheses
+            [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+            [0-9a-f]{12}        # 12 hex digits
+            \)\)                # Closing double parentheses
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        logging.info("Compiled DoubleParenthesesPatterns")
+
+
+class EmbeddedLinksPatterns:
+    """
+    Class to hold regex patterns for embedded links in Logseq content.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the EmbeddedLinksPatterns class."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.all = None
+            self.internet = None
+            self.asset = None
+            self.initialize_patterns()
+
+    def initialize_patterns(self):
+        """
+        Compile and return a dictionary of regex patterns for embedded links.
+
+        Overview of Patterns:
+            embedded_link: Matches embedded content links.
+                embedded_link_internet: Matches embedded internet content.
+                embedded_link_asset: Matches embedded asset references.
+        """
+        self.all = re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            .*?                 # Any characters (non-greedy)
+            \)                  # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        self.internet = re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            http.*?             # "http" followed by any characters (non-greedy)
+            \)                  # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        self.asset = re.compile(
+            r"""
+            \!                  # Exclamation mark
+            \[                  # Opening bracket
+            .*?                 # Any characters (non-greedy)
+            \]                  # Closing bracket
+            \(                  # Opening parenthesis
+            .*?                 # Any characters (non-greedy)
+            assets/             # Literal "assets/"
+            .*?                 # Any characters (non-greedy)
+            \)                  # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        logging.info("Compiled EmbeddedLinksPatterns")
+
+
+class ExternalLinksPatterns:
+    """
+    Class to hold regex patterns for external links in Logseq content.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the ExternalLinksPatterns class."""
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.all = None
+            self.internet = None
+            self.alias = None
+            self.initialize_patterns()
+
+    def initialize_patterns(self):
+        """
+        Compile and return a dictionary of regex patterns for external links.
+
+        Overview of Patterns:
+            external_link: Matches markdown-style external links.
+                external_link_internet: Matches external links to websites (http/https).
+                external_link_alias: Matches aliased external links (e.g., nested links).
+        """
+        self.all = re.compile(
+            r"""
+            (?<!\!)            # Negative lookbehind: not preceded by !
+            \[                 # Opening bracket
+            .*?                # Any characters (non-greedy)
+            \]                 # Closing bracket
+            \(                 # Opening parenthesis
+            .*?                # Any characters (non-greedy)
+            \)                 # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        self.internet = re.compile(
+            r"""
+            (?<!\!)            # Negative lookbehind: not preceded by !
+            \[                 # Opening bracket
+            .*?                # Any characters (non-greedy)
+            \]                 # Closing bracket
+            \(                 # Opening parenthesis
+            http.*?            # "http" followed by any characters (non-greedy)
+            \)                 # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        self.alias = re.compile(
+            r"""
+            (?<!\!)                # Negative lookbehind: not preceded by !
+            \[                     # Opening bracket
+            .*?                    # Any characters (non-greedy)
+            \]                     # Closing bracket
+            \(                     # Opening parenthesis
+            [\[\[|\(\(]            # Either [[ or ((
+            .*?                    # Any characters (non-greedy)
+            [\]\]|\)\)]            # Either ]] or ))
+            .*?                    # Any characters (non-greedy)
+            \)                     # Closing parenthesis
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        logging.info("Compiled ExternalLinksPatterns")
