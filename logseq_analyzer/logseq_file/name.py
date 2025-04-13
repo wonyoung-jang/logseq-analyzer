@@ -19,7 +19,6 @@ class LogseqFilename:
     """Class for processing Logseq filenames based on their parent directory."""
 
     file_path: Path
-
     original_name: str = None
     name: str = None
     parent: str = None
@@ -56,7 +55,7 @@ class LogseqFilename:
 
         self.is_namespace = NS_SEP in self.name
 
-    def process_logseq_journal_key(self) -> str:
+    def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
         try:
             date_object = datetime.strptime(self.name, ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"])
@@ -121,7 +120,7 @@ class LogseqFilename:
                 if value:
                     setattr(self, key, value)
 
-    def determine_file_type(self) -> str:
+    def determine_file_type(self):
         """
         Helper function to determine the file type based on the directory structure.
         """

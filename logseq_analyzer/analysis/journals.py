@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import logging
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from .summary_files import LogseqFileSummarizer
 from .graph import LogseqGraph
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
@@ -31,9 +32,10 @@ class LogseqJournals:
         """
         if not hasattr(self, "_initialized"):
             graph = LogseqGraph()
+            summary_files = LogseqFileSummarizer()
             self._initialized = True
             self.dangling_links = graph.dangling_links
-            self.journal_keys = graph.summary_file_subsets["___is_filetype_journal"]
+            self.journal_keys = summary_files.subsets["filetype_journal"]
             self.dangling_journals = []
             self.processed_keys = []
             self.complete_timeline = []

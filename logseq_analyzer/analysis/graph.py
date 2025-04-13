@@ -3,10 +3,10 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Dict
 
 from ..io.cache import Cache
-from ..logseq_file.file import LogseqFile, LogseqFileHash
+from ..logseq_file.file import LogseqFile
 
 
 class LogseqGraph:
@@ -35,7 +35,7 @@ class LogseqGraph:
             self.summary_data_subsets = {}
             self.assets_backlinked = []
             self.assets_not_backlinked = []
-            self.hashed_files: Dict[LogseqFileHash, LogseqFile] = {}
+            self.hashed_files: Dict[int, LogseqFile] = {}
             self.names_to_hashes = defaultdict(list)
             self.masked_blocks = {}
 
@@ -43,11 +43,14 @@ class LogseqGraph:
         """Process all files in the Logseq graph folder."""
         for file_path in self.cache.iter_modified_files():
             file = LogseqFile(file_path)
-            self.data[hash(file)] = file.__dict__
-            self.content_bullets[hash(file)] = file.content_bullets
-            self.hashed_files[hash(file)] = file
-            self.names_to_hashes[file.path.name].append(hash(file))
-            self.masked_blocks[hash(file)] = file.masked_blocks
+            file.init_file_data()
+            file.process_content_data()
+            file_hash = hash(file)
+            self.data[file_hash] = file.__dict__
+            self.content_bullets[file_hash] = file.content_bullets
+            self.hashed_files[file_hash] = file
+            self.names_to_hashes[file.path.name].append(file_hash)
+            self.masked_blocks[file_hash] = file.masked_blocks
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
@@ -160,49 +163,6 @@ class LogseqGraph:
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
 
-    def generate_summary_file_subsets(self):
-        """Generate summary subsets for the Logseq Analyzer."""
-        summary_categories = {
-            # Process general categories
-            "___is_backlinked": {"is_backlinked": True},
-            "___is_backlinked_by_ns_only": {"is_backlinked_by_ns_only": True},
-            "___has_content": {"has_content": True},
-            "___has_backlinks": {"has_backlinks": True},
-            # Process file types
-            "___is_filetype_asset": {"file_type": "asset"},
-            "___is_filetype_draw": {"file_type": "draw"},
-            "___is_filetype_journal": {"file_type": "journal"},
-            "___is_filetype_page": {"file_type": "page"},
-            "___is_filetype_whiteboard": {"file_type": "whiteboard"},
-            "___is_filetype_other": {"file_type": "other"},
-            # Process nodes
-            "___is_node_orphan_true": {"node_type": "orphan_true"},
-            "___is_node_orphan_graph": {"node_type": "orphan_graph"},
-            "___is_node_orphan_namespace": {"node_type": "orphan_namespace"},
-            "___is_node_orphan_namespace_true": {"node_type": "orphan_namespace_true"},
-            "___is_node_root": {"node_type": "root"},
-            "___is_node_leaf": {"node_type": "leaf"},
-            "___is_node_branch": {"node_type": "branch"},
-            "___is_node_other": {"node_type": "other"},
-        }
-        for output_name, criteria in summary_categories.items():
-            self.summary_file_subsets[output_name] = self.list_files_with_keys_and_values(**criteria)
-
-        # Process file extensions
-        file_extensions = set()
-        for _, file in self.hashed_files.items():
-            ext = file.path.suffix
-            if ext in file_extensions:
-                continue
-            file_extensions.add(ext)
-
-        file_ext_dict = {}
-        for ext in file_extensions:
-            output_name = f"_all_{ext}s"
-            criteria = {"suffix": ext}
-            file_ext_dict[output_name] = self.list_files_with_keys_and_values(**criteria)
-        self.summary_file_subsets["____file_extensions_dict"] = file_ext_dict
-
     def list_files_with_keys_and_values(self, **criteria) -> list:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         result = []
@@ -211,97 +171,14 @@ class LogseqGraph:
                 result.append(file.path.name)
         return result
 
-    def generate_summary_data_subsets(self):
-        """Generate summary subsets for content data in the Logseq graph."""
-        content_subset_tags_nodes = [
-            "advanced_commands_caution",
-            "advanced_commands_center",
-            "advanced_commands_comment",
-            "advanced_commands_example",
-            "advanced_commands_export_ascii",
-            "advanced_commands_export_latex",
-            "advanced_commands_export",
-            "advanced_commands_important",
-            "advanced_commands_note",
-            "advanced_commands_pinned",
-            "advanced_commands_query",
-            "advanced_commands_quote",
-            "advanced_commands_tip",
-            "advanced_commands_verse",
-            "advanced_commands_warning",
-            "advanced_commands",
-            "aliases",
-            "any_links",
-            "assets",
-            "block_embeds",
-            "block_references",
-            "blockquotes",
-            "calc_blocks",
-            "cards",
-            "clozes",
-            "draws",
-            "dynamic_variables",
-            "embed_twitter_tweets",
-            "embed_video_urls",
-            "embed_youtube_timestamps",
-            "embedded_links_asset",
-            "embedded_links_internet",
-            "embedded_links_other",
-            "embeds",
-            "external_links_alias",
-            "external_links_internet",
-            "external_links_other",
-            "flashcards",
-            "inline_code_blocks",
-            "macros",
-            "multiline_code_blocks",
-            "multiline_code_langs",
-            "namespace_queries",
-            "page_embeds",
-            "page_references",
-            "properties_block_builtin",
-            "properties_block_user",
-            "properties_page_builtin",
-            "properties_page_user",
-            "properties_values",
-            "query_functions",
-            "references_general",
-            "renderers",
-            "simple_queries",
-            "tagged_backlinks",
-            "tags",
-        ]
-        for criteria in content_subset_tags_nodes:
-            self.summary_data_subsets[f"content_{criteria}"] = self.extract_summary_subset_content(criteria)
-
-    def extract_summary_subset_content(self, criteria) -> Dict[str, Any]:
-        """
-        Extract a subset of data based on a specific criteria.
-        Asks: What content matches the criteria? And where is it found? How many times?
-
-        Args:
-            criteria (str): The criteria for extraction.
-
-        Returns:
-            Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
-        """
-        subset_counter = {}
-        for _, file in self.hashed_files.items():
-            if file.data.get(criteria):
-                for value in file.data[criteria]:
-                    subset_counter.setdefault(value, {})
-                    subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                    subset_counter[value].setdefault("found_in", []).append(file.path.name)
-        return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
-
-    def handle_assets(self):
+    def handle_assets(self, asset_files: list):
         """Handle assets for the Logseq Analyzer."""
         for hash_, file in self.hashed_files.items():
             emb_link_asset = file.data.get("embedded_links_asset")
             asset_captured = file.data.get("assets")
             if not (emb_link_asset or asset_captured):
                 continue
-            for asset in self.summary_file_subsets.get("___is_filetype_asset", []):
+            for asset in asset_files:
                 asset_hash = self.names_to_hashes.get(asset)
                 if not asset_hash:
                     continue

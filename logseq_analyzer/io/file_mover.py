@@ -10,8 +10,8 @@ import shutil
 from ..analysis.graph import LogseqGraph
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.arguments import LogseqAnalyzerArguments
+from ..io.path_validator import LogseqAnalyzerPathValidator
 from ..utils.helpers import get_or_create_file_or_dir
-from .filesystem import File
 
 
 class LogseqFileMover:
@@ -33,11 +33,11 @@ class LogseqFileMover:
         """
         if not hasattr(self, "_initialized"):
             self._initialized = True
+            self._paths = LogseqAnalyzerPathValidator()
             self.analyzer_config = LogseqAnalyzerConfig()
             self.graph = LogseqGraph()
             self.moved_files = {}
-            self.delete = File(self.analyzer_config.config["CONST"]["TO_DELETE_DIR"])
-            self.delete.get_or_create_dir()
+            self.delete = self._paths.dir_delete.path
 
     def handle_move_files(self) -> List[str]:
         """
@@ -76,7 +76,7 @@ class LogseqFileMover:
             logging.error("No asset directory found in configuration.")
             return
 
-        to_delete_asset_subdir = get_or_create_file_or_dir(self.delete.path / asset_dir)
+        to_delete_asset_subdir = get_or_create_file_or_dir(self.delete / asset_dir)
         for name in self.graph.assets_not_backlinked:
             file_path = Path(self.graph.data[name]["file_path"])
             new_path = to_delete_asset_subdir / file_path.name
@@ -90,12 +90,12 @@ class LogseqFileMover:
         """
         Move all folders from one directory to another.
         """
-        for folder in [input_dir, self.delete.path]:
+        for folder in [input_dir, self.delete]:
             if not folder.exists():
                 return [], []
 
         if target_subdir:
-            self.delete.path = get_or_create_file_or_dir(self.delete.path / target_subdir)
+            self.delete = get_or_create_file_or_dir(self.delete / target_subdir)
 
         moved_content = []
         moved_content_names = []
@@ -103,12 +103,12 @@ class LogseqFileMover:
         for root, dirs, files in Path.walk(input_dir):
             for directory in dirs:
                 current_dir_path = Path(root) / directory
-                moved_dir_path = self.delete.path / directory
+                moved_dir_path = self.delete / directory
                 moved_content.append((current_dir_path, moved_dir_path))
                 moved_content_names.append(directory)
             for file in files:
                 current_file_path = Path(root) / file
-                moved_file_path = self.delete.path / file
+                moved_file_path = self.delete / file
                 moved_content.append((current_file_path, moved_file_path))
                 moved_content_names.append(file)
 

@@ -3,7 +3,6 @@ LogseqFile class to process Logseq files.
 """
 
 from collections import defaultdict
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
@@ -45,9 +44,6 @@ class LogseqFile:
         self.is_backlinked_by_ns_only = False
         self.node_type = "other"
         self.file_type = "other"
-        self.init_file_data()
-        self.hash = LogseqFileHash(self)
-        self.process_content_data()
 
     def __repr__(self) -> str:
         return f"LogseqFile(name={self.path.name}, path={self.file_path})"
@@ -482,36 +478,3 @@ class LogseqFile:
                 continue
         advanced_command_family["advanced_commands"] = results
         return advanced_command_family
-
-
-@dataclass
-class LogseqFileHash:
-    """A class to represent a Logseq file hash."""
-
-    file: LogseqFile
-
-    def __repr__(self):
-        """
-        Return the string representation of the LogseqFileHash object.
-        """
-        return f"LogseqFileHash(key={self.__key()}, hash={self.__hash__()})"
-
-    def __key(self):
-        """
-        Return the key for the LogseqFileHash object.
-        """
-        return self.file.path.parts
-
-    def __hash__(self):
-        """
-        Return the hash of the LogseqFileHash object.
-        """
-        return hash(self.__key())
-
-    def __eq__(self, other):
-        """
-        Check if two LogseqFileHash objects are equal.
-        """
-        if isinstance(other, LogseqFileHash):
-            return self.__key() == other.__key()
-        return NotImplemented

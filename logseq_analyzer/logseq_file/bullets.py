@@ -16,6 +16,15 @@ class LogseqBullets:
     """LogseqBullets class"""
 
     file_path: Path
+    content: str = None
+    primary_bullet: str = None
+    all_bullets: list = None
+    content_bullets: list = None
+    char_count: int = None
+    bullet_count: int = None
+    bullet_count_empty: int = None
+    bullet_density: float = None
+    has_page_properties: bool = None
 
     def __post_init__(self):
         """Initialize the LogseqBullets class"""

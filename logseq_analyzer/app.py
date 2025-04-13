@@ -6,6 +6,8 @@ from pathlib import Path
 import logging
 
 from .analysis.graph import LogseqGraph
+from .analysis.summary_files import LogseqFileSummarizer
+from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
 from .config.analyzer_config import LogseqAnalyzerConfig
@@ -101,9 +103,11 @@ def run_app(**kwargs):
     progress(50)
     graph.process_summary_data()
     progress(60)
-    graph.generate_summary_file_subsets()
+    summary_files = LogseqFileSummarizer()
+    summary_files.generate_summary()
     progress(70)
-    graph.generate_summary_data_subsets()
+    summary_content = LogseqContentSummarizer()
+    summary_content.generate_summary()
     progress(80)
     graph_namespaces = LogseqNamespaces()
     graph_namespaces.init_ns_parts()
@@ -114,7 +118,7 @@ def run_app(**kwargs):
     graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
     progress(90)
-    graph.handle_assets()
+    graph.handle_assets(summary_files.subsets.get("filetype_asset", []))
     graph_assets_handler = LogseqFileMover()
     moved_files = graph_assets_handler.moved_files
     moved_files["moved_assets"] = graph_assets_handler.handle_move_files()
@@ -176,8 +180,8 @@ def run_app(**kwargs):
     all_outputs = [
         (meta_reports, analyzer_config.config["OUTPUT"]["META"]),
         (journal_reports, analyzer_config.config["OUTPUT"]["JOURNALS"]),
-        (graph.summary_file_subsets, analyzer_config.config["OUTPUT"]["SUMMARY_FILE"]),
-        (graph.summary_data_subsets, analyzer_config.config["OUTPUT"]["SUMMARY_CONTENT"]),
+        (summary_files.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_FILE"]),
+        (summary_content.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_CONTENT"]),
         (namespace_reports, analyzer_config.config["OUTPUT"]["NAMESPACES"]),
         (moved_files_reports, analyzer_config.config["OUTPUT"]["ASSETS"]),
     ]
@@ -196,8 +200,8 @@ def run_app(**kwargs):
         Output.GRAPH_NAMES_TO_HASHES.value: graph.names_to_hashes,
         Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
         # General summary
-        **graph.summary_file_subsets,
-        **graph.summary_data_subsets,
+        **summary_files.subsets,
+        **summary_content.subsets,
         # Namespaces summary
         **namespace_reports,
         # Move files and assets

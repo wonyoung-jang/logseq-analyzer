@@ -2,7 +2,7 @@
 This module defines the LogseqFilestats class, which is used to gather file statistics for Logseq files.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -13,13 +13,12 @@ class LogseqFilestats:
     """Initialize the LogseqFilestats class."""
 
     file_path: Path
-
-    size: int = field(init=False)
-    has_content: bool = field(init=False)
-    time_existed: float = field(init=False)
-    time_unmodified: float = field(init=False)
-    date_created: datetime = field(init=False)
-    date_modified: datetime = field(init=False)
+    size: int = 0
+    has_content: bool = False
+    time_existed: float = 0.0
+    time_unmodified: float = 0.0
+    date_created: datetime = None
+    date_modified: datetime = None
 
     def __post_init__(self):
         """Post-initialization method to set file statistics attributes."""
