@@ -259,6 +259,15 @@ class LogseqFile:
 
         return masked_content, masked_blocks
 
+    @staticmethod
+    def split_builtin_user_properties(properties: list) -> Dict[str, List[str]]:
+        """Helper function to split properties into built-in and user-defined."""
+        properties_dict = {
+            "built_in": [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties],
+            "user_props": [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties],
+        }
+        return properties_dict
+
     def unmask_blocks(self, masked_content: str, masked_blocks: Dict[str, str]) -> str:
         """
         Restore the original content by replacing placeholders with their blocks.
@@ -293,14 +302,14 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.code.calc_block.search(result):
-                code_family["calc_blocks"].append(result)
+                code_family[Criteria.CALC_BLOCKS.value].append(result)
                 results.pop()
                 continue
             if self.code.multiline_code_lang.search(result):
-                code_family["multiline_code_langs"].append(result)
+                code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
                 results.pop()
                 continue
-        code_family["multiline_code_blocks"] = results
+        code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
         return code_family
 
     def process_double_parens(self, results: List[str]):
@@ -311,10 +320,10 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.double_parentheses.block_reference.search(result):
-                double_paren_family["block_references"].append(result)
+                double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
                 results.pop()
                 continue
-        double_paren_family["references_general"] = results
+        double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
         return double_paren_family
 
     def process_external_links(self, results: List[str]):
@@ -325,14 +334,14 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.external_links.internet.search(result):
-                external_links_family["external_links_internet"].append(result)
+                external_links_family[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
                 results.pop()
                 continue
             if self.external_links.alias.search(result):
-                external_links_family["external_links_alias"].append(result)
+                external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
                 results.pop()
                 continue
-        external_links_family["external_links_other"] = results
+        external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
         return external_links_family
 
     def process_embedded_links(self, results: List[str]):
@@ -343,24 +352,15 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.embedded_links.internet.search(result):
-                embedded_links_family["embedded_links_internet"].append(result)
+                embedded_links_family[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
                 results.pop()
                 continue
             if self.embedded_links.asset.search(result):
-                embedded_links_family["embedded_links_asset"].append(result)
+                embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
                 results.pop()
                 continue
-        embedded_links_family["embedded_links_other"] = results
+        embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
         return embedded_links_family
-
-    @staticmethod
-    def split_builtin_user_properties(properties: list) -> Dict[str, List[str]]:
-        """Helper function to split properties into built-in and user-defined."""
-        properties_dict = {
-            "built_in": [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties],
-            "user_props": [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties],
-        }
-        return properties_dict
 
     def process_double_curly_braces(self, results: List[str]):
         """Process double curly braces and extract relevant data."""
@@ -370,53 +370,53 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.double_curly_brackets.embed.search(result):
-                double_curly_family["embeds"].append(result)
+                double_curly_family[Criteria.EMBEDS.value].append(result)
                 results.pop()
                 if self.double_curly_brackets.page_embed.search(result):
-                    double_curly_family["page_embeds"].append(result)
-                    double_curly_family["embeds"].remove(result)
+                    double_curly_family[Criteria.PAGE_EMBEDS.value].append(result)
+                    double_curly_family[Criteria.EMBEDS.value].remove(result)
                     continue
                 if self.double_curly_brackets.block_embed.search(result):
-                    double_curly_family["block_embeds"].append(result)
-                    double_curly_family["embeds"].remove(result)
+                    double_curly_family[Criteria.BLOCK_EMBEDS.value].append(result)
+                    double_curly_family[Criteria.EMBEDS.value].remove(result)
                     continue
             if self.double_curly_brackets.namespace_query.search(result):
-                double_curly_family["namespace_queries"].append(result)
+                double_curly_family[Criteria.NAMESPACE_QUERIES.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.card.search(result):
-                double_curly_family["cards"].append(result)
+                double_curly_family[Criteria.CARDS.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.cloze.search(result):
-                double_curly_family["clozes"].append(result)
+                double_curly_family[Criteria.CLOZES.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.simple_query.search(result):
-                double_curly_family["simple_queries"].append(result)
+                double_curly_family[Criteria.SIMPLE_QUERIES.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.query_function.search(result):
-                double_curly_family["query_functions"].append(result)
+                double_curly_family[Criteria.QUERY_FUNCTIONS.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.embed_video_url.search(result):
-                double_curly_family["embed_video_urls"].append(result)
+                double_curly_family[Criteria.EMBED_VIDEO_URLS.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.embed_twitter_tweet.search(result):
-                double_curly_family["embed_twitter_tweets"].append(result)
+                double_curly_family[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.embed_youtube_timestamp.search(result):
-                double_curly_family["embed_youtube_timestamps"].append(result)
+                double_curly_family[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
                 results.pop()
                 continue
             if self.double_curly_brackets.renderer.search(result):
-                double_curly_family["renderers"].append(result)
+                double_curly_family[Criteria.RENDERERS.value].append(result)
                 results.pop()
                 continue
-        double_curly_family["macros"] = results
+        double_curly_family[Criteria.MACROS.value] = results
         return double_curly_family
 
     def process_advanced_commands(self, results: List[str]):
@@ -427,63 +427,63 @@ class LogseqFile:
         for _ in range(len(results)):
             result = results[-1]
             if self.advanced_commands.export.search(result):
-                advanced_command_family["advanced_commands_export"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
                 results.pop()
                 if self.advanced_commands.export_ascii.search(result):
-                    advanced_command_family["advanced_commands_export_ascii"].append(result)
-                    advanced_command_family["advanced_commands_export"].pop()
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
                     continue
                 if self.advanced_commands.export_latex.search(result):
-                    advanced_command_family["advanced_commands_export_latex"].append(result)
-                    advanced_command_family["advanced_commands_export"].pop()
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
                     continue
             if self.advanced_commands.caution.search(result):
-                advanced_command_family["advanced_commands_caution"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.center.search(result):
-                advanced_command_family["advanced_commands_center"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.comment.search(result):
-                advanced_command_family["advanced_commands_comment"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.example.search(result):
-                advanced_command_family["advanced_commands_example"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.important.search(result):
-                advanced_command_family["advanced_commands_important"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.note.search(result):
-                advanced_command_family["advanced_commands_note"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.pinned.search(result):
-                advanced_command_family["advanced_commands_pinned"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.query.search(result):
-                advanced_command_family["advanced_commands_query"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.quote.search(result):
-                advanced_command_family["advanced_commands_quote"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.tip.search(result):
-                advanced_command_family["advanced_commands_tip"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.verse.search(result):
-                advanced_command_family["advanced_commands_verse"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
                 results.pop()
                 continue
             if self.advanced_commands.warning.search(result):
-                advanced_command_family["advanced_commands_warning"].append(result)
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
                 results.pop()
                 continue
-        advanced_command_family["advanced_commands"] = results
+        advanced_command_family[Criteria.ADVANCED_COMMANDS.value] = results
         return advanced_command_family
