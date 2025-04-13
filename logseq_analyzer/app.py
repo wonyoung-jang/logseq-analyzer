@@ -180,28 +180,17 @@ def run_app(**kwargs):
     for report, output_dir in all_outputs:
         for name, data in report.items():
             ReportWriter(name, data, output_dir).write()
-    # Write output data to persistent storage
-    shelve_output_data = {
-        # Main meta outputs
-        Output.META_UNIQUE_LINKED_REFS.value: graph.unique_linked_references,
-        Output.META_UNIQUE_LINKED_REFS_NS.value: graph.unique_linked_references_ns,
-        Output.GRAPH_DATA.value: graph.data,
-        Output.ALL_REFS.value: graph.all_linked_references,
-        Output.DANGLING_LINKS.value: graph.dangling_links,
-        Output.GRAPH_HASHED_FILES.value: graph.hashed_files,
-        Output.GRAPH_NAMES_TO_HASHES.value: graph.names_to_hashes,
-        Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
-        # General summary
-        **summary_files.subsets,
-        **summary_content.subsets,
-        # Namespaces summary
-        **namespace_reports,
-        # Move files and assets
-        Output.MOVED_FILES.value: graph_assets_handler.moved_files,
-        Output.ASSETS_BACKLINKED.value: graph.assets_backlinked,
-        Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
-    }
+
+    # Cache writing
     try:
+        shelve_output_data = {
+            **meta_reports,
+            **summary_files.subsets,
+            **summary_content.subsets,
+            **journal_reports,
+            **namespace_reports,
+            **moved_files_reports,
+        }
         cache.update(shelve_output_data)
         cache.close()
     finally:

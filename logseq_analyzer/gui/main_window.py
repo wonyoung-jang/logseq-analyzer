@@ -26,8 +26,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..io.path_validator import LogseqAnalyzerPathValidator
 from ..app import run_app
+from ..io.cache import Cache
+from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -165,6 +166,7 @@ class LogseqAnalyzerGUI(QMainWindow):
     def close_analyzer(self):
         """Close the application."""
         self.save_settings()
+        Cache().close()
         self.close()
 
     def open_output_directory(self):
