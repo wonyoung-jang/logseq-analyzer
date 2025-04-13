@@ -35,14 +35,12 @@ class LogseqFilename:
         self.original_name = self.file_path.stem
         self.name = self.file_path.stem.lower()
         self.parent = self.file_path.parent.name.lower()
-        self.process_logseq_filename()
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
-        self.logseq_url = self.convert_uri_to_logseq_url()
-        self.is_namespace = NS_SEP in self.name
-        self.file_type = self.determine_file_type()
-        self.get_namespace_name_data()
+        self.is_namespace = False
+        self.logseq_url = ""
+        self.file_type = ""
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
@@ -55,6 +53,8 @@ class LogseqFilename:
             self.name = unquote(self.name).replace(
                 ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP
             )
+
+        self.is_namespace = NS_SEP in self.name
 
     def process_logseq_journal_key(self) -> str:
         """Process the journal key to create a page title."""
@@ -95,7 +95,7 @@ class LogseqFilename:
                 path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
                 encoded_path = path_with_slashes
                 target_segment = target_segment[:-1]
-                return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+                self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
     def get_namespace_name_data(self):
         """Get the namespace name data."""
@@ -125,7 +125,7 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        return {
+        self.file_type = {
             ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
             ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
             ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",

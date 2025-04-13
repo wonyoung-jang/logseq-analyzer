@@ -52,12 +52,25 @@ class LogseqFile:
     def __repr__(self) -> str:
         return f"LogseqFile(name={self.path.name}, path={self.file_path})"
 
+    def __hash__(self) -> int:
+        return hash(self.path.parts)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, LogseqFile):
+            return self.path.parts == other.path.parts
+        return NotImplemented
+
     def init_file_data(self):
         """
         Extract metadata from a file.
         """
+        self.path.determine_file_type()
+        self.path.process_logseq_filename()
+        self.path.convert_uri_to_logseq_url()
+        self.path.get_namespace_name_data()
         for attr, value in self.path.__dict__.items():
             setattr(self, attr, value)
+
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
 
@@ -101,24 +114,16 @@ class LogseqFile:
         }
 
         # Process aliases and property:values
-        properties_values = {}
         property_value_all = PATTERNS.content["property_value"].findall(self.content)
-        for prop, value in property_value_all:
-            properties_values[prop] = value
-
+        properties_values = dict(property_value_all)
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
 
         # Process properties
         page_properties = []
         if self.bullets.has_page_properties:
-            masked_primary_bullet, _ = self.mask_blocks(self.primary_bullet)
-            page_properties = find_all_lower(PATTERNS.content["property"], masked_primary_bullet)
-            masked_content_bullets = []
-            for bullet in self.content_bullets:
-                masked_bullet, _ = self.mask_blocks(bullet)
-                masked_content_bullets.append(masked_bullet)
-            masked_content = "\n".join(masked_content_bullets)
+            page_properties = find_all_lower(PATTERNS.content["property"], self.primary_bullet)
+            self.content = "\n".join(self.content_bullets)
         block_properties = find_all_lower(PATTERNS.content["property"], self.content)
         page_props = LogseqFile.split_builtin_user_properties(page_properties)
         block_props = LogseqFile.split_builtin_user_properties(block_properties)

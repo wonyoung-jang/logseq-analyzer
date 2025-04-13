@@ -43,11 +43,11 @@ class LogseqGraph:
         """Process all files in the Logseq graph folder."""
         for file_path in self.cache.iter_modified_files():
             file = LogseqFile(file_path)
-            self.data[file.hash] = file.__dict__
-            self.content_bullets[file.hash] = file.content_bullets
-            self.hashed_files[file.hash] = file
-            self.names_to_hashes[file.path.name].append(file.hash)
-            self.masked_blocks[file.hash] = file.masked_blocks
+            self.data[hash(file)] = file.__dict__
+            self.content_bullets[hash(file)] = file.content_bullets
+            self.hashed_files[hash(file)] = file
+            self.names_to_hashes[file.path.name].append(hash(file))
+            self.masked_blocks[hash(file)] = file.masked_blocks
             delattr(file, "content_bullets")
             delattr(file, "content")
             delattr(file, "primary_bullet")
@@ -204,9 +204,7 @@ class LogseqGraph:
         self.summary_file_subsets["____file_extensions_dict"] = file_ext_dict
 
     def list_files_with_keys_and_values(self, **criteria) -> list:
-        """
-        Extract a subset of the summary data based on multiple criteria (key-value pairs).
-        """
+        """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         result = []
         for _, file in self.hashed_files.items():
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
@@ -215,7 +213,6 @@ class LogseqGraph:
 
     def generate_summary_data_subsets(self):
         """Generate summary subsets for content data in the Logseq graph."""
-        # Process content types
         content_subset_tags_nodes = [
             "advanced_commands_caution",
             "advanced_commands_center",
@@ -274,10 +271,8 @@ class LogseqGraph:
             "tagged_backlinks",
             "tags",
         ]
-
         for criteria in content_subset_tags_nodes:
-            counts_output_name = f"_content_{criteria}"
-            self.summary_data_subsets[counts_output_name] = self.extract_summary_subset_content(criteria)
+            self.summary_data_subsets[f"content_{criteria}"] = self.extract_summary_subset_content(criteria)
 
     def extract_summary_subset_content(self, criteria) -> Dict[str, Any]:
         """

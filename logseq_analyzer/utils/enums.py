@@ -1,3 +1,7 @@
+"""
+Enums for the Logseq Analyzer.
+"""
+
 from enum import Enum
 
 

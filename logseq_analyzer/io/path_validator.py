@@ -48,8 +48,8 @@ class LogseqAnalyzerPathValidator:
             # 07 Cache Path
             self.file_cache = None
 
-    def initialize(self):
-        """Initialize the path validator."""
+    def validate_cache(self):
+        """Validate the cache file."""
         self.file_cache = File(self._ac.config["CONST"]["CACHE"])
 
     def validate_output_dir_and_logging(self):

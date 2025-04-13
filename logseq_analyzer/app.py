@@ -66,6 +66,7 @@ def run_app(**kwargs):
     patterns.compile_re_dblparen()
     analyzer_config = LogseqAnalyzerConfig()
     graph_config = LogseqGraphConfig()
+    paths.validate_cache()
     cache = Cache()
     analyzer_config.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
     paths.validate_graph_logseq_config_paths()
@@ -142,7 +143,7 @@ def run_app(**kwargs):
     if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
     # Journals
-    journals_report = {
+    journal_reports = {
         Output.DANGLING_JOURNALS.value: graph_journals.dangling_journals,
         Output.PROCESSED_KEYS.value: graph_journals.processed_keys,
         Output.COMPLETE_TIMELINE.value: graph_journals.complete_timeline,
@@ -173,12 +174,12 @@ def run_app(**kwargs):
     }
     # Writing
     all_outputs = [
-        (meta_reports, analyzer_config.config["OUTPUT_DIRS"]["META"]),
-        (journals_report, analyzer_config.config["OUTPUT_DIRS"]["LOGSEQ_JOURNALS"]),
-        (graph.summary_file_subsets, analyzer_config.config["OUTPUT_DIRS"]["SUMMARY"]),
-        (graph.summary_data_subsets, "summary_content_data"),
-        (namespace_reports, analyzer_config.config["OUTPUT_DIRS"]["NAMESPACE"]),
-        (moved_files_reports, analyzer_config.config["OUTPUT_DIRS"]["ASSETS"]),
+        (meta_reports, analyzer_config.config["OUTPUT"]["META"]),
+        (journal_reports, analyzer_config.config["OUTPUT"]["JOURNALS"]),
+        (graph.summary_file_subsets, analyzer_config.config["OUTPUT"]["SUMMARY_FILE"]),
+        (graph.summary_data_subsets, analyzer_config.config["OUTPUT"]["SUMMARY_CONTENT"]),
+        (namespace_reports, analyzer_config.config["OUTPUT"]["NAMESPACES"]),
+        (moved_files_reports, analyzer_config.config["OUTPUT"]["ASSETS"]),
     ]
     for report, output_dir in all_outputs:
         for name, data in report.items():
