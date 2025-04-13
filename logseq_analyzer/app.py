@@ -77,7 +77,6 @@ def run_app(**kwargs):
     paths.validate_target_paths()
     # --- #
     analyzer_config.get_logseq_target_dirs()
-    analyzer_config.get_built_in_properties()
     analyzer_config.get_datetime_token_map()
     analyzer_config.get_datetime_token_pattern()
     analyzer_config.set_journal_py_formatting()

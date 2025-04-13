@@ -5,6 +5,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 from collections import defaultdict
 from typing import Dict
 
+from ..config.builtin_properties import LogseqBuiltInProperties
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output, Criteria
@@ -39,11 +40,13 @@ class LogseqGraph:
             self.hashed_files: Dict[int, LogseqFile] = {}
             self.names_to_hashes = defaultdict(list)
             self.masked_blocks = {}
+            self.logseq_builtin_properties = LogseqBuiltInProperties()
+            self.logseq_builtin_properties.set_builtin_properties()
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
         for file_path in self.cache.iter_modified_files():
-            file = LogseqFile(file_path)
+            file = LogseqFile(file_path, self.logseq_builtin_properties)
             file.init_file_data()
             file.process_content_data()
             file_hash = hash(file)

@@ -10,8 +10,6 @@ from ..config.analyzer_config import LogseqAnalyzerConfig
 from .summary_files import LogseqFileSummarizer
 from .graph import LogseqGraph
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-
 
 class LogseqJournals:
     """
@@ -48,11 +46,14 @@ class LogseqJournals:
         """
         Process journal keys to build the complete timeline and detect missing entries.
         """
-        for dateobj in self.process_journal_keys_to_datetime(self.dangling_links):
+        ac = LogseqAnalyzerConfig()
+        py_page_base_format = ac.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]
+
+        for dateobj in self.process_journal_keys_to_datetime(self.dangling_links, py_page_base_format):
             self.dangling_journals.append(dateobj)
         self.dangling_journals.sort()
 
-        for dateobj in self.process_journal_keys_to_datetime(self.journal_keys):
+        for dateobj in self.process_journal_keys_to_datetime(self.journal_keys, py_page_base_format):
             self.processed_keys.append(dateobj)
         self.processed_keys.sort()
 
@@ -61,7 +62,7 @@ class LogseqJournals:
         self.timeline_stats["dangling_journals"] = LogseqJournals.get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
-    def process_journal_keys_to_datetime(self, list_of_keys: List[str]):
+    def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = None):
         """
         Convert journal keys from strings to datetime objects.
         """
@@ -69,10 +70,7 @@ class LogseqJournals:
             try:
                 if any(ordinal in key for ordinal in ("st", "nd", "rd", "th")):
                     key = key.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
-                date_obj = datetime.strptime(
-                    key,
-                    ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"].replace("#", ""),
-                )
+                date_obj = datetime.strptime(key, py_page_base_format.replace("#", ""))
                 yield date_obj
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)

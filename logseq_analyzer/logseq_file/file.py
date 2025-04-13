@@ -8,6 +8,7 @@ from typing import Dict, List, Set, Tuple
 import uuid
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..config.builtin_properties import LogseqBuiltInProperties
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import (
     AdvancedCommandPatterns,
@@ -30,7 +31,7 @@ NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
 class LogseqFile:
     """A class to represent a Logseq file."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path, logseq_builtin_properties: LogseqBuiltInProperties):
         """
         Initialize the LogseqFile object.
 
@@ -38,6 +39,7 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path = file_path
+        self.logseq_builtin_properties = logseq_builtin_properties
         self.masked_blocks = {}
         self.path = LogseqFilename(self.file_path)
         self.stat = LogseqFilestats(self.file_path)
@@ -136,8 +138,8 @@ class LogseqFile:
             page_properties = find_all_lower(self.content_patterns.property, self.primary_bullet)
             self.content = "\n".join(self.content_bullets)
         block_properties = find_all_lower(self.content_patterns.property, self.content)
-        page_props = LogseqFile.split_builtin_user_properties(page_properties)
-        block_props = LogseqFile.split_builtin_user_properties(block_properties)
+        page_props = self.logseq_builtin_properties.split_builtin_user_properties(page_properties)
+        block_props = self.logseq_builtin_properties.split_builtin_user_properties(block_properties)
 
         # Process code blocks
         code_pattern = find_all_lower(self.code.all, self.content)
@@ -258,23 +260,6 @@ class LogseqFile:
             masked_content = masked_content.replace(match.group(0), block_id)
 
         return masked_content, masked_blocks
-
-    @staticmethod
-    def split_builtin_user_properties(properties: list) -> Dict[str, List[str]]:
-        """
-        Helper function to split properties into built-in and user-defined.
-
-        Args:
-            properties (list): List of properties to split.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary containing built-in and user-defined properties.
-        """
-        properties_dict = {
-            "built_in": [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties],
-            "user_props": [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties],
-        }
-        return properties_dict
 
     def unmask_blocks(self, masked_content: str, masked_blocks: Dict[str, str]) -> str:
         """

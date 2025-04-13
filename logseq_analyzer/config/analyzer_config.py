@@ -10,6 +10,13 @@ import re
 from ..io.filesystem import File
 
 
+def lambda_optionxform(option: str) -> str:
+    """
+    Custom optionxform function to preserve case sensitivity of options.
+    """
+    return option
+
+
 class LogseqAnalyzerConfig:
     """
     A class to handle configuration file loading and management.
@@ -37,10 +44,9 @@ class LogseqAnalyzerConfig:
                 empty_lines_in_values=False,
                 allow_unnamed_section=True,
             )
-            self.config.optionxform = lambda option: option
+            self.config.optionxform = lambda_optionxform
             self.config.read(config_path.path)
             self.target_dirs = None
-            self.built_in_properties = None
             self.datetime_token_map = None
             self.datetime_token_pattern = None
 
@@ -59,11 +65,6 @@ class LogseqAnalyzerConfig:
         if section in self.config:
             return dict(self.config[section])
         return {}
-
-    def get_built_in_properties(self):
-        """Return the built-in properties as a frozenset"""
-        properties_str = self.get("BUILT_IN_PROPERTIES", "PROPERTIES")
-        self.built_in_properties = frozenset(properties_str.split(","))
 
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""
