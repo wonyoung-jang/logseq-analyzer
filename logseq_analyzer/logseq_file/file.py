@@ -261,7 +261,15 @@ class LogseqFile:
 
     @staticmethod
     def split_builtin_user_properties(properties: list) -> Dict[str, List[str]]:
-        """Helper function to split properties into built-in and user-defined."""
+        """
+        Helper function to split properties into built-in and user-defined.
+
+        Args:
+            properties (list): List of properties to split.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary containing built-in and user-defined properties.
+        """
         properties_dict = {
             "built_in": [prop for prop in properties if prop in ANALYZER_CONFIG.built_in_properties],
             "user_props": [prop for prop in properties if prop not in ANALYZER_CONFIG.built_in_properties],
@@ -287,6 +295,12 @@ class LogseqFile:
     def check_is_backlinked(self, lookup: Set[str]) -> bool:
         """
         Helper function to check if a file is backlinked.
+
+        Args:
+            lookup (Set[str]): Set of backlinks to check against.
+
+        Returns:
+            bool: True if the file is backlinked, False otherwise.
         """
         try:
             lookup.remove(self.path.name)
@@ -294,8 +308,16 @@ class LogseqFile:
         except KeyError:
             return False
 
-    def process_code_blocks(self, results: List[str]):
-        """Process code blocks and categorize them."""
+    def process_code_blocks(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process code blocks and categorize them.
+
+        Args:
+            results (List[str]): List of code block strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing code blocks.
+        """
         code_family = defaultdict(list)
         if not results:
             return {}
@@ -312,8 +334,16 @@ class LogseqFile:
         code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
         return code_family
 
-    def process_double_parens(self, results: List[str]):
-        """Process double parentheses and categorize them."""
+    def process_double_parens(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process double parentheses and categorize them.
+
+        Args:
+            results (List[str]): List of double parenthesis strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing double parentheses.
+        """
         double_paren_family = defaultdict(list)
         if not results:
             return {}
@@ -326,8 +356,16 @@ class LogseqFile:
         double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
         return double_paren_family
 
-    def process_external_links(self, results: List[str]):
-        """Process external links and categorize them."""
+    def process_external_links(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process external links and categorize them.
+
+        Args:
+            results (List[str]): List of external link strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing external links.
+        """
         external_links_family = defaultdict(list)
         if not results:
             return {}
@@ -344,8 +382,16 @@ class LogseqFile:
         external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
         return external_links_family
 
-    def process_embedded_links(self, results: List[str]):
-        """Process embedded links and categorize them."""
+    def process_embedded_links(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process embedded links and categorize them.
+
+        Args:
+            results (List[str]): List of embedded link strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing embedded links.
+        """
         embedded_links_family = defaultdict(list)
         if not results:
             return {}
@@ -362,8 +408,16 @@ class LogseqFile:
         embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
         return embedded_links_family
 
-    def process_double_curly_braces(self, results: List[str]):
-        """Process double curly braces and extract relevant data."""
+    def process_double_curly_braces(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process double curly braces and extract relevant data.
+
+        Args:
+            results (List[str]): List of double curly brace strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing double curly brace data.
+        """
         double_curly_family = defaultdict(list)
         if not results:
             return {}
@@ -419,8 +473,16 @@ class LogseqFile:
         double_curly_family[Criteria.MACROS.value] = results
         return double_curly_family
 
-    def process_advanced_commands(self, results: List[str]):
-        """Process advanced commands and extract relevant data."""
+    def process_advanced_commands(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process advanced commands and extract relevant data.
+
+        Args:
+            results (List[str]): List of advanced command strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing advanced commands.
+        """
         advanced_command_family = defaultdict(list)
         if not results:
             return {}
