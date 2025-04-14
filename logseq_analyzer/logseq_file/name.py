@@ -43,6 +43,9 @@ class LogseqFilename:
         self.logseq_url = ""
         self.file_type = ""
 
+    def __repr__(self):
+        return f"LogseqFilename({self.file_path})"
+
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
         if self.name.endswith(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
@@ -122,13 +125,27 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        self.file_type = {
+        result = {
             self.ac.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
             self.ac.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
             self.ac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
             self.ac.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
             self.ac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
+
+        if result == "other":
+            if "assets" in self.parts:
+                result = "sub_asset"
+            elif "draws" in self.parts:
+                result = "sub_draw"
+            elif "journals" in self.parts:
+                result = "sub_journal"
+            elif "pages" in self.parts:
+                result = "sub_page"
+            elif "whiteboards" in self.parts:
+                result = "sub_whiteboard"
+
+        self.file_type = result
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

@@ -69,9 +69,14 @@ def test_summary_files_values():
         "FILETYPE_ASSET": "filetype_asset",
         "FILETYPE_DRAW": "filetype_draw",
         "FILETYPE_JOURNAL": "filetype_journal",
-        "FILETYPE_OTHER": "filetype_other",
         "FILETYPE_PAGE": "filetype_page",
         "FILETYPE_WHITEBOARD": "filetype_whiteboard",
+        "FILETYPE_SUB_ASSET": "filetype_sub_asset",
+        "FILETYPE_SUB_DRAW": "filetype_sub_draw",
+        "FILETYPE_SUB_JOURNAL": "filetype_sub_journal",
+        "FILETYPE_SUB_PAGE": "filetype_sub_page",
+        "FILETYPE_SUB_WHITEBOARD": "filetype_sub_whiteboard",
+        "FILETYPE_OTHER": "filetype_other",
         "HAS_BACKLINKS": "has_backlinks",
         "HAS_CONTENT": "has_content",
         "IS_BACKLINKED": "is_backlinked",
@@ -90,7 +95,7 @@ def test_summary_files_values():
 
 
 def test_summary_files_member_count():
-    assert len(SummaryFiles) == 19
+    assert len(SummaryFiles) == 24
 
 
 # Criteria

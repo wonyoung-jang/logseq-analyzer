@@ -39,6 +39,11 @@ class LogseqFileSummarizer:
             SummaryFiles.FILETYPE_JOURNAL: {"file_type": "journal"},
             SummaryFiles.FILETYPE_PAGE: {"file_type": "page"},
             SummaryFiles.FILETYPE_WHITEBOARD: {"file_type": "whiteboard"},
+            SummaryFiles.FILETYPE_SUB_ASSET: {"file_type": "sub_asset"},
+            SummaryFiles.FILETYPE_SUB_DRAW: {"file_type": "sub_draw"},
+            SummaryFiles.FILETYPE_SUB_JOURNAL: {"file_type": "sub_journal"},
+            SummaryFiles.FILETYPE_SUB_PAGE: {"file_type": "sub_page"},
+            SummaryFiles.FILETYPE_SUB_WHITEBOARD: {"file_type": "sub_whiteboard"},
             SummaryFiles.FILETYPE_OTHER: {"file_type": "other"},
             # Process nodes
             SummaryFiles.NODE_ORPHAN_TRUE: {"node_type": "orphan_true"},

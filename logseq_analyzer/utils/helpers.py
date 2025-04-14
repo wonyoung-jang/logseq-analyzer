@@ -16,7 +16,7 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
         if path_root == root_dir:
             continue
 
-        if path_root.name in target_dirs:
+        if path_root.name in target_dirs or path_root.parent.name in target_dirs:
             for file in files:
                 yield path_root / file
         else:

@@ -42,3 +42,6 @@ class LogseqFilestats:
         self.time_unmodified = (now - date_modified).total_seconds()
         self.date_created = date_created.isoformat()
         self.date_modified = date_modified.isoformat()
+
+    def __repr__(self):
+        return f"LogseqFilestats({self.file_path})"

@@ -23,6 +23,7 @@ class LogseqBullets:
     bullet_count_empty: int = None
     bullet_density: float = None
     has_page_properties: bool = None
+    content_patterns = ContentPatterns()
 
     def __post_init__(self):
         """Initialize the LogseqBullets class"""
@@ -35,7 +36,9 @@ class LogseqBullets:
         self.bullet_count_empty = 0
         self.bullet_density = 0
         self.has_page_properties = False
-        self.content_patterns = ContentPatterns()
+
+    def __repr__(self):
+        return f"LogseqBullets({self.file_path})"
 
     def get_content(self):
         """Read the text content of a file."""
