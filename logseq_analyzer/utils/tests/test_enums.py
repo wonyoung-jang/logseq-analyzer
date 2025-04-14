@@ -16,7 +16,7 @@ def test_phase_values():
 
 
 def test_phase_member_count():
-    assert len(Phase) == 1  # number of expected items in the enum
+    assert len(Phase) == 1
 
 
 # Output
@@ -26,6 +26,7 @@ def test_output_values():
         "ASSETS_BACKLINKED": "assets_backlinked",
         "ASSETS_NOT_BACKLINKED": "assets_not_backlinked",
         "COMPLETE_TIMELINE": "complete_timeline",
+        "CONFIG_DATA": "__meta__config_data",
         "CONFLICTS_DANGLING": "conflicts_dangling",
         "CONFLICTS_NON_NAMESPACE": "conflicts_non_namespace",
         "CONFLICTS_PARENT_DEPTH": "conflicts_parent_depth",
@@ -58,7 +59,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 30  # number of expected items in the enum
+    assert len(Output) == 31
 
 
 # SummaryFiles
@@ -89,7 +90,7 @@ def test_summary_files_values():
 
 
 def test_summary_files_member_count():
-    assert len(SummaryFiles) == 19  # number of expected items in the enum
+    assert len(SummaryFiles) == 19
 
 
 # Criteria
@@ -157,4 +158,4 @@ def test_criteria_values():
 
 
 def test_criteria_member_count():
-    assert len(Criteria) == 56  # number of expected items in the enum
+    assert len(Criteria) == 56

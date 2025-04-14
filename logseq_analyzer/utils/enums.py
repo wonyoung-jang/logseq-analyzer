@@ -18,6 +18,7 @@ class Output(Enum):
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
     COMPLETE_TIMELINE = "complete_timeline"
+    CONFIG_DATA = "__meta__config_data"
     CONFLICTS_DANGLING = "conflicts_dangling"
     CONFLICTS_NON_NAMESPACE = "conflicts_non_namespace"
     CONFLICTS_PARENT_DEPTH = "conflicts_parent_depth"

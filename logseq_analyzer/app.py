@@ -73,7 +73,9 @@ def run_app(**kwargs):
         paths.validate_global_config_path()
         graph_config.global_config_file = paths.file_config_global.path
     graph_config.user_config_file = paths.file_config.path
-    graph_config.initialize_config_edns()
+    graph_config.initialize_user_config_edn()
+    graph_config.initialize_global_config_edn()
+    graph_config.merge()
     analyzer_config.set_logseq_config_edn_data(graph_config.ls_config)
     paths.validate_target_paths()
     # --- #
@@ -136,6 +138,7 @@ def run_app(**kwargs):
         Output.GRAPH_HASHED_FILES.value: graph.hashed_files,
         Output.GRAPH_NAMES_TO_HASHES.value: graph.names_to_hashes,
         Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
+        Output.CONFIG_DATA.value: graph_config.ls_config,
     }
     if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
