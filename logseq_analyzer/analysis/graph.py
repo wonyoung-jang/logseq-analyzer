@@ -3,6 +3,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import defaultdict
+from pathlib import Path
 from typing import Dict
 
 from ..config.builtin_properties import LogseqBuiltInProperties
@@ -46,18 +47,39 @@ class LogseqGraph:
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
         for file_path in self.cache.iter_modified_files():
-            file = LogseqFile(file_path, self.logseq_builtin_properties)
-            file.init_file_data()
-            file.process_content_data()
-            file_hash = hash(file)
-            self.data[file_hash] = file.__dict__
-            self.content_bullets[file_hash] = file.content_bullets
-            self.hashed_files[file_hash] = file
-            self.names_to_hashes[file.path.name].append(file_hash)
-            self.masked_blocks[file_hash] = file.masked_blocks
-            delattr(file, "content_bullets")
-            delattr(file, "content")
-            delattr(file, "primary_bullet")
+            file = self.initialize_file(file_path)
+            self.update_data_with_file(file)
+            self.del_large_file_attributes(file)
+
+    def initialize_file(self, file_path: Path) -> LogseqFile:
+        """
+        Initialize the file object.
+
+        Args:
+            file_path (Path): Path to the file to be initialized.
+
+        Returns:
+            LogseqFile: Initialized LogseqFile object.
+        """
+        file = LogseqFile(file_path, self.logseq_builtin_properties)
+        file.init_file_data()
+        file.process_content_data()
+        return file
+
+    def update_data_with_file(self, file: LogseqFile):
+        """Update the graph data with a new file."""
+        file_hash = hash(file)
+        self.data[file_hash] = file.__dict__
+        self.content_bullets[file_hash] = file.content_bullets
+        self.hashed_files[file_hash] = file
+        self.names_to_hashes[file.path.name].append(file_hash)
+        self.masked_blocks[file_hash] = file.masked_blocks
+
+    def del_large_file_attributes(self, file: LogseqFile):
+        """Delete large attributes from the file object."""
+        delattr(file, "content_bullets")
+        delattr(file, "content")
+        delattr(file, "primary_bullet")
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
