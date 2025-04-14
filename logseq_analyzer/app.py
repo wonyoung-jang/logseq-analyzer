@@ -5,21 +5,20 @@ This module contains the main application logic for the Logseq analyzer.
 from pathlib import Path
 import logging
 
-from .config.datetime_tokens import LogseqDateTimeTokens
-
 from .analysis.graph import LogseqGraph
-from .analysis.summary_files import LogseqFileSummarizer
-from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
+from .analysis.summary_content import LogseqContentSummarizer
+from .analysis.summary_files import LogseqFileSummarizer
 from .config.analyzer_config import LogseqAnalyzerConfig
 from .config.arguments import LogseqAnalyzerArguments
+from .config.datetime_tokens import LogseqDateTimeTokens
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
 from .io.file_mover import LogseqFileMover
 from .io.path_validator import LogseqAnalyzerPathValidator
 from .io.report_writer import ReportWriter
-from .utils.enums import Phase, Output
+from .utils.enums import Phase, Output, SummaryFiles
 
 
 class GUIInstanceDummy:
@@ -112,7 +111,7 @@ def run_app(**kwargs):
     graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
     progress(90)
-    graph.handle_assets(summary_files.subsets.get("filetype_asset", []))
+    graph.handle_assets(summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, []))
     graph_assets_handler = LogseqFileMover()
     moved_files = graph_assets_handler.moved_files
     moved_files["moved_assets"] = graph_assets_handler.handle_move_files()

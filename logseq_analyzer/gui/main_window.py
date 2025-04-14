@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
 )
 
 from ..app import run_app
-from ..io.cache import Cache
 from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
@@ -166,7 +165,6 @@ class LogseqAnalyzerGUI(QMainWindow):
     def close_analyzer(self):
         """Close the application."""
         self.save_settings()
-        Cache().close()
         self.close()
 
     def open_output_directory(self):
@@ -237,7 +235,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             success_dialog.exec()
         except KeyboardInterrupt:
             self.show_error("Analysis interrupted by user.")
-            self.close()
+            self.close_analyzer()
         finally:
             self.run_button.setEnabled(False)
             self.output_button.setEnabled(True)
