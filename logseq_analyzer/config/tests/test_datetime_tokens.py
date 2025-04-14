@@ -15,6 +15,14 @@ def datetime_tokens():
     return LogseqDateTimeTokens(LogseqAnalyzerConfig())
 
 
+def test_singleton_instance(datetime_tokens):
+    """Test that LogseqDateTimeTokens is a singleton."""
+    instance1 = LogseqDateTimeTokens()
+    instance2 = LogseqDateTimeTokens()
+    assert instance1 is instance2
+    assert instance1 is datetime_tokens
+
+
 def test_get_datetime_token_map(datetime_tokens):
     """Test the get_token_map method."""
     datetime_tokens.get_datetime_token_map()

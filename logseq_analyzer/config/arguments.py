@@ -1,5 +1,5 @@
 """
-Logseq Analyzer Class
+LogseqAnalyzerArguments Class
 """
 
 from pathlib import Path
