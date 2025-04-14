@@ -69,7 +69,7 @@ class LogseqGraph:
     def update_data_with_file(self, file: LogseqFile):
         """
         Update the graph data with a new file.
-        
+
         Args:
             file (LogseqFile): The LogseqFile object to be added.
         """
@@ -83,7 +83,7 @@ class LogseqGraph:
     def del_large_file_attributes(self, file: LogseqFile):
         """
         Delete large attributes from the file object.
-        
+
         Args:
             file (LogseqFile): The LogseqFile object to be modified.
         """

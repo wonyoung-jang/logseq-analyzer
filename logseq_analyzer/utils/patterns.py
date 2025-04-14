@@ -41,7 +41,7 @@ class ContentPatterns:
         """
         Compile and return a dictionary of frequently used regex patterns.
 
-        Overview of Patterns:
+        Attributes:
             bullet: Matches bullet points.
             page_reference: Matches internal page references in double brackets.
             tagged_backlink: Matches tagged backlinks.
@@ -216,20 +216,20 @@ class DoubleCurlyBracketsPatterns:
         """
         Compile and return a dictionary of regex patterns for double curly brackets.
 
-        Overview of Patterns:
+        Attributes:
             all: Matches macro syntax.
-                embed: Matches embedded content.
-                    page_embed: Matches embedded page references.
-                    block_embed: Matches embedded block references.
-                namespace_query: Matches namespace queries.
-                card: Matches card references.
-                cloze: Matches cloze deletions.
-                simple_query: Matches simple query syntax.
-                query_function: Matches query functions.
-                embed_video_url: Matches embedded video URLs.
-                embed_twitter_tweet: Matches embedded Twitter tweets.
-                embed_youtube_timestamp: Matches embedded YouTube timestamps.
-                renderer: Matches renderer syntax.
+            embed: Matches embedded content.
+            page_embed: Matches embedded page references.
+            block_embed: Matches embedded block references.
+            namespace_query: Matches namespace queries.
+            card: Matches card references.
+            cloze: Matches cloze deletions.
+            simple_query: Matches simple query syntax.
+            query_function: Matches query functions.
+            embed_video_url: Matches embedded video URLs.
+            embed_twitter_tweet: Matches embedded Twitter tweets.
+            embed_youtube_timestamp: Matches embedded YouTube timestamps.
+            renderer: Matches renderer syntax.
         """
         self.all = re.compile(
             r"""
@@ -385,22 +385,23 @@ class AdvancedCommandPatterns:
         """
         Compile and return a dictionary of frequently used regex patterns.
 
-        Overview of Patterns:
+        Attributes:
             all: Matches advanced org-mode commands.
-                export
-                    ascii
-                    latex
-                caution
-                center
-                comment
-                important
-                note
-                pinned
-                query
-                quote
-                tip
-                verse
-                warning
+            export: Matches export blocks.
+            export_ascii: Matches ASCII export blocks.
+            export_latex: Matches LaTeX export blocks.
+            caution: Matches caution blocks.
+            center: Matches center blocks.
+            comment: Matches comment blocks.
+            example: Matches example blocks.
+            important: Matches important blocks.
+            note: Matches note blocks.
+            pinned: Matches pinned blocks.
+            query: Matches query blocks.
+            quote: Matches quote blocks.
+            tip: Matches tip blocks.
+            verse: Matches verse blocks.
+            warning: Matches warning blocks.
         """
         self.all = re.compile(
             r"""
@@ -597,8 +598,11 @@ class CodePatterns:
         """
         Compile and return a dictionary of regex patterns for code blocks.
 
-        Overview of Patterns:
+        Attributes:
             all: Matches all code blocks.
+            multiline_code_lang: Matches multiline code blocks with a specified language.
+            calc_block: Matches calculation blocks.
+            inline_code_block: Matches inline code blocks.
         """
         self.all = re.compile(
             r"""
@@ -661,9 +665,9 @@ class DoubleParenthesesPatterns:
         """
         Compile and return a dictionary of regex patterns for double parentheses.
 
-        Overview of Patterns:
+        Attributes:
             all: Matches ((...)).
-                block_reference: Matches UUID block references.
+            block_reference: Matches UUID block references.
         """
         self.all = re.compile(
             r"""
@@ -716,10 +720,10 @@ class EmbeddedLinksPatterns:
         """
         Compile and return a dictionary of regex patterns for embedded links.
 
-        Overview of Patterns:
-            embedded_link: Matches embedded content links.
-                embedded_link_internet: Matches embedded internet content.
-                embedded_link_asset: Matches embedded asset references.
+        Attributes:
+            all: Matches embedded content links.
+            internet: Matches embedded internet content.
+            asset: Matches embedded asset references.
         """
         self.all = re.compile(
             r"""
@@ -788,10 +792,10 @@ class ExternalLinksPatterns:
         """
         Compile and return a dictionary of regex patterns for external links.
 
-        Overview of Patterns:
-            external_link: Matches markdown-style external links.
-                external_link_internet: Matches external links to websites (http/https).
-                external_link_alias: Matches aliased external links (e.g., nested links).
+        Attributes:
+            all: Matches markdown-style external links.
+            internet: Matches external links to websites (http/https).
+            alias: Matches aliased external links (e.g., nested links).
         """
         self.all = re.compile(
             r"""
