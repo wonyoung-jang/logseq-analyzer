@@ -3,7 +3,20 @@ Test the Criteria enum class.
 """
 
 import pytest
-from ..enums import Phase, Output, SummaryFiles, Criteria
+from ..enums import Core, Phase, Output, SummaryFiles, Criteria
+
+
+# Core
+def test_core_values():
+    expected = {
+        "NS_SEP": "/",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Core, member_name).value == string_value
+
+
+def test_core_member_count():
+    assert len(Core) == 1
 
 
 # Phase
