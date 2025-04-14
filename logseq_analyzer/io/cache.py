@@ -26,7 +26,7 @@ class Cache:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, cache_path: Path = None):
+    def __init__(self, cache_path: Path = "logseq-analyzer-cache"):
         """Initialize the class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
