@@ -67,7 +67,12 @@ class LogseqGraph:
         return file
 
     def update_data_with_file(self, file: LogseqFile):
-        """Update the graph data with a new file."""
+        """
+        Update the graph data with a new file.
+        
+        Args:
+            file (LogseqFile): The LogseqFile object to be added.
+        """
         file_hash = hash(file)
         self.data[file_hash] = file.__dict__
         self.content_bullets[file_hash] = file.content_bullets
@@ -76,7 +81,12 @@ class LogseqGraph:
         self.masked_blocks[file_hash] = file.masked_blocks
 
     def del_large_file_attributes(self, file: LogseqFile):
-        """Delete large attributes from the file object."""
+        """
+        Delete large attributes from the file object.
+        
+        Args:
+            file (LogseqFile): The LogseqFile object to be modified.
+        """
         delattr(file, "content_bullets")
         delattr(file, "content")
         delattr(file, "primary_bullet")
