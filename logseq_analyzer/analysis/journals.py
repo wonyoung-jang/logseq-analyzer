@@ -70,8 +70,7 @@ class LogseqJournals:
             try:
                 if any(ordinal in key for ordinal in ("st", "nd", "rd", "th")):
                     key = key.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
-                date_obj = datetime.strptime(key, py_page_base_format.replace("#", ""))
-                yield date_obj
+                yield datetime.strptime(key, py_page_base_format.replace("#", ""))
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
