@@ -11,8 +11,8 @@ from ..config.analyzer_config import LogseqAnalyzerConfig
 from .path_validator import LogseqAnalyzerPathValidator
 
 ANALYZER_CONFIG = LogseqAnalyzerConfig()
-JSON_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_JSON"]
-TXT_FORMAT = ANALYZER_CONFIG.config["CONST"]["REPORT_FORMAT_TXT"]
+JSON_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
+TXT_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
 
 
 class ReportWriter:
@@ -28,7 +28,7 @@ class ReportWriter:
         self.filename_prefix = filename_prefix
         self.items = items
         self.type_output = type_output
-        self.output_format = ANALYZER_CONFIG.config["ANALYZER"]["REPORT_FORMAT"]
+        self.output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:

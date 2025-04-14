@@ -5,6 +5,12 @@ Enums for the Logseq Analyzer.
 from enum import Enum
 
 
+class Core(Enum):
+    """Core components of the Logseq Analyzer."""
+
+    NS_SEP = "/"
+
+
 class Phase(Enum):
     """Phase of the application."""
 

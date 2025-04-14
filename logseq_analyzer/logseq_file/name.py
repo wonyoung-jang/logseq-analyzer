@@ -8,10 +8,11 @@ from pathlib import Path
 from urllib.parse import unquote
 import logging
 
+from ..utils.enums import Core
 from ..config.analyzer_config import LogseqAnalyzerConfig
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
+
+NS_SEP = Core.NS_SEP.value
 
 
 @dataclass
@@ -28,6 +29,7 @@ class LogseqFilename:
     logseq_url: str = None
     is_namespace: bool = None
     file_type: str = None
+    ac: LogseqAnalyzerConfig = LogseqAnalyzerConfig()
 
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
@@ -43,26 +45,22 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        if self.name.endswith(ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
-            self.name = self.name.rstrip(ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
+        if self.name.endswith(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
+            self.name = self.name.rstrip(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
 
-        if self.parent == ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
+        if self.parent == self.ac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(
-                ANALYZER_CONFIG.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP
-            )
+            self.name = unquote(self.name).replace(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP)
 
         self.is_namespace = NS_SEP in self.name
 
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
         try:
-            date_object = datetime.strptime(self.name, ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"])
-            page_title_base = date_object.strftime(
-                ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]
-            ).lower()
-            if "o" in ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["JOURNAL_PAGE_TITLE_FORMAT"]:
+            date_object = datetime.strptime(self.name, self.ac.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"])
+            page_title_base = date_object.strftime(self.ac.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]).lower()
+            if "o" in self.ac.config["LOGSEQ_CONFIG"]["JOURNAL_PAGE_TITLE_FORMAT"]:
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(
@@ -75,14 +73,14 @@ class LogseqFilename:
             logging.warning(
                 "Failed to parse date from key '%s', format `%s`: %s",
                 self.name,
-                ANALYZER_CONFIG.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"],
+                self.ac.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"],
                 e,
             )
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        graph_dir = ANALYZER_CONFIG.config["ANALYZER"]["GRAPH_DIR"]
+        graph_dir = self.ac.config["ANALYZER"]["GRAPH_DIR"]
         len_graph_dir = len(Path(graph_dir).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
@@ -125,11 +123,11 @@ class LogseqFilename:
         Helper function to determine the file type based on the directory structure.
         """
         self.file_type = {
-            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
-            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
-            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
-            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
-            ANALYZER_CONFIG.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
+            self.ac.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
+            self.ac.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
+            self.ac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
+            self.ac.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
+            self.ac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
     @staticmethod

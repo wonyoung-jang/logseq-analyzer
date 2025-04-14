@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
 
-from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.builtin_properties import LogseqBuiltInProperties
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import (
@@ -19,13 +18,12 @@ from ..utils.patterns import (
     DoubleParenthesesPatterns,
     CodePatterns,
 )
-from ..utils.enums import Criteria
+from ..utils.enums import Criteria, Core
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
 
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-NS_SEP = ANALYZER_CONFIG.config["CONST"]["NAMESPACE_SEP"]
+NS_SEP = Core.NS_SEP.value
 
 
 class LogseqFile:
