@@ -36,6 +36,21 @@ class LogseqAnalyzerGUI(QMainWindow):
     def __init__(self):
         """Initialize the GUI components and layout."""
         super().__init__()
+
+        self.graph_folder_input = QLineEdit(readOnly=True)
+        self.global_config_input = QLineEdit(readOnly=True)
+        self.report_format_combo = QComboBox()
+        self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
+        self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
+        self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
+        self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
+        self.graph_cache_checkbox = QCheckBox("Reindex Graph Cache")
+        self.setup_progress_bar = self.create_progress_bar()
+        self.run_button = QPushButton("Run Analysis")
+        self.output_button = QPushButton("Open Output Directory")
+        self.delete_button = QPushButton("Open Delete Directory")
+        self.log_button = QPushButton("Open Log File")
+
         self.setWindowTitle("Logseq Analyzer")
         self.resize(500, 500)
         self._paths = LogseqAnalyzerPathValidator()
@@ -46,6 +61,46 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.setup_ui(main_layout)
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
+
+    def run_analysis(self):
+        """Run the analysis with the provided arguments."""
+        args_gui = {
+            "graph_folder": self.graph_folder_input.text(),
+            "global_config": self.global_config_input.text(),
+            "move_unlinked_assets": self.move_assets_checkbox.isChecked(),
+            "move_bak": self.move_bak_checkbox.isChecked(),
+            "move_recycle": self.move_recycle_checkbox.isChecked(),
+            "write_graph": self.write_graph_checkbox.isChecked(),
+            "graph_cache": self.graph_cache_checkbox.isChecked(),
+            "report_format": self.report_format_combo.currentText(),
+        }
+        if not args_gui["graph_folder"]:
+            self.show_error("Graph folder is required.")
+            return
+
+        self.save_settings()
+        self.run_button.setEnabled(False)
+
+        # Reset progress bars before starting
+        self.setup_progress_bar.setValue(0)
+        QApplication.processEvents()
+
+        try:
+            run_app(**args_gui, gui_instance=self)
+            success_dialog = QMessageBox(self)
+            success_dialog.setIcon(QMessageBox.Information)
+            success_dialog.setWindowTitle("Analysis Complete")
+            success_dialog.setText("Analysis completed successfully.")
+            success_dialog.addButton("Close", QMessageBox.AcceptRole)
+            success_dialog.exec()
+        except KeyboardInterrupt:
+            self.show_error("Analysis interrupted by user.")
+            self.close_analyzer()
+        finally:
+            self.run_button.setEnabled(False)
+            self.output_button.setEnabled(True)
+            self.delete_button.setEnabled(True)
+            self.log_button.setEnabled(True)
 
     def setup_ui(self, main_layout):
         """Sets up the main user interface layout and elements."""
@@ -67,7 +122,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # --- Graph Folder Input ---
         graph_folder_label = QLabel("Logseq Graph Folder (Required):")
-        self.graph_folder_input = QLineEdit(readOnly=True)
         graph_folder_button = QPushButton("Browse")
         graph_folder_button.clicked.connect(self.select_graph_folder)
         graph_folder_hbox = QWidget()
@@ -78,7 +132,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # --- Global Config File Input ---
         global_config_label = QLabel("Logseq Global Config File (Optional):")
-        self.global_config_input = QLineEdit(readOnly=True)
         global_config_button = QPushButton("Browse")
         global_config_button.clicked.connect(self.select_global_config_file)
         global_config_hbox = QWidget()
@@ -89,7 +142,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # --- Report Format Dropdown ---
         report_format_label = QLabel("Report Format:")
-        self.report_format_combo = QComboBox()
         self.report_format_combo.addItems([".txt", ".json", ".md"])
         form_layout.addRow(report_format_label, self.report_format_combo)
 
@@ -98,11 +150,6 @@ class LogseqAnalyzerGUI(QMainWindow):
     def create_checkboxes_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for checkboxes."""
         checkboxes_layout = QVBoxLayout()
-        self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
-        self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
-        self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
-        self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
-        self.graph_cache_checkbox = QCheckBox("Reindex Graph Cache")
         checkboxes_layout.addWidget(self.move_assets_checkbox)
         checkboxes_layout.addWidget(self.move_bak_checkbox)
         checkboxes_layout.addWidget(self.move_recycle_checkbox)
@@ -113,7 +160,6 @@ class LogseqAnalyzerGUI(QMainWindow):
     def create_progress_bars_layout(self) -> QFormLayout:
         """Creates and returns the layout for progress bars."""
         progress_bars_layout = QFormLayout()
-        self.setup_progress_bar = self.create_progress_bar()
         progress_bars_layout.addRow("Progress:", self.setup_progress_bar)
         return progress_bars_layout
 
@@ -132,7 +178,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         buttons_layout.addLayout(button_layout_primary)
         buttons_layout.addLayout(button_layout_secondary)
 
-        self.run_button = QPushButton("Run Analysis")
         self.run_button.clicked.connect(self.run_analysis)
         self.run_button.setShortcut("Ctrl+R")
         self.run_button.setToolTip("Ctrl+R to run analysis")
@@ -145,17 +190,14 @@ class LogseqAnalyzerGUI(QMainWindow):
         button_layout_primary.addWidget(exit_button)
 
         # --- Secondary Buttons ---
-        self.output_button = QPushButton("Open Output Directory")
         self.output_button.clicked.connect(self.open_output_directory)
         self.output_button.setEnabled(False)
         button_layout_secondary.addWidget(self.output_button)
 
-        self.delete_button = QPushButton("Open Delete Directory")
         self.delete_button.clicked.connect(self.open_delete_directory)
         self.delete_button.setEnabled(False)
         button_layout_secondary.addWidget(self.delete_button)
 
-        self.log_button = QPushButton("Open Log File")
         self.log_button.clicked.connect(self.open_log_file)
         self.log_button.setEnabled(False)
         button_layout_secondary.addWidget(self.log_button)
@@ -201,46 +243,6 @@ class LogseqAnalyzerGUI(QMainWindow):
                 subprocess.call(["xdg-open", log_file_path])
         else:
             self.show_error("Log file not found.")
-
-    def run_analysis(self):
-        """Run the analysis with the provided arguments."""
-        args_gui = {
-            "graph_folder": self.graph_folder_input.text(),
-            "global_config": self.global_config_input.text(),
-            "move_unlinked_assets": self.move_assets_checkbox.isChecked(),
-            "move_bak": self.move_bak_checkbox.isChecked(),
-            "move_recycle": self.move_recycle_checkbox.isChecked(),
-            "write_graph": self.write_graph_checkbox.isChecked(),
-            "graph_cache": self.graph_cache_checkbox.isChecked(),
-            "report_format": self.report_format_combo.currentText(),
-        }
-        if not args_gui["graph_folder"]:
-            self.show_error("Graph folder is required.")
-            return
-
-        self.save_settings()
-        self.run_button.setEnabled(False)
-
-        # Reset progress bars before starting
-        self.setup_progress_bar.setValue(0)
-        QApplication.processEvents()
-
-        try:
-            run_app(**args_gui, gui_instance=self)
-            success_dialog = QMessageBox(self)
-            success_dialog.setIcon(QMessageBox.Information)
-            success_dialog.setWindowTitle("Analysis Complete")
-            success_dialog.setText("Analysis completed successfully.")
-            success_dialog.addButton("Close", QMessageBox.AcceptRole)
-            success_dialog.exec()
-        except KeyboardInterrupt:
-            self.show_error("Analysis interrupted by user.")
-            self.close_analyzer()
-        finally:
-            self.run_button.setEnabled(False)
-            self.output_button.setEnabled(True)
-            self.delete_button.setEnabled(True)
-            self.log_button.setEnabled(True)
 
     def update_progress(self, progress_value=0):
         """Updates the progress bar for a given phase."""
