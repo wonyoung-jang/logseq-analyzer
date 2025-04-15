@@ -1,12 +1,6 @@
 logseq\_analyzer package
 ========================
 
-.. automodule:: logseq_analyzer
-   :members:
-   :private-members:
-   :show-inheritance:
-   :undoc-members:
-
 Subpackages
 -----------
 
@@ -27,3 +21,11 @@ Submodules
    :maxdepth: 4
 
    logseq_analyzer.app
+
+Module contents
+---------------
+
+.. automodule:: logseq_analyzer
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -22,7 +22,6 @@ copyright = '2025, Wonyoung Jang'
 extensions = [
     'sphinx.ext.apidoc',        # Generate API documentation from docstrings
     'sphinx.ext.autodoc',       # Core extension for API doc generation from docstrings
-    'sphinx.ext.autosummary',   # Generate summary tables for modules/classes
     'sphinx.ext.viewcode',      # Add links to highlighted source code
     'sphinx.ext.napoleon',      # Support for NumPy and Google style docstrings
 ]
@@ -34,11 +33,11 @@ apidoc_modules = [
         'destination': '.',
         'exclude_patterns': [f'{MODULES}/**/tests/*'],
         'max_depth': 4,
-        'follow_links': True,
+        'follow_links': False,
         'separate_modules': True,
-        'include_private': True,
+        'include_private': False,
         'no_headings': False,
-        'module_first': True,
+        'module_first': False,
         'implicit_namespaces': False,
         'automodule_options': {
             'members', 'show-inheritance', 'undoc-members'

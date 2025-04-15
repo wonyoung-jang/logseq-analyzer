@@ -1,12 +1,6 @@
 logseq\_analyzer.config package
 ===============================
 
-.. automodule:: logseq_analyzer.config
-   :members:
-   :private-members:
-   :show-inheritance:
-   :undoc-members:
-
 Submodules
 ----------
 
@@ -20,3 +14,11 @@ Submodules
    logseq_analyzer.config.default_logseq_config_edn
    logseq_analyzer.config.edn_parser
    logseq_analyzer.config.graph_config
+
+Module contents
+---------------
+
+.. automodule:: logseq_analyzer.config
+   :members:
+   :show-inheritance:
+   :undoc-members:

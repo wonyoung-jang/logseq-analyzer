@@ -1,12 +1,6 @@
 logseq\_analyzer.logseq\_file package
 =====================================
 
-.. automodule:: logseq_analyzer.logseq_file
-   :members:
-   :private-members:
-   :show-inheritance:
-   :undoc-members:
-
 Submodules
 ----------
 
@@ -17,3 +11,11 @@ Submodules
    logseq_analyzer.logseq_file.file
    logseq_analyzer.logseq_file.name
    logseq_analyzer.logseq_file.stats
+
+Module contents
+---------------
+
+.. automodule:: logseq_analyzer.logseq_file
+   :members:
+   :show-inheritance:
+   :undoc-members:

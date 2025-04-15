@@ -1,12 +1,6 @@
 logseq\_analyzer.gui package
 ============================
 
-.. automodule:: logseq_analyzer.gui
-   :members:
-   :private-members:
-   :show-inheritance:
-   :undoc-members:
-
 Submodules
 ----------
 
@@ -14,3 +8,11 @@ Submodules
    :maxdepth: 4
 
    logseq_analyzer.gui.main_window
+
+Module contents
+---------------
+
+.. automodule:: logseq_analyzer.gui
+   :members:
+   :show-inheritance:
+   :undoc-members:

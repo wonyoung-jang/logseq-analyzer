@@ -1,12 +1,6 @@
 logseq\_analyzer.io package
 ===========================
 
-.. automodule:: logseq_analyzer.io
-   :members:
-   :private-members:
-   :show-inheritance:
-   :undoc-members:
-
 Submodules
 ----------
 
@@ -18,3 +12,11 @@ Submodules
    logseq_analyzer.io.filesystem
    logseq_analyzer.io.path_validator
    logseq_analyzer.io.report_writer
+
+Module contents
+---------------
+
+.. automodule:: logseq_analyzer.io
+   :members:
+   :show-inheritance:
+   :undoc-members:
