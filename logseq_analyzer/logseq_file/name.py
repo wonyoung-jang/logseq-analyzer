@@ -8,6 +8,10 @@ from pathlib import Path
 from urllib.parse import unquote
 import logging
 
+from ..config.datetime_tokens import LogseqJournalPyFileFormat, LogseqJournalPyPageFormat
+
+from ..config.graph_config import LogseqGraphConfig
+
 from ..utils.enums import Core
 from ..config.analyzer_config import LogseqAnalyzerConfig
 
@@ -31,6 +35,7 @@ class LogseqFilename:
     is_hls: bool = None
     file_type: str = None
     ac: LogseqAnalyzerConfig = LogseqAnalyzerConfig()
+    gc: LogseqGraphConfig = LogseqGraphConfig()
 
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
@@ -44,6 +49,8 @@ class LogseqFilename:
         self.is_hls = False
         self.logseq_url = ""
         self.file_type = ""
+        self.py_file_fmt = LogseqJournalPyFileFormat()
+        self.py_page_fmt = LogseqJournalPyPageFormat()
 
     def __repr__(self):
         return f"LogseqFilename({self.file_path})"
@@ -64,9 +71,9 @@ class LogseqFilename:
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
         try:
-            date_object = datetime.strptime(self.name, self.ac.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"])
-            page_title_base = date_object.strftime(self.ac.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]).lower()
-            if "o" in self.ac.config["LOGSEQ_CONFIG"]["JOURNAL_PAGE_TITLE_FORMAT"]:
+            date_object = datetime.strptime(self.name, self.py_file_fmt.py_file_format)
+            page_title_base = date_object.strftime(self.py_page_fmt.py_page_format).lower()
+            if "o" in self.gc.ls_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(
@@ -79,7 +86,7 @@ class LogseqFilename:
             logging.warning(
                 "Failed to parse date from key '%s', format `%s`: %s",
                 self.name,
-                self.ac.config["LOGSEQ_JOURNALS"]["PY_FILE_FORMAT"],
+                self.py_page_fmt.py_page_format,
                 e,
             )
 

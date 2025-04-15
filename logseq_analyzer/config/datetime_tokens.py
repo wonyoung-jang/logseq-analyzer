@@ -5,6 +5,7 @@ Logseq DateTime Tokens Module
 import re
 
 from .analyzer_config import LogseqAnalyzerConfig
+from .graph_config import LogseqGraphConfig
 
 
 class LogseqDateTimeTokens:
@@ -14,19 +15,20 @@ class LogseqDateTimeTokens:
 
     _instance = None
 
-    def __new__(cls, *args):
+    def __new__(cls):
         """Ensure only one instance exists."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, analyzer_config: LogseqAnalyzerConfig = None):
+    def __init__(self):
         """
         Initialize the LogseqDateTimeTokens class.
         """
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.analyzer_config = analyzer_config
+            self.analyzer_config = LogseqAnalyzerConfig()
+            self.graph_config = LogseqGraphConfig()
             self.token_map = None
             self.token_pattern = None
 
@@ -44,15 +46,16 @@ class LogseqDateTimeTokens:
         """
         Set the formatting for journal files and pages in Python format.
         """
-        journal_page_format = self.analyzer_config.get("LOGSEQ_CONFIG", "JOURNAL_PAGE_TITLE_FORMAT")
-        journal_file_format = self.analyzer_config.get("LOGSEQ_CONFIG", "JOURNAL_FILE_NAME_FORMAT")
-        if not self.analyzer_config.get("LOGSEQ_JOURNALS", "PY_FILE_FORMAT"):
-            py_file_name_format = self.convert_cljs_date_to_py(journal_file_format)
-            self.analyzer_config.set("LOGSEQ_JOURNALS", "PY_FILE_FORMAT", py_file_name_format)
+        journal_file_format = self.graph_config.ls_config.get(":journal/file-name-format")
+        py_file_fmt = LogseqJournalPyFileFormat()
+        if not py_file_fmt.py_file_format:
+            py_file_fmt.py_file_format = self.convert_cljs_date_to_py(journal_file_format)
+
+        journal_page_format = self.graph_config.ls_config.get(":journal/page-title-format")
         py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        if not self.analyzer_config.get("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT"):
-            py_page_title_format_base = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
-            self.analyzer_config.set("LOGSEQ_JOURNALS", "PY_PAGE_BASE_FORMAT", py_page_title_format_base)
+        py_page_fmt = LogseqJournalPyPageFormat()
+        if not py_page_fmt.py_page_format:
+            py_page_fmt.py_page_format = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
 
     def convert_cljs_date_to_py(self, cljs_format) -> str:
         """
@@ -67,3 +70,89 @@ class LogseqDateTimeTokens:
         """
         token = match.group(0)
         return self.token_map.get(token, token)
+
+
+class LogseqJournalPyFileFormat:
+    """
+    Class to handle the Python file format for Logseq journals.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """
+        Initialize the LogseqJournalPyFileFormat class.
+        """
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.py_file_format = ""
+
+    def __str__(self):
+        """Return the string representation of the LogseqJournalPyFileFormat."""
+        return self.py_file_format
+
+    @property
+    def py_file_format(self):
+        """Return the Python file format for Logseq journals."""
+        return self._py_file_format
+
+    @py_file_format.setter
+    def py_file_format(self, value):
+        """Set the Python file format for Logseq journals."""
+        if not isinstance(value, str):
+            raise ValueError("File format must be a string.")
+        self._py_file_format = value
+
+    @py_file_format.deleter
+    def py_file_format(self):
+        """Delete the Python file format for Logseq journals."""
+        del self._py_file_format
+
+
+class LogseqJournalPyPageFormat:
+    """
+    Class to handle the Python name format for Logseq journals.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """
+        Initialize the LogseqJournalPyNameFormat class.
+        """
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.py_page_format = ""
+
+    def __str__(self):
+        """Return the string representation of the LogseqJournalPyPageFormat."""
+        return self.py_page_format
+
+    @property
+    def py_page_format(self):
+        """Return the Python name format for Logseq journals."""
+        return self._py_page_format
+
+    @py_page_format.setter
+    def py_page_format(self, value):
+        """Set the Python name format for Logseq journals."""
+        if not isinstance(value, str):
+            raise ValueError("File format must be a string.")
+        self._py_page_format = value
+
+    @py_page_format.deleter
+    def py_page_format(self):
+        """Delete the Python name format for Logseq journals."""
+        del self._py_page_format

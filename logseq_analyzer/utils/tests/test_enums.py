@@ -3,7 +3,41 @@ Test the Criteria enum class.
 """
 
 import pytest
-from ..enums import Core, Phase, Output, SummaryFiles, Criteria
+from ..enums import Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved
+
+
+# Moved
+def test_moved_values():
+    expected = {
+        "ASSETS": "moved_assets",
+        "RECYCLE": "moved_recycle",
+        "BAK": "moved_bak",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Moved, member_name).value == string_value
+
+
+def test_moved_member_count():
+    assert len(Moved) == 3
+
+
+# OutputDir
+def test_output_dir_values():
+    expected = {
+        "META": "_meta",
+        "JOURNALS": "journals",
+        "NAMESPACES": "namespaces",
+        "SUMMARY_FILES": "summary_files",
+        "SUMMARY_CONTENT": "summary_content",
+        "MOVED_FILES": "moved_files",
+        "TEST": "test",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(OutputDir, member_name).value == string_value
+
+
+def test_output_dir_member_count():
+    assert len(OutputDir) == 7
 
 
 # Core
@@ -11,15 +45,17 @@ def test_core_values():
     expected = {
         "FMT_TXT": ".txt",
         "FMT_JSON": ".json",
-        "NS_SEP": "/",
         "HLS_PREFIX": "hls__",
+        "NS_SEP": "/",
+        "NS_FILE_SEP_LEGACY": "%2F",
+        "NS_FILE_SEP_TRIPLE_LOWBAR": "___",
     }
     for member_name, string_value in expected.items():
         assert getattr(Core, member_name).value == string_value
 
 
 def test_core_member_count():
-    assert len(Core) == 4
+    assert len(Core) == 6
 
 
 # Phase
@@ -59,10 +95,10 @@ def test_output_values():
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "MISSING_KEYS": "missing_keys",
         "MOVED_FILES": "moved_files",
-        "NAMESPACE_DATA": "__meta__namespace_data",
+        "NAMESPACE_DATA": "namespace_data",
         "NAMESPACE_DETAILS": "namespace_details",
         "NAMESPACE_HIERARCHY": "namespace_hierarchy",
-        "NAMESPACE_PARTS": "__meta__namespace_parts",
+        "NAMESPACE_PARTS": "namespace_parts",
         "NAMESPACE_QUERIES": "namespace_queries",
         "PROCESSED_KEYS": "processed_keys",
         "TIMELINE_STATS": "timeline_stats",

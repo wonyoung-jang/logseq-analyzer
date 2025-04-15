@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 import logging
 
-from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..config.datetime_tokens import LogseqJournalPyPageFormat
 from .summary_files import LogseqFileSummarizer
 from .graph import LogseqGraph
 
@@ -46,8 +46,8 @@ class LogseqJournals:
         """
         Process journal keys to build the complete timeline and detect missing entries.
         """
-        ac = LogseqAnalyzerConfig()
-        py_page_base_format = ac.config["LOGSEQ_JOURNALS"]["PY_PAGE_BASE_FORMAT"]
+        py_page_fmt = LogseqJournalPyPageFormat()
+        py_page_base_format = py_page_fmt.py_page_format
 
         for dateobj in self.process_journal_keys_to_datetime(self.dangling_links, py_page_base_format):
             self.dangling_journals.append(dateobj)

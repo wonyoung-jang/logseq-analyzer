@@ -7,6 +7,7 @@ from typing import Dict
 import configparser
 
 from ..io.filesystem import File
+from ..utils.enums import Core
 
 
 def lambda_optionxform(option: str) -> str:
@@ -74,22 +75,14 @@ class LogseqAnalyzerConfig:
 
     def set_logseq_config_edn_data(self, ls_config: Dict[str, str]):
         """Set the Logseq configuration data."""
-        self.set(
-            "LOGSEQ_CONFIG",
-            "JOURNAL_PAGE_TITLE_FORMAT",
-            ls_config.get(":journal/page-title-format"),
-        )
-        self.set(
-            "LOGSEQ_CONFIG",
-            "JOURNAL_FILE_NAME_FORMAT",
-            ls_config.get(":journal/file-name-format"),
-        )
         self.set("LOGSEQ_CONFIG", "DIR_PAGES", ls_config.get(":pages-directory", "pages"))
         self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory", "journals"))
         self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory", "whiteboards"))
-        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ls_config.get(":file/name-format"))
-        if self.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar":
-            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", "___")
+
+        ns_format = ls_config.get(":file/name-format")
+        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
+        if ns_format == ":triple-lowbar":
+            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
 
     def get_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""

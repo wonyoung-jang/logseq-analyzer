@@ -19,7 +19,7 @@ from .io.cache import Cache
 from .io.file_mover import LogseqFileMover
 from .io.path_validator import LogseqAnalyzerPathValidator
 from .io.report_writer import ReportWriter
-from .utils.enums import Phase, Output, SummaryFiles
+from .utils.enums import Phase, Output, SummaryFiles, OutputDir, Moved
 
 
 class GUIInstanceDummy:
@@ -81,7 +81,7 @@ def run_app(**kwargs):
     paths.validate_target_paths()
     # --- #
     analyzer_config.get_logseq_target_dirs()
-    datetime_tokens = LogseqDateTimeTokens(analyzer_config)
+    datetime_tokens = LogseqDateTimeTokens()
     datetime_tokens.get_datetime_token_map()
     datetime_tokens.set_datetime_token_pattern()
     datetime_tokens.set_journal_py_formatting()
@@ -137,9 +137,9 @@ def run_app(**kwargs):
         paths.dir_delete_recycle.path,
         paths.dir_recycle.path,
     )
-    ls_file_mover.moved_files["moved_assets"] = ma
-    ls_file_mover.moved_files["moved_recycle"] = mr
-    ls_file_mover.moved_files["moved_bak"] = mb
+    ls_file_mover.moved_files[Moved.ASSETS.value] = ma
+    ls_file_mover.moved_files[Moved.RECYCLE.value] = mr
+    ls_file_mover.moved_files[Moved.BAK.value] = mb
     progress(95)
     # Output writing
     meta_reports = {
@@ -186,16 +186,16 @@ def run_app(**kwargs):
     }
     # Writing
     all_outputs = (
-        (meta_reports, analyzer_config.config["OUTPUT"]["META"]),
-        (journal_reports, analyzer_config.config["OUTPUT"]["JOURNALS"]),
-        (summary_files.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_FILE"]),
-        (summary_content.subsets, analyzer_config.config["OUTPUT"]["SUMMARY_CONTENT"]),
-        (namespace_reports, analyzer_config.config["OUTPUT"]["NAMESPACES"]),
-        (moved_files_reports, analyzer_config.config["OUTPUT"]["ASSETS"]),
+        (meta_reports, OutputDir.META),
+        (journal_reports, OutputDir.JOURNALS),
+        (summary_files.subsets, OutputDir.SUMMARY_FILES),
+        (summary_content.subsets, OutputDir.SUMMARY_CONTENT),
+        (namespace_reports, OutputDir.NAMESPACES),
+        (moved_files_reports, OutputDir.MOVED_FILES),
     )
     for report, output_dir in all_outputs:
         for name, data in report.items():
-            ReportWriter(name, data, output_dir).write()
+            ReportWriter(name, data, output_dir.value).write()
 
     # Cache writing
     try:

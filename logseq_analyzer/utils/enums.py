@@ -11,6 +11,14 @@ class Config(Enum):
     pass
 
 
+class Moved(Enum):
+    """Moved files and directories in the Logseq Analyzer."""
+
+    ASSETS = "moved_assets"
+    RECYCLE = "moved_recycle"
+    BAK = "moved_bak"
+
+
 class Core(Enum):
     """Core components of the Logseq Analyzer."""
 
@@ -18,12 +26,26 @@ class Core(Enum):
     FMT_JSON = ".json"
     HLS_PREFIX = "hls__"
     NS_SEP = "/"
+    NS_FILE_SEP_LEGACY = "%2F"
+    NS_FILE_SEP_TRIPLE_LOWBAR = "___"
 
 
 class Phase(Enum):
     """Phase of the application."""
 
     GUI_INSTANCE = "gui_instance"
+
+
+class OutputDir(Enum):
+    """Output directories for the Logseq Analyzer."""
+
+    META = "_meta"
+    JOURNALS = "journals"
+    NAMESPACES = "namespaces"
+    SUMMARY_FILES = "summary_files"
+    SUMMARY_CONTENT = "summary_content"
+    MOVED_FILES = "moved_files"
+    TEST = "test"
 
 
 class Output(Enum):
@@ -50,10 +72,10 @@ class Output(Enum):
     UNIQUE_LINKED_REFERENCES_NS = "unique_linked_references_ns"
     MISSING_KEYS = "missing_keys"
     MOVED_FILES = "moved_files"
-    NAMESPACE_DATA = "__meta__namespace_data"
+    NAMESPACE_DATA = "namespace_data"
     NAMESPACE_DETAILS = "namespace_details"
     NAMESPACE_HIERARCHY = "namespace_hierarchy"
-    NAMESPACE_PARTS = "__meta__namespace_parts"
+    NAMESPACE_PARTS = "namespace_parts"
     NAMESPACE_QUERIES = "namespace_queries"
     PROCESSED_KEYS = "processed_keys"
     TIMELINE_STATS = "timeline_stats"
