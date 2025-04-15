@@ -41,13 +41,13 @@ class LogseqDateTimeTokens:
         Set the formatting for journal files and pages in Python format.
         """
         journal_file_format = self.graph_config.ls_config.get(":journal/file-name-format")
-        py_file_fmt = LogseqJournalPyFileFormat()
+        py_file_fmt = LogseqJournalFormats()
         if not py_file_fmt.py_file_format:
             py_file_fmt.py_file_format = self.convert_cljs_date_to_py(journal_file_format)
 
         journal_page_format = self.graph_config.ls_config.get(":journal/page-title-format")
         py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        py_page_fmt = LogseqJournalPyPageFormat()
+        py_page_fmt = LogseqJournalFormats()
         if not py_page_fmt.py_page_format:
             py_page_fmt.py_page_format = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
 
@@ -67,7 +67,7 @@ class LogseqDateTimeTokens:
 
 
 @singleton
-class LogseqJournalPyFileFormat:
+class LogseqJournalFormats:
     """
     Class to handle the Python file format for Logseq journals.
     """
@@ -78,11 +78,8 @@ class LogseqJournalPyFileFormat:
         """
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self.py_file_format = ""
-
-    def __str__(self):
-        """Return the string representation of the LogseqJournalPyFileFormat."""
-        return self.py_file_format
+            self._py_file_format = ""
+            self._py_page_format = ""
 
     @property
     def py_file_format(self):
@@ -96,30 +93,6 @@ class LogseqJournalPyFileFormat:
             raise ValueError("File format must be a string.")
         self._py_file_format = value
 
-    @py_file_format.deleter
-    def py_file_format(self):
-        """Delete the Python file format for Logseq journals."""
-        del self._py_file_format
-
-
-@singleton
-class LogseqJournalPyPageFormat:
-    """
-    Class to handle the Python name format for Logseq journals.
-    """
-
-    def __init__(self):
-        """
-        Initialize the LogseqJournalPyNameFormat class.
-        """
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.py_page_format = ""
-
-    def __str__(self):
-        """Return the string representation of the LogseqJournalPyPageFormat."""
-        return self.py_page_format
-
     @property
     def py_page_format(self):
         """Return the Python name format for Logseq journals."""
@@ -131,8 +104,3 @@ class LogseqJournalPyPageFormat:
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")
         self._py_page_format = value
-
-    @py_page_format.deleter
-    def py_page_format(self):
-        """Delete the Python name format for Logseq journals."""
-        del self._py_page_format
