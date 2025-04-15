@@ -7,6 +7,7 @@ from typing import List, Tuple
 import logging
 import shutil
 
+from ..utils.helpers import singleton
 from ..analysis.assets import LogseqAssets
 from ..analysis.graph import LogseqGraph
 from ..config.analyzer_config import LogseqAnalyzerConfig
@@ -14,18 +15,11 @@ from ..config.arguments import LogseqAnalyzerArguments
 from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
+@singleton
 class LogseqFileMover:
     """
     Class to handle moving files in a Logseq graph directory.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """

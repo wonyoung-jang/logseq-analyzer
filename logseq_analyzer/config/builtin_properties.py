@@ -5,20 +5,14 @@ Logseq Built-in Properties Module
 from typing import Dict, List
 
 from .analyzer_config import LogseqAnalyzerConfig
+from ..utils.helpers import singleton
 
 
+@singleton
 class LogseqBuiltInProperties:
     """
     A class to handle built-in properties for Logseq.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Implement singleton pattern."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqBuiltInProperties class."""
@@ -26,6 +20,7 @@ class LogseqBuiltInProperties:
             self._initialized = True
             self.analyzer_config = LogseqAnalyzerConfig()
             self.built_in_properties = None
+            self.set_builtin_properties()
 
     def set_builtin_properties(self):
         """Build the built-in properties set."""

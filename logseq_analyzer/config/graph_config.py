@@ -2,22 +2,16 @@
 Logseq Graph Class
 """
 
+from ..utils.helpers import singleton
 from .edn_parser import loads
 from .default_logseq_config_edn import DEFAULT_LOGSEQ_CONFIG_EDN
 
 
+@singleton
 class LogseqGraphConfig:
     """
     A class to LogseqGraphConfig.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""

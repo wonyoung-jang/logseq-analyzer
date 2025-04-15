@@ -5,17 +5,12 @@ LogseqAnalyzerArguments Class
 from pathlib import Path
 import argparse
 
+from ..utils.helpers import singleton
 
+
+@singleton
 class LogseqAnalyzerArguments:
     """A class to represent command line arguments for the Logseq Analyzer."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqAnalyzerArguments class."""

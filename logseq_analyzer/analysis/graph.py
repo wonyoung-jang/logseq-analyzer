@@ -6,22 +6,15 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict
 
-from ..config.builtin_properties import LogseqBuiltInProperties
+from ..utils.helpers import singleton
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output, Criteria
 
 
+@singleton
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqGraph instance."""
@@ -34,12 +27,8 @@ class LogseqGraph:
             self.unique_linked_references_ns = set()
             self.all_linked_references = {}
             self.dangling_links = set()
-
             self.hash_to_file_map: Dict[int, LogseqFile] = {}
             self.name_to_hashes_map = defaultdict(list)
-
-            self.logseq_builtin_properties = LogseqBuiltInProperties()
-            self.logseq_builtin_properties.set_builtin_properties()
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
@@ -58,7 +47,7 @@ class LogseqGraph:
         Returns:
             LogseqFile: Initialized LogseqFile object.
         """
-        file = LogseqFile(file_path, self.logseq_builtin_properties)
+        file = LogseqFile(file_path)
         file.init_file_data()
         file.process_content_data()
         return file

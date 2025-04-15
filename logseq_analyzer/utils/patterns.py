@@ -5,19 +5,14 @@ Compile frequently used regex patterns for Logseq content.
 import logging
 import re
 
+from .helpers import singleton
 
+
+@singleton
 class ContentPatterns:
     """
     Class to hold regex patterns for content in Logseq files.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the ContentPatterns class."""
@@ -180,18 +175,11 @@ class ContentPatterns:
         logging.info("Compiled ContentPatterns")
 
 
+@singleton
 class DoubleCurlyBracketsPatterns:
     """
     Class to hold regex patterns for double curly brackets in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the DoubleCurlyBracketsPatterns class."""
@@ -346,18 +334,11 @@ class DoubleCurlyBracketsPatterns:
         logging.info("Compiled DoubleCurlyBracketsPatterns")
 
 
+@singleton
 class AdvancedCommandPatterns:
     """
     Class to hold regex patterns for advanced commands in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the AdvancedCommandPatterns class."""
@@ -571,18 +552,11 @@ class AdvancedCommandPatterns:
         logging.info("Compiled AdvancedCommandPatterns")
 
 
+@singleton
 class CodePatterns:
     """
     Class to hold regex patterns for code blocks in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the CodePatterns class."""
@@ -640,18 +614,11 @@ class CodePatterns:
         logging.info("Compiled CodePatterns")
 
 
+@singleton
 class DoubleParenthesesPatterns:
     """
     Class to hold regex patterns for double parentheses in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the DoubleParenthesesPatterns class."""
@@ -694,18 +661,11 @@ class DoubleParenthesesPatterns:
         logging.info("Compiled DoubleParenthesesPatterns")
 
 
+@singleton
 class EmbeddedLinksPatterns:
     """
     Class to hold regex patterns for embedded links in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the EmbeddedLinksPatterns class."""
@@ -766,18 +726,11 @@ class EmbeddedLinksPatterns:
         logging.info("Compiled EmbeddedLinksPatterns")
 
 
+@singleton
 class ExternalLinksPatterns:
     """
     Class to hold regex patterns for external links in Logseq content.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the ExternalLinksPatterns class."""

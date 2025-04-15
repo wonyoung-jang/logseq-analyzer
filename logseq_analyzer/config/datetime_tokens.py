@@ -6,20 +6,14 @@ import re
 
 from .analyzer_config import LogseqAnalyzerConfig
 from .graph_config import LogseqGraphConfig
+from ..utils.helpers import singleton
 
 
+@singleton
 class LogseqDateTimeTokens:
     """
     Class to handle date and time tokens in Logseq.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """
@@ -72,18 +66,11 @@ class LogseqDateTimeTokens:
         return self.token_map.get(token, token)
 
 
+@singleton
 class LogseqJournalPyFileFormat:
     """
     Class to handle the Python file format for Logseq journals.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """
@@ -115,18 +102,11 @@ class LogseqJournalPyFileFormat:
         del self._py_file_format
 
 
+@singleton
 class LogseqJournalPyPageFormat:
     """
     Class to handle the Python name format for Logseq journals.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """

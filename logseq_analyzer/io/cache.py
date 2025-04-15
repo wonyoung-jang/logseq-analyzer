@@ -9,29 +9,22 @@ import logging
 import shelve
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
-from ..utils.helpers import iter_files
+from ..utils.helpers import iter_files, singleton
 from .path_validator import LogseqAnalyzerPathValidator
 
 
+@singleton
 class Cache:
     """
     Cache class to manage caching of modified files and directories.
     """
 
-    _instance = None
-
-    def __new__(cls, *args):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self, cache_path: Path = "logseq-analyzer-cache"):
+    def __init__(self):
         """Initialize the class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self._paths = LogseqAnalyzerPathValidator()
-            self.cache = shelve.open(cache_path, protocol=5)
+            self.cache = shelve.open(self._paths.file_cache.path, protocol=5)
 
     def close(self):
         """Close the cache file."""

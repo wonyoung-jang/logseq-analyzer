@@ -3,21 +3,16 @@ Logseq File Summarizer Module
 """
 
 from typing import Dict
+
+from ..utils.helpers import singleton
 from .graph import LogseqGraph
 from .query_graph import Query
 from ..utils.enums import SummaryFiles
 
 
+@singleton
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqFileSummarizer instance."""

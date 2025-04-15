@@ -2,20 +2,14 @@
 Path Validator for Logseq Analyzer
 """
 
+from ..utils.helpers import singleton
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from .filesystem import File
 
 
+@singleton
 class LogseqAnalyzerPathValidator:
     """Class to validate paths in the Logseq analyzer."""
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the path validator."""

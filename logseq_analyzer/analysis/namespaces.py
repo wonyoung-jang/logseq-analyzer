@@ -18,6 +18,7 @@ from collections import Counter, defaultdict
 from typing import Generator, List
 import logging
 
+from ..utils.helpers import singleton
 from .graph import LogseqGraph
 from ..logseq_file.name import LogseqFilename
 from ..utils.enums import Core
@@ -26,18 +27,11 @@ from ..utils.patterns import ContentPatterns
 NS_SEP = Core.NS_SEP.value
 
 
+@singleton
 class LogseqNamespaces:
     """
     Class for analyzing namespace data in Logseq.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """

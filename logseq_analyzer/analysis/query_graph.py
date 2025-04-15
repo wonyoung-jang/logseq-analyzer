@@ -2,22 +2,16 @@
 Query Graph Module.
 """
 
+from ..utils.helpers import singleton
 from ..logseq_file.file import LogseqFile
 from .graph import LogseqGraph
 
 
+@singleton
 class Query:
     """
     Class to query the Logseq graph for specific file attributes.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the Query class with a LogseqGraph instance."""

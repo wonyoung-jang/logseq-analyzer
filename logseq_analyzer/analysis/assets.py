@@ -2,24 +2,18 @@
 Logseq Assets Analysis Module.
 """
 
+from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
 from ..utils.enums import Criteria
 from .query_graph import Query
 from .graph import LogseqGraph
 
 
+@singleton
 class LogseqAssets:
     """
     Class to handle assets in Logseq.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqAssets instance."""
@@ -67,7 +61,8 @@ class LogseqAssetsHls:
     """
     Class to handle HLS assets in Logseq.
 
-    - [:span]
+    The HLS assets are identified by the following pattern:
+        [:span]
         ls-type:: annotation
         hl-page:: 18
         hl-color:: yellow
@@ -76,7 +71,7 @@ class LogseqAssetsHls:
         hl-stamp:: 1679002167912
     The format of the asset is:
         (hl-page)_(id)_(hl-stamp)
-    formatted: 18_64138a39-f69e-47fb-80df-116daea1cf91_1679002167912
+        formatted: 18_64138a39-f69e-47fb-80df-116daea1cf91_1679002167912
     """
 
     def __init__(self):

@@ -9,9 +9,7 @@ from urllib.parse import unquote
 import logging
 
 from ..config.datetime_tokens import LogseqJournalPyFileFormat, LogseqJournalPyPageFormat
-
 from ..config.graph_config import LogseqGraphConfig
-
 from ..utils.enums import Core
 from ..config.analyzer_config import LogseqAnalyzerConfig
 

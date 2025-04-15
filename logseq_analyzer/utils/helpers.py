@@ -2,6 +2,7 @@
 Helper functions for file and date processing.
 """
 
+import functools
 from pathlib import Path
 from typing import Generator, Set, List, Pattern
 import logging
@@ -57,3 +58,37 @@ def process_aliases(aliases: str) -> List[str]:
     if part:
         results.append(part)
     return results
+
+
+def singleton(cls):
+    """
+    Decorator to create a singleton class that is pickle-friendly.
+    """
+
+    # Store original __new__ method
+    orig_new = cls.__new__
+
+    # Keep track of instance
+    instance = None
+
+    @functools.wraps(orig_new)
+    def __new__(cls, *args, **kwargs):
+        nonlocal instance
+        if instance is None:
+            instance = orig_new(cls, *args, **kwargs)
+        return instance
+
+    # Replace __new__ method, keep class identity
+    cls.__new__ = __new__
+
+    # Add __reduce__ method for pickle support
+    if not hasattr(cls, "__reduce__"):
+
+        @functools.wraps(cls.__reduce__ if hasattr(cls, "__reduce__") else object.__reduce__)
+        def __reduce__(self):
+            # Return class itself (not decorator wrapper)
+            return (cls, ())
+
+        cls.__reduce__ = __reduce__
+
+    return cls

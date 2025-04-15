@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict
 import configparser
 
+from ..utils.helpers import singleton
 from ..io.filesystem import File
 from ..utils.enums import Core
 
@@ -17,18 +18,11 @@ def lambda_optionxform(option: str) -> str:
     return option
 
 
+@singleton
 class LogseqAnalyzerConfig:
     """
     A class to handle configuration file loading and management.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Implement singleton pattern."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""

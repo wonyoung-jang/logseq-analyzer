@@ -29,7 +29,7 @@ NS_SEP = Core.NS_SEP.value
 class LogseqFile:
     """A class to represent a Logseq file."""
 
-    def __init__(self, file_path: Path, logseq_builtin_properties: LogseqBuiltInProperties):
+    def __init__(self, file_path: Path):
         """
         Initialize the LogseqFile object.
 
@@ -37,7 +37,7 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path = file_path
-        self.logseq_builtin_properties = logseq_builtin_properties
+        self.logseq_builtin_properties = LogseqBuiltInProperties()
         self.masked_blocks = {}
         self.path = LogseqFilename(file_path)
         self.stat = LogseqFilestats(file_path)

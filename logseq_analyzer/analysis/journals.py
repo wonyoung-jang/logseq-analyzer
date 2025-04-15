@@ -7,22 +7,16 @@ from typing import List, Optional, Tuple
 import logging
 
 from ..config.datetime_tokens import LogseqJournalPyPageFormat
+from ..utils.helpers import singleton
 from .summary_files import LogseqFileSummarizer
 from .graph import LogseqGraph
 
 
+@singleton
 class LogseqJournals:
     """
     LogseqJournals class to handle journal files and their processing.
     """
-
-    _instance = None
-
-    def __new__(cls):
-        """Ensure only one instance exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         """
@@ -58,8 +52,8 @@ class LogseqJournals:
         self.processed_keys.sort()
 
         self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = LogseqJournals.get_date_stats(self.complete_timeline)
-        self.timeline_stats["dangling_journals"] = LogseqJournals.get_date_stats(self.dangling_journals)
+        self.timeline_stats["complete_timeline"] = get_date_stats(self.complete_timeline)
+        self.timeline_stats["dangling_journals"] = get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
     def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = None):
@@ -81,7 +75,7 @@ class LogseqJournals:
         # Iterate over the sorted keys to construct a continuous timeline.
         for i in range(len(self.processed_keys) - 1):
             current_date = self.processed_keys[i]
-            next_expected_date = LogseqJournals.get_next_day(current_date)
+            next_expected_date = get_next_day(current_date)
             next_actual_date = self.processed_keys[i + 1]
 
             # Always include the current date
@@ -95,59 +89,11 @@ class LogseqJournals:
                     self.dangling_journals.remove(next_expected_date)
                 else:
                     self.missing_keys.append(next_expected_date)
-                next_expected_date = LogseqJournals.get_next_day(next_expected_date)
+                next_expected_date = get_next_day(next_expected_date)
 
         # Add the last journal key if available.
         if self.processed_keys:
             self.complete_timeline.append(self.processed_keys[-1])
-
-    @staticmethod
-    def get_next_day(date_obj: datetime) -> datetime:
-        """
-        Return the date of the next day.
-        """
-        return date_obj + timedelta(days=1)
-
-    @staticmethod
-    def get_date_stats(timeline):
-        """
-        Get statistics about the timeline.
-        """
-        date_stats = {
-            "first_date": datetime.min,
-            "last_date": datetime.min,
-            "days": 0,
-            "weeks": 0,
-            "months": 0,
-            "years": 0,
-        }
-        if not timeline:
-            return date_stats
-        date_stats["first_date"] = min(timeline)
-        date_stats["last_date"] = max(timeline)
-        days, weeks, months, years = LogseqJournals.get_date_ranges(date_stats["last_date"], date_stats["first_date"])
-        date_stats["days"] = days
-        date_stats["weeks"] = weeks
-        date_stats["months"] = months
-        date_stats["years"] = years
-        return date_stats
-
-    @staticmethod
-    def get_date_ranges(
-        most_recent_date: Optional[datetime], least_recent_date: Optional[datetime]
-    ) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
-        """
-        Compute the range between two dates in days, weeks, months, and years.
-        """
-        if not most_recent_date or not least_recent_date:
-            return None, None, None, None
-
-        delta = most_recent_date - least_recent_date
-        days = delta.days + 1
-        weeks = round(days / 7, 2)
-        months = round(days / 30, 2)
-        years = round(days / 365, 2)
-        return days, weeks, months, years
 
     def get_dangling_journals_outside_range(self):
         """
@@ -160,3 +106,51 @@ class LogseqJournals:
             if link > self.timeline_stats["complete_timeline"]["last_date"]:
                 self.dangling_journals_future.append(link)
                 continue
+
+
+def get_next_day(date_obj: datetime) -> datetime:
+    """
+    Return the date of the next day.
+    """
+    return date_obj + timedelta(days=1)
+
+
+def get_date_stats(timeline):
+    """
+    Get statistics about the timeline.
+    """
+    date_stats = {
+        "first_date": datetime.min,
+        "last_date": datetime.min,
+        "days": 0,
+        "weeks": 0,
+        "months": 0,
+        "years": 0,
+    }
+    if not timeline:
+        return date_stats
+    date_stats["first_date"] = min(timeline)
+    date_stats["last_date"] = max(timeline)
+    days, weeks, months, years = get_date_ranges(date_stats["last_date"], date_stats["first_date"])
+    date_stats["days"] = days
+    date_stats["weeks"] = weeks
+    date_stats["months"] = months
+    date_stats["years"] = years
+    return date_stats
+
+
+def get_date_ranges(
+    most_recent_date: Optional[datetime], least_recent_date: Optional[datetime]
+) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
+    """
+    Compute the range between two dates in days, weeks, months, and years.
+    """
+    if not most_recent_date or not least_recent_date:
+        return None, None, None, None
+
+    delta = most_recent_date - least_recent_date
+    days = delta.days + 1
+    weeks = round(days / 7, 2)
+    months = round(days / 30, 2)
+    years = round(days / 365, 2)
+    return days, weeks, months, years

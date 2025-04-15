@@ -72,7 +72,6 @@ def builtin_properties_set():
 
 def test_singleton(builtin_properties):
     """Test singleton behavior."""
-    assert builtin_properties is LogseqBuiltInProperties._instance
     another_instance = LogseqBuiltInProperties()
     assert builtin_properties is another_instance, "LogseqBuiltInProperties should be a singleton."
 
