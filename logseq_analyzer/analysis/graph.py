@@ -34,7 +34,6 @@ class LogseqGraph:
             self.unique_linked_references_ns = set()
             self.all_linked_references = {}
             self.dangling_links = set()
-            self.masked_blocks = {}
 
             self.hash_to_file_map: Dict[int, LogseqFile] = {}
             self.name_to_hashes_map = defaultdict(list)
@@ -76,7 +75,6 @@ class LogseqGraph:
         self.content_bullets[file_hash] = file.content_bullets
         self.hash_to_file_map[file_hash] = file
         self.name_to_hashes_map[file.path.name].append(file_hash)
-        self.masked_blocks[file_hash] = file.masked_blocks
 
     def del_large_file_attributes(self, file: LogseqFile):
         """

@@ -66,6 +66,7 @@ class LogseqAssets:
 class LogseqAssetsHls:
     """
     Class to handle HLS assets in Logseq.
+
     - [:span]
         ls-type:: annotation
         hl-page:: 18

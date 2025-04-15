@@ -10,7 +10,6 @@ from pathlib import Path
 
 from ..helpers import (
     iter_files,
-    get_or_create_file_or_dir,
     find_all_lower,
     process_aliases,
 )
@@ -42,53 +41,6 @@ def test_iter_files(tmp_path, caplog, monkeypatch):
 
     assert set(got) == {f1, f2}
     assert any("Skipping directory" in rec.getMessage() for rec in caplog.records)
-
-
-def test_get_or_create_exists(tmp_path):
-    p = tmp_path / "exists"
-    p.mkdir()
-    assert get_or_create_file_or_dir(p) == p
-
-
-def test_get_or_create_new(tmp_path, caplog):
-    p = tmp_path / "newdir"
-    assert not p.exists()
-    caplog.set_level(logging.INFO)
-
-    ret = get_or_create_file_or_dir(p)
-    assert ret == p
-    assert p.exists()
-    msgs = [rec.getMessage() for rec in caplog.records]
-    assert any("Creating path" in m for m in msgs)
-    assert any("Created path" in m for m in msgs)
-
-
-def test_get_or_create_permission_error(tmp_path, monkeypatch, caplog):
-    p = tmp_path / "perm"
-
-    def fake_mkdir(*args, **kwargs):
-        raise PermissionError
-
-    monkeypatch.setattr(Path, "mkdir", fake_mkdir)
-
-    caplog.set_level(logging.ERROR)
-    ret = get_or_create_file_or_dir(p)
-    assert ret is None
-    assert any("Permission denied" in rec.getMessage() for rec in caplog.records)
-
-
-def test_get_or_create_os_error(tmp_path, monkeypatch, caplog):
-    p = tmp_path / "oserr"
-
-    def fake_mkdir(*args, **kwargs):
-        raise OSError("disk full")
-
-    monkeypatch.setattr(Path, "mkdir", fake_mkdir)
-
-    caplog.set_level(logging.ERROR)
-    ret = get_or_create_file_or_dir(p)
-    assert ret is None
-    assert any("Error creating path" in rec.getMessage() for rec in caplog.records)
 
 
 def test_find_all_lower_simple():

@@ -14,8 +14,10 @@ class Config(Enum):
 class Core(Enum):
     """Core components of the Logseq Analyzer."""
 
-    NS_SEP = "/"
+    FMT_TXT = ".txt"
+    FMT_JSON = ".json"
     HLS_PREFIX = "hls__"
+    NS_SEP = "/"
 
 
 class Phase(Enum):
@@ -27,11 +29,11 @@ class Phase(Enum):
 class Output(Enum):
     """Output types for the Logseq Analyzer."""
 
-    ALL_REFS = "all_refs"
+    ALL_REFS = "all_linked_references"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
     COMPLETE_TIMELINE = "complete_timeline"
-    CONFIG_DATA = "__meta__config_data"
+    CONFIG_DATA = "ls_config"
     CONFLICTS_DANGLING = "conflicts_dangling"
     CONFLICTS_NON_NAMESPACE = "conflicts_non_namespace"
     CONFLICTS_PARENT_DEPTH = "conflicts_parent_depth"
@@ -40,13 +42,12 @@ class Output(Enum):
     DANGLING_JOURNALS_FUTURE = "dangling_journals_future"
     DANGLING_JOURNALS_PAST = "dangling_journals_past"
     DANGLING_LINKS = "dangling_links"
-    GRAPH_CONTENT = "__meta__graph_content"
-    GRAPH_DATA = "__meta__graph_data"
-    GRAPH_HASHED_FILES = "graph_hashed_files"
-    GRAPH_MASKED_BLOCKS = "graph_masked_blocks"
-    GRAPH_NAMES_TO_HASHES = "graph_names_to_hashes"
-    META_UNIQUE_LINKED_REFS = "unique_linked_refs"
-    META_UNIQUE_LINKED_REFS_NS = "unique_linked_refs_ns"
+    GRAPH_CONTENT = "content_bullets"
+    GRAPH_DATA = "data"
+    GRAPH_HASHED_FILES = "hash_to_file_map"
+    GRAPH_NAMES_TO_HASHES = "name_to_hashes_map"
+    UNIQUE_LINKED_REFERENCES = "unique_linked_references"
+    UNIQUE_LINKED_REFERENCES_NS = "unique_linked_references_ns"
     MISSING_KEYS = "missing_keys"
     MOVED_FILES = "moved_files"
     NAMESPACE_DATA = "__meta__namespace_data"

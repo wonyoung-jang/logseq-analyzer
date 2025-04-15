@@ -9,10 +9,7 @@ import logging
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from .path_validator import LogseqAnalyzerPathValidator
-
-ANALYZER_CONFIG = LogseqAnalyzerConfig()
-JSON_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_JSON")
-TXT_FORMAT = ANALYZER_CONFIG.get("CONST", "REPORT_FORMAT_TXT")
+from ..utils.enums import Core
 
 
 class ReportWriter:
@@ -24,11 +21,12 @@ class ReportWriter:
         """
         Initialize the ReportWriter class.
         """
+        ac = LogseqAnalyzerConfig()
+        self.output_format = ac.config["ANALYZER"]["REPORT_FORMAT"]
         self._paths = LogseqAnalyzerPathValidator()
         self.filename_prefix = filename_prefix
         self.items = items
         self.type_output = type_output
-        self.output_format = ANALYZER_CONFIG.get("ANALYZER", "REPORT_FORMAT")
 
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
@@ -105,7 +103,7 @@ class ReportWriter:
             out_path = self._paths.dir_output.path / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
-        if self.output_format == JSON_FORMAT:
+        if self.output_format == Core.FMT_JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -113,13 +111,13 @@ class ReportWriter:
                 logging.error("Failed to write JSON for %s.", self.filename_prefix)
                 if out_path.exists():
                     out_path.unlink()
-                filename = f"{self.filename_prefix}{TXT_FORMAT}"
+                filename = f"{self.filename_prefix}{Core.FMT_TXT.value}"
                 if self.type_output:
                     out_path = Path(parent) / filename
                 with out_path.open("w", encoding="utf-8") as f:
                     f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif self.output_format == TXT_FORMAT:
+        elif self.output_format == Core.FMT_TXT.value:
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)

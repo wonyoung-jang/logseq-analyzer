@@ -65,17 +65,17 @@ class Cache:
 
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""
-        deleted_files = []
         self.cache.setdefault("___meta___graph_data", {})
         self.cache.setdefault("___meta___graph_content", {})
+        for file in self.yield_deleted_files():
+            self.cache["___meta___graph_data"].pop(file, None)
+            self.cache["___meta___graph_content"].pop(file, None)
 
+    def yield_deleted_files(self):
+        """Yield deleted files from the cache."""
         for key, data in self.cache["___meta___graph_data"].items():
             path = data.get("file_path")
             if Path(path).exists():
                 continue
-            deleted_files.append(key)
             logging.debug("File deleted: %s", path)
-
-        for file in deleted_files:
-            self.cache["___meta___graph_data"].pop(file, None)
-            self.cache["___meta___graph_content"].pop(file, None)
+            yield key

@@ -20,8 +20,10 @@ import logging
 
 from .graph import LogseqGraph
 from ..logseq_file.name import LogseqFilename
+from ..utils.enums import Core
 from ..utils.patterns import ContentPatterns
-from ..config.analyzer_config import LogseqAnalyzerConfig
+
+NS_SEP = Core.NS_SEP.value
 
 
 class LogseqNamespaces:
@@ -137,8 +139,6 @@ class LogseqNamespaces:
         """
         Identify namespace parts that appear at different depths (levels) across entries.
         """
-        ac = LogseqAnalyzerConfig()
-        ns_sep = ac.config["CONST"]["NAMESPACE_SEP"]
         for part, levels in self._part_levels.items():
             # Filter out parts that only occur at a single depth.
             if len(levels) < 2:
@@ -153,9 +153,9 @@ class LogseqNamespaces:
                 level = int(key.rsplit(" ", maxsplit=1)[-1])
                 unique_pages = set()
                 for page in entries:
-                    parts = page.split(ns_sep)
+                    parts = page.split(NS_SEP)
                     up_to_level = parts[:level]
-                    unique_pages.add(ns_sep.join(up_to_level))
+                    unique_pages.add(NS_SEP.join(up_to_level))
                 self.conflicts_parent_unique[key] = unique_pages
 
     def yield_files_with_keys(self, *criteria) -> Generator[LogseqFilename, None, None]:

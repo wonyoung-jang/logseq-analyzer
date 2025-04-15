@@ -24,33 +24,6 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
             dirs.clear()
 
 
-def get_or_create_file_or_dir(path: Path) -> Path:
-    """
-    Get a path or create it if it doesn't exist.
-
-    Args:
-        path (Path): The path to the target file or folder.
-
-    Returns:
-        Path: The path to the specified file or folder.
-    """
-    try:
-        path.resolve(strict=True)
-        return path
-    except FileNotFoundError:
-        logging.info("Creating path: %s", path)
-        try:
-            path.mkdir(parents=True, exist_ok=True)
-            logging.info("Created path: %s", path)
-            return path
-        except PermissionError:
-            logging.error("Permission denied to create path: %s", path)
-            return None
-        except OSError as e:
-            logging.error("Error creating path: %s", e)
-            return None
-
-
 def find_all_lower(pattern: Pattern, text: str) -> List[str]:
     """Find all matches of a regex pattern in the text, returning them in lowercase."""
     return [match.lower() for match in pattern.findall(text)]

@@ -126,29 +126,30 @@ def run_app(**kwargs):
     ls_assets.handle_assets(summary_subset_assets)
 
     ls_file_mover = LogseqFileMover()
-    moved_files = ls_file_mover.moved_files
-    moved_files["moved_assets"] = ls_file_mover.handle_move_files()
-    moved_files["moved_bak"] = ls_file_mover.handle_move_directory(
+    ma = ls_file_mover.handle_move_files()
+    mb = ls_file_mover.handle_move_directory(
         args.move_bak,
         paths.dir_delete_bak.path,
         paths.dir_bak.path,
     )
-    moved_files["moved_recycle"] = ls_file_mover.handle_move_directory(
+    mr = ls_file_mover.handle_move_directory(
         args.move_recycle,
         paths.dir_delete_recycle.path,
         paths.dir_recycle.path,
     )
+    ls_file_mover.moved_files["moved_assets"] = ma
+    ls_file_mover.moved_files["moved_recycle"] = mr
+    ls_file_mover.moved_files["moved_bak"] = mb
     progress(95)
     # Output writing
     meta_reports = {
-        Output.META_UNIQUE_LINKED_REFS.value: graph.unique_linked_references,
-        Output.META_UNIQUE_LINKED_REFS_NS.value: graph.unique_linked_references_ns,
+        Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
+        Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.GRAPH_DATA.value: graph.data,
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.DANGLING_LINKS.value: graph.dangling_links,
         Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
         Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
-        Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
         Output.CONFIG_DATA.value: graph_config.ls_config,
     }
     if args.write_graph:
