@@ -17,11 +17,11 @@ MODULES = str(PROJECT_ROOT / 'logseq_analyzer')
 project = 'Logseq Analyzer'
 author = 'Wonyoung Jang'
 copyright = '2025, Wonyoung Jang'
+release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
     'sphinx.ext.apidoc',        # Generate API documentation from docstrings
-    'sphinx.ext.autodoc',       # Core extension for API doc generation from docstrings
     'sphinx.ext.viewcode',      # Add links to highlighted source code
     'sphinx.ext.napoleon',      # Support for NumPy and Google style docstrings
 ]
@@ -30,7 +30,7 @@ extensions = [
 apidoc_modules = [
     {
         'path': MODULES,
-        'destination': '.',
+        'destination': './api',
         'exclude_patterns': [f'{MODULES}/**/tests/*'],
         'max_depth': 4,
         'follow_links': False,
@@ -46,12 +46,6 @@ apidoc_modules = [
 ]
 
 # Autodoc settings
-autodoc_default_options = {
-    'members': True,                # Document all members
-    'undoc-members': True,          # Document members without docstrings
-    'show-inheritance': True,       # Show base classes
-    'member-order': 'bysource',     # Order members by source order
-}
 autodoc_mock_imports = [
     'PySide6',
     'PySide6.QtCore',
@@ -67,13 +61,9 @@ napoleon_include_init_with_doc = False
 napoleon_include_private_with_doc = False
 
 # Document Python Code
-master_doc = 'modules' # The main page
-exclude_patterns = [
-    '_build', 
-    'Thumbs.db',
-    '.DS_Store',
-]
+root_doc = 'index'
 templates_path = ['_templates']
+exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'furo'  # Use Read the Docs theme
