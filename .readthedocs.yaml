@@ -10,6 +10,5 @@ python:
    - requirements: requirements.txt
 
 sphinx:
-  src_dir: docs/source
   configuration: docs/source/conf.py
   builder: html
