@@ -91,4 +91,18 @@ def singleton(cls):
 
         cls.__reduce__ = __reduce__
 
+    # Store the original __init__ method
+    orig_init = cls.__init__
+
+    @functools.wraps(orig_init)
+    def __init__(self, *args, **kwargs):
+        # Set a flag indicating that initialization has started
+        if not hasattr(self, "_init_started"):
+            self._init_started = True
+            # Call the original init
+            orig_init(self, *args, **kwargs)
+
+    # Replace the __init__ method
+    cls.__init__ = __init__
+
     return cls

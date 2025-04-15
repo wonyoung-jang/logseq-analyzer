@@ -41,7 +41,7 @@ class LogseqDateTimeTokens:
         Set the formatting for journal files and pages in Python format.
         """
         journal_formats = LogseqJournalFormats()
-        
+
         journal_file_format = self.graph_config.ls_config.get(":journal/file-name-format")
         if not journal_formats.py_file_format:
             journal_formats.py_file_format = self.convert_cljs_date_to_py(journal_file_format)

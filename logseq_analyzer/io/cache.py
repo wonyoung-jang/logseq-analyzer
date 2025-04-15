@@ -23,8 +23,9 @@ class Cache:
         """Initialize the class."""
         if not hasattr(self, "_initialized"):
             self._initialized = True
-            self._paths = LogseqAnalyzerPathValidator()
-            self.cache = shelve.open(self._paths.file_cache.path, protocol=5)
+            self.paths = LogseqAnalyzerPathValidator()
+            self.paths.validate_cache()
+            self.cache = shelve.open(self.paths.file_cache.path, protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -41,7 +42,7 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.get("mod_tracker", {})
-        graph = self._paths.dir_graph.path
+        graph = self.paths.dir_graph.path
         targets = LogseqAnalyzerConfig().target_dirs
         for path in iter_files(graph, targets):
             curr_date_mod = path.stat().st_mtime

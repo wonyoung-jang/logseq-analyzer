@@ -61,7 +61,6 @@ def run_app(**kwargs):
     # --- #
     analyzer_config = LogseqAnalyzerConfig()
     graph_config = LogseqGraphConfig()
-    paths.validate_cache()
     cache = Cache()
     analyzer_config.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
     paths.validate_graph_logseq_config_paths()
