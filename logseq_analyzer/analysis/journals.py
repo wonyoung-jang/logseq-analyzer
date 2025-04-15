@@ -27,7 +27,7 @@ class LogseqJournals:
             summary_files = LogseqFileSummarizer()
             self._initialized = True
             self.dangling_links = graph.dangling_links
-            self.journal_keys = summary_files.subsets["filetype_journal"]
+            self.journal_keys = summary_files.subsets.get("filetype_journal", [])
             self.dangling_journals = []
             self.processed_keys = []
             self.complete_timeline = []
