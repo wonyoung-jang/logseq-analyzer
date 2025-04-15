@@ -3,7 +3,7 @@ Module to handle moving files in a Logseq graph directory.
 """
 
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 import logging
 import shutil
 
@@ -12,7 +12,6 @@ from ..analysis.graph import LogseqGraph
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.arguments import LogseqAnalyzerArguments
 from ..io.path_validator import LogseqAnalyzerPathValidator
-from ..utils.helpers import get_or_create_file_or_dir
 
 
 class LogseqFileMover:
