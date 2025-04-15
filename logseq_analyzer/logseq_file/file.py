@@ -8,6 +8,7 @@ from typing import Dict, List, Set, Tuple
 import uuid
 
 from ..config.builtin_properties import LogseqBuiltInProperties
+from ..utils.enums import Criteria, Core
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import (
     AdvancedCommandPatterns,
@@ -18,7 +19,6 @@ from ..utils.patterns import (
     DoubleParenthesesPatterns,
     CodePatterns,
 )
-from ..utils.enums import Criteria, Core
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats

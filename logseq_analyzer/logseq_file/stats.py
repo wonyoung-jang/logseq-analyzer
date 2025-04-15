@@ -17,8 +17,8 @@ class LogseqFilestats:
     has_content: bool = False
     time_existed: float = 0.0
     time_unmodified: float = 0.0
-    date_created: datetime = None
-    date_modified: datetime = None
+    date_created: str = None
+    date_modified: str = None
 
     def __post_init__(self):
         """Post-initialization method to set file statistics attributes."""
@@ -27,7 +27,6 @@ class LogseqFilestats:
         self.size = stat.st_size
         self.has_content = bool(self.size)
 
-        now = datetime.now()
         try:
             created_ts = stat.st_birthtime
         except AttributeError:
@@ -36,6 +35,7 @@ class LogseqFilestats:
                 "st_birthtime not available for %s. Using st_ctime instead.",
                 self.file_path,
             )
+        now = datetime.now()
         date_created = datetime.fromtimestamp(created_ts)
         date_modified = datetime.fromtimestamp(stat.st_mtime)
         self.time_existed = (now - date_created).total_seconds()

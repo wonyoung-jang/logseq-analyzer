@@ -142,10 +142,10 @@ class LogseqGraph:
         )
 
         # Create dangling links
-        self.dangling_links = self.unique_linked_references.union(self.unique_linked_references_ns)
-        self.dangling_links.difference_update(self.name_to_hashes_map.keys())
-        self.dangling_links.difference_update(unique_aliases)
-        self.dangling_links = set(sorted(self.dangling_links))
+        all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
+        all_linked_refs.difference_update(self.name_to_hashes_map.keys())
+        all_linked_refs.difference_update(unique_aliases)
+        self.dangling_links = set(sorted(all_linked_refs))
 
     def post_processing_content_namespaces(self, file: LogseqFile):
         """Post-process namespaces in the content data."""
