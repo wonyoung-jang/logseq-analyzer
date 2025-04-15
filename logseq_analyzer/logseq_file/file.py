@@ -39,9 +39,9 @@ class LogseqFile:
         self.file_path = file_path
         self.logseq_builtin_properties = logseq_builtin_properties
         self.masked_blocks = {}
-        self.path = LogseqFilename(self.file_path)
-        self.stat = LogseqFilestats(self.file_path)
-        self.bullets = LogseqBullets(self.file_path)
+        self.path = LogseqFilename(file_path)
+        self.stat = LogseqFilestats(file_path)
+        self.bullets = LogseqBullets(file_path)
         self.content = ""
         self.data = {}
         self.primary_bullet = ""

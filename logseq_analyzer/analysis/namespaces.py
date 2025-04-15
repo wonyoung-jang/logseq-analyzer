@@ -46,7 +46,7 @@ class LogseqNamespaces:
             self._initialized = True
             self._part_levels = defaultdict(set)
             self._part_entries = defaultdict(list)
-            self.hashed_files = graph.hashed_files
+            self.hashed_files = graph.hash_to_file_map
             self.data = graph.data
             self.dangling_links = graph.dangling_links
             self.namespace_data = {}

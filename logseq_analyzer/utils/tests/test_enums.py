@@ -10,13 +10,14 @@ from ..enums import Core, Phase, Output, SummaryFiles, Criteria
 def test_core_values():
     expected = {
         "NS_SEP": "/",
+        "HLS_PREFIX": "hls__",
     }
     for member_name, string_value in expected.items():
         assert getattr(Core, member_name).value == string_value
 
 
 def test_core_member_count():
-    assert len(Core) == 1
+    assert len(Core) == 2
 
 
 # Phase
@@ -94,6 +95,7 @@ def test_summary_files_values():
         "HAS_CONTENT": "has_content",
         "IS_BACKLINKED": "is_backlinked",
         "IS_BACKLINKED_BY_NS_ONLY": "is_backlinked_by_ns_only",
+        "IS_HLS": "is_hls",
         "NODE_BRANCH": "node_branch",
         "NODE_LEAF": "node_leaf",
         "NODE_ORPHAN_GRAPH": "node_orphan_graph",
@@ -108,7 +110,7 @@ def test_summary_files_values():
 
 
 def test_summary_files_member_count():
-    assert len(SummaryFiles) == 24
+    assert len(SummaryFiles) == 25
 
 
 # Criteria

@@ -28,6 +28,7 @@ class LogseqFilename:
     uri: str = None
     logseq_url: str = None
     is_namespace: bool = None
+    is_hls: bool = None
     file_type: str = None
     ac: LogseqAnalyzerConfig = LogseqAnalyzerConfig()
 
@@ -40,6 +41,7 @@ class LogseqFilename:
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
         self.is_namespace = False
+        self.is_hls = False
         self.logseq_url = ""
         self.file_type = ""
 
@@ -57,6 +59,7 @@ class LogseqFilename:
             self.name = unquote(self.name).replace(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP)
 
         self.is_namespace = NS_SEP in self.name
+        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
 
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""

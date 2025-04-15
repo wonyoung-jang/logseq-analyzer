@@ -5,6 +5,7 @@ This module contains the main application logic for the Logseq analyzer.
 from pathlib import Path
 import logging
 
+from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
@@ -113,19 +114,29 @@ def run_app(**kwargs):
     graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
     progress(90)
-    graph.handle_assets(summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, []))
-    graph_assets_handler = LogseqFileMover()
-    moved_files = graph_assets_handler.moved_files
-    moved_files["moved_assets"] = graph_assets_handler.handle_move_files()
-    moved_files["moved_bak"] = graph_assets_handler.handle_move_directory(
+
+    summary_subset_hls_files = summary_files.subsets.get(SummaryFiles.IS_HLS.value, [])
+    ls_hls_assets = LogseqAssetsHls()
+    ls_hls_assets.get_asset_files()
+    ls_hls_assets.convert_names_to_data(summary_subset_hls_files)
+    ls_hls_assets.check_backlinks()
+
+    summary_subset_assets = summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, [])
+    ls_assets = LogseqAssets()
+    ls_assets.handle_assets(summary_subset_assets)
+
+    ls_file_mover = LogseqFileMover()
+    moved_files = ls_file_mover.moved_files
+    moved_files["moved_assets"] = ls_file_mover.handle_move_files()
+    moved_files["moved_bak"] = ls_file_mover.handle_move_directory(
         args.move_bak,
+        paths.dir_delete_bak.path,
         paths.dir_bak.path,
-        analyzer_config.config["CONST"]["BAK_DIR"],
     )
-    moved_files["moved_recycle"] = graph_assets_handler.handle_move_directory(
+    moved_files["moved_recycle"] = ls_file_mover.handle_move_directory(
         args.move_recycle,
+        paths.dir_delete_recycle.path,
         paths.dir_recycle.path,
-        analyzer_config.config["CONST"]["RECYCLE_DIR"],
     )
     progress(95)
     # Output writing
@@ -135,8 +146,8 @@ def run_app(**kwargs):
         Output.GRAPH_DATA.value: graph.data,
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.DANGLING_LINKS.value: graph.dangling_links,
-        Output.GRAPH_HASHED_FILES.value: graph.hashed_files,
-        Output.GRAPH_NAMES_TO_HASHES.value: graph.names_to_hashes,
+        Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
+        Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
         Output.GRAPH_MASKED_BLOCKS.value: graph.masked_blocks,
         Output.CONFIG_DATA.value: graph_config.ls_config,
     }
@@ -168,9 +179,9 @@ def run_app(**kwargs):
     }
     # Move files and assets
     moved_files_reports = {
-        Output.MOVED_FILES.value: graph_assets_handler.moved_files,
-        Output.ASSETS_BACKLINKED.value: graph.assets_backlinked,
-        Output.ASSETS_NOT_BACKLINKED.value: graph.assets_not_backlinked,
+        Output.MOVED_FILES.value: ls_file_mover.moved_files,
+        Output.ASSETS_BACKLINKED.value: ls_assets.backlinked,
+        Output.ASSETS_NOT_BACKLINKED.value: ls_assets.not_backlinked,
     }
     # Writing
     all_outputs = (

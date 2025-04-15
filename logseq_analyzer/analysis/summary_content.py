@@ -23,7 +23,7 @@ class LogseqContentSummarizer:
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self.graph = LogseqGraph()
-            self.hashed_files = self.graph.hashed_files
+            self.hashed_files = self.graph.hash_to_file_map
             self.subsets = {}
 
     def generate_summary(self):

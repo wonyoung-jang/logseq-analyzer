@@ -28,7 +28,7 @@ class ContentPatterns:
             self.tagged_backlink = None
             self.tag = None
             self.property = None
-            self.property_values = None
+            self.property_value = None
             self.asset = None
             self.draw = None
             self.blockquote = None

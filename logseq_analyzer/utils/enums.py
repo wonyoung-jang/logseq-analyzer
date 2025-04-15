@@ -5,10 +5,17 @@ Enums for the Logseq Analyzer.
 from enum import Enum
 
 
+class Config(Enum):
+    """Configuration settings for the Logseq Analyzer."""
+
+    pass
+
+
 class Core(Enum):
     """Core components of the Logseq Analyzer."""
 
     NS_SEP = "/"
+    HLS_PREFIX = "hls__"
 
 
 class Phase(Enum):
@@ -70,6 +77,7 @@ class SummaryFiles(Enum):
     FILETYPE_SUB_WHITEBOARD = "filetype_sub_whiteboard"
     HAS_BACKLINKS = "has_backlinks"
     HAS_CONTENT = "has_content"
+    IS_HLS = "is_hls"
     IS_BACKLINKED = "is_backlinked"
     IS_BACKLINKED_BY_NS_ONLY = "is_backlinked_by_ns_only"
     NODE_BRANCH = "node_branch"

@@ -34,13 +34,11 @@ class LogseqGraph:
             self.unique_linked_references_ns = set()
             self.all_linked_references = {}
             self.dangling_links = set()
-            self.summary_file_subsets = {}
-            self.summary_data_subsets = {}
-            self.assets_backlinked = []
-            self.assets_not_backlinked = []
-            self.hashed_files: Dict[int, LogseqFile] = {}
-            self.names_to_hashes = defaultdict(list)
             self.masked_blocks = {}
+
+            self.hash_to_file_map: Dict[int, LogseqFile] = {}
+            self.name_to_hashes_map = defaultdict(list)
+
             self.logseq_builtin_properties = LogseqBuiltInProperties()
             self.logseq_builtin_properties.set_builtin_properties()
 
@@ -76,8 +74,8 @@ class LogseqGraph:
         file_hash = hash(file)
         self.data[file_hash] = file.__dict__
         self.content_bullets[file_hash] = file.content_bullets
-        self.hashed_files[file_hash] = file
-        self.names_to_hashes[file.path.name].append(file_hash)
+        self.hash_to_file_map[file_hash] = file
+        self.name_to_hashes_map[file.path.name].append(file_hash)
         self.masked_blocks[file_hash] = file.masked_blocks
 
     def del_large_file_attributes(self, file: LogseqFile):
@@ -102,12 +100,12 @@ class LogseqGraph:
         self.content_bullets = graph_content_db
 
         graph_hashed_files_db = self.cache.get(Output.GRAPH_HASHED_FILES.value, {})
-        graph_hashed_files_db.update(self.hashed_files)
-        self.hashed_files = graph_hashed_files_db
+        graph_hashed_files_db.update(self.hash_to_file_map)
+        self.hash_to_file_map = graph_hashed_files_db
 
         graph_names_to_hashes_db = self.cache.get(Output.GRAPH_NAMES_TO_HASHES.value, {})
-        graph_names_to_hashes_db.update(self.names_to_hashes)
-        self.names_to_hashes = graph_names_to_hashes_db
+        graph_names_to_hashes_db.update(self.name_to_hashes_map)
+        self.name_to_hashes_map = graph_names_to_hashes_db
 
         graph_dangling_links_db = self.cache.get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in graph_dangling_links_db}
@@ -118,7 +116,7 @@ class LogseqGraph:
         unique_aliases = set()
 
         # Process each file's content
-        for _, file in self.hashed_files.items():
+        for _, file in self.hash_to_file_map.items():
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
 
@@ -158,7 +156,7 @@ class LogseqGraph:
 
         # Create dangling links
         self.dangling_links = self.unique_linked_references.union(self.unique_linked_references_ns)
-        self.dangling_links.difference_update(self.names_to_hashes.keys())
+        self.dangling_links.difference_update(self.name_to_hashes_map.keys())
         self.dangling_links.difference_update(unique_aliases)
         self.dangling_links = set(sorted(self.dangling_links))
 
@@ -169,18 +167,18 @@ class LogseqGraph:
         ns_parent = file.ns_parent_full
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
-        if self.names_to_hashes.get(ns_root):
-            for hash_ in self.names_to_hashes[ns_root]:
-                ns_root_file = self.hashed_files.get(hash_)
+        if self.name_to_hashes_map.get(ns_root):
+            for hash_ in self.name_to_hashes_map[ns_root]:
+                ns_root_file = self.hash_to_file_map.get(hash_)
                 ns_root_file.ns_level = 1
                 if not hasattr(ns_root_file, "ns_children"):
                     ns_root_file.ns_children = set()
                 ns_root_file.ns_children.add(file.path.name)
                 ns_root_file.ns_size = len(ns_root_file.ns_children)
 
-        if self.names_to_hashes.get(ns_parent) and ns_level > 2:
-            for hash_ in self.names_to_hashes[ns_parent]:
-                ns_parent_file = self.hashed_files.get(hash_)
+        if self.name_to_hashes_map.get(ns_parent) and ns_level > 2:
+            for hash_ in self.name_to_hashes_map[ns_parent]:
+                ns_parent_file = self.hash_to_file_map.get(hash_)
                 ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
                 direct_level = ns_level - 1
                 ns_parent_file.ns_level = max(direct_level, ns_parent_level)
@@ -191,50 +189,10 @@ class LogseqGraph:
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""
-        for _, file in self.hashed_files.items():
+        for _, file in self.hash_to_file_map.items():
             file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
             if file.is_backlinked and file.is_backlinked_by_ns_only:
                 file.is_backlinked = False
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
-
-    def list_files_with_keys_and_values(self, **criteria) -> list:
-        """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
-        result = []
-        for _, file in self.hashed_files.items():
-            if all(getattr(file, key) == expected for key, expected in criteria.items()):
-                result.append(file.path.name)
-        return result
-
-    def handle_assets(self, asset_files: list):
-        """Handle assets for the Logseq Analyzer."""
-        for hash_, file in self.hashed_files.items():
-            emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value)
-            asset_captured = file.data.get(Criteria.ASSETS.value)
-            if not (emb_link_asset or asset_captured):
-                continue
-            for asset in asset_files:
-                asset_hash = self.names_to_hashes.get(asset)
-                if not asset_hash:
-                    continue
-                for hash_ in asset_hash:
-                    asset_file = self.hashed_files.get(hash_)
-                    if not asset_file or asset_file.is_backlinked:
-                        continue
-                    if emb_link_asset:
-                        for asset_mention in emb_link_asset:
-                            if asset_file.path.name in asset_mention or file.path.name in asset_mention:
-                                asset_file.is_backlinked = True
-                                break
-                    if asset_captured:
-                        for asset_mention in asset_captured:
-                            if asset_file.path.name in asset_mention or file.path.name in asset_mention:
-                                asset_file.is_backlinked = True
-                                break
-
-        backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
-        not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-
-        self.assets_backlinked = self.list_files_with_keys_and_values(**backlinked_kwargs)
-        self.assets_not_backlinked = self.list_files_with_keys_and_values(**not_backlinked_kwargs)
