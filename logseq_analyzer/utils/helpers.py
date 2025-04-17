@@ -81,16 +81,6 @@ def singleton(cls):
     # Replace __new__ method, keep class identity
     cls.__new__ = __new__
 
-    # Add __reduce__ method for pickle support
-    if not hasattr(cls, "__reduce__"):
-
-        @functools.wraps(cls.__reduce__ if hasattr(cls, "__reduce__") else object.__reduce__)
-        def __reduce__(self):
-            # Return class itself (not decorator wrapper)
-            return (cls, ())
-
-        cls.__reduce__ = __reduce__
-
     # Store the original __init__ method
     orig_init = cls.__init__
 

@@ -28,3 +28,4 @@ setup.cfg
 setup.py
 logseq_analyzer/data.py
 docs/build
+.coverage
