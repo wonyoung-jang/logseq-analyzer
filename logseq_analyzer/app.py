@@ -29,9 +29,9 @@ class GUIInstanceDummy:
         """Initialize dummy GUI instance."""
         self.progress = {}
 
-    def update_progress(self, phase, percentage):
+    def update_progress(self, percentage):
         """Simulate updating progress in a GUI."""
-        logging.info("Updating progress: %s - %d%%", phase, percentage)
+        logging.info("Updating progress: %d%%", percentage)
 
 
 def setup_logging(log_file: Path):

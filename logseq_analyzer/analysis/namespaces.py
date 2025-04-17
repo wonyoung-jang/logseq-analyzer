@@ -162,4 +162,6 @@ class LogseqNamespaces:
         """
         Extract a subset of the summary data based on whether the keys do not exist.
         """
-        return [file.name for _, file in self.hashed_files.items() if all(not hasattr(file, key) for key in criteria)]
+        return [
+            file.path.name for _, file in self.hashed_files.items() if all(not hasattr(file, key) for key in criteria)
+        ]

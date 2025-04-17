@@ -10,6 +10,7 @@ from ..config.datetime_tokens import LogseqJournalFormats
 from ..utils.helpers import singleton
 from .summary_files import LogseqFileSummarizer
 from .graph import LogseqGraph
+from ..utils.enums import SummaryFiles
 
 
 @singleton
@@ -25,7 +26,7 @@ class LogseqJournals:
         graph = LogseqGraph()
         summary_files = LogseqFileSummarizer()
         self.dangling_links = graph.dangling_links
-        self.journal_keys = summary_files.subsets.get("filetype_journal", [])
+        self.journal_keys = summary_files.subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
         self.dangling_journals = []
         self.processed_keys = []
         self.complete_timeline = []
