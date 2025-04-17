@@ -32,9 +32,6 @@ class LogseqFilename:
     is_namespace: bool = None
     is_hls: bool = None
     file_type: str = None
-    ac: LogseqAnalyzerConfig = LogseqAnalyzerConfig()
-    gc: LogseqGraphConfig = LogseqGraphConfig()
-    journal_formats = LogseqJournalFormats()
 
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
@@ -54,13 +51,15 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        if self.name.endswith(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
-            self.name = self.name.rstrip(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
+        if self.name.endswith(LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
+            self.name = self.name.rstrip(LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
 
-        if self.parent == self.ac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
+        if self.parent == LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(self.ac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP)
+            self.name = unquote(self.name).replace(
+                LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP
+            )
 
         self.is_namespace = NS_SEP in self.name
         self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
@@ -68,9 +67,9 @@ class LogseqFilename:
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
         try:
-            date_object = datetime.strptime(self.name, self.journal_formats.py_file_format)
-            page_title_base = date_object.strftime(self.journal_formats.py_page_format).lower()
-            if "o" in self.gc.ls_config.get(":journal/page-title-format"):
+            date_object = datetime.strptime(self.name, LogseqJournalFormats().py_file_format)
+            page_title_base = date_object.strftime(LogseqJournalFormats().py_page_format).lower()
+            if "o" in LogseqGraphConfig().ls_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(
@@ -83,14 +82,14 @@ class LogseqFilename:
             logging.warning(
                 "Failed to parse date from key '%s', format `%s`: %s",
                 self.name,
-                self.journal_formats.py_page_format,
+                LogseqJournalFormats().py_page_format,
                 e,
             )
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        graph_dir = self.ac.config["ANALYZER"]["GRAPH_DIR"]
+        graph_dir = LogseqAnalyzerConfig().config["ANALYZER"]["GRAPH_DIR"]
         len_graph_dir = len(Path(graph_dir).parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
@@ -133,11 +132,11 @@ class LogseqFilename:
         Helper function to determine the file type based on the directory structure.
         """
         result = {
-            self.ac.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
-            self.ac.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
-            self.ac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
-            self.ac.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
-            self.ac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
+            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
+            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
+            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
+            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
+            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
         if result == "other":

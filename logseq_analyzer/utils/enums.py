@@ -8,8 +8,6 @@ from enum import Enum
 class Config(Enum):
     """Configuration settings for the Logseq Analyzer."""
 
-    pass
-
 
 class Moved(Enum):
     """Moved files and directories in the Logseq Analyzer."""

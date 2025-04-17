@@ -15,7 +15,6 @@ class LogseqContentSummarizer:
 
     def __init__(self):
         """Initialize the LogseqContentSummarizer instance."""
-        self.graph = LogseqGraph()
         self.subsets = {}
 
     def generate_summary(self):
@@ -35,7 +34,7 @@ class LogseqContentSummarizer:
             Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for _, file in self.graph.hash_to_file_map.items():
+        for _, file in LogseqGraph().hash_to_file_map.items():
             for value in file.data.get(criteria, []):
                 subset_counter.setdefault(value, {})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1

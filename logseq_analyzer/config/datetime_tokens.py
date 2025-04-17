@@ -19,14 +19,12 @@ class LogseqDateTimeTokens:
         """
         Initialize the LogseqDateTimeTokens class.
         """
-        self.analyzer_config = LogseqAnalyzerConfig()
-        self.graph_config = LogseqGraphConfig()
         self.token_map = None
         self.token_pattern = None
 
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""
-        self.token_map = self.analyzer_config.get_section("DATETIME_TOKEN_MAP")
+        self.token_map = LogseqAnalyzerConfig().get_section("DATETIME_TOKEN_MAP")
 
     def set_datetime_token_pattern(self):
         """Return a compiled regex pattern for datetime tokens"""
@@ -38,16 +36,14 @@ class LogseqDateTimeTokens:
         """
         Set the formatting for journal files and pages in Python format.
         """
-        journal_formats = LogseqJournalFormats()
+        journal_file_format = LogseqGraphConfig().ls_config.get(":journal/file-name-format")
+        if not LogseqJournalFormats().py_file_format:
+            LogseqJournalFormats().py_file_format = self.convert_cljs_date_to_py(journal_file_format)
 
-        journal_file_format = self.graph_config.ls_config.get(":journal/file-name-format")
-        if not journal_formats.py_file_format:
-            journal_formats.py_file_format = self.convert_cljs_date_to_py(journal_file_format)
-
-        journal_page_format = self.graph_config.ls_config.get(":journal/page-title-format")
+        journal_page_format = LogseqGraphConfig().ls_config.get(":journal/page-title-format")
         py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        if not journal_formats.py_page_format:
-            journal_formats.py_page_format = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
+        if not LogseqJournalFormats().py_page_format:
+            LogseqJournalFormats().py_page_format = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
 
     def convert_cljs_date_to_py(self, cljs_format) -> str:
         """

@@ -13,7 +13,6 @@ class LogseqAnalyzerPathValidator:
 
     def __init__(self):
         """Initialize the path validator."""
-        self._ac = LogseqAnalyzerConfig()
         # 01 Output and Logging
         self.dir_output = None
         self.file_log = None
@@ -42,30 +41,30 @@ class LogseqAnalyzerPathValidator:
 
     def validate_cache(self):
         """Validate the cache file."""
-        self.file_cache = File(self._ac.config["CONST"]["CACHE"])
+        self.file_cache = File(LogseqAnalyzerConfig().config["CONST"]["CACHE"])
 
     def validate_output_dir_and_logging(self):
         """Validate the output directory and logging."""
-        self.dir_output = File(self._ac.config["CONST"]["OUTPUT_DIR"])
-        self.file_log = File(self._ac.config["CONST"]["LOG_FILE"])
+        self.dir_output = File(LogseqAnalyzerConfig().config["CONST"]["OUTPUT_DIR"])
+        self.file_log = File(LogseqAnalyzerConfig().config["CONST"]["LOG_FILE"])
         self.dir_output.initialize_dir()  # Clear all and create
         self.file_log.initialize_file()  # Delete and create
 
     def validate_graph_logseq_config_paths(self):
         """Validate the graph and Logseq configuration paths."""
-        self.dir_graph = File(self._ac.config["ANALYZER"]["GRAPH_DIR"])
-        self.dir_logseq = File(self._ac.config["CONST"]["LOGSEQ_DIR"])
-        self.file_config = File(self._ac.config["CONST"]["CONFIG_FILE"])
+        self.dir_graph = File(LogseqAnalyzerConfig().config["ANALYZER"]["GRAPH_DIR"])
+        self.dir_logseq = File(LogseqAnalyzerConfig().config["CONST"]["LOGSEQ_DIR"])
+        self.file_config = File(LogseqAnalyzerConfig().config["CONST"]["CONFIG_FILE"])
         self.dir_graph.validate()  # Must exist
         self.dir_logseq.validate()  # Must exist
         self.file_config.validate()  # Must exist
 
     def validate_analyzer_paths(self):
         """Validate the analyzer paths."""
-        self.dir_delete = File(self._ac.config["CONST"]["TO_DELETE_DIR"])
-        self.dir_delete_bak = File(self._ac.config["CONST"]["TO_DELETE_BAK_DIR"])
-        self.dir_delete_recycle = File(self._ac.config["CONST"]["TO_DELETE_RECYCLE_DIR"])
-        self.dir_delete_assets = File(self._ac.config["CONST"]["TO_DELETE_ASSETS_DIR"])
+        self.dir_delete = File(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_DIR"])
+        self.dir_delete_bak = File(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_BAK_DIR"])
+        self.dir_delete_recycle = File(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_RECYCLE_DIR"])
+        self.dir_delete_assets = File(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_ASSETS_DIR"])
         self.dir_delete.get_or_create_dir()  # Create if it doesn't exist
         self.dir_delete_bak.get_or_create_dir()  # Create if it doesn't exist
         self.dir_delete_recycle.get_or_create_dir()  # Create if it doesn't exist
@@ -73,18 +72,18 @@ class LogseqAnalyzerPathValidator:
 
     def validate_graph_paths(self):
         """Validate the graph paths."""
-        self.dir_recycle = File(self._ac.config["CONST"]["RECYCLE_DIR"])
-        self.dir_bak = File(self._ac.config["CONST"]["BAK_DIR"])
+        self.dir_recycle = File(LogseqAnalyzerConfig().config["CONST"]["RECYCLE_DIR"])
+        self.dir_bak = File(LogseqAnalyzerConfig().config["CONST"]["BAK_DIR"])
         self.dir_recycle.get_or_create_dir()  # Create if it doesn't exist
         self.dir_bak.get_or_create_dir()  # Create if it doesn't exist
 
     def validate_target_paths(self):
         """Validate the target paths."""
-        self.dir_assets = File(self._ac.config["TARGET_DIRS"]["DIR_ASSETS"])
-        self.dir_draws = File(self._ac.config["TARGET_DIRS"]["DIR_DRAWS"])
-        self.dir_journals = File(self._ac.config["TARGET_DIRS"]["DIR_JOURNALS"])
-        self.dir_pages = File(self._ac.config["TARGET_DIRS"]["DIR_PAGES"])
-        self.dir_whiteboards = File(self._ac.config["TARGET_DIRS"]["DIR_WHITEBOARDS"])
+        self.dir_assets = File(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_ASSETS"])
+        self.dir_draws = File(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_DRAWS"])
+        self.dir_journals = File(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_JOURNALS"])
+        self.dir_pages = File(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_PAGES"])
+        self.dir_whiteboards = File(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_WHITEBOARDS"])
         self.dir_assets.get_or_create_dir()  # Create if it doesn't exist
         self.dir_draws.get_or_create_dir()  # Create if it doesn't exist
         self.dir_journals.get_or_create_dir()  # Create if it doesn't exist
@@ -93,5 +92,5 @@ class LogseqAnalyzerPathValidator:
 
     def validate_global_config_path(self):
         """Validate the global configuration file path."""
-        self.file_config_global = File(self._ac.config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
+        self.file_config_global = File(LogseqAnalyzerConfig().config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
         self.file_config_global.validate()  # Must exist

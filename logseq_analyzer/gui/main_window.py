@@ -53,7 +53,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         self.setWindowTitle("Logseq Analyzer")
         self.resize(500, 500)
-        self._paths = LogseqAnalyzerPathValidator()
         # Central Widget and Layout
         central_widget = QWidget()
         main_layout = QGridLayout(central_widget)
@@ -211,8 +210,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        if self._paths.dir_output.path.exists():
-            output_dir = self._paths.dir_output.path.resolve()
+        if LogseqAnalyzerPathValidator().dir_output.path.exists():
+            output_dir = LogseqAnalyzerPathValidator().dir_output.path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(output_dir)
             elif sys.platform.startswith("darwin"):
@@ -222,8 +221,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        if self._paths.dir_delete.path.exists():
-            delete_dir = self._paths.dir_delete.path.resolve()
+        if LogseqAnalyzerPathValidator().dir_delete.path.exists():
+            delete_dir = LogseqAnalyzerPathValidator().dir_delete.path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(delete_dir)
             elif sys.platform.startswith("darwin"):
@@ -233,8 +232,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        if self._paths.file_log.path.exists():
-            log_file_path = self._paths.file_log.path.resolve()
+        if LogseqAnalyzerPathValidator().file_log.path.exists():
+            log_file_path = LogseqAnalyzerPathValidator().file_log.path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
             elif sys.platform.startswith("darwin"):

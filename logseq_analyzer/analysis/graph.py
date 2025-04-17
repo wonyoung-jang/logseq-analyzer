@@ -6,10 +6,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict
 
-from ..utils.helpers import singleton
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output, Criteria
+from ..utils.helpers import singleton
 
 
 @singleton
@@ -18,7 +18,6 @@ class LogseqGraph:
 
     def __init__(self):
         """Initialize the LogseqGraph instance."""
-        self.cache = Cache()
         self.data = {}
         self.content_bullets = {}
         self.unique_linked_references = set()
@@ -30,7 +29,7 @@ class LogseqGraph:
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
-        for file_path in self.cache.iter_modified_files():
+        for file_path in Cache().iter_modified_files():
             file = self.initialize_file(file_path)
             self.update_data_with_file(file)
             self.del_large_file_attributes(file)
@@ -76,23 +75,23 @@ class LogseqGraph:
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
-        graph_data_db = self.cache.get(Output.GRAPH_DATA.value, {})
+        graph_data_db = Cache().get(Output.GRAPH_DATA.value, {})
         graph_data_db.update(self.data)
         self.data = graph_data_db
 
-        graph_content_db = self.cache.get(Output.GRAPH_CONTENT.value, {})
+        graph_content_db = Cache().get(Output.GRAPH_CONTENT.value, {})
         graph_content_db.update(self.content_bullets)
         self.content_bullets = graph_content_db
 
-        graph_hashed_files_db = self.cache.get(Output.GRAPH_HASHED_FILES.value, {})
+        graph_hashed_files_db = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
         graph_hashed_files_db.update(self.hash_to_file_map)
         self.hash_to_file_map = graph_hashed_files_db
 
-        graph_names_to_hashes_db = self.cache.get(Output.GRAPH_NAMES_TO_HASHES.value, {})
+        graph_names_to_hashes_db = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
         graph_names_to_hashes_db.update(self.name_to_hashes_map)
         self.name_to_hashes_map = graph_names_to_hashes_db
 
-        graph_dangling_links_db = self.cache.get(Output.DANGLING_LINKS.value, set())
+        graph_dangling_links_db = Cache().get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in graph_dangling_links_db}
         self.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
 

@@ -9,8 +9,6 @@ import shutil
 
 from ..utils.helpers import singleton
 from ..analysis.assets import LogseqAssets
-from ..analysis.graph import LogseqGraph
-from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.arguments import LogseqAnalyzerArguments
 from ..io.path_validator import LogseqAnalyzerPathValidator
 
@@ -25,36 +23,30 @@ class LogseqFileMover:
         """
         Initialize the LogseqFileMover class.
         """
-        self._paths = LogseqAnalyzerPathValidator()
-        self.analyzer_config = LogseqAnalyzerConfig()
-        self.graph = LogseqGraph()
-        self.assets = LogseqAssets()
         self.moved_files = {}
-        self.delete = self._paths.dir_delete.path
+        self.delete = LogseqAnalyzerPathValidator().dir_delete.path
 
     def handle_move_files(self) -> List[str]:
         """
         Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
         """
-        args = LogseqAnalyzerArguments()
-        if self.assets.not_backlinked:
-            if args.move_unlinked_assets:
+        if LogseqAssets().not_backlinked:
+            if LogseqAnalyzerArguments().move_unlinked_assets:
                 self.move_unlinked_assets()
-                self.assets.not_backlinked = [asset.path.name for asset in self.assets.not_backlinked]
-                return self.assets.not_backlinked
-            self.assets.not_backlinked = ["=== Simulated only ==="] + [
-                asset.path.name for asset in self.assets.not_backlinked
+                LogseqAssets().not_backlinked = [asset.path.name for asset in LogseqAssets().not_backlinked]
+                return LogseqAssets().not_backlinked
+            LogseqAssets().not_backlinked = ["=== Simulated only ==="] + [
+                asset.path.name for asset in LogseqAssets().not_backlinked
             ]
-            return self.assets.not_backlinked
+            return LogseqAssets().not_backlinked
         return []
 
     def move_unlinked_assets(self) -> None:
         """
         Move unlinked assets to a separate directory.
         """
-        paths = LogseqAnalyzerPathValidator()
-        delete_asset_dir = paths.dir_delete_assets.path
-        for asset in self.assets.not_backlinked:
+        delete_asset_dir = LogseqAnalyzerPathValidator().dir_delete_assets.path
+        for asset in LogseqAssets().not_backlinked:
             file_path = asset.file_path
             new_path = delete_asset_dir / file_path.name
             try:

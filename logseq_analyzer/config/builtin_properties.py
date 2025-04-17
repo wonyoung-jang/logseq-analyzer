@@ -16,13 +16,12 @@ class LogseqBuiltInProperties:
 
     def __init__(self):
         """Initialize the LogseqBuiltInProperties class."""
-        self.analyzer_config = LogseqAnalyzerConfig()
         self.built_in_properties = None
         self.set_builtin_properties()
 
     def set_builtin_properties(self):
         """Build the built-in properties set."""
-        properties_str = self.analyzer_config.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
+        properties_str = LogseqAnalyzerConfig().config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
         self.built_in_properties = frozenset(properties_str.split(","))
 
     def split_builtin_user_properties(self, properties: list) -> Dict[str, List[str]]:

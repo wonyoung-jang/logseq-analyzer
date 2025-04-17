@@ -17,23 +17,21 @@ class LogseqAssets:
 
     def __init__(self):
         """Initialize the LogseqAssets instance."""
-        self.graph = LogseqGraph()
-        self.query = Query()
         self.backlinked = []
         self.not_backlinked = []
 
     def handle_assets(self, asset_filenames: list):
         """Handle assets for the Logseq Analyzer."""
-        for hash_, file in self.graph.hash_to_file_map.items():
+        for hash_, file in LogseqGraph().hash_to_file_map.items():
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_name in asset_filenames:
-                if not (asset_hashes := self.query.name_to_hashes(asset_name)):
+                if not (asset_hashes := Query().name_to_hashes(asset_name)):
                     continue
                 for hash_ in asset_hashes:
-                    if not (asset_file := self.query.hash_to_file(hash_)):
+                    if not (asset_file := Query().hash_to_file(hash_)):
                         continue
                     if asset_file.is_backlinked:
                         continue
@@ -41,8 +39,8 @@ class LogseqAssets:
                     self.update_asset_backlink(file.path.name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = self.query.list_files_with_keys_and_values(**backlinked_kwargs)
-        self.not_backlinked = self.query.list_files_with_keys_and_values(**not_backlinked_kwargs)
+        self.backlinked = Query().list_files_with_keys_and_values(**backlinked_kwargs)
+        self.not_backlinked = Query().list_files_with_keys_and_values(**not_backlinked_kwargs)
 
     def update_asset_backlink(self, file_name, asset_mentions, asset_file):
         """
@@ -74,9 +72,6 @@ class LogseqAssetsHls:
 
     def __init__(self):
         """Initialize the LogseqAssetsHls instance."""
-        self.graph = LogseqGraph()
-        self.query = Query()
-        self.content_patterns = ContentPatterns()
         self.formatted_bullets = []
         self.backlinked = set()
         self.not_backlinked = set()
@@ -87,7 +82,7 @@ class LogseqAssetsHls:
     def get_asset_files(self):
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
-        self.asset_files = self.query.list_files_with_keys_and_values(**criteria)
+        self.asset_files = Query().list_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in self.asset_files}
         self.asset_names = list(self.asset_mapping.keys())
 
@@ -97,13 +92,13 @@ class LogseqAssetsHls:
         """
         data = {}
         for name in names:
-            files = self.query.name_to_files(name)
+            files = Query().name_to_files(name)
             for file in files:
                 for bullet in file.bullets.all_bullets:
                     bullet = bullet.strip()
                     if bullet.startswith("[:span]"):
                         hash_ = hash(bullet)
-                        for match in self.content_patterns.property_value.finditer(bullet):
+                        for match in ContentPatterns().property_value.finditer(bullet):
                             data.setdefault(name, {})
                             data[name].setdefault(hash_, {})
                             data[name][hash_][match.group(1)] = match.group(2)

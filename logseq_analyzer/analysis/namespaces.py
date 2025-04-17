@@ -37,12 +37,8 @@ class LogseqNamespaces:
         """
         Initialize the NamespaceAnalyzer instance.
         """
-        graph = LogseqGraph()
         self._part_levels = defaultdict(set)
         self._part_entries = defaultdict(list)
-        self.hashed_files = graph.hash_to_file_map
-        self.data = graph.data
-        self.dangling_links = graph.dangling_links
         self.namespace_data = {}
         self.namespace_parts = {}
         self.unique_namespace_parts = set()
@@ -54,7 +50,6 @@ class LogseqNamespaces:
         self.conflicts_dangling = defaultdict(list)
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
-        self.content_patterns = ContentPatterns()
 
     def init_ns_parts(self):
         """
@@ -86,12 +81,12 @@ class LogseqNamespaces:
         """
         Analyze namespace queries.
         """
-        for _, file in self.hashed_files.items():
+        for _, file in LogseqGraph().hash_to_file_map.items():
             got_ns_queries = file.data.get("namespace_queries")
             if not got_ns_queries:
                 continue
             for q in got_ns_queries:
-                page_refs = self.content_patterns.page_reference.findall(q)
+                page_refs = ContentPatterns().page_reference.findall(q)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", q)
                     continue
@@ -119,7 +114,7 @@ class LogseqNamespaces:
         """
         non_ns_names = self.list_files_without_keys("ns_level")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
-        potential_dangling = self.unique_namespace_parts.intersection(self.dangling_links)
+        potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)
         for entry, parts in self.namespace_parts.items():
             for part in parts:
                 if part in potential_non_ns_names:
@@ -154,7 +149,7 @@ class LogseqNamespaces:
         """
         Extract a subset of the summary data based on whether the keys exists.
         """
-        for _, file in self.hashed_files.items():
+        for _, file in LogseqGraph().hash_to_file_map.items():
             if all(hasattr(file, key) for key in criteria):
                 yield file
 
@@ -163,5 +158,7 @@ class LogseqNamespaces:
         Extract a subset of the summary data based on whether the keys do not exist.
         """
         return [
-            file.path.name for _, file in self.hashed_files.items() if all(not hasattr(file, key) for key in criteria)
+            file.path.name
+            for _, file in LogseqGraph().hash_to_file_map.items()
+            if all(not hasattr(file, key) for key in criteria)
         ]

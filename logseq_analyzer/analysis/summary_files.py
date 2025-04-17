@@ -4,10 +4,10 @@ Logseq File Summarizer Module
 
 from typing import Dict
 
+from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
 from .graph import LogseqGraph
 from .query_graph import Query
-from ..utils.enums import SummaryFiles
 
 
 @singleton
@@ -16,12 +16,7 @@ class LogseqFileSummarizer:
 
     def __init__(self):
         """Initialize the LogseqFileSummarizer instance."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.graph = LogseqGraph()
-            self.query = Query()
-            self.hashed_files = self.graph.hash_to_file_map
-            self.subsets: Dict[str, dict] = {}
+        self.subsets: Dict[str, dict] = {}
 
     def generate_summary(self):
         """Generate summary subsets for the Logseq Analyzer."""
@@ -55,17 +50,17 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         for output_name, criteria in summary_categories.items():
-            self.subsets[output_name.value] = self.query.list_file_names_with_keys_and_values(**criteria)
+            self.subsets[output_name.value] = Query().list_file_names_with_keys_and_values(**criteria)
 
         self.process_file_extensions()
 
     def process_file_extensions(self):
         """Process file extensions and create subsets for each."""
         file_extension_dict = {}
-        for _, file in self.hashed_files.items():
+        for _, file in LogseqGraph().hash_to_file_map.items():
             ext = file.path.suffix
             output_name = f"all {ext}s"
             if output_name not in file_extension_dict:
                 criteria = {"suffix": ext}
-                file_extension_dict[output_name] = self.query.list_file_names_with_keys_and_values(**criteria)
+                file_extension_dict[output_name] = Query().list_file_names_with_keys_and_values(**criteria)
         self.subsets[SummaryFiles.FILE_EXTS.value] = file_extension_dict

@@ -7,10 +7,10 @@ from typing import List, Optional, Tuple
 import logging
 
 from ..config.datetime_tokens import LogseqJournalFormats
-from ..utils.helpers import singleton
-from .summary_files import LogseqFileSummarizer
-from .graph import LogseqGraph
 from ..utils.enums import SummaryFiles
+from ..utils.helpers import singleton
+from .graph import LogseqGraph
+from .summary_files import LogseqFileSummarizer
 
 
 @singleton
@@ -23,10 +23,6 @@ class LogseqJournals:
         """
         Initialize the LogseqJournals class.
         """
-        graph = LogseqGraph()
-        summary_files = LogseqFileSummarizer()
-        self.dangling_links = graph.dangling_links
-        self.journal_keys = summary_files.subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
         self.dangling_journals = []
         self.processed_keys = []
         self.complete_timeline = []
@@ -39,14 +35,13 @@ class LogseqJournals:
         """
         Process journal keys to build the complete timeline and detect missing entries.
         """
-        py_page_fmt = LogseqJournalFormats()
-        py_page_base_format = py_page_fmt.py_page_format
-
-        for dateobj in self.process_journal_keys_to_datetime(self.dangling_links, py_page_base_format):
+        py_page_base_format = LogseqJournalFormats().py_page_format
+        for dateobj in self.process_journal_keys_to_datetime(LogseqGraph().dangling_links, py_page_base_format):
             self.dangling_journals.append(dateobj)
         self.dangling_journals.sort()
 
-        for dateobj in self.process_journal_keys_to_datetime(self.journal_keys, py_page_base_format):
+        journal_keys = LogseqFileSummarizer().subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
+        for dateobj in self.process_journal_keys_to_datetime(journal_keys, py_page_base_format):
             self.processed_keys.append(dateobj)
         self.processed_keys.sort()
 
