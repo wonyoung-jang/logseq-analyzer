@@ -13,34 +13,32 @@ class LogseqAnalyzerPathValidator:
 
     def __init__(self):
         """Initialize the path validator."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self._ac = LogseqAnalyzerConfig()
-            # 01 Output and Logging
-            self.dir_output = None
-            self.file_log = None
-            # 02 Graph and Logseq Config - required for config.edn to get target paths
-            self.dir_graph = None
-            self.dir_logseq = None
-            self.file_config = None
-            # 03 Analyzer Paths - required for deleting files
-            self.dir_delete = None
-            self.dir_delete_bak = None
-            self.dir_delete_recycle = None
-            self.dir_delete_assets = None
-            # 04 Graph Paths - required for deleting files
-            self.dir_recycle = None
-            self.dir_bak = None
-            # 05 Target Paths - required for analyzing files
-            self.dir_assets = None
-            self.dir_draws = None
-            self.dir_journals = None
-            self.dir_pages = None
-            self.dir_whiteboards = None
-            # 06 Global Config Path
-            self.file_config_global = None
-            # 07 Cache Path
-            self.file_cache = None
+        self._ac = LogseqAnalyzerConfig()
+        # 01 Output and Logging
+        self.dir_output = None
+        self.file_log = None
+        # 02 Graph and Logseq Config - required for config.edn to get target paths
+        self.dir_graph = None
+        self.dir_logseq = None
+        self.file_config = None
+        # 03 Analyzer Paths - required for deleting files
+        self.dir_delete = None
+        self.dir_delete_bak = None
+        self.dir_delete_recycle = None
+        self.dir_delete_assets = None
+        # 04 Graph Paths - required for deleting files
+        self.dir_recycle = None
+        self.dir_bak = None
+        # 05 Target Paths - required for analyzing files
+        self.dir_assets = None
+        self.dir_draws = None
+        self.dir_journals = None
+        self.dir_pages = None
+        self.dir_whiteboards = None
+        # 06 Global Config Path
+        self.file_config_global = None
+        # 07 Cache Path
+        self.file_cache = None
 
     def validate_cache(self):
         """Validate the cache file."""

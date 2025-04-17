@@ -17,12 +17,10 @@ class LogseqAssets:
 
     def __init__(self):
         """Initialize the LogseqAssets instance."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.graph = LogseqGraph()
-            self.query = Query()
-            self.backlinked = []
-            self.not_backlinked = []
+        self.graph = LogseqGraph()
+        self.query = Query()
+        self.backlinked = []
+        self.not_backlinked = []
 
     def handle_assets(self, asset_filenames: list):
         """Handle assets for the Logseq Analyzer."""

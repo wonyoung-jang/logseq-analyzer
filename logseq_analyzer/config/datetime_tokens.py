@@ -19,12 +19,10 @@ class LogseqDateTimeTokens:
         """
         Initialize the LogseqDateTimeTokens class.
         """
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.analyzer_config = LogseqAnalyzerConfig()
-            self.graph_config = LogseqGraphConfig()
-            self.token_map = None
-            self.token_pattern = None
+        self.analyzer_config = LogseqAnalyzerConfig()
+        self.graph_config = LogseqGraphConfig()
+        self.token_map = None
+        self.token_pattern = None
 
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""

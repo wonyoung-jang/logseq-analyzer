@@ -22,19 +22,17 @@ class LogseqJournals:
         """
         Initialize the LogseqJournals class.
         """
-        if not hasattr(self, "_initialized"):
-            graph = LogseqGraph()
-            summary_files = LogseqFileSummarizer()
-            self._initialized = True
-            self.dangling_links = graph.dangling_links
-            self.journal_keys = summary_files.subsets.get("filetype_journal", [])
-            self.dangling_journals = []
-            self.processed_keys = []
-            self.complete_timeline = []
-            self.missing_keys = []
-            self.timeline_stats = {}
-            self.dangling_journals_past = []
-            self.dangling_journals_future = []
+        graph = LogseqGraph()
+        summary_files = LogseqFileSummarizer()
+        self.dangling_links = graph.dangling_links
+        self.journal_keys = summary_files.subsets.get("filetype_journal", [])
+        self.dangling_journals = []
+        self.processed_keys = []
+        self.complete_timeline = []
+        self.missing_keys = []
+        self.timeline_stats = {}
+        self.dangling_journals_past = []
+        self.dangling_journals_future = []
 
     def process_journals_timelines(self) -> None:
         """

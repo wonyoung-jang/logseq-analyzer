@@ -15,9 +15,7 @@ class Query:
 
     def __init__(self):
         """Initialize the Query class with a LogseqGraph instance."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.graph = LogseqGraph()
+        self.graph = LogseqGraph()
 
     def name_to_hashes(self, name: str):
         """Get a Logseq file by its name."""

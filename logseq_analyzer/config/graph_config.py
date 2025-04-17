@@ -15,13 +15,11 @@ class LogseqGraphConfig:
 
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.ls_config = None
-            self.user_config_file = None
-            self.user_config_data = {}
-            self.global_config_file = None
-            self.global_config_data = {}
+        self.ls_config = None
+        self.user_config_file = None
+        self.user_config_data = {}
+        self.global_config_file = None
+        self.global_config_data = {}
 
     def initialize_user_config_edn(self):
         """Extract user config."""

@@ -26,21 +26,19 @@ class LogseqAnalyzerConfig:
 
     def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            config_path = File("configuration/config.ini")
-            config_path.validate()
-            self.config = configparser.ConfigParser(
-                allow_no_value=True,
-                inline_comment_prefixes=("#", ";"),
-                default_section="",
-                interpolation=configparser.ExtendedInterpolation(),
-                empty_lines_in_values=False,
-                allow_unnamed_section=True,
-            )
-            self.config.optionxform = lambda_optionxform
-            self.config.read(config_path.path)
-            self.target_dirs = None
+        config_path = File("configuration/config.ini")
+        config_path.validate()
+        self.config = configparser.ConfigParser(
+            allow_no_value=True,
+            inline_comment_prefixes=("#", ";"),
+            default_section="",
+            interpolation=configparser.ExtendedInterpolation(),
+            empty_lines_in_values=False,
+            allow_unnamed_section=True,
+        )
+        self.config.optionxform = lambda_optionxform
+        self.config.read(config_path.path)
+        self.target_dirs = None
 
     def get(self, section, key, fallback=None):
         """Get a value from the config file"""

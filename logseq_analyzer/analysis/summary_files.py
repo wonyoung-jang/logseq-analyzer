@@ -57,7 +57,10 @@ class LogseqFileSummarizer:
         for output_name, criteria in summary_categories.items():
             self.subsets[output_name.value] = self.query.list_file_names_with_keys_and_values(**criteria)
 
-        # Process file extensions
+        self.process_file_extensions()
+
+    def process_file_extensions(self):
+        """Process file extensions and create subsets for each."""
         file_extensions = set()
         for _, file in self.hashed_files.items():
             ext = file.path.suffix
@@ -67,7 +70,7 @@ class LogseqFileSummarizer:
 
         file_ext_dict = {}
         for ext in file_extensions:
-            output_name = f"_all_{ext}s"
+            output_name = f"all_{ext}s"
             criteria = {"suffix": ext}
             file_ext_dict[output_name] = self.query.list_file_names_with_keys_and_values(**criteria)
         self.subsets[SummaryFiles.FILE_EXTS.value] = file_ext_dict

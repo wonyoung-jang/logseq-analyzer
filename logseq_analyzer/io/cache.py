@@ -21,11 +21,9 @@ class Cache:
 
     def __init__(self):
         """Initialize the class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.paths = LogseqAnalyzerPathValidator()
-            self.paths.validate_cache()
-            self.cache = shelve.open(self.paths.file_cache.path, protocol=5)
+        self.paths = LogseqAnalyzerPathValidator()
+        self.paths.validate_cache()
+        self.cache = shelve.open(self.paths.file_cache.path, protocol=5)
 
     def close(self):
         """Close the cache file."""

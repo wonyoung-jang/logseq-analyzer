@@ -16,11 +16,9 @@ class LogseqBuiltInProperties:
 
     def __init__(self):
         """Initialize the LogseqBuiltInProperties class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.analyzer_config = LogseqAnalyzerConfig()
-            self.built_in_properties = None
-            self.set_builtin_properties()
+        self.analyzer_config = LogseqAnalyzerConfig()
+        self.built_in_properties = None
+        self.set_builtin_properties()
 
     def set_builtin_properties(self):
         """Build the built-in properties set."""

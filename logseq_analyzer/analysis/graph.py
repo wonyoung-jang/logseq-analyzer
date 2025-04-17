@@ -18,17 +18,15 @@ class LogseqGraph:
 
     def __init__(self):
         """Initialize the LogseqGraph instance."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.cache = Cache()
-            self.data = {}
-            self.content_bullets = {}
-            self.unique_linked_references = set()
-            self.unique_linked_references_ns = set()
-            self.all_linked_references = {}
-            self.dangling_links = set()
-            self.hash_to_file_map: Dict[int, LogseqFile] = {}
-            self.name_to_hashes_map = defaultdict(list)
+        self.cache = Cache()
+        self.data = {}
+        self.content_bullets = {}
+        self.unique_linked_references = set()
+        self.unique_linked_references_ns = set()
+        self.all_linked_references = {}
+        self.dangling_links = set()
+        self.hash_to_file_map: Dict[int, LogseqFile] = {}
+        self.name_to_hashes_map = defaultdict(list)
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""

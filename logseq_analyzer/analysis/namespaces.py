@@ -37,26 +37,24 @@ class LogseqNamespaces:
         """
         Initialize the NamespaceAnalyzer instance.
         """
-        if not hasattr(self, "_initialized"):
-            graph = LogseqGraph()
-            self._initialized = True
-            self._part_levels = defaultdict(set)
-            self._part_entries = defaultdict(list)
-            self.hashed_files = graph.hash_to_file_map
-            self.data = graph.data
-            self.dangling_links = graph.dangling_links
-            self.namespace_data = {}
-            self.namespace_parts = {}
-            self.unique_namespace_parts = set()
-            self.namespace_details = {}
-            self.unique_namespaces_per_level = defaultdict(set)
-            self.namespace_queries = {}
-            self.tree = {}
-            self.conflicts_non_namespace = defaultdict(list)
-            self.conflicts_dangling = defaultdict(list)
-            self.conflicts_parent_depth = {}
-            self.conflicts_parent_unique = {}
-            self.content_patterns = ContentPatterns()
+        graph = LogseqGraph()
+        self._part_levels = defaultdict(set)
+        self._part_entries = defaultdict(list)
+        self.hashed_files = graph.hash_to_file_map
+        self.data = graph.data
+        self.dangling_links = graph.dangling_links
+        self.namespace_data = {}
+        self.namespace_parts = {}
+        self.unique_namespace_parts = set()
+        self.namespace_details = {}
+        self.unique_namespaces_per_level = defaultdict(set)
+        self.namespace_queries = {}
+        self.tree = {}
+        self.conflicts_non_namespace = defaultdict(list)
+        self.conflicts_dangling = defaultdict(list)
+        self.conflicts_parent_depth = {}
+        self.conflicts_parent_unique = {}
+        self.content_patterns = ContentPatterns()
 
     def init_ns_parts(self):
         """

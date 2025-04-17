@@ -16,21 +16,19 @@ class ContentPatterns:
 
     def __init__(self):
         """Initialize the ContentPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.bullet = None
-            self.page_reference = None
-            self.tagged_backlink = None
-            self.tag = None
-            self.property = None
-            self.property_value = None
-            self.asset = None
-            self.draw = None
-            self.blockquote = None
-            self.flashcard = None
-            self.dynamic_variable = None
-            self.any_link = None
-            self.initialize_patterns()
+        self.bullet = None
+        self.page_reference = None
+        self.tagged_backlink = None
+        self.tag = None
+        self.property = None
+        self.property_value = None
+        self.asset = None
+        self.draw = None
+        self.blockquote = None
+        self.flashcard = None
+        self.dynamic_variable = None
+        self.any_link = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -183,22 +181,20 @@ class DoubleCurlyBracketsPatterns:
 
     def __init__(self):
         """Initialize the DoubleCurlyBracketsPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.embed = None
-            self.page_embed = None
-            self.block_embed = None
-            self.namespace_query = None
-            self.card = None
-            self.cloze = None
-            self.simple_query = None
-            self.query_function = None
-            self.embed_video_url = None
-            self.embed_twitter_tweet = None
-            self.embed_youtube_timestamp = None
-            self.renderer = None
-            self.initialize_patterns()
+        self.all = None
+        self.embed = None
+        self.page_embed = None
+        self.block_embed = None
+        self.namespace_query = None
+        self.card = None
+        self.cloze = None
+        self.simple_query = None
+        self.query_function = None
+        self.embed_video_url = None
+        self.embed_twitter_tweet = None
+        self.embed_youtube_timestamp = None
+        self.renderer = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -342,25 +338,23 @@ class AdvancedCommandPatterns:
 
     def __init__(self):
         """Initialize the AdvancedCommandPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.export = None
-            self.export_ascii = None
-            self.export_latex = None
-            self.caution = None
-            self.center = None
-            self.comment = None
-            self.example = None
-            self.important = None
-            self.note = None
-            self.pinned = None
-            self.query = None
-            self.quote = None
-            self.tip = None
-            self.verse = None
-            self.warning = None
-            self.initialize_patterns()
+        self.all = None
+        self.export = None
+        self.export_ascii = None
+        self.export_latex = None
+        self.caution = None
+        self.center = None
+        self.comment = None
+        self.example = None
+        self.important = None
+        self.note = None
+        self.pinned = None
+        self.query = None
+        self.quote = None
+        self.tip = None
+        self.verse = None
+        self.warning = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -560,13 +554,11 @@ class CodePatterns:
 
     def __init__(self):
         """Initialize the CodePatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.multiline_code_lang = None
-            self.calc_block = None
-            self.inline_code_block = None
-            self.initialize_patterns()
+        self.all = None
+        self.multiline_code_lang = None
+        self.calc_block = None
+        self.inline_code_block = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -622,11 +614,9 @@ class DoubleParenthesesPatterns:
 
     def __init__(self):
         """Initialize the DoubleParenthesesPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.block_reference = None
-            self.initialize_patterns()
+        self.all = None
+        self.block_reference = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -669,12 +659,10 @@ class EmbeddedLinksPatterns:
 
     def __init__(self):
         """Initialize the EmbeddedLinksPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.internet = None
-            self.asset = None
-            self.initialize_patterns()
+        self.all = None
+        self.internet = None
+        self.asset = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """
@@ -734,12 +722,10 @@ class ExternalLinksPatterns:
 
     def __init__(self):
         """Initialize the ExternalLinksPatterns class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.all = None
-            self.internet = None
-            self.alias = None
-            self.initialize_patterns()
+        self.all = None
+        self.internet = None
+        self.alias = None
+        self.initialize_patterns()
 
     def initialize_patterns(self):
         """

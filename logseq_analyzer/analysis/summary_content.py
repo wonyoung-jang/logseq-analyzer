@@ -15,10 +15,8 @@ class LogseqContentSummarizer:
 
     def __init__(self):
         """Initialize the LogseqContentSummarizer instance."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.graph = LogseqGraph()
-            self.subsets = {}
+        self.graph = LogseqGraph()
+        self.subsets = {}
 
     def generate_summary(self):
         """Generate summary subsets for content data in the Logseq graph."""

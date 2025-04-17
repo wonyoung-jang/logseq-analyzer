@@ -14,16 +14,14 @@ class LogseqAnalyzerArguments:
 
     def __init__(self):
         """Initialize the LogseqAnalyzerArguments class."""
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self.graph_folder: Path = None
-            self.global_config: Path = None
-            self.move_unlinked_assets: bool = None
-            self.move_bak: bool = None
-            self.move_recycle: bool = None
-            self.write_graph: bool = None
-            self.graph_cache: bool = None
-            self.report_format: str = None
+        self.graph_folder: Path = None
+        self.global_config: Path = None
+        self.move_unlinked_assets: bool = None
+        self.move_bak: bool = None
+        self.move_recycle: bool = None
+        self.write_graph: bool = None
+        self.graph_cache: bool = None
+        self.report_format: str = None
 
     def setup_args(self, **kwargs):
         """Set up command line arguments and GUI arguments."""

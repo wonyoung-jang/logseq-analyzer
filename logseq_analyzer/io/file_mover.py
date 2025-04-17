@@ -25,14 +25,12 @@ class LogseqFileMover:
         """
         Initialize the LogseqFileMover class.
         """
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self._paths = LogseqAnalyzerPathValidator()
-            self.analyzer_config = LogseqAnalyzerConfig()
-            self.graph = LogseqGraph()
-            self.assets = LogseqAssets()
-            self.moved_files = {}
-            self.delete = self._paths.dir_delete.path
+        self._paths = LogseqAnalyzerPathValidator()
+        self.analyzer_config = LogseqAnalyzerConfig()
+        self.graph = LogseqGraph()
+        self.assets = LogseqAssets()
+        self.moved_files = {}
+        self.delete = self._paths.dir_delete.path
 
     def handle_move_files(self) -> List[str]:
         """
