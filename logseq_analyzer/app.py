@@ -318,6 +318,7 @@ def run_app(**kwargs):
     progress(20)
     cache = setup_cache(args.graph_cache)
     progress(30)
+    # Main analysis
     graph = setup_logseq_graph()
     progress(40)
     summary_files = setup_logseq_file_summarizer()
@@ -328,25 +329,23 @@ def run_app(**kwargs):
     progress(70)
     graph_journals = setup_logseq_journals()
     progress(80)
+    # Assets
     setup_logseq_hls_assets(summary_files)
-    progress(85)
     ls_assets = setup_logseq_assets(summary_files)
-    progress(90)
+    progress(85)
+    # Movee files
     ls_file_mover = setup_logseq_file_mover(args, paths)
-    progress(95)
+    progress(90)
     # Output writing
     meta_reports = get_meta_reports(graph, graph_config, args)
-    # Journals
     journal_reports = get_journal_reports(graph_journals)
-    # Namespace
     namespace_reports = get_namespace_reports(graph_namespaces)
-    # Move files and assets
     moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets)
-    # Writing
     all_outputs = get_all_reports(
         meta_reports, journal_reports, summary_files, summary_content, namespace_reports, moved_files_reports
     )
     write_reports(all_outputs)
+    progress(95)
     # Cache writing
     update_cache_and_write_config(
         analyzer_config,
