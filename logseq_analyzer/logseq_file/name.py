@@ -22,16 +22,16 @@ class LogseqFilename:
     """Class for processing Logseq filenames based on their parent directory."""
 
     file_path: Path
-    original_name: str = None
-    name: str = None
-    parent: str = None
-    suffix: str = None
-    parts: tuple = None
-    uri: str = None
-    logseq_url: str = None
-    is_namespace: bool = None
-    is_hls: bool = None
-    file_type: str = None
+    original_name: str = ""
+    name: str = ""
+    parent: str = ""
+    suffix: str = ""
+    parts: tuple = ()
+    uri: str = ""
+    logseq_url: str = ""
+    file_type: str = ""
+    is_namespace: bool = False
+    is_hls: bool = False
 
     def __post_init__(self):
         """Initialize the LogseqFilename class."""
@@ -41,10 +41,10 @@ class LogseqFilename:
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
-        self.is_namespace = False
-        self.is_hls = False
-        self.logseq_url = ""
-        self.file_type = ""
+        self.determine_file_type()
+        self.process_logseq_filename()
+        self.convert_uri_to_logseq_url()
+        self.get_namespace_name_data()
 
     def __repr__(self):
         return f"LogseqFilename({self.file_path})"

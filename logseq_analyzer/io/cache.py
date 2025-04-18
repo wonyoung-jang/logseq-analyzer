@@ -4,13 +4,11 @@ This module handles caching mechanisms for the application.
 Imported once in app.py
 """
 
-from pathlib import Path
 import logging
 import shelve
 
-from ..utils.enums import Output
-
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
 from .path_validator import LogseqAnalyzerPathValidator
 

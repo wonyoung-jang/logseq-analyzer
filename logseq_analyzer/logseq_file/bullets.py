@@ -2,7 +2,7 @@
 Module for LogseqBullets class
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import logging
 
@@ -14,27 +14,24 @@ class LogseqBullets:
     """LogseqBullets class"""
 
     file_path: Path
-    content: str = None
-    primary_bullet: str = None
-    all_bullets: list = None
-    content_bullets: list = None
-    char_count: int = None
-    bullet_count: int = None
-    bullet_count_empty: int = None
-    bullet_density: float = None
-    has_page_properties: bool = None
+    content: str = ""
+    primary_bullet: str = ""
+    all_bullets: list = field(default_factory=list)
+    content_bullets: list = field(default_factory=list)
+    char_count: int = 0
+    bullet_count: int = 0
+    bullet_count_empty: int = 0
+    bullet_density: float = 0.0
+    has_page_properties: bool = False
 
     def __post_init__(self):
         """Initialize the LogseqBullets class"""
-        self.content = ""
-        self.primary_bullet = ""
-        self.all_bullets = []
-        self.content_bullets = []
-        self.char_count = 0
-        self.bullet_count = 0
-        self.bullet_count_empty = 0
-        self.bullet_density = 0
-        self.has_page_properties = False
+        self.get_content()
+        self.get_char_count()
+        self.get_bullet_content()
+        self.get_primary_bullet()
+        self.get_bullet_density()
+        self.is_primary_bullet_page_properties()
 
     def __repr__(self):
         return f"LogseqBullets({self.file_path})"

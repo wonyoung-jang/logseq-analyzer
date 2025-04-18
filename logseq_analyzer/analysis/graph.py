@@ -59,7 +59,7 @@ class LogseqGraph:
         self.name_to_hashes_map[file.path.name].append(file_hash)
         self.hash_to_file_map[file_hash] = file
         self.name_to_files_map.setdefault(file.path.name, [])
-        self.name_to_files_map[file.path.name].append(self.hash_to_file_map[file_hash])
+        self.name_to_files_map[file.path.name].append(file)
 
     def del_large_file_attributes(self, file: LogseqFile):
         """
