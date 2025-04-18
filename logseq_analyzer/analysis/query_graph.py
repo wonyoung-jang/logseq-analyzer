@@ -51,7 +51,7 @@ class Query:
         """Get the name of a Logseq file."""
         return file.path.name
 
-    def list_files_with_keys_and_values(self, **criteria) -> list:
+    def list_files_with_keys_and_values(self, **criteria) -> List[LogseqFile]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         result = []
         for _, file in self.graph.hash_to_file_map.items():

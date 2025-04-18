@@ -9,9 +9,9 @@ def builtin_properties():
 
 
 @pytest.fixture
-def builtin_properties_set():
+def builtin_properties_set_static():
     """Fixture for setting built-in properties."""
-    builtin_properties_set_static = frozenset(
+    return frozenset(
         [
             "alias",
             "aliases",
@@ -67,31 +67,25 @@ def builtin_properties_set():
             "updated-at",
         ]
     )
-    return builtin_properties_set_static
 
 
 def test_singleton(builtin_properties):
     """Test singleton behavior."""
     another_instance = LogseqBuiltInProperties()
     assert builtin_properties is another_instance, "LogseqBuiltInProperties should be a singleton."
-
-
-def test_set_builtin_properties(builtin_properties):
-    """Test setting built-in properties."""
-    builtin_properties.set_builtin_properties()
     assert builtin_properties.built_in_properties is not None, "Built-in properties should be set."
     assert isinstance(builtin_properties.built_in_properties, frozenset), "Built-in properties should be a frozenset."
 
 
-def test_set_builtin_properties_content(builtin_properties, builtin_properties_set):
+def test_set_builtin_properties_content(builtin_properties, builtin_properties_set_static):
     """Test the content of built-in properties."""
-    builtin_properties.set_builtin_properties()
-    assert builtin_properties.built_in_properties == builtin_properties_set, "Built-in properties content should match."
+    assert (
+        builtin_properties.built_in_properties == builtin_properties_set_static
+    ), "Built-in properties content should match."
 
 
 def test_split_builtin_user_properties(builtin_properties):
     """Test splitting built-in and user-defined properties."""
-    builtin_properties.set_builtin_properties()
     properties = [
         "alias",
         "custom-id",
