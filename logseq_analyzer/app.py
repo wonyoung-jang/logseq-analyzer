@@ -34,14 +34,14 @@ class GUIInstanceDummy:
         logging.info("Updating progress: %d%%", percentage)
 
 
-def setup_logseq_arguments(**kwargs):
+def setup_logseq_arguments(**kwargs) -> LogseqAnalyzerArguments:
     """Setup Logseq arguments from keyword arguments."""
     args = LogseqAnalyzerArguments()
     args.setup_args(**kwargs)
     return args
 
 
-def init_logseq_paths():
+def init_logseq_paths() -> LogseqAnalyzerPathValidator:
     """Setup Logseq paths for the analyzer."""
     paths = LogseqAnalyzerPathValidator()
     paths.validate_output_dir_and_logging()
@@ -73,7 +73,7 @@ def setup_logseq_analyzer_config(args: LogseqAnalyzerArguments) -> LogseqAnalyze
     return config
 
 
-def setup_logseq_paths(paths, args: LogseqAnalyzerArguments) -> LogseqAnalyzerPathValidator:
+def setup_logseq_paths(paths: LogseqAnalyzerPathValidator, args: LogseqAnalyzerArguments):
     """Setup Logseq paths for the analyzer."""
     paths.validate_graph_logseq_config_paths()
     paths.validate_analyzer_paths()
@@ -81,7 +81,6 @@ def setup_logseq_paths(paths, args: LogseqAnalyzerArguments) -> LogseqAnalyzerPa
     if args.global_config:
         paths.validate_global_config_path()
     logging.debug("run_app: setup_logseq_paths")
-    return paths
 
 
 def setup_logseq_graph_config(args: LogseqAnalyzerArguments, paths: LogseqAnalyzerPathValidator) -> LogseqGraphConfig:
@@ -114,10 +113,10 @@ def setup_datetime_tokens():
     logging.debug("run_app: setup_datetime_tokens")
 
 
-def setup_cache(graph_cache: bool) -> Cache:
+def setup_cache(args: LogseqAnalyzerArguments) -> Cache:
     """Setup cache for the Logseq Analyzer."""
     cache = Cache()
-    if graph_cache:
+    if args.graph_cache:
         cache.clear()
     else:
         cache.clear_deleted_files()
@@ -125,7 +124,7 @@ def setup_cache(graph_cache: bool) -> Cache:
     return cache
 
 
-def setup_logseq_graph():
+def setup_logseq_graph() -> LogseqGraph:
     """Setup the Logseq graph."""
     graph = LogseqGraph()
     graph.process_graph_files()
@@ -136,7 +135,7 @@ def setup_logseq_graph():
     return graph
 
 
-def setup_logseq_file_summarizer():
+def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
     """Setup the Logseq file summarizer."""
     summary_files = LogseqFileSummarizer()
     summary_files.generate_summary()
@@ -144,7 +143,7 @@ def setup_logseq_file_summarizer():
     return summary_files
 
 
-def setup_logseq_content_summarizer():
+def setup_logseq_content_summarizer() -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
     summary_content = LogseqContentSummarizer()
     summary_content.generate_summary()
@@ -152,7 +151,7 @@ def setup_logseq_content_summarizer():
     return summary_content
 
 
-def setup_logseq_namespaces():
+def setup_logseq_namespaces() -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
     graph_namespaces = LogseqNamespaces()
     graph_namespaces.init_ns_parts()
@@ -163,7 +162,7 @@ def setup_logseq_namespaces():
     return graph_namespaces
 
 
-def setup_logseq_journals():
+def setup_logseq_journals() -> LogseqJournals:
     """Setup LogseqJournals."""
     graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
@@ -171,7 +170,7 @@ def setup_logseq_journals():
     return graph_journals
 
 
-def setup_logseq_hls_assets(summary_files):
+def setup_logseq_hls_assets(summary_files: LogseqFileSummarizer):
     """Setup LogseqAssetsHls for HLS assets."""
     names = summary_files.subsets.get(SummaryFiles.IS_HLS.value, [])
     ls_hls = LogseqAssetsHls()
@@ -181,7 +180,7 @@ def setup_logseq_hls_assets(summary_files):
     logging.debug("run_app: setup_logseq_hls_assets")
 
 
-def setup_logseq_assets(summary_files):
+def setup_logseq_assets(summary_files: LogseqFileSummarizer) -> LogseqAssets:
     """Setup LogseqAssets for handling assets."""
     asset_files = summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, [])
     ls_assets = LogseqAssets()
@@ -190,7 +189,7 @@ def setup_logseq_assets(summary_files):
     return ls_assets
 
 
-def setup_logseq_file_mover(args, paths):
+def setup_logseq_file_mover(args: LogseqAnalyzerArguments, paths: LogseqAnalyzerPathValidator) -> LogseqFileMover:
     """Setup LogseqFileMover for moving files and directories."""
     ls_file_mover = LogseqFileMover()
     ma = ls_file_mover.handle_move_files()
@@ -211,7 +210,7 @@ def setup_logseq_file_mover(args, paths):
     return ls_file_mover
 
 
-def get_meta_reports(graph, graph_config, args):
+def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: LogseqAnalyzerArguments) -> dict:
     """Get metadata reports from the graph and configuration."""
     meta_reports = {
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
@@ -229,7 +228,7 @@ def get_meta_reports(graph, graph_config, args):
     return meta_reports
 
 
-def get_journal_reports(graph_journals):
+def get_journal_reports(graph_journals: LogseqJournals) -> dict:
     """Get journal reports from the graph journals."""
     logging.debug("run_app: get_journal_reports")
     return {
@@ -243,7 +242,7 @@ def get_journal_reports(graph_journals):
     }
 
 
-def get_namespace_reports(graph_namespaces):
+def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict:
     """Get namespace reports from the graph namespaces."""
     logging.debug("run_app: get_namespace_reports")
     return {
@@ -261,7 +260,7 @@ def get_namespace_reports(graph_namespaces):
     }
 
 
-def get_moved_files_reports(ls_file_mover, ls_assets):
+def get_moved_files_reports(ls_file_mover: LogseqFileMover, ls_assets: LogseqAssets) -> dict:
     """Get reports for moved files and assets."""
     logging.debug("run_app: get_moved_files_reports")
     return {
@@ -272,8 +271,13 @@ def get_moved_files_reports(ls_file_mover, ls_assets):
 
 
 def get_all_reports(
-    meta_reports, journal_reports, summary_files, summary_content, namespace_reports, moved_files_reports
-):
+    meta_reports: dict,
+    journal_reports: dict,
+    summary_files: LogseqFileSummarizer,
+    summary_content: LogseqContentSummarizer,
+    namespace_reports: dict,
+    moved_files_reports: dict,
+) -> list:
     """Combine all reports into a single list."""
     logging.debug("run_app: get_all_reports")
     return [
@@ -286,23 +290,23 @@ def get_all_reports(
     ]
 
 
-def write_reports(reports):
+def write_reports(all_outputs: list):
     """Write reports to the specified output directories."""
-    for report, output_dir in reports:
+    for report, output_dir in all_outputs:
         for name, data in report.items():
             ReportWriter(name, data, output_dir.value).write()
     logging.debug("run_app: write_reports")
 
 
 def update_cache_and_write_config(
-    analyzer_config,
-    cache,
-    summary_files,
-    summary_content,
-    meta_reports,
-    journal_reports,
-    namespace_reports,
-    moved_files_reports,
+    analyzer_config: LogseqAnalyzerConfig,
+    cache: Cache,
+    summary_files: LogseqFileSummarizer,
+    summary_content: LogseqContentSummarizer,
+    meta_reports: dict,
+    journal_reports: dict,
+    namespace_reports: dict,
+    moved_files_reports: dict,
 ):
     """Update the cache with the output data and write the analyzer configuration to file."""
     try:
@@ -338,7 +342,7 @@ def run_app(**kwargs):
     # --- #
     setup_datetime_tokens()
     progress(20)
-    cache = setup_cache(args.graph_cache)
+    cache = setup_cache(args)
     progress(30)
     # Main analysis
     graph = setup_logseq_graph()
