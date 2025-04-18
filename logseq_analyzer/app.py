@@ -69,6 +69,7 @@ def setup_logseq_analyzer_config(args: LogseqAnalyzerArguments) -> LogseqAnalyze
     config.set("ANALYZER", "REPORT_FORMAT", args.report_format)
     if args.global_config:
         config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
+    logging.debug("run_app: setup_logseq_analyzer_config")
     return config
 
 
@@ -79,6 +80,7 @@ def setup_logseq_paths(paths, args: LogseqAnalyzerArguments) -> LogseqAnalyzerPa
     paths.validate_graph_paths()
     if args.global_config:
         paths.validate_global_config_path()
+    logging.debug("run_app: setup_logseq_paths")
     return paths
 
 
@@ -91,6 +93,7 @@ def setup_logseq_graph_config(args: LogseqAnalyzerArguments, paths: LogseqAnalyz
     graph_config.initialize_user_config_edn()
     graph_config.initialize_global_config_edn()
     graph_config.merge()
+    logging.debug("run_app: setup_logseq_graph_config")
     return graph_config
 
 
@@ -99,13 +102,16 @@ def setup_target_dirs(ac: LogseqAnalyzerConfig, gc: LogseqGraphConfig, paths: Lo
     ac.set_logseq_config_edn_data(gc.ls_config)
     paths.validate_target_paths()
     ac.set_logseq_target_dirs()
+    logging.debug("run_app: setup_target_dirs")
 
 
 def setup_datetime_tokens():
     """Setup datetime tokens."""
-    LogseqDateTimeTokens().get_datetime_token_map()
-    LogseqDateTimeTokens().set_datetime_token_pattern()
-    LogseqDateTimeTokens().set_journal_py_formatting()
+    dt_tokens = LogseqDateTimeTokens()
+    dt_tokens.get_datetime_token_map()
+    dt_tokens.set_datetime_token_pattern()
+    dt_tokens.set_journal_py_formatting()
+    logging.debug("run_app: setup_datetime_tokens")
 
 
 def setup_cache(graph_cache: bool) -> Cache:
@@ -115,6 +121,7 @@ def setup_cache(graph_cache: bool) -> Cache:
         cache.clear()
     else:
         cache.clear_deleted_files()
+    logging.debug("run_app: setup_cache")
     return cache
 
 
@@ -125,6 +132,7 @@ def setup_logseq_graph():
     graph.update_graph_files_with_cache()
     graph.post_processing_content()
     graph.process_summary_data()
+    logging.debug("run_app: setup_logseq_graph")
     return graph
 
 
@@ -132,6 +140,7 @@ def setup_logseq_file_summarizer():
     """Setup the Logseq file summarizer."""
     summary_files = LogseqFileSummarizer()
     summary_files.generate_summary()
+    logging.debug("run_app: setup_logseq_file_summarizer")
     return summary_files
 
 
@@ -139,6 +148,7 @@ def setup_logseq_content_summarizer():
     """Setup the Logseq content summarizer."""
     summary_content = LogseqContentSummarizer()
     summary_content.generate_summary()
+    logging.debug("run_app: setup_logseq_content_summarizer")
     return summary_content
 
 
@@ -149,6 +159,7 @@ def setup_logseq_namespaces():
     graph_namespaces.analyze_ns_queries()
     graph_namespaces.detect_non_ns_conflicts()
     graph_namespaces.detect_parent_depth_conflicts()
+    logging.debug("run_app: setup_logseq_namespaces")
     return graph_namespaces
 
 
@@ -156,6 +167,7 @@ def setup_logseq_journals():
     """Setup LogseqJournals."""
     graph_journals = LogseqJournals()
     graph_journals.process_journals_timelines()
+    logging.debug("run_app: setup_logseq_journals")
     return graph_journals
 
 
@@ -166,6 +178,7 @@ def setup_logseq_hls_assets(summary_files):
     ls_hls.get_asset_files()
     ls_hls.convert_names_to_data(names)
     ls_hls.check_backlinks()
+    logging.debug("run_app: setup_logseq_hls_assets")
 
 
 def setup_logseq_assets(summary_files):
@@ -173,6 +186,7 @@ def setup_logseq_assets(summary_files):
     asset_files = summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, [])
     ls_assets = LogseqAssets()
     ls_assets.handle_assets(asset_files)
+    logging.debug("run_app: setup_logseq_assets")
     return ls_assets
 
 
@@ -193,6 +207,7 @@ def setup_logseq_file_mover(args, paths):
     ls_file_mover.moved_files[Moved.ASSETS.value] = ma
     ls_file_mover.moved_files[Moved.RECYCLE.value] = mr
     ls_file_mover.moved_files[Moved.BAK.value] = mb
+    logging.debug("run_app: setup_logseq_file_mover")
     return ls_file_mover
 
 
@@ -210,11 +225,13 @@ def get_meta_reports(graph, graph_config, args):
     }
     if args.write_graph:
         meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
+    logging.debug("run_app: get_meta_reports")
     return meta_reports
 
 
 def get_journal_reports(graph_journals):
     """Get journal reports from the graph journals."""
+    logging.debug("run_app: get_journal_reports")
     return {
         Output.DANGLING_JOURNALS.value: graph_journals.dangling_journals,
         Output.PROCESSED_KEYS.value: graph_journals.processed_keys,
@@ -228,6 +245,7 @@ def get_journal_reports(graph_journals):
 
 def get_namespace_reports(graph_namespaces):
     """Get namespace reports from the graph namespaces."""
+    logging.debug("run_app: get_namespace_reports")
     return {
         Output.NAMESPACE_DATA.value: graph_namespaces.namespace_data,
         Output.NAMESPACE_PARTS.value: graph_namespaces.namespace_parts,
@@ -245,6 +263,7 @@ def get_namespace_reports(graph_namespaces):
 
 def get_moved_files_reports(ls_file_mover, ls_assets):
     """Get reports for moved files and assets."""
+    logging.debug("run_app: get_moved_files_reports")
     return {
         Output.MOVED_FILES.value: ls_file_mover.moved_files,
         Output.ASSETS_BACKLINKED.value: ls_assets.backlinked,
@@ -255,7 +274,8 @@ def get_moved_files_reports(ls_file_mover, ls_assets):
 def get_all_reports(
     meta_reports, journal_reports, summary_files, summary_content, namespace_reports, moved_files_reports
 ):
-    """Combine all reports into a single dictionary."""
+    """Combine all reports into a single list."""
+    logging.debug("run_app: get_all_reports")
     return [
         (meta_reports, OutputDir.META),
         (journal_reports, OutputDir.JOURNALS),
@@ -271,6 +291,7 @@ def write_reports(reports):
     for report, output_dir in reports:
         for name, data in report.items():
             ReportWriter(name, data, output_dir.value).write()
+    logging.debug("run_app: write_reports")
 
 
 def update_cache_and_write_config(
@@ -297,6 +318,7 @@ def update_cache_and_write_config(
         cache.close()
     finally:
         analyzer_config.write_to_file()
+    logging.debug("run_app: update_cache_and_write_config")
 
 
 def run_app(**kwargs):
