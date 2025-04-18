@@ -18,14 +18,13 @@ class LogseqGraph:
 
     def __init__(self):
         """Initialize the LogseqGraph instance."""
-        self.data = {}
-        self.content_bullets = {}
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
         self.all_linked_references = {}
         self.dangling_links = set()
         self.hash_to_file_map: Dict[int, LogseqFile] = {}
         self.name_to_hashes_map = defaultdict(list)
+        self.name_to_files_map = {}
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
@@ -57,10 +56,10 @@ class LogseqGraph:
             file (LogseqFile): The LogseqFile object to be added.
         """
         file_hash = hash(file)
-        self.data[file_hash] = file.__dict__
-        self.content_bullets[file_hash] = file.content_bullets
-        self.hash_to_file_map[file_hash] = file
         self.name_to_hashes_map[file.path.name].append(file_hash)
+        self.hash_to_file_map[file_hash] = file
+        self.name_to_files_map.setdefault(file.path.name, [])
+        self.name_to_files_map[file.path.name].append(self.hash_to_file_map[file_hash])
 
     def del_large_file_attributes(self, file: LogseqFile):
         """
@@ -75,25 +74,17 @@ class LogseqGraph:
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
-        graph_data_db = Cache().get(Output.GRAPH_DATA.value, {})
-        graph_data_db.update(self.data)
-        self.data = graph_data_db
+        cached_hash_to_file_map = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
+        cached_hash_to_file_map.update(self.hash_to_file_map)
+        self.hash_to_file_map = cached_hash_to_file_map
 
-        graph_content_db = Cache().get(Output.GRAPH_CONTENT.value, {})
-        graph_content_db.update(self.content_bullets)
-        self.content_bullets = graph_content_db
+        cached_names_to_hashes_map = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
+        cached_names_to_hashes_map.update(self.name_to_hashes_map)
+        self.name_to_hashes_map = cached_names_to_hashes_map
 
-        graph_hashed_files_db = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
-        graph_hashed_files_db.update(self.hash_to_file_map)
-        self.hash_to_file_map = graph_hashed_files_db
-
-        graph_names_to_hashes_db = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
-        graph_names_to_hashes_db.update(self.name_to_hashes_map)
-        self.name_to_hashes_map = graph_names_to_hashes_db
-
-        graph_dangling_links_db = Cache().get(Output.DANGLING_LINKS.value, set())
-        graph_dangling_links = {d for d in self.dangling_links if d not in graph_dangling_links_db}
-        self.dangling_links = graph_dangling_links.union(graph_dangling_links_db)
+        cached_dangling_links = Cache().get(Output.DANGLING_LINKS.value, set())
+        graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
+        self.dangling_links = graph_dangling_links.union(cached_dangling_links)
 
     def post_processing_content(self):
         """Post-process the content data for all files."""

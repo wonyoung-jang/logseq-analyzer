@@ -215,15 +215,16 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
     meta_reports = {
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
-        Output.GRAPH_DATA.value: graph.data,
+        # Output.GRAPH_DATA.value: graph.data,
+        "name_to_files_map": graph.name_to_files_map,
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.DANGLING_LINKS.value: graph.dangling_links,
         Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
         Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
         Output.CONFIG_DATA.value: graph_config.ls_config,
     }
-    if args.write_graph:
-        meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
+    # if args.write_graph:
+    #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
     logging.debug("run_app: get_meta_reports")
     return meta_reports
 

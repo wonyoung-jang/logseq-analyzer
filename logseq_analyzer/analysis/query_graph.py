@@ -4,9 +4,9 @@ Query Graph Module.
 
 from typing import Generator, List
 
+from ..logseq_file.file import LogseqFile
 from ..logseq_file.name import LogseqFilename
 from ..utils.helpers import singleton
-from ..logseq_file.file import LogseqFile
 from .graph import LogseqGraph
 
 
@@ -22,26 +22,21 @@ class Query:
 
     def name_to_hashes(self, name: str):
         """Get a Logseq file by its name."""
-        return self.graph.name_to_hashes_map.get(name)
+        return self.graph.name_to_hashes_map.get(name, [])
 
     def hash_to_file(self, hash_: int):
         """Get a Logseq file by its hash."""
-        return self.graph.hash_to_file_map.get(hash_)
+        return self.graph.hash_to_file_map.get(hash_, None)
 
     def name_to_files(self, name: str):
         """Get Logseq files by name."""
-        files = []
-        if hashes := self.name_to_hashes(name):
-            for hash_ in hashes:
-                if file := self.hash_to_file(hash_):
-                    files.append(file)
-        return files
+        return self.graph.name_to_files_map.get(name, [])
 
     def hash_to_name(self, hash_: int):
         """Get a Logseq file name by its hash."""
-        if hash_ not in self.graph.hash_to_file_map:
+        if not (path := self.graph.hash_to_file_map.get(hash_)):
             return None
-        return self.graph.hash_to_file_map[hash_].path.name
+        return path.path.name
 
     def file_to_hash(self, file: LogseqFile):
         """Get the hash of a Logseq file."""
