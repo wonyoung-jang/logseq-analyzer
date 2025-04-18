@@ -2,6 +2,7 @@
 Compile frequently used regex patterns for Logseq content.
 """
 
+from dataclasses import dataclass
 import logging
 import re
 
@@ -9,28 +10,26 @@ from .helpers import singleton
 
 
 @singleton
+@dataclass
 class ContentPatterns:
     """
     Class to hold regex patterns for content in Logseq files.
     """
 
-    def __init__(self):
-        """Initialize the ContentPatterns class."""
-        self.bullet = None
-        self.page_reference = None
-        self.tagged_backlink = None
-        self.tag = None
-        self.property = None
-        self.property_value = None
-        self.asset = None
-        self.draw = None
-        self.blockquote = None
-        self.flashcard = None
-        self.dynamic_variable = None
-        self.any_link = None
-        self.initialize_patterns()
+    bullet = None
+    page_reference = None
+    tagged_backlink = None
+    tag = None
+    property = None
+    property_value = None
+    asset = None
+    draw = None
+    blockquote = None
+    flashcard = None
+    dynamic_variable = None
+    any_link = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of frequently used regex patterns.
 
@@ -174,29 +173,27 @@ class ContentPatterns:
 
 
 @singleton
+@dataclass
 class DoubleCurlyBracketsPatterns:
     """
     Class to hold regex patterns for double curly brackets in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the DoubleCurlyBracketsPatterns class."""
-        self.all = None
-        self.embed = None
-        self.page_embed = None
-        self.block_embed = None
-        self.namespace_query = None
-        self.card = None
-        self.cloze = None
-        self.simple_query = None
-        self.query_function = None
-        self.embed_video_url = None
-        self.embed_twitter_tweet = None
-        self.embed_youtube_timestamp = None
-        self.renderer = None
-        self.initialize_patterns()
+    all = None
+    embed = None
+    page_embed = None
+    block_embed = None
+    namespace_query = None
+    card = None
+    cloze = None
+    simple_query = None
+    query_function = None
+    embed_video_url = None
+    embed_twitter_tweet = None
+    embed_youtube_timestamp = None
+    renderer = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of regex patterns for double curly brackets.
 
@@ -331,32 +328,30 @@ class DoubleCurlyBracketsPatterns:
 
 
 @singleton
+@dataclass
 class AdvancedCommandPatterns:
     """
     Class to hold regex patterns for advanced commands in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the AdvancedCommandPatterns class."""
-        self.all = None
-        self.export = None
-        self.export_ascii = None
-        self.export_latex = None
-        self.caution = None
-        self.center = None
-        self.comment = None
-        self.example = None
-        self.important = None
-        self.note = None
-        self.pinned = None
-        self.query = None
-        self.quote = None
-        self.tip = None
-        self.verse = None
-        self.warning = None
-        self.initialize_patterns()
+    all = None
+    export = None
+    export_ascii = None
+    export_latex = None
+    caution = None
+    center = None
+    comment = None
+    example = None
+    important = None
+    note = None
+    pinned = None
+    query = None
+    quote = None
+    tip = None
+    verse = None
+    warning = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of frequently used regex patterns.
 
@@ -547,20 +542,18 @@ class AdvancedCommandPatterns:
 
 
 @singleton
+@dataclass
 class CodePatterns:
     """
     Class to hold regex patterns for code blocks in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the CodePatterns class."""
-        self.all = None
-        self.multiline_code_lang = None
-        self.calc_block = None
-        self.inline_code_block = None
-        self.initialize_patterns()
+    all = None
+    multiline_code_lang = None
+    calc_block = None
+    inline_code_block = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of regex patterns for code blocks.
 
@@ -607,18 +600,16 @@ class CodePatterns:
 
 
 @singleton
+@dataclass
 class DoubleParenthesesPatterns:
     """
     Class to hold regex patterns for double parentheses in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the DoubleParenthesesPatterns class."""
-        self.all = None
-        self.block_reference = None
-        self.initialize_patterns()
+    all = None
+    block_reference = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of regex patterns for double parentheses.
 
@@ -652,19 +643,17 @@ class DoubleParenthesesPatterns:
 
 
 @singleton
+@dataclass
 class EmbeddedLinksPatterns:
     """
     Class to hold regex patterns for embedded links in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the EmbeddedLinksPatterns class."""
-        self.all = None
-        self.internet = None
-        self.asset = None
-        self.initialize_patterns()
+    all = None
+    internet = None
+    asset = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of regex patterns for embedded links.
 
@@ -715,19 +704,17 @@ class EmbeddedLinksPatterns:
 
 
 @singleton
+@dataclass
 class ExternalLinksPatterns:
     """
     Class to hold regex patterns for external links in Logseq content.
     """
 
-    def __init__(self):
-        """Initialize the ExternalLinksPatterns class."""
-        self.all = None
-        self.internet = None
-        self.alias = None
-        self.initialize_patterns()
+    all = None
+    internet = None
+    alias = None
 
-    def initialize_patterns(self):
+    def __post_init__(self):
         """
         Compile and return a dictionary of regex patterns for external links.
 
