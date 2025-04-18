@@ -76,7 +76,7 @@ class LogseqAnalyzerConfig:
         if ns_format == ":triple-lowbar":
             self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
 
-    def get_logseq_target_dirs(self):
+    def set_logseq_target_dirs(self):
         """Get the target directories based on the configuration data."""
         self.target_dirs = {
             self.config["LOGSEQ_CONFIG"]["DIR_ASSETS"],
