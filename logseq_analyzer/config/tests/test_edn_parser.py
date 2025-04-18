@@ -4,7 +4,7 @@ Tests for LogseqConfigEDN.
 
 import pytest
 
-from ..edn_parser import loads, tokenize
+from ..edn_parser import LogseqConfigEDN, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas():
@@ -66,6 +66,16 @@ def test_unhashable_keys_in_map():
     assert result[(1, 2)] == "value"
 
 
+def test_parse_map_key_set():
+    """Test that a map with a set as a key is parsed correctly."""
+    edn = "{#{1 2} :val}"
+    result = loads(edn)
+    # The set {1, 2} should become a frozenset of its items as the key
+    key = frozenset({1, 2})
+    assert key in result
+    assert result[key] == ":val"
+
+
 def test_map_key_map():
     """Test that a map with a map as a key is parsed correctly."""
     edn = "{{:x 10} :val}"
@@ -100,3 +110,11 @@ def test_string_with_spaces_and_commas():
     tokens = list(tokenize(edn))
     assert tokens == ['"a, b, c"']
     assert loads(edn) == "a, b, c"
+
+
+def test_tokenize():
+    """Test that the tokenize function works correctly."""
+    edn = "1, 2 ; comment\n 3"
+    tokens = tokenize(edn)
+    edn_class = LogseqConfigEDN(tokens)
+    assert edn_class.tokens == ["1", "2", "3"]
