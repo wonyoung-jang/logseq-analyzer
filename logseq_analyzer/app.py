@@ -12,7 +12,7 @@ from .analysis.namespaces import LogseqNamespaces
 from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.summary_files import LogseqFileSummarizer
 from .config.analyzer_config import LogseqAnalyzerConfig
-from .config.arguments import LogseqAnalyzerArguments
+from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
@@ -34,9 +34,9 @@ class GUIInstanceDummy:
         logging.info("Updating progress: %d%%", percentage)
 
 
-def setup_logseq_arguments(**kwargs) -> LogseqAnalyzerArguments:
+def setup_logseq_arguments(**kwargs) -> Args:
     """Setup Logseq arguments from keyword arguments."""
-    args = LogseqAnalyzerArguments()
+    args = Args()
     args.setup_args(**kwargs)
     return args
 
@@ -62,7 +62,7 @@ def setup_logging(log_file: Path):
     logging.debug("Logging initialized to %s", log_file)
 
 
-def setup_logseq_analyzer_config(args: LogseqAnalyzerArguments) -> LogseqAnalyzerConfig:
+def setup_logseq_analyzer_config(args: Args) -> LogseqAnalyzerConfig:
     """Setup Logseq analyzer configuration based on arguments."""
     config = LogseqAnalyzerConfig()
     config.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
@@ -73,7 +73,7 @@ def setup_logseq_analyzer_config(args: LogseqAnalyzerArguments) -> LogseqAnalyze
     return config
 
 
-def setup_logseq_paths(paths: LogseqAnalyzerPathValidator, args: LogseqAnalyzerArguments):
+def setup_logseq_paths(paths: LogseqAnalyzerPathValidator, args: Args):
     """Setup Logseq paths for the analyzer."""
     paths.validate_graph_logseq_config_paths()
     paths.validate_analyzer_paths()
@@ -83,7 +83,7 @@ def setup_logseq_paths(paths: LogseqAnalyzerPathValidator, args: LogseqAnalyzerA
     logging.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(args: LogseqAnalyzerArguments, paths: LogseqAnalyzerPathValidator) -> LogseqGraphConfig:
+def setup_logseq_graph_config(args: Args, paths: LogseqAnalyzerPathValidator) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     graph_config = LogseqGraphConfig()
     if args.global_config:
@@ -113,7 +113,7 @@ def setup_datetime_tokens():
     logging.debug("run_app: setup_datetime_tokens")
 
 
-def setup_cache(args: LogseqAnalyzerArguments) -> Cache:
+def setup_cache(args: Args) -> Cache:
     """Setup cache for the Logseq Analyzer."""
     cache = Cache()
     if args.graph_cache:
@@ -189,7 +189,7 @@ def setup_logseq_assets(summary_files: LogseqFileSummarizer) -> LogseqAssets:
     return ls_assets
 
 
-def setup_logseq_file_mover(args: LogseqAnalyzerArguments, paths: LogseqAnalyzerPathValidator) -> LogseqFileMover:
+def setup_logseq_file_mover(args: Args, paths: LogseqAnalyzerPathValidator) -> LogseqFileMover:
     """Setup LogseqFileMover for moving files and directories."""
     ls_file_mover = LogseqFileMover()
     ma = ls_file_mover.handle_move_files()
@@ -210,7 +210,7 @@ def setup_logseq_file_mover(args: LogseqAnalyzerArguments, paths: LogseqAnalyzer
     return ls_file_mover
 
 
-def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: LogseqAnalyzerArguments) -> dict:
+def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: Args) -> dict:
     """Get metadata reports from the graph and configuration."""
     meta_reports = {
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,

@@ -70,10 +70,8 @@ class LogseqJournalFormats:
         """
         Initialize the LogseqJournalPyFileFormat class.
         """
-        if not hasattr(self, "_initialized"):
-            self._initialized = True
-            self._py_file_format = ""
-            self._py_page_format = ""
+        self._py_file_format = ""
+        self._py_page_format = ""
 
     @property
     def py_file_format(self):

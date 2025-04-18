@@ -2,26 +2,25 @@
 LogseqAnalyzerArguments Class
 """
 
-from pathlib import Path
+from dataclasses import dataclass
 import argparse
 
 from ..utils.helpers import singleton
 
 
 @singleton
-class LogseqAnalyzerArguments:
+@dataclass
+class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
-    def __init__(self):
-        """Initialize the LogseqAnalyzerArguments class."""
-        self.graph_folder: Path = None
-        self.global_config: Path = None
-        self.move_unlinked_assets: bool = None
-        self.move_bak: bool = None
-        self.move_recycle: bool = None
-        self.write_graph: bool = None
-        self.graph_cache: bool = None
-        self.report_format: str = None
+    graph_folder: str = ""
+    global_config: str = ""
+    move_unlinked_assets: bool = False
+    move_bak: bool = False
+    move_recycle: bool = False
+    write_graph: bool = False
+    graph_cache: bool = False
+    report_format: str = ".txt"
 
     def setup_args(self, **kwargs):
         """Set up command line arguments and GUI arguments."""

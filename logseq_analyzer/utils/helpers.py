@@ -2,9 +2,9 @@
 Helper functions for file and date processing.
 """
 
-import functools
 from pathlib import Path
 from typing import Generator, Set, List, Pattern
+import functools
 import logging
 
 

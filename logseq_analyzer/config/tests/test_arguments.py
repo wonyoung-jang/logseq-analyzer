@@ -6,41 +6,41 @@ from pathlib import Path
 import pytest
 import sys
 
-from ..arguments import LogseqAnalyzerArguments
+from ..arguments import Args
 
 
 @pytest.fixture(autouse=True)
 def reset_singleton():
     """Reset the singleton instance before each test."""
-    LogseqAnalyzerArguments._instance = None
+    Args._instance = None
     yield
-    LogseqAnalyzerArguments._instance = None
+    Args._instance = None
 
 
 @pytest.fixture
 def args_instance():
     """Fixture for LogseqAnalyzerArguments instance."""
-    return LogseqAnalyzerArguments()
+    return Args()
 
 
 def test_singleton_instance(args_instance):
     """Test that LogseqAnalyzerArguments is a singleton."""
-    instance1 = LogseqAnalyzerArguments()
-    instance2 = LogseqAnalyzerArguments()
+    instance1 = Args()
+    instance2 = Args()
     assert instance1 is instance2
     assert instance1 is args_instance
 
 
 def test_initialization(args_instance):
     """Test the initial state of the arguments."""
-    assert args_instance.graph_folder is None
-    assert args_instance.global_config is None
-    assert args_instance.move_unlinked_assets is None  # Initialized to None before setup_args
-    assert args_instance.move_bak is None
-    assert args_instance.move_recycle is None
-    assert args_instance.write_graph is None
-    assert args_instance.graph_cache is None
-    assert args_instance.report_format is None
+    assert args_instance.graph_folder == ""
+    assert args_instance.global_config == ""
+    assert args_instance.move_unlinked_assets is False
+    assert args_instance.move_bak is False
+    assert args_instance.move_recycle is False
+    assert args_instance.write_graph is False
+    assert args_instance.graph_cache is False
+    assert args_instance.report_format == ".txt"
 
 
 def test_set_gui_args(args_instance):

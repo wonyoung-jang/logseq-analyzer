@@ -15,14 +15,13 @@ Problems:
 """
 
 from collections import Counter, defaultdict
-from typing import Generator, List
 import logging
 
-from ..utils.helpers import singleton
-from .graph import LogseqGraph
-from ..logseq_file.name import LogseqFilename
 from ..utils.enums import Core
+from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
+from .graph import LogseqGraph
+from .query_graph import Query
 
 NS_SEP = Core.NS_SEP.value
 
@@ -56,7 +55,7 @@ class LogseqNamespaces:
         Create namespace parts from the data.
         """
         level_distribution = Counter()
-        for file in self.yield_files_with_keys("ns_level"):
+        for file in Query().yield_files_with_keys("ns_level"):
             current_level = self.tree
             meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             self.namespace_data[file.name] = meta
@@ -112,7 +111,7 @@ class LogseqNamespaces:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
-        non_ns_names = self.list_files_without_keys("ns_level")
+        non_ns_names = Query().list_files_without_keys("ns_level")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)
         for entry, parts in self.namespace_parts.items():
@@ -144,21 +143,3 @@ class LogseqNamespaces:
                     up_to_level = parts[:level]
                     unique_pages.add(NS_SEP.join(up_to_level))
                 self.conflicts_parent_unique[key] = unique_pages
-
-    def yield_files_with_keys(self, *criteria) -> Generator[LogseqFilename, None, None]:
-        """
-        Extract a subset of the summary data based on whether the keys exists.
-        """
-        for _, file in LogseqGraph().hash_to_file_map.items():
-            if all(hasattr(file, key) for key in criteria):
-                yield file
-
-    def list_files_without_keys(self, *criteria) -> List[str]:
-        """
-        Extract a subset of the summary data based on whether the keys do not exist.
-        """
-        return [
-            file.path.name
-            for _, file in LogseqGraph().hash_to_file_map.items()
-            if all(not hasattr(file, key) for key in criteria)
-        ]

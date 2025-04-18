@@ -9,7 +9,7 @@ import shutil
 
 from ..utils.helpers import singleton
 from ..analysis.assets import LogseqAssets
-from ..config.arguments import LogseqAnalyzerArguments
+from ..config.arguments import Args
 from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
@@ -31,7 +31,7 @@ class LogseqFileMover:
         Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
         """
         if LogseqAssets().not_backlinked:
-            if LogseqAnalyzerArguments().move_unlinked_assets:
+            if Args().move_unlinked_assets:
                 self.move_unlinked_assets()
                 LogseqAssets().not_backlinked = [asset.path.name for asset in LogseqAssets().not_backlinked]
                 return LogseqAssets().not_backlinked

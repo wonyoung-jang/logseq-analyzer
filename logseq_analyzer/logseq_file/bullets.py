@@ -23,7 +23,6 @@ class LogseqBullets:
     bullet_count_empty: int = None
     bullet_density: float = None
     has_page_properties: bool = None
-    content_patterns = ContentPatterns()
 
     def __post_init__(self):
         """Initialize the LogseqBullets class"""
@@ -54,7 +53,7 @@ class LogseqBullets:
     def get_bullet_content(self):
         """Get all bullets split into a list"""
         if self.content:
-            self.all_bullets = self.content_patterns.bullet.split(self.content)
+            self.all_bullets = ContentPatterns().bullet.split(self.content)
 
     def get_primary_bullet(self):
         """Get the Logseq primary bullet if available"""

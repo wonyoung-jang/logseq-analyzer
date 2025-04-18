@@ -17,8 +17,8 @@ class LogseqFilestats:
     has_content: bool = False
     time_existed: float = 0.0
     time_unmodified: float = 0.0
-    date_created: str = None
-    date_modified: str = None
+    date_created: str = ""
+    date_modified: str = ""
 
     def __post_init__(self):
         """Post-initialization method to set file statistics attributes."""
