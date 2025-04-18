@@ -213,6 +213,4 @@ def tokenize(edn_str):
     edn_str = re.sub(r";.*", "", edn_str)
     for match in TOKEN_REGEX.finditer(edn_str):
         tok = match.group().strip()
-        if not tok or tok == ",":
-            continue
         yield tok
