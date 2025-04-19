@@ -74,8 +74,9 @@ class LogseqFile:
             setattr(self, attr, value)
 
         for attr, value in self.bullets.__dict__.items():
-            if attr not in ("all_bullets"):
-                setattr(self, attr, value)
+            if attr in ("all_bullets"):
+                continue
+            setattr(self, attr, value)
 
     def process_content_data(self):
         """
@@ -163,11 +164,16 @@ class LogseqFile:
         )
 
         for key, value in primary_data.items():
-            if value:
-                self.data[key] = value
-                if not self.has_backlinks:
-                    if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
-                        self.has_backlinks = True
+            if not value:
+                continue
+
+            self.data[key] = value
+
+            if self.has_backlinks:
+                continue
+
+            if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+                self.has_backlinks = True
 
     def determine_node_type(self) -> str:
         """Helper function to determine node type based on summary data."""
@@ -283,9 +289,11 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing code blocks.
         """
-        code_family = defaultdict(list)
         if not results:
             return {}
+
+        code_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if CodePatterns().calc_block.search(result):
@@ -296,7 +304,9 @@ class LogseqFile:
                 code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
                 results.pop()
                 continue
+
         code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
+
         return code_family
 
     def process_double_parens(self, results: List[str]) -> Dict[str, List[str]]:
@@ -309,16 +319,20 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing double parentheses.
         """
-        double_paren_family = defaultdict(list)
         if not results:
             return {}
+
+        double_paren_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if DoubleParenthesesPatterns().block_reference.search(result):
                 double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
                 results.pop()
                 continue
+
         double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
+
         return double_paren_family
 
     def process_external_links(self, results: List[str]) -> Dict[str, List[str]]:
@@ -331,9 +345,11 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing external links.
         """
-        external_links_family = defaultdict(list)
         if not results:
             return {}
+
+        external_links_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if ExternalLinksPatterns().internet.search(result):
@@ -344,7 +360,9 @@ class LogseqFile:
                 external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
                 results.pop()
                 continue
+
         external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
+
         return external_links_family
 
     def process_embedded_links(self, results: List[str]) -> Dict[str, List[str]]:
@@ -357,9 +375,11 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing embedded links.
         """
-        embedded_links_family = defaultdict(list)
         if not results:
             return {}
+
+        embedded_links_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if EmbeddedLinksPatterns().internet.search(result):
@@ -370,7 +390,9 @@ class LogseqFile:
                 embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
                 results.pop()
                 continue
+
         embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
+
         return embedded_links_family
 
     def process_double_curly_braces(self, results: List[str]) -> Dict[str, List[str]]:
@@ -383,9 +405,11 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing double curly brace data.
         """
-        double_curly_family = defaultdict(list)
         if not results:
             return {}
+
+        double_curly_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if DoubleCurlyBracketsPatterns().embed.search(result):
@@ -435,7 +459,9 @@ class LogseqFile:
                 double_curly_family[Criteria.RENDERERS.value].append(result)
                 results.pop()
                 continue
+
         double_curly_family[Criteria.MACROS.value] = results
+
         return double_curly_family
 
     def process_advanced_commands(self, results: List[str]) -> Dict[str, List[str]]:
@@ -448,9 +474,11 @@ class LogseqFile:
         Returns:
             Dict[str, List[str]]: Dictionary categorizing advanced commands.
         """
-        advanced_command_family = defaultdict(list)
         if not results:
             return {}
+
+        advanced_command_family = defaultdict(list)
+
         for _ in range(len(results)):
             result = results[-1]
             if AdvancedCommandPatterns().export.search(result):
@@ -512,5 +540,7 @@ class LogseqFile:
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
                 results.pop()
                 continue
+
         advanced_command_family[Criteria.ADVANCED_COMMANDS.value] = results
+
         return advanced_command_family

@@ -92,13 +92,13 @@ class ReportWriter:
             else f"___EMPTY___{self.filename_prefix}{self.output_format}"
         )
 
+        output_dir = OutputDirectory().path
+        out_path = output_dir / filename
         if self.type_output:
-            parent = OutputDirectory().path / self.type_output
+            parent = output_dir / self.type_output
             if not parent.exists():
                 parent.mkdir(parents=True, exist_ok=True)
             out_path = Path(parent) / filename
-        else:
-            out_path = OutputDirectory().path / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
         if self.output_format == Core.FMT_JSON.value:

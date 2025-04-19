@@ -29,3 +29,4 @@ setup.py
 logseq_analyzer/data.py
 docs/build
 .coverage
+cache_api.py

@@ -135,9 +135,9 @@ def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
     return graph_config
 
 
-def setup_target_dirs(ac: LogseqAnalyzerConfig, gc: LogseqGraphConfig):
+def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: LogseqGraphConfig):
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    ac.set_logseq_config_edn_data(gc.ls_config)
+    analyzer_config.set_logseq_config_edn_data(graph_config.ls_config)
     asset_dir = AssetsDirectory()
     draws_dir = DrawsDirectory()
     journals_dir = JournalsDirectory()
@@ -148,7 +148,7 @@ def setup_target_dirs(ac: LogseqAnalyzerConfig, gc: LogseqGraphConfig):
     journals_dir.get_or_create_dir()
     pages_dir.get_or_create_dir()
     whiteboards_dir.get_or_create_dir()
-    ac.set_logseq_target_dirs()
+    analyzer_config.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
 
@@ -264,13 +264,15 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.CONFIG_DATA.value: graph_config.ls_config,
         Output.DANGLING_LINKS.value: graph.dangling_links,
-        Output.GRAPH_FILE_MAP.value: graph.file_map,
-        Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
-        Output.GRAPH_NAME_TO_FILES.value: graph.name_to_files_map,
-        Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
         # Output.GRAPH_DATA.value: graph.data,
+        "FileIndex": graph.file_index,
+        "FileIndexFiles": graph.file_index.files,
+        Output.GRAPH_FILE_MAP.value: graph.file_index.file_map,
+        Output.GRAPH_HASHED_FILES.value: graph.file_index.hash_to_file,
+        Output.GRAPH_NAMES_TO_HASHES.value: graph.file_index.name_to_hashes,
+        Output.GRAPH_NAME_TO_FILES.value: graph.file_index.name_to_files,
     }
     # if args.write_graph:
     #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
@@ -361,12 +363,12 @@ def update_cache_and_write_config(
     """Update the cache with the output data and write the analyzer configuration to file."""
     try:
         shelve_output_data = {
-            **meta_reports,
-            **summary_files.subsets,
-            **summary_content.subsets,
-            **journal_reports,
-            **namespace_reports,
-            **moved_files_reports,
+            "META_REPORTS": meta_reports,
+            "SUMMARY_FILES": summary_files.subsets,
+            "SUMMARY_CONTENT": summary_content.subsets,
+            "JOURNAL_REPORTS": journal_reports,
+            "NAMESPACE_REPORTS": namespace_reports,
+            "MOVED_FILES_REPORTS": moved_files_reports,
         }
         cache.update(shelve_output_data)
         cache.close()

@@ -22,7 +22,7 @@ class LogseqAssets:
 
     def handle_assets(self, asset_filenames: list):
         """Handle assets for the Logseq Analyzer."""
-        for hash_, file in LogseqGraph().hash_to_file_map.items():
+        for hash_, file in LogseqGraph().file_index.hash_to_file.items():
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):

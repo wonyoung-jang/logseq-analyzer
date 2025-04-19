@@ -8,6 +8,8 @@ from pathlib import Path
 from urllib.parse import unquote
 import logging
 
+from ..io.filesystem import GraphDirectory
+
 from ..config.datetime_tokens import LogseqJournalFormats
 from ..config.graph_config import LogseqGraphConfig
 from ..utils.enums import Core
@@ -51,15 +53,14 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        if self.name.endswith(LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]):
-            self.name = self.name.rstrip(LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"])
+        ns_file_sep = LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+
+        self.name = self.name.strip(ns_file_sep)
 
         if self.parent == LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(
-                LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"], NS_SEP
-            )
+            self.name = unquote(self.name).replace(ns_file_sep, NS_SEP)
 
         self.is_namespace = NS_SEP in self.name
         self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
@@ -72,9 +73,7 @@ class LogseqFilename:
             if "o" in LogseqGraphConfig().ls_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
-                page_title = page_title_base.replace(
-                    f"{day_number}", day_with_ordinal, 1
-                )  # Just 1st occurrence, may break with odd implementations
+                page_title = page_title_base.replace(f"{day_number}", day_with_ordinal, 1)
             else:
                 page_title = page_title_base
             self.name = page_title.replace("'", "")
@@ -89,43 +88,45 @@ class LogseqFilename:
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
         len_uri = len(Path(self.uri).parts)
-        graph_dir = LogseqAnalyzerConfig().config["ANALYZER"]["GRAPH_DIR"]
-        len_graph_dir = len(Path(graph_dir).parts)
+        graph_dir_path = GraphDirectory().path
+        len_graph_dir = len(graph_dir_path.parts)
         target_index = len_uri - len_graph_dir
         target_segment = Path(self.uri).parts[target_index]
-        if target_segment[:-1] in ("page", "block-id"):
-            prefix = f"file:///{str(graph_dir)}/{target_segment}/"
-            if self.uri.startswith(prefix):
-                len_suffix = len(Path(self.uri).suffix)
-                path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
-                path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
-                encoded_path = path_with_slashes
-                target_segment = target_segment[:-1]
-                self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+
+        if target_segment[:-1] not in ("page", "block-id"):
+            return
+
+        prefix = f"file:///{str(graph_dir_path)}/{target_segment}/"
+        if not self.uri.startswith(prefix):
+            return
+
+        len_suffix = len(Path(self.uri).suffix)
+        path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
+        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
+        encoded_path = path_with_slashes
+        target_segment = target_segment[:-1]
+        self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
     def get_namespace_name_data(self):
         """Get the namespace name data."""
-        if self.is_namespace:
-            ns_parts_list = self.name.split(NS_SEP)
-            ns_level = len(ns_parts_list)
-            ns_root = ns_parts_list[0]
-            ns_stem = ns_parts_list[-1]
-            ns_parent = ns_root
-            if ns_level > 2:
-                ns_parent = ns_parts_list[-2]
-            ns_parent_full = NS_SEP.join(ns_parts_list[:-1])
-            ns_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-            namespace_name_data = {
-                "ns_parts": ns_parts,
-                "ns_level": ns_level,
-                "ns_root": ns_root,
-                "ns_parent": ns_parent,
-                "ns_parent_full": ns_parent_full,
-                "ns_stem": ns_stem,
-            }
-            for key, value in namespace_name_data.items():
-                if value:
-                    setattr(self, key, value)
+        if not self.is_namespace:
+            return
+
+        ns_parts_list = self.name.split(NS_SEP)
+        ns_level = len(ns_parts_list)
+        ns_root = ns_parts_list[0]
+        namespace_name_data = {
+            "ns_parts": {part: level for level, part in enumerate(ns_parts_list, start=1)},
+            "ns_level": ns_level,
+            "ns_root": ns_root,
+            "ns_parent": ns_parts_list[-2] if ns_level > 2 else ns_root,
+            "ns_parent_full": NS_SEP.join(ns_parts_list[:-1]),
+            "ns_stem": ns_parts_list[-1],
+        }
+
+        for key, value in namespace_name_data.items():
+            if value:
+                setattr(self, key, value)
 
     def determine_file_type(self):
         """
@@ -139,17 +140,20 @@ class LogseqFilename:
             LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
-        if result == "other":
-            if "assets" in self.parts:
-                result = "sub_asset"
-            elif "draws" in self.parts:
-                result = "sub_draw"
-            elif "journals" in self.parts:
-                result = "sub_journal"
-            elif "pages" in self.parts:
-                result = "sub_page"
-            elif "whiteboards" in self.parts:
-                result = "sub_whiteboard"
+        if result != "other":
+            self.file_type = result
+            return
+
+        if "assets" in self.parts:
+            result = "sub_asset"
+        elif "draws" in self.parts:
+            result = "sub_draw"
+        elif "journals" in self.parts:
+            result = "sub_journal"
+        elif "pages" in self.parts:
+            result = "sub_page"
+        elif "whiteboards" in self.parts:
+            result = "sub_whiteboard"
 
         self.file_type = result
 

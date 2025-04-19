@@ -57,7 +57,7 @@ class LogseqFileSummarizer:
     def process_file_extensions(self):
         """Process file extensions and create subsets for each."""
         file_extension_dict = {}
-        for _, file in LogseqGraph().hash_to_file_map.items():
+        for _, file in LogseqGraph().file_index.hash_to_file.items():
             ext = file.path.suffix
             output_name = f"all {ext}s"
             if output_name not in file_extension_dict:

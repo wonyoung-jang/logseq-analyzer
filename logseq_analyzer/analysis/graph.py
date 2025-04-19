@@ -4,12 +4,60 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Set
 
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output, Criteria
 from ..utils.helpers import singleton
+
+
+@singleton
+class FileIndex:
+    """Class to index files in the Logseq graph."""
+
+    def __init__(self):
+        """Initialize the FileIndex instance."""
+        self.files: Set[LogseqFile] = set()
+        self.hash_to_file: Dict[int, LogseqFile] = {}
+        self.name_to_hashes: Dict[str, List[int]] = defaultdict(list)
+        self.name_to_files: Dict[str, List[LogseqFile]] = defaultdict(list)
+        self.file_map: Dict[LogseqFile, dict] = {}
+
+    def __len__(self):
+        """Return the number of files in the index."""
+        return len(self.files)
+
+    def __contains__(self, file):
+        """Check if a file is in the index."""
+        return file in self.files
+
+    def add(self, file: LogseqFile):
+        """Add a file to the index."""
+        file_hash = hash(file)
+        name = file.path.name
+
+        self.files.add(file)
+        self.hash_to_file[file] = file
+        self.name_to_hashes[name].append(file_hash)
+        self.name_to_files[name].append(file)
+        self.file_map[file] = {"hash": file_hash, "name": name}
+
+    def get_by_file(self, file):
+        """Get a file by its LogseqFile object."""
+        return self.file_map.get(file)
+
+    def get_by_hash(self, file_hash):
+        """Get a file by its hash."""
+        return self.hash_to_file.get(file_hash)
+
+    def get_hashes_by_name(self, name):
+        """Get hashes associated with a given name."""
+        return self.name_to_hashes.get(name, [])
+
+    def get_files_by_name(self, name):
+        """Get files associated with a given name."""
+        return self.name_to_files.get(name, [])
 
 
 @singleton
@@ -20,12 +68,11 @@ class LogseqGraph:
         """Initialize the LogseqGraph instance."""
         self.all_linked_references = {}
         self.dangling_links = set()
-        self.file_map = {}
-        self.hash_to_file_map: Dict[int, LogseqFile] = {}
-        self.name_to_files_map = {}
-        self.name_to_hashes_map = defaultdict(list)
+
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
+
+        self.file_index = FileIndex()
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
@@ -56,15 +103,7 @@ class LogseqGraph:
         Args:
             file (LogseqFile): The LogseqFile object to be added.
         """
-        file_hash = hash(file)
-        self.file_map[file] = {
-            "hash": file_hash,
-            "name": file.path.name,
-        }
-        self.name_to_hashes_map[file.path.name].append(file_hash)
-        self.hash_to_file_map[file_hash] = file
-        self.name_to_files_map.setdefault(file.path.name, [])
-        self.name_to_files_map[file.path.name].append(file)
+        self.file_index.add(file)
 
     def del_large_file_attributes(self, file: LogseqFile):
         """
@@ -80,12 +119,12 @@ class LogseqGraph:
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
         cached_hash_to_file_map = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
-        cached_hash_to_file_map.update(self.hash_to_file_map)
-        self.hash_to_file_map = cached_hash_to_file_map
+        cached_hash_to_file_map.update(self.file_index.hash_to_file)
+        self.file_index.hash_to_file = cached_hash_to_file_map
 
         cached_names_to_hashes_map = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
-        cached_names_to_hashes_map.update(self.name_to_hashes_map)
-        self.name_to_hashes_map = cached_names_to_hashes_map
+        cached_names_to_hashes_map.update(self.file_index.name_to_hashes)
+        self.file_index.name_to_hashes = cached_names_to_hashes_map
 
         cached_dangling_links = Cache().get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
@@ -96,7 +135,7 @@ class LogseqGraph:
         unique_aliases = set()
 
         # Process each file's content
-        for _, file in self.hash_to_file_map.items():
+        for _, file in self.file_index.hash_to_file.items():
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
 
@@ -136,7 +175,7 @@ class LogseqGraph:
 
         # Create dangling links
         all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
-        all_linked_refs.difference_update(self.name_to_hashes_map.keys())
+        all_linked_refs.difference_update(self.file_index.name_to_hashes.keys())
         all_linked_refs.difference_update(unique_aliases)
         self.dangling_links = set(sorted(all_linked_refs))
 
@@ -147,29 +186,28 @@ class LogseqGraph:
         ns_parent = file.ns_parent_full
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
-        if self.name_to_hashes_map.get(ns_root):
-            for hash_ in self.name_to_hashes_map[ns_root]:
-                ns_root_file = self.hash_to_file_map.get(hash_)
-                ns_root_file.ns_level = 1
-                if not hasattr(ns_root_file, "ns_children"):
-                    ns_root_file.ns_children = set()
-                ns_root_file.ns_children.add(file.path.name)
-                ns_root_file.ns_size = len(ns_root_file.ns_children)
+        for ns_root_file in self.file_index.name_to_files.get(ns_root, []):
+            ns_root_file.ns_level = 1
+            if not hasattr(ns_root_file, "ns_children"):
+                ns_root_file.ns_children = set()
+            ns_root_file.ns_children.add(file.path.name)
+            ns_root_file.ns_size = len(ns_root_file.ns_children)
 
-        if self.name_to_hashes_map.get(ns_parent) and ns_level > 2:
-            for hash_ in self.name_to_hashes_map[ns_parent]:
-                ns_parent_file = self.hash_to_file_map.get(hash_)
-                ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
-                direct_level = ns_level - 1
-                ns_parent_file.ns_level = max(direct_level, ns_parent_level)
-                if not hasattr(ns_parent_file, "ns_children"):
-                    ns_parent_file.ns_children = set()
-                ns_parent_file.ns_children.add(file.path.name)
-                ns_parent_file.ns_size = len(ns_parent_file.ns_children)
+        if ns_level <= 2:
+            return
+
+        for ns_parent_file in self.file_index.name_to_files.get(ns_parent, []):
+            ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
+            direct_level = ns_level - 1
+            ns_parent_file.ns_level = max(direct_level, ns_parent_level)
+            if not hasattr(ns_parent_file, "ns_children"):
+                ns_parent_file.ns_children = set()
+            ns_parent_file.ns_children.add(file.path.name)
+            ns_parent_file.ns_size = len(ns_parent_file.ns_children)
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""
-        for _, file in self.hash_to_file_map.items():
+        for file in self.file_index.files:
             file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
             if file.is_backlinked and file.is_backlinked_by_ns_only:
