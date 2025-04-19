@@ -53,37 +53,25 @@ class LogseqAssets:
                     break
 
 
+@singleton
 class LogseqAssetsHls:
     """
     Class to handle HLS assets in Logseq.
-
-    The HLS assets are identified by the following pattern:
-        [:span]
-        ls-type:: annotation
-        hl-page:: 18
-        hl-color:: yellow
-        id:: 64138a39-f69e-47fb-80df-116daea1cf91
-        hl-type:: area
-        hl-stamp:: 1679002167912
-    The format of the asset is:
-        (hl-page)_(id)_(hl-stamp)
-        formatted: 18_64138a39-f69e-47fb-80df-116daea1cf91_1679002167912
     """
 
     def __init__(self):
         """Initialize the LogseqAssetsHls instance."""
-        self.formatted_bullets = []
-        self.backlinked = set()
-        self.not_backlinked = set()
-        self.asset_names = None
-        self.asset_files = None
         self.asset_mapping = {}
+        self.asset_names = None
+        self.backlinked = set()
+        self.formatted_bullets = []
+        self.not_backlinked = set()
 
     def get_asset_files(self):
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
-        self.asset_files = Query().list_files_with_keys_and_values(**criteria)
-        self.asset_mapping = {file.path.name: file for file in self.asset_files}
+        asset_files = Query().list_files_with_keys_and_values(**criteria)
+        self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = list(self.asset_mapping.keys())
 
     def convert_names_to_data(self, names: list) -> dict:
@@ -92,8 +80,7 @@ class LogseqAssetsHls:
         """
         data = {}
         for name in names:
-            files = Query().name_to_files(name)
-            for file in files:
+            for file in Query().name_to_files(name):
                 for bullet in file.bullets.all_bullets:
                     bullet = bullet.strip()
                     if bullet.startswith("[:span]"):
@@ -112,10 +99,10 @@ class LogseqAssetsHls:
         """
         Check for backlinks in the HLS assets.
         """
-        self.asset_names = set(self.asset_names)  # To check
-        self.formatted_bullets = set(self.formatted_bullets)  # Backlinked
-        self.backlinked = self.asset_names.intersection(self.formatted_bullets)
-        self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
+        set_asset_names = set(self.asset_names)  # To check
+        set_formatted_bullets = set(self.formatted_bullets)  # Backlinked
+        self.backlinked = set_asset_names.intersection(set_formatted_bullets)
+        self.not_backlinked = set_asset_names.difference(set_formatted_bullets)
         self.update_sub_asset_files()
 
     def update_sub_asset_files(self):
