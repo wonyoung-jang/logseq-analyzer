@@ -7,11 +7,10 @@ Imported once in app.py
 import logging
 import shelve
 
-from .filesystem import CacheFile, GraphDirectory
-
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
+from .filesystem import CacheFile, GraphDirectory
 
 
 @singleton
@@ -56,16 +55,21 @@ class Cache:
 
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""
-        self.cache.setdefault(Output.GRAPH_HASHED_FILES.value, {})
+        meta_data = self.cache.setdefault("META_REPORTS", {})
+        meta_data.setdefault(Output.GRAPH_HASHED_FILES.value, {})
         for hash_ in self.yield_deleted_files():
-            self.cache[Output.GRAPH_HASHED_FILES.value].pop(hash_, None)
+            meta_data[Output.GRAPH_HASHED_FILES.value].pop(hash_, None)
+        self.cache["META_REPORTS"][Output.GRAPH_HASHED_FILES.value] = meta_data[Output.GRAPH_HASHED_FILES.value]
 
     def yield_deleted_files(self):
         """Yield deleted files from the cache."""
-        for hash_, file in self.cache[Output.GRAPH_HASHED_FILES.value].items():
-            if not file.file_path.exists():
-                logging.debug("File deleted: %s", file.file_path)
-                yield hash_
+        meta_data = self.cache.setdefault("META_REPORTS", {})
+        for hash_, file in meta_data[Output.GRAPH_HASHED_FILES.value].items():
+            if file.file_path.exists():
+                continue
+
+            logging.debug("File deleted: %s", file.file_path)
+            yield hash_
 
 
 @singleton

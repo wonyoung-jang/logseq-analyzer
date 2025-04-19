@@ -76,7 +76,7 @@ class LogseqGraph:
         """Process all files in the Logseq graph folder."""
         for file_path in Cache().iter_modified_files():
             file = self.initialize_file(file_path)
-            self.update_data_with_file(file)
+            self.index.add(file)
             self.del_large_file_attributes(file)
 
     def initialize_file(self, file_path: Path) -> LogseqFile:
@@ -94,15 +94,6 @@ class LogseqGraph:
         file.process_content_data()
         return file
 
-    def update_data_with_file(self, file: LogseqFile):
-        """
-        Update the graph data with a new file.
-
-        Args:
-            file (LogseqFile): The LogseqFile object to be added.
-        """
-        self.index.add(file)
-
     def del_large_file_attributes(self, file: LogseqFile):
         """
         Delete large attributes from the file object.
@@ -116,15 +107,22 @@ class LogseqGraph:
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
-        cached_hash_to_file_map = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
+        cache = Cache()
+        meta_data = cache.get("META_REPORTS", {})
+
+        cached_files = meta_data.get("FileIndexFiles", [])
+        cached_files = {file for file in cached_files if file not in self.index.files}
+        self.index.files.update(cached_files)
+
+        cached_hash_to_file_map = meta_data.get(Output.GRAPH_HASHED_FILES.value, {})
         cached_hash_to_file_map.update(self.index.hash_to_file)
         self.index.hash_to_file = cached_hash_to_file_map
 
-        cached_names_to_hashes_map = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
+        cached_names_to_hashes_map = meta_data.get(Output.GRAPH_NAMES_TO_HASHES.value, {})
         cached_names_to_hashes_map.update(self.index.name_to_hashes)
         self.index.name_to_hashes = cached_names_to_hashes_map
 
-        cached_dangling_links = Cache().get(Output.DANGLING_LINKS.value, set())
+        cached_dangling_links = meta_data.get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
         self.dangling_links = graph_dangling_links.union(cached_dangling_links)
 
