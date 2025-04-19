@@ -213,15 +213,16 @@ def setup_logseq_file_mover(args: Args, paths: LogseqAnalyzerPathValidator) -> L
 def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: Args) -> dict:
     """Get metadata reports from the graph and configuration."""
     meta_reports = {
-        Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
-        Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
-        # Output.GRAPH_DATA.value: graph.data,
-        "name_to_files_map": graph.name_to_files_map,
         Output.ALL_REFS.value: graph.all_linked_references,
-        Output.DANGLING_LINKS.value: graph.dangling_links,
-        Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
-        Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
         Output.CONFIG_DATA.value: graph_config.ls_config,
+        Output.DANGLING_LINKS.value: graph.dangling_links,
+        Output.GRAPH_FILE_MAP.value: graph.file_map,
+        Output.GRAPH_HASHED_FILES.value: graph.hash_to_file_map,
+        Output.GRAPH_NAME_TO_FILES.value: graph.name_to_files_map,
+        Output.GRAPH_NAMES_TO_HASHES.value: graph.name_to_hashes_map,
+        Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
+        Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
+        # Output.GRAPH_DATA.value: graph.data,
     }
     # if args.write_graph:
     #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets

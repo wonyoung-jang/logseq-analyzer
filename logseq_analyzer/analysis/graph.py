@@ -22,6 +22,7 @@ class LogseqGraph:
         self.unique_linked_references_ns = set()
         self.all_linked_references = {}
         self.dangling_links = set()
+        self.file_map = {}
         self.hash_to_file_map: Dict[int, LogseqFile] = {}
         self.name_to_hashes_map = defaultdict(list)
         self.name_to_files_map = {}
@@ -56,6 +57,10 @@ class LogseqGraph:
             file (LogseqFile): The LogseqFile object to be added.
         """
         file_hash = hash(file)
+        self.file_map[file] = {
+            "hash": file_hash,
+            "name": file.path.name,
+        }
         self.name_to_hashes_map[file.path.name].append(file_hash)
         self.hash_to_file_map[file_hash] = file
         self.name_to_files_map.setdefault(file.path.name, [])

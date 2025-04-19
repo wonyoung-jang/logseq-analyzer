@@ -91,6 +91,8 @@ def test_output_values():
         "GRAPH_DATA": "data",
         "GRAPH_HASHED_FILES": "hash_to_file_map",
         "GRAPH_NAMES_TO_HASHES": "name_to_hashes_map",
+        "GRAPH_NAME_TO_FILES": "name_to_files_map",
+        "GRAPH_FILE_MAP": "file_map",
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "MISSING_KEYS": "missing_keys",
@@ -110,7 +112,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 30
+    assert len(Output) == 32
 
 
 # SummaryFiles
