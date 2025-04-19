@@ -267,12 +267,11 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
         # Output.GRAPH_DATA.value: graph.data,
-        "FileIndex": graph.file_index,
-        "FileIndexFiles": graph.file_index.files,
-        Output.GRAPH_FILE_MAP.value: graph.file_index.file_map,
-        Output.GRAPH_HASHED_FILES.value: graph.file_index.hash_to_file,
-        Output.GRAPH_NAMES_TO_HASHES.value: graph.file_index.name_to_hashes,
-        Output.GRAPH_NAME_TO_FILES.value: graph.file_index.name_to_files,
+        "FileIndexFiles": graph.index.files,
+        Output.GRAPH_FILE_MAP.value: graph.index.file_map,
+        Output.GRAPH_HASHED_FILES.value: graph.index.hash_to_file,
+        Output.GRAPH_NAMES_TO_HASHES.value: graph.index.name_to_hashes,
+        Output.GRAPH_NAME_TO_FILES.value: graph.index.name_to_files,
     }
     # if args.write_graph:
     #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets

@@ -34,7 +34,7 @@ class LogseqContentSummarizer:
             Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for _, file in LogseqGraph().file_index.hash_to_file.items():
+        for _, file in LogseqGraph().index.hash_to_file.items():
             for value in file.data.get(criteria, []):
                 subset_counter.setdefault(value, {})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1

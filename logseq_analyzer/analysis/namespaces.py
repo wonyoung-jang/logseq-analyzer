@@ -80,7 +80,7 @@ class LogseqNamespaces:
         """
         Analyze namespace queries.
         """
-        for _, file in LogseqGraph().file_index.hash_to_file.items():
+        for _, file in LogseqGraph().index.hash_to_file.items():
             got_ns_queries = file.data.get("namespace_queries")
             if not got_ns_queries:
                 continue

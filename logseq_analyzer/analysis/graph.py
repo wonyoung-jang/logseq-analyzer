@@ -68,11 +68,9 @@ class LogseqGraph:
         """Initialize the LogseqGraph instance."""
         self.all_linked_references = {}
         self.dangling_links = set()
-
+        self.index = FileIndex()
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
-
-        self.file_index = FileIndex()
 
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
@@ -103,7 +101,7 @@ class LogseqGraph:
         Args:
             file (LogseqFile): The LogseqFile object to be added.
         """
-        self.file_index.add(file)
+        self.index.add(file)
 
     def del_large_file_attributes(self, file: LogseqFile):
         """
@@ -119,12 +117,12 @@ class LogseqGraph:
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
         cached_hash_to_file_map = Cache().get(Output.GRAPH_HASHED_FILES.value, {})
-        cached_hash_to_file_map.update(self.file_index.hash_to_file)
-        self.file_index.hash_to_file = cached_hash_to_file_map
+        cached_hash_to_file_map.update(self.index.hash_to_file)
+        self.index.hash_to_file = cached_hash_to_file_map
 
         cached_names_to_hashes_map = Cache().get(Output.GRAPH_NAMES_TO_HASHES.value, {})
-        cached_names_to_hashes_map.update(self.file_index.name_to_hashes)
-        self.file_index.name_to_hashes = cached_names_to_hashes_map
+        cached_names_to_hashes_map.update(self.index.name_to_hashes)
+        self.index.name_to_hashes = cached_names_to_hashes_map
 
         cached_dangling_links = Cache().get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
@@ -135,7 +133,7 @@ class LogseqGraph:
         unique_aliases = set()
 
         # Process each file's content
-        for _, file in self.file_index.hash_to_file.items():
+        for _, file in self.index.hash_to_file.items():
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
 
@@ -175,7 +173,7 @@ class LogseqGraph:
 
         # Create dangling links
         all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
-        all_linked_refs.difference_update(self.file_index.name_to_hashes.keys())
+        all_linked_refs.difference_update(self.index.name_to_hashes.keys())
         all_linked_refs.difference_update(unique_aliases)
         self.dangling_links = set(sorted(all_linked_refs))
 
@@ -186,7 +184,7 @@ class LogseqGraph:
         ns_parent = file.ns_parent_full
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
-        for ns_root_file in self.file_index.name_to_files.get(ns_root, []):
+        for ns_root_file in self.index.name_to_files.get(ns_root, []):
             ns_root_file.ns_level = 1
             if not hasattr(ns_root_file, "ns_children"):
                 ns_root_file.ns_children = set()
@@ -196,7 +194,7 @@ class LogseqGraph:
         if ns_level <= 2:
             return
 
-        for ns_parent_file in self.file_index.name_to_files.get(ns_parent, []):
+        for ns_parent_file in self.index.name_to_files.get(ns_parent, []):
             ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
             direct_level = ns_level - 1
             ns_parent_file.ns_level = max(direct_level, ns_parent_level)
@@ -207,7 +205,7 @@ class LogseqGraph:
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""
-        for file in self.file_index.files:
+        for file in self.index.files:
             file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
             if file.is_backlinked and file.is_backlinked_by_ns_only:
