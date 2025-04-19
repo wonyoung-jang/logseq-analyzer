@@ -8,8 +8,8 @@ import json
 import logging
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
-from .path_validator import LogseqAnalyzerPathValidator
 from ..utils.enums import Core
+from .filesystem import OutputDirectory
 
 
 class ReportWriter:
@@ -93,12 +93,12 @@ class ReportWriter:
         )
 
         if self.type_output:
-            parent = LogseqAnalyzerPathValidator().dir_output.path / self.type_output
+            parent = OutputDirectory().path / self.type_output
             if not parent.exists():
                 parent.mkdir(parents=True, exist_ok=True)
             out_path = Path(parent) / filename
         else:
-            out_path = LogseqAnalyzerPathValidator().dir_output.path / filename
+            out_path = OutputDirectory().path / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
         if self.output_format == Core.FMT_JSON.value:

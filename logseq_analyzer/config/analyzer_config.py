@@ -2,12 +2,12 @@
 Config class for loading and managing configuration files.
 """
 
+import logging
 from pathlib import Path
 from typing import Dict
 import configparser
 
 from ..utils.helpers import singleton
-from ..io.filesystem import File
 from ..utils.enums import Core
 
 
@@ -26,8 +26,10 @@ class LogseqAnalyzerConfig:
 
     def __init__(self):
         """Initialize the LogseqAnalyzerConfig class."""
-        config_path = File("configuration/config.ini")
-        config_path.validate()
+        config_path = Path("configuration/config.ini")
+        if not config_path.exists():
+            logging.error("Configuration file not found: %s", config_path)
+            raise FileNotFoundError(f"Configuration file not found: {config_path}")
         self.config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
@@ -37,7 +39,7 @@ class LogseqAnalyzerConfig:
             allow_unnamed_section=True,
         )
         self.config.optionxform = lambda_optionxform
-        self.config.read(config_path.path)
+        self.config.read(config_path)
         self.target_dirs = None
 
     def get(self, section, key, fallback=None):

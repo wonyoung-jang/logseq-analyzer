@@ -17,7 +17,25 @@ from .config.datetime_tokens import LogseqDateTimeTokens
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
 from .io.file_mover import LogseqFileMover
-from .io.path_validator import LogseqAnalyzerPathValidator
+from .io.filesystem import (
+    AssetsDirectory,
+    BakDirectory,
+    ConfigFile,
+    DeleteAssetsDirectory,
+    DeleteBakDirectory,
+    DeleteDirectory,
+    DeleteRecycleDirectory,
+    DrawsDirectory,
+    GlobalConfigFile,
+    GraphDirectory,
+    JournalsDirectory,
+    LogFile,
+    LogseqDirectory,
+    OutputDirectory,
+    PagesDirectory,
+    RecycleDirectory,
+    WhiteboardsDirectory,
+)
 from .io.report_writer import ReportWriter
 from .utils.enums import Phase, Output, SummaryFiles, OutputDir, Moved
 
@@ -41,11 +59,13 @@ def setup_logseq_arguments(**kwargs) -> Args:
     return args
 
 
-def init_logseq_paths() -> LogseqAnalyzerPathValidator:
+def init_logseq_paths() -> LogFile:
     """Setup Logseq paths for the analyzer."""
-    paths = LogseqAnalyzerPathValidator()
-    paths.validate_output_dir_and_logging()
-    return paths
+    output_dir = OutputDirectory()
+    output_dir.initialize_dir()
+    log_file = LogFile()
+    log_file.initialize_file()
+    return log_file
 
 
 def setup_logging(log_file: Path):
@@ -73,22 +93,41 @@ def setup_logseq_analyzer_config(args: Args) -> LogseqAnalyzerConfig:
     return config
 
 
-def setup_logseq_paths(paths: LogseqAnalyzerPathValidator, args: Args):
+def setup_logseq_paths(args: Args):
     """Setup Logseq paths for the analyzer."""
-    paths.validate_graph_logseq_config_paths()
-    paths.validate_analyzer_paths()
-    paths.validate_graph_paths()
+    graph_dir = GraphDirectory()
+    logseq_dir = LogseqDirectory()
+    config_file = ConfigFile()
+    graph_dir.validate()
+    logseq_dir.validate()
+    config_file.validate()
+
+    delete_dir = DeleteDirectory()
+    delete_bak_dir = DeleteBakDirectory()
+    delete_recycle_dir = DeleteRecycleDirectory()
+    delete_assets_dir = DeleteAssetsDirectory()
+    delete_dir.get_or_create_dir()
+    delete_bak_dir.get_or_create_dir()
+    delete_recycle_dir.get_or_create_dir()
+    delete_assets_dir.get_or_create_dir()
+
+    bak_dir = BakDirectory()
+    recycle_dir = RecycleDirectory()
+    bak_dir.get_or_create_dir()
+    recycle_dir.get_or_create_dir()
+
     if args.global_config:
-        paths.validate_global_config_path()
+        global_config_file = GlobalConfigFile()
+        global_config_file.validate()
     logging.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(args: Args, paths: LogseqAnalyzerPathValidator) -> LogseqGraphConfig:
+def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     graph_config = LogseqGraphConfig()
     if args.global_config:
-        graph_config.global_config_file = paths.file_config_global.path
-    graph_config.user_config_file = paths.file_config.path
+        graph_config.global_config_file = GlobalConfigFile().path
+    graph_config.user_config_file = ConfigFile().path
     graph_config.initialize_user_config_edn()
     graph_config.initialize_global_config_edn()
     graph_config.merge()
@@ -96,10 +135,19 @@ def setup_logseq_graph_config(args: Args, paths: LogseqAnalyzerPathValidator) ->
     return graph_config
 
 
-def setup_target_dirs(ac: LogseqAnalyzerConfig, gc: LogseqGraphConfig, paths: LogseqAnalyzerPathValidator):
+def setup_target_dirs(ac: LogseqAnalyzerConfig, gc: LogseqGraphConfig):
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     ac.set_logseq_config_edn_data(gc.ls_config)
-    paths.validate_target_paths()
+    asset_dir = AssetsDirectory()
+    draws_dir = DrawsDirectory()
+    journals_dir = JournalsDirectory()
+    pages_dir = PagesDirectory()
+    whiteboards_dir = WhiteboardsDirectory()
+    asset_dir.get_or_create_dir()
+    draws_dir.get_or_create_dir()
+    journals_dir.get_or_create_dir()
+    pages_dir.get_or_create_dir()
+    whiteboards_dir.get_or_create_dir()
     ac.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
@@ -189,19 +237,19 @@ def setup_logseq_assets(summary_files: LogseqFileSummarizer) -> LogseqAssets:
     return ls_assets
 
 
-def setup_logseq_file_mover(args: Args, paths: LogseqAnalyzerPathValidator) -> LogseqFileMover:
+def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     """Setup LogseqFileMover for moving files and directories."""
     ls_file_mover = LogseqFileMover()
     ma = ls_file_mover.handle_move_files()
     mb = ls_file_mover.handle_move_directory(
         args.move_bak,
-        paths.dir_delete_bak.path,
-        paths.dir_bak.path,
+        DeleteBakDirectory().path,
+        BakDirectory().path,
     )
     mr = ls_file_mover.handle_move_directory(
         args.move_recycle,
-        paths.dir_delete_recycle.path,
-        paths.dir_recycle.path,
+        DeleteRecycleDirectory().path,
+        RecycleDirectory().path,
     )
     ls_file_mover.moved_files[Moved.ASSETS.value] = ma
     ls_file_mover.moved_files[Moved.RECYCLE.value] = mr
@@ -333,14 +381,14 @@ def run_app(**kwargs):
     progress = gui.update_progress
     progress(5)
     args = setup_logseq_arguments(**kwargs)
-    paths = init_logseq_paths()
-    setup_logging(paths.file_log.path)
+    log_file = init_logseq_paths()
+    setup_logging(log_file.path)
     # --- #
     analyzer_config = setup_logseq_analyzer_config(args)
-    setup_logseq_paths(paths, args)
+    setup_logseq_paths(args)
     progress(10)
-    graph_config = setup_logseq_graph_config(args, paths)
-    setup_target_dirs(analyzer_config, graph_config, paths)
+    graph_config = setup_logseq_graph_config(args)
+    setup_target_dirs(analyzer_config, graph_config)
     # --- #
     setup_datetime_tokens()
     progress(20)
@@ -362,7 +410,7 @@ def run_app(**kwargs):
     ls_assets = setup_logseq_assets(summary_files)
     progress(85)
     # Movee files
-    ls_file_mover = setup_logseq_file_mover(args, paths)
+    ls_file_mover = setup_logseq_file_mover(args)
     progress(90)
     # Output writing
     meta_reports = get_meta_reports(graph, graph_config, args)

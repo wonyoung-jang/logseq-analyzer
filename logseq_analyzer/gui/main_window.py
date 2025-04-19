@@ -26,8 +26,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
+
 from ..app import run_app
-from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -210,8 +211,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        if LogseqAnalyzerPathValidator().dir_output.path.exists():
-            output_dir = LogseqAnalyzerPathValidator().dir_output.path.resolve()
+        if OutputDirectory().path.exists():
+            output_dir = OutputDirectory().path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(output_dir)
             elif sys.platform.startswith("darwin"):
@@ -221,8 +222,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        if LogseqAnalyzerPathValidator().dir_delete.path.exists():
-            delete_dir = LogseqAnalyzerPathValidator().dir_delete.path.resolve()
+        if DeleteDirectory().path.exists():
+            delete_dir = DeleteDirectory().path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(delete_dir)
             elif sys.platform.startswith("darwin"):
@@ -232,8 +233,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        if LogseqAnalyzerPathValidator().file_log.path.exists():
-            log_file_path = LogseqAnalyzerPathValidator().file_log.path.resolve()
+        if LogFile().path.exists():
+            log_file_path = LogFile().path.resolve()
             if sys.platform.startswith("win"):
                 os.startfile(log_file_path)
             elif sys.platform.startswith("darwin"):

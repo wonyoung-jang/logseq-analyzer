@@ -7,10 +7,10 @@ from typing import List, Tuple
 import logging
 import shutil
 
+from .filesystem import DeleteAssetsDirectory, DeleteDirectory
 from ..utils.helpers import singleton
 from ..analysis.assets import LogseqAssets
 from ..config.arguments import Args
-from ..io.path_validator import LogseqAnalyzerPathValidator
 
 
 @singleton
@@ -24,7 +24,7 @@ class LogseqFileMover:
         Initialize the LogseqFileMover class.
         """
         self.moved_files = {}
-        self.delete = LogseqAnalyzerPathValidator().dir_delete.path
+        self.delete = DeleteDirectory().path
 
     def handle_move_files(self) -> List[str]:
         """
@@ -45,7 +45,7 @@ class LogseqFileMover:
         """
         Move unlinked assets to a separate directory.
         """
-        delete_asset_dir = LogseqAnalyzerPathValidator().dir_delete_assets.path
+        delete_asset_dir = DeleteAssetsDirectory().path
         for asset in LogseqAssets().not_backlinked:
             file_path = asset.file_path
             new_path = delete_asset_dir / file_path.name
