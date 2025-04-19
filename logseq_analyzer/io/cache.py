@@ -35,20 +35,6 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
-    def iter_modified_files(self):
-        """Get the modified files from the cache."""
-        mod_tracker = self.cache.get("mod_tracker", {})
-        graph_dir = GraphDirectory().path
-        target_dirs = LogseqAnalyzerConfig().target_dirs
-        for path in iter_files(graph_dir, target_dirs):
-            curr_date_mod = path.stat().st_mtime
-            last_date_mod = mod_tracker.get(str(path))
-            if last_date_mod is None or last_date_mod != curr_date_mod:
-                mod_tracker[str(path)] = curr_date_mod
-                logging.debug("File modified: %s", path)
-                yield path
-        self.cache["mod_tracker"] = mod_tracker
-
     def clear(self):
         """Clear the cache."""
         self.cache.clear()
@@ -70,6 +56,20 @@ class Cache:
 
             logging.debug("File deleted: %s", file.file_path)
             yield hash_
+
+    def iter_modified_files(self):
+        """Get the modified files from the cache."""
+        mod_tracker = self.cache.get("mod_tracker", {})
+        graph_dir = GraphDirectory().path
+        target_dirs = LogseqAnalyzerConfig().target_dirs
+        for path in iter_files(graph_dir, target_dirs):
+            curr_date_mod = path.stat().st_mtime
+            last_date_mod = mod_tracker.get(str(path))
+            if last_date_mod is None or last_date_mod != curr_date_mod:
+                mod_tracker[str(path)] = curr_date_mod
+                logging.debug("File modified: %s", path)
+                yield path
+        self.cache["mod_tracker"] = mod_tracker
 
 
 @singleton

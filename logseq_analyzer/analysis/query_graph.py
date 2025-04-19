@@ -20,32 +20,6 @@ class Query:
         """Initialize the Query class with a LogseqGraph instance."""
         self.graph = LogseqGraph()
 
-    def name_to_hashes(self, name: str):
-        """Get a Logseq file by its name."""
-        return self.graph.index.name_to_hashes.get(name, [])
-
-    def hash_to_file(self, hash_: int):
-        """Get a Logseq file by its hash."""
-        return self.graph.index.hash_to_file.get(hash_, None)
-
-    def name_to_files(self, name: str):
-        """Get Logseq files by name."""
-        return self.graph.index.name_to_files.get(name, [])
-
-    def hash_to_name(self, hash_: int):
-        """Get a Logseq file name by its hash."""
-        if not (path := self.graph.index.hash_to_file.get(hash_)):
-            return None
-        return path.path.name
-
-    def file_to_hash(self, file: LogseqFile):
-        """Get the hash of a Logseq file."""
-        return hash(file)
-
-    def file_to_name(self, file: LogseqFile):
-        """Get the name of a Logseq file."""
-        return file.path.name
-
     def list_files_with_keys_and_values(self, **criteria) -> List[LogseqFile]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         result = []

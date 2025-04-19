@@ -2,62 +2,13 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
-from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set
 
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output, Criteria
 from ..utils.helpers import singleton
-
-
-@singleton
-class FileIndex:
-    """Class to index files in the Logseq graph."""
-
-    def __init__(self):
-        """Initialize the FileIndex instance."""
-        self.files: Set[LogseqFile] = set()
-        self.hash_to_file: Dict[int, LogseqFile] = {}
-        self.name_to_hashes: Dict[str, List[int]] = defaultdict(list)
-        self.name_to_files: Dict[str, List[LogseqFile]] = defaultdict(list)
-        self.file_map: Dict[LogseqFile, dict] = {}
-
-    def __len__(self):
-        """Return the number of files in the index."""
-        return len(self.files)
-
-    def __contains__(self, file):
-        """Check if a file is in the index."""
-        return file in self.files
-
-    def add(self, file: LogseqFile):
-        """Add a file to the index."""
-        file_hash = hash(file)
-        name = file.path.name
-
-        self.files.add(file)
-        self.hash_to_file[file] = file
-        self.name_to_hashes[name].append(file_hash)
-        self.name_to_files[name].append(file)
-        self.file_map[file] = {"hash": file_hash, "name": name}
-
-    def get_by_file(self, file):
-        """Get a file by its LogseqFile object."""
-        return self.file_map.get(file)
-
-    def get_by_hash(self, file_hash):
-        """Get a file by its hash."""
-        return self.hash_to_file.get(file_hash)
-
-    def get_hashes_by_name(self, name):
-        """Get hashes associated with a given name."""
-        return self.name_to_hashes.get(name, [])
-
-    def get_files_by_name(self, name):
-        """Get files associated with a given name."""
-        return self.name_to_files.get(name, [])
+from .index import FileIndex
 
 
 @singleton
@@ -118,10 +69,6 @@ class LogseqGraph:
         cached_hash_to_file_map.update(self.index.hash_to_file)
         self.index.hash_to_file = cached_hash_to_file_map
 
-        cached_names_to_hashes_map = meta_data.get(Output.GRAPH_NAMES_TO_HASHES.value, {})
-        cached_names_to_hashes_map.update(self.index.name_to_hashes)
-        self.index.name_to_hashes = cached_names_to_hashes_map
-
         cached_dangling_links = meta_data.get(Output.DANGLING_LINKS.value, set())
         graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
         self.dangling_links = graph_dangling_links.union(cached_dangling_links)
@@ -171,7 +118,7 @@ class LogseqGraph:
 
         # Create dangling links
         all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
-        all_linked_refs.difference_update(self.index.name_to_hashes.keys())
+        all_linked_refs.difference_update(self.index.name_to_files.keys())
         all_linked_refs.difference_update(unique_aliases)
         self.dangling_links = set(sorted(all_linked_refs))
 

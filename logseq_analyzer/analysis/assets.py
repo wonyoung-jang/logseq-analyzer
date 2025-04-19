@@ -2,6 +2,7 @@
 Logseq Assets Analysis Module.
 """
 
+from .index import FileIndex
 from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
 from ..utils.enums import Criteria
@@ -22,17 +23,15 @@ class LogseqAssets:
 
     def handle_assets(self, asset_filenames: list):
         """Handle assets for the Logseq Analyzer."""
-        for hash_, file in LogseqGraph().index.hash_to_file.items():
+        for file in LogseqGraph().index.files:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_name in asset_filenames:
-                if not (asset_hashes := Query().name_to_hashes(asset_name)):
+                if not (asset_files := LogseqGraph().index.get(asset_name)):
                     continue
-                for hash_ in asset_hashes:
-                    if not (asset_file := Query().hash_to_file(hash_)):
-                        continue
+                for asset_file in asset_files:
                     if asset_file.is_backlinked:
                         continue
                     self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
@@ -80,7 +79,7 @@ class LogseqAssetsHls:
         """
         data = {}
         for name in names:
-            for file in Query().name_to_files(name):
+            for file in FileIndex().get(name):
                 for bullet in file.bullets.all_bullets:
                     bullet = bullet.strip()
                     if bullet.startswith("[:span]"):

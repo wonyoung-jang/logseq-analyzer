@@ -19,6 +19,7 @@ class LogseqFilestats:
     time_unmodified: float = 0.0
     date_created: str = ""
     date_modified: str = ""
+    _last_mod_tracking: float = 0.0
 
     def __post_init__(self):
         """Post-initialization method to set file statistics attributes."""
@@ -36,6 +37,7 @@ class LogseqFilestats:
                 self.file_path,
             )
         now = datetime.now()
+        self._last_mod_tracking = stat.st_mtime
         date_created = datetime.fromtimestamp(created_ts)
         date_modified = datetime.fromtimestamp(stat.st_mtime)
         self.time_existed = (now - date_created).total_seconds()
