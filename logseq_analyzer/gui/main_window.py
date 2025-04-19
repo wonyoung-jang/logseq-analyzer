@@ -26,9 +26,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
-
 from ..app import run_app
+from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
 
 
 class LogseqAnalyzerGUI(QMainWindow):

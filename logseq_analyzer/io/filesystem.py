@@ -2,13 +2,11 @@
 File system operations for Logseq Analyzer.
 """
 
-from math import sin
 from pathlib import Path
 import logging
 import shutil
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
-
 from ..utils.helpers import singleton
 
 
