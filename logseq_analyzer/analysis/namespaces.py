@@ -62,7 +62,7 @@ class LogseqNamespaces:
             self.namespace_data[file.path.name] = meta
             if not (parts := meta.get("ns_parts")):
                 continue
-            self.namespace_parts[file.name] = parts
+            self.namespace_parts[file.path.name] = parts
             for part, level in parts.items():
                 self.unique_namespace_parts.add(part)
                 self.unique_namespaces_per_level[level].add(part)
@@ -70,7 +70,7 @@ class LogseqNamespaces:
                 current_level.setdefault(part, {})
                 current_level = current_level[part]
                 self._part_levels[part].add(level)
-                self._part_entries[part].append({"entry": file.name, "level": level})
+                self._part_entries[part].append({"entry": file.path.name, "level": level})
 
         self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.namespace_details["level_distribution"] = dict(level_distribution)
