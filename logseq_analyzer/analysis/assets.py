@@ -7,6 +7,7 @@ from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
 from ..utils.enums import Criteria
 
+
 @singleton
 class LogseqAssets:
     """
@@ -76,20 +77,22 @@ class LogseqAssetsHls:
         Convert a list of names to a dictionary of hashes and their corresponding files.
         """
         index = FileIndex()
-        data = {}
         for name in names:
             for file in index.get(name):
                 for bullet in file.bullets.all_bullets:
                     bullet = bullet.strip()
-                    if bullet.startswith("[:span]"):
-                        hash_ = hash(bullet)
-                        for match in ContentPatterns().property_value.finditer(bullet):
-                            data.setdefault(name, {})
-                            data[name].setdefault(hash_, {})
-                            data[name][hash_][match.group(1)] = match.group(2)
-                        hl_page = data[name][hash_].get("hl-page")
-                        id_bullet = data[name][hash_].get("id")
-                        hl_stamp = data[name][hash_].get("hl-stamp")
+                    if not bullet.startswith("[:span]"):
+                        continue
+
+                    hl_page, id_bullet, hl_stamp = "" * 3
+                    for match in ContentPatterns().property_value.finditer(bullet):
+                        if match.group(1) == "hl-page":
+                            hl_page = match.group(2)
+                        elif match.group(1) == "id":
+                            id_bullet = match.group(2)
+                        elif match.group(1) == "hl-stamp":
+                            hl_stamp = match.group(2)
+                    if all([hl_page, id_bullet, hl_stamp]):
                         formatted_bullet = f"{hl_page.strip()}_{id_bullet.strip()}_{hl_stamp.strip()}"
                         self.formatted_bullets.append(formatted_bullet)
 

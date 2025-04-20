@@ -324,12 +324,12 @@ def get_moved_files_reports(ls_file_mover: LogseqFileMover, ls_assets: LogseqAss
 
 
 def get_all_reports(
-    meta_reports: dict,
     journal_reports: dict,
-    summary_files: LogseqFileSummarizer,
-    summary_content: LogseqContentSummarizer,
-    namespace_reports: dict,
+    meta_reports: dict,
     moved_files_reports: dict,
+    namespace_reports: dict,
+    summary_content: LogseqContentSummarizer,
+    summary_files: LogseqFileSummarizer,
 ) -> Tuple[List, List]:
     """Combine all reports into a single list."""
     output_subdirectories = [
@@ -380,32 +380,37 @@ def run_app(**kwargs):
     progress = gui.update_progress
     progress(5)
     args = setup_logseq_arguments(**kwargs)
-    log_file = init_logseq_paths()
-    setup_logging(log_file.path)
-    # --- #
-    analyzer_config = setup_logseq_analyzer_config(args)
-    setup_logseq_paths(args)
     progress(10)
-    graph_config = setup_logseq_graph_config(args)
-    setup_target_dirs(analyzer_config, graph_config)
-    # --- #
-    setup_datetime_tokens()
+    log_file = init_logseq_paths()
+    progress(15)
+    setup_logging(log_file.path)
     progress(20)
-    cache = setup_cache(args)
+    analyzer_config = setup_logseq_analyzer_config(args)
+    progress(25)
+    setup_logseq_paths(args)
     progress(30)
+    graph_config = setup_logseq_graph_config(args)
+    progress(35)
+    setup_target_dirs(analyzer_config, graph_config)
+    progress(40)
+    setup_datetime_tokens()
+    progress(45)
+    cache = setup_cache(args)
+    progress(50)
     # Main analysis
     graph = setup_logseq_graph()
-    progress(40)
+    progress(55)
     summary_files = setup_logseq_file_summarizer()
-    progress(50)
-    summary_content = setup_logseq_content_summarizer()
     progress(60)
+    summary_content = setup_logseq_content_summarizer()
+    progress(65)
     graph_namespaces = setup_logseq_namespaces()
     progress(70)
     graph_journals = setup_logseq_journals()
-    progress(80)
+    progress(75)
     # Assets
     setup_logseq_hls_assets(summary_files)
+    progress(80)
     ls_assets = setup_logseq_assets(summary_files)
     progress(85)
     # Movee files
@@ -417,16 +422,19 @@ def run_app(**kwargs):
     namespace_reports = get_namespace_reports(graph_namespaces)
     moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets)
     output_subdirectories, data_reports = get_all_reports(
-        meta_reports,
         journal_reports,
-        summary_files,
-        summary_content,
-        namespace_reports,
+        meta_reports,
         moved_files_reports,
+        namespace_reports,
+        summary_content,
+        summary_files,
     )
-    update_cache(cache, output_subdirectories, data_reports)
     progress(95)
+    update_cache(cache, output_subdirectories, data_reports)
+    progress(97)
     write_reports(cache)
+    progress(98)
     analyzer_config.write_to_file()
+    progress(99)
     cache.close()
     progress(100)

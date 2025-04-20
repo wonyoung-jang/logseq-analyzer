@@ -22,7 +22,6 @@ from ..utils.helpers import find_all_lower, singleton, sort_dict_by_value
 from ..utils.patterns import ContentPatterns
 from .graph import LogseqGraph
 from .index import FileIndex
-from .query_graph import Query
 
 NS_SEP = Core.NS_SEP.value
 
@@ -55,8 +54,9 @@ class LogseqNamespaces:
         """
         Create namespace parts from the data.
         """
+        index = FileIndex()
         level_distribution = Counter()
-        for file in Query().yield_files_with_keys("ns_level"):
+        for file in index.yield_files_with_keys("ns_level"):
             current_level = self.tree
             meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             self.namespace_data[file.path.name] = meta
@@ -103,7 +103,8 @@ class LogseqNamespaces:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
-        non_ns_names = Query().list_files_without_keys("ns_level")
+        index = FileIndex()
+        non_ns_names = index.list_file_names_without_keys("ns_level")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)
         for entry, parts in self.namespace_parts.items():

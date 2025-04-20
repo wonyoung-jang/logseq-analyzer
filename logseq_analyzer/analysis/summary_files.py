@@ -4,11 +4,9 @@ Logseq File Summarizer Module
 
 from typing import Dict
 
-from .index import FileIndex
-
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
-from .query_graph import Query
+from .index import FileIndex
 
 
 @singleton
@@ -21,6 +19,7 @@ class LogseqFileSummarizer:
 
     def generate_summary(self):
         """Generate summary subsets for the Logseq Analyzer."""
+        index = FileIndex()
         summary_categories = {
             # Process general categories
             SummaryFiles.IS_BACKLINKED: {"is_backlinked": True},
@@ -51,17 +50,18 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         for output_name, criteria in summary_categories.items():
-            self.subsets[output_name.value] = Query().list_file_names_with_keys_and_values(**criteria)
+            self.subsets[output_name.value] = index.list_file_names_with_keys_and_values(**criteria)
 
         self.process_file_extensions()
 
     def process_file_extensions(self):
         """Process file extensions and create subsets for each."""
+        index = FileIndex()
         file_extension_dict = {}
-        for file in FileIndex().files:
+        for file in index.files:
             ext = file.path.suffix
             output_name = f"all {ext}s"
             if output_name not in file_extension_dict:
                 criteria = {"suffix": ext}
-                file_extension_dict[output_name] = Query().list_file_names_with_keys_and_values(**criteria)
+                file_extension_dict[output_name] = index.list_file_names_with_keys_and_values(**criteria)
         self.subsets[SummaryFiles.FILE_EXTS.value] = file_extension_dict
