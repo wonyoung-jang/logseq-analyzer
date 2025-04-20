@@ -6,9 +6,6 @@ from .index import FileIndex
 from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
 from ..utils.enums import Criteria
-from .query_graph import Query
-from .graph import LogseqGraph
-
 
 @singleton
 class LogseqAssets:
