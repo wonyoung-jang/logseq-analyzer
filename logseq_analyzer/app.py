@@ -4,6 +4,7 @@ This module contains the main application logic for the Logseq analyzer.
 
 from pathlib import Path
 import logging
+from typing import List, Tuple
 
 from .analysis.index import FileIndex
 
@@ -329,52 +330,48 @@ def get_all_reports(
     summary_content: LogseqContentSummarizer,
     namespace_reports: dict,
     moved_files_reports: dict,
-) -> list:
+) -> Tuple[List, List]:
     """Combine all reports into a single list."""
-    logging.debug("run_app: get_all_reports")
-    return [
-        (meta_reports, OutputDir.META),
-        (journal_reports, OutputDir.JOURNALS),
-        (summary_files.subsets, OutputDir.SUMMARY_FILES),
-        (summary_content.subsets, OutputDir.SUMMARY_CONTENT),
-        (namespace_reports, OutputDir.NAMESPACES),
-        (moved_files_reports, OutputDir.MOVED_FILES),
+    output_subdirectories = [
+        OutputDir.JOURNALS,
+        OutputDir.META,
+        OutputDir.MOVED_FILES,
+        OutputDir.NAMESPACES,
+        OutputDir.SUMMARY_CONTENT,
+        OutputDir.SUMMARY_FILES,
     ]
+    data_reports = [
+        journal_reports,
+        meta_reports,
+        moved_files_reports,
+        namespace_reports,
+        summary_content.subsets,
+        summary_files.subsets,
+    ]
+    logging.debug("run_app: get_all_reports")
+    return output_subdirectories, data_reports
 
 
-def write_reports(all_outputs: list):
-    """Write reports to the specified output directories."""
-    for report, output_dir in all_outputs:
-        for name, data in report.items():
-            ReportWriter(name, data, output_dir.value).write()
-    logging.debug("run_app: write_reports")
-
-
-def update_cache_and_write_config(
-    analyzer_config: LogseqAnalyzerConfig,
-    cache: Cache,
-    summary_files: LogseqFileSummarizer,
-    summary_content: LogseqContentSummarizer,
-    meta_reports: dict,
-    journal_reports: dict,
-    namespace_reports: dict,
-    moved_files_reports: dict,
-):
-    """Update the cache with the output data and write the analyzer configuration to file."""
+def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
+    """Update the cache with the output data."""
     try:
-        shelve_output_data = {
-            "META_REPORTS": meta_reports,
-            "SUMMARY_FILES": summary_files.subsets,
-            "SUMMARY_CONTENT": summary_content.subsets,
-            "JOURNAL_REPORTS": journal_reports,
-            "NAMESPACE_REPORTS": namespace_reports,
-            "MOVED_FILES_REPORTS": moved_files_reports,
-        }
-        cache.update(shelve_output_data)
-        cache.close()
-    finally:
-        analyzer_config.write_to_file()
-    logging.debug("run_app: update_cache_and_write_config")
+        shelve_output_data = zip(output_subdirectories, data_reports)
+        for output_subdir, data_report in shelve_output_data:
+            cache.update({output_subdir.value: data_report})
+    except Exception as e:
+        logging.error("Error updating cache")
+    logging.debug("run_app: update_cache")
+
+
+def write_reports(cache: Cache):
+    """Write reports to the specified output directories."""
+    for output_dir, reports in cache.cache.items():
+        if output_dir == "mod_tracker":
+            continue
+
+        for name, report in reports.items():
+            ReportWriter(name, report, output_dir).write()
+    logging.debug("run_app: write_reports")
 
 
 def run_app(**kwargs):
@@ -419,20 +416,17 @@ def run_app(**kwargs):
     journal_reports = get_journal_reports(graph_journals)
     namespace_reports = get_namespace_reports(graph_namespaces)
     moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets)
-    all_outputs = get_all_reports(
-        meta_reports, journal_reports, summary_files, summary_content, namespace_reports, moved_files_reports
-    )
-    write_reports(all_outputs)
-    progress(95)
-    # Cache writing
-    update_cache_and_write_config(
-        analyzer_config,
-        cache,
-        summary_files,
-        summary_content,
+    output_subdirectories, data_reports = get_all_reports(
         meta_reports,
         journal_reports,
+        summary_files,
+        summary_content,
         namespace_reports,
         moved_files_reports,
     )
+    update_cache(cache, output_subdirectories, data_reports)
+    progress(95)
+    write_reports(cache)
+    analyzer_config.write_to_file()
+    cache.close()
     progress(100)
