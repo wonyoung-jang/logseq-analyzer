@@ -8,12 +8,11 @@ from pathlib import Path
 from urllib.parse import unquote
 import logging
 
-from ..io.filesystem import GraphDirectory
-
+from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.datetime_tokens import LogseqJournalFormats
 from ..config.graph_config import LogseqGraphConfig
+from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
-from ..config.analyzer_config import LogseqAnalyzerConfig
 
 
 NS_SEP = Core.NS_SEP.value

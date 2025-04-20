@@ -75,7 +75,7 @@ class LogseqAnalyzerConfig:
         self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory", "journals"))
         self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory", "whiteboards"))
 
-        ns_format = ls_config.get(":file/name-format")
+        ns_format = ls_config.get(":file/name-format", ":legacy")
         self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
         if ns_format == ":triple-lowbar":
             self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)

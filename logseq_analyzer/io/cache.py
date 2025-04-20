@@ -42,15 +42,15 @@ class Cache:
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""
         meta_data = self.cache.setdefault("META_REPORTS", {})
-        meta_data.setdefault(Output.GRAPH_HASHED_FILES.value, {})
+        meta_data.setdefault(Output.HASH_TO_FILE.value, {})
         for hash_ in self.yield_deleted_files():
-            meta_data[Output.GRAPH_HASHED_FILES.value].pop(hash_, None)
-        self.cache["META_REPORTS"][Output.GRAPH_HASHED_FILES.value] = meta_data[Output.GRAPH_HASHED_FILES.value]
+            meta_data[Output.HASH_TO_FILE.value].pop(hash_, None)
+        self.cache["META_REPORTS"][Output.HASH_TO_FILE.value] = meta_data[Output.HASH_TO_FILE.value]
 
     def yield_deleted_files(self):
         """Yield deleted files from the cache."""
         meta_data = self.cache.setdefault("META_REPORTS", {})
-        for hash_, file in meta_data[Output.GRAPH_HASHED_FILES.value].items():
+        for hash_, file in meta_data[Output.HASH_TO_FILE.value].items():
             if file.file_path.exists():
                 continue
 

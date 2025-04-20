@@ -18,9 +18,10 @@ from collections import Counter, defaultdict
 import logging
 
 from ..utils.enums import Core
-from ..utils.helpers import singleton
+from ..utils.helpers import find_all_lower, singleton, sort_dict_by_value
 from ..utils.patterns import ContentPatterns
 from .graph import LogseqGraph
+from .index import FileIndex
 from .query_graph import Query
 
 NS_SEP = Core.NS_SEP.value
@@ -58,17 +59,15 @@ class LogseqNamespaces:
         for file in Query().yield_files_with_keys("ns_level"):
             current_level = self.tree
             meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
-            self.namespace_data[file.name] = meta
-            parts = meta.get("ns_parts")
-            if not parts:
+            self.namespace_data[file.path.name] = meta
+            if not (parts := meta.get("ns_parts")):
                 continue
             self.namespace_parts[file.name] = parts
             for part, level in parts.items():
                 self.unique_namespace_parts.add(part)
                 self.unique_namespaces_per_level[level].add(part)
                 level_distribution[level] += 1
-                if part not in current_level:
-                    current_level[part] = {}
+                current_level.setdefault(part, {})
                 current_level = current_level[part]
                 self._part_levels[part].add(level)
                 self._part_entries[part].append({"entry": file.name, "level": level})
@@ -80,32 +79,25 @@ class LogseqNamespaces:
         """
         Analyze namespace queries.
         """
-        for _, file in LogseqGraph().index.hash_to_file.items():
-            got_ns_queries = file.data.get("namespace_queries")
-            if not got_ns_queries:
-                continue
-            for q in got_ns_queries:
-                page_refs = ContentPatterns().page_reference.findall(q)
+        ns_queries = {}
+        index = FileIndex()
+        for file in index.files:
+            for query in file.data.get("namespace_queries", []):
+                page_refs = find_all_lower(ContentPatterns().page_reference, query)
                 if len(page_refs) != 1:
-                    logging.warning("Invalid references found in query: %s", q)
+                    logging.warning("Invalid references found in query: %s", query)
                     continue
 
                 page_ref = page_refs[0]
-                self.namespace_queries.setdefault(q, {})
-                self.namespace_queries[q].setdefault("found_in", []).append(file.name)
-                self.namespace_queries[q]["namespace"] = page_ref
-                self.namespace_queries[q]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
-                self.namespace_queries[q]["uri"] = getattr(file, "uri", "")
-                self.namespace_queries[q]["logseq_url"] = getattr(file, "logseq_url", "")
+                ns_queries.setdefault(query, {})
+                ns_queries[query].setdefault("found_in", []).append(file.path.name)
+                ns_queries[query]["namespace"] = page_ref
+                ns_queries[query]["ns_size"] = self.namespace_data.get(page_ref, {}).get("ns_size", 0)
+                ns_queries[query]["uri"] = getattr(file, "uri", "")
+                ns_queries[query]["logseq_url"] = getattr(file, "logseq_url", "")
 
         # Sort the queries by size in descending order
-        self.namespace_queries = dict(
-            sorted(
-                self.namespace_queries.items(),
-                key=lambda item: item[1]["ns_size"],
-                reverse=True,
-            )
-        )
+        self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
     def detect_non_ns_conflicts(self):
         """
@@ -131,7 +123,7 @@ class LogseqNamespaces:
                 continue
 
             details = self._part_entries[part]
-            for level in sorted(levels):
+            for level in levels:
                 key = f"{part} {level}"
                 entries = [i["entry"] for i in details if i["level"] == level]
                 self.conflicts_parent_depth[key] = entries

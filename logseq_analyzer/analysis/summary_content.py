@@ -4,9 +4,9 @@ Logseq Content Summarizer Module
 
 from typing import Any, Dict
 
-from ..utils.helpers import singleton
-from .graph import LogseqGraph
 from ..utils.enums import Criteria
+from ..utils.helpers import singleton, sort_dict_by_value
+from .index import FileIndex
 
 
 @singleton
@@ -34,9 +34,10 @@ class LogseqContentSummarizer:
             Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for _, file in LogseqGraph().index.hash_to_file.items():
+        index = FileIndex()
+        for file in index.files:
             for value in file.data.get(criteria, []):
                 subset_counter.setdefault(value, {})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
                 subset_counter[value].setdefault("found_in", []).append(file.path.name)
-        return dict(sorted(subset_counter.items(), key=lambda item: item[1]["count"], reverse=True))
+        return sort_dict_by_value(subset_counter, value="count", reverse=True)

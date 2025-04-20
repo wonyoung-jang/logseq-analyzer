@@ -4,9 +4,10 @@ Logseq File Summarizer Module
 
 from typing import Dict
 
+from .index import FileIndex
+
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
-from .graph import LogseqGraph
 from .query_graph import Query
 
 
@@ -57,7 +58,7 @@ class LogseqFileSummarizer:
     def process_file_extensions(self):
         """Process file extensions and create subsets for each."""
         file_extension_dict = {}
-        for _, file in LogseqGraph().index.hash_to_file.items():
+        for file in FileIndex().files:
             ext = file.path.suffix
             output_name = f"all {ext}s"
             if output_name not in file_extension_dict:

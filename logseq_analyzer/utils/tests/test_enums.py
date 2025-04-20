@@ -89,10 +89,9 @@ def test_output_values():
         "DANGLING_LINKS": "dangling_links",
         "GRAPH_CONTENT": "content_bullets",
         "GRAPH_DATA": "data",
-        "GRAPH_HASHED_FILES": "hash_to_file_map",
-        "GRAPH_NAMES_TO_HASHES": "name_to_hashes_map",
-        "GRAPH_NAME_TO_FILES": "name_to_files_map",
-        "GRAPH_FILE_MAP": "file_map",
+        "FILES": "files",
+        "HASH_TO_FILE": "hash_to_file",
+        "NAME_TO_FILES": "name_to_files",
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "MISSING_KEYS": "missing_keys",
@@ -112,7 +111,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 32
+    assert len(Output) == 31
 
 
 # SummaryFiles

@@ -3,7 +3,7 @@ FilIndex class.
 """
 
 from collections import defaultdict
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Union
 from pathlib import Path
 
 from ..logseq_file.file import LogseqFile
@@ -36,7 +36,7 @@ class FileIndex:
         self.name_to_files[file.path.name].append(file)
         self.path_to_file[file.file_path] = file
 
-    def get(self, key):
+    def get(self, key) -> Union[LogseqFile, List[LogseqFile], None]:
         """Get a file by its key."""
         if isinstance(key, int):
             return self.hash_to_file.get(key)
@@ -44,7 +44,7 @@ class FileIndex:
             return self.name_to_files.get(key, [])
         if isinstance(key, Path):
             return self.path_to_file.get(key)
-        return None
+        raise TypeError(f"Invalid key type: {type(key)}. Expected int, str, or Path.")
 
     def remove(self, key):
         """Remove a file from the index."""
@@ -70,3 +70,11 @@ class FileIndex:
                 self.name_to_files[file.path.name].remove(file)
                 if not self.name_to_files[file.path.name]:
                     del self.name_to_files[file.path.name]
+
+    def list_files_with_keys_and_values(self, **criteria) -> List[LogseqFile]:
+        """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
+        result = []
+        for file in self.files:
+            if all(getattr(file, key) == expected for key, expected in criteria.items()):
+                result.append(file)
+        return result

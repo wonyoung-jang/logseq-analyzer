@@ -23,33 +23,33 @@ class LogseqAssets:
 
     def handle_assets(self, asset_filenames: list):
         """Handle assets for the Logseq Analyzer."""
-        for file in LogseqGraph().index.files:
+        index = FileIndex()
+        for file in index.files:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_name in asset_filenames:
-                if not (asset_files := LogseqGraph().index.get(asset_name)):
-                    continue
-                for asset_file in asset_files:
+                for asset_file in index.get(asset_name):
                     if asset_file.is_backlinked:
                         continue
                     self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
                     self.update_asset_backlink(file.path.name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = Query().list_files_with_keys_and_values(**backlinked_kwargs)
-        self.not_backlinked = Query().list_files_with_keys_and_values(**not_backlinked_kwargs)
+        self.backlinked = index.list_files_with_keys_and_values(**backlinked_kwargs)
+        self.not_backlinked = index.list_files_with_keys_and_values(**not_backlinked_kwargs)
 
     def update_asset_backlink(self, file_name, asset_mentions, asset_file):
         """
         Update the backlink status of an asset file based on mentions in another file.
         """
-        if asset_mentions:
-            for asset_mention in asset_mentions:
-                if asset_file.path.name in asset_mention or file_name in asset_mention:
-                    asset_file.is_backlinked = True
-                    break
+        if not asset_mentions:
+            return
+        for asset_mention in asset_mentions:
+            if asset_file.path.name in asset_mention or file_name in asset_mention:
+                asset_file.is_backlinked = True
+                break
 
 
 @singleton
@@ -69,7 +69,8 @@ class LogseqAssetsHls:
     def get_asset_files(self):
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
-        asset_files = Query().list_files_with_keys_and_values(**criteria)
+        index = FileIndex()
+        asset_files = index.list_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = list(self.asset_mapping.keys())
 
@@ -77,9 +78,10 @@ class LogseqAssetsHls:
         """
         Convert a list of names to a dictionary of hashes and their corresponding files.
         """
+        index = FileIndex()
         data = {}
         for name in names:
-            for file in FileIndex().get(name):
+            for file in index.get(name):
                 for bullet in file.bullets.all_bullets:
                     bullet = bullet.strip()
                     if bullet.startswith("[:span]"):

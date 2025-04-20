@@ -28,9 +28,11 @@ class LogseqGraphConfig:
 
     def initialize_global_config_edn(self):
         """Extract global config."""
-        if self.global_config_file:
-            with self.global_config_file.open("r", encoding="utf-8") as global_config:
-                self.global_config_data = loads(global_config.read())
+        if not self.global_config_file:
+            return
+
+        with self.global_config_file.open("r", encoding="utf-8") as global_config:
+            self.global_config_data = loads(global_config.read())
 
     def merge(self):
         """Merge user and global config."""

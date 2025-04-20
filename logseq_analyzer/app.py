@@ -5,6 +5,8 @@ This module contains the main application logic for the Logseq analyzer.
 from pathlib import Path
 import logging
 
+from .analysis.index import FileIndex
+
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.journals import LogseqJournals
@@ -260,6 +262,7 @@ def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
 
 def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: Args) -> dict:
     """Get metadata reports from the graph and configuration."""
+    index = FileIndex()
     meta_reports = {
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.CONFIG_DATA.value: graph_config.ls_config,
@@ -267,9 +270,9 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
         # Output.GRAPH_DATA.value: graph.data,
-        "FileIndexFiles": graph.index.files,
-        Output.GRAPH_HASHED_FILES.value: graph.index.hash_to_file,
-        Output.GRAPH_NAME_TO_FILES.value: graph.index.name_to_files,
+        Output.FILES.value: index.files,
+        Output.HASH_TO_FILE.value: index.hash_to_file,
+        Output.NAME_TO_FILES.value: index.name_to_files,
     }
     # if args.write_graph:
     #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets

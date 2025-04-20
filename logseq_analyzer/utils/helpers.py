@@ -60,6 +60,13 @@ def process_aliases(aliases: str) -> List[str]:
     return results
 
 
+def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True):
+    """Sort a dictionary by its values."""
+    if not value:
+        return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
+    return dict(sorted(d.items(), key=lambda item: item[1][value], reverse=reverse))
+
+
 def singleton(cls):
     """
     Decorator to create a singleton class that is pickle-friendly.
