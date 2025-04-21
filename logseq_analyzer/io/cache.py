@@ -21,7 +21,9 @@ class Cache:
 
     def __init__(self):
         """Initialize the class."""
-        self.cache = shelve.open(CacheFile().path, protocol=5)
+        cache_file = CacheFile()
+        cache_path = cache_file.path
+        self.cache = shelve.open(cache_path, protocol=5)
 
     def close(self):
         """Close the cache file."""

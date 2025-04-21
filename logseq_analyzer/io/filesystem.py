@@ -29,6 +29,8 @@ class File:
         """Set the path of the file."""
         if isinstance(value, str):
             value = Path(value)
+        if not isinstance(value, Path):
+            raise TypeError("Path must be a string or a Path object.")
         self._path = value
 
     def validate(self):

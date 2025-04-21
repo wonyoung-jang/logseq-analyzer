@@ -23,23 +23,12 @@ class LogseqGraph:
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
         index = FileIndex()
-        for file_path in Cache().iter_modified_files():
+        cache = Cache()
+        for file_path in cache.iter_modified_files():
             file = LogseqFile(file_path)
             file.init_file_data()
             file.process_content_data()
             index.add(file)
-            self.del_large_file_attributes(file)
-
-    def del_large_file_attributes(self, file: LogseqFile):
-        """
-        Delete large attributes from the file object.
-
-        Args:
-            file (LogseqFile): The LogseqFile object to be modified.
-        """
-        delattr(file, "content_bullets")
-        delattr(file, "content")
-        delattr(file, "primary_bullet")
 
     def update_graph_files_with_cache(self):
         """Update the graph files with cached data."""
@@ -64,7 +53,6 @@ class LogseqGraph:
         index = FileIndex()
         unique_aliases = set()
 
-        # Process each file's content
         for file in index.files:
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)

@@ -5,9 +5,6 @@ Enums for the Logseq Analyzer.
 from enum import Enum
 
 
-class Config(Enum):
-    """Configuration settings for the Logseq Analyzer."""
-
 
 class Moved(Enum):
     """Moved files and directories in the Logseq Analyzer."""

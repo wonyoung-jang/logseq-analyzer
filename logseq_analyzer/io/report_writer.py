@@ -21,7 +21,6 @@ class ReportWriter:
         """
         Initialize the ReportWriter class.
         """
-        self.output_format = LogseqAnalyzerConfig().config["ANALYZER"]["REPORT_FORMAT"]
         self.filename_prefix = filename_prefix
         self.items = items
         self.type_output = type_output
@@ -84,12 +83,14 @@ class ReportWriter:
         """
         Write the output to a file using a recursive helper to handle nested structures.
         """
-        logging.info("Writing %s as %s", self.filename_prefix, self.output_format)
+        ac = LogseqAnalyzerConfig()
+        output_format = ac.config["ANALYZER"]["REPORT_FORMAT"]
+        logging.info("Writing %s as %s", self.filename_prefix, output_format)
         count = len(self.items)
         filename = (
-            f"{self.filename_prefix}{self.output_format}"
+            f"{self.filename_prefix}{output_format}"
             if count
-            else f"___EMPTY___{self.filename_prefix}{self.output_format}"
+            else f"___EMPTY___{self.filename_prefix}{output_format}"
         )
 
         output_dir = OutputDirectory().path
@@ -101,7 +102,7 @@ class ReportWriter:
             out_path = Path(parent) / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
-        if self.output_format == Core.FMT_JSON.value:
+        if output_format == Core.FMT_JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -115,14 +116,14 @@ class ReportWriter:
                 with out_path.open("w", encoding="utf-8") as f:
                     f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif self.output_format == Core.FMT_TXT.value:
+        elif output_format == Core.FMT_TXT.value:
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)
         else:
             logging.error(
                 "Unsupported output format: %s. Defaulting to text.",
-                self.output_format,
+                output_format,
             )
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")

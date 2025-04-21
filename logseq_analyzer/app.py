@@ -7,7 +7,6 @@ import logging
 from typing import List, Tuple
 
 from .analysis.index import FileIndex
-
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.journals import LogseqJournals
@@ -366,7 +365,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
 def write_reports(cache: Cache):
     """Write reports to the specified output directories."""
     for output_dir, reports in cache.cache.items():
-        if output_dir == "mod_tracker":
+        if output_dir in ("mod_tracker"):
             continue
 
         for name, report in reports.items():
