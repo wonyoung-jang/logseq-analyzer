@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import List, Tuple
 import logging
 
+from requests import get
+
 from .analysis.index import FileIndex
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
@@ -272,12 +274,33 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.FILES.value: index.files,
         Output.HASH_TO_FILE.value: index.hash_to_file,
         Output.NAME_TO_FILES.value: index.name_to_files,
-        # Output.GRAPH_DATA.value: graph.data,
+        Output.GRAPH_DATA.value: get_graph_data(),
     }
-    # if args.write_graph:
-    #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
+    if args.write_graph:
+        meta_reports[Output.GRAPH_CONTENT.value] = get_graph_content()
     logging.debug("run_app: get_meta_reports")
     return meta_reports
+
+
+def get_graph_data() -> dict:
+    """Get metadata file data from the graph."""
+    index = FileIndex()
+    files = index.files
+    graph_data = {}
+    for file in files:
+        data = {k: v for k, v in file.__dict__.items() if k not in ["content", "content_bullets", "primary_bullet"]}
+        graph_data[file] = data
+    return graph_data
+
+
+def get_graph_content() -> dict:
+    """Get graph content."""
+    index = FileIndex()
+    files = index.files
+    graph_content = {}
+    for file in files:
+        graph_content[file] = file.bullets.all_bullets
+    return graph_content
 
 
 def get_journal_reports(graph_journals: LogseqJournals) -> dict:
