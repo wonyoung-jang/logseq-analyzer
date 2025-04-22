@@ -29,6 +29,7 @@ class LogseqGraph:
             file.init_file_data()
             file.process_content_data()
             index.add(file)
+            print(file)
 
     def post_processing_content(self):
         """Post-process the content data for all files."""
@@ -81,24 +82,31 @@ class LogseqGraph:
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
         index = FileIndex()
-        for ns_root_file in index.name_to_files.get(ns_root, []):
-            ns_root_file.ns_level = 1
+        for ns_root_file in index.get(ns_root):
+            if not hasattr(ns_root_file, "ns_level"):
+                ns_root_file.ns_level = 1
             if not hasattr(ns_root_file, "ns_children"):
                 ns_root_file.ns_children = set()
             ns_root_file.ns_children.add(file.path.name)
-            ns_root_file.ns_size = len(ns_root_file.ns_children)
+            ns_root_file.ns_size = self.process_ns_size(ns_root_file)
 
         if ns_level <= 2:
             return
 
-        for ns_parent_file in index.name_to_files.get(ns_parent, []):
-            ns_parent_level = getattr(ns_parent_file, "ns_level", 0)
-            direct_level = ns_level - 1
-            ns_parent_file.ns_level = max(direct_level, ns_parent_level)
+        for ns_parent_file in index.get(ns_parent):
+            if not hasattr(ns_parent_file, "ns_level"):
+                ns_parent_file.ns_level = ns_level - 1
             if not hasattr(ns_parent_file, "ns_children"):
                 ns_parent_file.ns_children = set()
             ns_parent_file.ns_children.add(file.path.name)
-            ns_parent_file.ns_size = len(ns_parent_file.ns_children)
+            ns_parent_file.ns_size = self.process_ns_size(ns_parent_file)
+
+    def process_ns_size(self, parent_file: LogseqFile):
+        """Process the size of namespaces."""
+        if not hasattr(parent_file, "ns_size"):
+            return len(parent_file.ns_children)
+        else:
+            return parent_file.ns_size + 1
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""

@@ -219,21 +219,19 @@ def setup_logseq_journals() -> LogseqJournals:
     return graph_journals
 
 
-def setup_logseq_hls_assets(summary_files: LogseqFileSummarizer):
+def setup_logseq_hls_assets():
     """Setup LogseqAssetsHls for HLS assets."""
-    names = summary_files.subsets.get(SummaryFiles.IS_HLS.value, [])
     ls_hls = LogseqAssetsHls()
     ls_hls.get_asset_files()
-    ls_hls.convert_names_to_data(names)
+    ls_hls.convert_names_to_data()
     ls_hls.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
 
 
-def setup_logseq_assets(summary_files: LogseqFileSummarizer) -> LogseqAssets:
+def setup_logseq_assets() -> LogseqAssets:
     """Setup LogseqAssets for handling assets."""
-    asset_files = summary_files.subsets.get(SummaryFiles.FILETYPE_ASSET.value, [])
     ls_assets = LogseqAssets()
-    ls_assets.handle_assets(asset_files)
+    ls_assets.handle_assets()
     logging.debug("run_app: setup_logseq_assets")
     return ls_assets
 
@@ -430,9 +428,9 @@ def run_app(**kwargs):
     graph_journals = setup_logseq_journals()
     progress(75)
     # Assets
-    setup_logseq_hls_assets(summary_files)
+    setup_logseq_hls_assets()
     progress(80)
-    ls_assets = setup_logseq_assets(summary_files)
+    ls_assets = setup_logseq_assets()
     progress(85)
     # Movee files
     ls_file_mover = setup_logseq_file_mover(args)

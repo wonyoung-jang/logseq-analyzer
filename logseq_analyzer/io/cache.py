@@ -53,7 +53,7 @@ class Cache:
         ]
         for key in analysis_keys:
             if key in self.cache:
-                del self.cache[key]
+                self.cache[key] = {}
 
         if Output.FILE_INDEX.value in self.cache:
             index: FileIndex = self.cache[Output.FILE_INDEX.value]
