@@ -3,7 +3,30 @@ Test the Criteria enum class.
 """
 
 import pytest
-from ..enums import Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved
+from ..enums import Format, Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved
+
+
+# Format
+def test_format_values():
+    expected = {
+        "TXT": ".txt",
+        "JSON": ".json",
+        "CSV": ".csv",
+        "TSV": ".tsv",
+        "HTML": ".html",
+        "MD": ".md",
+        "PNG": ".png",
+        "JPG": ".jpg",
+        "JPEG": ".jpeg",
+        "GIF": ".gif",
+        "SVG": ".svg",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Format, member_name).value == string_value
+
+
+def test_format_member_count():
+    assert len(Format) == 11
 
 
 # Moved
@@ -43,8 +66,6 @@ def test_output_dir_member_count():
 # Core
 def test_core_values():
     expected = {
-        "FMT_TXT": ".txt",
-        "FMT_JSON": ".json",
         "HLS_PREFIX": "hls__",
         "NS_SEP": "/",
         "NS_FILE_SEP_LEGACY": "%2F",
@@ -55,7 +76,7 @@ def test_core_values():
 
 
 def test_core_member_count():
-    assert len(Core) == 6
+    assert len(Core) == 4
 
 
 # Phase

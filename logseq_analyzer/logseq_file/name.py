@@ -52,11 +52,12 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        ns_file_sep = LogseqAnalyzerConfig().config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+        ls_analyzer_config = LogseqAnalyzerConfig()
+        ns_file_sep = ls_analyzer_config.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
 
         self.name = self.name.strip(ns_file_sep)
 
-        if self.parent == LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
+        if self.parent == ls_analyzer_config.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
             self.name = unquote(self.name).replace(ns_file_sep, NS_SEP)

@@ -8,7 +8,7 @@ import json
 import logging
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
-from ..utils.enums import Core
+from ..utils.enums import Format
 from .filesystem import OutputDirectory
 
 
@@ -88,9 +88,7 @@ class ReportWriter:
         logging.info("Writing %s as %s", self.filename_prefix, output_format)
         count = len(self.items)
         filename = (
-            f"{self.filename_prefix}{output_format}"
-            if count
-            else f"___EMPTY___{self.filename_prefix}{output_format}"
+            f"{self.filename_prefix}{output_format}" if count else f"___EMPTY___{self.filename_prefix}{output_format}"
         )
 
         output_dir = OutputDirectory().path
@@ -102,7 +100,7 @@ class ReportWriter:
             out_path = Path(parent) / filename
 
         # For JSON format, re-open and dump JSON if that is the requested format
-        if output_format == Core.FMT_JSON.value:
+        if output_format == Format.JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
@@ -110,13 +108,13 @@ class ReportWriter:
                 logging.error("Failed to write JSON for %s.", self.filename_prefix)
                 if out_path.exists():
                     out_path.unlink()
-                filename = f"{self.filename_prefix}{Core.FMT_TXT.value}"
+                filename = f"{self.filename_prefix}{Format.TXT.value}"
                 if self.type_output:
                     out_path = Path(parent) / filename
                 with out_path.open("w", encoding="utf-8") as f:
                     f.write(f"{filename} | Items: {count}\n\n")
                     ReportWriter.write_recursive(f, self.items)
-        elif output_format == Core.FMT_TXT.value:
+        elif output_format == Format.TXT.value:
             with out_path.open("w", encoding="utf-8") as f:
                 f.write(f"{filename} | Items: {count}\n\n")
                 ReportWriter.write_recursive(f, self.items)

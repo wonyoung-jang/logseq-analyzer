@@ -90,14 +90,10 @@ class LogseqFile:
         masked_content, masked_blocks = self.mask_blocks(self.content)
         self.masked_blocks = masked_blocks
 
-        # Extract basic data
         primary_data = {
-            # Code blocks
             Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(CodePatterns().inline_code_block, self.content),
-            # Captures from all content
             Criteria.ASSETS.value: find_all_lower(ContentPatterns().asset, self.content),
             Criteria.ANY_LINKS.value: find_all_lower(ContentPatterns().any_link, self.content),
-            # Basic content
             Criteria.BLOCKQUOTES.value: find_all_lower(ContentPatterns().blockquote, masked_content),
             Criteria.DRAWS.value: find_all_lower(ContentPatterns().draw, masked_content),
             Criteria.FLASHCARDS.value: find_all_lower(ContentPatterns().flashcard, masked_content),

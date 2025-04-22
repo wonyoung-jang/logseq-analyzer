@@ -2,10 +2,10 @@
 Logseq Assets Analysis Module.
 """
 
-from .index import FileIndex
+from ..utils.enums import Criteria
 from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
-from ..utils.enums import Criteria
+from .index import FileIndex
 
 
 @singleton
@@ -77,6 +77,8 @@ class LogseqAssetsHls:
         Convert a list of names to a dictionary of hashes and their corresponding files.
         """
         index = FileIndex()
+        content_patterns = ContentPatterns()
+        prop_value_pattern = content_patterns.property_value
         for name in names:
             for file in index.get(name):
                 for bullet in file.bullets.all_bullets:
@@ -84,14 +86,15 @@ class LogseqAssetsHls:
                     if not bullet.startswith("[:span]"):
                         continue
 
-                    hl_page, id_bullet, hl_stamp = "" * 3
-                    for match in ContentPatterns().property_value.finditer(bullet):
+                    (hl_page, id_bullet, hl_stamp) = ("", "", "")
+                    for match in prop_value_pattern.finditer(bullet):
                         if match.group(1) == "hl-page":
                             hl_page = match.group(2)
                         elif match.group(1) == "id":
                             id_bullet = match.group(2)
                         elif match.group(1) == "hl-stamp":
                             hl_stamp = match.group(2)
+
                     if all([hl_page, id_bullet, hl_stamp]):
                         formatted_bullet = f"{hl_page.strip()}_{id_bullet.strip()}_{hl_stamp.strip()}"
                         self.formatted_bullets.append(formatted_bullet)

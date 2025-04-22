@@ -5,7 +5,6 @@ Enums for the Logseq Analyzer.
 from enum import Enum
 
 
-
 class Moved(Enum):
     """Moved files and directories in the Logseq Analyzer."""
 
@@ -14,11 +13,25 @@ class Moved(Enum):
     BAK = "moved_bak"
 
 
+class Format(Enum):
+    """File formats used in the Logseq Analyzer."""
+
+    TXT = ".txt"
+    JSON = ".json"
+    CSV = ".csv"
+    TSV = ".tsv"
+    HTML = ".html"
+    MD = ".md"
+    PNG = ".png"
+    JPG = ".jpg"
+    JPEG = ".jpeg"
+    GIF = ".gif"
+    SVG = ".svg"
+
+
 class Core(Enum):
     """Core components of the Logseq Analyzer."""
 
-    FMT_TXT = ".txt"
-    FMT_JSON = ".json"
     HLS_PREFIX = "hls__"
     NS_SEP = "/"
     NS_FILE_SEP_LEGACY = "%2F"
