@@ -4,7 +4,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import Output, Criteria
+from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
 from .index import FileIndex
 
@@ -29,24 +29,6 @@ class LogseqGraph:
             file.init_file_data()
             file.process_content_data()
             index.add(file)
-
-    def update_graph_files_with_cache(self):
-        """Update the graph files with cached data."""
-        index = FileIndex()
-        cache = Cache()
-        meta_data = cache.get("META_REPORTS", {})
-
-        cached_files = meta_data.get(Output.FILES.value, [])
-        cached_files = {file for file in cached_files if file not in index.files}
-        index.files.update(cached_files)
-
-        cached_hash_to_file_map = meta_data.get(Output.HASH_TO_FILE.value, {})
-        cached_hash_to_file_map.update(index.hash_to_file)
-        index.hash_to_file = cached_hash_to_file_map
-
-        cached_dangling_links = meta_data.get(Output.DANGLING_LINKS.value, set())
-        graph_dangling_links = {d for d in self.dangling_links if d not in cached_dangling_links}
-        self.dangling_links = graph_dangling_links.union(cached_dangling_links)
 
     def post_processing_content(self):
         """Post-process the content data for all files."""

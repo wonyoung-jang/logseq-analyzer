@@ -6,8 +6,6 @@ from pathlib import Path
 from typing import List, Tuple
 import logging
 
-from requests import get
-
 from .analysis.index import FileIndex
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
@@ -180,7 +178,6 @@ def setup_logseq_graph() -> LogseqGraph:
     """Setup the Logseq graph."""
     graph = LogseqGraph()
     graph.process_graph_files()
-    graph.update_graph_files_with_cache()
     graph.post_processing_content()
     graph.process_summary_data()
     logging.debug("run_app: setup_logseq_graph")
@@ -266,6 +263,7 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
     """Get metadata reports from the graph and configuration."""
     index = FileIndex()
     meta_reports = {
+        "File_Index": index,
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.CONFIG_DATA.value: graph_config.ls_config,
         Output.DANGLING_LINKS.value: graph.dangling_links,

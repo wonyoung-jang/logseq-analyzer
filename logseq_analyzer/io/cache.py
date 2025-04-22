@@ -7,8 +7,9 @@ Imported once in app.py
 import logging
 import shelve
 
+from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig
-from ..utils.enums import Output, OutputDir
+from ..utils.enums import OutputDir
 from ..utils.helpers import iter_files, singleton
 from .filesystem import CacheFile, GraphDirectory
 
@@ -43,21 +44,37 @@ class Cache:
 
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""
-        meta_data = self.cache.setdefault(OutputDir.META.value, {})
-        meta_data.setdefault(Output.HASH_TO_FILE.value, {})
-        for hash_ in self.yield_deleted_files():
-            meta_data[Output.HASH_TO_FILE.value].pop(hash_, None)
-        self.cache[OutputDir.META.value][Output.HASH_TO_FILE.value] = meta_data[Output.HASH_TO_FILE.value]
+        analysis_keys = [
+            OutputDir.JOURNALS.value,
+            OutputDir.SUMMARY_FILES.value,
+            OutputDir.SUMMARY_CONTENT.value,
+            OutputDir.NAMESPACES.value,
+            OutputDir.MOVED_FILES.value,
+        ]
+        for key in analysis_keys:
+            if self.get(key, {}):
+                self.cache[key] = {}
 
-    def yield_deleted_files(self):
+        index = None
+        if meta := self.get(OutputDir.META.value, {}):
+            if meta.get("File_Index", {}):
+                index: FileIndex = meta["File_Index"]
+
+        if index:
+            for file in self.yield_deleted_files(index):
+                if file not in index.files:
+                    continue
+                index.files.remove(file)
+                logging.debug("File removed from index: %s", file.file_path)
+            self.cache[OutputDir.META.value]["File_Index"] = index
+
+    def yield_deleted_files(self, index: FileIndex):
         """Yield deleted files from the cache."""
-        meta_data = self.cache.setdefault(OutputDir.META.value, {})
-        for hash_, file in meta_data[Output.HASH_TO_FILE.value].items():
+        for file in index.files:
             if file.file_path.exists():
                 continue
-
             logging.debug("File deleted: %s", file.file_path)
-            yield hash_
+            yield file
 
     def iter_modified_files(self):
         """Get the modified files from the cache."""
