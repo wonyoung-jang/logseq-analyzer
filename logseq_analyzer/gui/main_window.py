@@ -123,20 +123,26 @@ class LogseqAnalyzerGUI(QMainWindow):
         graph_folder_label = QLabel("Logseq Graph Folder (Required):")
         graph_folder_button = QPushButton("Browse")
         graph_folder_button.clicked.connect(self.select_graph_folder)
+        graph_folder_clear_button = QPushButton("Clear")
+        graph_folder_clear_button.clicked.connect(lambda: self.graph_folder_input.clear())
         graph_folder_hbox = QWidget()
         graph_folder_layout = QHBoxLayout(graph_folder_hbox)
         graph_folder_layout.addWidget(self.graph_folder_input)
         graph_folder_layout.addWidget(graph_folder_button)
+        graph_folder_layout.addWidget(graph_folder_clear_button)
         form_layout.addRow(graph_folder_label, graph_folder_hbox)
 
         # --- Global Config File Input ---
         global_config_label = QLabel("Logseq Global Config File (Optional):")
         global_config_button = QPushButton("Browse")
         global_config_button.clicked.connect(self.select_global_config_file)
+        global_config_clear_button = QPushButton("Clear")
+        global_config_clear_button.clicked.connect(lambda: self.global_config_input.clear())
         global_config_hbox = QWidget()
         global_config_layout = QHBoxLayout(global_config_hbox)
         global_config_layout.addWidget(self.global_config_input)
         global_config_layout.addWidget(global_config_button)
+        global_config_layout.addWidget(global_config_clear_button)
         form_layout.addRow(global_config_label, global_config_hbox)
 
         # --- Report Format Dropdown ---
