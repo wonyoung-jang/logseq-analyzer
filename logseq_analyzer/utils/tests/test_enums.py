@@ -111,11 +111,13 @@ def test_output_values():
         "GRAPH_CONTENT": "content_bullets",
         "GRAPH_DATA": "data",
         "FILES": "files",
+        "FILE_INDEX": "file_index",
         "HASH_TO_FILE": "hash_to_file",
         "NAME_TO_FILES": "name_to_files",
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "MISSING_KEYS": "missing_keys",
+        "MOD_TRACKER": "mod_tracker",
         "MOVED_FILES": "moved_files",
         "NAMESPACE_DATA": "namespace_data",
         "NAMESPACE_DETAILS": "namespace_details",
@@ -132,7 +134,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 31
+    assert len(Output) == 33
 
 
 # SummaryFiles

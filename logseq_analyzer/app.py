@@ -377,7 +377,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
         shelve_output_data = zip(output_subdirectories, data_reports)
         for output_subdir, data_report in shelve_output_data:
             cache.update({output_subdir.value: data_report})
-        cache.update({"File_Index": FileIndex()})
+        cache.update({Output.FILE_INDEX.value: FileIndex()})
     except Exception as e:
         logging.error("Error updating cache: %s", e)
         raise RuntimeError("Failed to update cache") from e
@@ -387,7 +387,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
 def write_reports(cache: Cache):
     """Write reports to the specified output directories."""
     for output_dir, reports in cache.cache.items():
-        if output_dir in ("mod_tracker", "File_Index"):
+        if output_dir in (Output.MOD_TRACKER.value, Output.FILE_INDEX.value):
             continue
 
         for name, report in reports.items():

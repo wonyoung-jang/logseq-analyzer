@@ -9,7 +9,7 @@ import shelve
 
 from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig
-from ..utils.enums import OutputDir
+from ..utils.enums import Output, OutputDir
 from ..utils.helpers import iter_files, singleton
 from .filesystem import CacheFile, GraphDirectory
 
@@ -55,8 +55,8 @@ class Cache:
             if key in self.cache:
                 del self.cache[key]
 
-        if "File_Index" in self.cache:
-            index: FileIndex = self.cache["File_Index"]
+        if Output.FILE_INDEX.value in self.cache:
+            index: FileIndex = self.cache[Output.FILE_INDEX.value]
         else:
             return
 
@@ -67,7 +67,7 @@ class Cache:
         for file in files_to_remove:
             index.remove(file)
 
-        self.cache["File_Index"] = index
+        self.cache[Output.FILE_INDEX.value] = index
 
     def yield_deleted_files(self, index: FileIndex):
         """Yield deleted files from the cache."""
@@ -78,7 +78,7 @@ class Cache:
 
     def iter_modified_files(self):
         """Get the modified files from the cache."""
-        mod_tracker = self.cache.setdefault("mod_tracker", {})
+        mod_tracker = self.cache.setdefault(Output.MOD_TRACKER.value, {})
         graph_directory = GraphDirectory()
         graph_dir = graph_directory.path
         ls_analyzer_config = LogseqAnalyzerConfig()
@@ -91,4 +91,4 @@ class Cache:
                 mod_tracker[str_path] = curr_date_mod
                 logging.debug("File modified: %s", path)
                 yield path
-        self.cache["mod_tracker"] = mod_tracker
+        self.cache[Output.MOD_TRACKER.value] = mod_tracker
