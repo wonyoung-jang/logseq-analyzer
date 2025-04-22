@@ -23,8 +23,6 @@ from ..utils.patterns import ContentPatterns
 from .graph import LogseqGraph
 from .index import FileIndex
 
-NS_SEP = Core.NS_SEP.value
-
 
 @singleton
 class LogseqNamespaces:
@@ -132,7 +130,7 @@ class LogseqNamespaces:
                 level = int(key.rsplit(" ", maxsplit=1)[-1])
                 unique_pages = set()
                 for page in entries:
-                    parts = page.split(NS_SEP)
+                    parts = page.split(Core.NS_SEP.value)
                     up_to_level = parts[:level]
-                    unique_pages.add(NS_SEP.join(up_to_level))
+                    unique_pages.add(Core.NS_SEP.value.join(up_to_level))
                 self.conflicts_parent_unique[key] = unique_pages

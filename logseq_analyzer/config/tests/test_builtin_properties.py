@@ -1,5 +1,5 @@
 import pytest
-from ..builtin_properties import LogseqBuiltInProperties
+from ..builtin_properties import LogseqBuiltInProperties, split_builtin_user_properties
 
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def test_split_builtin_user_properties(builtin_properties):
         "user-defined-property-1",
         "user-defined-property-2",
     ]
-    result = builtin_properties.split_builtin_user_properties(properties)
+    result = split_builtin_user_properties(properties)
     assert result["built_in"] == ["alias", "custom-id"], "Built-in properties should be correctly identified."
     assert result["user_props"] == [
         "user-defined-property-1",

@@ -20,21 +20,25 @@ class LogseqBuiltInProperties:
 
     def __post_init__(self):
         """Build the built-in properties set."""
-        properties_str = LogseqAnalyzerConfig().config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
+        ls_analyzer_config = LogseqAnalyzerConfig()
+        properties_str = ls_analyzer_config.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
         self.built_in_properties = frozenset(properties_str.split(","))
 
-    def split_builtin_user_properties(self, properties: list) -> Dict[str, List[str]]:
-        """
-        Helper function to split properties into built-in and user-defined.
 
-        Args:
-            properties (list): List of properties to split.
+def split_builtin_user_properties(properties: List) -> Dict[str, List[str]]:
+    """
+    Helper function to split properties into built-in and user-defined.
 
-        Returns:
-            Dict[str, List[str]]: Dictionary containing built-in and user-defined properties.
-        """
-        properties_dict = {
-            "built_in": [prop for prop in properties if prop in self.built_in_properties],
-            "user_props": [prop for prop in properties if prop not in self.built_in_properties],
-        }
-        return properties_dict
+    Args:
+        properties (list): List of properties to split.
+
+    Returns:
+        Dict[str, List[str]]: Dictionary containing built-in and user-defined properties.
+    """
+    built_ins = LogseqBuiltInProperties()
+    built_in_props = built_ins.built_in_properties
+    properties_dict = {
+        "built_in": [prop for prop in properties if prop in built_in_props],
+        "user_props": [prop for prop in properties if prop not in built_in_props],
+    }
+    return properties_dict

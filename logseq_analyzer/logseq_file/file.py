@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import uuid
 
-from ..config.builtin_properties import LogseqBuiltInProperties
-from ..utils.enums import Criteria, Core
+from ..config.builtin_properties import split_builtin_user_properties
+from ..utils.enums import Criteria
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import (
     AdvancedCommandPatterns,
@@ -22,8 +22,6 @@ from ..utils.patterns import (
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
-
-NS_SEP = Core.NS_SEP.value
 
 
 class LogseqFile:
@@ -115,8 +113,8 @@ class LogseqFile:
             page_properties = find_all_lower(ContentPatterns().property, self.primary_bullet)
             self.content = "\n".join(self.content_bullets)
         block_properties = find_all_lower(ContentPatterns().property, self.content)
-        page_props = LogseqBuiltInProperties().split_builtin_user_properties(page_properties)
-        block_props = LogseqBuiltInProperties().split_builtin_user_properties(block_properties)
+        page_props = split_builtin_user_properties(page_properties)
+        block_props = split_builtin_user_properties(block_properties)
 
         # Process code blocks
         code_pattern = find_all_lower(CodePatterns().all, self.content)

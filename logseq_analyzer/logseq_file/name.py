@@ -15,9 +15,6 @@ from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
 
 
-NS_SEP = Core.NS_SEP.value
-
-
 @dataclass
 class LogseqFilename:
     """Class for processing Logseq filenames based on their parent directory."""
@@ -60,9 +57,9 @@ class LogseqFilename:
         if self.parent == ls_analyzer_config.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
-            self.name = unquote(self.name).replace(ns_file_sep, NS_SEP)
+            self.name = unquote(self.name).replace(ns_file_sep, Core.NS_SEP.value)
 
-        self.is_namespace = NS_SEP in self.name
+        self.is_namespace = Core.NS_SEP.value in self.name
         self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
 
     def process_logseq_journal_key(self):
@@ -112,7 +109,7 @@ class LogseqFilename:
         if not self.is_namespace:
             return
 
-        ns_parts_list = self.name.split(NS_SEP)
+        ns_parts_list = self.name.split(Core.NS_SEP.value)
         ns_level = len(ns_parts_list)
         ns_root = ns_parts_list[0]
         namespace_name_data = {
@@ -120,7 +117,7 @@ class LogseqFilename:
             "ns_level": ns_level,
             "ns_root": ns_root,
             "ns_parent": ns_parts_list[-2] if ns_level > 2 else ns_root,
-            "ns_parent_full": NS_SEP.join(ns_parts_list[:-1]),
+            "ns_parent_full": Core.NS_SEP.value.join(ns_parts_list[:-1]),
             "ns_stem": ns_parts_list[-1],
         }
 
