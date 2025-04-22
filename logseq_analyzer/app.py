@@ -263,7 +263,6 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
     """Get metadata reports from the graph and configuration."""
     index = FileIndex()
     meta_reports = {
-        "File_Index": index,
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.CONFIG_DATA.value: graph_config.ls_config,
         Output.DANGLING_LINKS.value: graph.dangling_links,
@@ -378,6 +377,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
         shelve_output_data = zip(output_subdirectories, data_reports)
         for output_subdir, data_report in shelve_output_data:
             cache.update({output_subdir.value: data_report})
+        cache.update({"File_Index": FileIndex()})
     except Exception as e:
         logging.error("Error updating cache: %s", e)
         raise RuntimeError("Failed to update cache") from e
@@ -387,7 +387,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
 def write_reports(cache: Cache):
     """Write reports to the specified output directories."""
     for output_dir, reports in cache.cache.items():
-        if output_dir in ("mod_tracker"):
+        if output_dir in ("mod_tracker", "File_Index"):
             continue
 
         for name, report in reports.items():

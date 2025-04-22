@@ -52,33 +52,33 @@ class Cache:
             OutputDir.MOVED_FILES.value,
         ]
         for key in analysis_keys:
-            if self.get(key, {}):
-                self.cache[key] = {}
+            if key in self.cache:
+                del self.cache[key]
 
-        index = None
-        if meta := self.get(OutputDir.META.value, {}):
-            if meta.get("File_Index", {}):
-                index: FileIndex = meta["File_Index"]
+        if "File_Index" in self.cache:
+            index: FileIndex = self.cache["File_Index"]
+        else:
+            return
 
-        if index:
-            for file in self.yield_deleted_files(index):
-                if file not in index.files:
-                    continue
-                index.files.remove(file)
-                logging.debug("File removed from index: %s", file.file_path)
-            self.cache[OutputDir.META.value]["File_Index"] = index
+        files_to_remove = set()
+        for file in self.yield_deleted_files(index):
+            files_to_remove.add(file)
+            logging.debug("File removed from index: %s", file.file_path)
+        for file in files_to_remove:
+            index.remove(file)
+
+        self.cache["File_Index"] = index
 
     def yield_deleted_files(self, index: FileIndex):
         """Yield deleted files from the cache."""
         for file in index.files:
-            if file.file_path.exists():
-                continue
-            logging.debug("File deleted: %s", file.file_path)
-            yield file
+            if not file.file_path.exists():
+                logging.debug("File deleted: %s", file.file_path)
+                yield file
 
     def iter_modified_files(self):
         """Get the modified files from the cache."""
-        mod_tracker = self.cache.get("mod_tracker", {})
+        mod_tracker = self.cache.setdefault("mod_tracker", {})
         graph_directory = GraphDirectory()
         graph_dir = graph_directory.path
         ls_analyzer_config = LogseqAnalyzerConfig()

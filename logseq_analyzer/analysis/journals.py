@@ -35,12 +35,16 @@ class LogseqJournals:
         """
         Process journal keys to build the complete timeline and detect missing entries.
         """
-        py_page_base_format = LogseqJournalFormats().py_page_format
-        for dateobj in self.process_journal_keys_to_datetime(LogseqGraph().dangling_links, py_page_base_format):
+        ls_journal_formats = LogseqJournalFormats()
+        py_page_base_format = ls_journal_formats.py_page_format
+        graph = LogseqGraph()
+        dangling_links = graph.dangling_links
+        for dateobj in self.process_journal_keys_to_datetime(dangling_links, py_page_base_format):
             self.dangling_journals.append(dateobj)
         self.dangling_journals.sort()
 
-        journal_keys = LogseqFileSummarizer().subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
+        summaries = LogseqFileSummarizer()
+        journal_keys = summaries.subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
         for dateobj in self.process_journal_keys_to_datetime(journal_keys, py_page_base_format):
             self.processed_keys.append(dateobj)
         self.processed_keys.sort()

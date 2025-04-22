@@ -2,7 +2,7 @@
 Logseq File Summarizer Module
 """
 
-from typing import Dict
+from typing import Dict, List
 
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
@@ -17,7 +17,7 @@ class LogseqFileSummarizer:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: Dict[str, dict] = {}
 
-    def generate_summary(self):
+    def generate_summary(self) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         index = FileIndex()
         summary_categories = {
@@ -49,19 +49,18 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_BRANCH: {"node_type": "branch"},
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
+        subsets = {}
         for output_name, criteria in summary_categories.items():
-            self.subsets[output_name.value] = index.list_file_names_with_keys_and_values(**criteria)
+            subsets[output_name.value] = index.list_file_names_with_keys_and_values(**criteria)
+        subsets[SummaryFiles.FILE_EXTS.value] = self.process_file_extensions(index)
+        self.subsets.update(subsets)
 
-        self.process_file_extensions()
-
-    def process_file_extensions(self):
+    def process_file_extensions(self, index: FileIndex) -> Dict[str, List[str]]:
         """Process file extensions and create subsets for each."""
-        index = FileIndex()
-        file_extension_dict = {}
-        for file in index.files:
-            ext = file.path.suffix
-            output_name = f"all {ext}s"
-            if output_name not in file_extension_dict:
-                criteria = {"suffix": ext}
-                file_extension_dict[output_name] = index.list_file_names_with_keys_and_values(**criteria)
-        self.subsets[SummaryFiles.FILE_EXTS.value] = file_extension_dict
+        file_extension_dict: Dict[str, List[str]] = {}
+        unique_exts = {file.path.suffix for file in index.files if file.path.suffix}
+        for ext in unique_exts:
+            subset_name = f"all {ext}s"
+            criteria = {"suffix": ext}
+            file_extension_dict[subset_name] = index.list_file_names_with_keys_and_values(**criteria)
+        return file_extension_dict
