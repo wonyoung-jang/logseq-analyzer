@@ -3,8 +3,8 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from pathlib import Path
-import logging
 from typing import List, Tuple
+import logging
 
 from .analysis.index import FileIndex
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
@@ -269,10 +269,10 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.DANGLING_LINKS.value: graph.dangling_links,
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
-        # Output.GRAPH_DATA.value: graph.data,
         Output.FILES.value: index.files,
         Output.HASH_TO_FILE.value: index.hash_to_file,
         Output.NAME_TO_FILES.value: index.name_to_files,
+        # Output.GRAPH_DATA.value: graph.data,
     }
     # if args.write_graph:
     #     meta_reports[Output.GRAPH_CONTENT.value] = graph.content_bullets
@@ -358,7 +358,8 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
         for output_subdir, data_report in shelve_output_data:
             cache.update({output_subdir.value: data_report})
     except Exception as e:
-        logging.error("Error updating cache")
+        logging.error("Error updating cache: %s", e)
+        raise RuntimeError("Failed to update cache") from e
     logging.debug("run_app: update_cache")
 
 
