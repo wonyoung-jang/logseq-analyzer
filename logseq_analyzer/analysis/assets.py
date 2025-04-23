@@ -17,6 +17,18 @@ class LogseqAssets:
         self.backlinked = []
         self.not_backlinked = []
 
+    def __repr__(self):
+        """Return a string representation of the LogseqAssets instance."""
+        return "LogseqAssets()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqAssets instance."""
+        return "LogseqAssets"
+
+    def __len__(self):
+        """Return the number of assets."""
+        return len(self.backlinked) + len(self.not_backlinked)
+
     def handle_assets(self):
         """Handle assets for the Logseq Analyzer."""
         index = FileIndex()
@@ -59,6 +71,18 @@ class LogseqAssetsHls:
         self.backlinked = set()
         self.formatted_bullets = set()
         self.not_backlinked = set()
+
+    def __repr__(self):
+        """Return a string representation of the LogseqAssetsHls instance."""
+        return "LogseqAssetsHls()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqAssetsHls instance."""
+        return "LogseqAssetsHls"
+
+    def __len__(self):
+        """Return the number of hls assets found."""
+        return len(self.formatted_bullets)
 
     def get_asset_files(self):
         """Retrieve asset files based on specific criteria."""
