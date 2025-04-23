@@ -38,6 +38,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         super().__init__()
 
         self.graph_folder_input = QLineEdit(readOnly=True)
+        self.graph_folder_input.textChanged.connect(self.force_enable_graph_cache)
         self.global_config_input = QLineEdit(readOnly=True)
         self.report_format_combo = QComboBox()
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
@@ -100,6 +101,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.output_button.setEnabled(True)
             self.delete_button.setEnabled(True)
             self.log_button.setEnabled(True)
+            self.graph_cache_checkbox.setEnabled(True)
 
     def setup_ui(self, main_layout):
         """Sets up the main user interface layout and elements."""
@@ -161,6 +163,11 @@ class LogseqAnalyzerGUI(QMainWindow):
         checkboxes_layout.addWidget(self.write_graph_checkbox)
         checkboxes_layout.addWidget(self.graph_cache_checkbox)
         return checkboxes_layout
+
+    def force_enable_graph_cache(self):
+        """Force enable and check the graph cache checkbox when the graph folder changes."""
+        self.graph_cache_checkbox.setChecked(True)
+        self.graph_cache_checkbox.setEnabled(False)
 
     def create_progress_bars_layout(self) -> QFormLayout:
         """Creates and returns the layout for progress bars."""
