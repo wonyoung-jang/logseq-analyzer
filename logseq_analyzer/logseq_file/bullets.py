@@ -14,6 +14,7 @@ class LogseqBullets:
     """LogseqBullets class"""
 
     file_path: Path
+
     content: str = ""
     primary_bullet: str = ""
     all_bullets: list = field(default_factory=list)
@@ -34,7 +35,7 @@ class LogseqBullets:
         self.is_primary_bullet_page_properties()
 
     def __repr__(self):
-        return f"LogseqBullets({self.file_path})"
+        return f'LogseqBullets(file_path="{self.file_path}")'
 
     def get_content(self):
         """Read the text content of a file."""
@@ -72,14 +73,12 @@ class LogseqBullets:
                     self.bullet_count += 1
 
     def get_bullet_density(self):
-        """ "Calculate bullet density: ~Char count / Bullet count"""
+        """Calculate bullet density: ~Char count / Bullet count"""
         if self.bullet_count:
             self.bullet_density = round(self.char_count / self.bullet_count, 2)
 
     def is_primary_bullet_page_properties(self):
-        """
-        Process primary bullet data.
-        """
+        """Process primary bullet data."""
         bullet = self.primary_bullet.strip()
         if bullet and not bullet.startswith("#"):
             self.has_page_properties = True

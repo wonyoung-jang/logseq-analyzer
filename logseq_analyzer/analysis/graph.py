@@ -29,7 +29,6 @@ class LogseqGraph:
             file.init_file_data()
             file.process_content_data()
             index.add(file)
-            print(file)
 
     def post_processing_content(self):
         """Post-process the content data for all files."""
@@ -112,8 +111,10 @@ class LogseqGraph:
         """Process summary data for each file based on metadata and content analysis."""
         index = FileIndex()
         for file in index.files:
-            file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
-            file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
+            if not file.is_backlinked:
+                file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
+            if not file.is_backlinked_by_ns_only:
+                file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
             if file.is_backlinked and file.is_backlinked_by_ns_only:
                 file.is_backlinked = False
             if file.file_type in ("journal", "page"):

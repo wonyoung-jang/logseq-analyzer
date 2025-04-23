@@ -10,9 +10,7 @@ from .index import FileIndex
 
 @singleton
 class LogseqAssets:
-    """
-    Class to handle assets in Logseq.
-    """
+    """Class to handle assets in Logseq."""
 
     def __init__(self):
         """Initialize the LogseqAssets instance."""
@@ -40,11 +38,10 @@ class LogseqAssets:
         self.not_backlinked = index.list_files_with_keys_and_values(**not_backlinked_kwargs)
 
     def update_asset_backlink(self, file_name, asset_mentions, asset_file):
-        """
-        Update the backlink status of an asset file based on mentions in another file.
-        """
+        """Update the backlink status of an asset file based on mentions in another file."""
         if not asset_mentions:
             return
+
         for asset_mention in asset_mentions:
             if asset_file.path.name in asset_mention or file_name in asset_mention:
                 asset_file.is_backlinked = True
@@ -53,9 +50,7 @@ class LogseqAssets:
 
 @singleton
 class LogseqAssetsHls:
-    """
-    Class to handle HLS assets in Logseq.
-    """
+    """Class to handle HLS assets in Logseq."""
 
     def __init__(self):
         """Initialize the LogseqAssetsHls instance."""
@@ -100,27 +95,15 @@ class LogseqAssetsHls:
                     self.formatted_bullets.add(formatted_bullet)
 
     def check_backlinks(self):
-        """
-        Check for backlinks in the HLS assets.
-        """
-        set_asset_names = self.asset_names  # To check
-        self.backlinked = set_asset_names.intersection(self.asset_names)
-        self.not_backlinked = set_asset_names.difference(self.formatted_bullets)
+        """Check for backlinks in the HLS assets."""
+        self.backlinked = self.asset_names.intersection(self.formatted_bullets)
+        self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
         self.update_sub_asset_files()
 
     def update_sub_asset_files(self):
-        """
-        Update the asset files with backlink status and file type.
-        """
-        index = FileIndex()
-        criteria = {"file_type": "sub_asset"}
-        asset_files = index.list_files_with_keys_and_values(**criteria)
-        print(len(asset_files), "before")
+        """Update the asset files with backlink status and file type."""
         for name in self.backlinked:
             self.asset_mapping[name].is_backlinked = True
             self.asset_mapping[name].file_type = "asset"
         for name in self.not_backlinked:
-            self.asset_mapping[name].is_backlinked = False
             self.asset_mapping[name].file_type = "asset"
-        asset_files = index.list_files_with_keys_and_values(**criteria)
-        print(len(asset_files), "after")

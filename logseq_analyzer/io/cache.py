@@ -55,10 +55,17 @@ class Cache:
             if key in self.cache:
                 self.cache[key] = {}
 
-        if Output.FILE_INDEX.value in self.cache:
-            index: FileIndex = self.cache[Output.FILE_INDEX.value]
-        else:
-            return
+        index_keys = [
+            Output.FILES.value,
+            Output.HASH_TO_FILE.value,
+            Output.NAME_TO_FILES.value,
+            Output.PATH_TO_FILE.value,
+        ]
+        index: FileIndex = FileIndex()
+        if OutputDir.META.value in self.cache:
+            for key in index_keys:
+                if key in self.cache[OutputDir.META.value]:
+                    setattr(index, key, self.cache[OutputDir.META.value][key])
 
         files_to_remove = set()
         for file in self.yield_deleted_files(index):
@@ -66,8 +73,6 @@ class Cache:
             logging.debug("File removed from index: %s", file.file_path)
         for file in files_to_remove:
             index.remove(file)
-
-        self.cache[Output.FILE_INDEX.value] = index
 
     def yield_deleted_files(self, index: FileIndex):
         """Yield deleted files from the cache."""

@@ -13,6 +13,7 @@ class LogseqFilestats:
     """Initialize the LogseqFilestats class."""
 
     file_path: Path
+
     size: int = 0
     has_content: bool = False
     time_existed: float = 0.0
@@ -44,4 +45,4 @@ class LogseqFilestats:
         self.date_modified = date_modified.isoformat()
 
     def __repr__(self):
-        return f"LogseqFilestats({self.file_path})"
+        return f'LogseqFilestats(file_path="{self.file_path}")'

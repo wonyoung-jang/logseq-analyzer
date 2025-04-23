@@ -39,7 +39,7 @@ from .io.filesystem import (
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
-from .utils.enums import Phase, Output, SummaryFiles, OutputDir, Moved
+from .utils.enums import Phase, Output, OutputDir, Moved
 
 
 class GUIInstanceDummy:
@@ -269,6 +269,7 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
         Output.FILES.value: index.files,
         Output.HASH_TO_FILE.value: index.hash_to_file,
         Output.NAME_TO_FILES.value: index.name_to_files,
+        Output.PATH_TO_FILE.value: index.path_to_file,
         Output.GRAPH_DATA.value: get_graph_data(),
     }
     if args.write_graph:
@@ -333,10 +334,16 @@ def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict:
 def get_moved_files_reports(ls_file_mover: LogseqFileMover, ls_assets: LogseqAssets) -> dict:
     """Get reports for moved files and assets."""
     logging.debug("run_app: get_moved_files_reports")
+    hls_assets = LogseqAssetsHls()
     return {
         Output.MOVED_FILES.value: ls_file_mover.moved_files,
         Output.ASSETS_BACKLINKED.value: ls_assets.backlinked,
         Output.ASSETS_NOT_BACKLINKED.value: ls_assets.not_backlinked,
+        "asset_mapping": hls_assets.asset_mapping,
+        "asset_names": hls_assets.asset_names,
+        "formatted_bullets": hls_assets.formatted_bullets,
+        "not_backlinked": hls_assets.not_backlinked,
+        "backlinked": hls_assets.backlinked,
     }
 
 
@@ -375,7 +382,6 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
         shelve_output_data = zip(output_subdirectories, data_reports)
         for output_subdir, data_report in shelve_output_data:
             cache.update({output_subdir.value: data_report})
-        cache.update({Output.FILE_INDEX.value: FileIndex()})
     except Exception as e:
         logging.error("Error updating cache: %s", e)
         raise RuntimeError("Failed to update cache") from e

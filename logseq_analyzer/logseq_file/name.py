@@ -15,11 +15,15 @@ from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
 
 
+DATE_ORDINAL_SUFFIX = "o"
+
+
 @dataclass
 class LogseqFilename:
     """Class for processing Logseq filenames based on their parent directory."""
 
     file_path: Path
+
     original_name: str = ""
     name: str = ""
     parent: str = ""
@@ -36,7 +40,7 @@ class LogseqFilename:
         self.original_name = self.file_path.stem
         self.name = self.file_path.stem.lower()
         self.parent = self.file_path.parent.name.lower()
-        self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else None
+        self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else ""
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
         self.determine_file_type()
@@ -45,7 +49,7 @@ class LogseqFilename:
         self.get_namespace_name_data()
 
     def __repr__(self):
-        return f"LogseqFilename({self.file_path})"
+        return f'LogseqFilename(file_path="{self.file_path}")'
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
@@ -64,23 +68,23 @@ class LogseqFilename:
 
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
+        ljf = LogseqJournalFormats()
+        py_file_format = ljf.py_file_format
+        py_page_format = ljf.py_page_format
         try:
-            date_object = datetime.strptime(self.name, LogseqJournalFormats().py_file_format)
-            page_title_base = date_object.strftime(LogseqJournalFormats().py_page_format).lower()
-            if "o" in LogseqGraphConfig().ls_config.get(":journal/page-title-format"):
+            date_object = datetime.strptime(self.name, py_file_format)
+            page_title_base = date_object.strftime(py_page_format).lower()
+            lgc = LogseqGraphConfig()
+            ls_config = lgc.ls_config
+            if DATE_ORDINAL_SUFFIX in ls_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
-                page_title = page_title_base.replace(f"{day_number}", day_with_ordinal, 1)
+                page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
             else:
                 page_title = page_title_base
             self.name = page_title.replace("'", "")
         except ValueError as e:
-            logging.warning(
-                "Failed to parse date from key '%s', format `%s`: %s",
-                self.name,
-                LogseqJournalFormats().py_page_format,
-                e,
-            )
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", self.name, py_page_format, e)
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""

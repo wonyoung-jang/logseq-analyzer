@@ -124,6 +124,7 @@ def test_output_values():
         "NAMESPACE_HIERARCHY": "namespace_hierarchy",
         "NAMESPACE_PARTS": "namespace_parts",
         "NAMESPACE_QUERIES": "namespace_queries",
+        "PATH_TO_FILE": "path_to_file",
         "PROCESSED_KEYS": "processed_keys",
         "TIMELINE_STATS": "timeline_stats",
         "UNIQUE_NAMESPACE_PARTS": "unique_namespace_parts",
@@ -134,7 +135,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 33
+    assert len(Output) == 34
 
 
 # SummaryFiles

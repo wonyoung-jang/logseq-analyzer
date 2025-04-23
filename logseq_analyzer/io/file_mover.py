@@ -36,11 +36,8 @@ class LogseqFileMover:
         if ls_assets.not_backlinked:
             if args.move_unlinked_assets:
                 self.move_unlinked_assets()
-                ls_assets.not_backlinked = [asset.path.name for asset in ls_assets.not_backlinked]
                 return ls_assets.not_backlinked
-            ls_assets.not_backlinked = ["=== Simulated only ==="] + [
-                asset.path.name for asset in ls_assets.not_backlinked
-            ]
+            ls_assets.not_backlinked.insert(0, "=== Simulated only ===")
             return ls_assets.not_backlinked
         return []
 

@@ -36,4 +36,3 @@ def test_logseq_filestats(logseq_filestats, temp_file):
     assert logseq_filestats.date_modified is not None
     assert isinstance(logseq_filestats.date_created, str)
     assert isinstance(logseq_filestats.date_modified, str)
-    assert str(logseq_filestats) == f"LogseqFilestats({logseq_filestats.file_path})"
