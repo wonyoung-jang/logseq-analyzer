@@ -21,13 +21,17 @@ class FileIndex:
         self.name_to_files: Dict[str, List[LogseqFile]] = defaultdict(list)
         self.path_to_file: Dict[Path, LogseqFile] = {}
 
+    def __repr__(self):
+        """Return a string representation of the FileIndex."""
+        return "FileIndex()"
+
+    def __str__(self):
+        """Return a string representation of the FileIndex."""
+        return "FileIndex"
+
     def __len__(self):
         """Return the number of files in the index."""
         return len(self.files)
-
-    def __contains__(self, file):
-        """Check if a file is in the index."""
-        return file in self.files
 
     def add(self, file: LogseqFile):
         """Add a file to the index."""

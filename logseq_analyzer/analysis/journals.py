@@ -15,14 +15,10 @@ from .summary_files import LogseqFileSummarizer
 
 @singleton
 class LogseqJournals:
-    """
-    LogseqJournals class to handle journal files and their processing.
-    """
+    """LogseqJournals class to handle journal files and their processing."""
 
     def __init__(self):
-        """
-        Initialize the LogseqJournals class.
-        """
+        """Initialize the LogseqJournals class."""
         self.dangling_journals = []
         self.processed_keys = []
         self.complete_timeline = []
@@ -31,10 +27,20 @@ class LogseqJournals:
         self.dangling_journals_past = []
         self.dangling_journals_future = []
 
+    def __repr__(self):
+        """Return a string representation of the LogseqJournals class."""
+        return "LogseqJournals()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqJournals class."""
+        return "LogseqJournals"
+
+    def __len__(self):
+        """Return the number of processed keys."""
+        return len(self.complete_timeline)
+
     def process_journals_timelines(self) -> None:
-        """
-        Process journal keys to build the complete timeline and detect missing entries.
-        """
+        """Process journal keys to build the complete timeline and detect missing entries."""
         ls_journal_formats = LogseqJournalFormats()
         py_page_base_format = ls_journal_formats.py_page_format
         graph = LogseqGraph()

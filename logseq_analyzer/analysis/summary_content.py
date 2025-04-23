@@ -17,6 +17,18 @@ class LogseqContentSummarizer:
         """Initialize the LogseqContentSummarizer instance."""
         self.subsets = {}
 
+    def __repr__(self):
+        """Return a string representation of the LogseqContentSummarizer instance."""
+        return "LogseqContentSummarizer()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqContentSummarizer instance."""
+        return "LogseqContentSummarizer"
+
+    def __len__(self):
+        """Return the number of subsets."""
+        return len(self.subsets)
+
     def generate_summary(self):
         """Generate summary subsets for content data in the Logseq graph."""
         for criteria in list(Criteria):

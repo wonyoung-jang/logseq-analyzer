@@ -2,10 +2,10 @@
 Config class for loading and managing configuration files.
 """
 
-import logging
 from pathlib import Path
 from typing import Dict
 import configparser
+import logging
 
 from ..utils.helpers import singleton
 from ..utils.enums import Core
@@ -61,16 +61,12 @@ class LogseqAnalyzerConfig:
             return dict(self.config[section])
         return {}
 
-    def write(self, file):
-        """Write the config to a file-like object"""
-        self.config.write(file)
-
     def write_to_file(self, output_path: str = ""):
         """Write the config to a file"""
         if not output_path:
             output_path = f"{Path('configuration')}/user_config.ini"
-        with open(output_path, "w", encoding="utf-8") as config_file:
-            self.write(config_file)
+        with open(output_path, "w", encoding="utf-8") as file:
+            self.config.write(file)
 
     def set_logseq_config_edn_data(self, ls_config: Dict[str, str]):
         """Set the Logseq configuration data."""

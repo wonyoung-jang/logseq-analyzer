@@ -52,7 +52,7 @@ def test_write(config, tmp_path):
     config.set("TEST_SECTION", "test_key", "test_value")
     test_file = tmp_path / "test_config.ini"
     with open(test_file, "w") as f:
-        config.write(f)
+        config.config.write(f)
 
     # Read back the file to verify
     with open(test_file, "r") as f:

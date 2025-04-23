@@ -3,7 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 import logging
 
 from .analysis.index import FileIndex
@@ -226,6 +226,7 @@ def setup_logseq_hls_assets():
     ls_hls.convert_names_to_data()
     ls_hls.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
+    return ls_hls
 
 
 def setup_logseq_assets() -> LogseqAssets:
@@ -331,30 +332,46 @@ def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict:
     }
 
 
-def get_moved_files_reports(ls_file_mover: LogseqFileMover, ls_assets: LogseqAssets) -> dict:
+def get_moved_files_reports(
+    ls_file_mover: LogseqFileMover, ls_assets: LogseqAssets, hls_assets: LogseqAssetsHls
+) -> dict:
     """Get reports for moved files and assets."""
     logging.debug("run_app: get_moved_files_reports")
-    hls_assets = LogseqAssetsHls()
     return {
         Output.MOVED_FILES.value: ls_file_mover.moved_files,
         Output.ASSETS_BACKLINKED.value: ls_assets.backlinked,
         Output.ASSETS_NOT_BACKLINKED.value: ls_assets.not_backlinked,
-        "asset_mapping": hls_assets.asset_mapping,
-        "asset_names": hls_assets.asset_names,
-        "formatted_bullets": hls_assets.formatted_bullets,
-        "not_backlinked": hls_assets.not_backlinked,
-        "backlinked": hls_assets.backlinked,
+        Output.HLS_ASSET_MAPPING.value: hls_assets.asset_mapping,
+        Output.HLS_ASSET_NAMES.value: hls_assets.asset_names,
+        Output.HLS_FORMATTED_BULLETS.value: hls_assets.formatted_bullets,
+        Output.HLS_NOT_BACKLINKED.value: hls_assets.not_backlinked,
+        Output.HLS_BACKLINKED.value: hls_assets.backlinked,
     }
 
 
-def get_all_reports(
-    journal_reports: dict,
-    meta_reports: dict,
-    moved_files_reports: dict,
-    namespace_reports: dict,
-    summary_content: LogseqContentSummarizer,
-    summary_files: LogseqFileSummarizer,
-) -> Tuple[List, List]:
+def get_main_objects() -> dict:
+    """Get main objects for the Logseq analyzer."""
+    index = FileIndex()
+    graph = LogseqGraph()
+    graph_journals = LogseqJournals()
+    graph_namespaces = LogseqNamespaces()
+    summary_files = LogseqFileSummarizer()
+    summary_content = LogseqContentSummarizer()
+    return {
+        "objects": {
+            "all_objects": {
+                "index": index,
+                "graph": graph,
+                "graph_journals": graph_journals,
+                "graph_namespaces": graph_namespaces,
+                "summary_files": summary_files,
+                "summary_content": summary_content,
+            }
+        }
+    }
+
+
+def get_all_reports() -> List:
     """Combine all reports into a single list."""
     output_subdirectories = [
         OutputDir.JOURNALS,
@@ -364,16 +381,8 @@ def get_all_reports(
         OutputDir.SUMMARY_CONTENT,
         OutputDir.SUMMARY_FILES,
     ]
-    data_reports = [
-        journal_reports,
-        meta_reports,
-        moved_files_reports,
-        namespace_reports,
-        summary_content.subsets,
-        summary_files.subsets,
-    ]
     logging.debug("run_app: get_all_reports")
-    return output_subdirectories, data_reports
+    return output_subdirectories
 
 
 def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
@@ -382,6 +391,9 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
         shelve_output_data = zip(output_subdirectories, data_reports)
         for output_subdir, data_report in shelve_output_data:
             cache.update({output_subdir.value: data_report})
+
+        cache.update(get_main_objects())
+
     except Exception as e:
         logging.error("Error updating cache: %s", e)
         raise RuntimeError("Failed to update cache") from e
@@ -391,7 +403,7 @@ def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
 def write_reports(cache: Cache):
     """Write reports to the specified output directories."""
     for output_dir, reports in cache.cache.items():
-        if output_dir in (Output.MOD_TRACKER.value, Output.FILE_INDEX.value):
+        if output_dir in (Output.MOD_TRACKER.value):
             continue
 
         for name, report in reports.items():
@@ -434,7 +446,7 @@ def run_app(**kwargs):
     graph_journals = setup_logseq_journals()
     progress(75)
     # Assets
-    setup_logseq_hls_assets()
+    hls_assets = setup_logseq_hls_assets()
     progress(80)
     ls_assets = setup_logseq_assets()
     progress(85)
@@ -445,15 +457,16 @@ def run_app(**kwargs):
     meta_reports = get_meta_reports(graph, graph_config, args)
     journal_reports = get_journal_reports(graph_journals)
     namespace_reports = get_namespace_reports(graph_namespaces)
-    moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets)
-    output_subdirectories, data_reports = get_all_reports(
+    moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets, hls_assets)
+    output_subdirectories = get_all_reports()
+    data_reports = [
         journal_reports,
         meta_reports,
         moved_files_reports,
         namespace_reports,
-        summary_content,
-        summary_files,
-    )
+        summary_content.subsets,
+        summary_files.subsets,
+    ]
     progress(95)
     update_cache(cache, output_subdirectories, data_reports)
     progress(97)

@@ -20,6 +20,18 @@ class LogseqGraph:
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
 
+    def __repr__(self):
+        """Return a string representation of the LogseqGraph instance."""
+        return "LogseqGraph()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqGraph instance."""
+        return "LogseqGraph"
+
+    def __len__(self):
+        """Return the number of unique linked references."""
+        return len(self.all_linked_references)
+
     def process_graph_files(self):
         """Process all files in the Logseq graph folder."""
         index = FileIndex()
@@ -104,8 +116,7 @@ class LogseqGraph:
         """Process the size of namespaces."""
         if not hasattr(parent_file, "ns_size"):
             return len(parent_file.ns_children)
-        else:
-            return parent_file.ns_size + 1
+        return parent_file.ns_size + 1
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""

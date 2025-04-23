@@ -17,6 +17,18 @@ class LogseqFileSummarizer:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: Dict[str, dict] = {}
 
+    def __repr__(self):
+        """Return a string representation of the LogseqFileSummarizer instance."""
+        return "LogseqFileSummarizer()"
+
+    def __str__(self):
+        """Return a string representation of the LogseqFileSummarizer instance."""
+        return "LogseqFileSummarizer"
+
+    def __len__(self):
+        """Return the number of subsets."""
+        return len(self.subsets)
+
     def generate_summary(self) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         index = FileIndex()

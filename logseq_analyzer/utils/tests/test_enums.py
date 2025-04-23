@@ -111,8 +111,12 @@ def test_output_values():
         "GRAPH_CONTENT": "content_bullets",
         "GRAPH_DATA": "data",
         "FILES": "files",
-        "FILE_INDEX": "file_index",
         "HASH_TO_FILE": "hash_to_file",
+        "HLS_ASSET_MAPPING": "hls_asset_mapping",
+        "HLS_ASSET_NAMES": "hls_asset_names",
+        "HLS_FORMATTED_BULLETS": "hls_formatted_bullets",
+        "HLS_NOT_BACKLINKED": "hls_not_backlinked",
+        "HLS_BACKLINKED": "hls_backlinked",
         "NAME_TO_FILES": "name_to_files",
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
@@ -135,7 +139,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 34
+    assert len(Output) == 38
 
 
 # SummaryFiles

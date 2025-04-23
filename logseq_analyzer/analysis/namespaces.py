@@ -48,6 +48,18 @@ class LogseqNamespaces:
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
 
+    def __repr__(self):
+        """Return a string representation of the NamespaceAnalyzer instance."""
+        return "LogseqNamespaces()"
+
+    def __str__(self):
+        """Return a string representation of the NamespaceAnalyzer instance."""
+        return "LogseqNamespaces"
+
+    def __len__(self):
+        """Return the number of unique namespace parts."""
+        return len(self.namespace_data)
+
     def init_ns_parts(self):
         """
         Create namespace parts from the data.
