@@ -43,10 +43,6 @@ class LogseqFilename:
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else ""
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
-        self.determine_file_type()
-        self.process_logseq_filename()
-        self.convert_uri_to_logseq_url()
-        self.get_namespace_name_data()
 
     def __repr__(self):
         return f'LogseqFilename(file_path="{self.file_path}")'

@@ -3,8 +3,8 @@ Tests for LogseqFilestats
 """
 
 from pathlib import Path
-import pytest
 from tempfile import TemporaryFile
+import pytest
 
 from ..stats import LogseqFilestats
 

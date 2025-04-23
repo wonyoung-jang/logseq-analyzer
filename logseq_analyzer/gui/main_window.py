@@ -38,7 +38,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         super().__init__()
 
         self.graph_folder_input = QLineEdit(readOnly=True)
-        self.graph_folder_input.textChanged.connect(self.force_enable_graph_cache)
         self.global_config_input = QLineEdit(readOnly=True)
         self.report_format_combo = QComboBox()
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
@@ -46,6 +45,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
         self.write_graph_checkbox = QCheckBox("Write Full Graph Content (large)")
         self.graph_cache_checkbox = QCheckBox("Reindex Graph Cache")
+        self.graph_cache_checkbox.setEnabled(True)
         self.setup_progress_bar = self.create_progress_bar()
         self.run_button = QPushButton("Run Analysis")
         self.output_button = QPushButton("Open Output Directory")
@@ -61,6 +61,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.setup_ui(main_layout)
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
+        self.graph_folder_input.textChanged.connect(self.force_enable_graph_cache)
 
     def run_analysis(self):
         """Run the analysis with the provided arguments."""

@@ -65,6 +65,10 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
+        self.path.determine_file_type()
+        self.path.process_logseq_filename()
+        self.path.convert_uri_to_logseq_url()
+        self.path.get_namespace_name_data()
         for attr, value in self.path.__dict__.items():
             setattr(self, attr, value)
 
