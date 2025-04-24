@@ -15,7 +15,7 @@ class LogseqGraphConfig:
 
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
-        self.ls_config = None
+        self.ls_config = {}
         self.user_config_file = None
         self.user_config_data = {}
         self.global_config_file = None
@@ -36,6 +36,7 @@ class LogseqGraphConfig:
 
     def merge(self):
         """Merge user and global config."""
-        self.ls_config = DEFAULT_LOGSEQ_CONFIG_EDN
-        self.ls_config.update(self.user_config_data)
-        self.ls_config.update(self.global_config_data)
+        config = DEFAULT_LOGSEQ_CONFIG_EDN
+        config.update(self.user_config_data)
+        config.update(self.global_config_data)
+        self.ls_config = config
