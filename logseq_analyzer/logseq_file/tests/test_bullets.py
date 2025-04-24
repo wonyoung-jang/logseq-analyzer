@@ -2,9 +2,9 @@
 Tests for LogseqBullets class.
 """
 
-import pytest
 from pathlib import Path
 from tempfile import TemporaryFile
+import pytest
 
 from ..bullets import LogseqBullets
 
