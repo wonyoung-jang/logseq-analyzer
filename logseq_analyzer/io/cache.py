@@ -42,7 +42,7 @@ class Cache:
     def clear(self):
         """Clear the cache."""
         self.cache.close()
-        self.cache_path.unlink(missing_ok=True)
+        self.cache_path.unlink()
         self.cache = shelve.open(self.cache_path, protocol=5)
 
     def clear_deleted_files(self):
