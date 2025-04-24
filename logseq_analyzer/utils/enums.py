@@ -188,3 +188,17 @@ class Criteria(Enum):
     SIMPLE_QUERIES = "simple_queries"
     TAGGED_BACKLINKS = "tagged_backlinks"
     TAGS = "tags"
+
+
+class Arguments(Enum):
+    """Arguments for the Logseq Analyzer."""
+
+    GRAPH_FOLDER = "graph_folder"
+    GLOBAL_CONFIG = "global_config"
+    MOVE_UNLINKED_ASSETS = "move_unlinked_assets"
+    MOVE_BAK = "move_bak"
+    MOVE_RECYCLE = "move_recycle"
+    WRITE_GRAPH = "write_graph"
+    GRAPH_CACHE = "graph_cache"
+    REPORT_FORMAT = "report_format"
+    GEOMETRY = "geometry"

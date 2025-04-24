@@ -2,8 +2,7 @@
 Test the Criteria enum class.
 """
 
-import pytest
-from ..enums import Format, Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved
+from ..enums import Format, Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments
 
 
 # Format
@@ -245,3 +244,23 @@ def test_criteria_values():
 
 def test_criteria_member_count():
     assert len(Criteria) == 56
+
+
+def test_args_values():
+    expected = {
+        "GRAPH_FOLDER": "graph_folder",
+        "GLOBAL_CONFIG": "global_config",
+        "MOVE_UNLINKED_ASSETS": "move_unlinked_assets",
+        "MOVE_BAK": "move_bak",
+        "MOVE_RECYCLE": "move_recycle",
+        "WRITE_GRAPH": "write_graph",
+        "GRAPH_CACHE": "graph_cache",
+        "REPORT_FORMAT": "report_format",
+        "GEOMETRY": "geometry",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Arguments, member_name).value == string_value
+
+
+def test_args_member_count():
+    assert len(Arguments) == 9

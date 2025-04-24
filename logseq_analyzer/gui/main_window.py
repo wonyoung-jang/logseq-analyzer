@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 
 from ..app import run_app
 from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
-from ..utils.enums import Format
+from ..utils.enums import Arguments, Format
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -67,16 +67,16 @@ class LogseqAnalyzerGUI(QMainWindow):
     def run_analysis(self):
         """Run the analysis with the provided arguments."""
         args_gui = {
-            "graph_folder": self.graph_folder_input.text(),
-            "global_config": self.global_config_input.text(),
-            "move_unlinked_assets": self.move_assets_checkbox.isChecked(),
-            "move_bak": self.move_bak_checkbox.isChecked(),
-            "move_recycle": self.move_recycle_checkbox.isChecked(),
-            "write_graph": self.write_graph_checkbox.isChecked(),
-            "graph_cache": self.graph_cache_checkbox.isChecked(),
-            "report_format": self.report_format_combo.currentText(),
+            Arguments.GRAPH_FOLDER.value: self.graph_folder_input.text(),
+            Arguments.GLOBAL_CONFIG.value: self.global_config_input.text(),
+            Arguments.MOVE_UNLINKED_ASSETS.value: self.move_assets_checkbox.isChecked(),
+            Arguments.MOVE_BAK.value: self.move_bak_checkbox.isChecked(),
+            Arguments.MOVE_RECYCLE.value: self.move_recycle_checkbox.isChecked(),
+            Arguments.WRITE_GRAPH.value: self.write_graph_checkbox.isChecked(),
+            Arguments.GRAPH_CACHE.value: self.graph_cache_checkbox.isChecked(),
+            Arguments.REPORT_FORMAT.value: self.report_format_combo.currentText(),
         }
-        if not args_gui["graph_folder"]:
+        if not args_gui[Arguments.GRAPH_FOLDER.value]:
             self.show_error("Graph folder is required.")
             return
 
@@ -290,27 +290,29 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def save_settings(self):
         """Save current settings using QSettings."""
-        self.settings.setValue("graph_folder", self.graph_folder_input.text())
-        self.settings.setValue("global_config", self.global_config_input.text())
-        self.settings.setValue("move_unlinked_assets", self.move_assets_checkbox.isChecked())
-        self.settings.setValue("move_bak", self.move_bak_checkbox.isChecked())
-        self.settings.setValue("move_recycle", self.move_recycle_checkbox.isChecked())
-        self.settings.setValue("write_graph", self.write_graph_checkbox.isChecked())
-        self.settings.setValue("graph_cache", self.graph_cache_checkbox.isChecked())
-        self.settings.setValue("report_format", self.report_format_combo.currentText())
-        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue(Arguments.GRAPH_FOLDER.value, self.graph_folder_input.text())
+        self.settings.setValue(Arguments.GLOBAL_CONFIG.value, self.global_config_input.text())
+        self.settings.setValue(Arguments.MOVE_UNLINKED_ASSETS.value, self.move_assets_checkbox.isChecked())
+        self.settings.setValue(Arguments.MOVE_BAK.value, self.move_bak_checkbox.isChecked())
+        self.settings.setValue(Arguments.MOVE_RECYCLE.value, self.move_recycle_checkbox.isChecked())
+        self.settings.setValue(Arguments.WRITE_GRAPH.value, self.write_graph_checkbox.isChecked())
+        self.settings.setValue(Arguments.GRAPH_CACHE.value, self.graph_cache_checkbox.isChecked())
+        self.settings.setValue(Arguments.REPORT_FORMAT.value, self.report_format_combo.currentText())
+        self.settings.setValue(Arguments.GEOMETRY.value, self.saveGeometry())
 
     def load_settings(self):
         """Load settings using QSettings."""
-        self.graph_folder_input.setText(self.settings.value("graph_folder", ""))
-        self.global_config_input.setText(self.settings.value("global_config", ""))
-        self.move_assets_checkbox.setChecked(self.settings.value("move_unlinked_assets", False, type=bool))
-        self.move_bak_checkbox.setChecked(self.settings.value("move_bak", False, type=bool))
-        self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
-        self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
-        self.graph_cache_checkbox.setChecked(self.settings.value("graph_cache", False, type=bool))
-        self.report_format_combo.setCurrentText(self.settings.value("report_format", Format.TXT.value))
-        self.restoreGeometry(self.settings.value("geometry", b""))
+        self.graph_folder_input.setText(self.settings.value(Arguments.GRAPH_FOLDER.value, ""))
+        self.global_config_input.setText(self.settings.value(Arguments.GLOBAL_CONFIG.value, ""))
+        self.move_assets_checkbox.setChecked(
+            self.settings.value(Arguments.MOVE_UNLINKED_ASSETS.value, False, type=bool)
+        )
+        self.move_bak_checkbox.setChecked(self.settings.value(Arguments.MOVE_BAK.value, False, type=bool))
+        self.move_recycle_checkbox.setChecked(self.settings.value(Arguments.MOVE_RECYCLE.value, False, type=bool))
+        self.write_graph_checkbox.setChecked(self.settings.value(Arguments.WRITE_GRAPH.value, False, type=bool))
+        self.graph_cache_checkbox.setChecked(self.settings.value(Arguments.GRAPH_CACHE.value, False, type=bool))
+        self.report_format_combo.setCurrentText(self.settings.value(Arguments.REPORT_FORMAT.value, Format.TXT.value))
+        self.restoreGeometry(self.settings.value(Arguments.GEOMETRY.value, b""))
 
 
 def resource_path(relative_path):
