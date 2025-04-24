@@ -78,7 +78,7 @@ class LogseqGraph:
 
             self.unique_linked_references.update(linked_references)
 
-        for key, values in self.all_linked_references.items():
+        for _, values in self.all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
 

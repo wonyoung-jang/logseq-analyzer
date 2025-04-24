@@ -6,7 +6,6 @@ Imported once in app.py
 
 import logging
 import shelve
-import sys
 
 from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig
