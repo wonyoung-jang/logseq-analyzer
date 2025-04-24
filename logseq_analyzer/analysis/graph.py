@@ -80,10 +80,8 @@ class LogseqGraph:
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
 
         # Create dangling links
-        all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
-        all_linked_refs.difference_update(index.name_to_files.keys())
-        all_linked_refs.difference_update(unique_aliases)
-        self.dangling_links = set(sorted(all_linked_refs))
+        all_file_names = set(index.name_to_files.keys())
+        self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
     def post_processing_content_namespaces(self, file: LogseqFile):
         """Post-process namespaces in the content data."""
@@ -130,3 +128,10 @@ class LogseqGraph:
                 file.is_backlinked = False
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
+
+    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]):
+        """Process dangling links in the graph."""
+        all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
+        all_linked_refs.difference_update(all_file_names)
+        all_linked_refs.difference_update(unique_aliases)
+        return set(sorted(all_linked_refs))

@@ -6,6 +6,7 @@ Imported once in app.py
 
 import logging
 import shelve
+import sys
 
 from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig
@@ -23,8 +24,8 @@ class Cache:
     def __init__(self):
         """Initialize the class."""
         cache_file = CacheFile()
-        cache_path = cache_file.path
-        self.cache = shelve.open(cache_path, protocol=5)
+        self.cache_path = cache_file.path
+        self.cache = shelve.open(self.cache_path, protocol=5)
 
     def close(self):
         """Close the cache file."""
@@ -40,7 +41,9 @@ class Cache:
 
     def clear(self):
         """Clear the cache."""
-        self.cache.clear()
+        self.cache.close()
+        self.cache_path.unlink(missing_ok=True)
+        self.cache = shelve.open(self.cache_path, protocol=5)
 
     def clear_deleted_files(self):
         """Clear the deleted files from the cache."""

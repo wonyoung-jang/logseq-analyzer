@@ -19,13 +19,14 @@ def test_format_values():
         "JPEG": ".jpeg",
         "GIF": ".gif",
         "SVG": ".svg",
+        "ORG": ".org",
     }
     for member_name, string_value in expected.items():
         assert getattr(Format, member_name).value == string_value
 
 
 def test_format_member_count():
-    assert len(Format) == 11
+    assert len(Format) == 12
 
 
 # Moved

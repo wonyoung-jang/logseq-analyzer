@@ -7,6 +7,8 @@ from typing import Generator, Set, List, Pattern
 import functools
 import logging
 
+from ..utils.enums import Format
+
 
 def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
     """
@@ -19,6 +21,8 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
 
         if path_root.name in target_dirs or path_root.parent.name in target_dirs:
             for file in files:
+                if Path(file).suffix in [Format.ORG.value]:
+                    continue
                 yield path_root / file
         else:
             logging.info("Skipping directory %s outside target directories", path_root)

@@ -27,6 +27,7 @@ class Format(Enum):
     JPEG = ".jpeg"
     GIF = ".gif"
     SVG = ".svg"
+    ORG = ".org"
 
 
 class Core(Enum):
