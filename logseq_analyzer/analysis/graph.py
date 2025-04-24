@@ -2,6 +2,7 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
+from collections import Counter
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
@@ -68,18 +69,19 @@ class LogseqGraph:
             linked_references = [item for sublist in linked_references for item in sublist if item]
 
             for item in linked_references:
-                self.all_linked_references.setdefault(item, {})
+                self.all_linked_references.setdefault(item, {"count": 0, "found_in": Counter()})
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
-                self.all_linked_references[item].setdefault("found_in", []).append(file.path.name)
+                self.all_linked_references[item]["found_in"][file.path.name] += 1
 
             if hasattr(file, "ns_parent"):
                 linked_references.remove(file.ns_parent)
 
             self.unique_linked_references.update(linked_references)
 
+        for key, values in self.all_linked_references.items():
+            values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
 
-        # Create dangling links
         all_file_names = set(index.name_to_files.keys())
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
