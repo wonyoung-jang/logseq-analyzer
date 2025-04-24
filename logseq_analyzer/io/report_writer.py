@@ -19,7 +19,7 @@ class ReportWriter:
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
         Initialize the ReportWriter class.
-        
+
         Args:
             filename_prefix (str): The prefix for the output filename.
             items (Any): The data to be written to the file.

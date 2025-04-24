@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from ..app import run_app
 from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
+from ..utils.enums import Format
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -152,10 +153,10 @@ class LogseqAnalyzerGUI(QMainWindow):
         report_format_label = QLabel("Report Format:")
         self.report_format_combo.addItems(
             [
-                ".txt",
-                ".json",
-                ".md",
-                ".html",
+                Format.TXT.value,
+                Format.JSON.value,
+                Format.MD.value,
+                Format.HTML.value,
             ]
         )
         form_layout.addRow(report_format_label, self.report_format_combo)
@@ -231,38 +232,34 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def open_output_directory(self):
         """Open the output directory in the file explorer."""
-        if OutputDirectory().path.exists():
-            output_dir = OutputDirectory().path.resolve()
-            if sys.platform.startswith("win"):
-                os.startfile(output_dir)
-            elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", output_dir])
-            else:
-                subprocess.call(["xdg-open", output_dir])
+        od = OutputDirectory()
+        output_dir = od.path
+        self._open_path(output_dir)
 
     def open_delete_directory(self):
         """Open the delete directory in the file explorer."""
-        if DeleteDirectory().path.exists():
-            delete_dir = DeleteDirectory().path.resolve()
-            if sys.platform.startswith("win"):
-                os.startfile(delete_dir)
-            elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", delete_dir])
-            else:
-                subprocess.call(["xdg-open", delete_dir])
+        dd = DeleteDirectory()
+        delete_dir = dd.path
+        self._open_path(delete_dir)
 
     def open_log_file(self):
         """Open the log file in the default text editor."""
-        if LogFile().path.exists():
-            log_file_path = LogFile().path.resolve()
+        lf = LogFile()
+        log_file = lf.path
+        self._open_path(log_file)
+
+    def _open_path(self, path):
+        """Open a path in the file explorer."""
+        if path.exists():
+            path = path.resolve()
             if sys.platform.startswith("win"):
-                os.startfile(log_file_path)
+                os.startfile(path)
             elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", log_file_path])
+                subprocess.call(["open", path])
             else:
-                subprocess.call(["xdg-open", log_file_path])
+                subprocess.call(["xdg-open", path])
         else:
-            self.show_error("Log file not found.")
+            self.show_error(f"Path not found: {path}")
 
     def update_progress(self, progress_value=0):
         """Updates the progress bar for a given phase."""
@@ -312,7 +309,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.move_recycle_checkbox.setChecked(self.settings.value("move_recycle", False, type=bool))
         self.write_graph_checkbox.setChecked(self.settings.value("write_graph", False, type=bool))
         self.graph_cache_checkbox.setChecked(self.settings.value("graph_cache", False, type=bool))
-        self.report_format_combo.setCurrentText(self.settings.value("report_format", ".txt"))
+        self.report_format_combo.setCurrentText(self.settings.value("report_format", Format.TXT.value))
         self.restoreGeometry(self.settings.value("geometry", b""))
 
 
