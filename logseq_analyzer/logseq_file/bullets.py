@@ -28,6 +28,9 @@ class LogseqBullets:
     def __repr__(self):
         return f'LogseqBullets(file_path="{self.file_path}")'
 
+    def __str__(self):
+        return f"LogseqBullets: {self.file_path}"
+
     def get_content(self):
         """Read the text content of a file."""
         try:

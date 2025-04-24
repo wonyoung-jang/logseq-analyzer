@@ -51,7 +51,10 @@ class LogseqFile:
         self.file_type = "other"
 
     def __repr__(self) -> str:
-        return f"LogseqFile({self.file_path})"
+        return f'LogseqFile(file_path="{self.file_path}")'
+
+    def __str__(self) -> str:
+        return f"LogseqFile: {self.file_path}"
 
     def __hash__(self) -> int:
         return hash(self.path.parts)

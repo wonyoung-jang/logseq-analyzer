@@ -46,3 +46,6 @@ class LogseqFilestats:
 
     def __repr__(self):
         return f'LogseqFilestats(file_path="{self.file_path}")'
+
+    def __str__(self):
+        return f"LogseqFilestats: {self.file_path}"

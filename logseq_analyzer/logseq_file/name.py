@@ -47,6 +47,9 @@ class LogseqFilename:
     def __repr__(self):
         return f'LogseqFilename(file_path="{self.file_path}")'
 
+    def __str__(self):
+        return f"LogseqFilename: {self.file_path}"
+
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
         ls_analyzer_config = LogseqAnalyzerConfig()

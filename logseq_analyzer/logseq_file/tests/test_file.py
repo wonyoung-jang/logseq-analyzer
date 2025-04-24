@@ -43,3 +43,9 @@ def test_logseq_file(logseq_file, temp_file):
     assert isinstance(logseq_file.path, LogseqFilename)
     assert isinstance(logseq_file.stat, LogseqFilestats)
     assert isinstance(logseq_file.bullets, LogseqBullets)
+
+
+def test_representation(logseq_file):
+    """Test the string representation of LogseqFile."""
+    assert repr(logseq_file) == f'LogseqFile(file_path="{logseq_file.file_path}")'
+    assert str(logseq_file) == f"LogseqFile: {logseq_file.file_path}"

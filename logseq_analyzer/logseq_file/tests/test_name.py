@@ -38,3 +38,9 @@ def test_logseq_filename(logseq_filename, temp_file):
     assert logseq_filename.file_type == ""
     assert logseq_filename.is_namespace == False
     assert logseq_filename.is_hls == False
+
+
+def test_representation(logseq_filename):
+    """Test the string representation of LogseqFilename."""
+    assert repr(logseq_filename) == f'LogseqFilename(file_path="{logseq_filename.file_path}")'
+    assert str(logseq_filename) == f"LogseqFilename: {logseq_filename.file_path}"
