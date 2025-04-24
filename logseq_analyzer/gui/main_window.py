@@ -150,7 +150,14 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         # --- Report Format Dropdown ---
         report_format_label = QLabel("Report Format:")
-        self.report_format_combo.addItems([".txt", ".json", ".md"])
+        self.report_format_combo.addItems(
+            [
+                ".txt",
+                ".json",
+                ".md",
+                ".html",
+            ]
+        )
         form_layout.addRow(report_format_label, self.report_format_combo)
 
         return form_layout

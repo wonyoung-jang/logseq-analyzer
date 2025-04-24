@@ -1,8 +1,7 @@
 """
-Reporting module for writing output to files.
+Reporting module for writing output to files, including HTML reports.
 """
 
-from pathlib import Path
 from typing import Any, TextIO
 import json
 import logging
@@ -14,12 +13,17 @@ from .filesystem import OutputDirectory
 
 class ReportWriter:
     """
-    A class to handle reporting and writing output to files.
+    A class to handle reporting and writing output to files, including text, JSON, and HTML formats.
     """
 
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
         Initialize the ReportWriter class.
+        
+        Args:
+            filename_prefix (str): The prefix for the output filename.
+            items (Any): The data to be written to the file.
+            type_output (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
         """
         self.filename_prefix = filename_prefix
         self.items = items
@@ -28,12 +32,7 @@ class ReportWriter:
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
         """
-        Recursive function to write nested data structures to a file.
-
-        Args:
-            f (TextIO): The file object to write to.
-            data (Any): The data to write.
-            indent_level (int, optional): The current indentation level. Defaults to 0.
+        Recursive function to write nested data structures to plain text files.
         """
         indent = "\t" * indent_level
         if indent_level == 0 and isinstance(data, dict):
@@ -79,50 +78,93 @@ class ReportWriter:
             else:
                 f.write(f"{indent}{data}\n")
 
+    @staticmethod
+    def write_html_recursive(f: TextIO, data: Any) -> None:
+        """
+        Recursive helper to write nested data structures into HTML format.
+        Uses <dl> for dicts, <ol> for lists/sets, and <span> for simple values.
+        """
+        if isinstance(data, dict):
+            f.write("<dl>\n")
+            for key, value in data.items():
+                f.write(f"  <dt><strong>{key}</strong></dt>\n")
+                f.write("  <dd>")
+                if isinstance(value, (dict, list, set)):
+                    f.write("\n")
+                    ReportWriter.write_html_recursive(f, value)
+                    f.write("  ")
+                else:
+                    f.write(f"<span>{value}</span>")
+                f.write("</dd>\n")
+            f.write("</dl>\n")
+
+        elif isinstance(data, (list, set)):
+            f.write("<ol>\n")
+            for item in data:
+                f.write("  <li>")
+                if isinstance(item, (dict, list, set)):
+                    f.write("\n")
+                    ReportWriter.write_html_recursive(f, item)
+                    f.write("  ")
+                else:
+                    f.write(f"<span>{item}</span>")
+                f.write("</li>\n")
+            f.write("</ol>\n")
+
+        else:
+            f.write(f"<span>{data}</span>\n")
+
     def write(self) -> None:
         """
-        Write the output to a file using a recursive helper to handle nested structures.
+        Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
         ac = LogseqAnalyzerConfig()
         output_format = ac.config["ANALYZER"]["REPORT_FORMAT"]
         logging.info("Writing %s as %s", self.filename_prefix, output_format)
-        count = len(self.items)
-        filename = (
-            f"{self.filename_prefix}{output_format}" if count else f"___EMPTY___{self.filename_prefix}{output_format}"
-        )
 
+        count = len(self.items) if hasattr(self.items, "__len__") else None
+        ext = output_format
+        filename = f"{self.filename_prefix}{ext}" if count else f"___EMPTY___{self.filename_prefix}{ext}"
+
+        # Determine output path
         output_dir = OutputDirectory().path
-        out_path = output_dir / filename
         if self.type_output:
-            parent = output_dir / self.type_output
-            if not parent.exists():
-                parent.mkdir(parents=True, exist_ok=True)
-            out_path = Path(parent) / filename
+            output_dir = output_dir / self.type_output
+            output_dir.mkdir(parents=True, exist_ok=True)
+        out_path = output_dir / filename
 
-        # For JSON format, re-open and dump JSON if that is the requested format
+        # Handle JSON format
         if output_format == Format.JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(self.items, f, indent=4)
+                return
             except TypeError:
-                logging.error("Failed to write JSON for %s.", self.filename_prefix)
-                if out_path.exists():
-                    out_path.unlink()
-                filename = f"{self.filename_prefix}{Format.TXT.value}"
-                if self.type_output:
-                    out_path = Path(parent) / filename
-                with out_path.open("w", encoding="utf-8") as f:
-                    f.write(f"{filename} | Items: {count}\n\n")
-                    ReportWriter.write_recursive(f, self.items)
-        elif output_format == Format.TXT.value:
+                logging.error("Failed to write JSON for %s, falling back to TXT.", self.filename_prefix)
+
+        # Handle HTML format
+        if output_format == Format.HTML.value:
             with out_path.open("w", encoding="utf-8") as f:
+                # HTML header
+                f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
+                f.write(f'  <meta charset="utf-8">\n  <title>{self.filename_prefix}</title>\n')
+                f.write(
+                    "  <style> body { font-family: sans-serif; margin: 2em; } dl { margin-left: 1em; } ol { margin-left: 1em; } span { display: inline-block; } </style>\n"
+                )
+                f.write("</head>\n<body>\n")
+                f.write(f"<h1>{self.filename_prefix}</h1>\n")
+                if count is not None:
+                    f.write(f"<p>Items: {count}</p>\n")
+                # Recursive content
+                ReportWriter.write_html_recursive(f, self.items)
+                f.write("</body>\n</html>\n")
+            return
+
+        # Handle TXT format and fallback
+        with out_path.open("w", encoding="utf-8") as f:
+            if count is not None:
                 f.write(f"{filename} | Items: {count}\n\n")
-                ReportWriter.write_recursive(f, self.items)
-        else:
-            logging.error(
-                "Unsupported output format: %s. Defaulting to text.",
-                output_format,
-            )
-            with out_path.open("w", encoding="utf-8") as f:
-                f.write(f"{filename} | Items: {count}\n\n")
-                ReportWriter.write_recursive(f, self.items)
+            ReportWriter.write_recursive(f, self.items)
+
+        if output_format not in (Format.TXT.value, Format.JSON.value, Format.HTML.value):
+            logging.warning("Unsupported output format: %s. Defaulted to text.", output_format)
