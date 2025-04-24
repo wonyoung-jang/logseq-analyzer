@@ -17,6 +17,14 @@ class File:
         """Initialize the File class with a path."""
         self.path = path
 
+    def __repr__(self):
+        """Return a string representation of the File object."""
+        return f'File(path="{str(self.path)}")'
+
+    def __str__(self):
+        """Return a string representation of the File object."""
+        return f"File: {str(self.path)}"
+
     # Getter for path property
     @property
     def path(self):

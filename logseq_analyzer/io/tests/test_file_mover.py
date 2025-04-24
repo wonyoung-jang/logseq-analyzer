@@ -23,3 +23,9 @@ def test_file_mover_singleton(logseq_file_mover):
     """Test the singleton behavior of LogseqFileMover."""
     another_instance = LogseqFileMover()
     assert logseq_file_mover is another_instance
+
+
+def test_representation(logseq_file_mover):
+    """Test the string representation of LogseqFileMover."""
+    assert repr(logseq_file_mover) == f'LogseqFileMover(delete="{logseq_file_mover.delete}")'
+    assert str(logseq_file_mover) == f"LogseqFileMover: {logseq_file_mover.delete}"

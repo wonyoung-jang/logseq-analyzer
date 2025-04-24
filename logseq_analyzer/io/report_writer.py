@@ -29,6 +29,14 @@ class ReportWriter:
         self.items = items
         self.type_output = type_output
 
+    def __repr__(self) -> str:
+        """String representation of the ReportWriter object."""
+        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, type_output={self.type_output})"
+
+    def __str__(self) -> str:
+        """String representation of the ReportWriter object."""
+        return f"ReportWriter: {self.filename_prefix}, Items: data, Type Output: {self.type_output}"
+
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
         """

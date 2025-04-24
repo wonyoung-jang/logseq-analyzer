@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 
 from ..filesystem import (
@@ -10,6 +11,7 @@ from ..filesystem import (
     DeleteDirectory,
     DeleteRecycleDirectory,
     DrawsDirectory,
+    File,
     GlobalConfigFile,
     GraphDirectory,
     JournalsDirectory,
@@ -20,6 +22,11 @@ from ..filesystem import (
     RecycleDirectory,
     WhiteboardsDirectory,
 )
+
+
+@pytest.fixture
+def generic_file():
+    return File("test.txt")
 
 
 @pytest.fixture
@@ -110,6 +117,20 @@ def pages_dir():
 @pytest.fixture
 def whiteboards_dir():
     return WhiteboardsDirectory()
+
+
+def test_file_initialization(generic_file):
+    """Test that the File class is initialized correctly."""
+    assert generic_file.path == Path("test.txt")
+    assert generic_file.path.exists() is False
+    assert generic_file.path.is_dir() is False
+    assert generic_file.path.is_file() is False
+
+
+def test_representation(generic_file):
+    """Test the string representation of the File class."""
+    assert repr(generic_file) == 'File(path="test.txt")'
+    assert str(generic_file) == "File: test.txt"
 
 
 def test_output_dir_singleton(output_dir):

@@ -27,6 +27,12 @@ class LogseqFileMover:
         delete_dir = DeleteDirectory()
         self.delete = delete_dir.path
 
+    def __repr__(self):
+        return f'LogseqFileMover(delete="{self.delete}")'
+
+    def __str__(self):
+        return f"LogseqFileMover: {self.delete}"
+
     def handle_move_files(self) -> List[str]:
         """
         Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
