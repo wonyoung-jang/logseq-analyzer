@@ -2,9 +2,9 @@
 Test for LogseqFilename class.
 """
 
+import pytest
 from pathlib import Path
 from tempfile import TemporaryFile
-import pytest
 
 from ..name import LogseqFilename
 

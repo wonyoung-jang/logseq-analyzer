@@ -75,6 +75,12 @@ class LogseqFile:
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
 
+        self.bullets.get_content()
+        self.bullets.get_char_count()
+        self.bullets.get_bullet_content()
+        self.bullets.get_primary_bullet()
+        self.bullets.get_bullet_density()
+        self.bullets.is_primary_bullet_page_properties()
         for attr, value in self.bullets.__dict__.items():
             if attr in ("all_bullets"):
                 continue

@@ -25,15 +25,6 @@ class LogseqBullets:
     bullet_density: float = 0.0
     has_page_properties: bool = False
 
-    def __post_init__(self):
-        """Initialize the LogseqBullets class"""
-        self.get_content()
-        self.get_char_count()
-        self.get_bullet_content()
-        self.get_primary_bullet()
-        self.get_bullet_density()
-        self.is_primary_bullet_page_properties()
-
     def __repr__(self):
         return f'LogseqBullets(file_path="{self.file_path}")'
 
