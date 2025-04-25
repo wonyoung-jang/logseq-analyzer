@@ -4,6 +4,7 @@ LogseqFile class to process Logseq files.
 
 from collections import defaultdict
 from pathlib import Path
+from tokenize import Double
 from typing import Dict, List, Set, Tuple
 import uuid
 
@@ -97,12 +98,13 @@ class LogseqFile:
         if not self.content:
             return
 
+        code_blocks = CodePatterns()
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_blocks(self.content)
         self.masked_blocks = masked_blocks
 
         primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(CodePatterns().inline_code_block, self.content),
+            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(code_blocks.inline_code_block, self.content),
             Criteria.ASSETS.value: find_all_lower(ContentPatterns().asset, self.content),
             Criteria.ANY_LINKS.value: find_all_lower(ContentPatterns().any_link, self.content),
             Criteria.BLOCKQUOTES.value: find_all_lower(ContentPatterns().blockquote, masked_content),
@@ -130,34 +132,28 @@ class LogseqFile:
         block_props = split_builtin_user_properties(block_properties)
 
         # Process code blocks
-        code_pattern = find_all_lower(CodePatterns().all, self.content)
-        code_family = self.process_code_blocks(code_pattern)
-        primary_data.update(code_family)
+        code_blocks_family = self.find_and_process_pattern(code_blocks)
+        primary_data.update(code_blocks_family)
 
         # Process double parentheses
-        double_paren_pattern = find_all_lower(DoubleParenthesesPatterns().all, self.content)
-        double_paren_family = self.process_double_parens(double_paren_pattern)
+        double_paren_family = self.find_and_process_pattern(DoubleParenthesesPatterns())
         primary_data.update(double_paren_family)
 
         # Process external links
-        external_links = find_all_lower(ExternalLinksPatterns().all, self.content)
-        external_links_family = self.process_external_links(external_links)
+        external_links_family = self.find_and_process_pattern(ExternalLinksPatterns())
         primary_data.update(external_links_family)
 
         # Process embedded links
-        embedded_links = find_all_lower(EmbeddedLinksPatterns().all, self.content)
-        embedded_links_family = self.process_embedded_links(embedded_links)
+        embedded_links_family = self.find_and_process_pattern(EmbeddedLinksPatterns())
         primary_data.update(embedded_links_family)
 
         # Process double curly braces
-        double_curly = find_all_lower(DoubleCurlyBracketsPatterns().all, self.content)
-        double_curly_family = self.process_double_curly_braces(double_curly)
+        double_curly_family = self.find_and_process_pattern(DoubleCurlyBracketsPatterns())
         primary_data.update(double_curly_family)
 
         # Process advanced commands
-        advanced_commands = find_all_lower(AdvancedCommandPatterns().all, self.content)
-        advanced_command_family = self.process_advanced_commands(advanced_commands)
-        primary_data.update(advanced_command_family)
+        advanced_commands_family = self.find_and_process_pattern(AdvancedCommandPatterns())
+        primary_data.update(advanced_commands_family)
 
         primary_data.update(
             {
@@ -181,6 +177,16 @@ class LogseqFile:
 
             if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
                 self.has_backlinks = True
+
+    def find_and_process_pattern(self, pattern):
+        """
+        Find and process a specific pattern in the content.
+
+        Args:
+            pattern: The pattern to find and process.
+        """
+        results = find_all_lower(pattern.all, self.content)
+        return pattern.process(results)
 
     def determine_node_type(self) -> str:
         """Helper function to determine node type based on summary data."""
@@ -285,269 +291,3 @@ class LogseqFile:
             return True
         except KeyError:
             return False
-
-    def process_code_blocks(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process code blocks and categorize them.
-
-        Args:
-            results (List[str]): List of code block strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing code blocks.
-        """
-        if not results:
-            return {}
-
-        code_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if CodePatterns().calc_block.search(result):
-                code_family[Criteria.CALC_BLOCKS.value].append(result)
-                results.pop()
-                continue
-            if CodePatterns().multiline_code_lang.search(result):
-                code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
-                results.pop()
-                continue
-
-        code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
-
-        return code_family
-
-    def process_double_parens(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process double parentheses and categorize them.
-
-        Args:
-            results (List[str]): List of double parenthesis strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing double parentheses.
-        """
-        if not results:
-            return {}
-
-        double_paren_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if DoubleParenthesesPatterns().block_reference.search(result):
-                double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
-                results.pop()
-                continue
-
-        double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
-
-        return double_paren_family
-
-    def process_external_links(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process external links and categorize them.
-
-        Args:
-            results (List[str]): List of external link strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing external links.
-        """
-        if not results:
-            return {}
-
-        external_links_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if ExternalLinksPatterns().internet.search(result):
-                external_links_family[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
-                results.pop()
-                continue
-            if ExternalLinksPatterns().alias.search(result):
-                external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
-                results.pop()
-                continue
-
-        external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
-
-        return external_links_family
-
-    def process_embedded_links(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process embedded links and categorize them.
-
-        Args:
-            results (List[str]): List of embedded link strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing embedded links.
-        """
-        if not results:
-            return {}
-
-        embedded_links_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if EmbeddedLinksPatterns().internet.search(result):
-                embedded_links_family[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
-                results.pop()
-                continue
-            if EmbeddedLinksPatterns().asset.search(result):
-                embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
-                results.pop()
-                continue
-
-        embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
-
-        return embedded_links_family
-
-    def process_double_curly_braces(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process double curly braces and extract relevant data.
-
-        Args:
-            results (List[str]): List of double curly brace strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing double curly brace data.
-        """
-        if not results:
-            return {}
-
-        double_curly_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if DoubleCurlyBracketsPatterns().embed.search(result):
-                double_curly_family[Criteria.EMBEDS.value].append(result)
-                results.pop()
-                if DoubleCurlyBracketsPatterns().page_embed.search(result):
-                    double_curly_family[Criteria.PAGE_EMBEDS.value].append(result)
-                    double_curly_family[Criteria.EMBEDS.value].remove(result)
-                    continue
-                if DoubleCurlyBracketsPatterns().block_embed.search(result):
-                    double_curly_family[Criteria.BLOCK_EMBEDS.value].append(result)
-                    double_curly_family[Criteria.EMBEDS.value].remove(result)
-                    continue
-            if DoubleCurlyBracketsPatterns().namespace_query.search(result):
-                double_curly_family[Criteria.NAMESPACE_QUERIES.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().card.search(result):
-                double_curly_family[Criteria.CARDS.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().cloze.search(result):
-                double_curly_family[Criteria.CLOZES.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().simple_query.search(result):
-                double_curly_family[Criteria.SIMPLE_QUERIES.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().query_function.search(result):
-                double_curly_family[Criteria.QUERY_FUNCTIONS.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().embed_video_url.search(result):
-                double_curly_family[Criteria.EMBED_VIDEO_URLS.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().embed_twitter_tweet.search(result):
-                double_curly_family[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().embed_youtube_timestamp.search(result):
-                double_curly_family[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
-                results.pop()
-                continue
-            if DoubleCurlyBracketsPatterns().renderer.search(result):
-                double_curly_family[Criteria.RENDERERS.value].append(result)
-                results.pop()
-                continue
-
-        double_curly_family[Criteria.MACROS.value] = results
-
-        return double_curly_family
-
-    def process_advanced_commands(self, results: List[str]) -> Dict[str, List[str]]:
-        """
-        Process advanced commands and extract relevant data.
-
-        Args:
-            results (List[str]): List of advanced command strings.
-
-        Returns:
-            Dict[str, List[str]]: Dictionary categorizing advanced commands.
-        """
-        if not results:
-            return {}
-
-        advanced_command_family = defaultdict(list)
-
-        for _ in range(len(results)):
-            result = results[-1]
-            if AdvancedCommandPatterns().export.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
-                results.pop()
-                if AdvancedCommandPatterns().export_ascii.search(result):
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
-                    continue
-                if AdvancedCommandPatterns().export_latex.search(result):
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
-                    continue
-            if AdvancedCommandPatterns().caution.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().center.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().comment.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().example.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().important.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().note.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().pinned.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().query.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().quote.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().tip.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().verse.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
-                results.pop()
-                continue
-            if AdvancedCommandPatterns().warning.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
-                results.pop()
-                continue
-
-        advanced_command_family[Criteria.ADVANCED_COMMANDS.value] = results
-
-        return advanced_command_family

@@ -2,9 +2,13 @@
 Compile frequently used regex patterns for Logseq content.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 import re
+from typing import Dict, List
+
+from .enums import Criteria
 
 from .helpers import singleton
 
@@ -326,6 +330,75 @@ class DoubleCurlyBracketsPatterns:
         )
         logging.info("Compiled DoubleCurlyBracketsPatterns")
 
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process double curly braces and extract relevant data.
+
+        Args:
+            results (List[str]): List of double curly brace strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing double curly brace data.
+        """
+        if not results:
+            return {}
+
+        double_curly_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.embed.search(result):
+                double_curly_family[Criteria.EMBEDS.value].append(result)
+                results.pop()
+                if self.page_embed.search(result):
+                    double_curly_family[Criteria.PAGE_EMBEDS.value].append(result)
+                    double_curly_family[Criteria.EMBEDS.value].remove(result)
+                    continue
+                if self.block_embed.search(result):
+                    double_curly_family[Criteria.BLOCK_EMBEDS.value].append(result)
+                    double_curly_family[Criteria.EMBEDS.value].remove(result)
+                    continue
+            if self.namespace_query.search(result):
+                double_curly_family[Criteria.NAMESPACE_QUERIES.value].append(result)
+                results.pop()
+                continue
+            if self.card.search(result):
+                double_curly_family[Criteria.CARDS.value].append(result)
+                results.pop()
+                continue
+            if self.cloze.search(result):
+                double_curly_family[Criteria.CLOZES.value].append(result)
+                results.pop()
+                continue
+            if self.simple_query.search(result):
+                double_curly_family[Criteria.SIMPLE_QUERIES.value].append(result)
+                results.pop()
+                continue
+            if self.query_function.search(result):
+                double_curly_family[Criteria.QUERY_FUNCTIONS.value].append(result)
+                results.pop()
+                continue
+            if self.embed_video_url.search(result):
+                double_curly_family[Criteria.EMBED_VIDEO_URLS.value].append(result)
+                results.pop()
+                continue
+            if self.embed_twitter_tweet.search(result):
+                double_curly_family[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
+                results.pop()
+                continue
+            if self.embed_youtube_timestamp.search(result):
+                double_curly_family[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
+                results.pop()
+                continue
+            if self.renderer.search(result):
+                double_curly_family[Criteria.RENDERERS.value].append(result)
+                results.pop()
+                continue
+
+        double_curly_family[Criteria.MACROS.value] = results
+
+        return double_curly_family
+
 
 @singleton
 @dataclass
@@ -537,8 +610,88 @@ class AdvancedCommandPatterns:
             """,
             re.DOTALL | re.IGNORECASE | re.VERBOSE,
         )
-
         logging.info("Compiled AdvancedCommandPatterns")
+
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process advanced commands and extract relevant data.
+
+        Args:
+            results (List[str]): List of advanced command strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing advanced commands.
+        """
+        if not results:
+            return {}
+
+        advanced_command_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.export.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
+                results.pop()
+                if self.export_ascii.search(result):
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
+                    continue
+                if self.export_latex.search(result):
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
+                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
+                    continue
+            if self.caution.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
+                results.pop()
+                continue
+            if self.center.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
+                results.pop()
+                continue
+            if self.comment.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
+                results.pop()
+                continue
+            if self.example.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
+                results.pop()
+                continue
+            if self.important.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
+                results.pop()
+                continue
+            if self.note.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
+                results.pop()
+                continue
+            if self.pinned.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
+                results.pop()
+                continue
+            if self.query.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
+                results.pop()
+                continue
+            if self.quote.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
+                results.pop()
+                continue
+            if self.tip.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
+                results.pop()
+                continue
+            if self.verse.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
+                results.pop()
+                continue
+            if self.warning.search(result):
+                advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
+                results.pop()
+                continue
+
+        advanced_command_family[Criteria.ADVANCED_COMMANDS.value] = results
+
+        return advanced_command_family
 
 
 @singleton
@@ -598,6 +751,36 @@ class CodePatterns:
         )
         logging.info("Compiled CodePatterns")
 
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process code blocks and categorize them.
+
+        Args:
+            results (List[str]): List of code block strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing code blocks.
+        """
+        if not results:
+            return {}
+
+        code_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.calc_block.search(result):
+                code_family[Criteria.CALC_BLOCKS.value].append(result)
+                results.pop()
+                continue
+            if self.multiline_code_lang.search(result):
+                code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
+                results.pop()
+                continue
+
+        code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
+
+        return code_family
+
 
 @singleton
 @dataclass
@@ -640,6 +823,32 @@ class DoubleParenthesesPatterns:
             re.IGNORECASE | re.VERBOSE,
         )
         logging.info("Compiled DoubleParenthesesPatterns")
+
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process double parentheses and categorize them.
+
+        Args:
+            results (List[str]): List of double parenthesis strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing double parentheses.
+        """
+        if not results:
+            return {}
+
+        double_paren_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.block_reference.search(result):
+                double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
+                results.pop()
+                continue
+
+        double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
+
+        return double_paren_family
 
 
 @singleton
@@ -702,6 +911,36 @@ class EmbeddedLinksPatterns:
         )
         logging.info("Compiled EmbeddedLinksPatterns")
 
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process embedded links and categorize them.
+
+        Args:
+            results (List[str]): List of embedded link strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing embedded links.
+        """
+        if not results:
+            return {}
+
+        embedded_links_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.internet.search(result):
+                embedded_links_family[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
+                results.pop()
+                continue
+            if self.asset.search(result):
+                embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
+                results.pop()
+                continue
+
+        embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
+
+        return embedded_links_family
+
 
 @singleton
 @dataclass
@@ -763,3 +1002,33 @@ class ExternalLinksPatterns:
             re.IGNORECASE | re.VERBOSE,
         )
         logging.info("Compiled ExternalLinksPatterns")
+
+    def process(self, results: List[str]) -> Dict[str, List[str]]:
+        """
+        Process external links and categorize them.
+
+        Args:
+            results (List[str]): List of external link strings.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary categorizing external links.
+        """
+        if not results:
+            return {}
+
+        external_links_family = defaultdict(list)
+
+        for _ in range(len(results)):
+            result = results[-1]
+            if self.internet.search(result):
+                external_links_family[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
+                results.pop()
+                continue
+            if self.alias.search(result):
+                external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
+                results.pop()
+                continue
+
+        external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
+
+        return external_links_family
