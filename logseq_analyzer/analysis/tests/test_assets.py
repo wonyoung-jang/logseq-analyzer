@@ -13,6 +13,20 @@ def logseq_assets_hls():
     return LogseqAssetsHls()
 
 
+def test_representation(logseq_assets):
+    assert repr(logseq_assets) == "LogseqAssets()"
+    assert str(logseq_assets) == "LogseqAssets"
+
+
+def test_len(logseq_assets):
+    assert len(logseq_assets) == 0
+    logseq_assets.backlinked = ["a", "b"]
+    logseq_assets.not_backlinked = ["c"]
+    assert len(logseq_assets) == 3
+    logseq_assets.backlinked = []
+    logseq_assets.not_backlinked = []
+
+
 def test_logseq_assets_singleton(logseq_assets):
     other_logseq_assets = LogseqAssets()
     assert logseq_assets is other_logseq_assets
