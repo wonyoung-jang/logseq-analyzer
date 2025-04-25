@@ -98,13 +98,12 @@ class LogseqFile:
         if not self.content:
             return
 
-        code_blocks = CodePatterns()
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_blocks(self.content)
         self.masked_blocks = masked_blocks
 
         primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(code_blocks.inline_code_block, self.content),
+            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(CodePatterns().inline_code_block, self.content),
             Criteria.ASSETS.value: find_all_lower(ContentPatterns().asset, self.content),
             Criteria.ANY_LINKS.value: find_all_lower(ContentPatterns().any_link, self.content),
             Criteria.BLOCKQUOTES.value: find_all_lower(ContentPatterns().blockquote, masked_content),
@@ -132,7 +131,7 @@ class LogseqFile:
         block_props = split_builtin_user_properties(block_properties)
 
         # Process code blocks
-        code_blocks_family = self.find_and_process_pattern(code_blocks)
+        code_blocks_family = self.find_and_process_pattern(CodePatterns())
         primary_data.update(code_blocks_family)
 
         # Process double parentheses
