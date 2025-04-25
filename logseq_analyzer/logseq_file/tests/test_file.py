@@ -49,3 +49,15 @@ def test_representation(logseq_file):
     """Test the string representation of LogseqFile."""
     assert repr(logseq_file) == f'LogseqFile(file_path="{logseq_file.file_path}")'
     assert str(logseq_file) == f"LogseqFile: {logseq_file.file_path}"
+
+
+def test_hash(logseq_file):
+    """Test the hash of LogseqFile."""
+    assert hash(logseq_file) == hash(logseq_file.path.parts)
+
+
+def test_equality(logseq_file, temp_file):
+    """Test the equality of LogseqFile objects."""
+    logseq_file_2 = LogseqFile(Path(temp_file))
+    assert logseq_file == logseq_file_2
+    assert logseq_file != "Not a LogseqFile object"
