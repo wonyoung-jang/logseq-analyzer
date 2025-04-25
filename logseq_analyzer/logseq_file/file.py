@@ -2,10 +2,8 @@
 LogseqFile class to process Logseq files.
 """
 
-from collections import defaultdict
 from pathlib import Path
-from tokenize import Double
-from typing import Dict, List, Set, Tuple
+from typing import Dict, Set, Tuple
 import uuid
 
 from ..config.builtin_properties import split_builtin_user_properties

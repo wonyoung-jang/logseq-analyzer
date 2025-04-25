@@ -4,12 +4,11 @@ Compile frequently used regex patterns for Logseq content.
 
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Dict, List
 import logging
 import re
-from typing import Dict, List
 
 from .enums import Criteria
-
 from .helpers import singleton
 
 
