@@ -128,8 +128,10 @@ def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     graph_config = LogseqGraphConfig()
     if args.global_config:
-        graph_config.global_config_file = GlobalConfigFile().path
-    graph_config.user_config_file = ConfigFile().path
+        global_config_file = GlobalConfigFile()
+        graph_config.global_config_file = global_config_file.path
+    user_config_file = ConfigFile()
+    graph_config.user_config_file = user_config_file.path
     graph_config.initialize_user_config_edn()
     graph_config.initialize_global_config_edn()
     graph_config.merge()
