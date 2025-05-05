@@ -32,8 +32,7 @@ class Args:
     def set_gui_args(self, **kwargs):
         """Set arguments if provided as keyword arguments from GUI."""
         for key, value in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+            setattr(self, key, value)
 
     def set_cli_args(self):
         """Parse command line arguments and set them as attributes."""
@@ -87,5 +86,4 @@ class Args:
         )
         args = parser.parse_args()
         for key, value in vars(args).items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+            setattr(self, key, value)
