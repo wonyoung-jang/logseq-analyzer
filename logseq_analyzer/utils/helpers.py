@@ -15,17 +15,17 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
     Recursively iterate over files in the root directory.
     """
     for root, dirs, files in Path.walk(root_dir):
-        path_root = Path(root)
-        if path_root == root_dir:
+        if root == root_dir:
             continue
 
-        if path_root.name in target_dirs or path_root.parent.name in target_dirs:
+        if root.name in target_dirs or root.parent.name in target_dirs:
             for file in files:
                 if Path(file).suffix in [Format.ORG.value]:
+                    logging.info("Skipping org-mode file %s in %s", file, root)
                     continue
-                yield path_root / file
+                yield root / file
         else:
-            logging.info("Skipping directory %s outside target directories", path_root)
+            logging.info("Skipping directory %s outside target directories", root)
             dirs.clear()
 
 

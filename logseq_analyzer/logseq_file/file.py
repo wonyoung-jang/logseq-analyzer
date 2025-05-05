@@ -163,6 +163,15 @@ class LogseqFile:
             }
         )
 
+        self.check_has_backlinks(primary_data)
+
+    def check_has_backlinks(self, primary_data: Dict[str, str]):
+        """
+        Checkd has backlinks in the content.
+
+        Args:
+            primary_data (Dict[str, str]): Dictionary containing primary data.
+        """
         for key, value in primary_data.items():
             if not value:
                 continue

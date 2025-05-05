@@ -237,7 +237,7 @@ def setup_logseq_assets() -> LogseqAssets:
 def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     """Setup LogseqFileMover for moving files and directories."""
     ls_file_mover = LogseqFileMover()
-    ma = ls_file_mover.handle_move_files()
+    ma = ls_file_mover.handle_move_assets()
     mb = ls_file_mover.handle_move_directory(
         args.move_bak,
         DeleteBakDirectory().path,
