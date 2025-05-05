@@ -24,7 +24,8 @@ class LogseqDateTimeTokens:
 
     def get_datetime_token_map(self):
         """Return the datetime token mapping as a dictionary"""
-        self.token_map = LogseqAnalyzerConfig().get_section("DATETIME_TOKEN_MAP")
+        ls_analyzer_config = LogseqAnalyzerConfig()
+        self.token_map = ls_analyzer_config.get_section("DATETIME_TOKEN_MAP")
 
     def set_datetime_token_pattern(self):
         """Return a compiled regex pattern for datetime tokens"""
@@ -36,14 +37,16 @@ class LogseqDateTimeTokens:
         """
         Set the formatting for journal files and pages in Python format.
         """
-        journal_file_format = LogseqGraphConfig().ls_config.get(":journal/file-name-format")
-        if not LogseqJournalFormats().py_file_format:
-            LogseqJournalFormats().py_file_format = self.convert_cljs_date_to_py(journal_file_format)
+        ls_graph_config = LogseqGraphConfig()
+        journal_file_format = ls_graph_config.ls_config.get(":journal/file-name-format")
+        ls_journal_formats = LogseqJournalFormats()
+        if not ls_journal_formats.file:
+            ls_journal_formats.file = self.convert_cljs_date_to_py(journal_file_format)
 
-        journal_page_format = LogseqGraphConfig().ls_config.get(":journal/page-title-format")
+        journal_page_format = ls_graph_config.ls_config.get(":journal/page-title-format")
         py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        if not LogseqJournalFormats().py_page_format:
-            LogseqJournalFormats().py_page_format = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
+        if not ls_journal_formats.page:
+            ls_journal_formats.page = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
 
     def convert_cljs_date_to_py(self, cljs_format) -> str:
         """
@@ -70,29 +73,29 @@ class LogseqJournalFormats:
         """
         Initialize the LogseqJournalPyFileFormat class.
         """
-        self._py_file_format = ""
-        self._py_page_format = ""
+        self._file = ""
+        self._page = ""
 
     @property
-    def py_file_format(self):
+    def file(self):
         """Return the Python file format for Logseq journals."""
-        return self._py_file_format
+        return self._file
 
-    @py_file_format.setter
-    def py_file_format(self, value):
+    @file.setter
+    def file(self, value):
         """Set the Python file format for Logseq journals."""
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")
-        self._py_file_format = value
+        self._file = value
 
     @property
-    def py_page_format(self):
+    def page(self):
         """Return the Python name format for Logseq journals."""
-        return self._py_page_format
+        return self._page
 
-    @py_page_format.setter
-    def py_page_format(self, value):
+    @page.setter
+    def page(self, value):
         """Set the Python name format for Logseq journals."""
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")
-        self._py_page_format = value
+        self._page = value

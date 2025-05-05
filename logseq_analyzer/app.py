@@ -124,14 +124,9 @@ def setup_logseq_paths(args: Args):
     logging.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
+def setup_logseq_graph_config() -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     graph_config = LogseqGraphConfig()
-    if args.global_config:
-        global_config_file = GlobalConfigFile()
-        graph_config.global_config_file = global_config_file.path
-    user_config_file = ConfigFile()
-    graph_config.user_config_file = user_config_file.path
     graph_config.initialize_user_config_edn()
     graph_config.initialize_global_config_edn()
     graph_config.merge()
@@ -266,6 +261,8 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
     meta_reports = {
         Output.ALL_REFS.value: graph.all_linked_references,
         Output.CONFIG_DATA.value: graph_config.ls_config,
+        "config_user": graph_config.user_config_data,
+        "config_global": graph_config.global_config_data,
         Output.DANGLING_LINKS.value: graph.dangling_links,
         Output.UNIQUE_LINKED_REFERENCES_NS.value: graph.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: graph.unique_linked_references,
@@ -428,7 +425,7 @@ def run_app(**kwargs):
     progress(25)
     setup_logseq_paths(args)
     progress(30)
-    graph_config = setup_logseq_graph_config(args)
+    graph_config = setup_logseq_graph_config()
     progress(35)
     setup_target_dirs(analyzer_config, graph_config)
     progress(40)

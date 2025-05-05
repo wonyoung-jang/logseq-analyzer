@@ -67,9 +67,9 @@ class LogseqFilename:
 
     def process_logseq_journal_key(self):
         """Process the journal key to create a page title."""
-        ljf = LogseqJournalFormats()
-        py_file_format = ljf.py_file_format
-        py_page_format = ljf.py_page_format
+        ls_journal_formats = LogseqJournalFormats()
+        py_file_format = ls_journal_formats.file
+        py_page_format = ls_journal_formats.page
         try:
             date_object = datetime.strptime(self.name, py_file_format)
             page_title_base = date_object.strftime(py_page_format).lower()

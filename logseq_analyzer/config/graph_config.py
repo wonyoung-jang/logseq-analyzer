@@ -4,7 +4,9 @@ Logseq Graph Class
 
 from typing import Any, Dict
 
+from ..io.filesystem import ConfigFile, GlobalConfigFile
 from ..utils.helpers import singleton
+from .arguments import Args
 from .edn_parser import loads
 
 
@@ -17,22 +19,23 @@ class LogseqGraphConfig:
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
         self.ls_config = {}
-        self.user_config_file = None
         self.user_config_data = {}
-        self.global_config_file = None
         self.global_config_data = {}
 
     def initialize_user_config_edn(self):
         """Extract user config."""
-        with self.user_config_file.open("r", encoding="utf-8") as user_config:
+        user_config_file = ConfigFile()
+        with user_config_file.path.open("r", encoding="utf-8") as user_config:
             self.user_config_data = loads(user_config.read())
 
     def initialize_global_config_edn(self):
         """Extract global config."""
-        if not self.global_config_file:
+        args = Args()
+        if not args.global_config:
             return
 
-        with self.global_config_file.open("r", encoding="utf-8") as global_config:
+        global_config_file = GlobalConfigFile()
+        with global_config_file.path.open("r", encoding="utf-8") as global_config:
             self.global_config_data = loads(global_config.read())
 
     def merge(self):
