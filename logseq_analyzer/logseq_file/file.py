@@ -191,7 +191,8 @@ class LogseqFile:
         Args:
             pattern: The pattern to find and process.
         """
-        results = find_all_lower(pattern.all, self.content)
+        all_pattern = getattr(pattern, "all", None)
+        results = find_all_lower(all_pattern, self.content)
         return pattern.process(results)
 
     def determine_node_type(self) -> str:
@@ -224,7 +225,7 @@ class LogseqFile:
         masked_blocks = {}
         masked_content = content
 
-        for match in CodePatterns().all.finditer(content):
+        for match in CodePatterns().all.finditer(masked_content):
             block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
