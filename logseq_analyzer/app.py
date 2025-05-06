@@ -449,7 +449,7 @@ def run_app(**kwargs):
     progress(80)
     ls_assets = setup_logseq_assets()
     progress(85)
-    # Movee files
+    # Move files
     ls_file_mover = setup_logseq_file_mover(args)
     progress(90)
     # Output writing
