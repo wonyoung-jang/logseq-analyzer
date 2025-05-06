@@ -2,6 +2,9 @@
 Logseq Assets Analysis Module.
 """
 
+from typing import List
+
+from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton
 from ..utils.patterns import ContentPatterns
@@ -48,7 +51,7 @@ class LogseqAssets:
         self.backlinked = index.list_files_with_keys_and_values(**backlinked_kwargs)
         self.not_backlinked = index.list_files_with_keys_and_values(**not_backlinked_kwargs)
 
-    def update_asset_backlink(self, file_name, asset_mentions, asset_file):
+    def update_asset_backlink(self, file_name: str, asset_mentions: List[str], asset_file: LogseqFile):
         """Update the backlink status of an asset file based on mentions in another file."""
         if not asset_mentions:
             return

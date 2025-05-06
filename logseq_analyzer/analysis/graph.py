@@ -3,6 +3,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import Counter
+
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
@@ -73,8 +74,8 @@ class LogseqGraph:
                 self.all_linked_references[item]["count"] = self.all_linked_references[item].get("count", 0) + 1
                 self.all_linked_references[item]["found_in"][file.path.name] += 1
 
-            if hasattr(file, "ns_parent"):
-                linked_references.remove(file.ns_parent)
+            if ns_parent := getattr(file, "ns_parent", ""):
+                linked_references.remove(ns_parent)
 
             self.unique_linked_references.update(linked_references)
 
@@ -87,36 +88,48 @@ class LogseqGraph:
 
     def post_processing_content_namespaces(self, file: LogseqFile):
         """Post-process namespaces in the content data."""
-        ns_level = file.ns_level
-        ns_root = file.ns_root
-        ns_parent = file.ns_parent_full
+        ns_level = getattr(file, "ns_level")
+        ns_root = getattr(file, "ns_root")
+        ns_parent = getattr(file, "ns_parent_full")
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
         index = FileIndex()
         for ns_root_file in index.get(ns_root):
             if not hasattr(ns_root_file, "ns_level"):
-                ns_root_file.ns_level = 1
+                setattr(ns_root_file, "ns_level", 1)
             if not hasattr(ns_root_file, "ns_children"):
-                ns_root_file.ns_children = set()
-            ns_root_file.ns_children.add(file.path.name)
-            ns_root_file.ns_size = self.process_ns_size(ns_root_file)
+                setattr(ns_root_file, "ns_children", set())
+            ns_children_root = getattr(ns_root_file, "ns_children")
+            ns_children_root.add(file.path.name)
+            setattr(ns_root_file, "ns_size", self.process_ns_size(ns_root_file))
 
         if ns_level <= 2:
             return
 
         for ns_parent_file in index.get(ns_parent):
             if not hasattr(ns_parent_file, "ns_level"):
-                ns_parent_file.ns_level = ns_level - 1
+                setattr(ns_parent_file, "ns_level", ns_level - 1)
             if not hasattr(ns_parent_file, "ns_children"):
-                ns_parent_file.ns_children = set()
-            ns_parent_file.ns_children.add(file.path.name)
-            ns_parent_file.ns_size = self.process_ns_size(ns_parent_file)
+                setattr(ns_parent_file, "ns_children", set())
+            ns_children_parent = getattr(ns_parent_file, "ns_children")
+            ns_children_parent.add(file.path.name)
+            setattr(ns_parent_file, "ns_size", self.process_ns_size(ns_parent_file))
 
-    def process_ns_size(self, parent_file: LogseqFile):
-        """Process the size of namespaces."""
+    def process_ns_size(self, parent_file: LogseqFile) -> int:
+        """
+        Process the size of namespaces.
+
+        Args:
+            parent_file (LogseqFile): The parent file to process.
+
+        Returns:
+            int: The size of the namespace.
+        """
         if not hasattr(parent_file, "ns_size"):
-            return len(parent_file.ns_children)
-        return parent_file.ns_size + 1
+            ns_children = getattr(parent_file, "ns_children")
+            return len(ns_children)
+        ns_size = getattr(parent_file, "ns_size")
+        return ns_size + 1
 
     def process_summary_data(self):
         """Process summary data for each file based on metadata and content analysis."""
