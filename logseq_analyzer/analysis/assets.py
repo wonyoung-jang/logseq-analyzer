@@ -33,13 +33,12 @@ class LogseqAssets:
         """Handle assets for the Logseq Analyzer."""
         index = FileIndex()
         criteria = {"file_type": "asset"}
-        asset_files = index.list_files_with_keys_and_values(**criteria)
         for file in index.files:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
-            for asset_file in asset_files:
+            for asset_file in index.yield_files_with_keys_and_values(**criteria):
                 if asset_file.is_backlinked:
                     continue
                 self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
@@ -88,7 +87,7 @@ class LogseqAssetsHls:
         """Retrieve asset files based on specific criteria."""
         index = FileIndex()
         criteria = {"file_type": "sub_asset"}
-        asset_files = index.list_files_with_keys_and_values(**criteria)
+        asset_files = index.yield_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
@@ -96,10 +95,9 @@ class LogseqAssetsHls:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         index = FileIndex()
         criteria = {"is_hls": True}
-        files = index.list_files_with_keys_and_values(**criteria)
         content_patterns = ContentPatterns()
         prop_value_pattern = content_patterns.property_value
-        for file in files:
+        for file in index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):

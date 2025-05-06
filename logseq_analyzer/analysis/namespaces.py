@@ -21,7 +21,7 @@ from ..utils.enums import Core
 from ..utils.helpers import find_all_lower, singleton, sort_dict_by_value
 from ..utils.patterns import ContentPatterns
 from .graph import LogseqGraph
-from .index import FileIndex
+from .index import FileIndex, get_attribute_list
 
 
 @singleton
@@ -114,7 +114,8 @@ class LogseqNamespaces:
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
         index = FileIndex()
-        non_ns_names = index.list_file_names_without_keys("ns_level")
+        non_ns_files = index.list_files_without_keys("ns_level")
+        non_ns_names = get_attribute_list(non_ns_files, "name")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)
         for entry, parts in self.namespace_parts.items():

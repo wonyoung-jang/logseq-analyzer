@@ -22,19 +22,19 @@ class Args:
     graph_cache: bool = False
     report_format: str = ".txt"
 
-    def setup_args(self, **kwargs):
+    def setup_args(self, **kwargs) -> None:
         """Set up command line arguments and GUI arguments."""
         if kwargs:
             self.set_gui_args(**kwargs)
         else:
             self.set_cli_args()
 
-    def set_gui_args(self, **kwargs):
+    def set_gui_args(self, **kwargs) -> None:
         """Set arguments if provided as keyword arguments from GUI."""
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def set_cli_args(self):
+    def set_cli_args(self) -> None:
         """Parse command line arguments and set them as attributes."""
         parser = argparse.ArgumentParser(description="Logseq Analyzer")
         parser.add_argument(

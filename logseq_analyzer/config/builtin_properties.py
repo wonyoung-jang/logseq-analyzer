@@ -25,7 +25,7 @@ class LogseqBuiltInProperties:
         self.built_in_properties = frozenset(properties_str.split(","))
 
 
-def split_builtin_user_properties(properties: List) -> Dict[str, List[str]]:
+def split_builtin_user_properties(properties: List[str]) -> Dict[str, List[str]]:
     """
     Helper function to split properties into built-in and user-defined.
 

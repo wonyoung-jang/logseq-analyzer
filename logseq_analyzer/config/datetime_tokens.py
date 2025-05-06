@@ -22,18 +22,18 @@ class LogseqDateTimeTokens:
         self.token_map = None
         self.token_pattern = None
 
-    def get_datetime_token_map(self):
+    def get_datetime_token_map(self) -> None:
         """Return the datetime token mapping as a dictionary"""
         ls_analyzer_config = LogseqAnalyzerConfig()
         self.token_map = ls_analyzer_config.get_section("DATETIME_TOKEN_MAP")
 
-    def set_datetime_token_pattern(self):
+    def set_datetime_token_pattern(self) -> None:
         """Return a compiled regex pattern for datetime tokens"""
         tokens = self.token_map.keys()
         pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
         self.token_pattern = re.compile(pattern)
 
-    def set_journal_py_formatting(self):
+    def set_journal_py_formatting(self) -> None:
         """
         Set the formatting for journal files and pages in Python format.
         """
@@ -48,14 +48,14 @@ class LogseqDateTimeTokens:
         if not ls_journal_formats.page:
             ls_journal_formats.page = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
 
-    def convert_cljs_date_to_py(self, cljs_format) -> str:
+    def convert_cljs_date_to_py(self, cljs_format: str) -> str:
         """
         Convert a Clojure-style date format to a Python-style date format.
         """
         cljs_format = cljs_format.replace("o", "")
         return self.token_pattern.sub(self.replace_token, cljs_format)
 
-    def replace_token(self, match):
+    def replace_token(self, match: re.Match) -> str:
         """
         Replace a date token with its corresponding Python format.
         """

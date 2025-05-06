@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
-from .index import FileIndex
+from .index import FileIndex, get_attribute_list
 
 
 @singleton
@@ -63,7 +63,8 @@ class LogseqFileSummarizer:
         }
         subsets = {}
         for output_name, criteria in summary_categories.items():
-            subsets[output_name.value] = index.list_file_names_with_keys_and_values(**criteria)
+            files = index.list_files_with_keys_and_values(**criteria)
+            subsets[output_name.value] = get_attribute_list(files, "name")
         subsets[SummaryFiles.FILE_EXTS.value] = self.process_file_extensions(index)
         self.subsets.update(subsets)
 
@@ -74,5 +75,6 @@ class LogseqFileSummarizer:
         for ext in unique_exts:
             subset_name = f"all {ext}s"
             criteria = {"suffix": ext}
-            file_extension_dict[subset_name] = index.list_file_names_with_keys_and_values(**criteria)
+            files = index.list_files_with_keys_and_values(**criteria)
+            file_extension_dict[subset_name] = get_attribute_list(files, "name")
         return file_extension_dict

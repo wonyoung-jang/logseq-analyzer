@@ -95,20 +95,18 @@ class FileIndex:
                 result.append(file)
         return result
 
-    def list_file_names_with_keys_and_values(self, **criteria) -> List[str]:
+    def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
-        result = []
         for file in self.files:
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
-                result.append(file.path.name)
-        return result
+                yield file
 
-    def list_file_names_without_keys(self, *criteria) -> List[str]:
+    def list_files_without_keys(self, *criteria) -> List[LogseqFile]:
         """Extract a subset of the summary data based on whether the keys do not exist."""
         result = []
         for file in self.files:
             if all(not hasattr(file, key) for key in criteria):
-                result.append(file.path.name)
+                result.append(file)
         return result
 
     def yield_files_with_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
@@ -116,3 +114,17 @@ class FileIndex:
         for file in self.files:
             if all(hasattr(file, key) for key in criteria):
                 yield file
+
+
+def get_attribute_list(file_list: List[LogseqFile], attribute: str) -> List[Union[str, int]]:
+    """
+    Get a list of attribute values from a list of LogseqFile objects.
+
+    Args:
+        file_list (List[LogseqFile]): List of LogseqFile objects.
+        attribute (str): The attribute to extract from each LogseqFile object.
+
+    Returns:
+        List[Union[str, int]]: List of attribute values.
+    """
+    return [getattr(file, attribute) for file in file_list]

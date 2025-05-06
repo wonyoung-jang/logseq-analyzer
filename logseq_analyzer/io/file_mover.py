@@ -36,7 +36,7 @@ class LogseqFileMover:
     def handle_move_assets(self) -> List[str]:
         """
         Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
-        
+
         Returns:
             List[str]: A list of names of the moved files/folders.
         """
@@ -69,12 +69,12 @@ class LogseqFileMover:
     def handle_move_directory(self, argument: bool, output_dir: Path, logseq_dir: Path) -> List[str]:
         """
         Move bak and recycle files to a specified directory.
-        
+
         Args:
             argument (bool): If True, move the files. If False, simulate the move.
             output_dir (Path): The directory to move files to.
             logseq_dir (Path): The directory to move files from.
-            
+
         Returns:
             List[str]: A list of names of the moved files/folders.
         """
@@ -93,11 +93,11 @@ class LogseqFileMover:
     def get_all_folder_content(self, output_dir: Path, logseq_dir: Path) -> Tuple[List[Tuple], List[str]]:
         """
         Move all folders from one directory to another.
-        
+
         Args:
             output_dir (Path): The directory to move files to.
             logseq_dir (Path): The directory to move files from.
-            
+
         Returns:
             Tuple[List[Tuple], List[str]]: A tuple containing a list of tuples with source and destination paths,
                                             and a list of names of the moved files/folders.
