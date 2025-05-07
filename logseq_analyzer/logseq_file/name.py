@@ -52,12 +52,12 @@ class LogseqFilename:
 
     def process_logseq_filename(self):
         """Process the Logseq filename based on its parent directory."""
-        ls_analyzer_config = LogseqAnalyzerConfig()
-        ns_file_sep = ls_analyzer_config.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+        lac = LogseqAnalyzerConfig()
+        ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
 
         self.name = self.name.strip(ns_file_sep)
 
-        if self.parent == ls_analyzer_config.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
+        if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             self.process_logseq_journal_key()
         else:
             self.name = unquote(self.name).replace(ns_file_sep, Core.NS_SEP.value)
@@ -87,16 +87,16 @@ class LogseqFilename:
 
     def convert_uri_to_logseq_url(self):
         """Convert a file URI to a Logseq URL."""
+        gd = GraphDirectory()
+        len_gd = len(gd.path.parts)
         len_uri = len(Path(self.uri).parts)
-        graph_dir_path = GraphDirectory().path
-        len_graph_dir = len(graph_dir_path.parts)
-        target_index = len_uri - len_graph_dir
+        target_index = len_uri - len_gd
         target_segment = Path(self.uri).parts[target_index]
 
         if target_segment[:-1] not in ("page", "block-id"):
             return
 
-        prefix = f"file:///{str(graph_dir_path)}/{target_segment}/"
+        prefix = f"file:///{str(gd.path)}/{target_segment}/"
         if not self.uri.startswith(prefix):
             return
 
@@ -132,12 +132,13 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
+        lac = LogseqAnalyzerConfig()
         result = {
-            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
-            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
-            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
-            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
-            LogseqAnalyzerConfig().config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
+            lac.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
+            lac.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
+            lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
+            lac.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
+            lac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
         if result != "other":
@@ -148,11 +149,11 @@ class LogseqFilename:
             result = "sub_asset"
         elif "draws" in self.parts:
             result = "sub_draw"
-        elif "journals" in self.parts:
+        elif lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"] in self.parts:
             result = "sub_journal"
-        elif "pages" in self.parts:
+        elif lac.config["LOGSEQ_CONFIG"]["DIR_PAGES"] in self.parts:
             result = "sub_page"
-        elif "whiteboards" in self.parts:
+        elif lac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] in self.parts:
             result = "sub_whiteboard"
 
         self.file_type = result

@@ -38,7 +38,7 @@ def split_builtin_user_properties(properties: List[str]) -> Dict[str, List[str]]
     built_ins = LogseqBuiltInProperties()
     built_in_props = built_ins.built_in_properties
     properties_dict = {
-        "built_in": [prop for prop in properties if prop in built_in_props],
+        "built_ins": [prop for prop in properties if prop in built_in_props],
         "user_props": [prop for prop in properties if prop not in built_in_props],
     }
     return properties_dict

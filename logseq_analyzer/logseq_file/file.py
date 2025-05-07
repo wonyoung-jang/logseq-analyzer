@@ -3,6 +3,7 @@ LogseqFile class to process Logseq files.
 """
 
 from pathlib import Path
+from re import Pattern
 from typing import Dict, Set, Tuple
 import uuid
 
@@ -118,8 +119,7 @@ class LogseqFile:
         properties_values = dict(property_value_all)
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
-
-        # Process properties
+        # Process aliases and properties
         page_properties = []
         if self.bullets.has_page_properties:
             page_properties = find_all_lower(ContentPatterns().property, self.primary_bullet)
@@ -127,42 +127,32 @@ class LogseqFile:
         block_properties = find_all_lower(ContentPatterns().property, self.content)
         page_props = split_builtin_user_properties(page_properties)
         block_props = split_builtin_user_properties(block_properties)
-
-        # Process code blocks
+        aliases_and_properties = {
+            Criteria.ALIASES.value: aliases,
+            Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props.get("built_ins", []),
+            Criteria.PROPERTIES_BLOCK_USER.value: block_props.get("user_props", []),
+            Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props.get("built_ins", []),
+            Criteria.PROPERTIES_PAGE_USER.value: page_props.get("user_props", []),
+            Criteria.PROPERTIES_VALUES.value: properties_values,
+        }
+        primary_data.update(aliases_and_properties)
+        # Process specific families of patterns
         code_blocks_family = self.find_and_process_pattern(CodePatterns())
-        primary_data.update(code_blocks_family)
-
-        # Process double parentheses
         double_paren_family = self.find_and_process_pattern(DoubleParenthesesPatterns())
-        primary_data.update(double_paren_family)
-
-        # Process external links
         external_links_family = self.find_and_process_pattern(ExternalLinksPatterns())
-        primary_data.update(external_links_family)
-
-        # Process embedded links
         embedded_links_family = self.find_and_process_pattern(EmbeddedLinksPatterns())
-        primary_data.update(embedded_links_family)
-
-        # Process double curly braces
         double_curly_family = self.find_and_process_pattern(DoubleCurlyBracketsPatterns())
-        primary_data.update(double_curly_family)
-
-        # Process advanced commands
         advanced_commands_family = self.find_and_process_pattern(AdvancedCommandPatterns())
-        primary_data.update(advanced_commands_family)
-
-        primary_data.update(
-            {
-                Criteria.ALIASES.value: aliases,
-                Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props["built_in"],
-                Criteria.PROPERTIES_BLOCK_USER.value: block_props["user_props"],
-                Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props["built_in"],
-                Criteria.PROPERTIES_PAGE_USER.value: page_props["user_props"],
-                Criteria.PROPERTIES_VALUES.value: properties_values,
-            }
-        )
-
+        capture_families = [
+            code_blocks_family,
+            double_paren_family,
+            external_links_family,
+            embedded_links_family,
+            double_curly_family,
+            advanced_commands_family,
+        ]
+        for family in capture_families:
+            primary_data.update(family)
         self.check_has_backlinks(primary_data)
 
     def check_has_backlinks(self, primary_data: Dict[str, str]):
@@ -173,15 +163,11 @@ class LogseqFile:
             primary_data (Dict[str, str]): Dictionary containing primary data.
         """
         for key, value in primary_data.items():
-            if not value:
-                continue
-
-            self.data[key] = value
-
-            if self.has_backlinks:
-                continue
-
-            if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+            if value:
+                self.data[key] = value
+            if not self.has_backlinks and (
+                key in ("page_references", "tags", "tagged_backlinks") or "properties" in key
+            ):
                 self.has_backlinks = True
 
     def find_and_process_pattern(self, pattern):
@@ -204,7 +190,6 @@ class LogseqFile:
             (True, True, False, False): "leaf",
             (False, True, True, False): "leaf",
             (False, True, False, False): "leaf",
-            (True, False, True, True): "root",
             (True, False, False, True): "root",
             (True, False, True, False): "orphan_namespace",
             (False, False, True, False): "orphan_namespace_true",
