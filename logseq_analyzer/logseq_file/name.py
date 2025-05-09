@@ -50,28 +50,32 @@ class LogseqFilename:
     def __str__(self):
         return f"LogseqFilename: {self.file_path}"
 
-    def process_logseq_filename(self):
+    def process_logseq_filename(self) -> str:
         """Process the Logseq filename based on its parent directory."""
         lac = LogseqAnalyzerConfig()
         ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
-
-        self.name = self.name.strip(ns_file_sep)
-
+        name = self.name.strip(ns_file_sep)
         if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
-            self.process_logseq_journal_key()
+            return self._process_logseq_journal_key(name)
         else:
-            self.name = unquote(self.name).replace(ns_file_sep, Core.NS_SEP.value)
+            name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
+        return name
 
-        self.is_namespace = Core.NS_SEP.value in self.name
-        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
+    def check_is_namespace(self) -> bool:
+        """Check if the filename is a namespace."""
+        return Core.NS_SEP.value in self.name
 
-    def process_logseq_journal_key(self):
+    def check_is_hls(self) -> bool:
+        """Check if the filename is a HLS (Hierarchical Logseq Structure)."""
+        return self.name.startswith(Core.HLS_PREFIX.value)
+
+    def _process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
-        ls_journal_formats = LogseqJournalFormats()
-        py_file_format = ls_journal_formats.file
-        py_page_format = ls_journal_formats.page
+        ljf = LogseqJournalFormats()
+        py_file_format = ljf.file
+        py_page_format = ljf.page
         try:
-            date_object = datetime.strptime(self.name, py_file_format)
+            date_object = datetime.strptime(name, py_file_format)
             page_title_base = date_object.strftime(py_page_format).lower()
             lgc = LogseqGraphConfig()
             ls_config = lgc.ls_config
@@ -81,11 +85,12 @@ class LogseqFilename:
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
             else:
                 page_title = page_title_base
-            self.name = page_title.replace("'", "")
+            return page_title.replace("'", "")
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", self.name, py_page_format, e)
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, py_page_format, e)
+            return ""
 
-    def convert_uri_to_logseq_url(self):
+    def convert_uri_to_logseq_url(self) -> str:
         """Convert a file URI to a Logseq URL."""
         gd = GraphDirectory()
         len_gd = len(gd.path.parts)
@@ -94,18 +99,18 @@ class LogseqFilename:
         target_segment = Path(self.uri).parts[target_index]
 
         if target_segment[:-1] not in ("page", "block-id"):
-            return
+            return ""
 
         prefix = f"file:///{str(gd.path)}/{target_segment}/"
         if not self.uri.startswith(prefix):
-            return
+            return ""
 
         len_suffix = len(Path(self.uri).suffix)
         path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
         path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
         encoded_path = path_with_slashes
         target_segment = target_segment[:-1]
-        self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+        return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
     def get_namespace_name_data(self):
         """Get the namespace name data."""

@@ -3,6 +3,7 @@ FilIndex class.
 """
 
 from collections import defaultdict
+import logging
 from typing import Dict, Generator, List, Set, Union
 from pathlib import Path
 
@@ -50,8 +51,13 @@ class FileIndex:
             return self.path_to_file.get(key)
         raise TypeError(f"Invalid key type: {type(key)}. Expected int, str, or Path.")
 
-    def remove(self, key):
-        """Remove a file from the index."""
+    def remove(self, key: Union[LogseqFile, int, str, Path]) -> None:
+        """
+        Remove a file from the index.
+
+        Args:
+            key (Union[LogseqFile, int, str, Path]): The key to remove.
+        """
         if isinstance(key, LogseqFile):
             if key in self.files:
                 self.files.remove(key)
@@ -60,7 +66,7 @@ class FileIndex:
                 if not self.name_to_files[key.path.name]:
                     del self.name_to_files[key.path.name]
                 del self.path_to_file[key.file_path]
-            print(f"Key {key} removed from index.")
+            logging.debug("Key %s removed from index.", key)
         elif isinstance(key, int):
             file = self.hash_to_file.pop(key, None)
             if file:
@@ -69,14 +75,14 @@ class FileIndex:
                 if not self.name_to_files[file.path.name]:
                     del self.name_to_files[file.path.name]
                 del self.path_to_file[file.file_path]
-            print(f"Key {key} removed from index.")
+            logging.debug("Key %s removed from index.", key)
         elif isinstance(key, str):
             files = self.name_to_files.pop(key, [])
             for file in files:
                 self.files.remove(file)
                 del self.hash_to_file[file]
                 del self.path_to_file[file.file_path]
-            print(f"Key {key} removed from index.")
+            logging.debug("Key %s removed from index.", key)
         elif isinstance(key, Path):
             file = self.path_to_file.pop(key, None)
             if file:
@@ -85,7 +91,7 @@ class FileIndex:
                 self.name_to_files[file.path.name].remove(file)
                 if not self.name_to_files[file.path.name]:
                     del self.name_to_files[file.path.name]
-            print(f"Key {key} removed from index.")
+            logging.debug("Key %s removed from index.", key)
 
     def list_files_with_keys_and_values(self, **criteria) -> List[LogseqFile]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""

@@ -27,13 +27,13 @@ class File:
 
     # Getter for path property
     @property
-    def path(self):
+    def path(self) -> Path:
         """Get the path of the file."""
         return self._path
 
     # Setter for path property
     @path.setter
-    def path(self, value):
+    def path(self, value: str | Path) -> None:
         """Set the path of the file."""
         if isinstance(value, str):
             value = Path(value)

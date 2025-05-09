@@ -56,8 +56,8 @@ class LogseqJournals:
         self.processed_keys.sort()
 
         self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = get_date_stats(self.complete_timeline)
-        self.timeline_stats["dangling_journals"] = get_date_stats(self.dangling_journals)
+        self.timeline_stats["complete_timeline"] = _get_date_stats(self.complete_timeline)
+        self.timeline_stats["dangling_journals"] = _get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
     def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = None):
@@ -79,7 +79,7 @@ class LogseqJournals:
         # Iterate over the sorted keys to construct a continuous timeline.
         for i in range(len(self.processed_keys) - 1):
             current_date = self.processed_keys[i]
-            next_expected_date = get_next_day(current_date)
+            next_expected_date = _get_next_day(current_date)
             next_actual_date = self.processed_keys[i + 1]
 
             # Always include the current date
@@ -93,7 +93,7 @@ class LogseqJournals:
                     self.dangling_journals.remove(next_expected_date)
                 else:
                     self.missing_keys.append(next_expected_date)
-                next_expected_date = get_next_day(next_expected_date)
+                next_expected_date = _get_next_day(next_expected_date)
 
         # Add the last journal key if available.
         if self.processed_keys:
@@ -112,14 +112,14 @@ class LogseqJournals:
                 continue
 
 
-def get_next_day(date_obj: datetime) -> datetime:
+def _get_next_day(date_obj: datetime) -> datetime:
     """
     Return the date of the next day.
     """
     return date_obj + timedelta(days=1)
 
 
-def get_date_stats(timeline):
+def _get_date_stats(timeline):
     """
     Get statistics about the timeline.
     """
@@ -135,7 +135,7 @@ def get_date_stats(timeline):
         return date_stats
     date_stats["first_date"] = min(timeline)
     date_stats["last_date"] = max(timeline)
-    days, weeks, months, years = get_date_ranges(date_stats["last_date"], date_stats["first_date"])
+    days, weeks, months, years = _get_date_ranges(date_stats["last_date"], date_stats["first_date"])
     date_stats["days"] = days
     date_stats["weeks"] = weeks
     date_stats["months"] = months
@@ -143,7 +143,7 @@ def get_date_stats(timeline):
     return date_stats
 
 
-def get_date_ranges(
+def _get_date_ranges(
     most_recent_date: Optional[datetime], least_recent_date: Optional[datetime]
 ) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
     """

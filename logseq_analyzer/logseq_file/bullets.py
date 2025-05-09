@@ -5,6 +5,7 @@ Module for LogseqBullets class
 from dataclasses import dataclass, field
 from pathlib import Path
 import logging
+from typing import List
 
 from ..utils.patterns import ContentPatterns
 
@@ -31,48 +32,52 @@ class LogseqBullets:
     def __str__(self):
         return f"LogseqBullets: {self.file_path}"
 
-    def get_content(self):
+    def get_content(self) -> str:
         """Read the text content of a file."""
         try:
-            self.content = self.file_path.read_text(encoding="utf-8")
+            return self.file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
+            return ""
 
-    def get_char_count(self):
+    def get_char_count(self) -> int:
         """Get character count of content"""
-        self.char_count = len(self.content)
+        return len(self.content)
 
-    def get_bullet_content(self):
+    def get_bullet_content(self) -> List[str]:
         """Get all bullets split into a list"""
-        if self.content:
-            self.all_bullets = ContentPatterns().bullet.split(self.content)
+        if not self.content:
+            return []
+        content_patterns = ContentPatterns()
+        return content_patterns.bullet.split(self.content)
 
-    def get_primary_bullet(self):
+    def get_primary_bullet(self) -> str:
         """Get the Logseq primary bullet if available"""
+        primary = ""
         if len(self.all_bullets) == 1:
-            primary = self.all_bullets[-1].strip()
-            if primary:
-                self.primary_bullet = primary
+            if primary := self.all_bullets[-1].strip():
                 self.bullet_count = 1
             else:
                 self.bullet_count_empty = 1
         elif len(self.all_bullets) > 1:
-            self.primary_bullet = self.all_bullets[0].strip()
+            primary = self.all_bullets[0].strip()
             for bullet in self.all_bullets[1:]:
-                stripped_bullet = bullet.strip()
-                if not stripped_bullet:
+                if not (stripped_bullet := bullet.strip()):
                     self.bullet_count_empty += 1
                 else:
                     self.content_bullets.append(stripped_bullet)
                     self.bullet_count += 1
+        return primary
 
-    def get_bullet_density(self):
+    def get_bullet_density(self) -> float:
         """Calculate bullet density: ~Char count / Bullet count"""
-        if self.bullet_count:
-            self.bullet_density = round(self.char_count / self.bullet_count, 2)
+        if not self.bullet_count:
+            return 0.0
+        return round(self.char_count / self.bullet_count, 2)
 
-    def is_primary_bullet_page_properties(self):
+    def is_primary_bullet_page_properties(self) -> bool:
         """Process primary bullet data."""
         bullet = self.primary_bullet.strip()
         if bullet and not bullet.startswith("#"):
-            self.has_page_properties = True
+            return True
+        return False

@@ -33,20 +33,20 @@ class LogseqFile:
         Args:
             file_path (Path): The path to the Logseq file.
         """
-        self.file_path = file_path
-        self.path = LogseqFilename(file_path)
-        self.stat = LogseqFilestats(file_path)
-        self.bullets = LogseqBullets(file_path)
-        self.content = ""
-        self.data = {}
-        self.primary_bullet = ""
-        self.content_bullets = []
-        self.has_content = False
-        self.has_backlinks = False
-        self.is_backlinked = False
-        self.is_backlinked_by_ns_only = False
-        self.node_type = "other"
-        self.file_type = "other"
+        self.file_path: Path = file_path
+        self.path: LogseqFilename = LogseqFilename(file_path)
+        self.stat: LogseqFilestats = LogseqFilestats(file_path)
+        self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.content: str = ""
+        self.data: dict = {}
+        self.primary_bullet: str = ""
+        self.content_bullets: list = []
+        self.has_content: bool = False
+        self.has_backlinks: bool = False
+        self.is_backlinked: bool = False
+        self.is_backlinked_by_ns_only: bool = False
+        self.node_type: str = "other"
+        self.file_type: str = "other"
 
     def __repr__(self) -> str:
         return f'LogseqFile(file_path="{self.file_path}")'
@@ -67,8 +67,10 @@ class LogseqFile:
         Extract metadata from a file.
         """
         self.path.file_type = self.path.determine_file_type()
-        self.path.process_logseq_filename()
-        self.path.convert_uri_to_logseq_url()
+        self.path.name = self.path.process_logseq_filename()
+        self.path.is_namespace = self.path.check_is_namespace()
+        self.path.is_hls = self.path.check_is_hls()
+        self.path.logseq_url = self.path.convert_uri_to_logseq_url()
         self.path.get_namespace_name_data()
         for attr, value in self.path.__dict__.items():
             setattr(self, attr, value)
@@ -76,12 +78,12 @@ class LogseqFile:
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
 
-        self.bullets.get_content()
-        self.bullets.get_char_count()
-        self.bullets.get_bullet_content()
-        self.bullets.get_primary_bullet()
-        self.bullets.get_bullet_density()
-        self.bullets.is_primary_bullet_page_properties()
+        self.bullets.content = self.bullets.get_content()
+        self.bullets.char_count = self.bullets.get_char_count()
+        self.bullets.all_bullets = self.bullets.get_bullet_content()
+        self.bullets.primary_bullet = self.bullets.get_primary_bullet()
+        self.bullets.bullet_density = self.bullets.get_bullet_density()
+        self.bullets.has_page_properties = self.bullets.is_primary_bullet_page_properties()
         for attr, value in self.bullets.__dict__.items():
             if attr in ("all_bullets"):
                 continue
