@@ -128,7 +128,7 @@ class LogseqFilename:
             if value:
                 setattr(self, key, value)
 
-    def determine_file_type(self):
+    def determine_file_type(self) -> str:
         """
         Helper function to determine the file type based on the directory structure.
         """
@@ -142,8 +142,7 @@ class LogseqFilename:
         }.get(self.parent, "other")
 
         if result != "other":
-            self.file_type = result
-            return
+            return result
 
         if "assets" in self.parts:
             result = "sub_asset"
@@ -155,8 +154,7 @@ class LogseqFilename:
             result = "sub_page"
         elif lac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] in self.parts:
             result = "sub_whiteboard"
-
-        self.file_type = result
+        return result
 
     @staticmethod
     def add_ordinal_suffix_to_day_of_month(day):

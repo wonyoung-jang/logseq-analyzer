@@ -52,7 +52,6 @@ class LogseqGraph:
         for file in index.files:
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
-
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
@@ -83,7 +82,7 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
 
-        all_file_names = set(index.name_to_files.keys())
+        all_file_names = (file.name for file in index.files)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
     def post_processing_content_namespaces(self, file: LogseqFile):

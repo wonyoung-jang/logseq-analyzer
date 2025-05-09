@@ -71,15 +71,12 @@ def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True):
     return dict(sorted(d.items(), key=lambda item: item[1][value], reverse=reverse))
 
 
-def singleton(cls):
+def singleton(cls: type) -> type:
     """
     Decorator to create a singleton class that is pickle-friendly.
     """
 
-    # Store original __new__ method
     orig_new = cls.__new__
-
-    # Keep track of instance
     instance = None
 
     @functools.wraps(orig_new)
@@ -89,21 +86,16 @@ def singleton(cls):
             instance = orig_new(cls, *args, **kwargs)
         return instance
 
-    # Replace __new__ method, keep class identity
     cls.__new__ = __new__
 
-    # Store the original __init__ method
     orig_init = cls.__init__
 
     @functools.wraps(orig_init)
     def __init__(self, *args, **kwargs):
-        # Set a flag indicating that initialization has started
-        if not hasattr(self, "_init_started"):
-            self._init_started = True
-            # Call the original init
+        if not hasattr(self, "init_started"):
+            self.init_started = True
             orig_init(self, *args, **kwargs)
 
-    # Replace the __init__ method
     cls.__init__ = __init__
 
     return cls

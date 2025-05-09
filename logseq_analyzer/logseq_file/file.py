@@ -3,7 +3,6 @@ LogseqFile class to process Logseq files.
 """
 
 from pathlib import Path
-from re import Pattern
 from typing import Dict, Set, Tuple
 import uuid
 
@@ -35,7 +34,6 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path = file_path
-        self.masked_blocks = {}
         self.path = LogseqFilename(file_path)
         self.stat = LogseqFilestats(file_path)
         self.bullets = LogseqBullets(file_path)
@@ -68,7 +66,7 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
-        self.path.determine_file_type()
+        self.path.file_type = self.path.determine_file_type()
         self.path.process_logseq_filename()
         self.path.convert_uri_to_logseq_url()
         self.path.get_namespace_name_data()
@@ -99,7 +97,6 @@ class LogseqFile:
 
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_blocks(self.content)
-        self.masked_blocks = masked_blocks
 
         primary_data = {
             Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(CodePatterns().inline_code_block, self.content),
