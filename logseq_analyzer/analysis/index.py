@@ -3,12 +3,26 @@ FileIndex class.
 """
 
 from collections import defaultdict
-import logging
-from typing import Dict, Generator, List, Set, Union
 from pathlib import Path
+from typing import Dict, Generator, List, Set, Union
+import logging
 
 from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
+
+
+def get_attribute_list(file_list: List[LogseqFile], attribute: str) -> List[Union[str, int]]:
+    """
+    Get a list of attribute values from a list of LogseqFile objects.
+
+    Args:
+        file_list (List[LogseqFile]): List of LogseqFile objects.
+        attribute (str): The attribute to extract from each LogseqFile object.
+
+    Returns:
+        List[Union[str, int]]: List of attribute values.
+    """
+    return [getattr(file, attribute) for file in file_list]
 
 
 @singleton
@@ -16,7 +30,9 @@ class FileIndex:
     """Class to index files in the Logseq graph."""
 
     def __init__(self):
-        """Initialize the FileIndex instance."""
+        """
+        Initialize the FileIndex instance.
+        """
         self.files: Set[LogseqFile] = set()
         self.hash_to_file: Dict[int, LogseqFile] = {}
         self.name_to_files: Dict[str, List[LogseqFile]] = defaultdict(list)
@@ -120,17 +136,3 @@ class FileIndex:
         for file in self.files:
             if all(hasattr(file, key) for key in criteria):
                 yield file
-
-
-def get_attribute_list(file_list: List[LogseqFile], attribute: str) -> List[Union[str, int]]:
-    """
-    Get a list of attribute values from a list of LogseqFile objects.
-
-    Args:
-        file_list (List[LogseqFile]): List of LogseqFile objects.
-        attribute (str): The attribute to extract from each LogseqFile object.
-
-    Returns:
-        List[Union[str, int]]: List of attribute values.
-    """
-    return [getattr(file, attribute) for file in file_list]

@@ -53,7 +53,7 @@ def get_default_logseq_config_edn() -> Dict[str, Any]:
     Returns:
         dict: Default Logseq configuration in EDN format.
     """
-    config = {
+    return {
         ":meta/version": 1,
         ":preferred-format": "Markdown",
         ":preferred-workflow": ":now",
@@ -185,4 +185,3 @@ def get_default_logseq_config_edn() -> Dict[str, Any]:
         },
         ":file/name-format": ":triple-lowbar",
     }
-    return config

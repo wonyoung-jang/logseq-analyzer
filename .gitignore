@@ -1,18 +1,13 @@
+__pycache__
+.*
+.*/
 .*/*
 *.code-workspace
+*.dat
 *.json
 *.log
 *.spec
 *.txt
-.*/
-__pycache__
-
-# Pylint
-.pylintrc
-
-# cProfile
-*.dat
-*.prof
 
 # Pyinstaller
 build/
@@ -20,14 +15,11 @@ dist/
 
 # Logseq Analyzer specific files
 ~notes/
-logseq-analyzer-output/
-to_delete/
 configuration/user_config.ini
+docs/build
+logseq_analyzer/data.py
 logseq-analyzer-cache*
+logseq-analyzer-output/
 setup.cfg
 setup.py
-logseq_analyzer/data.py
-docs/build
-.coverage
-cache_api.py
-explore.py
+to_delete/
