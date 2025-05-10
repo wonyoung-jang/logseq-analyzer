@@ -4,10 +4,10 @@ Logseq Graph Class
 
 from typing import Any, Dict
 
-from ..io.filesystem import ConfigFile, GlobalConfigFile
-from ..utils.helpers import singleton
-from .arguments import Args
-from .edn_parser import loads
+from logseq_analyzer.io.filesystem import ConfigFile, GlobalConfigFile
+from logseq_analyzer.utils.helpers import singleton
+from logseq_analyzer.config.arguments import Args
+from logseq_analyzer.config.edn_parser import loads
 
 
 @singleton
@@ -18,9 +18,9 @@ class LogseqGraphConfig:
 
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
-        self.ls_config = {}
-        self.user_config_data = {}
-        self.global_config_data = {}
+        self.ls_config: Dict = {}
+        self.user_config_data: Dict = {}
+        self.global_config_data: Dict = {}
 
     def initialize_user_config_edn(self):
         """Extract user config."""

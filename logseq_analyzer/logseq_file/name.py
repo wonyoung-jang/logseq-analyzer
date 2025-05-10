@@ -5,6 +5,7 @@ This module handles processing of Logseq filenames based on their parent directo
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Dict
 from urllib.parse import unquote
 import logging
 
@@ -139,12 +140,13 @@ class LogseqFilename:
         Helper function to determine the file type based on the directory structure.
         """
         lac = LogseqAnalyzerConfig()
+        config = lac.config["LOGSEQ_CONFIG"]
         result = {
-            lac.config["LOGSEQ_CONFIG"]["DIR_ASSETS"]: "asset",
-            lac.config["LOGSEQ_CONFIG"]["DIR_DRAWS"]: "draw",
-            lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]: "journal",
-            lac.config["LOGSEQ_CONFIG"]["DIR_PAGES"]: "page",
-            lac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"]: "whiteboard",
+            config["DIR_ASSETS"]: "asset",
+            config["DIR_DRAWS"]: "draw",
+            config["DIR_JOURNALS"]: "journal",
+            config["DIR_PAGES"]: "page",
+            config["DIR_WHITEBOARDS"]: "whiteboard",
         }.get(self.parent, "other")
 
         if result != "other":
@@ -154,11 +156,11 @@ class LogseqFilename:
             result = "sub_asset"
         elif "draws" in self.parts:
             result = "sub_draw"
-        elif lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"] in self.parts:
+        elif config["DIR_JOURNALS"] in self.parts:
             result = "sub_journal"
-        elif lac.config["LOGSEQ_CONFIG"]["DIR_PAGES"] in self.parts:
+        elif config["DIR_PAGES"] in self.parts:
             result = "sub_page"
-        elif lac.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] in self.parts:
+        elif config["DIR_WHITEBOARDS"] in self.parts:
             result = "sub_whiteboard"
         return result
 

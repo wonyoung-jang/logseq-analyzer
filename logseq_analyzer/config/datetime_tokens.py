@@ -73,8 +73,8 @@ class LogseqJournalFormats:
         """
         Initialize the LogseqJournalPyFileFormat class.
         """
-        self._file = ""
-        self._page = ""
+        self._file: str = ""
+        self._page: str = ""
 
     @property
     def file(self) -> str:
