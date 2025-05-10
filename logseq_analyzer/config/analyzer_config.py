@@ -3,7 +3,7 @@ Config class for loading and managing configuration files.
 """
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Set
 import configparser
 import logging
 
@@ -20,20 +20,14 @@ def lambda_optionxform(option: str) -> str:
 
 @singleton
 class LogseqAnalyzerConfig:
-    """
-    A class to handle configuration file loading and management.
-    """
+    """A class to handle configuration file loading and management."""
 
-    def __init__(self, config_path: Path = None):
+    def __init__(self, config_path: Path = Path("configuration/config.ini")):
         """Initialize the LogseqAnalyzerConfig class."""
-        if not config_path:
-            config_path = Path("configuration/config.ini")
-
         if not config_path.exists():
             logging.error("Configuration file not found: %s", config_path)
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
-
-        self.config = configparser.ConfigParser(
+        config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
             default_section="",
@@ -41,50 +35,51 @@ class LogseqAnalyzerConfig:
             empty_lines_in_values=False,
             allow_unnamed_section=True,
         )
-        self.config.optionxform = lambda_optionxform
-        self.config.read(config_path)
-        self.target_dirs = None
+        config.optionxform = lambda_optionxform
+        config.read(config_path)
+        self.config: configparser.ConfigParser = config
+        self.target_dirs: Set[str] = set()
 
-    def get(self, section, key, fallback=None):
+    def get(self, section, key, fallback=None) -> str | None:
         """Get a value from the config file"""
         return self.config.get(section, key, fallback=fallback)
 
-    def set(self, section, key, value):
+    def set(self, section, key, value) -> None:
         """Set a value in the config file"""
         if section not in self.config:
             self.config.add_section(section)
         self.config.set(section, key, str(value))
 
-    def get_section(self, section):
+    def get_section(self, section) -> Dict[str, str]:
         """Get a section from the config file as a dictionary"""
         if section in self.config:
             return dict(self.config[section])
         return {}
 
-    def write_to_file(self, output_path: str = ""):
+    def write_to_file(self, output_path: Path = Path("configuration/user_config.ini")) -> None:
         """Write the config to a file"""
-        if not output_path:
-            output_path = f"{Path('configuration')}/user_config.ini"
         with open(output_path, "w", encoding="utf-8") as file:
             self.config.write(file)
 
-    def set_logseq_config_edn_data(self, ls_config: Dict[str, str]):
+    def set_logseq_config_edn_data(self, ls_config: Dict[str, str]) -> None:
         """Set the Logseq configuration data."""
-        self.set("LOGSEQ_CONFIG", "DIR_PAGES", ls_config.get(":pages-directory", "pages"))
-        self.set("LOGSEQ_CONFIG", "DIR_JOURNALS", ls_config.get(":journals-directory", "journals"))
-        self.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", ls_config.get(":whiteboards-directory", "whiteboards"))
+        config = self.config["LOGSEQ_CONFIG"]
+        config["DIR_PAGES"] = ls_config.get(":pages-directory", "pages")
+        config["DIR_JOURNALS"] = ls_config.get(":journals-directory", "journals")
+        config["DIR_WHITEBOARDS"] = ls_config.get(":whiteboards-directory", "whiteboards")
 
         ns_format = ls_config.get(":file/name-format", ":legacy")
-        self.set("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
+        config["NAMESPACE_FORMAT"] = ns_format
         if ns_format == ":triple-lowbar":
-            self.set("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+            self.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] = Core.NS_FILE_SEP_TRIPLE_LOWBAR.value
 
-    def set_logseq_target_dirs(self):
+    def set_logseq_target_dirs(self) -> Set[str]:
         """Get the target directories based on the configuration data."""
-        self.target_dirs = {
-            self.config["LOGSEQ_CONFIG"]["DIR_ASSETS"],
-            self.config["LOGSEQ_CONFIG"]["DIR_DRAWS"],
-            self.config["LOGSEQ_CONFIG"]["DIR_PAGES"],
-            self.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"],
-            self.config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"],
+        config = self.config["LOGSEQ_CONFIG"]
+        return {
+            config["DIR_ASSETS"],
+            config["DIR_DRAWS"],
+            config["DIR_PAGES"],
+            config["DIR_JOURNALS"],
+            config["DIR_WHITEBOARDS"],
         }

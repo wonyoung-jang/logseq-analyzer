@@ -77,24 +77,24 @@ class LogseqJournalFormats:
         self._page = ""
 
     @property
-    def file(self):
+    def file(self) -> str:
         """Return the Python file format for Logseq journals."""
         return self._file
 
     @file.setter
-    def file(self, value):
+    def file(self, value) -> None:
         """Set the Python file format for Logseq journals."""
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")
         self._file = value
 
     @property
-    def page(self):
+    def page(self) -> str:
         """Return the Python name format for Logseq journals."""
         return self._page
 
     @page.setter
-    def page(self, value):
+    def page(self, value) -> None:
         """Set the Python name format for Logseq journals."""
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")

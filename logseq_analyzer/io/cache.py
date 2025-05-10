@@ -92,10 +92,10 @@ class Cache:
     def iter_modified_files(self):
         """Get the modified files from the cache."""
         mod_tracker = self.cache.setdefault(Output.MOD_TRACKER.value, {})
-        graph_directory = GraphDirectory()
-        graph_dir = graph_directory.path
-        ls_analyzer_config = LogseqAnalyzerConfig()
-        target_dirs = ls_analyzer_config.target_dirs
+        gd = GraphDirectory()
+        graph_dir = gd.path
+        lac = LogseqAnalyzerConfig()
+        target_dirs = lac.target_dirs
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime

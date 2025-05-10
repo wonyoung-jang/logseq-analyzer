@@ -147,7 +147,7 @@ def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: Logse
     journals_dir.get_or_create_dir()
     pages_dir.get_or_create_dir()
     whiteboards_dir.get_or_create_dir()
-    analyzer_config.set_logseq_target_dirs()
+    analyzer_config.target_dirs = analyzer_config.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
 

@@ -40,24 +40,24 @@ class LogseqFileMover:
         Returns:
             List[str]: A list of names of the moved files/folders.
         """
-        ls_assets = LogseqAssets()
+        lsa = LogseqAssets()
         args = Args()
-        if ls_assets.not_backlinked:
+        if lsa.not_backlinked:
             if args.move_unlinked_assets:
                 self.move_unlinked_assets()
-                return ls_assets.not_backlinked
-            ls_assets.not_backlinked.insert(0, "=== Simulated only ===")
-            return ls_assets.not_backlinked
+                return lsa.not_backlinked
+            lsa.not_backlinked.insert(0, "=== Simulated only ===")
+            return lsa.not_backlinked
         return []
 
     def move_unlinked_assets(self) -> None:
         """
         Move unlinked assets to a separate directory.
         """
-        ls_assets = LogseqAssets()
+        lsa = LogseqAssets()
         delete_assets = DeleteAssetsDirectory()
         delete_asset_dir = delete_assets.path
-        for asset in ls_assets.not_backlinked:
+        for asset in lsa.not_backlinked:
             file_path = asset.file_path
             new_path = delete_asset_dir / file_path.name
             try:

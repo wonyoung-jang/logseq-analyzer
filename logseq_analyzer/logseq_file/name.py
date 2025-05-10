@@ -71,10 +71,10 @@ class LogseqFilename:
 
     def _process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
-        ljf = LogseqJournalFormats()
-        py_file_format = ljf.file
-        py_page_format = ljf.page
         try:
+            ljf = LogseqJournalFormats()
+            py_file_format = ljf.file
+            py_page_format = ljf.page
             date_object = datetime.strptime(name, py_file_format)
             page_title_base = date_object.strftime(py_page_format).lower()
             lgc = LogseqGraphConfig()
@@ -85,7 +85,8 @@ class LogseqFilename:
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
             else:
                 page_title = page_title_base
-            return page_title.replace("'", "")
+            page_title = page_title.replace("'", "")
+            return page_title
         except ValueError as e:
             logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, py_page_format, e)
             return ""

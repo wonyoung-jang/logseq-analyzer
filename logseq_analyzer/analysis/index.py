@@ -1,5 +1,5 @@
 """
-FilIndex class.
+FileIndex class.
 """
 
 from collections import defaultdict

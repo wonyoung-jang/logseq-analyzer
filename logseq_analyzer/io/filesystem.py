@@ -13,9 +13,9 @@ from ..utils.helpers import singleton
 class File:
     """A class to represent a file in the Logseq Analyzer."""
 
-    def __init__(self, path):
+    def __init__(self, path: Path):
         """Initialize the File class with a path."""
-        self.path = path
+        self.path: Path = path
 
     def __repr__(self):
         """Return a string representation of the File object."""
