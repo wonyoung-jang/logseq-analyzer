@@ -4,7 +4,7 @@ Tests for LogseqGraphConfig.
 
 import pytest
 
-from ..graph_config import LogseqGraphConfig, get_default_logseq_config_edn
+from ..graph_config import LogseqGraphConfig, _get_default_logseq_config_edn
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def test_merge(graph_config):
 
 
 def test_default_logseq_config():
-    config = get_default_logseq_config_edn()
+    config = _get_default_logseq_config_edn()
     assert config is not None
     assert isinstance(config, dict)
     assert ":meta/version" in config

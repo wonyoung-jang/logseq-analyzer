@@ -5,7 +5,6 @@ This module handles processing of Logseq filenames based on their parent directo
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 from urllib.parse import unquote
 import logging
 
@@ -44,12 +43,6 @@ class LogseqFilename:
         self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else ""
         self.parts = self.file_path.parts
         self.uri = self.file_path.as_uri()
-
-    def __repr__(self):
-        return f'LogseqFilename(file_path="{self.file_path}")'
-
-    def __str__(self):
-        return f"LogseqFilename: {self.file_path}"
 
     def process_logseq_filename(self) -> str:
         """Process the Logseq filename based on its parent directory."""

@@ -2,10 +2,10 @@
 FileIndex class.
 """
 
+import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Generator, List, Set, Union
-import logging
 
 from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
@@ -53,7 +53,7 @@ class FileIndex:
     def add(self, file: LogseqFile):
         """Add a file to the index."""
         self.files.add(file)
-        self.hash_to_file[file] = file
+        self.hash_to_file[hash(file)] = file
         self.name_to_files[file.path.name].append(file)
         self.path_to_file[file.file_path] = file
 

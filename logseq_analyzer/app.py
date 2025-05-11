@@ -126,12 +126,12 @@ def setup_logseq_paths(args: Args):
 
 def setup_logseq_graph_config() -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
-    graph_config = LogseqGraphConfig()
-    graph_config.initialize_user_config_edn()
-    graph_config.initialize_global_config_edn()
-    graph_config.merge()
+    gc = LogseqGraphConfig()
+    gc.initialize_user_config_edn()
+    gc.initialize_global_config_edn()
+    gc.ls_config = gc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
-    return graph_config
+    return gc
 
 
 def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: LogseqGraphConfig):

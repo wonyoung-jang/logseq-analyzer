@@ -18,19 +18,13 @@ class LogseqBullets:
 
     content: str = ""
     primary_bullet: str = ""
-    all_bullets: list = field(default_factory=list)
-    content_bullets: list = field(default_factory=list)
+    all_bullets: List[str] = field(default_factory=list)
+    content_bullets: List[str] = field(default_factory=list)
     char_count: int = 0
     bullet_count: int = 0
     bullet_count_empty: int = 0
     bullet_density: float = 0.0
     has_page_properties: bool = False
-
-    def __repr__(self):
-        return f'LogseqBullets(file_path="{self.file_path}")'
-
-    def __str__(self):
-        return f"LogseqBullets: {self.file_path}"
 
     def get_content(self) -> str:
         """Read the text content of a file."""

@@ -4,10 +4,10 @@ Logseq Graph Class
 
 from typing import Any, Dict
 
-from logseq_analyzer.io.filesystem import ConfigFile, GlobalConfigFile
-from logseq_analyzer.utils.helpers import singleton
-from logseq_analyzer.config.arguments import Args
-from logseq_analyzer.config.edn_parser import loads
+from ..io.filesystem import ConfigFile, GlobalConfigFile
+from ..utils.helpers import singleton
+from .arguments import Args
+from .edn_parser import loads
 
 
 @singleton
@@ -24,8 +24,8 @@ class LogseqGraphConfig:
 
     def initialize_user_config_edn(self):
         """Extract user config."""
-        user_config_file = ConfigFile()
-        with user_config_file.path.open("r", encoding="utf-8") as user_config:
+        cf = ConfigFile()
+        with cf.path.open("r", encoding="utf-8") as user_config:
             self.user_config_data = loads(user_config.read())
 
     def initialize_global_config_edn(self):
@@ -34,19 +34,19 @@ class LogseqGraphConfig:
         if not args.global_config:
             return
 
-        global_config_file = GlobalConfigFile()
-        with global_config_file.path.open("r", encoding="utf-8") as global_config:
+        gcf = GlobalConfigFile()
+        with gcf.path.open("r", encoding="utf-8") as global_config:
             self.global_config_data = loads(global_config.read())
 
-    def merge(self):
+    def merge(self) -> Dict:
         """Merge user and global config."""
-        config = get_default_logseq_config_edn()
+        config = _get_default_logseq_config_edn()
         config.update(self.user_config_data)
         config.update(self.global_config_data)
-        self.ls_config = config
+        return config
 
 
-def get_default_logseq_config_edn() -> Dict[str, Any]:
+def _get_default_logseq_config_edn() -> Dict[str, Any]:
     """
     Get the default Logseq configuration in EDN format.
 
