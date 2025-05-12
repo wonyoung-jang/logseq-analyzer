@@ -3,6 +3,7 @@ Logseq Analyzer GUI using PySide6.
 """
 
 from pathlib import Path
+from typing import Any
 import os
 import subprocess
 import sys
@@ -34,7 +35,7 @@ from ..utils.enums import Arguments, Format
 class LogseqAnalyzerGUI(QMainWindow):
     """Main GUI class for the Logseq Analyzer application."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the GUI components and layout."""
         super().__init__()
 
@@ -64,7 +65,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.load_settings()
         self.graph_folder_input.textChanged.connect(self.force_enable_graph_cache)
 
-    def run_analysis(self):
+    def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
         args_gui = {
             Arguments.GRAPH_FOLDER.value: self.graph_folder_input.text(),
@@ -105,7 +106,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.log_button.setEnabled(True)
             self.graph_cache_checkbox.setEnabled(True)
 
-    def setup_ui(self, main_layout):
+    def setup_ui(self, main_layout) -> None:
         """Sets up the main user interface layout and elements."""
         form_layout = self.create_input_fields_layout()
         main_layout.addLayout(form_layout, 0, 0)
@@ -173,7 +174,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         checkboxes_layout.addWidget(self.graph_cache_checkbox)
         return checkboxes_layout
 
-    def force_enable_graph_cache(self):
+    def force_enable_graph_cache(self) -> None:
         """Force enable and check the graph cache checkbox when the graph folder changes."""
         self.graph_cache_checkbox.setChecked(True)
         self.graph_cache_checkbox.setEnabled(False)
@@ -184,7 +185,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         progress_bars_layout.addRow("Progress:", self.setup_progress_bar)
         return progress_bars_layout
 
-    def create_progress_bar(self):
+    def create_progress_bar(self) -> QProgressBar:
         """Create a progress bar."""
         progress_bar = QProgressBar(self)
         progress_bar.setRange(0, 100)
@@ -225,30 +226,30 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         return buttons_layout
 
-    def close_analyzer(self):
+    def close_analyzer(self) -> None:
         """Close the application."""
         self.save_settings()
         self.close()
 
-    def open_output_directory(self):
+    def open_output_directory(self) -> None:
         """Open the output directory in the file explorer."""
         od = OutputDirectory()
         output_dir = od.path
         self._open_path(output_dir)
 
-    def open_delete_directory(self):
+    def open_delete_directory(self) -> None:
         """Open the delete directory in the file explorer."""
         dd = DeleteDirectory()
         delete_dir = dd.path
         self._open_path(delete_dir)
 
-    def open_log_file(self):
+    def open_log_file(self) -> None:
         """Open the log file in the default text editor."""
         lf = LogFile()
         log_file = lf.path
         self._open_path(log_file)
 
-    def _open_path(self, path):
+    def _open_path(self, path) -> None:
         """Open a path in the file explorer."""
         if path.exists():
             path = path.resolve()
@@ -261,14 +262,14 @@ class LogseqAnalyzerGUI(QMainWindow):
         else:
             self.show_error(f"Path not found: {path}")
 
-    def update_progress(self, progress_value=0):
+    def update_progress(self, progress_value=0) -> None:
         """Updates the progress bar for a given phase."""
         progress_bar = self.setup_progress_bar
         if progress_bar:
             progress_bar.setValue(progress_value)
             QApplication.processEvents()
 
-    def show_error(self, message):
+    def show_error(self, message) -> None:
         """Show an error message in a dialog."""
         error_dialog = QMessageBox(self)
         error_dialog.setIcon(QMessageBox.Critical)
@@ -276,19 +277,19 @@ class LogseqAnalyzerGUI(QMainWindow):
         error_dialog.setText(message)
         error_dialog.exec()
 
-    def select_graph_folder(self):
+    def select_graph_folder(self) -> None:
         """Open a file dialog to select the Logseq graph folder."""
         folder = QFileDialog.getExistingDirectory(self, "Select Logseq Graph Folder")
         if folder:
             self.graph_folder_input.setText(folder)
 
-    def select_global_config_file(self):
+    def select_global_config_file(self) -> None:
         """Open a file dialog to select the Logseq global config file."""
         file, _ = QFileDialog.getOpenFileName(self, "Select Logseq Global Config File", "", "EDN Files (*.edn)")
         if file:
             self.global_config_input.setText(file)
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Save current settings using QSettings."""
         self.settings.setValue(Arguments.GRAPH_FOLDER.value, self.graph_folder_input.text())
         self.settings.setValue(Arguments.GLOBAL_CONFIG.value, self.global_config_input.text())
@@ -300,7 +301,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.settings.setValue(Arguments.REPORT_FORMAT.value, self.report_format_combo.currentText())
         self.settings.setValue(Arguments.GEOMETRY.value, self.saveGeometry())
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         """Load settings using QSettings."""
         self.graph_folder_input.setText(self.settings.value(Arguments.GRAPH_FOLDER.value, ""))
         self.global_config_input.setText(self.settings.value(Arguments.GLOBAL_CONFIG.value, ""))
@@ -315,7 +316,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.restoreGeometry(self.settings.value(Arguments.GEOMETRY.value, b""))
 
 
-def resource_path(relative_path):
+def resource_path(relative_path) -> Any:
     """Get the absolute path to the resource."""
     if hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS) / relative_path

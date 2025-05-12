@@ -3,7 +3,7 @@ Process logseq journals.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Generator, Literal, Optional
 import logging
 
 from ..config.datetime_tokens import LogseqJournalFormats
@@ -19,7 +19,7 @@ class LogseqJournals:
     LogseqJournals class to handle journal files and their processing.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqJournals class."""
         self.dangling_journals = []
         self.processed_keys = []
@@ -29,15 +29,15 @@ class LogseqJournals:
         self.dangling_journals_past = []
         self.dangling_journals_future = []
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqJournals()"]:
         """Return a string representation of the LogseqJournals class."""
         return "LogseqJournals()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqJournals"]:
         """Return a string representation of the LogseqJournals class."""
         return "LogseqJournals"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of processed keys."""
         return len(self.complete_timeline)
 
@@ -62,7 +62,9 @@ class LogseqJournals:
         self.timeline_stats["dangling_journals"] = _get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
-    def process_journal_keys_to_datetime(self, list_of_keys: list[str], py_page_base_format: str = ""):
+    def process_journal_keys_to_datetime(
+        self, list_of_keys: list[str], py_page_base_format: str = ""
+    ) -> Generator[datetime, Any, None]:
         """
         Convert journal keys from strings to datetime objects.
         """
@@ -74,7 +76,7 @@ class LogseqJournals:
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
-    def build_complete_timeline(self):
+    def build_complete_timeline(self) -> None:
         """
         Build a complete timeline of journal entries, filling in any missing dates.
         """
@@ -101,7 +103,7 @@ class LogseqJournals:
         if self.processed_keys:
             self.complete_timeline.append(self.processed_keys[-1])
 
-    def get_dangling_journals_outside_range(self):
+    def get_dangling_journals_outside_range(self) -> None:
         """
         Check for dangling journals that are outside the range of the complete timeline.
         """
@@ -121,7 +123,7 @@ def _get_next_day(date_obj: datetime) -> datetime:
     return date_obj + timedelta(days=1)
 
 
-def _get_date_stats(timeline):
+def _get_date_stats(timeline) -> dict[str, Any]:
     """
     Get statistics about the timeline.
     """

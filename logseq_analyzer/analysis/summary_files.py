@@ -2,6 +2,8 @@
 Logseq File Summarizer Module
 """
 
+from typing import Literal
+
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
 from .index import FileIndex, get_attribute_list
@@ -11,19 +13,19 @@ from .index import FileIndex, get_attribute_list
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: dict[str, dict] = {}
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqFileSummarizer()"]:
         """Return a string representation of the LogseqFileSummarizer instance."""
         return "LogseqFileSummarizer()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqFileSummarizer"]:
         """Return a string representation of the LogseqFileSummarizer instance."""
         return "LogseqFileSummarizer"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of subsets."""
         return len(self.subsets)
 

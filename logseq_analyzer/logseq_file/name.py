@@ -40,7 +40,7 @@ class LogseqFilename:
     is_namespace: bool = False
     is_hls: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize the LogseqFilename class."""
         self.original_name = self.file_path.stem
         self.name = self.file_path.stem.lower()
@@ -111,7 +111,7 @@ class LogseqFilename:
         target_segment = target_segment[:-1]
         return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
-    def get_namespace_name_data(self):
+    def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
         if not self.is_namespace:
             return
@@ -162,7 +162,7 @@ class LogseqFilename:
         return result
 
     @staticmethod
-    def add_ordinal_suffix_to_day_of_month(day):
+    def add_ordinal_suffix_to_day_of_month(day) -> str:
         """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
         if 11 <= day <= 13:
             suffix = "th"

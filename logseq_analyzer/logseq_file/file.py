@@ -2,8 +2,9 @@
 LogseqFile class to process Logseq files.
 """
 
-import uuid
 from pathlib import Path
+from typing import Any
+import uuid
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
@@ -25,7 +26,7 @@ from .stats import LogseqFilestats
 class LogseqFile:
     """A class to represent a Logseq file."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path) -> None:
         """
         Initialize the LogseqFile object.
 
@@ -62,7 +63,7 @@ class LogseqFile:
             return self.path.parts == other.path.parts
         return NotImplemented
 
-    def init_file_data(self):
+    def init_file_data(self) -> None:
         """
         Extract metadata from a file.
         """
@@ -89,7 +90,7 @@ class LogseqFile:
                 continue
             setattr(self, attr, value)
 
-    def process_content_data(self):
+    def process_content_data(self) -> None:
         """
         Process content data to extract various elements like backlinks, tags, and properties.
         """
@@ -154,7 +155,7 @@ class LogseqFile:
             primary_data.update(family)
         self.check_has_backlinks(primary_data)
 
-    def check_has_backlinks(self, primary_data: dict[str, str]):
+    def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
         """
         Check has backlinks in the content.
 
@@ -169,7 +170,7 @@ class LogseqFile:
             ):
                 self.has_backlinks = True
 
-    def find_and_process_pattern(self, pattern):
+    def find_and_process_pattern(self, pattern) -> Any:
         """
         Find and process a specific pattern in the content.
 

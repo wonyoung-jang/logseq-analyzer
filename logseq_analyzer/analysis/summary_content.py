@@ -2,7 +2,7 @@
 Logseq Content Summarizer Module
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
@@ -13,23 +13,23 @@ from .index import FileIndex
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
         self.subsets = {}
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqContentSummarizer()"]:
         """Return a string representation of the LogseqContentSummarizer instance."""
         return "LogseqContentSummarizer()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqContentSummarizer"]:
         """Return a string representation of the LogseqContentSummarizer instance."""
         return "LogseqContentSummarizer"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self):
+    def generate_summary(self) -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         for criteria in list(Criteria):
             self.subsets[criteria.value] = self.extract_summary_subset_content(criteria.value)

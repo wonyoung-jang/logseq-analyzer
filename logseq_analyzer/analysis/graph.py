@@ -3,6 +3,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import Counter
+from typing import Literal
 
 from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
@@ -17,26 +18,26 @@ class LogseqGraph:
 
     index = FileIndex()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqGraph instance."""
         self.all_linked_references = {}
         self.dangling_links = set()
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqGraph()"]:
         """Return a string representation of the LogseqGraph instance."""
         return "LogseqGraph()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqGraph"]:
         """Return a string representation of the LogseqGraph instance."""
         return "LogseqGraph"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of unique linked references."""
         return len(self.all_linked_references)
 
-    def process_graph_files(self):
+    def process_graph_files(self) -> None:
         """Process all files in the Logseq graph folder."""
         cache = Cache()
         for file_path in cache.iter_modified_files():
@@ -45,7 +46,7 @@ class LogseqGraph:
             file.process_content_data()
             LogseqGraph.index.add(file)
 
-    def post_processing_content(self):
+    def post_processing_content(self) -> None:
         """Post-process the content data for all files."""
         unique_aliases = set()
 
@@ -85,7 +86,7 @@ class LogseqGraph:
         all_file_names = (file.name for file in LogseqGraph.index.files)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
-    def post_processing_content_namespaces(self, file: LogseqFile):
+    def post_processing_content_namespaces(self, file: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
         ns_level = getattr(file, "ns_level")
         ns_root = getattr(file, "ns_root")
@@ -129,7 +130,7 @@ class LogseqGraph:
         ns_size = getattr(parent_file, "ns_size")
         return ns_size + 1
 
-    def process_summary_data(self):
+    def process_summary_data(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
         for file in LogseqGraph.index.files:
             if not file.is_backlinked:
@@ -141,7 +142,7 @@ class LogseqGraph:
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
 
-    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]):
+    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> set:
         """Process dangling links in the graph."""
         all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
         all_linked_refs.difference_update(all_file_names)

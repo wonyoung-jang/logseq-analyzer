@@ -15,7 +15,7 @@ class LogseqDateTimeTokens:
     Class to handle date and time tokens in Logseq.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the LogseqDateTimeTokens class.
         """
@@ -69,7 +69,7 @@ class LogseqJournalFormats:
     Class to handle the Python file format for Logseq journals.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the LogseqJournalPyFileFormat class.
         """

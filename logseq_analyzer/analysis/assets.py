@@ -2,6 +2,8 @@
 Logseq Assets Analysis Module.
 """
 
+from typing import Literal
+
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton
@@ -13,24 +15,24 @@ from .index import FileIndex
 class LogseqAssets:
     """Class to handle assets in Logseq."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
         self.backlinked = []
         self.not_backlinked = []
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqAssets()"]:
         """Return a string representation of the LogseqAssets instance."""
         return "LogseqAssets()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqAssets"]:
         """Return a string representation of the LogseqAssets instance."""
         return "LogseqAssets"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of assets."""
         return len(self.backlinked) + len(self.not_backlinked)
 
-    def handle_assets(self):
+    def handle_assets(self) -> None:
         """Handle assets for the Logseq Analyzer."""
         idx = FileIndex()
         criteria = {"file_type": "asset"}
@@ -49,7 +51,7 @@ class LogseqAssets:
         self.backlinked = idx.list_files_with_keys_and_values(**backlinked_kwargs)
         self.not_backlinked = idx.list_files_with_keys_and_values(**not_backlinked_kwargs)
 
-    def update_asset_backlink(self, file_name: str, asset_mentions: list[str], asset_file: LogseqFile):
+    def update_asset_backlink(self, file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
         if not asset_mentions:
             return
@@ -66,7 +68,7 @@ class LogseqAssetsHls:
 
     index = FileIndex()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
         self.asset_mapping = {}
         self.asset_names = set()
@@ -74,26 +76,26 @@ class LogseqAssetsHls:
         self.formatted_bullets = set()
         self.not_backlinked = set()
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqAssetsHls()"]:
         """Return a string representation of the LogseqAssetsHls instance."""
         return "LogseqAssetsHls()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqAssetsHls"]:
         """Return a string representation of the LogseqAssetsHls instance."""
         return "LogseqAssetsHls"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of hls assets found."""
         return len(self.formatted_bullets)
 
-    def get_asset_files(self):
+    def get_asset_files(self) -> None:
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
         asset_files = LogseqAssetsHls.index.yield_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
-    def convert_names_to_data(self):
+    def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         criteria = {"is_hls": True}
         content_patterns = ContentPatterns()
@@ -117,13 +119,13 @@ class LogseqAssetsHls:
                     formatted_bullet = f"{hl_page.strip()}_{id_bullet.strip()}_{hl_stamp.strip()}"
                     self.formatted_bullets.add(formatted_bullet)
 
-    def check_backlinks(self):
+    def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
         self.backlinked = self.asset_names.intersection(self.formatted_bullets)
         self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
         self.update_sub_asset_files()
 
-    def update_sub_asset_files(self):
+    def update_sub_asset_files(self) -> None:
         """Update the asset files with backlink status and file type."""
         for name in self.backlinked:
             self.asset_mapping[name].is_backlinked = True

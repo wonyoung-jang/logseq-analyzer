@@ -5,13 +5,13 @@ FileIndex class.
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Generator, Union
+from typing import Generator, Literal
 
 from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
-def get_attribute_list(file_list: list[LogseqFile], attribute: str) -> list[Union[str, int]]:
+def get_attribute_list(file_list: list[LogseqFile], attribute: str) -> list[str | int]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
@@ -29,7 +29,7 @@ def get_attribute_list(file_list: list[LogseqFile], attribute: str) -> list[Unio
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the FileIndex instance.
         """
@@ -38,26 +38,26 @@ class FileIndex:
         self.name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
         self.path_to_file: dict[Path, LogseqFile] = {}
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["FileIndex()"]:
         """Return a string representation of the FileIndex."""
         return "FileIndex()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["FileIndex"]:
         """Return a string representation of the FileIndex."""
         return "FileIndex"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of files in the index."""
         return len(self.files)
 
-    def add(self, file: LogseqFile):
+    def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
         self.files.add(file)
         self.hash_to_file[hash(file)] = file
         self.name_to_files[file.path.name].append(file)
         self.path_to_file[file.file_path] = file
 
-    def get(self, key) -> Union[LogseqFile, list[LogseqFile], None]:
+    def get(self, key) -> LogseqFile | list[LogseqFile] | None:
         """Get a file by its key."""
         if isinstance(key, int):
             return self.hash_to_file.get(key)
@@ -67,7 +67,7 @@ class FileIndex:
             return self.path_to_file.get(key)
         raise TypeError(f"Invalid key type: {type(key)}. Expected int, str, or Path.")
 
-    def remove(self, key: Union[LogseqFile, int, str, Path]) -> None:
+    def remove(self, key: LogseqFile | int | str | Path) -> None:
         """
         Remove a file from the index.
 

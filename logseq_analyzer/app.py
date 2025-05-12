@@ -3,6 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from pathlib import Path
+from typing import Any
 import logging
 
 from .analysis.index import FileIndex
@@ -44,11 +45,11 @@ from .utils.enums import Phase, Output, OutputDir, Moved
 class GUIInstanceDummy:
     """Dummy class to simulate a GUI instance for testing purposes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize dummy GUI instance."""
         self.progress = {}
 
-    def update_progress(self, percentage):
+    def update_progress(self, percentage) -> None:
         """Simulate updating progress in a GUI."""
         logging.info("Updating progress: %d%%", percentage)
 
@@ -69,7 +70,7 @@ def init_logseq_paths() -> LogFile:
     return log_file
 
 
-def setup_logging(log_file: Path):
+def setup_logging(log_file: Path) -> None:
     """Setup logging configuration for the Logseq Analyzer."""
     logging.basicConfig(
         filename=log_file,
@@ -94,7 +95,7 @@ def setup_logseq_analyzer_config(args: Args) -> LogseqAnalyzerConfig:
     return config
 
 
-def setup_logseq_paths(args: Args):
+def setup_logseq_paths(args: Args) -> None:
     """Setup Logseq paths for the analyzer."""
     graph_dir = GraphDirectory()
     logseq_dir = LogseqDirectory()
@@ -133,7 +134,7 @@ def setup_logseq_graph_config() -> LogseqGraphConfig:
     return gc
 
 
-def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: LogseqGraphConfig):
+def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: LogseqGraphConfig) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     analyzer_config.set_logseq_config_edn_data(graph_config.ls_config)
     asset_dir = AssetsDirectory()
@@ -150,7 +151,7 @@ def setup_target_dirs(analyzer_config: LogseqAnalyzerConfig, graph_config: Logse
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens():
+def setup_datetime_tokens() -> None:
     """Setup datetime tokens."""
     dt_tokens = LogseqDateTimeTokens()
     dt_tokens.get_datetime_token_map()
@@ -215,7 +216,7 @@ def setup_logseq_journals() -> LogseqJournals:
     return graph_journals
 
 
-def setup_logseq_hls_assets():
+def setup_logseq_hls_assets() -> LogseqAssetsHls:
     """Setup LogseqAssetsHls for HLS assets."""
     ls_hls = LogseqAssetsHls()
     ls_hls.get_asset_files()
@@ -254,7 +255,7 @@ def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     return ls_file_mover
 
 
-def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: Args) -> dict:
+def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: Args) -> dict[str, Any]:
     """Get metadata reports from the graph and configuration."""
     index = FileIndex()
     meta_reports = {
@@ -277,7 +278,7 @@ def get_meta_reports(graph: LogseqGraph, graph_config: LogseqGraphConfig, args: 
     return meta_reports
 
 
-def get_graph_data() -> dict:
+def get_graph_data() -> dict[str, Any]:
     """Get metadata file data from the graph."""
     index = FileIndex()
     files = index.files
@@ -288,7 +289,7 @@ def get_graph_data() -> dict:
     return graph_data
 
 
-def get_graph_content() -> dict:
+def get_graph_content() -> dict[str, object]:
     """Get graph content."""
     index = FileIndex()
     files = index.files
@@ -298,7 +299,7 @@ def get_graph_content() -> dict:
     return graph_content
 
 
-def get_journal_reports(graph_journals: LogseqJournals) -> dict:
+def get_journal_reports(graph_journals: LogseqJournals) -> dict[str, object]:
     """Get journal reports from the graph journals."""
     logging.debug("run_app: get_journal_reports")
     return {
@@ -312,7 +313,7 @@ def get_journal_reports(graph_journals: LogseqJournals) -> dict:
     }
 
 
-def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict:
+def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict[str, object]:
     """Get namespace reports from the graph namespaces."""
     logging.debug("run_app: get_namespace_reports")
     return {
@@ -332,7 +333,7 @@ def get_namespace_reports(graph_namespaces: LogseqNamespaces) -> dict:
 
 def get_moved_files_reports(
     ls_file_mover: LogseqFileMover, ls_assets: LogseqAssets, hls_assets: LogseqAssetsHls
-) -> dict:
+) -> dict[str, object]:
     """Get reports for moved files and assets."""
     logging.debug("run_app: get_moved_files_reports")
     return {
@@ -347,7 +348,7 @@ def get_moved_files_reports(
     }
 
 
-def get_main_objects() -> dict:
+def get_main_objects() -> dict[str, dict[str, object]]:
     """Get main objects for the Logseq analyzer."""
     index = FileIndex()
     graph = LogseqGraph()
@@ -383,7 +384,7 @@ def get_all_reports() -> list[OutputDir]:
     return output_subdirectories
 
 
-def update_cache(cache: Cache, output_subdirectories: list[OutputDir], data_reports: list[str]):
+def update_cache(cache: Cache, output_subdirectories: list[OutputDir], data_reports: list[str]) -> None:
     """Update the cache with the output data."""
     try:
         shelve_output_data = zip(output_subdirectories, data_reports)
@@ -398,7 +399,7 @@ def update_cache(cache: Cache, output_subdirectories: list[OutputDir], data_repo
     logging.debug("run_app: update_cache")
 
 
-def write_reports(cache: Cache):
+def write_reports(cache: Cache) -> None:
     """Write reports to the specified output directories."""
     for output_dir, reports in cache.cache.items():
         if output_dir in (Output.MOD_TRACKER.value):
@@ -409,7 +410,7 @@ def write_reports(cache: Cache):
     logging.debug("run_app: write_reports")
 
 
-def run_app(**kwargs):
+def run_app(**kwargs) -> None:
     """Main function to run the Logseq analyzer."""
     gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
     progress = gui.update_progress

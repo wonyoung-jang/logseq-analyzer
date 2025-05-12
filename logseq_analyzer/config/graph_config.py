@@ -16,19 +16,19 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
         self.ls_config: dict[str, Any] = {}
         self.user_config_data: dict[str, Any] = {}
         self.global_config_data: dict[str, Any] = {}
 
-    def initialize_user_config_edn(self):
+    def initialize_user_config_edn(self) -> None:
         """Extract user config."""
         cf = ConfigFile()
         with cf.path.open("r", encoding="utf-8") as user_config:
             self.user_config_data = loads(user_config.read())
 
-    def initialize_global_config_edn(self):
+    def initialize_global_config_edn(self) -> None:
         """Extract global config."""
         args = Args()
         if not args.global_config:

@@ -17,7 +17,7 @@ class LogseqBuiltInProperties:
 
     built_in_properties: frozenset = frozenset()
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Build the built-in properties set."""
         ls_analyzer_config = LogseqAnalyzerConfig()
         properties_str = ls_analyzer_config.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]

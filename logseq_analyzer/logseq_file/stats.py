@@ -26,7 +26,7 @@ class LogseqFilestats:
     date_created: str = ""
     date_modified: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post-initialization method to set file statistics attributes."""
 
         stat = self.file_path.stat()

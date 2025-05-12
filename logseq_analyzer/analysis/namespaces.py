@@ -15,6 +15,7 @@ Problems:
 """
 
 from collections import Counter, defaultdict
+from typing import Literal
 import logging
 
 from ..utils.enums import Core
@@ -32,7 +33,7 @@ class LogseqNamespaces:
 
     index = FileIndex()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the NamespaceAnalyzer instance.
         """
@@ -50,19 +51,19 @@ class LogseqNamespaces:
         self.conflicts_parent_depth = {}
         self.conflicts_parent_unique = {}
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["LogseqNamespaces()"]:
         """Return a string representation of the NamespaceAnalyzer instance."""
         return "LogseqNamespaces()"
 
-    def __str__(self):
+    def __str__(self) -> Literal["LogseqNamespaces"]:
         """Return a string representation of the NamespaceAnalyzer instance."""
         return "LogseqNamespaces"
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of unique namespace parts."""
         return len(self.namespace_data)
 
-    def init_ns_parts(self):
+    def init_ns_parts(self) -> None:
         """
         Create namespace parts from the data.
         """
@@ -86,7 +87,7 @@ class LogseqNamespaces:
         self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.namespace_details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self):
+    def analyze_ns_queries(self) -> None:
         """
         Analyze namespace queries.
         """
@@ -109,7 +110,7 @@ class LogseqNamespaces:
         # Sort the queries by size in descending order
         self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
-    def detect_non_ns_conflicts(self):
+    def detect_non_ns_conflicts(self) -> None:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
@@ -124,7 +125,7 @@ class LogseqNamespaces:
                 if part in potential_dangling:
                     self.conflicts_dangling[part].append(entry)
 
-    def detect_parent_depth_conflicts(self):
+    def detect_parent_depth_conflicts(self) -> None:
         """
         Identify namespace parts that appear at different depths (levels) across entries.
         """

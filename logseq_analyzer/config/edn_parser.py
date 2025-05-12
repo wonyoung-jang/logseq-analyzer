@@ -2,6 +2,7 @@
 Parse EDN (Extensible Data Notation) data from Logseq configuration files.
 """
 
+from typing import Any, Generator
 import re
 import ast
 
@@ -22,20 +23,20 @@ class LogseqConfigEDN:
     A simple EDN parser that converts EDN data into Python data structures.
     """
 
-    def __init__(self, tokens):
+    def __init__(self, tokens) -> None:
         """
         Initialize the parser with a list of tokens.
         """
         self.tokens = list(tokens)
         self.pos = 0
 
-    def peek(self):
+    def peek(self) -> Any | None:
         """
         Return the next token without advancing the position.
         """
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def next(self):
+    def next(self) -> Any | None:
         """
         Return the next token and advance the position.
         """
@@ -43,7 +44,7 @@ class LogseqConfigEDN:
         self.pos += 1
         return tok
 
-    def parse(self):
+    def parse(self) -> dict | list | set | Any | None | bool | float | int:
         """
         Parse the entire EDN input and return the resulting Python object.
         """
@@ -52,7 +53,7 @@ class LogseqConfigEDN:
             raise ValueError(f"Unexpected extra EDN data: {self.peek()}")
         return value
 
-    def parse_value(self):
+    def parse_value(self) -> dict | list | set | Any | None | bool | float | int:
         """
         Parse a single EDN value.
         """
@@ -79,7 +80,7 @@ class LogseqConfigEDN:
             return self.parse_keyword()
         return self.parse_symbol()
 
-    def parse_map(self):
+    def parse_map(self) -> dict:
         """
         Parse a map (dictionary) from EDN.
         """
@@ -103,7 +104,7 @@ class LogseqConfigEDN:
             result[key] = val
         return result
 
-    def parse_vector(self):
+    def parse_vector(self) -> list:
         """
         Parse a vector (list) from EDN.
         """
@@ -117,7 +118,7 @@ class LogseqConfigEDN:
             result.append(self.parse_value())
         return result
 
-    def parse_list(self):
+    def parse_list(self) -> list:
         """
         Parse a list from EDN.
         """
@@ -131,7 +132,7 @@ class LogseqConfigEDN:
             result.append(self.parse_value())
         return result
 
-    def parse_set(self):
+    def parse_set(self) -> set:
         """
         Parse a set from EDN.
         """
@@ -145,7 +146,7 @@ class LogseqConfigEDN:
             result.add(self.parse_value())
         return result
 
-    def parse_string(self):
+    def parse_string(self) -> Any:
         """
         Parse a string from EDN.
         """
@@ -153,7 +154,7 @@ class LogseqConfigEDN:
         # Use ast.literal_eval for escape handling
         return ast.literal_eval(tok)
 
-    def parse_literal(self):
+    def parse_literal(self) -> None | bool:
         """
         Parse a literal value from EDN.
         """
@@ -165,13 +166,13 @@ class LogseqConfigEDN:
         if tok == "nil":
             return None
 
-    def is_number(self, tok):
+    def is_number(self, tok) -> bool:
         """
         Check if the token is a valid number (integer or float).
         """
         return re.fullmatch(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", tok) is not None
 
-    def parse_number(self):
+    def parse_number(self) -> float | int:
         """
         Parse a number (integer or float) from EDN.
         """
@@ -180,14 +181,14 @@ class LogseqConfigEDN:
             return float(tok)
         return int(tok)
 
-    def parse_keyword(self):
+    def parse_keyword(self) -> Any | None:
         """
         Parse a keyword from EDN.
         """
         tok = self.next()
         return tok
 
-    def parse_symbol(self):
+    def parse_symbol(self) -> Any | None:
         """
         Parse a symbol from EDN.
         """
@@ -195,7 +196,7 @@ class LogseqConfigEDN:
         return tok
 
 
-def loads(edn_str):
+def loads(edn_str) -> dict | list | set | Any | None | bool | float | int:
     """
     Parse an EDN-formatted string and return the corresponding Python data structure.
     """
@@ -204,7 +205,7 @@ def loads(edn_str):
     return parser.parse()
 
 
-def tokenize(edn_str):
+def tokenize(edn_str) -> Generator[str, Any, None]:
     """
     Yield EDN tokens, skipping comments, whitespace, and commas.
     Comments start with ';' and run to end-of-line.

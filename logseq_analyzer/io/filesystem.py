@@ -13,15 +13,15 @@ from ..utils.helpers import singleton
 class File:
     """A class to represent a file in the Logseq Analyzer."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
         self.path: Path = path
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the File object."""
         return f'File(path="{str(self.path)}")'
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a string representation of the File object."""
         return f"File: {str(self.path)}"
 
@@ -41,14 +41,14 @@ class File:
             raise TypeError("Path must be a string or a Path object.")
         self._path = value
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate the file path."""
         if not self.path.exists():
             logging.error("File does not exist: %s", self.path)
             raise FileNotFoundError(f"File does not exist: {self.path}")
         logging.info("File exists: %s", self.path)
 
-    def get_or_create_dir(self):
+    def get_or_create_dir(self) -> None:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
@@ -62,7 +62,7 @@ class File:
             except OSError as e:
                 logging.error("Error creating path: %s", e)
 
-    def get_or_create_file(self):
+    def get_or_create_file(self) -> None:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
@@ -76,7 +76,7 @@ class File:
             except OSError as e:
                 logging.error("Error creating path: %s", e)
 
-    def initialize_dir(self):
+    def initialize_dir(self) -> None:
         """Initialize the directory."""
         try:
             if self.path.exists():
@@ -90,7 +90,7 @@ class File:
             self.get_or_create_dir()
             logging.info("Created path: %s", self.path)
 
-    def initialize_file(self):
+    def initialize_file(self) -> None:
         """Initialize the file or directory."""
         try:
             if self.path.exists():
@@ -109,7 +109,7 @@ class File:
 class OutputDirectory(File):
     """Class to handle the output directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerOutputDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["OUTPUT_DIR"])
 
@@ -118,7 +118,7 @@ class OutputDirectory(File):
 class LogFile(File):
     """Class to handle the log file for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerLogFile class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["LOG_FILE"])
 
@@ -127,7 +127,7 @@ class LogFile(File):
 class GraphDirectory(File):
     """Class to handle the graph directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerGraphDir class."""
         super().__init__(LogseqAnalyzerConfig().config["ANALYZER"]["GRAPH_DIR"])
 
@@ -136,7 +136,7 @@ class GraphDirectory(File):
 class LogseqDirectory(File):
     """Class to handle the Logseq directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerLogseqDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["LOGSEQ_DIR"])
 
@@ -145,7 +145,7 @@ class LogseqDirectory(File):
 class ConfigFile(File):
     """Class to handle the config file for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerConfigFile class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["CONFIG_FILE"])
 
@@ -154,7 +154,7 @@ class ConfigFile(File):
 class DeleteDirectory(File):
     """Class to handle the delete directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_DIR"])
 
@@ -163,7 +163,7 @@ class DeleteDirectory(File):
 class DeleteBakDirectory(File):
     """Class to handle the delete bak directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteBakDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_BAK_DIR"])
 
@@ -172,7 +172,7 @@ class DeleteBakDirectory(File):
 class DeleteRecycleDirectory(File):
     """Class to handle the delete recycle directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteRecycleDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_RECYCLE_DIR"])
 
@@ -181,7 +181,7 @@ class DeleteRecycleDirectory(File):
 class DeleteAssetsDirectory(File):
     """Class to handle the delete assets directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteAssetsDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_ASSETS_DIR"])
 
@@ -190,7 +190,7 @@ class DeleteAssetsDirectory(File):
 class CacheFile(File):
     """Class to handle the cache file for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerCacheFile class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["CACHE"])
 
@@ -199,7 +199,7 @@ class CacheFile(File):
 class BakDirectory(File):
     """Class to handle the bak directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerBakDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["BAK_DIR"])
 
@@ -208,7 +208,7 @@ class BakDirectory(File):
 class RecycleDirectory(File):
     """Class to handle the recycle directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerRecycleDir class."""
         super().__init__(LogseqAnalyzerConfig().config["CONST"]["RECYCLE_DIR"])
 
@@ -217,7 +217,7 @@ class RecycleDirectory(File):
 class GlobalConfigFile(File):
     """Class to handle the global config file for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerGlobalConfigFile class."""
         super().__init__(LogseqAnalyzerConfig().config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
 
@@ -226,7 +226,7 @@ class GlobalConfigFile(File):
 class AssetsDirectory(File):
     """Class to handle the assets directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerAssetsDir class."""
         super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_ASSETS"])
 
@@ -235,7 +235,7 @@ class AssetsDirectory(File):
 class DrawsDirectory(File):
     """Class to handle the draws directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDrawsDir class."""
         super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_DRAWS"])
 
@@ -244,7 +244,7 @@ class DrawsDirectory(File):
 class JournalsDirectory(File):
     """Class to handle the journals directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerJournalsDir class."""
         super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_JOURNALS"])
 
@@ -253,7 +253,7 @@ class JournalsDirectory(File):
 class PagesDirectory(File):
     """Class to handle the pages directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerPagesDir class."""
         super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_PAGES"])
 
@@ -262,6 +262,6 @@ class PagesDirectory(File):
 class WhiteboardsDirectory(File):
     """Class to handle the whiteboards directory for the Logseq Analyzer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the LogseqAnalyzerWhiteboardsDir class."""
         super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_WHITEBOARDS"])
