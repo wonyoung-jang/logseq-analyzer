@@ -64,6 +64,8 @@ class LogseqAssets:
 class LogseqAssetsHls:
     """Class to handle HLS assets in Logseq."""
 
+    index = FileIndex()
+
     def __init__(self):
         """Initialize the LogseqAssetsHls instance."""
         self.asset_mapping = {}
@@ -86,19 +88,17 @@ class LogseqAssetsHls:
 
     def get_asset_files(self):
         """Retrieve asset files based on specific criteria."""
-        index = FileIndex()
         criteria = {"file_type": "sub_asset"}
-        asset_files = index.yield_files_with_keys_and_values(**criteria)
+        asset_files = LogseqAssetsHls.index.yield_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
     def convert_names_to_data(self):
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        index = FileIndex()
         criteria = {"is_hls": True}
         content_patterns = ContentPatterns()
         prop_value_pattern = content_patterns.property_value
-        for file in index.yield_files_with_keys_and_values(**criteria):
+        for file in LogseqAssetsHls.index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):

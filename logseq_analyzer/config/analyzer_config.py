@@ -43,7 +43,7 @@ class LogseqAnalyzerConfig:
         """Get a value from the config file"""
         return self.config.get(section, key, fallback=fallback)
 
-    def set(self, section, key, value) -> None:
+    def set_value(self, section, key, value) -> None:
         """set a value in the config file"""
         if section not in self.config:
             self.config.add_section(section)

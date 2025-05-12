@@ -86,10 +86,10 @@ def setup_logging(log_file: Path):
 def setup_logseq_analyzer_config(args: Args) -> LogseqAnalyzerConfig:
     """Setup Logseq analyzer configuration based on arguments."""
     config = LogseqAnalyzerConfig()
-    config.set("ANALYZER", "GRAPH_DIR", args.graph_folder)
-    config.set("ANALYZER", "REPORT_FORMAT", args.report_format)
+    config.set_value("ANALYZER", "GRAPH_DIR", args.graph_folder)
+    config.set_value("ANALYZER", "REPORT_FORMAT", args.report_format)
     if args.global_config:
-        config.set("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
+        config.set_value("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", args.global_config)
     logging.debug("run_app: setup_logseq_analyzer_config")
     return config
 

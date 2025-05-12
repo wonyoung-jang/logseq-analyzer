@@ -4,6 +4,7 @@ Compile frequently used regex patterns for Logseq content.
 
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Pattern
 import logging
 import re
 
@@ -16,18 +17,18 @@ from .helpers import singleton
 class ContentPatterns:
     """Class to hold regex patterns for content in Logseq files."""
 
-    bullet = None
-    page_reference = None
-    tagged_backlink = None
-    tag = None
-    property = None
-    property_value = None
-    asset = None
-    draw = None
-    blockquote = None
-    flashcard = None
-    dynamic_variable = None
-    any_link = None
+    bullet: Pattern = None
+    page_reference: Pattern = None
+    tagged_backlink: Pattern = None
+    tag: Pattern = None
+    property: Pattern = None
+    property_value: Pattern = None
+    asset: Pattern = None
+    draw: Pattern = None
+    blockquote: Pattern = None
+    flashcard: Pattern = None
+    dynamic_variable: Pattern = None
+    any_link: Pattern = None
 
     def __post_init__(self):
         """
@@ -179,19 +180,19 @@ class DoubleCurlyBracketsPatterns:
     Class to hold regex patterns for double curly brackets in Logseq content.
     """
 
-    all = None
-    embed = None
-    page_embed = None
-    block_embed = None
-    namespace_query = None
-    card = None
-    cloze = None
-    simple_query = None
-    query_function = None
-    embed_video_url = None
-    embed_twitter_tweet = None
-    embed_youtube_timestamp = None
-    renderer = None
+    all: Pattern = None
+    embed: Pattern = None
+    page_embed: Pattern = None
+    block_embed: Pattern = None
+    namespace_query: Pattern = None
+    card: Pattern = None
+    cloze: Pattern = None
+    simple_query: Pattern = None
+    query_function: Pattern = None
+    embed_video_url: Pattern = None
+    embed_twitter_tweet: Pattern = None
+    embed_youtube_timestamp: Pattern = None
+    renderer: Pattern = None
 
     def __post_init__(self):
         """
@@ -403,22 +404,22 @@ class AdvancedCommandPatterns:
     Class to hold regex patterns for advanced commands in Logseq content.
     """
 
-    all = None
-    export = None
-    export_ascii = None
-    export_latex = None
-    caution = None
-    center = None
-    comment = None
-    example = None
-    important = None
-    note = None
-    pinned = None
-    query = None
-    quote = None
-    tip = None
-    verse = None
-    warning = None
+    all: Pattern = None
+    export: Pattern = None
+    export_ascii: Pattern = None
+    export_latex: Pattern = None
+    caution: Pattern = None
+    center: Pattern = None
+    comment: Pattern = None
+    example: Pattern = None
+    important: Pattern = None
+    note: Pattern = None
+    pinned: Pattern = None
+    query: Pattern = None
+    quote: Pattern = None
+    tip: Pattern = None
+    verse: Pattern = None
+    warning: Pattern = None
 
     def __post_init__(self):
         """
@@ -695,10 +696,10 @@ class AdvancedCommandPatterns:
 class CodePatterns:
     """Class to hold regex patterns for code blocks in Logseq content."""
 
-    all = None
-    multiline_code_lang = None
-    calc_block = None
-    inline_code_block = None
+    all: Pattern = None
+    multiline_code_lang: Pattern = None
+    calc_block: Pattern = None
+    inline_code_block: Pattern = None
 
     def __post_init__(self):
         """
@@ -783,8 +784,8 @@ class DoubleParenthesesPatterns:
     Class to hold regex patterns for double parentheses in Logseq content.
     """
 
-    all = None
-    block_reference = None
+    all: Pattern = None
+    block_reference: Pattern = None
 
     def __post_init__(self):
         """
@@ -852,9 +853,9 @@ class EmbeddedLinksPatterns:
     Class to hold regex patterns for embedded links in Logseq content.
     """
 
-    all = None
-    internet = None
-    asset = None
+    all: Pattern = None
+    internet: Pattern = None
+    asset: Pattern = None
 
     def __post_init__(self):
         """
@@ -943,9 +944,9 @@ class ExternalLinksPatterns:
     Class to hold regex patterns for external links in Logseq content.
     """
 
-    all = None
-    internet = None
-    alias = None
+    all: Pattern = None
+    internet: Pattern = None
+    alias: Pattern = None
 
     def __post_init__(self):
         """
