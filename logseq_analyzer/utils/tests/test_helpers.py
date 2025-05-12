@@ -15,8 +15,7 @@ from ..helpers import (
 )
 
 
-def test_iter_files(tmp_path, caplog, monkeypatch):
-    monkeypatch.setattr(Path, "walk", os.walk)
+def test_iter_files(tmp_path, caplog):
     # Create directory tree:
     # tmp/root/
     #   dirA/target1/file1.txt

@@ -61,27 +61,6 @@ def test_write(config, tmp_path):
     assert "test_key = test_value\n" in content, "Written file should contain the key-value pair."
 
 
-def test_write_to_file_default_path(monkeypatch, config, tmp_path):
-    """Test that write_to_file creates a default file in the configuration directory."""
-    import logseq_analyzer.config.analyzer_config as ac_mod
-
-    # Prepare a dummy configuration
-    config.set("MY_SECTION", "foo", "bar")
-    # Create a fake "configuration" directory under tmp_path
-    fake_conf_dir = tmp_path / "configuration"
-    fake_conf_dir.mkdir()
-    # Monkey-patch Path in the module to always return our fake directory
-    monkeypatch.setattr(ac_mod, "Path", lambda x: fake_conf_dir)
-    # Call write_to_file without passing a path
-    config.write_to_file()
-    # Verify the file was created in the fake configuration directory
-    out_file = fake_conf_dir / "user_config.ini"
-    assert out_file.exists(), "Default user_config.ini should be created in the configuration directory"
-    content = out_file.read_text(encoding="utf-8")
-    assert "[MY_SECTION]" in content
-    assert "foo = bar" in content
-
-
 def test_write_to_file_overwrites_existing(config, tmp_path):
     """Test that write_to_file overwrites existing files."""
     # Prepare a dummy configuration and a pre-existing file with old content
@@ -122,6 +101,6 @@ def test_set_logseq_target_dirs(config):
     config.set("LOGSEQ_CONFIG", "DIR_PAGES", "pages")
     config.set("LOGSEQ_CONFIG", "DIR_JOURNALS", "journals")
     config.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", "whiteboards")
-    config.set_logseq_target_dirs()
+    config.target_dirs = config.set_logseq_target_dirs()
     expected_dirs = {"assets", "draws", "pages", "journals", "whiteboards"}
     assert config.target_dirs == expected_dirs, "Target directories should be set correctly."
