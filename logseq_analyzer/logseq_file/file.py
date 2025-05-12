@@ -2,22 +2,17 @@
 LogseqFile class to process Logseq files.
 """
 
+import uuid
 from pathlib import Path
 from typing import Any
-import uuid
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
-from ..utils.helpers import find_all_lower, process_aliases
-from ..utils.patterns import (
-    AdvancedCommandPatterns,
-    CodePatterns,
-    ContentPatterns,
-    DoubleCurlyBracketsPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinksPatterns,
-    ExternalLinksPatterns,
-)
+from ..utils.helpers import process_aliases
+from ..utils.patterns import (AdvancedCommandPatterns, CodePatterns,
+                              ContentPatterns, DoubleCurlyBracketsPatterns,
+                              DoubleParenthesesPatterns, EmbeddedLinksPatterns,
+                              ExternalLinksPatterns)
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
@@ -102,16 +97,16 @@ class LogseqFile:
         masked_content, masked_blocks = self.mask_blocks(self.content)
 
         primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: find_all_lower(CodePatterns().inline_code_block, self.content),
-            Criteria.ASSETS.value: find_all_lower(ContentPatterns().asset, self.content),
-            Criteria.ANY_LINKS.value: find_all_lower(ContentPatterns().any_link, self.content),
-            Criteria.BLOCKQUOTES.value: find_all_lower(ContentPatterns().blockquote, masked_content),
-            Criteria.DRAWS.value: find_all_lower(ContentPatterns().draw, masked_content),
-            Criteria.FLASHCARDS.value: find_all_lower(ContentPatterns().flashcard, masked_content),
-            Criteria.PAGE_REFERENCES.value: find_all_lower(ContentPatterns().page_reference, masked_content),
-            Criteria.TAGGED_BACKLINKS.value: find_all_lower(ContentPatterns().tagged_backlink, masked_content),
-            Criteria.TAGS.value: find_all_lower(ContentPatterns().tag, masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: find_all_lower(ContentPatterns().dynamic_variable, masked_content),
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns().inline_code_block.findall(self.content),
+            Criteria.ASSETS.value: ContentPatterns().asset.findall(self.content),
+            Criteria.ANY_LINKS.value: ContentPatterns().any_link.findall(self.content),
+            Criteria.BLOCKQUOTES.value: ContentPatterns().blockquote.findall(masked_content),
+            Criteria.DRAWS.value: ContentPatterns().draw.findall(masked_content),
+            Criteria.FLASHCARDS.value: ContentPatterns().flashcard.findall(masked_content),
+            Criteria.PAGE_REFERENCES.value: ContentPatterns().page_reference.findall(masked_content),
+            Criteria.TAGGED_BACKLINKS.value: ContentPatterns().tagged_backlink.findall(masked_content),
+            Criteria.TAGS.value: ContentPatterns().tag.findall(masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns().dynamic_variable.findall(masked_content),
         }
 
         # Process aliases and property:values
@@ -122,9 +117,9 @@ class LogseqFile:
         # Process aliases and properties
         page_properties = []
         if self.bullets.has_page_properties:
-            page_properties = find_all_lower(ContentPatterns().property, self.primary_bullet)
+            page_properties = ContentPatterns().property.findall(self.primary_bullet)
             self.content = "\n".join(self.content_bullets)
-        block_properties = find_all_lower(ContentPatterns().property, self.content)
+        block_properties = ContentPatterns().property.findall(self.content)
         page_props = split_builtin_user_properties(page_properties)
         block_props = split_builtin_user_properties(block_properties)
         aliases_and_properties = {
@@ -178,7 +173,7 @@ class LogseqFile:
             pattern: The pattern to find and process.
         """
         all_pattern = getattr(pattern, "all", None)
-        results = find_all_lower(all_pattern, self.content)
+        results = all_pattern.findall(self.content)
         return pattern.process(results)
 
     def determine_node_type(self) -> str:

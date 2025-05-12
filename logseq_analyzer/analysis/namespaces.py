@@ -14,12 +14,12 @@ Problems:
     3. There is no easy way to get data about namespaces.
 """
 
+import logging
 from collections import Counter, defaultdict
 from typing import Literal
-import logging
 
 from ..utils.enums import Core
-from ..utils.helpers import find_all_lower, singleton, sort_dict_by_value
+from ..utils.helpers import singleton, sort_dict_by_value
 from ..utils.patterns import ContentPatterns
 from .graph import LogseqGraph
 from .index import FileIndex, get_attribute_list
@@ -94,7 +94,7 @@ class LogseqNamespaces:
         ns_queries = {}
         for file in LogseqNamespaces.index.files:
             for query in file.data.get("namespace_queries", []):
-                page_refs = find_all_lower(ContentPatterns().page_reference, query)
+                page_refs = ContentPatterns().page_reference.findall(query)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", query)
                     continue

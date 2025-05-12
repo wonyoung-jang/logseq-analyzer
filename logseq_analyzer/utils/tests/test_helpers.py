@@ -2,15 +2,11 @@
 Unit tests for helpers.py module.
 """
 
-import os
-import re
 import logging
 import pytest
-from pathlib import Path
 
 from ..helpers import (
     iter_files,
-    find_all_lower,
     process_aliases,
 )
 
@@ -40,13 +36,6 @@ def test_iter_files(tmp_path, caplog):
 
     assert set(got) == {f1, f2}
     assert any("Skipping directory" in rec.getMessage() for rec in caplog.records)
-
-
-def test_find_all_lower_simple():
-    text = "Foo BAR baz"
-    pattern = re.compile(r"\b\w+\b")
-    got = find_all_lower(pattern, text)
-    assert got == ["foo", "bar", "baz"]
 
 
 @pytest.mark.parametrize(
