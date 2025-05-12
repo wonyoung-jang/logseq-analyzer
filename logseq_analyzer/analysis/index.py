@@ -11,12 +11,12 @@ from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
-def get_attribute_list(file_list: list[LogseqFile], attribute: str) -> list[str | int]:
+def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[str | int]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
     Args:
-        file_list (list[LogseqFile]): list of LogseqFile objects.
+        file_list (Generator[LogseqFile, None, None]): generator of LogseqFile objects.
         attribute (str): The attribute to extract from each LogseqFile object.
 
     Returns:
@@ -109,30 +109,36 @@ class FileIndex:
                     del self.name_to_files[file.path.name]
             logging.debug("Key %s removed from index.", key)
 
-    def list_files_with_keys_and_values(self, **criteria) -> list[LogseqFile]:
-        """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
-        result = []
-        for file in self.files:
-            if all(getattr(file, key) == expected for key, expected in criteria.items()):
-                result.append(file)
-        return result
-
     def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
-        for file in self.files:
+        files = self.files
+        for file in files:
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
                 yield file
 
-    def list_files_without_keys(self, *criteria) -> list[LogseqFile]:
+    def yield_files_without_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys do not exist."""
-        result = []
-        for file in self.files:
+        files = self.files
+        for file in files:
             if all(not hasattr(file, key) for key in criteria):
-                result.append(file)
-        return result
+                yield file
 
     def yield_files_with_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys exists."""
-        for file in self.files:
+        files = self.files
+        for file in files:
             if all(hasattr(file, key) for key in criteria):
                 yield file
+
+
+@singleton
+class FileIndexQuery:
+    """Class to query the FileIndex."""
+
+    def __init__(self) -> None:
+        """Initialize the FileIndexQuery instance."""
+        self.index = FileIndex()
+
+    def list(self) -> set[LogseqFile]:
+        """List all files in the index."""
+        return self.index.files

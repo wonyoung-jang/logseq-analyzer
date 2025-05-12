@@ -15,6 +15,8 @@ from .index import FileIndex
 class LogseqAssets:
     """Class to handle assets in Logseq."""
 
+    index = FileIndex()
+
     def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
         self.backlinked = []
@@ -34,22 +36,22 @@ class LogseqAssets:
 
     def handle_assets(self) -> None:
         """Handle assets for the Logseq Analyzer."""
-        idx = FileIndex()
+        index = LogseqAssets.index
         criteria = {"file_type": "asset"}
-        for file in idx.files:
+        for file in index.files:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
-            for asset_file in idx.yield_files_with_keys_and_values(**criteria):
+            for asset_file in index.yield_files_with_keys_and_values(**criteria):
                 if asset_file.is_backlinked:
                     continue
                 self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
                 self.update_asset_backlink(file.path.name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = idx.list_files_with_keys_and_values(**backlinked_kwargs)
-        self.not_backlinked = idx.list_files_with_keys_and_values(**not_backlinked_kwargs)
+        self.backlinked = list(index.yield_files_with_keys_and_values(**backlinked_kwargs))
+        self.not_backlinked = list(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
 
     def update_asset_backlink(self, file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
@@ -90,17 +92,19 @@ class LogseqAssetsHls:
 
     def get_asset_files(self) -> None:
         """Retrieve asset files based on specific criteria."""
+        index = LogseqAssetsHls.index
         criteria = {"file_type": "sub_asset"}
-        asset_files = LogseqAssetsHls.index.yield_files_with_keys_and_values(**criteria)
+        asset_files = index.yield_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
     def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
+        index = LogseqAssetsHls.index
         criteria = {"is_hls": True}
         content_patterns = ContentPatterns()
         prop_value_pattern = content_patterns.property_value
-        for file in LogseqAssetsHls.index.yield_files_with_keys_and_values(**criteria):
+        for file in index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):

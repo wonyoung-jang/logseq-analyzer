@@ -13,6 +13,8 @@ from .index import FileIndex, get_attribute_list
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
+    index = FileIndex()
+
     def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: dict[str, dict] = {}
@@ -31,7 +33,6 @@ class LogseqFileSummarizer:
 
     def generate_summary(self) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
-        index = FileIndex()
         summary_categories = {
             # Process general categories
             SummaryFiles.IS_BACKLINKED: {"is_backlinked": True},
@@ -62,8 +63,9 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         subsets = {}
+        index = LogseqFileSummarizer.index
         for output_name, criteria in summary_categories.items():
-            files = index.list_files_with_keys_and_values(**criteria)
+            files = index.yield_files_with_keys_and_values(**criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
         subsets[SummaryFiles.FILE_EXTS.value] = self.process_file_extensions(index)
         self.subsets.update(subsets)
@@ -75,6 +77,6 @@ class LogseqFileSummarizer:
         for ext in unique_exts:
             subset_name = f"all {ext}s"
             criteria = {"suffix": ext}
-            files = index.list_files_with_keys_and_values(**criteria)
+            files = index.yield_files_with_keys_and_values(**criteria)
             file_extension_dict[subset_name] = get_attribute_list(files, "name")
         return file_extension_dict

@@ -2,6 +2,7 @@
 Logseq Content Summarizer Module
 """
 
+from collections import Counter
 from typing import Any, Literal
 
 from ..utils.enums import Criteria
@@ -12,6 +13,8 @@ from .index import FileIndex
 @singleton
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
+
+    index = FileIndex()
 
     def __init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
@@ -32,7 +35,8 @@ class LogseqContentSummarizer:
     def generate_summary(self) -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         for criteria in list(Criteria):
-            self.subsets[criteria.value] = self.extract_summary_subset_content(criteria.value)
+            criteria_value = criteria.value
+            self.subsets[criteria_value] = self.extract_summary_subset_content(criteria_value)
 
     def extract_summary_subset_content(self, criteria) -> dict[str, Any]:
         """
@@ -46,10 +50,9 @@ class LogseqContentSummarizer:
             dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        index = FileIndex()
-        for file in index.files:
+        for file in LogseqContentSummarizer.index.files:
             for value in file.data.get(criteria, []):
-                subset_counter.setdefault(value, {})
+                subset_counter.setdefault(value, {"count": 0, "found_in": Counter()})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                subset_counter[value].setdefault("found_in", []).append(file.path.name)
+                subset_counter[value]["found_in"][file.path.name] += 1
         return sort_dict_by_value(subset_counter, value="count", reverse=True)

@@ -114,7 +114,7 @@ class LogseqNamespaces:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
-        non_ns_files = LogseqNamespaces.index.list_files_without_keys("ns_level")
+        non_ns_files = LogseqNamespaces.index.yield_files_without_keys("ns_level")
         non_ns_names = get_attribute_list(non_ns_files, "name")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)

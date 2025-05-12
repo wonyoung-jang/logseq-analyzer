@@ -110,10 +110,8 @@ class LogseqJournals:
         for link in self.dangling_journals:
             if link < self.timeline_stats["complete_timeline"]["first_date"]:
                 self.dangling_journals_past.append(link)
-                continue
-            if link > self.timeline_stats["complete_timeline"]["last_date"]:
+            elif link > self.timeline_stats["complete_timeline"]["last_date"]:
                 self.dangling_journals_future.append(link)
-                continue
 
 
 def _get_next_day(date_obj: datetime) -> datetime:
