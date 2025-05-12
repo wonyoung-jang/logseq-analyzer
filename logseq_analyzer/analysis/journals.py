@@ -62,7 +62,7 @@ class LogseqJournals:
         self.timeline_stats["dangling_journals"] = _get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
-    def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = None):
+    def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = ""):
         """
         Convert journal keys from strings to datetime objects.
         """

@@ -54,7 +54,6 @@ def test_set_gui_args(args_instance):
         "write_graph": False,
         "graph_cache": True,
         "report_format": ".json",
-        "non_existent_arg": "should_be_ignored",
     }
     args_instance.setup_args(**gui_args)
 

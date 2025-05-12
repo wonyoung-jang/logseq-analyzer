@@ -2,9 +2,9 @@
 Module for LogseqBullets class
 """
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-import logging
 from typing import List
 
 from ..utils.patterns import ContentPatterns

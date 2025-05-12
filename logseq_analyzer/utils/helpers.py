@@ -3,11 +3,15 @@ Helper functions for file and date processing.
 """
 
 from pathlib import Path
-from typing import Generator, Set, List, Pattern
+from typing import Generator, Set, List, Pattern, Type, TypeVar, Any
 import functools
 import logging
+import threading
 
 from ..utils.enums import Format
+
+
+_T = TypeVar("_T")
 
 
 def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
@@ -71,31 +75,53 @@ def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True):
     return dict(sorted(d.items(), key=lambda item: item[1][value], reverse=reverse))
 
 
-def singleton(cls: type) -> type:
+def singleton(cls: Type[_T]) -> Type[_T]:
     """
-    Decorator to create a singleton class that is pickle-friendly.
+    Decorator to create a singleton class that is thread-safe and pickle-friendly.
+
+    Args:
+        cls (Type[_T]): The class to be decorated as a singleton.
+    Returns:
+        Type[_T]: The singleton class.
     """
+    instance_attr_name = f"__singleton_instance_{cls.__name__}"
+    init_flag_attr_name = f"__singleton_init_done_{cls.__name__}"
+    lock_attr_name = f"__singleton_lock_{cls.__name__}"
 
-    orig_new = cls.__new__
-    instance = None
+    if not hasattr(cls, instance_attr_name):
+        setattr(cls, instance_attr_name, None)
+    if not hasattr(cls, init_flag_attr_name):
+        setattr(cls, init_flag_attr_name, False)
+    if not hasattr(cls, lock_attr_name):
+        setattr(cls, lock_attr_name, threading.Lock())
 
-    @functools.wraps(orig_new)
-    def __new__(cls, *args, **kwargs):
-        nonlocal instance
-        if instance is None:
-            instance = orig_new(cls, *args, **kwargs)
-        return instance
+    original_new = cls.__new__
+    original_init = cls.__init__
 
-    cls.__new__ = __new__
+    @functools.wraps(original_new)
+    def new_wrapper(wrapper_cls: Type[_T], *args: Any, **kwargs: Any) -> _T:
+        """Wrapper for __new__ to control instance creation."""
+        instance_lock = getattr(wrapper_cls, lock_attr_name)
+        with instance_lock:
+            if getattr(wrapper_cls, instance_attr_name) is None:
+                if original_new is object.__new__:
+                    current_instance = original_new(wrapper_cls)
+                else:
+                    current_instance = original_new(wrapper_cls, *args, **kwargs)
+                setattr(wrapper_cls, instance_attr_name, current_instance)
+        return getattr(wrapper_cls, instance_attr_name)
 
-    orig_init = cls.__init__
+    @functools.wraps(original_init)
+    def init_wrapper(self: _T, *args: Any, **kwargs: Any) -> None:
+        """Wrapper for __init__ to ensure it's called only once."""
+        decorated_class = type(self)
+        instance_lock = getattr(decorated_class, lock_attr_name)
+        with instance_lock:
+            if not getattr(decorated_class, init_flag_attr_name):
+                original_init(self, *args, **kwargs)
+                setattr(decorated_class, init_flag_attr_name, True)
 
-    @functools.wraps(orig_init)
-    def __init__(self, *args, **kwargs):
-        if not hasattr(self, "init_started"):
-            self.init_started = True
-            orig_init(self, *args, **kwargs)
-
-    cls.__init__ = __init__
+    cls.__new__ = new_wrapper
+    cls.__init__ = init_wrapper
 
     return cls

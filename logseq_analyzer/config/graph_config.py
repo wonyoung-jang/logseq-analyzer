@@ -2,7 +2,7 @@
 Logseq Graph Class
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from ..io.filesystem import ConfigFile, GlobalConfigFile
 from ..utils.helpers import singleton
@@ -18,9 +18,9 @@ class LogseqGraphConfig:
 
     def __init__(self):
         """Initialize the LogseqGraphConfig class."""
-        self.ls_config: Dict = {}
-        self.user_config_data: Dict = {}
-        self.global_config_data: Dict = {}
+        self.ls_config: dict[str, Any] = {}
+        self.user_config_data: dict[str, Any] = {}
+        self.global_config_data: dict[str, Any] = {}
 
     def initialize_user_config_edn(self):
         """Extract user config."""
@@ -38,7 +38,7 @@ class LogseqGraphConfig:
         with gcf.path.open("r", encoding="utf-8") as global_config:
             self.global_config_data = loads(global_config.read())
 
-    def merge(self) -> Dict:
+    def merge(self) -> dict[str, Any]:
         """Merge user and global config."""
         config = _get_default_logseq_config_edn()
         config.update(self.user_config_data)
@@ -46,7 +46,7 @@ class LogseqGraphConfig:
         return config
 
 
-def _get_default_logseq_config_edn() -> Dict[str, Any]:
+def _get_default_logseq_config_edn() -> dict[str, Any]:
     """
     Get the default Logseq configuration in EDN format.
 

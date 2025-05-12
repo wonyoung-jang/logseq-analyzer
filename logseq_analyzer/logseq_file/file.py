@@ -2,21 +2,21 @@
 LogseqFile class to process Logseq files.
 """
 
+import uuid
 from pathlib import Path
 from typing import Dict, Set, Tuple
-import uuid
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
 from ..utils.helpers import find_all_lower, process_aliases
 from ..utils.patterns import (
     AdvancedCommandPatterns,
+    CodePatterns,
     ContentPatterns,
     DoubleCurlyBracketsPatterns,
+    DoubleParenthesesPatterns,
     EmbeddedLinksPatterns,
     ExternalLinksPatterns,
-    DoubleParenthesesPatterns,
-    CodePatterns,
 )
 from .bullets import LogseqBullets
 from .name import LogseqFilename

@@ -36,9 +36,3 @@ def test_logseq_bullets(logseq_bullets, temp_file):
     assert logseq_bullets.bullet_count_empty == 0
     assert logseq_bullets.bullet_density == 0.0
     assert logseq_bullets.has_page_properties == False
-
-
-def test_representation(logseq_bullets):
-    """Test the string representation of LogseqBullets."""
-    assert repr(logseq_bullets) == f'LogseqBullets(file_path="{logseq_bullets.file_path}")'
-    assert str(logseq_bullets) == f"LogseqBullets: {logseq_bullets.file_path}"

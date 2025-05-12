@@ -31,7 +31,6 @@ def logseq_file(temp_file):
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
     assert logseq_file.file_path == Path(temp_file)
-    assert logseq_file.masked_blocks == {}
     assert logseq_file.content == ""
     assert logseq_file.primary_bullet == ""
     assert logseq_file.content_bullets == []

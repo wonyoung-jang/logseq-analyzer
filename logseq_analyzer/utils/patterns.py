@@ -15,9 +15,7 @@ from .helpers import singleton
 @singleton
 @dataclass
 class ContentPatterns:
-    """
-    Class to hold regex patterns for content in Logseq files.
-    """
+    """Class to hold regex patterns for content in Logseq files."""
 
     bullet = None
     page_reference = None
@@ -696,9 +694,7 @@ class AdvancedCommandPatterns:
 @singleton
 @dataclass
 class CodePatterns:
-    """
-    Class to hold regex patterns for code blocks in Logseq content.
-    """
+    """Class to hold regex patterns for code blocks in Logseq content."""
 
     all = None
     multiline_code_lang = None

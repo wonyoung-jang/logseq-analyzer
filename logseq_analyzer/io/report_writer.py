@@ -12,9 +12,7 @@ from .filesystem import OutputDirectory
 
 
 class ReportWriter:
-    """
-    A class to handle reporting and writing output to files, including text, JSON, and HTML formats.
-    """
+    """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
