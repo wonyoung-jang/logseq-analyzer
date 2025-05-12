@@ -30,6 +30,8 @@ class LogseqNamespaces:
     Class for analyzing namespace data in Logseq.
     """
 
+    index = FileIndex()
+
     def __init__(self):
         """
         Initialize the NamespaceAnalyzer instance.
@@ -64,9 +66,8 @@ class LogseqNamespaces:
         """
         Create namespace parts from the data.
         """
-        index = FileIndex()
         level_distribution = Counter()
-        for file in index.yield_files_with_keys("ns_level"):
+        for file in LogseqNamespaces.index.yield_files_with_keys("ns_level"):
             current_level = self.tree
             meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             self.namespace_data[file.path.name] = meta
@@ -90,8 +91,7 @@ class LogseqNamespaces:
         Analyze namespace queries.
         """
         ns_queries = {}
-        index = FileIndex()
-        for file in index.files:
+        for file in LogseqNamespaces.index.files:
             for query in file.data.get("namespace_queries", []):
                 page_refs = find_all_lower(ContentPatterns().page_reference, query)
                 if len(page_refs) != 1:
@@ -113,8 +113,7 @@ class LogseqNamespaces:
         """
         Check for conflicts between split namespace parts and existing non-namespace page names.
         """
-        index = FileIndex()
-        non_ns_files = index.list_files_without_keys("ns_level")
+        non_ns_files = LogseqNamespaces.index.list_files_without_keys("ns_level")
         non_ns_names = get_attribute_list(non_ns_files, "name")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)

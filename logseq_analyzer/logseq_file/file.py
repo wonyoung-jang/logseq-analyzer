@@ -33,6 +33,7 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path: Path = file_path
+        self.name: str = ""
         self.path: LogseqFilename = LogseqFilename(file_path)
         self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.bullets: LogseqBullets = LogseqBullets(file_path)
