@@ -30,7 +30,7 @@ def test_lambda_optionxform():
 
 def test_get_set(config):
     """Test the get and set methods."""
-    config.set("TEST_SECTION", "test_key", "test_value")
+    config.set_value("TEST_SECTION", "test_key", "test_value")
     assert config.get("TEST_SECTION", "test_key") == "test_value", "get should return the correct value."
     assert (
         config.get("TEST_SECTION", "non_existent_key", fallback="fallback_value") == "fallback_value"
@@ -39,7 +39,7 @@ def test_get_set(config):
 
 def test_get_section(config):
     """Test the get_section method."""
-    config.set("TEST_SECTION", "test_key", "test_value")
+    config.set_value("TEST_SECTION", "test_key", "test_value")
     section = config.get_section("TEST_SECTION")
     assert section["test_key"] == "test_value", "get_section should return the correct section."
 
@@ -49,7 +49,7 @@ def test_get_section(config):
 
 def test_write(config, tmp_path):
     """Test the write method."""
-    config.set("TEST_SECTION", "test_key", "test_value")
+    config.set_value("TEST_SECTION", "test_key", "test_value")
     test_file = tmp_path / "test_config.ini"
     with open(test_file, "w") as f:
         config.config.write(f)
@@ -64,7 +64,7 @@ def test_write(config, tmp_path):
 def test_write_to_file_overwrites_existing(config, tmp_path):
     """Test that write_to_file overwrites existing files."""
     # Prepare a dummy configuration and a pre-existing file with old content
-    config.set("SECTION1", "key1", "value1")
+    config.set_value("SECTION1", "key1", "value1")
     out_file = tmp_path / "user_config.ini"
     out_file.write_text("OLD_CONTENT", encoding="utf-8")
     # Write new config to the same path
@@ -96,11 +96,11 @@ def test_set_logseq_config_edn_data(config):
 
 def test_set_logseq_target_dirs(config):
     """Test the set_logseq_target_dirs method."""
-    config.set("LOGSEQ_CONFIG", "DIR_ASSETS", "assets")
-    config.set("LOGSEQ_CONFIG", "DIR_DRAWS", "draws")
-    config.set("LOGSEQ_CONFIG", "DIR_PAGES", "pages")
-    config.set("LOGSEQ_CONFIG", "DIR_JOURNALS", "journals")
-    config.set("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", "whiteboards")
+    config.set_value("LOGSEQ_CONFIG", "DIR_ASSETS", "assets")
+    config.set_value("LOGSEQ_CONFIG", "DIR_DRAWS", "draws")
+    config.set_value("LOGSEQ_CONFIG", "DIR_PAGES", "pages")
+    config.set_value("LOGSEQ_CONFIG", "DIR_JOURNALS", "journals")
+    config.set_value("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", "whiteboards")
     config.target_dirs = config.set_logseq_target_dirs()
     expected_dirs = {"assets", "draws", "pages", "journals", "whiteboards"}
     assert config.target_dirs == expected_dirs, "Target directories should be set correctly."

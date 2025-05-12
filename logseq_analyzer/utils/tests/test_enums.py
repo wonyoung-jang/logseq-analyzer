@@ -141,7 +141,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 38
+    assert len(Output) == 40
 
 
 # SummaryFiles
