@@ -104,29 +104,29 @@ class LogseqFile:
         self.masked_blocks = masked_blocks
 
         primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns().inline_code_block.findall(self.content),
-            Criteria.ASSETS.value: ContentPatterns().asset.findall(self.content),
-            Criteria.ANY_LINKS.value: ContentPatterns().any_link.findall(self.content),
-            Criteria.BLOCKQUOTES.value: ContentPatterns().blockquote.findall(masked_content),
-            Criteria.DRAWS.value: ContentPatterns().draw.findall(masked_content),
-            Criteria.FLASHCARDS.value: ContentPatterns().flashcard.findall(masked_content),
-            Criteria.PAGE_REFERENCES.value: ContentPatterns().page_reference.findall(masked_content),
-            Criteria.TAGGED_BACKLINKS.value: ContentPatterns().tagged_backlink.findall(masked_content),
-            Criteria.TAGS.value: ContentPatterns().tag.findall(masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns().dynamic_variable.findall(masked_content),
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(self.content),
+            Criteria.ASSETS.value: ContentPatterns.asset.findall(self.content),
+            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(self.content),
+            Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
+            Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
+            Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
+            Criteria.PAGE_REFERENCES.value: ContentPatterns.page_reference.findall(masked_content),
+            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.tagged_backlink.findall(masked_content),
+            Criteria.TAGS.value: ContentPatterns.tag.findall(masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.dynamic_variable.findall(masked_content),
         }
 
         # Process aliases and property:values
-        property_value_all = ContentPatterns().property_value.findall(self.content)
+        property_value_all = ContentPatterns.property_value.findall(self.content)
         properties_values = dict(property_value_all)
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
         # Process aliases and properties
         page_properties = []
         if self.bullets.has_page_properties:
-            page_properties = ContentPatterns().property.findall(self.primary_bullet)
+            page_properties = ContentPatterns.property.findall(self.primary_bullet)
             self.content = "\n".join(self.content_bullets)
-        block_properties = ContentPatterns().property.findall(self.content)
+        block_properties = ContentPatterns.property.findall(self.content)
         page_props = split_builtin_user_properties(page_properties)
         block_props = split_builtin_user_properties(block_properties)
         aliases_and_properties = {
@@ -139,12 +139,12 @@ class LogseqFile:
         }
         primary_data.update(aliases_and_properties)
         # Process specific families of patterns
-        code_blocks_family = self.find_and_process_pattern(CodePatterns())
-        double_paren_family = self.find_and_process_pattern(DoubleParenthesesPatterns())
-        external_links_family = self.find_and_process_pattern(ExternalLinksPatterns())
-        embedded_links_family = self.find_and_process_pattern(EmbeddedLinksPatterns())
-        double_curly_family = self.find_and_process_pattern(DoubleCurlyBracketsPatterns())
-        advanced_commands_family = self.find_and_process_pattern(AdvancedCommandPatterns())
+        code_blocks_family = self.find_and_process_pattern(CodePatterns)
+        double_paren_family = self.find_and_process_pattern(DoubleParenthesesPatterns)
+        external_links_family = self.find_and_process_pattern(ExternalLinksPatterns)
+        embedded_links_family = self.find_and_process_pattern(EmbeddedLinksPatterns)
+        double_curly_family = self.find_and_process_pattern(DoubleCurlyBracketsPatterns)
+        advanced_commands_family = self.find_and_process_pattern(AdvancedCommandPatterns)
         capture_families = [
             code_blocks_family,
             double_paren_family,
@@ -212,42 +212,42 @@ class LogseqFile:
         masked_blocks = {}
         masked_content = content
 
-        for match in CodePatterns().all.finditer(masked_content):
+        for match in CodePatterns.all.finditer(masked_content):
             block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in CodePatterns().inline_code_block.finditer(masked_content):
+        for match in CodePatterns.inline_code_block.finditer(masked_content):
             block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in AdvancedCommandPatterns().all.finditer(masked_content):
+        for match in AdvancedCommandPatterns.all.finditer(masked_content):
             block_id = f"__ADV_COMMAND_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in DoubleCurlyBracketsPatterns().all.finditer(masked_content):
+        for match in DoubleCurlyBracketsPatterns.all.finditer(masked_content):
             block_id = f"__DOUBLE_CURLY_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in EmbeddedLinksPatterns().all.finditer(masked_content):
+        for match in EmbeddedLinksPatterns.all.finditer(masked_content):
             block_id = f"__EMB_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in ExternalLinksPatterns().all.finditer(masked_content):
+        for match in ExternalLinksPatterns.all.finditer(masked_content):
             block_id = f"__EXT_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in DoubleParenthesesPatterns().all.finditer(masked_content):
+        for match in DoubleParenthesesPatterns.all.finditer(masked_content):
             block_id = f"__DBLPAREN_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)
 
-        for match in ContentPatterns().any_link.finditer(masked_content):
+        for match in ContentPatterns.any_link.finditer(masked_content):
             block_id = f"__ANY_LINK_{uuid.uuid4()}__"
             masked_blocks[block_id] = match.group(0)
             masked_content = masked_content.replace(match.group(0), block_id)

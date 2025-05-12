@@ -17,317 +17,250 @@ from .helpers import singleton
 class ContentPatterns:
     """Class to hold regex patterns for content in Logseq files."""
 
-    bullet: Pattern = None
-    page_reference: Pattern = None
-    tagged_backlink: Pattern = None
-    tag: Pattern = None
-    property: Pattern = None
-    property_value: Pattern = None
-    asset: Pattern = None
-    draw: Pattern = None
-    blockquote: Pattern = None
-    flashcard: Pattern = None
-    dynamic_variable: Pattern = None
-    any_link: Pattern = None
-
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of frequently used regex patterns.
-
-        Attributes:
-            bullet: Matches bullet points.
-            page_reference: Matches internal page references in double brackets.
-            tagged_backlink: Matches tagged backlinks.
-            tag: Matches hashtags.
-            property: Matches property keys.
-            property_values: Matches property key-value pairs.
-            asset: Matches references to assets.
-            draw: Matches references to Excalidraw drawings.
-            blockquote: Matches blockquote syntax.
-            flashcard: Matches flashcard syntax.
-            dynamic_variable: Matches dynamic variables.
-            any_link: Matches any link format.
-        """
-        self.bullet = re.compile(
-            r"""
-            ^           # Beginning of line
-            \s*         # Optional whitespace
-            -           # Literal hyphen
-            \s*         # Optional whitespace
-            """,
-            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-        )
-        self.page_reference = re.compile(
-            r"""
-            (?<!\#)     # Negative lookbehind: not preceded by #
-            \[\[        # Opening double brackets
-            (.+?)       # Capture group: the page name (non-greedy)
-            \]\]        # Closing double brackets
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.tagged_backlink = re.compile(
-            r"""
-            \#          # Hash character
-            \[\[        # Opening double brackets
-            ([^\]\#]+?) # Anything except closing brackets or hash (non-greedy)
-            \]\]        # Closing double brackets
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.tag = re.compile(
-            r"""
-            \#              # Hash character
-            (?!\[\[)        # Negative lookahead: not followed by [[
-            ([^\]\#\s]+?)   # Anything except closing brackets, hash, or whitespace (non-greedy)
-            (?=\s|$)        # Followed by whitespace or end of line
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.property = re.compile(
-            r"""
-            ^                   # Start of line
-            (?!\s*-\s)          # Negative lookahead: not a bullet
-            \s*?                # Optional whitespace
-            ([A-Za-z0-9_-]+?)   # Capture group: alphanumeric, underscore, or hyphen (non-greedy)
-            (?=::)              # Positive lookahead: double colon
-            """,
-            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-        )
-        self.property_value = re.compile(
-            r"""
-            ^                   # Start of line
-            (?!\s*-\s)          # Negative lookahead: not a bullet
-            \s*?                # Optional whitespace
-            ([A-Za-z0-9_-]+?)   # Capture group 1: Alphanumeric, underscore, or hyphen (non-greedy)
-            ::                  # Literal ::
-            (.*)                # Capture group 2: Any characters
-            $                   # End of line
-            """,
-            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-        )
-        self.asset = re.compile(
-            r"""
-            assets/         # assets/ literal string
-            (.+)            # Capture group: anything except newline (non-greedy)
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.draw = re.compile(
-            r"""
-            (?<!\#)             # Negative lookbehind: not preceded by #
-            \[\[                # Opening double brackets
-            draws/(.+?)         # Literal "draws/" followed by capture group
-            \.excalidraw        # Literal ".excalidraw"
-            \]\]                # Closing double brackets
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.blockquote = re.compile(
-            r"""
-            (?:^|\s)            # Start of line or whitespace
-            -\ >                # Hyphen, space, greater than
-            .*                  # Any characters
-            """,
-            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-        )
-        self.flashcard = re.compile(
-            r"""
-            (?:^|\s)            # Start of line or whitespace
-            -\ .*               # Hyphen, space, any characters
-            \#card|\[\[card\]\] # Either "#card" or "[[card]]"
-            .*                  # Any characters
-            """,
-            re.MULTILINE | re.IGNORECASE | re.VERBOSE,
-        )
-        self.dynamic_variable = re.compile(
-            r"""
-            <%                  # Opening tag
-            \s*                 # Optional whitespace
-            .*?                 # Any characters (non-greedy)
-            \s*                 # Optional whitespace
-            %>                  # Closing tag
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.any_link = re.compile(
-            r"""
-            \b                                          # word boundary
-            (?:                                       
-                (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
-                (?:\S+(?::\S*)?@)?                      #   optional user:pass@
-                (?:                                     
-                    \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
-                    |
-                    \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
-                    |
-                    (?:[A-Z0-9-]+\.)+[A-Z]{2,}          #   domain name
-                )
-                (?::\d{2,5})?                           #   optional port
-                (?:/[^\s]*)?                            #   optional path/query/fragment
+    bullet = re.compile(
+        r"""
+        ^           # Beginning of line
+        \s*         # Optional whitespace
+        -           # Literal hyphen
+        \s*         # Optional whitespace
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+    page_reference = re.compile(
+        r"""
+        (?<!\#)     # Negative lookbehind: not preceded by #
+        \[\[        # Opening double brackets
+        (.+?)       # Capture group: the page name (non-greedy)
+        \]\]        # Closing double brackets
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    tagged_backlink = re.compile(
+        r"""
+        \#          # Hash character
+        \[\[        # Opening double brackets
+        ([^\]\#]+?) # Anything except closing brackets or hash (non-greedy)
+        \]\]        # Closing double brackets
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    tag = re.compile(
+        r"""
+        \#              # Hash character
+        (?!\[\[)        # Negative lookahead: not followed by [[
+        ([^\]\#\s]+?)   # Anything except closing brackets, hash, or whitespace (non-greedy)
+        (?=\s|$)        # Followed by whitespace or end of line
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    property = re.compile(
+        r"""
+        ^                   # Start of line
+        (?!\s*-\s)          # Negative lookahead: not a bullet
+        \s*?                # Optional whitespace
+        ([A-Za-z0-9_-]+?)   # Capture group: alphanumeric, underscore, or hyphen (non-greedy)
+        (?=::)              # Positive lookahead: double colon
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+    property_value = re.compile(
+        r"""
+        ^                   # Start of line
+        (?!\s*-\s)          # Negative lookahead: not a bullet
+        \s*?                # Optional whitespace
+        ([A-Za-z0-9_-]+?)   # Capture group 1: Alphanumeric, underscore, or hyphen (non-greedy)
+        ::                  # Literal ::
+        (.*)                # Capture group 2: Any characters
+        $                   # End of line
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+    asset = re.compile(
+        r"""
+        assets/         # assets/ literal string
+        (.+)            # Capture group: anything except newline (non-greedy)
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    draw = re.compile(
+        r"""
+        (?<!\#)             # Negative lookbehind: not preceded by #
+        \[\[                # Opening double brackets
+        draws/(.+?)         # Literal "draws/" followed by capture group
+        \.excalidraw        # Literal ".excalidraw"
+        \]\]                # Closing double brackets
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    blockquote = re.compile(
+        r"""
+        (?:^|\s)            # Start of line or whitespace
+        -\ >                # Hyphen, space, greater than
+        .*                  # Any characters
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+    flashcard = re.compile(
+        r"""
+        (?:^|\s)            # Start of line or whitespace
+        -\ .*               # Hyphen, space, any characters
+        \#card|\[\[card\]\] # Either "#card" or "[[card]]"
+        .*                  # Any characters
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+    dynamic_variable = re.compile(
+        r"""
+        <%                  # Opening tag
+        \s*                 # Optional whitespace
+        .*?                 # Any characters (non-greedy)
+        \s*                 # Optional whitespace
+        %>                  # Closing tag
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    any_link = re.compile(
+        r"""
+        \b                                          # word boundary
+        (?:                                       
+            (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
+            (?:\S+(?::\S*)?@)?                      #   optional user:pass@
+            (?:                                     
+                \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
+                |
+                \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
+                |
+                (?:[A-Z0-9-]+\.)+[A-Z]{2,}          #   domain name
             )
-            \b                                          # word boundary
-            """,
-            re.IGNORECASE | re.VERBOSE,
+            (?::\d{2,5})?                           #   optional port
+            (?:/[^\s]*)?                            #   optional path/query/fragment
         )
-        logging.info("Compiled ContentPatterns")
+        \b                                          # word boundary
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
 
 @singleton
 @dataclass
 class DoubleCurlyBracketsPatterns:
-    """
-    Class to hold regex patterns for double curly brackets in Logseq content.
-    """
+    """Class to hold regex patterns for double curly brackets in Logseq content."""
 
-    all: Pattern = None
-    embed: Pattern = None
-    page_embed: Pattern = None
-    block_embed: Pattern = None
-    namespace_query: Pattern = None
-    card: Pattern = None
-    cloze: Pattern = None
-    simple_query: Pattern = None
-    query_function: Pattern = None
-    embed_video_url: Pattern = None
-    embed_twitter_tweet: Pattern = None
-    embed_youtube_timestamp: Pattern = None
-    renderer: Pattern = None
+    all = re.compile(
+        r"""
+        \{\{                # Opening double braces
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    embed = re.compile(
+        r"""
+        \{\{embed\          # "{{embed" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    page_embed = re.compile(
+        r"""
+        \{\{embed\          # "{{embed" followed by space
+        \[\[                # Opening double brackets
+        .*?                 # Any characters (non-greedy)
+        \]\]                # Closing double brackets
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    block_embed = re.compile(
+        r"""
+        \{\{embed\          # "{{embed" followed by space
+        \(\(                # Opening double parentheses
+        [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{12}        # 12 hex digits
+        \)\)                # Closing double parentheses
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    namespace_query = re.compile(
+        r"""
+        \{\{namespace\      # "{{namespace" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    card = re.compile(
+        r"""
+        \{\{cards\          # "{{cards" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    cloze = re.compile(
+        r"""
+        \{\{cloze\          # "{{cloze" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    simple_query = re.compile(
+        r"""
+        \{\{query\          # "{{query" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    query_function = re.compile(
+        r"""
+        \{\{function\       # "{{function" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    embed_video_url = re.compile(
+        r"""
+        \{\{video\          # "{{video" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    embed_twitter_tweet = re.compile(
+        r"""
+        \{\{tweet\          # "{{tweet" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    embed_youtube_timestamp = re.compile(
+        r"""
+        \{\{youtube-timestamp\  # "{{youtube-timestamp" followed by space
+        .*?                     # Any characters (non-greedy)
+        \}\}                    # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    renderer = re.compile(
+        r"""
+        \{\{renderer\       # "{{renderer" followed by space
+        .*?                 # Any characters (non-greedy)
+        \}\}                # Closing double braces
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of regex patterns for double curly brackets.
-
-        Attributes:
-            all: Matches macro syntax.
-            embed: Matches embedded content.
-            page_embed: Matches embedded page references.
-            block_embed: Matches embedded block references.
-            namespace_query: Matches namespace queries.
-            card: Matches card references.
-            cloze: Matches cloze deletions.
-            simple_query: Matches simple query syntax.
-            query_function: Matches query functions.
-            embed_video_url: Matches embedded video URLs.
-            embed_twitter_tweet: Matches embedded Twitter tweets.
-            embed_youtube_timestamp: Matches embedded YouTube timestamps.
-            renderer: Matches renderer syntax.
-        """
-        self.all = re.compile(
-            r"""
-            \{\{                # Opening double braces
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.embed = re.compile(
-            r"""
-            \{\{embed\          # "{{embed" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.page_embed = re.compile(
-            r"""
-            \{\{embed\          # "{{embed" followed by space
-            \[\[                # Opening double brackets
-            .*?                 # Any characters (non-greedy)
-            \]\]                # Closing double brackets
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.block_embed = re.compile(
-            r"""
-            \{\{embed\          # "{{embed" followed by space
-            \(\(                # Opening double parentheses
-            [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{12}        # 12 hex digits
-            \)\)                # Closing double parentheses
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.namespace_query = re.compile(
-            r"""
-            \{\{namespace\      # "{{namespace" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.card = re.compile(
-            r"""
-            \{\{cards\          # "{{cards" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.cloze = re.compile(
-            r"""
-            \{\{cloze\          # "{{cloze" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.simple_query = re.compile(
-            r"""
-            \{\{query\          # "{{query" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.query_function = re.compile(
-            r"""
-            \{\{function\       # "{{function" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.embed_video_url = re.compile(
-            r"""
-            \{\{video\          # "{{video" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.embed_twitter_tweet = re.compile(
-            r"""
-            \{\{tweet\          # "{{tweet" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.embed_youtube_timestamp = re.compile(
-            r"""
-            \{\{youtube-timestamp\  # "{{youtube-timestamp" followed by space
-            .*?                     # Any characters (non-greedy)
-            \}\}                    # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.renderer = re.compile(
-            r"""
-            \{\{renderer\       # "{{renderer" followed by space
-            .*?                 # Any characters (non-greedy)
-            \}\}                # Closing double braces
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled DoubleCurlyBracketsPatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process double curly braces and extract relevant data.
 
@@ -344,50 +277,50 @@ class DoubleCurlyBracketsPatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.embed.search(result):
+            if cls.embed.search(result):
                 double_curly_family[Criteria.EMBEDS.value].append(result)
                 results.pop()
-                if self.page_embed.search(result):
+                if cls.page_embed.search(result):
                     double_curly_family[Criteria.PAGE_EMBEDS.value].append(result)
                     double_curly_family[Criteria.EMBEDS.value].remove(result)
                     continue
-                if self.block_embed.search(result):
+                if cls.block_embed.search(result):
                     double_curly_family[Criteria.BLOCK_EMBEDS.value].append(result)
                     double_curly_family[Criteria.EMBEDS.value].remove(result)
                     continue
-            if self.namespace_query.search(result):
+            if cls.namespace_query.search(result):
                 double_curly_family[Criteria.NAMESPACE_QUERIES.value].append(result)
                 results.pop()
                 continue
-            if self.card.search(result):
+            if cls.card.search(result):
                 double_curly_family[Criteria.CARDS.value].append(result)
                 results.pop()
                 continue
-            if self.cloze.search(result):
+            if cls.cloze.search(result):
                 double_curly_family[Criteria.CLOZES.value].append(result)
                 results.pop()
                 continue
-            if self.simple_query.search(result):
+            if cls.simple_query.search(result):
                 double_curly_family[Criteria.SIMPLE_QUERIES.value].append(result)
                 results.pop()
                 continue
-            if self.query_function.search(result):
+            if cls.query_function.search(result):
                 double_curly_family[Criteria.QUERY_FUNCTIONS.value].append(result)
                 results.pop()
                 continue
-            if self.embed_video_url.search(result):
+            if cls.embed_video_url.search(result):
                 double_curly_family[Criteria.EMBED_VIDEO_URLS.value].append(result)
                 results.pop()
                 continue
-            if self.embed_twitter_tweet.search(result):
+            if cls.embed_twitter_tweet.search(result):
                 double_curly_family[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
                 results.pop()
                 continue
-            if self.embed_youtube_timestamp.search(result):
+            if cls.embed_youtube_timestamp.search(result):
                 double_curly_family[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
                 results.pop()
                 continue
-            if self.renderer.search(result):
+            if cls.renderer.search(result):
                 double_curly_family[Criteria.RENDERERS.value].append(result)
                 results.pop()
                 continue
@@ -400,216 +333,175 @@ class DoubleCurlyBracketsPatterns:
 @singleton
 @dataclass
 class AdvancedCommandPatterns:
-    """
-    Class to hold regex patterns for advanced commands in Logseq content.
-    """
+    """Class to hold regex patterns for advanced commands in Logseq content."""
 
-    all: Pattern = None
-    export: Pattern = None
-    export_ascii: Pattern = None
-    export_latex: Pattern = None
-    caution: Pattern = None
-    center: Pattern = None
-    comment: Pattern = None
-    example: Pattern = None
-    important: Pattern = None
-    note: Pattern = None
-    pinned: Pattern = None
-    query: Pattern = None
-    quote: Pattern = None
-    tip: Pattern = None
-    verse: Pattern = None
-    warning: Pattern = None
+    all = re.compile(
+        r"""
+        \#\+BEGIN_          # "#+BEGIN_"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_            # "#+END_"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    export = re.compile(
+        r"""
+        \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_EXPORT      # "#+END_EXPORT"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    export_ascii = re.compile(
+        r"""
+        \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
+        \s{1}                   # Single space
+        ascii                   # "ascii"
+        .*?                     # Any characters (non-greedy)
+        \#\+END_EXPORT          # "#+END_EXPORT"
+        .*?                     # Any characters (non-greedy)
+        (?:\n|$)                # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    export_latex = re.compile(
+        r"""
+        \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
+        \s{1}                   # Single space
+        latex                   # "latex"
+        .*?                     # Any characters (non-greedy)
+        \#\+END_EXPORT          # "#+END_EXPORT"
+        .*?                     # Any characters (non-greedy)
+        (?:\n|$)                # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    caution = re.compile(
+        r"""
+        \#\+BEGIN_CAUTION   # "#+BEGIN_CAUTION"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_CAUTION     # "#+END_CAUTION"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    center = re.compile(
+        r"""
+        \#\+BEGIN_CENTER    # "#+BEGIN_CENTER"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_CENTER      # "#+END_CENTER"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    comment = re.compile(
+        r"""
+        \#\+BEGIN_COMMENT   # "#+BEGIN_COMMENT"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_COMMENT     # "#+END_COMMENT"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    example = re.compile(
+        r"""
+        \#\+BEGIN_EXAMPLE   # "#+BEGIN_EXAMPLE"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_EXAMPLE     # "#+END_EXAMPLE"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    important = re.compile(
+        r"""
+        \#\+BEGIN_IMPORTANT # "#+BEGIN_IMPORTANT"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_IMPORTANT   # "#+END_IMPORTANT"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    note = re.compile(
+        r"""
+        \#\+BEGIN_NOTE      # "#+BEGIN_NOTE"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_NOTE        # "#+END_NOTE"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    pinned = re.compile(
+        r"""
+        \#\+BEGIN_PINNED    # "#+BEGIN_PINNED"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_PINNED      # "#+END_PINNED"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    query = re.compile(
+        r"""
+        \#\+BEGIN_QUERY     # "#+BEGIN_QUERY"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_QUERY       # "#+END_QUERY"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    quote = re.compile(
+        r"""
+        \#\+BEGIN_QUOTE     # "#+BEGIN_QUOTE"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_QUOTE       # "#+END_QUOTE"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    tip = re.compile(
+        r"""
+        \#\+BEGIN_TIP       # "#+BEGIN_TIP"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_TIP         # "#+END_TIP"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    verse = re.compile(
+        r"""
+        \#\+BEGIN_VERSE     # "#+BEGIN_VERSE"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_VERSE       # "#+END_VERSE"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    warning = re.compile(
+        r"""
+        \#\+BEGIN_WARNING   # "#+BEGIN_WARNING"
+        .*?                 # Any characters (non-greedy)
+        \#\+END_WARNING     # "#+END_WARNING"
+        .*?                 # Any characters (non-greedy)
+        (?:\n|$)            # Newline or end-of-file
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of frequently used regex patterns.
-
-        Attributes:
-            all: Matches advanced org-mode commands.
-            export: Matches export blocks.
-            export_ascii: Matches ASCII export blocks.
-            export_latex: Matches LaTeX export blocks.
-            caution: Matches caution blocks.
-            center: Matches center blocks.
-            comment: Matches comment blocks.
-            example: Matches example blocks.
-            important: Matches important blocks.
-            note: Matches note blocks.
-            pinned: Matches pinned blocks.
-            query: Matches query blocks.
-            quote: Matches quote blocks.
-            tip: Matches tip blocks.
-            verse: Matches verse blocks.
-            warning: Matches warning blocks.
-        """
-        self.all = re.compile(
-            r"""
-            \#\+BEGIN_          # "#+BEGIN_"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_            # "#+END_"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.export = re.compile(
-            r"""
-            \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_EXPORT      # "#+END_EXPORT"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.export_ascii = re.compile(
-            r"""
-            \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
-            \s{1}                   # Single space
-            ascii                   # "ascii"
-            .*?                     # Any characters (non-greedy)
-            \#\+END_EXPORT          # "#+END_EXPORT"
-            .*?                     # Any characters (non-greedy)
-            (?:\n|$)                # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.export_latex = re.compile(
-            r"""
-            \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
-            \s{1}                   # Single space
-            latex                   # "latex"
-            .*?                     # Any characters (non-greedy)
-            \#\+END_EXPORT          # "#+END_EXPORT"
-            .*?                     # Any characters (non-greedy)
-            (?:\n|$)                # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.caution = re.compile(
-            r"""
-            \#\+BEGIN_CAUTION   # "#+BEGIN_CAUTION"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_CAUTION     # "#+END_CAUTION"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.center = re.compile(
-            r"""
-            \#\+BEGIN_CENTER    # "#+BEGIN_CENTER"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_CENTER      # "#+END_CENTER"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.comment = re.compile(
-            r"""
-            \#\+BEGIN_COMMENT   # "#+BEGIN_COMMENT"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_COMMENT     # "#+END_COMMENT"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.example = re.compile(
-            r"""
-            \#\+BEGIN_EXAMPLE   # "#+BEGIN_EXAMPLE"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_EXAMPLE     # "#+END_EXAMPLE"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.important = re.compile(
-            r"""
-            \#\+BEGIN_IMPORTANT # "#+BEGIN_IMPORTANT"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_IMPORTANT   # "#+END_IMPORTANT"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.note = re.compile(
-            r"""
-            \#\+BEGIN_NOTE      # "#+BEGIN_NOTE"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_NOTE        # "#+END_NOTE"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.pinned = re.compile(
-            r"""
-            \#\+BEGIN_PINNED    # "#+BEGIN_PINNED"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_PINNED      # "#+END_PINNED"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.query = re.compile(
-            r"""
-            \#\+BEGIN_QUERY     # "#+BEGIN_QUERY"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_QUERY       # "#+END_QUERY"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.quote = re.compile(
-            r"""
-            \#\+BEGIN_QUOTE     # "#+BEGIN_QUOTE"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_QUOTE       # "#+END_QUOTE"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.tip = re.compile(
-            r"""
-            \#\+BEGIN_TIP       # "#+BEGIN_TIP"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_TIP         # "#+END_TIP"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.verse = re.compile(
-            r"""
-            \#\+BEGIN_VERSE     # "#+BEGIN_VERSE"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_VERSE       # "#+END_VERSE"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.warning = re.compile(
-            r"""
-            \#\+BEGIN_WARNING   # "#+BEGIN_WARNING"
-            .*?                 # Any characters (non-greedy)
-            \#\+END_WARNING     # "#+END_WARNING"
-            .*?                 # Any characters (non-greedy)
-            (?:\n|$)            # Newline or end-of-file
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled AdvancedCommandPatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process advanced commands and extract relevant data.
 
@@ -626,62 +518,62 @@ class AdvancedCommandPatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.export.search(result):
+            if cls.export.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
                 results.pop()
-                if self.export_ascii.search(result):
+                if cls.export_ascii.search(result):
                     advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
                     advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
                     continue
-                if self.export_latex.search(result):
+                if cls.export_latex.search(result):
                     advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
                     advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
                     continue
-            if self.caution.search(result):
+            if cls.caution.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
                 results.pop()
                 continue
-            if self.center.search(result):
+            if cls.center.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
                 results.pop()
                 continue
-            if self.comment.search(result):
+            if cls.comment.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
                 results.pop()
                 continue
-            if self.example.search(result):
+            if cls.example.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
                 results.pop()
                 continue
-            if self.important.search(result):
+            if cls.important.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
                 results.pop()
                 continue
-            if self.note.search(result):
+            if cls.note.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
                 results.pop()
                 continue
-            if self.pinned.search(result):
+            if cls.pinned.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
                 results.pop()
                 continue
-            if self.query.search(result):
+            if cls.query.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
                 results.pop()
                 continue
-            if self.quote.search(result):
+            if cls.quote.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
                 results.pop()
                 continue
-            if self.tip.search(result):
+            if cls.tip.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
                 results.pop()
                 continue
-            if self.verse.search(result):
+            if cls.verse.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
                 results.pop()
                 continue
-            if self.warning.search(result):
+            if cls.warning.search(result):
                 advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
                 results.pop()
                 continue
@@ -696,57 +588,42 @@ class AdvancedCommandPatterns:
 class CodePatterns:
     """Class to hold regex patterns for code blocks in Logseq content."""
 
-    all: Pattern = None
-    multiline_code_lang: Pattern = None
-    calc_block: Pattern = None
-    inline_code_block: Pattern = None
+    all = re.compile(
+        r"""
+        ```                 # Three backticks
+        .*?                 # Any characters (non-greedy)
+        ```                 # Three backticks
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    multiline_code_lang = re.compile(
+        r"""
+        ```                 # Three backticks
+        \w+                 # One or more word characters
+        .*?                 # Any characters (non-greedy)
+        ```                 # Three backticks
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    calc_block = re.compile(
+        r"""
+        ```calc             # Three backticks followed by "calc"
+        .*?                 # Any characters (non-greedy)
+        ```                 # Three backticks
+        """,
+        re.DOTALL | re.IGNORECASE | re.VERBOSE,
+    )
+    inline_code_block = re.compile(
+        r"""
+        `                   # One backtick
+        .+?                 # One or more characters (non-greedy)
+        `                   # One backtick
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of regex patterns for code blocks.
-
-        Attributes:
-            all: Matches all code blocks.
-            multiline_code_lang: Matches multiline code blocks with a specified language.
-            calc_block: Matches calculation blocks.
-            inline_code_block: Matches inline code blocks.
-        """
-        self.all = re.compile(
-            r"""
-            ```                 # Three backticks
-            .*?                 # Any characters (non-greedy)
-            ```                 # Three backticks
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.multiline_code_lang = re.compile(
-            r"""
-            ```                 # Three backticks
-            \w+                 # One or more word characters
-            .*?                 # Any characters (non-greedy)
-            ```                 # Three backticks
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.calc_block = re.compile(
-            r"""
-            ```calc             # Three backticks followed by "calc"
-            .*?                 # Any characters (non-greedy)
-            ```                 # Three backticks
-            """,
-            re.DOTALL | re.IGNORECASE | re.VERBOSE,
-        )
-        self.inline_code_block = re.compile(
-            r"""
-            `                   # One backtick
-            .+?                 # One or more characters (non-greedy)
-            `                   # One backtick
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled CodePatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process code blocks and categorize them.
 
@@ -763,11 +640,11 @@ class CodePatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.calc_block.search(result):
+            if cls.calc_block.search(result):
                 code_family[Criteria.CALC_BLOCKS.value].append(result)
                 results.pop()
                 continue
-            if self.multiline_code_lang.search(result):
+            if cls.multiline_code_lang.search(result):
                 code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
                 results.pop()
                 continue
@@ -780,46 +657,33 @@ class CodePatterns:
 @singleton
 @dataclass
 class DoubleParenthesesPatterns:
-    """
-    Class to hold regex patterns for double parentheses in Logseq content.
-    """
+    """Class to hold regex patterns for double parentheses in Logseq content."""
 
-    all: Pattern = None
-    block_reference: Pattern = None
+    all = re.compile(
+        r"""
+        (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+        \(\(                # Opening double parentheses
+        .*?                 # Any characters (non-greedy)
+        \)\)                # Closing double parentheses
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    block_reference = re.compile(
+        r"""
+        (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
+        \(\(                # Opening double parentheses
+        [0-9a-f]{8}-        # 8 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{4}-        # 4 hex digits followed by hyphen
+        [0-9a-f]{12}        # 12 hex digits
+        \)\)                # Closing double parentheses
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of regex patterns for double parentheses.
-
-        Attributes:
-            all: Matches ((...)).
-            block_reference: Matches UUID block references.
-        """
-        self.all = re.compile(
-            r"""
-            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-            \(\(                # Opening double parentheses
-            .*?                 # Any characters (non-greedy)
-            \)\)                # Closing double parentheses
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.block_reference = re.compile(
-            r"""
-            (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
-            \(\(                # Opening double parentheses
-            [0-9a-f]{8}-        # 8 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{4}-        # 4 hex digits followed by hyphen
-            [0-9a-f]{12}        # 12 hex digits
-            \)\)                # Closing double parentheses
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled DoubleParenthesesPatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process double parentheses and categorize them.
 
@@ -836,7 +700,7 @@ class DoubleParenthesesPatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.block_reference.search(result):
+            if cls.block_reference.search(result):
                 double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
                 results.pop()
                 continue
@@ -849,64 +713,49 @@ class DoubleParenthesesPatterns:
 @singleton
 @dataclass
 class EmbeddedLinksPatterns:
-    """
-    Class to hold regex patterns for embedded links in Logseq content.
-    """
+    """Class to hold regex patterns for embedded links in Logseq content."""
 
-    all: Pattern = None
-    internet: Pattern = None
-    asset: Pattern = None
+    all = re.compile(
+        r"""
+        \!                  # Exclamation mark
+        \[                  # Opening bracket
+        .*?                 # Any characters (non-greedy)
+        \]                  # Closing bracket
+        \(                  # Opening parenthesis
+        .*?                 # Any characters (non-greedy)
+        \)                  # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    internet = re.compile(
+        r"""
+        \!                  # Exclamation mark
+        \[                  # Opening bracket
+        .*?                 # Any characters (non-greedy)
+        \]                  # Closing bracket
+        \(                  # Opening parenthesis
+        http.*?             # "http" followed by any characters (non-greedy)
+        \)                  # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    asset = re.compile(
+        r"""
+        \!                  # Exclamation mark
+        \[                  # Opening bracket
+        .*?                 # Any characters (non-greedy)
+        \]                  # Closing bracket
+        \(                  # Opening parenthesis
+        .*?                 # Any characters (non-greedy)
+        assets/             # Literal "assets/"
+        .*?                 # Any characters (non-greedy)
+        \)                  # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of regex patterns for embedded links.
-
-        Attributes:
-            all: Matches embedded content links.
-            internet: Matches embedded internet content.
-            asset: Matches embedded asset references.
-        """
-        self.all = re.compile(
-            r"""
-            \!                  # Exclamation mark
-            \[                  # Opening bracket
-            .*?                 # Any characters (non-greedy)
-            \]                  # Closing bracket
-            \(                  # Opening parenthesis
-            .*?                 # Any characters (non-greedy)
-            \)                  # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.internet = re.compile(
-            r"""
-            \!                  # Exclamation mark
-            \[                  # Opening bracket
-            .*?                 # Any characters (non-greedy)
-            \]                  # Closing bracket
-            \(                  # Opening parenthesis
-            http.*?             # "http" followed by any characters (non-greedy)
-            \)                  # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.asset = re.compile(
-            r"""
-            \!                  # Exclamation mark
-            \[                  # Opening bracket
-            .*?                 # Any characters (non-greedy)
-            \]                  # Closing bracket
-            \(                  # Opening parenthesis
-            .*?                 # Any characters (non-greedy)
-            assets/             # Literal "assets/"
-            .*?                 # Any characters (non-greedy)
-            \)                  # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled EmbeddedLinksPatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process embedded links and categorize them.
 
@@ -923,11 +772,11 @@ class EmbeddedLinksPatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.internet.search(result):
+            if cls.internet.search(result):
                 embedded_links_family[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
                 results.pop()
                 continue
-            if self.asset.search(result):
+            if cls.asset.search(result):
                 embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
                 results.pop()
                 continue
@@ -940,65 +789,50 @@ class EmbeddedLinksPatterns:
 @singleton
 @dataclass
 class ExternalLinksPatterns:
-    """
-    Class to hold regex patterns for external links in Logseq content.
-    """
+    """Class to hold regex patterns for external links in Logseq content."""
 
-    all: Pattern = None
-    internet: Pattern = None
-    alias: Pattern = None
+    all = re.compile(
+        r"""
+        (?<!\!)            # Negative lookbehind: not preceded by !
+        \[                 # Opening bracket
+        .*?                # Any characters (non-greedy)
+        \]                 # Closing bracket
+        \(                 # Opening parenthesis
+        .*?                # Any characters (non-greedy)
+        \)                 # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    internet = re.compile(
+        r"""
+        (?<!\!)            # Negative lookbehind: not preceded by !
+        \[                 # Opening bracket
+        .*?                # Any characters (non-greedy)
+        \]                 # Closing bracket
+        \(                 # Opening parenthesis
+        http.*?            # "http" followed by any characters (non-greedy)
+        \)                 # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+    alias = re.compile(
+        r"""
+        (?<!\!)                # Negative lookbehind: not preceded by !
+        \[                     # Opening bracket
+        .*?                    # Any characters (non-greedy)
+        \]                     # Closing bracket
+        \(                     # Opening parenthesis
+        [\[\[|\(\(]            # Either [[ or ((
+        .*?                    # Any characters (non-greedy)
+        [\]\]|\)\)]            # Either ]] or ))
+        .*?                    # Any characters (non-greedy)
+        \)                     # Closing parenthesis
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
-    def __post_init__(self):
-        """
-        Compile and return a dictionary of regex patterns for external links.
-
-        Attributes:
-            all: Matches markdown-style external links.
-            internet: Matches external links to websites (http/https).
-            alias: Matches aliased external links (e.g., nested links).
-        """
-        self.all = re.compile(
-            r"""
-            (?<!\!)            # Negative lookbehind: not preceded by !
-            \[                 # Opening bracket
-            .*?                # Any characters (non-greedy)
-            \]                 # Closing bracket
-            \(                 # Opening parenthesis
-            .*?                # Any characters (non-greedy)
-            \)                 # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.internet = re.compile(
-            r"""
-            (?<!\!)            # Negative lookbehind: not preceded by !
-            \[                 # Opening bracket
-            .*?                # Any characters (non-greedy)
-            \]                 # Closing bracket
-            \(                 # Opening parenthesis
-            http.*?            # "http" followed by any characters (non-greedy)
-            \)                 # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        self.alias = re.compile(
-            r"""
-            (?<!\!)                # Negative lookbehind: not preceded by !
-            \[                     # Opening bracket
-            .*?                    # Any characters (non-greedy)
-            \]                     # Closing bracket
-            \(                     # Opening parenthesis
-            [\[\[|\(\(]            # Either [[ or ((
-            .*?                    # Any characters (non-greedy)
-            [\]\]|\)\)]            # Either ]] or ))
-            .*?                    # Any characters (non-greedy)
-            \)                     # Closing parenthesis
-            """,
-            re.IGNORECASE | re.VERBOSE,
-        )
-        logging.info("Compiled ExternalLinksPatterns")
-
-    def process(self, results: list[str]) -> dict[str, list[str]]:
+    @classmethod
+    def process(cls, results: list[str]) -> dict[str, list[str]]:
         """
         Process external links and categorize them.
 
@@ -1015,11 +849,11 @@ class ExternalLinksPatterns:
 
         for _ in range(len(results)):
             result = results[-1]
-            if self.internet.search(result):
+            if cls.internet.search(result):
                 external_links_family[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
                 results.pop()
                 continue
-            if self.alias.search(result):
+            if cls.alias.search(result):
                 external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
                 results.pop()
                 continue

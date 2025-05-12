@@ -46,8 +46,7 @@ class LogseqBullets:
         """Get all bullets split into a list"""
         if not self.content:
             return []
-        content_patterns = ContentPatterns()
-        return content_patterns.bullet.split(self.content)
+        return ContentPatterns.bullet.split(self.content)
 
     def get_primary_bullet(self) -> str:
         """Get the Logseq primary bullet if available"""

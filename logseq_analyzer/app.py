@@ -105,7 +105,7 @@ def setup_logseq_paths() -> None:
 
     dd = DeleteDirectory()
     dd.get_or_create_dir()
-    
+
     dbd = DeleteBakDirectory()
     drd = DeleteRecycleDirectory()
     dad = DeleteAssetsDirectory()

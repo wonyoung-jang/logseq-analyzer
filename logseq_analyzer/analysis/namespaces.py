@@ -95,11 +95,10 @@ class LogseqNamespaces:
             dict[str, dict[str, Any]]: A dictionary mapping namespace queries to their details.
         """
         ns_queries: dict[str, dict[str, Any]] = {}
-        content_patterns = ContentPatterns()
         index = LogseqNamespaces.index
         for file in index.files:
             for query in file.data.get("namespace_queries", []):
-                page_refs = content_patterns.page_reference.findall(query)
+                page_refs = ContentPatterns.page_reference.findall(query)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", query)
                     continue

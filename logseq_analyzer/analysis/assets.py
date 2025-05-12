@@ -105,8 +105,7 @@ class LogseqAssetsHls:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         index = LogseqAssetsHls.index
         criteria = {"is_hls": True}
-        content_patterns = ContentPatterns()
-        prop_value_pattern = content_patterns.property_value
+        prop_value_pattern = ContentPatterns.property_value
         for file in index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
