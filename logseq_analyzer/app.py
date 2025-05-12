@@ -6,8 +6,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from .logseq_file.file import LogseqFile
-
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -41,6 +39,7 @@ from .io.filesystem import (
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
+from .logseq_file.file import LogseqFile
 from .utils.enums import Moved, Output, OutputDir, Phase
 
 
@@ -97,20 +96,19 @@ def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
     return lac
 
 
-def setup_logseq_paths(a: Args) -> None:
+def setup_logseq_paths() -> None:
     """Setup Logseq paths for the analyzer."""
     gd = GraphDirectory()
     ld = LogseqDirectory()
-    cf = ConfigFile()
     gd.validate()
     ld.validate()
-    cf.validate()
 
     dd = DeleteDirectory()
+    dd.get_or_create_dir()
+    
     dbd = DeleteBakDirectory()
     drd = DeleteRecycleDirectory()
     dad = DeleteAssetsDirectory()
-    dd.get_or_create_dir()
     dbd.get_or_create_dir()
     drd.get_or_create_dir()
     dad.get_or_create_dir()
@@ -120,17 +118,19 @@ def setup_logseq_paths(a: Args) -> None:
     bd.get_or_create_dir()
     rd.get_or_create_dir()
 
-    if a.global_config:
-        gcf = GlobalConfigFile()
-        gcf.validate()
     logging.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config() -> LogseqGraphConfig:
+def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     lgc = LogseqGraphConfig()
-    lgc.initialize_user_config_edn()
-    lgc.initialize_global_config_edn()
+    cf = ConfigFile()
+    cf.validate()
+    lgc.initialize_user_config_edn(cf)
+    if a.global_config:
+        gcf = GlobalConfigFile()
+        gcf.validate()
+        lgc.initialize_global_config_edn(gcf)
     lgc.config_merged = lgc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
     return lgc
@@ -390,9 +390,9 @@ def run_app(**kwargs) -> None:
     progress(20)
     analyzer_config = setup_logseq_analyzer_config(args)
     progress(25)
-    setup_logseq_paths(args)
+    setup_logseq_paths()
     progress(30)
-    graph_config = setup_logseq_graph_config()
+    graph_config = setup_logseq_graph_config(args)
     progress(35)
     setup_target_dirs(analyzer_config, graph_config)
     progress(40)

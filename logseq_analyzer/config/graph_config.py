@@ -6,7 +6,6 @@ from typing import Any
 
 from ..io.filesystem import ConfigFile, GlobalConfigFile
 from ..utils.helpers import singleton
-from .arguments import Args
 from .edn_parser import loads
 
 
@@ -22,24 +21,33 @@ class LogseqGraphConfig:
         self.config_user: dict[str, Any] = {}
         self.config_global: dict[str, Any] = {}
 
-    def initialize_user_config_edn(self) -> None:
-        """Extract user config."""
-        cf = ConfigFile()
+    def initialize_user_config_edn(self, cf: ConfigFile) -> None:
+        """
+        Extract user config.
+
+        Args:
+            cf (ConfigFile): The config file object.
+        """
         with cf.path.open("r", encoding="utf-8") as user_config:
             self.config_user = loads(user_config.read())
 
-    def initialize_global_config_edn(self) -> None:
-        """Extract global config."""
-        args = Args()
-        if not args.global_config:
-            return
+    def initialize_global_config_edn(self, gcf: GlobalConfigFile) -> None:
+        """
+        Extract global config.
 
-        gcf = GlobalConfigFile()
+        Args:
+            gcf (GlobalConfigFile): The global config file object.
+        """
         with gcf.path.open("r", encoding="utf-8") as global_config:
             self.config_global = loads(global_config.read())
 
     def merge(self) -> dict[str, Any]:
-        """Merge user and global config."""
+        """
+        Merge user and global config.
+
+        Returns:
+            dict: Merged configuration.
+        """
         config = _get_default_logseq_config_edn()
         config.update(self.config_user)
         config.update(self.config_global)
@@ -51,7 +59,7 @@ def _get_default_logseq_config_edn() -> dict[str, Any]:
     Get the default Logseq configuration in EDN format.
 
     Returns:
-        dict: Default Logseq configuration in EDN format.
+        dict[str, Any]: Default Logseq configuration in EDN format.
     """
     return {
         ":meta/version": 1,
