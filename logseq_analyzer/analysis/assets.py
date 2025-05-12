@@ -39,21 +39,24 @@ class LogseqAssets:
         index = LogseqAssets.index
         criteria = {"file_type": "asset"}
         for file in index.files:
-            emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
-            asset_captured = file.data.get(Criteria.ASSETS.value, [])
+            file_name = file.path.name
+            file_data = file.data
+            emb_link_asset = file_data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
+            asset_captured = file_data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_file in index.yield_files_with_keys_and_values(**criteria):
                 if asset_file.is_backlinked:
                     continue
-                self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
-                self.update_asset_backlink(file.path.name, asset_captured, asset_file)
+                LogseqAssets.update_asset_backlink(file_name, emb_link_asset, asset_file)
+                LogseqAssets.update_asset_backlink(file_name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
         self.backlinked = list(index.yield_files_with_keys_and_values(**backlinked_kwargs))
         self.not_backlinked = list(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
 
-    def update_asset_backlink(self, file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
+    @staticmethod
+    def update_asset_backlink(file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
         if not asset_mentions:
             return

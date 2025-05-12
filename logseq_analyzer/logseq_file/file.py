@@ -48,6 +48,7 @@ class LogseqFile:
         self.is_backlinked_by_ns_only: bool = False
         self.node_type: str = "other"
         self.file_type: str = "other"
+        self.masked_blocks: dict[str, str] = {}
 
     def __repr__(self) -> str:
         return f'LogseqFile(file_path="{self.file_path}")'
@@ -100,6 +101,7 @@ class LogseqFile:
 
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_blocks(self.content)
+        self.masked_blocks = masked_blocks
 
         primary_data = {
             Criteria.INLINE_CODE_BLOCKS.value: CodePatterns().inline_code_block.findall(self.content),

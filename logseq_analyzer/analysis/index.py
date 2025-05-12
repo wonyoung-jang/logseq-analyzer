@@ -129,16 +129,3 @@ class FileIndex:
         for file in files:
             if all(hasattr(file, key) for key in criteria):
                 yield file
-
-
-@singleton
-class FileIndexQuery:
-    """Class to query the FileIndex."""
-
-    def __init__(self) -> None:
-        """Initialize the FileIndexQuery instance."""
-        self.index = FileIndex()
-
-    def list(self) -> set[LogseqFile]:
-        """List all files in the index."""
-        return self.index.files

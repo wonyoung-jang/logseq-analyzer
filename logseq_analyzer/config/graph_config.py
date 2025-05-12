@@ -18,15 +18,15 @@ class LogseqGraphConfig:
 
     def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
-        self.ls_config: dict[str, Any] = {}
-        self.user_config_data: dict[str, Any] = {}
-        self.global_config_data: dict[str, Any] = {}
+        self.config_merged: dict[str, Any] = {}
+        self.config_user: dict[str, Any] = {}
+        self.config_global: dict[str, Any] = {}
 
     def initialize_user_config_edn(self) -> None:
         """Extract user config."""
         cf = ConfigFile()
         with cf.path.open("r", encoding="utf-8") as user_config:
-            self.user_config_data = loads(user_config.read())
+            self.config_user = loads(user_config.read())
 
     def initialize_global_config_edn(self) -> None:
         """Extract global config."""
@@ -36,13 +36,13 @@ class LogseqGraphConfig:
 
         gcf = GlobalConfigFile()
         with gcf.path.open("r", encoding="utf-8") as global_config:
-            self.global_config_data = loads(global_config.read())
+            self.config_global = loads(global_config.read())
 
     def merge(self) -> dict[str, Any]:
         """Merge user and global config."""
         config = _get_default_logseq_config_edn()
-        config.update(self.user_config_data)
-        config.update(self.global_config_data)
+        config.update(self.config_user)
+        config.update(self.config_global)
         return config
 
 

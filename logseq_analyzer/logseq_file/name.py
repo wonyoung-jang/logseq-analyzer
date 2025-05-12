@@ -75,7 +75,7 @@ class LogseqFilename:
             date_object = datetime.strptime(name, py_file_format)
             page_title_base = date_object.strftime(py_page_format).lower()
             lgc = LogseqGraphConfig()
-            ls_config = lgc.ls_config
+            ls_config = lgc.config_merged
             if DATE_ORDINAL_SUFFIX in ls_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)

@@ -40,17 +40,19 @@ class LogseqGraph:
     def process_graph_files(self) -> None:
         """Process all files in the Logseq graph folder."""
         cache = Cache()
+        index = LogseqGraph.index
         for file_path in cache.iter_modified_files():
             file = LogseqFile(file_path)
             file.init_file_data()
             file.process_content_data()
-            LogseqGraph.index.add(file)
+            index.add(file)
 
     def post_processing_content(self) -> None:
         """Post-process the content data for all files."""
         unique_aliases = set()
+        index = LogseqGraph.index
 
-        for file in LogseqGraph.index.files:
+        for file in index.files:
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
@@ -83,7 +85,7 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
 
-        all_file_names = (file.name for file in LogseqGraph.index.files)
+        all_file_names = (file.name for file in index.files)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
     def post_processing_content_namespaces(self, file: LogseqFile) -> None:
@@ -93,7 +95,8 @@ class LogseqGraph:
         ns_parent = getattr(file, "ns_parent_full")
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
-        for ns_root_file in LogseqGraph.index.get(ns_root):
+        index = LogseqGraph.index
+        for ns_root_file in index.get(ns_root):
             if not hasattr(ns_root_file, "ns_level"):
                 setattr(ns_root_file, "ns_level", 1)
             if not hasattr(ns_root_file, "ns_children"):
@@ -105,7 +108,7 @@ class LogseqGraph:
         if ns_level <= 2:
             return
 
-        for ns_parent_file in LogseqGraph.index.get(ns_parent):
+        for ns_parent_file in index.get(ns_parent):
             if not hasattr(ns_parent_file, "ns_level"):
                 setattr(ns_parent_file, "ns_level", ns_level - 1)
             if not hasattr(ns_parent_file, "ns_children"):
@@ -132,7 +135,8 @@ class LogseqGraph:
 
     def process_summary_data(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
-        for file in LogseqGraph.index.files:
+        index = LogseqGraph.index
+        for file in index.files:
             if not file.is_backlinked:
                 file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             if not file.is_backlinked_by_ns_only:

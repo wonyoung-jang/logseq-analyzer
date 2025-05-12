@@ -38,12 +38,12 @@ class LogseqDateTimeTokens:
         Set the formatting for journal files and pages in Python format.
         """
         lgc = LogseqGraphConfig()
-        journal_file_format = lgc.ls_config.get(":journal/file-name-format")
+        journal_file_format = lgc.config_merged.get(":journal/file-name-format")
         ljf = LogseqJournalFormats()
         if not ljf.file:
             ljf.file = self.convert_cljs_date_to_py(journal_file_format)
 
-        journal_page_format = lgc.ls_config.get(":journal/page-title-format")
+        journal_page_format = lgc.config_merged.get(":journal/page-title-format")
         py_page_title_no_ordinal = journal_page_format.replace("o", "")
         if not ljf.page:
             ljf.page = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
