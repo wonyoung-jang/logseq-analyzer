@@ -4,7 +4,6 @@ LogseqFile class to process Logseq files.
 
 import uuid
 from pathlib import Path
-from typing import Dict, Set, Tuple
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
@@ -154,12 +153,12 @@ class LogseqFile:
             primary_data.update(family)
         self.check_has_backlinks(primary_data)
 
-    def check_has_backlinks(self, primary_data: Dict[str, str]):
+    def check_has_backlinks(self, primary_data: dict[str, str]):
         """
-        Checkd has backlinks in the content.
+        Check has backlinks in the content.
 
         Args:
-            primary_data (Dict[str, str]): Dictionary containing primary data.
+            primary_data (dict[str, str]): Dictionary containing primary data.
         """
         for key, value in primary_data.items():
             if value:
@@ -196,7 +195,7 @@ class LogseqFile:
             (False, False, False, False): "orphan_true",
         }.get((self.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
 
-    def mask_blocks(self, content: str) -> Tuple[str, Dict[str, str]]:
+    def mask_blocks(self, content: str) -> tuple[str, dict[str, str]]:
         """
         Mask code blocks and other patterns in the content.
 
@@ -204,7 +203,7 @@ class LogseqFile:
             content (str): The content to mask.
 
         Returns:
-            Tuple[str, Dict[str, str]]: Masked content and a dictionary mapping placeholders to original blocks.
+            tuple[str, dict[str, str]]: Masked content and a dictionary mapping placeholders to original blocks.
         """
         masked_blocks = {}
         masked_content = content
@@ -251,13 +250,13 @@ class LogseqFile:
 
         return masked_content, masked_blocks
 
-    def unmask_blocks(self, masked_content: str, masked_blocks: Dict[str, str]) -> str:
+    def unmask_blocks(self, masked_content: str, masked_blocks: dict[str, str]) -> str:
         """
         Restore the original content by replacing placeholders with their blocks.
 
         Args:
             masked_content (str): Content with code block placeholders.
-            masked_blocks (Dict[str, str]): Mapping of placeholders to original code blocks.
+            masked_blocks (dict[str, str]): Mapping of placeholders to original code blocks.
 
         Returns:
             str: Original content with code blocks restored.
@@ -267,12 +266,12 @@ class LogseqFile:
             content = content.replace(placeholder, block)
         return content
 
-    def check_is_backlinked(self, lookup: Set[str]) -> bool:
+    def check_is_backlinked(self, lookup: set[str]) -> bool:
         """
         Helper function to check if a file is backlinked.
 
         Args:
-            lookup (Set[str]): Set of backlinks to check against.
+            lookup (set[str]): Set of backlinks to check against.
 
         Returns:
             bool: True if the file is backlinked, False otherwise.

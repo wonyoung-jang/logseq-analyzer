@@ -3,7 +3,6 @@ Module to handle moving files in a Logseq graph directory.
 """
 
 from pathlib import Path
-from typing import List, Tuple
 import logging
 import shutil
 
@@ -33,12 +32,12 @@ class LogseqFileMover:
     def __str__(self):
         return f"LogseqFileMover: {self.delete}"
 
-    def handle_move_assets(self) -> List[str]:
+    def handle_move_assets(self) -> list[str]:
         """
         Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
         Returns:
-            List[str]: A list of names of the moved files/folders.
+            list[str]: A list of names of the moved files/folders.
         """
         lsa = LogseqAssets()
         args = Args()
@@ -66,7 +65,7 @@ class LogseqFileMover:
             except (shutil.Error, OSError) as e:
                 logging.error("Failed to move unlinked asset: %s to %s: %s", file_path, new_path, e)
 
-    def handle_move_directory(self, argument: bool, output_dir: Path, logseq_dir: Path) -> List[str]:
+    def handle_move_directory(self, argument: bool, output_dir: Path, logseq_dir: Path) -> list[str]:
         """
         Move bak and recycle files to a specified directory.
 
@@ -76,7 +75,7 @@ class LogseqFileMover:
             logseq_dir (Path): The directory to move files from.
 
         Returns:
-            List[str]: A list of names of the moved files/folders.
+            list[str]: A list of names of the moved files/folders.
         """
         moved, moved_names = self.get_all_folder_content(output_dir, logseq_dir)
 
@@ -90,7 +89,7 @@ class LogseqFileMover:
         LogseqFileMover.move_all_folder_content(moved)
         return moved_names
 
-    def get_all_folder_content(self, output_dir: Path, logseq_dir: Path) -> Tuple[List[Tuple], List[str]]:
+    def get_all_folder_content(self, output_dir: Path, logseq_dir: Path) -> tuple[list[tuple], list[str]]:
         """
         Move all folders from one directory to another.
 
@@ -99,7 +98,7 @@ class LogseqFileMover:
             logseq_dir (Path): The directory to move files from.
 
         Returns:
-            Tuple[List[Tuple], List[str]]: A tuple containing a list of tuples with source and destination paths,
+            tuple[list[tuple], list[str]]: A tuple containing a list of tuples with source and destination paths,
                                             and a list of names of the moved files/folders.
         """
         moved_content = []
@@ -118,12 +117,12 @@ class LogseqFileMover:
         return moved_content, moved_content_names
 
     @staticmethod
-    def move_all_folder_content(moved_content: List[Tuple]) -> None:
+    def move_all_folder_content(moved_content: list[tuple]) -> None:
         """
         Move all folders from one directory to another.
 
         Args:
-            moved_content (List[Tuple]): List of tuples containing source and destination paths.
+            moved_content (list[Tuple]): list of tuples containing source and destination paths.
         """
         for old_path, new_path in moved_content:
             try:

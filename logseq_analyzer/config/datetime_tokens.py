@@ -15,7 +15,7 @@ class LogseqDateTimeTokens:
     Class to handle date and time tokens in Logseq.
     """
 
-    def __init__(self, token_map: dict[str, str] = {}, token_pattern: re.Pattern = None):
+    def __init__(self):
         """
         Initialize the LogseqDateTimeTokens class.
         """

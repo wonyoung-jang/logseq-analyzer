@@ -3,7 +3,7 @@ Helper functions for file and date processing.
 """
 
 from pathlib import Path
-from typing import Generator, Set, List, Pattern, Type, TypeVar, Any
+from typing import Generator, Pattern, Type, TypeVar, Any
 import functools
 import logging
 import threading
@@ -14,7 +14,7 @@ from ..utils.enums import Format
 _T = TypeVar("_T")
 
 
-def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, None]:
+def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, None]:
     """
     Recursively iterate over files in the root directory.
     """
@@ -33,12 +33,12 @@ def iter_files(root_dir: Path, target_dirs: Set[str]) -> Generator[Path, None, N
             dirs.clear()
 
 
-def find_all_lower(pattern: Pattern, text: str) -> List[str]:
+def find_all_lower(pattern: Pattern, text: str) -> list[str]:
     """Find all matches of a regex pattern in the text, returning them in lowercase."""
     return [match.lower() for match in pattern.findall(text)]
 
 
-def process_aliases(aliases: str) -> List[str]:
+def process_aliases(aliases: str) -> list[str]:
     """Process aliases to extract individual aliases."""
     aliases = aliases.strip()
     results = []

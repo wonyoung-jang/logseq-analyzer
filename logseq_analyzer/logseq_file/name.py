@@ -20,7 +20,12 @@ DATE_ORDINAL_SUFFIX = "o"
 
 @dataclass
 class LogseqFilename:
-    """Class for processing Logseq filenames based on their parent directory."""
+    """
+    LogseqFilename class.
+
+    Args:
+        file_path (Path): The path to the Logseq file.
+    """
 
     file_path: Path
 
@@ -51,8 +56,7 @@ class LogseqFilename:
         name = self.name.strip(ns_file_sep)
         if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
             return self._process_logseq_journal_key(name)
-        else:
-            name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
+        name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
         return name
 
     def check_is_namespace(self) -> bool:

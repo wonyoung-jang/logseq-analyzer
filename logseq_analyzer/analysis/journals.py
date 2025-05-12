@@ -3,7 +3,7 @@ Process logseq journals.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import Optional
 import logging
 
 from ..config.datetime_tokens import LogseqJournalFormats
@@ -62,7 +62,7 @@ class LogseqJournals:
         self.timeline_stats["dangling_journals"] = _get_date_stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
-    def process_journal_keys_to_datetime(self, list_of_keys: List[str], py_page_base_format: str = ""):
+    def process_journal_keys_to_datetime(self, list_of_keys: list[str], py_page_base_format: str = ""):
         """
         Convert journal keys from strings to datetime objects.
         """
@@ -147,7 +147,7 @@ def _get_date_stats(timeline):
 
 def _get_date_ranges(
     most_recent_date: Optional[datetime], least_recent_date: Optional[datetime]
-) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
+) -> tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
     """
     Compute the range between two dates in days, weeks, months, and years.
     """

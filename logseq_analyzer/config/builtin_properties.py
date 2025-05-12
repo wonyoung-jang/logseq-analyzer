@@ -3,7 +3,6 @@ Logseq Built-in Properties Module
 """
 
 from dataclasses import dataclass
-from typing import Dict, List
 
 from .analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import singleton
@@ -25,15 +24,15 @@ class LogseqBuiltInProperties:
         self.built_in_properties = frozenset(properties_str.split(","))
 
 
-def split_builtin_user_properties(properties: List[str]) -> Dict[str, List[str]]:
+def split_builtin_user_properties(properties: list[str]) -> dict[str, list[str]]:
     """
     Helper function to split properties into built-in and user-defined.
 
     Args:
-        properties (list): List of properties to split.
+        properties (list[str]): List of properties to split.
 
     Returns:
-        Dict[str, List[str]]: Dictionary containing built-in and user-defined properties.
+        dict[str, list[str]]: Dictionary containing built-in and user-defined properties.
     """
     built_ins = LogseqBuiltInProperties()
     built_in_props = built_ins.built_in_properties

@@ -2,7 +2,7 @@
 Logseq Content Summarizer Module
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
@@ -34,7 +34,7 @@ class LogseqContentSummarizer:
         for criteria in list(Criteria):
             self.subsets[criteria.value] = self.extract_summary_subset_content(criteria.value)
 
-    def extract_summary_subset_content(self, criteria) -> Dict[str, Any]:
+    def extract_summary_subset_content(self, criteria) -> dict[str, Any]:
         """
         Extract a subset of data based on a specific criteria.
         Asks: What content matches the criteria? And where is it found? How many times?
@@ -43,7 +43,7 @@ class LogseqContentSummarizer:
             criteria (str): The criteria for extraction.
 
         Returns:
-            Dict[str, Any]: A dictionary containing the count and locations of the extracted values.
+            dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
         index = FileIndex()

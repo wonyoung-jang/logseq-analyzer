@@ -5,22 +5,22 @@ FileIndex class.
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Generator, List, Set, Union
+from typing import Generator, Union
 
 from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
-def get_attribute_list(file_list: List[LogseqFile], attribute: str) -> List[Union[str, int]]:
+def get_attribute_list(file_list: list[LogseqFile], attribute: str) -> list[Union[str, int]]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
     Args:
-        file_list (List[LogseqFile]): List of LogseqFile objects.
+        file_list (list[LogseqFile]): list of LogseqFile objects.
         attribute (str): The attribute to extract from each LogseqFile object.
 
     Returns:
-        List[Union[str, int]]: List of attribute values.
+        list[Union[str, int]]: list of attribute values.
     """
     return [getattr(file, attribute) for file in file_list]
 
@@ -33,10 +33,10 @@ class FileIndex:
         """
         Initialize the FileIndex instance.
         """
-        self.files: Set[LogseqFile] = set()
-        self.hash_to_file: Dict[int, LogseqFile] = {}
-        self.name_to_files: Dict[str, List[LogseqFile]] = defaultdict(list)
-        self.path_to_file: Dict[Path, LogseqFile] = {}
+        self.files: set[LogseqFile] = set()
+        self.hash_to_file: dict[int, LogseqFile] = {}
+        self.name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
+        self.path_to_file: dict[Path, LogseqFile] = {}
 
     def __repr__(self):
         """Return a string representation of the FileIndex."""
@@ -57,7 +57,7 @@ class FileIndex:
         self.name_to_files[file.path.name].append(file)
         self.path_to_file[file.file_path] = file
 
-    def get(self, key) -> Union[LogseqFile, List[LogseqFile], None]:
+    def get(self, key) -> Union[LogseqFile, list[LogseqFile], None]:
         """Get a file by its key."""
         if isinstance(key, int):
             return self.hash_to_file.get(key)
@@ -109,7 +109,7 @@ class FileIndex:
                     del self.name_to_files[file.path.name]
             logging.debug("Key %s removed from index.", key)
 
-    def list_files_with_keys_and_values(self, **criteria) -> List[LogseqFile]:
+    def list_files_with_keys_and_values(self, **criteria) -> list[LogseqFile]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         result = []
         for file in self.files:
@@ -123,7 +123,7 @@ class FileIndex:
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
                 yield file
 
-    def list_files_without_keys(self, *criteria) -> List[LogseqFile]:
+    def list_files_without_keys(self, *criteria) -> list[LogseqFile]:
         """Extract a subset of the summary data based on whether the keys do not exist."""
         result = []
         for file in self.files:

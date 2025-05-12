@@ -5,21 +5,25 @@ Module for LogseqBullets class
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 
 from ..utils.patterns import ContentPatterns
 
 
 @dataclass
 class LogseqBullets:
-    """LogseqBullets class"""
+    """
+    LogseqBullets class.
+
+    Args:
+        file_path (Path): The path to the Logseq file.
+    """
 
     file_path: Path
 
     content: str = ""
     primary_bullet: str = ""
-    all_bullets: List[str] = field(default_factory=list)
-    content_bullets: List[str] = field(default_factory=list)
+    all_bullets: list[str] = field(default_factory=list)
+    content_bullets: list[str] = field(default_factory=list)
     char_count: int = 0
     bullet_count: int = 0
     bullet_count_empty: int = 0
@@ -38,7 +42,7 @@ class LogseqBullets:
         """Get character count of content"""
         return len(self.content)
 
-    def get_bullet_content(self) -> List[str]:
+    def get_bullet_content(self) -> list[str]:
         """Get all bullets split into a list"""
         if not self.content:
             return []

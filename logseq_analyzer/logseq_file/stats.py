@@ -10,7 +10,12 @@ import logging
 
 @dataclass
 class LogseqFilestats:
-    """Initialize the LogseqFilestats class."""
+    """
+    LogseqFilestats class.
+
+    Args:
+        file_path (Path): The path to the Logseq file.
+    """
 
     file_path: Path
 

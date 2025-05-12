@@ -4,7 +4,6 @@ Compile frequently used regex patterns for Logseq content.
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
 import logging
 import re
 
@@ -327,15 +326,15 @@ class DoubleCurlyBracketsPatterns:
         )
         logging.info("Compiled DoubleCurlyBracketsPatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process double curly braces and extract relevant data.
 
         Args:
-            results (List[str]): List of double curly brace strings.
+            results (list[str]): List of double curly brace strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing double curly brace data.
+            dict[str, list[str]]: Dictionary categorizing double curly brace data.
         """
         if not results:
             return {}
@@ -609,15 +608,15 @@ class AdvancedCommandPatterns:
         )
         logging.info("Compiled AdvancedCommandPatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process advanced commands and extract relevant data.
 
         Args:
-            results (List[str]): List of advanced command strings.
+            results (list[str]): List of advanced command strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing advanced commands.
+            dict[str, list[str]]: Dictionary categorizing advanced commands.
         """
         if not results:
             return {}
@@ -746,15 +745,15 @@ class CodePatterns:
         )
         logging.info("Compiled CodePatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process code blocks and categorize them.
 
         Args:
-            results (List[str]): List of code block strings.
+            results (list[str]): List of code block strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing code blocks.
+            dict[str, list[str]]: Dictionary categorizing code blocks.
         """
         if not results:
             return {}
@@ -819,15 +818,15 @@ class DoubleParenthesesPatterns:
         )
         logging.info("Compiled DoubleParenthesesPatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process double parentheses and categorize them.
 
         Args:
-            results (List[str]): List of double parenthesis strings.
+            results (list[str]): List of double parenthesis strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing double parentheses.
+            dict[str, list[str]]: Dictionary categorizing double parentheses.
         """
         if not results:
             return {}
@@ -906,15 +905,15 @@ class EmbeddedLinksPatterns:
         )
         logging.info("Compiled EmbeddedLinksPatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process embedded links and categorize them.
 
         Args:
-            results (List[str]): List of embedded link strings.
+            results (list[str]): List of embedded link strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing embedded links.
+            dict[str, list[str]]: Dictionary categorizing embedded links.
         """
         if not results:
             return {}
@@ -998,15 +997,15 @@ class ExternalLinksPatterns:
         )
         logging.info("Compiled ExternalLinksPatterns")
 
-    def process(self, results: List[str]) -> Dict[str, List[str]]:
+    def process(self, results: list[str]) -> dict[str, list[str]]:
         """
         Process external links and categorize them.
 
         Args:
-            results (List[str]): List of external link strings.
+            results (list[str]): List of external link strings.
 
         Returns:
-            Dict[str, List[str]]: Dictionary categorizing external links.
+            dict[str, list[str]]: Dictionary categorizing external links.
         """
         if not results:
             return {}

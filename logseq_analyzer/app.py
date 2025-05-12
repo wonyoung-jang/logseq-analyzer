@@ -3,7 +3,6 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 from pathlib import Path
-from typing import List
 import logging
 
 from .analysis.index import FileIndex
@@ -370,7 +369,7 @@ def get_main_objects() -> dict:
     }
 
 
-def get_all_reports() -> List:
+def get_all_reports() -> list[OutputDir]:
     """Combine all reports into a single list."""
     output_subdirectories = [
         OutputDir.JOURNALS,
@@ -384,7 +383,7 @@ def get_all_reports() -> List:
     return output_subdirectories
 
 
-def update_cache(cache: Cache, output_subdirectories: List, data_reports: List):
+def update_cache(cache: Cache, output_subdirectories: list[OutputDir], data_reports: list[str]):
     """Update the cache with the output data."""
     try:
         shelve_output_data = zip(output_subdirectories, data_reports)

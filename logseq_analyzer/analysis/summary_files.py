@@ -2,8 +2,6 @@
 Logseq File Summarizer Module
 """
 
-from typing import Dict, List
-
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
 from .index import FileIndex, get_attribute_list
@@ -15,7 +13,7 @@ class LogseqFileSummarizer:
 
     def __init__(self):
         """Initialize the LogseqFileSummarizer instance."""
-        self.subsets: Dict[str, dict] = {}
+        self.subsets: dict[str, dict] = {}
 
     def __repr__(self):
         """Return a string representation of the LogseqFileSummarizer instance."""
@@ -68,9 +66,9 @@ class LogseqFileSummarizer:
         subsets[SummaryFiles.FILE_EXTS.value] = self.process_file_extensions(index)
         self.subsets.update(subsets)
 
-    def process_file_extensions(self, index: FileIndex) -> Dict[str, List[str]]:
+    def process_file_extensions(self, index: FileIndex) -> dict[str, list[str]]:
         """Process file extensions and create subsets for each."""
-        file_extension_dict: Dict[str, List[str]] = {}
+        file_extension_dict: dict[str, list[str]] = {}
         unique_exts = {file.path.suffix for file in index.files if file.path.suffix}
         for ext in unique_exts:
             subset_name = f"all {ext}s"
