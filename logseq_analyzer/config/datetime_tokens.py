@@ -4,9 +4,9 @@ Logseq DateTime Tokens Module
 
 import re
 
+from ..utils.helpers import singleton
 from .analyzer_config import LogseqAnalyzerConfig
 from .graph_config import LogseqGraphConfig
-from ..utils.helpers import singleton
 
 
 @singleton

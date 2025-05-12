@@ -4,10 +4,10 @@ This module handles caching mechanisms for the application.
 Imported once in app.py
 """
 
-from pathlib import Path
-from typing import Any, Generator
 import logging
 import shelve
+from pathlib import Path
+from typing import Any, Generator
 
 from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig

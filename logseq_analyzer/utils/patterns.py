@@ -2,11 +2,11 @@
 Compile frequently used regex patterns for Logseq content.
 """
 
+import logging
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Pattern
-import logging
-import re
 
 from .enums import Criteria
 from .helpers import singleton

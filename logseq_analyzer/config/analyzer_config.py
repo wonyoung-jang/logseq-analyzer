@@ -2,12 +2,12 @@
 Config class for loading and managing configuration files.
 """
 
-from pathlib import Path
 import configparser
 import logging
+from pathlib import Path
 
-from ..utils.helpers import singleton
 from ..utils.enums import Core
+from ..utils.helpers import singleton
 
 
 def lambda_optionxform(option: str) -> str:

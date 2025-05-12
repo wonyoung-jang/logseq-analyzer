@@ -2,11 +2,11 @@
 Logseq Analyzer GUI using PySide6.
 """
 
-from pathlib import Path
-from typing import Any
 import os
 import subprocess
 import sys
+from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (

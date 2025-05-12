@@ -2,9 +2,9 @@
 Reporting module for writing output to files, including HTML reports.
 """
 
-from typing import Any, TextIO
 import json
 import logging
+from typing import Any, TextIO
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.enums import Format

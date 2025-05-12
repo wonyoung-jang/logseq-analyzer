@@ -2,8 +2,8 @@
 LogseqAnalyzerArguments Class
 """
 
-from dataclasses import dataclass
 import argparse
+from dataclasses import dataclass
 
 from ..utils.helpers import singleton
 

@@ -2,10 +2,10 @@
 This module defines the LogseqFilestats class, which is used to gather file statistics for Logseq files.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-import logging
 
 
 @dataclass

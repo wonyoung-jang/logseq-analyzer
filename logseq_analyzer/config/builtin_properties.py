@@ -4,8 +4,8 @@ Logseq Built-in Properties Module
 
 from dataclasses import dataclass
 
-from .analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import singleton
+from .analyzer_config import LogseqAnalyzerConfig
 
 
 @singleton

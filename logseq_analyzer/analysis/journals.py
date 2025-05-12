@@ -2,9 +2,9 @@
 Process logseq journals.
 """
 
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Generator, Literal, Optional
-import logging
 
 from ..config.datetime_tokens import LogseqJournalFormats
 from ..utils.enums import SummaryFiles

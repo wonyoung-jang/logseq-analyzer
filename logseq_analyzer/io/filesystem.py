@@ -2,9 +2,9 @@
 File system operations for Logseq Analyzer.
 """
 
-from pathlib import Path
 import logging
 import shutil
+from pathlib import Path
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.helpers import singleton

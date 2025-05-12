@@ -2,9 +2,9 @@
 Parse EDN (Extensible Data Notation) data from Logseq configuration files.
 """
 
-from typing import Any, Generator
-import re
 import ast
+import re
+from typing import Any, Generator
 
 # Simple EDN tokenizer and parser to convert EDN data into Python types.
 TOKEN_REGEX = re.compile(

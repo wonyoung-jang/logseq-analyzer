@@ -2,14 +2,14 @@
 Module to handle moving files in a Logseq graph directory.
 """
 
-from pathlib import Path
 import logging
 import shutil
+from pathlib import Path
 
-from .filesystem import DeleteAssetsDirectory, DeleteDirectory
-from ..utils.helpers import singleton
 from ..analysis.assets import LogseqAssets
 from ..config.arguments import Args
+from ..utils.helpers import singleton
+from .filesystem import DeleteAssetsDirectory, DeleteDirectory
 
 
 @singleton

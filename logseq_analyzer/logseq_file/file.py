@@ -9,10 +9,15 @@ from typing import Any
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
 from ..utils.helpers import process_aliases
-from ..utils.patterns import (AdvancedCommandPatterns, CodePatterns,
-                              ContentPatterns, DoubleCurlyBracketsPatterns,
-                              DoubleParenthesesPatterns, EmbeddedLinksPatterns,
-                              ExternalLinksPatterns)
+from ..utils.patterns import (
+    AdvancedCommandPatterns,
+    CodePatterns,
+    ContentPatterns,
+    DoubleCurlyBracketsPatterns,
+    DoubleParenthesesPatterns,
+    EmbeddedLinksPatterns,
+    ExternalLinksPatterns,
+)
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats

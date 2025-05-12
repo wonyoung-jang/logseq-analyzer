@@ -2,18 +2,17 @@
 This module handles processing of Logseq filenames based on their parent directory.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
-import logging
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..config.datetime_tokens import LogseqJournalFormats
 from ..config.graph_config import LogseqGraphConfig
 from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
-
 
 DATE_ORDINAL_SUFFIX = "o"
 
