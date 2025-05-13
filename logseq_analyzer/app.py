@@ -381,8 +381,9 @@ def write_reports(c: Cache) -> None:
 
 def run_app(**kwargs) -> None:
     """Main function to run the Logseq analyzer."""
-    gui = kwargs.get(Phase.GUI_INSTANCE.value, GUIInstanceDummy())
-    progress = gui.update_progress
+    progress = kwargs.get("progress_callback", GUIInstanceDummy())
+    if isinstance(progress, GUIInstanceDummy):
+        progress = progress.update_progress
     progress(5)
     args = setup_logseq_arguments(**kwargs)
     progress(10)

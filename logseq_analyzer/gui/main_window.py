@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QSettings, QThread, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -32,13 +32,31 @@ from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
 from ..utils.enums import Arguments, Format
 
 
+class AnalysisWorker(QThread):
+    progress_signal = Signal(int)
+    finished_signal = Signal(bool, str)
+
+    def __init__(self, args) -> None:
+        super().__init__()
+        self.args = args
+
+    def run(self) -> None:
+        try:
+            def update_progress(value) -> None:
+                self.progress_signal.emit(value)
+
+            run_app(**self.args, progress_callback=update_progress)
+            self.finished_signal.emit(True, "")
+        except Exception as e:
+            self.finished_signal.emit(False, str(e))
+
+
 class LogseqAnalyzerGUI(QMainWindow):
     """Main GUI class for the Logseq Analyzer application."""
 
     def __init__(self) -> None:
         """Initialize the GUI components and layout."""
         super().__init__()
-
         self.graph_folder_input = QLineEdit(readOnly=True)
         self.global_config_input = QLineEdit(readOnly=True)
         self.report_format_combo = QComboBox()
@@ -53,10 +71,8 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.output_button = QPushButton("Open Output Directory")
         self.delete_button = QPushButton("Open Delete Directory")
         self.log_button = QPushButton("Open Log File")
-
         self.setWindowTitle("Logseq Analyzer")
         self.resize(500, 500)
-        # Central Widget and Layout
         central_widget = QWidget()
         main_layout = QGridLayout(central_widget)
         self.setCentralWidget(central_widget)
@@ -83,28 +99,29 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         self.save_settings()
         self.run_button.setEnabled(False)
-
-        # Reset progress bars before starting
         self.setup_progress_bar.setValue(0)
-        QApplication.processEvents()
+        self.worker = AnalysisWorker(args_gui)
+        self.worker.progress_signal.connect(self.update_progress)
+        self.worker.finished_signal.connect(self.handle_analysis_complete)
+        self.worker.start()
 
-        try:
-            run_app(**args_gui, gui_instance=self)
+    def handle_analysis_complete(self, success, error_message):
+        """Handle completion of analysis"""
+        if success:
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")
             success_dialog.setText("Analysis completed successfully.")
             success_dialog.addButton("Close", QMessageBox.AcceptRole)
             success_dialog.exec()
-        except KeyboardInterrupt:
-            self.show_error("Analysis interrupted by user.")
-            self.close_analyzer()
-        finally:
-            self.run_button.setEnabled(False)
-            self.output_button.setEnabled(True)
-            self.delete_button.setEnabled(True)
-            self.log_button.setEnabled(True)
-            self.graph_cache_checkbox.setEnabled(True)
+        else:
+            self.show_error(f"Analysis failed: {error_message}")
+
+        self.run_button.setEnabled(True)
+        self.output_button.setEnabled(True)
+        self.delete_button.setEnabled(True)
+        self.log_button.setEnabled(True)
+        self.graph_cache_checkbox.setEnabled(True)
 
     def setup_ui(self, main_layout) -> None:
         """Sets up the main user interface layout and elements."""
