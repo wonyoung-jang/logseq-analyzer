@@ -21,14 +21,6 @@ class LogseqFileSummarizer:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: dict[str, dict] = {}
 
-    def __repr__(self) -> Literal["LogseqFileSummarizer()"]:
-        """Return a string representation of the LogseqFileSummarizer instance."""
-        return "LogseqFileSummarizer()"
-
-    def __str__(self) -> Literal["LogseqFileSummarizer"]:
-        """Return a string representation of the LogseqFileSummarizer instance."""
-        return "LogseqFileSummarizer"
-
     def __len__(self) -> int:
         """Return the number of subsets."""
         return len(self.subsets)

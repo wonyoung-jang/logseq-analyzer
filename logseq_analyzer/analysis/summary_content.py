@@ -22,14 +22,6 @@ class LogseqContentSummarizer:
         """Initialize the LogseqContentSummarizer instance."""
         self.subsets = {}
 
-    def __repr__(self) -> Literal["LogseqContentSummarizer()"]:
-        """Return a string representation of the LogseqContentSummarizer instance."""
-        return "LogseqContentSummarizer()"
-
-    def __str__(self) -> Literal["LogseqContentSummarizer"]:
-        """Return a string representation of the LogseqContentSummarizer instance."""
-        return "LogseqContentSummarizer"
-
     def __len__(self) -> int:
         """Return the number of subsets."""
         return len(self.subsets)
