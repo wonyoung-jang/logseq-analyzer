@@ -34,15 +34,10 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path: Path = file_path
-        self.name: str = ""
         self.path: LogseqFilename = LogseqFilename(file_path)
         self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.bullets: LogseqBullets = LogseqBullets(file_path)
-        self.content: str = ""
         self.data: dict = {}
-        self.primary_bullet: str = ""
-        self.content_bullets: list = []
-        self.has_content: bool = False
         self.has_backlinks: bool = False
         self.is_backlinked: bool = False
         self.is_backlinked_by_ns_only: bool = False
@@ -88,7 +83,7 @@ class LogseqFile:
             setattr(self, attr, value)
 
         for attr, value in self.bullets.__dict__.items():
-            if attr in ("all_bullets"):
+            if attr in ("all_bullets", "content_bullets", "content"):
                 continue
             setattr(self, attr, value)
 
@@ -97,17 +92,17 @@ class LogseqFile:
         Process content data to extract various elements like backlinks, tags, and properties.
         """
         # If no content, return
-        if not self.content:
+        if not self.bullets.content:
             return
 
         # Mask code blocks to avoid interference with pattern matching
-        masked_content, masked_blocks = self.mask_blocks(self.content)
+        masked_content, masked_blocks = self.mask_blocks(self.bullets.content)
         self.masked_blocks = masked_blocks
 
         primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(self.content),
-            Criteria.ASSETS.value: ContentPatterns.asset.findall(self.content),
-            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(self.content),
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(self.bullets.content),
+            Criteria.ASSETS.value: ContentPatterns.asset.findall(self.bullets.content),
+            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(self.bullets.content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
             Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
             Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
@@ -118,16 +113,16 @@ class LogseqFile:
         }
 
         # Process aliases and property:values
-        property_value_all = ContentPatterns.property_value.findall(self.content)
+        property_value_all = ContentPatterns.property_value.findall(self.bullets.content)
         properties_values = dict(property_value_all)
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
         # Process aliases and properties
         page_properties = []
         if self.bullets.has_page_properties:
-            page_properties = ContentPatterns.property.findall(self.primary_bullet)
-            self.content = "\n".join(self.content_bullets)
-        block_properties = ContentPatterns.property.findall(self.content)
+            page_properties = ContentPatterns.property.findall(self.bullets.primary_bullet)
+            self.bullets.content = "\n".join(self.bullets.content_bullets)
+        block_properties = ContentPatterns.property.findall(self.bullets.content)
         page_props = split_builtin_user_properties(page_properties)
         block_props = split_builtin_user_properties(block_properties)
         aliases_and_properties = {
@@ -181,7 +176,7 @@ class LogseqFile:
             pattern: The pattern to find and process.
         """
         all_pattern = getattr(pattern, "all", None)
-        results = all_pattern.findall(self.content)
+        results = all_pattern.findall(self.bullets.content)
         return pattern.process(results)
 
     def determine_node_type(self) -> str:
@@ -198,7 +193,7 @@ class LogseqFile:
             (False, False, True, False): "orphan_namespace_true",
             (True, False, False, False): "orphan_graph",
             (False, False, False, False): "orphan_true",
-        }.get((self.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
+        }.get((self.stat.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
 
     def mask_blocks(self, content: str) -> tuple[str, dict[str, str]]:
         """

@@ -85,7 +85,7 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
 
-        all_file_names = (file.name for file in index.files)
+        all_file_names = (file.path.name for file in index.files)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
     def post_processing_content_namespaces(self, file: LogseqFile) -> None:

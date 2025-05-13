@@ -3,7 +3,7 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -24,16 +24,16 @@ class LogseqFilename:
     """
 
     file_path: Path
-    original_name: str = ""
-    name: str = ""
-    parent: str = ""
-    suffix: str = ""
-    parts: tuple = ()
-    uri: str = ""
-    logseq_url: str = ""
-    file_type: str = ""
-    is_namespace: bool = False
-    is_hls: bool = False
+    original_name: str = field(init=False, repr=False)
+    name: str = field(init=False, repr=False)
+    parent: str = field(init=False, repr=False)
+    suffix: str = field(init=False, repr=False)
+    parts: tuple = field(init=False, repr=False)
+    uri: str = field(init=False, repr=False)
+    logseq_url: str = field(init=False, repr=False)
+    file_type: str = field(init=False, repr=False)
+    is_namespace: bool = field(init=False, repr=False)
+    is_hls: bool = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFilename class."""

@@ -50,7 +50,8 @@ class LogseqContentSummarizer:
             dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        for file in LogseqContentSummarizer.index.files:
+        index = LogseqContentSummarizer.index
+        for file in index.files:
             for value in file.data.get(criteria, []):
                 subset_counter.setdefault(value, {"count": 0, "found_in": Counter()})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1

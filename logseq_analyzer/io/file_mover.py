@@ -22,9 +22,9 @@ class LogseqFileMover:
         """
         Initialize the LogseqFileMover class.
         """
-        self.moved_files = {}
         delete_dir = DeleteDirectory()
         self.delete = delete_dir.path
+        self.moved_files = {}
 
     def __repr__(self) -> str:
         return f'LogseqFileMover(delete="{self.delete}")'

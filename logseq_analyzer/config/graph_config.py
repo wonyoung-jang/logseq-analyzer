@@ -2,9 +2,9 @@
 Logseq Graph Class
 """
 
+from pathlib import Path
 from typing import Any
 
-from ..io.filesystem import ConfigFile, GlobalConfigFile
 from ..utils.helpers import singleton
 from .edn_parser import loads
 
@@ -21,24 +21,24 @@ class LogseqGraphConfig:
         self.config_user: dict[str, Any] = {}
         self.config_global: dict[str, Any] = {}
 
-    def initialize_user_config_edn(self, cf: ConfigFile) -> None:
+    def initialize_user_config_edn(self, cf_path: Path) -> None:
         """
         Extract user config.
 
         Args:
-            cf (ConfigFile): The config file object.
+            cf_path (Path): The path to the config file.
         """
-        with cf.path.open("r", encoding="utf-8") as user_config:
+        with cf_path.open("r", encoding="utf-8") as user_config:
             self.config_user = loads(user_config.read())
 
-    def initialize_global_config_edn(self, gcf: GlobalConfigFile) -> None:
+    def initialize_global_config_edn(self, gcf_path: Path) -> None:
         """
         Extract global config.
 
         Args:
-            gcf (GlobalConfigFile): The global config file object.
+            gcf_path (Path): The path to the global config file.
         """
-        with gcf.path.open("r", encoding="utf-8") as global_config:
+        with gcf_path.open("r", encoding="utf-8") as global_config:
             self.config_global = loads(global_config.read())
 
     def merge(self) -> dict[str, Any]:

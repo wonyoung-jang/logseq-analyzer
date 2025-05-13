@@ -16,15 +16,27 @@ class LogseqBullets:
     """
 
     file_path: Path
-    content: str = ""
-    primary_bullet: str = ""
-    all_bullets: list[str] = field(default_factory=list)
-    content_bullets: list[str] = field(default_factory=list)
-    char_count: int = 0
-    bullet_count: int = 0
-    bullet_count_empty: int = 0
-    bullet_density: float = 0.0
-    has_page_properties: bool = False
+    content: str = field(init=False, repr=False)
+    primary_bullet: str = field(init=False, repr=False)
+    all_bullets: list[str] = field(init=False, repr=False)
+    content_bullets: list[str] = field(init=False, repr=False)
+    char_count: int = field(init=False, repr=False)
+    bullet_count: int = field(init=False, repr=False)
+    bullet_count_empty: int = field(init=False, repr=False)
+    bullet_density: float = field(init=False, repr=False)
+    has_page_properties: bool = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Post-initialization method to set bullet attributes."""
+        self.content = ""
+        self.primary_bullet = ""
+        self.all_bullets = []
+        self.content_bullets = []
+        self.char_count = 0
+        self.bullet_count = 0
+        self.bullet_count_empty = 0
+        self.bullet_density = 0.0
+        self.has_page_properties = False
 
     def get_content(self) -> str:
         """Read the text content of a file."""

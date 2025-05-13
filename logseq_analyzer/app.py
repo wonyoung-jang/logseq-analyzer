@@ -122,11 +122,11 @@ def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
     lgc = LogseqGraphConfig()
     cf = ConfigFile()
     cf.validate()
-    lgc.initialize_user_config_edn(cf)
+    lgc.initialize_user_config_edn(cf.path)
     if a.global_config:
         gcf = GlobalConfigFile()
         gcf.validate()
-        lgc.initialize_global_config_edn(gcf)
+        lgc.initialize_global_config_edn(gcf.path)
     lgc.config_merged = lgc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
     return lgc

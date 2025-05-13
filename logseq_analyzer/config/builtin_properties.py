@@ -2,7 +2,7 @@
 Logseq Built-in Properties Module
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..utils.helpers import singleton
 from .analyzer_config import LogseqAnalyzerConfig
@@ -15,12 +15,12 @@ class LogseqBuiltInProperties:
     A class to handle built-in properties for Logseq.
     """
 
-    built_in_properties: frozenset = frozenset()
+    built_in_properties: frozenset = field(init=False)
 
     def __post_init__(self) -> None:
         """Build the built-in properties set."""
-        ls_analyzer_config = LogseqAnalyzerConfig()
-        properties_str = ls_analyzer_config.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
+        lac = LogseqAnalyzerConfig()
+        properties_str = lac.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
         self.built_in_properties = frozenset(properties_str.split(","))
 
 
@@ -34,10 +34,10 @@ def split_builtin_user_properties(properties: list[str]) -> dict[str, list[str]]
     Returns:
         dict[str, list[str]]: Dictionary containing built-in and user-defined properties.
     """
-    built_ins = LogseqBuiltInProperties()
-    built_in_props = built_ins.built_in_properties
+    lsbip = LogseqBuiltInProperties()
+    built_ins = lsbip.built_in_properties
     properties_dict = {
-        "built_ins": [prop for prop in properties if prop in built_in_props],
-        "user_props": [prop for prop in properties if prop not in built_in_props],
+        "built_ins": [prop for prop in properties if prop in built_ins],
+        "user_props": [prop for prop in properties if prop not in built_ins],
     }
     return properties_dict
