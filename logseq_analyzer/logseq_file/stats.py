@@ -12,13 +12,9 @@ from pathlib import Path
 class LogseqFilestats:
     """
     LogseqFilestats class.
-
-    Args:
-        file_path (Path): The path to the Logseq file.
     """
 
     file_path: Path
-
     size: int = 0
     has_content: bool = False
     time_existed: float = 0.0
@@ -34,17 +30,16 @@ class LogseqFilestats:
         self.has_content = bool(self.size)
 
         try:
-            created_ts = stat.st_birthtime
+            _created_ts = stat.st_birthtime
         except AttributeError:
-            created_ts = stat.st_ctime
+            _created_ts = stat.st_ctime
             logging.warning(
                 "st_birthtime not available for %s. Using st_ctime instead.",
                 self.file_path,
             )
+        _modified_ts = stat.st_mtime
         now = datetime.now()
-        date_created = datetime.fromtimestamp(created_ts)
-        date_modified = datetime.fromtimestamp(stat.st_mtime)
-        self.time_existed = (now - date_created).total_seconds()
-        self.time_unmodified = (now - date_modified).total_seconds()
-        self.date_created = date_created.isoformat()
-        self.date_modified = date_modified.isoformat()
+        self.time_existed = now.timestamp() - _created_ts
+        self.time_unmodified = now.timestamp() - _modified_ts
+        self.date_created = datetime.fromtimestamp(_created_ts).isoformat()
+        self.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()

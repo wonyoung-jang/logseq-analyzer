@@ -102,22 +102,18 @@ def setup_logseq_paths() -> None:
     ld = LogseqDirectory()
     gd.validate()
     ld.validate()
-
     dd = DeleteDirectory()
     dd.get_or_create_dir()
-
     dbd = DeleteBakDirectory()
     drd = DeleteRecycleDirectory()
     dad = DeleteAssetsDirectory()
     dbd.get_or_create_dir()
     drd.get_or_create_dir()
     dad.get_or_create_dir()
-
     bd = BakDirectory()
     rd = RecycleDirectory()
     bd.get_or_create_dir()
     rd.get_or_create_dir()
-
     logging.debug("run_app: setup_logseq_paths")
 
 
@@ -339,26 +335,30 @@ def get_moved_files_reports(lfm: LogseqFileMover, la: LogseqAssets, lah: LogseqA
     }
 
 
-def get_output_subdirs() -> list[OutputDir]:
-    """Combine all reports into a single list."""
-    output_subdirs = [
-        OutputDir.JOURNALS,
-        OutputDir.META,
-        OutputDir.MOVED_FILES,
-        OutputDir.NAMESPACES,
-        OutputDir.SUMMARY_CONTENT,
-        OutputDir.SUMMARY_FILES,
-    ]
+def get_output_subdirs() -> list[str]:
+    """
+    Combine all reports into a single list.
+
+    Returns:
+        list[str]: A list of output subdirectories.
+    """
     logging.debug("run_app: get_output_subdirs")
-    return output_subdirs
+    return [
+        OutputDir.JOURNALS.value,
+        OutputDir.META.value,
+        OutputDir.MOVED_FILES.value,
+        OutputDir.NAMESPACES.value,
+        OutputDir.SUMMARY_CONTENT.value,
+        OutputDir.SUMMARY_FILES.value,
+    ]
 
 
-def update_cache(c: Cache, output_subdirs: list[OutputDir], data_reports: list[str]) -> None:
+def update_cache(c: Cache, output_subdirs: list[str], data_reports: list[Any]) -> None:
     """Update the cache with the output data."""
     try:
         shelve_output_data = zip(output_subdirs, data_reports)
         for output_subdir, data_report in shelve_output_data:
-            c.update({output_subdir.value: data_report})
+            c.update({output_subdir: data_report})
 
     except Exception as e:
         logging.error("Error updating cache: %s", e)

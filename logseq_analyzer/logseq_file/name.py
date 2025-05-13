@@ -21,13 +21,9 @@ DATE_ORDINAL_SUFFIX = "o"
 class LogseqFilename:
     """
     LogseqFilename class.
-
-    Args:
-        file_path (Path): The path to the Logseq file.
     """
 
     file_path: Path
-
     original_name: str = ""
     name: str = ""
     parent: str = ""

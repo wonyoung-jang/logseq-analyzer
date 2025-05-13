@@ -13,13 +13,9 @@ from ..utils.patterns import ContentPatterns
 class LogseqBullets:
     """
     LogseqBullets class.
-
-    Args:
-        file_path (Path): The path to the Logseq file.
     """
 
     file_path: Path
-
     content: str = ""
     primary_bullet: str = ""
     all_bullets: list[str] = field(default_factory=list)
@@ -51,14 +47,15 @@ class LogseqBullets:
     def get_primary_bullet(self) -> str:
         """Get the Logseq primary bullet if available"""
         primary = ""
-        if len(self.all_bullets) == 1:
-            if primary := self.all_bullets[-1].strip():
+        all_bullets = self.all_bullets
+        if len(all_bullets) == 1:
+            if primary := all_bullets[0].strip():
                 self.bullet_count = 1
             else:
                 self.bullet_count_empty = 1
-        elif len(self.all_bullets) > 1:
-            primary = self.all_bullets[0].strip()
-            for bullet in self.all_bullets[1:]:
+        elif len(all_bullets) > 1:
+            primary = all_bullets[0].strip()
+            for bullet in all_bullets[1:]:
                 if not (stripped_bullet := bullet.strip()):
                     self.bullet_count_empty += 1
                 else:
