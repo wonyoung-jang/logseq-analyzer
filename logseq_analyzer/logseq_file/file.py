@@ -70,9 +70,9 @@ class LogseqFile:
         """
         self.path.file_type = self.path.determine_file_type()
         self.path.name = self.path.process_logseq_filename()
-        self.path.is_namespace = self.path.check_is_namespace()
         self.path.is_hls = self.path.check_is_hls()
         self.path.logseq_url = self.path.convert_uri_to_logseq_url()
+        self.path.is_namespace = self.path.check_is_namespace()
         self.path.get_namespace_name_data()
         self.bullets.content = self.bullets.get_content()
         self.bullets.char_count = self.bullets.get_char_count()

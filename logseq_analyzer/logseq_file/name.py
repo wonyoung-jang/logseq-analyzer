@@ -3,7 +3,7 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -146,15 +146,16 @@ class LogseqFilename:
         if result != "other":
             return result
 
-        if "assets" in self.parts:
+        parts = self.parts
+        if config["DIR_ASSETS"] in parts:
             result = "sub_asset"
-        elif "draws" in self.parts:
+        elif config["DIR_DRAWS"] in parts:
             result = "sub_draw"
-        elif config["DIR_JOURNALS"] in self.parts:
+        elif config["DIR_JOURNALS"] in parts:
             result = "sub_journal"
-        elif config["DIR_PAGES"] in self.parts:
+        elif config["DIR_PAGES"] in parts:
             result = "sub_page"
-        elif config["DIR_WHITEBOARDS"] in self.parts:
+        elif config["DIR_WHITEBOARDS"] in parts:
             result = "sub_whiteboard"
         return result
 
