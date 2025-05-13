@@ -129,7 +129,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         graph_folder_button = QPushButton("Browse")
         graph_folder_button.clicked.connect(self.select_graph_folder)
         graph_folder_clear_button = QPushButton("Clear")
-        graph_folder_clear_button.clicked.connect(lambda: self.graph_folder_input.clear())
+        graph_folder_clear_button.clicked.connect(self.clear_graph_folder_input)
         graph_folder_hbox = QWidget()
         graph_folder_layout = QHBoxLayout(graph_folder_hbox)
         graph_folder_layout.addWidget(self.graph_folder_input)
@@ -142,7 +142,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         global_config_button = QPushButton("Browse")
         global_config_button.clicked.connect(self.select_global_config_file)
         global_config_clear_button = QPushButton("Clear")
-        global_config_clear_button.clicked.connect(lambda: self.global_config_input.clear())
+        global_config_clear_button.clicked.connect(self.clear_global_config_input)
         global_config_hbox = QWidget()
         global_config_layout = QHBoxLayout(global_config_hbox)
         global_config_layout.addWidget(self.global_config_input)
@@ -163,6 +163,14 @@ class LogseqAnalyzerGUI(QMainWindow):
         form_layout.addRow(report_format_label, self.report_format_combo)
 
         return form_layout
+
+    def clear_graph_folder_input(self) -> None:
+        """Clear the graph folder input field."""
+        self.graph_folder_input.clear()
+
+    def clear_global_config_input(self) -> None:
+        """Clear the global config input field."""
+        self.global_config_input.clear()
 
     def create_checkboxes_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for checkboxes."""

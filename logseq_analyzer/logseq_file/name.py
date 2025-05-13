@@ -3,7 +3,7 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
