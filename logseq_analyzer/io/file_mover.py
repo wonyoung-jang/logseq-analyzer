@@ -18,6 +18,8 @@ class LogseqFileMover:
     Class to handle moving files in a Logseq graph directory.
     """
 
+    __slots__ = ("delete", "moved_files")
+
     def __init__(self) -> None:
         """
         Initialize the LogseqFileMover class.

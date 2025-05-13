@@ -13,11 +13,13 @@ from ..utils.helpers import singleton
 class File:
     """A class to represent a file in the Logseq Analyzer."""
 
+    __slots__ = ("_path",)
+
     config = LogseqAnalyzerConfig()
 
     def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
-        self.path: Path = path
+        self.path = path
 
     def __repr__(self) -> str:
         """Return a string representation of the File object."""

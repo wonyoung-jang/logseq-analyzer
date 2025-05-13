@@ -14,6 +14,8 @@ from .index import FileIndex
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
+    __slots__ = ("subsets",)
+
     index = FileIndex()
 
     def __init__(self) -> None:

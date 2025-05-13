@@ -16,6 +16,13 @@ from .index import FileIndex
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
 
+    __slots__ = (
+        "all_linked_references",
+        "dangling_links",
+        "unique_linked_references",
+        "unique_linked_references_ns",
+    )
+
     index = FileIndex()
 
     def __init__(self) -> None:

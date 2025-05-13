@@ -31,6 +31,22 @@ class LogseqNamespaces:
     Class for analyzing namespace data in Logseq.
     """
 
+    __slots__ = (
+        "_part_levels",
+        "_part_entries",
+        "namespace_data",
+        "namespace_parts",
+        "unique_namespace_parts",
+        "namespace_details",
+        "unique_namespaces_per_level",
+        "namespace_queries",
+        "tree",
+        "conflicts_non_namespace",
+        "conflicts_dangling",
+        "conflicts_parent_depth",
+        "conflicts_parent_unique",
+    )
+
     index = FileIndex()
 
     def __init__(self) -> None:

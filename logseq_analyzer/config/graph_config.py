@@ -15,6 +15,8 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
+    __slots__ = ("config_merged", "config_user", "config_global")
+
     def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
         self.config_merged: dict[str, Any] = {}

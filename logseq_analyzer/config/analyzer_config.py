@@ -21,6 +21,8 @@ def lambda_optionxform(option: str) -> str:
 class LogseqAnalyzerConfig:
     """A class to handle configuration file loading and management."""
 
+    __slots__ = ("config", "target_dirs")
+
     def __init__(self, config_path: Path = Path("configuration/config.ini")) -> None:
         """Initialize the LogseqAnalyzerConfig class."""
         if not config_path.exists():

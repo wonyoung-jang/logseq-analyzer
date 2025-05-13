@@ -2,26 +2,23 @@
 Logseq Built-in Properties Module
 """
 
-from dataclasses import dataclass, field
-
 from ..utils.helpers import singleton
 from .analyzer_config import LogseqAnalyzerConfig
 
 
 @singleton
-@dataclass
 class LogseqBuiltInProperties:
     """
     A class to handle built-in properties for Logseq.
     """
 
-    built_in_properties: frozenset = field(init=False)
+    __slots__ = ("built_in_properties",)
 
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         """Build the built-in properties set."""
         lac = LogseqAnalyzerConfig()
         properties_str = lac.config["BUILT_IN_PROPERTIES"]["PROPERTIES"]
-        self.built_in_properties = frozenset(properties_str.split(","))
+        self.built_in_properties: frozenset = frozenset(properties_str.split(","))
 
 
 def split_builtin_user_properties(properties: list[str]) -> dict[str, list[str]]:

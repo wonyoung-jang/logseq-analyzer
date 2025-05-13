@@ -15,6 +15,8 @@ from .index import FileIndex
 class LogseqAssets:
     """Class to handle assets in Logseq."""
 
+    __slots__ = ("backlinked", "not_backlinked")
+
     index = FileIndex()
 
     def __init__(self) -> None:
@@ -70,6 +72,8 @@ class LogseqAssets:
 @singleton
 class LogseqAssetsHls:
     """Class to handle HLS assets in Logseq."""
+
+    __slots__ = ("asset_mapping", "asset_names", "backlinked", "formatted_bullets", "not_backlinked")
 
     index = FileIndex()
 

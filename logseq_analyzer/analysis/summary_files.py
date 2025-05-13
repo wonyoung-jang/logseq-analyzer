@@ -13,6 +13,8 @@ from .index import FileIndex, get_attribute_list
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
+    __slots__ = ("subsets",)
+
     index = FileIndex()
 
     def __init__(self) -> None:

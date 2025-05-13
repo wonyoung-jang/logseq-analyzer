@@ -23,6 +23,8 @@ class LogseqConfigEDN:
     A simple EDN parser that converts EDN data into Python data structures.
     """
 
+    __slots__ = ("tokens", "pos")
+
     def __init__(self, tokens) -> None:
         """
         Initialize the parser with a list of tokens.

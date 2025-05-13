@@ -29,6 +29,8 @@ def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: 
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
+    __slots__ = ("files", "hash_to_file", "name_to_files", "path_to_file")
+
     def __init__(self) -> None:
         """
         Initialize the FileIndex instance.

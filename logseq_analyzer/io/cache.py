@@ -23,6 +23,8 @@ class Cache:
     Cache class to manage caching of modified files and directories.
     """
 
+    __slots__ = ("cache_path", "cache")
+
     def __init__(self) -> None:
         """Initialize the class."""
         cache_file = CacheFile()

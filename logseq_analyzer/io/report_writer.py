@@ -14,6 +14,8 @@ from .filesystem import OutputDirectory
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
+    __slots__ = ("filename_prefix", "items", "type_output")
+
     def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
         """
         Initialize the ReportWriter class.

@@ -4,14 +4,12 @@ Compile frequently used regex patterns for Logseq content.
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 
 from .enums import Criteria
 from .helpers import singleton
 
 
 @singleton
-@dataclass
 class ContentPatterns:
     """Class to hold regex patterns for content in Logseq files."""
 
@@ -140,7 +138,6 @@ class ContentPatterns:
 
 
 @singleton
-@dataclass
 class DoubleCurlyBracketsPatterns:
     """Class to hold regex patterns for double curly brackets in Logseq content."""
 
@@ -329,7 +326,6 @@ class DoubleCurlyBracketsPatterns:
 
 
 @singleton
-@dataclass
 class AdvancedCommandPatterns:
     """Class to hold regex patterns for advanced commands in Logseq content."""
 
@@ -582,7 +578,6 @@ class AdvancedCommandPatterns:
 
 
 @singleton
-@dataclass
 class CodePatterns:
     """Class to hold regex patterns for code blocks in Logseq content."""
 
@@ -653,7 +648,6 @@ class CodePatterns:
 
 
 @singleton
-@dataclass
 class DoubleParenthesesPatterns:
     """Class to hold regex patterns for double parentheses in Logseq content."""
 
@@ -709,7 +703,6 @@ class DoubleParenthesesPatterns:
 
 
 @singleton
-@dataclass
 class EmbeddedLinksPatterns:
     """Class to hold regex patterns for embedded links in Logseq content."""
 
@@ -785,7 +778,6 @@ class EmbeddedLinksPatterns:
 
 
 @singleton
-@dataclass
 class ExternalLinksPatterns:
     """Class to hold regex patterns for external links in Logseq content."""
 

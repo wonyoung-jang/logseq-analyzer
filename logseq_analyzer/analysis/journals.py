@@ -19,6 +19,16 @@ class LogseqJournals:
     LogseqJournals class to handle journal files and their processing.
     """
 
+    __slots__ = (
+        "dangling_journals",
+        "processed_keys",
+        "complete_timeline",
+        "missing_keys",
+        "timeline_stats",
+        "dangling_journals_past",
+        "dangling_journals_future",
+    )
+
     def __init__(self) -> None:
         """Initialize the LogseqJournals class."""
         self.dangling_journals = []
