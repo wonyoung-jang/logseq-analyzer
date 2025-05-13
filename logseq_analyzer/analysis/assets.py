@@ -73,7 +73,13 @@ class LogseqAssets:
 class LogseqAssetsHls:
     """Class to handle HLS assets in Logseq."""
 
-    __slots__ = ("asset_mapping", "asset_names", "backlinked", "formatted_bullets", "not_backlinked")
+    __slots__ = (
+        "asset_mapping",
+        "asset_names",
+        "backlinked",
+        "formatted_bullets",
+        "not_backlinked",
+    )
 
     index = FileIndex()
 
@@ -102,14 +108,13 @@ class LogseqAssetsHls:
         index = LogseqAssetsHls.index
         criteria = {"file_type": "sub_asset"}
         asset_files = index.yield_files_with_keys_and_values(**criteria)
-        self.asset_mapping = {file.path.name: file for file in asset_files}
+        self.asset_mapping = {file.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
     def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         index = LogseqAssetsHls.index
         criteria = {"is_hls": True}
-        prop_value_pattern = ContentPatterns.property_value
         for file in index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
@@ -117,7 +122,7 @@ class LogseqAssetsHls:
                     continue
 
                 hl_page, id_bullet, hl_stamp = "", "", ""
-                for match in prop_value_pattern.finditer(bullet):
+                for match in ContentPatterns.property_value.finditer(bullet):
                     if match.group(1) == "hl-page":
                         hl_page = match.group(2)
                     elif match.group(1) == "id":

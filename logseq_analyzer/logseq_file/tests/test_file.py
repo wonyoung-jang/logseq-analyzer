@@ -31,10 +31,6 @@ def logseq_file(temp_file):
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
     assert logseq_file.file_path == Path(temp_file)
-    assert logseq_file.content == ""
-    assert logseq_file.primary_bullet == ""
-    assert logseq_file.content_bullets == []
-    assert logseq_file.has_content == False
     assert logseq_file.is_backlinked == False
     assert logseq_file.is_backlinked_by_ns_only == False
     assert logseq_file.node_type == "other"

@@ -4,6 +4,7 @@ Reporting module for writing output to files, including HTML reports.
 
 import json
 import logging
+from pathlib import Path
 from typing import Any, TextIO
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
@@ -14,49 +15,45 @@ from .filesystem import OutputDirectory
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    __slots__ = ("filename_prefix", "items", "type_output")
+    __slots__ = ("filename_prefix", "items", "output_subdir")
 
-    def __init__(self, filename_prefix: str, items: Any, type_output: str = "") -> None:
+    lac = LogseqAnalyzerConfig()
+    od = OutputDirectory()
+
+    def __init__(self, filename_prefix: str, items: Any, output_subdir: str = "") -> None:
         """
         Initialize the ReportWriter class.
 
         Args:
             filename_prefix (str): The prefix for the output filename.
             items (Any): The data to be written to the file.
-            type_output (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
+            output_subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
         """
         self.filename_prefix = filename_prefix
         self.items = items
-        self.type_output = type_output
+        self.output_subdir = output_subdir
 
     def __repr__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, type_output={self.type_output})"
+        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, output_subdir={self.output_subdir})"
 
     def __str__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter: {self.filename_prefix}, Items: data, Type Output: {self.type_output}"
+        return f"ReportWriter: {self.filename_prefix}, Items: data, Output Subdir: {self.output_subdir}"
 
     def write(self) -> None:
         """
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
-        ac = LogseqAnalyzerConfig()
-        output_format = ac.config["ANALYZER"]["REPORT_FORMAT"]
+        output_format = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
         logging.info("Writing %s as %s", self.filename_prefix, output_format)
 
         count = len(self.items) if hasattr(self.items, "__len__") else None
-        print(f"Name: {self.filename_prefix}, Items: {count}")
         ext = output_format
         filename = f"{self.filename_prefix}{ext}" if count else f"___EMPTY___{self.filename_prefix}{ext}"
 
         # Determine output path
-        out_directory = OutputDirectory()
-        output_dir = out_directory.path
-        if self.type_output:
-            output_dir = output_dir / self.type_output
-            output_dir.mkdir(parents=True, exist_ok=True)
-        out_path = output_dir / filename
+        out_path = self.get_output_path(filename)
 
         # Handle JSON format
         if output_format == Format.JSON.value:
@@ -93,6 +90,22 @@ class ReportWriter:
 
         if output_format not in (Format.TXT.value, Format.JSON.value, Format.HTML.value):
             logging.warning("Unsupported output format: %s. Defaulted to text.", output_format)
+
+    def get_output_path(self, filename: str) -> Path:
+        """
+        Get the output path for the report file.
+
+        Args:
+            filename (str): The name of the file to be created.
+
+        Returns:
+            Path: The output path for the report file.
+        """
+        output_dir = ReportWriter.od.path
+        if self.output_subdir:
+            output_dir = output_dir / self.output_subdir
+            output_dir.mkdir(parents=True, exist_ok=True)
+        return output_dir / filename
 
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:

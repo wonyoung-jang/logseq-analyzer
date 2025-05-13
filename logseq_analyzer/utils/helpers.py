@@ -62,7 +62,7 @@ def process_aliases(aliases: str) -> list[str]:
     return results
 
 
-def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True):
+def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True) -> dict:
     """Sort a dictionary by its values."""
     if not value:
         return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))

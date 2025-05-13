@@ -46,6 +46,8 @@ from .utils.enums import Moved, Output, OutputDir, Phase
 class GUIInstanceDummy:
     """Dummy class to simulate a GUI instance for testing purposes."""
 
+    __slots__ = ("progress",)
+
     def __init__(self) -> None:
         """Initialize dummy GUI instance."""
         self.progress = {}

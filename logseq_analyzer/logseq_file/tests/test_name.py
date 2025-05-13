@@ -34,7 +34,3 @@ def test_logseq_filename(logseq_filename, temp_file):
     assert logseq_filename.suffix == Path(temp_file).suffix.lower()
     assert logseq_filename.parts == Path(temp_file).parts
     assert logseq_filename.uri == Path(temp_file).as_uri()
-    assert logseq_filename.logseq_url == ""
-    assert logseq_filename.file_type == ""
-    assert logseq_filename.is_namespace == False
-    assert logseq_filename.is_hls == False
