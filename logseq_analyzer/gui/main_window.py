@@ -42,6 +42,7 @@ class AnalysisWorker(QThread):
 
     def run(self) -> None:
         try:
+
             def update_progress(value) -> None:
                 self.progress_signal.emit(value)
 

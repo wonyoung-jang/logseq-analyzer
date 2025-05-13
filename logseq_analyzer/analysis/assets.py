@@ -41,7 +41,6 @@ class LogseqAssets:
         index = LogseqAssets.index
         criteria = {"file_type": "asset"}
         for file in index.files:
-            file_name = file.path.name
             file_data = file.data
             emb_link_asset = file_data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file_data.get(Criteria.ASSETS.value, [])
@@ -50,8 +49,11 @@ class LogseqAssets:
             for asset_file in index.yield_files_with_keys_and_values(**criteria):
                 if asset_file.is_backlinked:
                     continue
-                LogseqAssets.update_asset_backlink(file_name, emb_link_asset, asset_file)
-                LogseqAssets.update_asset_backlink(file_name, asset_captured, asset_file)
+                file_name = file.path.name
+                if emb_link_asset:
+                    LogseqAssets.update_asset_backlink(file_name, emb_link_asset, asset_file)
+                if asset_captured:
+                    LogseqAssets.update_asset_backlink(file_name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
         self.backlinked = list(index.yield_files_with_keys_and_values(**backlinked_kwargs))
@@ -60,13 +62,9 @@ class LogseqAssets:
     @staticmethod
     def update_asset_backlink(file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
-        if not asset_mentions:
-            return
-
-        for asset_mention in asset_mentions:
-            if asset_file.path.name in asset_mention or file_name in asset_mention:
-                asset_file.is_backlinked = True
-                break
+        asset_file.is_backlinked = any(
+            asset_file.path.name in mention or file_name in mention for mention in asset_mentions
+        )
 
 
 @singleton
@@ -108,7 +106,7 @@ class LogseqAssetsHls:
         index = LogseqAssetsHls.index
         criteria = {"file_type": "sub_asset"}
         asset_files = index.yield_files_with_keys_and_values(**criteria)
-        self.asset_mapping = {file.name: file for file in asset_files}
+        self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
     def convert_names_to_data(self) -> None:

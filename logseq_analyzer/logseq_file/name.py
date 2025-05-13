@@ -24,7 +24,6 @@ class LogseqFilename:
     """
 
     file_path: Path
-    original_name: str = field(init=False, repr=False)
     name: str = field(init=False, repr=False)
     parent: str = field(init=False, repr=False)
     suffix: str = field(init=False, repr=False)
@@ -38,10 +37,9 @@ class LogseqFilename:
     def __post_init__(self) -> None:
         """Initialize the LogseqFilename class."""
         path = self.file_path
-        self.original_name = path.stem
-        self.name = path.stem.lower()
-        self.parent = path.parent.name.lower()
-        self.suffix = path.suffix.lower() if path.suffix else ""
+        self.name = path.stem
+        self.parent = path.parent.name
+        self.suffix = path.suffix if path.suffix else ""
         self.parts = path.parts
         self.uri = path.as_uri()
 
@@ -69,7 +67,7 @@ class LogseqFilename:
             ljf = LogseqJournalFormats()
             lgc = LogseqGraphConfig()
             date_object = datetime.strptime(name, ljf.file)
-            page_title_base = date_object.strftime(ljf.page).lower()
+            page_title_base = date_object.strftime(ljf.page)
             if DATE_ORDINAL_SUFFIX in lgc.config_merged.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
