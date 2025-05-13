@@ -36,8 +36,8 @@ class LogseqAnalyzerConfig:
         )
         config.optionxform = lambda_optionxform
         config.read(config_path)
-        self.config: configparser.ConfigParser = config
-        self.target_dirs: set[str] = set()
+        self.config = config
+        self.target_dirs = set()
 
     def get(self, section, key, fallback=None) -> str | None:
         """Get a value from the config file"""

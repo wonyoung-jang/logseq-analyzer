@@ -13,6 +13,8 @@ from ..utils.helpers import singleton
 class File:
     """A class to represent a file in the Logseq Analyzer."""
 
+    config = LogseqAnalyzerConfig()
+
     def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
         self.path: Path = path
@@ -37,8 +39,6 @@ class File:
         """Set the path of the file."""
         if isinstance(value, str):
             value = Path(value)
-        if not isinstance(value, Path):
-            raise TypeError("Path must be a string or a Path object.")
         self._path = value
 
     def validate(self) -> None:
@@ -111,7 +111,7 @@ class OutputDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerOutputDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["OUTPUT_DIR"])
+        super().__init__(File.config.get("CONST", "OUTPUT_DIR"))
 
 
 @singleton
@@ -120,7 +120,7 @@ class LogFile(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerLogFile class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["LOG_FILE"])
+        super().__init__(File.config.get("CONST", "LOG_FILE"))
 
 
 @singleton
@@ -129,7 +129,7 @@ class GraphDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerGraphDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["ANALYZER"]["GRAPH_DIR"])
+        super().__init__(File.config.get("ANALYZER", "GRAPH_DIR"))
 
 
 @singleton
@@ -138,7 +138,7 @@ class LogseqDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerLogseqDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["LOGSEQ_DIR"])
+        super().__init__(File.config.get("CONST", "LOGSEQ_DIR"))
 
 
 @singleton
@@ -147,7 +147,7 @@ class ConfigFile(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerConfigFile class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["CONFIG_FILE"])
+        super().__init__(File.config.get("CONST", "CONFIG_FILE"))
 
 
 @singleton
@@ -156,7 +156,7 @@ class DeleteDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_DIR"])
+        super().__init__(File.config.get("CONST", "TO_DELETE_DIR"))
 
 
 @singleton
@@ -165,7 +165,7 @@ class DeleteBakDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteBakDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_BAK_DIR"])
+        super().__init__(File.config.get("CONST", "TO_DELETE_BAK_DIR"))
 
 
 @singleton
@@ -174,7 +174,7 @@ class DeleteRecycleDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteRecycleDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_RECYCLE_DIR"])
+        super().__init__(File.config.get("CONST", "TO_DELETE_RECYCLE_DIR"))
 
 
 @singleton
@@ -183,7 +183,7 @@ class DeleteAssetsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDeleteAssetsDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["TO_DELETE_ASSETS_DIR"])
+        super().__init__(File.config.get("CONST", "TO_DELETE_ASSETS_DIR"))
 
 
 @singleton
@@ -192,7 +192,7 @@ class CacheFile(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerCacheFile class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["CACHE"])
+        super().__init__(File.config.get("CONST", "CACHE"))
 
 
 @singleton
@@ -201,7 +201,7 @@ class BakDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerBakDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["BAK_DIR"])
+        super().__init__(File.config.get("CONST", "BAK_DIR"))
 
 
 @singleton
@@ -210,7 +210,7 @@ class RecycleDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerRecycleDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["CONST"]["RECYCLE_DIR"])
+        super().__init__(File.config.get("CONST", "RECYCLE_DIR"))
 
 
 @singleton
@@ -219,7 +219,7 @@ class GlobalConfigFile(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerGlobalConfigFile class."""
-        super().__init__(LogseqAnalyzerConfig().config["LOGSEQ_FILESYSTEM"]["GLOBAL_CONFIG_FILE"])
+        super().__init__(File.config.get("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE"))
 
 
 @singleton
@@ -228,7 +228,7 @@ class AssetsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerAssetsDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_ASSETS"])
+        super().__init__(File.config.get("TARGET_DIRS", "DIR_ASSETS"))
 
 
 @singleton
@@ -237,7 +237,7 @@ class DrawsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDrawsDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_DRAWS"])
+        super().__init__(File.config.get("TARGET_DIRS", "DIR_DRAWS"))
 
 
 @singleton
@@ -246,7 +246,7 @@ class JournalsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerJournalsDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_JOURNALS"])
+        super().__init__(File.config.get("TARGET_DIRS", "DIR_JOURNALS"))
 
 
 @singleton
@@ -255,7 +255,7 @@ class PagesDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerPagesDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_PAGES"])
+        super().__init__(File.config.get("TARGET_DIRS", "DIR_PAGES"))
 
 
 @singleton
@@ -264,4 +264,4 @@ class WhiteboardsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerWhiteboardsDir class."""
-        super().__init__(LogseqAnalyzerConfig().config["TARGET_DIRS"]["DIR_WHITEBOARDS"])
+        super().__init__(File.config.get("TARGET_DIRS", "DIR_WHITEBOARDS"))

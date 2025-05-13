@@ -41,12 +41,13 @@ class LogseqFilename:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFilename class."""
-        self.original_name = self.file_path.stem
-        self.name = self.file_path.stem.lower()
-        self.parent = self.file_path.parent.name.lower()
-        self.suffix = self.file_path.suffix.lower() if self.file_path.suffix else ""
-        self.parts = self.file_path.parts
-        self.uri = self.file_path.as_uri()
+        path = self.file_path
+        self.original_name = path.stem
+        self.name = path.stem.lower()
+        self.parent = path.parent.name.lower()
+        self.suffix = path.suffix.lower() if path.suffix else ""
+        self.parts = path.parts
+        self.uri = path.as_uri()
 
     def process_logseq_filename(self) -> str:
         """Process the Logseq filename based on its parent directory."""
@@ -70,13 +71,10 @@ class LogseqFilename:
         """Process the journal key to create a page title."""
         try:
             ljf = LogseqJournalFormats()
-            py_file_format = ljf.file
-            py_page_format = ljf.page
-            date_object = datetime.strptime(name, py_file_format)
-            page_title_base = date_object.strftime(py_page_format).lower()
             lgc = LogseqGraphConfig()
-            ls_config = lgc.config_merged
-            if DATE_ORDINAL_SUFFIX in ls_config.get(":journal/page-title-format"):
+            date_object = datetime.strptime(name, ljf.file)
+            page_title_base = date_object.strftime(ljf.page).lower()
+            if DATE_ORDINAL_SUFFIX in lgc.config_merged.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
@@ -85,7 +83,7 @@ class LogseqFilename:
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, py_page_format, e)
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, ljf.page, e)
             return ""
 
     def convert_uri_to_logseq_url(self) -> str:
