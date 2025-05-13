@@ -33,14 +33,18 @@ from ..utils.enums import Arguments, Format
 
 
 class AnalysisWorker(QThread):
+    """Thread worker for running the Logseq Analyzer application."""
+
     progress_signal = Signal(int)
     finished_signal = Signal(bool, str)
 
     def __init__(self, args) -> None:
+        """Initialize the worker with arguments."""
         super().__init__()
         self.args = args
 
     def run(self) -> None:
+        """Run the Logseq Analyzer application."""
         try:
 
             def update_progress(value) -> None:
@@ -81,6 +85,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.load_settings()
         self.graph_folder_input.textChanged.connect(self.force_enable_graph_cache)
+        self.worker = None
 
     def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
@@ -106,7 +111,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.worker.finished_signal.connect(self.handle_analysis_complete)
         self.worker.start()
 
-    def handle_analysis_complete(self, success, error_message):
+    def handle_analysis_complete(self, success, error_message) -> None:
         """Handle completion of analysis"""
         if success:
             success_dialog = QMessageBox(self)

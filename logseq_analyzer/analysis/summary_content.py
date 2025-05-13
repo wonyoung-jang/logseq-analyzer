@@ -3,7 +3,7 @@ Logseq Content Summarizer Module
 """
 
 from collections import Counter
-from typing import Any, Literal
+from typing import Any
 
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
@@ -26,11 +26,13 @@ class LogseqContentSummarizer:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self) -> None:
+    def generate_summary(self) -> dict[str, dict]:
         """Generate summary subsets for content data in the Logseq graph."""
+        subsets = {}
         for criteria in list(Criteria):
             criteria_value = criteria.value
-            self.subsets[criteria_value] = self.extract_summary_subset_content(criteria_value)
+            subsets[criteria_value] = self.extract_summary_subset_content(criteria_value)
+        return subsets
 
     def extract_summary_subset_content(self, criteria) -> dict[str, Any]:
         """

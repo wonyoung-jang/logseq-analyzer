@@ -40,7 +40,7 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
-from .utils.enums import Moved, Output, OutputDir, Phase
+from .utils.enums import Moved, Output, OutputDir
 
 
 class GUIInstanceDummy:
@@ -184,7 +184,7 @@ def setup_logseq_graph() -> LogseqGraph:
 def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
     """Setup the Logseq file summarizer."""
     lfs = LogseqFileSummarizer()
-    lfs.generate_summary()
+    lfs.subsets = lfs.generate_summary()
     logging.debug("run_app: setup_logseq_file_summarizer")
     return lfs
 
@@ -192,7 +192,7 @@ def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
 def setup_logseq_content_summarizer() -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
     lcs = LogseqContentSummarizer()
-    lcs.generate_summary()
+    lcs.subsets = lcs.generate_summary()
     logging.debug("run_app: setup_logseq_content_summarizer")
     return lcs
 
