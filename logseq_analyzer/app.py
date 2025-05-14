@@ -277,7 +277,7 @@ def get_graph_data(files: list[LogseqFile]) -> dict[LogseqFile, dict[str, Any]]:
     """Get metadata file data from the graph."""
     graph_data = {}
     for file in files:
-        data = {k: v for k, v in file.__dict__.items() if k not in ["content", "content_bullets", "primary_bullet"]}
+        data = {k: v for k, v in file.__dict__.items() if k not in ("content", "content_bullets", "primary_bullet")}
         graph_data[file] = data
     return graph_data
 

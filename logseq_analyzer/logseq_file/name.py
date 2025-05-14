@@ -49,7 +49,7 @@ class LogseqFilename:
         ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
         name = self.name.strip(ns_file_sep)
         if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
-            return self._process_logseq_journal_key(name)
+            return LogseqFilename._process_logseq_journal_key(name)
         name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
         return name
 
@@ -61,42 +61,25 @@ class LogseqFilename:
         """Check if the filename is a HLS (Hierarchical Logseq Structure)."""
         return self.name.startswith(Core.HLS_PREFIX.value)
 
-    def _process_logseq_journal_key(self, name: str) -> str:
-        """Process the journal key to create a page title."""
-        try:
-            ljf = LogseqJournalFormats()
-            lgc = LogseqGraphConfig()
-            date_object = datetime.strptime(name, ljf.file)
-            page_title_base = date_object.strftime(ljf.page)
-            if DATE_ORDINAL_SUFFIX in lgc.config_merged.get(":journal/page-title-format"):
-                day_number = date_object.day
-                day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
-                page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
-            else:
-                page_title = page_title_base
-            page_title = page_title.replace("'", "")
-            return page_title
-        except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, ljf.page, e)
-            return ""
-
     def convert_uri_to_logseq_url(self) -> str:
         """Convert a file URI to a Logseq URL."""
+        uri = self.uri
+        uri_path = Path(uri)
         gd = GraphDirectory()
         len_gd = len(gd.path.parts)
-        len_uri = len(Path(self.uri).parts)
+        len_uri = len(uri_path.parts)
         target_index = len_uri - len_gd
-        target_segment = Path(self.uri).parts[target_index]
+        target_segment = uri_path.parts[target_index]
 
         if target_segment[:-1] not in ("page", "block-id"):
             return ""
 
         prefix = f"file:///{str(gd.path)}/{target_segment}/"
-        if not self.uri.startswith(prefix):
+        if not uri.startswith(prefix):
             return ""
 
-        len_suffix = len(Path(self.uri).suffix)
-        path_without_prefix = self.uri[len(prefix) : -(len_suffix)]
+        len_suffix = len(uri_path.suffix)
+        path_without_prefix = uri[len(prefix) : -(len_suffix)]
         path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
         encoded_path = path_with_slashes
         target_segment = target_segment[:-1]
@@ -104,9 +87,6 @@ class LogseqFilename:
 
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
-        if not self.is_namespace:
-            return
-
         ns_parts_list = self.name.split(Core.NS_SEP.value)
         ns_level = len(ns_parts_list)
         ns_root = ns_parts_list[0]
@@ -154,7 +134,27 @@ class LogseqFilename:
         return result
 
     @staticmethod
-    def add_ordinal_suffix_to_day_of_month(day) -> str:
+    def _process_logseq_journal_key(name: str) -> str:
+        """Process the journal key to create a page title."""
+        try:
+            ljf = LogseqJournalFormats()
+            lgc = LogseqGraphConfig()
+            date_object = datetime.strptime(name, ljf.file)
+            page_title_base = date_object.strftime(ljf.page)
+            if DATE_ORDINAL_SUFFIX in lgc.config_merged.get(":journal/page-title-format"):
+                day_number = date_object.day
+                day_with_ordinal = LogseqFilename._add_ordinal_suffix_to_day_of_month(day_number)
+                page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
+            else:
+                page_title = page_title_base
+            page_title = page_title.replace("'", "")
+            return page_title
+        except ValueError as e:
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, ljf.page, e)
+            return ""
+
+    @staticmethod
+    def _add_ordinal_suffix_to_day_of_month(day) -> str:
         """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
         if 11 <= day <= 13:
             suffix = "th"

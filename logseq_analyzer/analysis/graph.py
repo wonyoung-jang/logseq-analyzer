@@ -51,7 +51,8 @@ class LogseqGraph:
         for file_path in cache.iter_modified_files():
             file = LogseqFile(file_path)
             file.init_file_data()
-            file.process_content_data()
+            if file.stat.has_content:
+                file.process_content_data()
             index.add(file)
 
     def post_processing_content(self) -> None:

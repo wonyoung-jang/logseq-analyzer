@@ -68,7 +68,8 @@ class LogseqFile:
         self.path.is_hls = self.path.check_is_hls()
         self.path.logseq_url = self.path.convert_uri_to_logseq_url()
         self.path.is_namespace = self.path.check_is_namespace()
-        self.path.get_namespace_name_data()
+        if self.path.is_namespace:
+            self.path.get_namespace_name_data()
         self.bullets.content = self.bullets.get_content()
         self.bullets.char_count = self.bullets.get_char_count()
         self.bullets.all_bullets = self.bullets.get_bullet_content()
@@ -91,10 +92,6 @@ class LogseqFile:
         """
         Process content data to extract various elements like backlinks, tags, and properties.
         """
-        # If no content, return
-        if not self.bullets.content:
-            return
-
         # Mask code blocks to avoid interference with pattern matching
         masked_content, masked_blocks = self.mask_blocks(self.bullets.content)
         self.masked_blocks = masked_blocks
@@ -163,10 +160,9 @@ class LogseqFile:
         for key, value in primary_data.items():
             if value:
                 self.data[key] = value
-            if not self.has_backlinks and (
-                key in ("page_references", "tags", "tagged_backlinks") or "properties" in key
-            ):
-                self.has_backlinks = True
+            if not self.has_backlinks:
+                if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+                    self.has_backlinks = True
 
     def find_and_process_pattern(self, pattern) -> Any:
         """
