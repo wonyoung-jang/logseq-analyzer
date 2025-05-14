@@ -138,10 +138,12 @@ class LogseqNamespaces:
                 - conflicts_dangling: A dictionary mapping namespace parts to the entries they appear in.
         """
         index = LogseqNamespaces.index
+        lg = LogseqGraph()
+        dangling_links = lg.dangling_links
         non_ns_files = index.yield_files_without_keys("ns_level")
         non_ns_names = get_attribute_list(non_ns_files, "name")
         potential_non_ns_names = self.unique_namespace_parts.intersection(non_ns_names)
-        potential_dangling = self.unique_namespace_parts.intersection(LogseqGraph().dangling_links)
+        potential_dangling = self.unique_namespace_parts.intersection(dangling_links)
         conflicts_non_namespace: dict[str, list[str]] = defaultdict(list)
         conflicts_dangling: dict[str, list[str]] = defaultdict(list)
         namespace_parts = self.namespace_parts

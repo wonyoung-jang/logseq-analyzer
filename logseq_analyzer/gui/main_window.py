@@ -5,6 +5,7 @@ Logseq Analyzer GUI using PySide6.
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +37,7 @@ class AnalysisWorker(QThread):
     """Thread worker for running the Logseq Analyzer application."""
 
     progress_signal = Signal(int)
-    finished_signal = Signal(bool, str)
+    finished_signal = Signal(bool, str, float)
 
     def __init__(self, args) -> None:
         """Initialize the worker with arguments."""
@@ -46,14 +47,15 @@ class AnalysisWorker(QThread):
     def run(self) -> None:
         """Run the Logseq Analyzer application."""
         try:
+            curr_time = time.time()
 
             def update_progress(value) -> None:
                 self.progress_signal.emit(value)
 
             run_app(**self.args, progress_callback=update_progress)
-            self.finished_signal.emit(True, "")
+            self.finished_signal.emit(True, "", time.time() - curr_time)
         except Exception as e:
-            self.finished_signal.emit(False, str(e))
+            self.finished_signal.emit(False, str(e), 0)
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -111,13 +113,13 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.worker.finished_signal.connect(self.handle_analysis_complete)
         self.worker.start()
 
-    def handle_analysis_complete(self, success, error_message) -> None:
+    def handle_analysis_complete(self, success, error_message, elapsed_time) -> None:
         """Handle completion of analysis"""
         if success:
             success_dialog = QMessageBox(self)
             success_dialog.setIcon(QMessageBox.Information)
             success_dialog.setWindowTitle("Analysis Complete")
-            success_dialog.setText("Analysis completed successfully.")
+            success_dialog.setText(f"Analysis completed successfully in {elapsed_time:.2f} seconds.")
             success_dialog.addButton("Close", QMessageBox.AcceptRole)
             success_dialog.exec()
         else:

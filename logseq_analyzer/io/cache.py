@@ -25,9 +25,10 @@ class Cache:
 
     __slots__ = ("cache_path", "cache")
 
-    def __init__(self) -> None:
+    def __init__(self, cache_file: CacheFile = None) -> None:
         """Initialize the class."""
-        cache_file = CacheFile()
+        if cache_file is None:
+            cache_file = CacheFile()
         self.cache_path = cache_file.path
         self.cache = shelve.open(self.cache_path, protocol=5)
 
