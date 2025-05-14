@@ -25,10 +25,9 @@ class Cache:
 
     __slots__ = ("cache_path", "cache")
 
-    def __init__(self, cache_file: CacheFile = None) -> None:
+    def __init__(self) -> None:
         """Initialize the class."""
-        if cache_file is None:
-            cache_file = CacheFile()
+        cache_file = CacheFile()
         self.cache_path = cache_file.path
         self.cache = shelve.open(self.cache_path, protocol=5)
 
@@ -52,7 +51,7 @@ class Cache:
 
     def clear(self) -> None:
         """Clear the cache."""
-        self.cache.close()
+        self.close()
         self.cache_path.unlink()
         self.cache = shelve.open(self.cache_path, protocol=5)
 
@@ -75,7 +74,7 @@ class Cache:
             Output.NAME_TO_FILES.value,
             Output.PATH_TO_FILE.value,
         ]
-        index: FileIndex = FileIndex()
+        index = FileIndex()
         if OutputDir.META.value in self.cache:
             for key in index_keys:
                 if key in self.cache[OutputDir.META.value]:
