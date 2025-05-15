@@ -10,62 +10,6 @@ from .graph_config import LogseqGraphConfig
 
 
 @singleton
-class LogseqDateTimeTokens:
-    """
-    Class to handle date and time tokens in Logseq.
-    """
-
-    __slots__ = ("token_map", "token_pattern")
-
-    def __init__(self) -> None:
-        """
-        Initialize the LogseqDateTimeTokens class.
-        """
-        self.token_map = {}
-        self.token_pattern = None
-
-    def get_datetime_token_map(self) -> None:
-        """Return the datetime token mapping as a dictionary"""
-        lac = LogseqAnalyzerConfig()
-        self.token_map = lac.get_section("DATETIME_TOKEN_MAP")
-
-    def set_datetime_token_pattern(self) -> None:
-        """Return a compiled regex pattern for datetime tokens"""
-        tokens = self.token_map.keys()
-        pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
-        self.token_pattern = re.compile(pattern)
-
-    def set_journal_py_formatting(self) -> None:
-        """
-        Set the formatting for journal files and pages in Python format.
-        """
-        lgc = LogseqGraphConfig()
-        journal_file_format = lgc.config_merged.get(":journal/file-name-format")
-        ljf = LogseqJournalFormats()
-        if not ljf.file:
-            ljf.file = self.convert_cljs_date_to_py(journal_file_format)
-
-        journal_page_format = lgc.config_merged.get(":journal/page-title-format")
-        py_page_title_no_ordinal = journal_page_format.replace("o", "")
-        if not ljf.page:
-            ljf.page = self.convert_cljs_date_to_py(py_page_title_no_ordinal)
-
-    def convert_cljs_date_to_py(self, cljs_format: str) -> str:
-        """
-        Convert a Clojure-style date format to a Python-style date format.
-        """
-        cljs_format = cljs_format.replace("o", "")
-        return self.token_pattern.sub(self.replace_token, cljs_format)
-
-    def replace_token(self, match: re.Match) -> str:
-        """
-        Replace a date token with its corresponding Python format.
-        """
-        token = match.group(0)
-        return self.token_map.get(token, token)
-
-
-@singleton
 class LogseqJournalFormats:
     """
     Class to handle the Python file format for Logseq journals.
@@ -75,7 +19,7 @@ class LogseqJournalFormats:
 
     def __init__(self) -> None:
         """
-        Initialize the LogseqJournalPyFileFormat class.
+        Initialize the LogseqJournalFormats class.
         """
         self._file: str = ""
         self._page: str = ""
@@ -103,3 +47,56 @@ class LogseqJournalFormats:
         if not isinstance(value, str):
             raise ValueError("File format must be a string.")
         self._page = value
+
+
+@singleton
+class LogseqDateTimeTokens:
+    """
+    Class to handle date and time tokens in Logseq.
+    """
+
+    __slots__ = ("token_map", "token_pattern")
+
+    def __init__(self) -> None:
+        """
+        Initialize the LogseqDateTimeTokens class.
+        """
+        self.token_map = {}
+        self.token_pattern = None
+
+    def get_datetime_token_map(self, lac: LogseqAnalyzerConfig) -> None:
+        """Return the datetime token mapping as a dictionary"""
+        self.token_map = lac.get_section("DATETIME_TOKEN_MAP")
+
+    def set_datetime_token_pattern(self) -> None:
+        """Return a compiled regex pattern for datetime tokens"""
+        tokens = self.token_map.keys()
+        pattern = "|".join(re.escape(k) for k in sorted(tokens, key=len, reverse=True))
+        self.token_pattern = re.compile(pattern)
+
+    def set_journal_py_formatting(self, lgc: LogseqGraphConfig, ljf: LogseqJournalFormats) -> None:
+        """
+        Set the formatting for journal files and pages in Python format.
+        """
+        journal_file_format = lgc.config_merged.get(":journal/file-name-format")
+        if not ljf.file:
+            ljf.file = self.convert_cljs_date_to_py(journal_file_format)
+
+        journal_page_format = lgc.config_merged.get(":journal/page-title-format")
+        journal_page_format = journal_page_format.replace("o", "")
+        if not ljf.page:
+            ljf.page = self.convert_cljs_date_to_py(journal_page_format)
+
+    def convert_cljs_date_to_py(self, cljs_format: str) -> str:
+        """
+        Convert a Clojure-style date format to a Python-style date format.
+        """
+        cljs_format = cljs_format.replace("o", "")
+        return self.token_pattern.sub(self.replace_token, cljs_format)
+
+    def replace_token(self, match: re.Match) -> str:
+        """
+        Replace a date token with its corresponding Python format.
+        """
+        token = match.group(0)
+        return self.token_map.get(token, token)

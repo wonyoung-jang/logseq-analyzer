@@ -15,7 +15,7 @@ from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.summary_files import LogseqFileSummarizer
 from .config.analyzer_config import LogseqAnalyzerConfig
 from .config.arguments import Args
-from .config.datetime_tokens import LogseqDateTimeTokens
+from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
 from .io.file_mover import LogseqFileMover, handle_move_directory, handle_move_assets
@@ -151,12 +151,13 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens() -> None:
+def setup_datetime_tokens(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None:
     """Setup datetime tokens."""
+    ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
-    ldtt.get_datetime_token_map()
+    ldtt.get_datetime_token_map(lac)
     ldtt.set_datetime_token_pattern()
-    ldtt.set_journal_py_formatting()
+    ldtt.set_journal_py_formatting(lgc, ljf)
     logging.debug("run_app: setup_datetime_tokens")
 
 
@@ -397,7 +398,7 @@ def run_app(**kwargs) -> None:
     progress(35)
     setup_target_dirs(analyzer_config, graph_config)
     progress(40)
-    setup_datetime_tokens()
+    setup_datetime_tokens(analyzer_config, graph_config)
     progress(45)
     cache = setup_cache(args)
     progress(50)
