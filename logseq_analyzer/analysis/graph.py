@@ -111,7 +111,7 @@ class LogseqGraph:
                 setattr(ns_root_file, "ns_children", set())
             ns_children_root = getattr(ns_root_file, "ns_children")
             ns_children_root.add(file.path.name)
-            setattr(ns_root_file, "ns_size", self.process_ns_size(ns_root_file))
+            setattr(ns_root_file, "ns_size", _process_ns_size(ns_root_file))
 
         if ns_level <= 2:
             return
@@ -123,23 +123,7 @@ class LogseqGraph:
                 setattr(ns_parent_file, "ns_children", set())
             ns_children_parent = getattr(ns_parent_file, "ns_children")
             ns_children_parent.add(file.path.name)
-            setattr(ns_parent_file, "ns_size", self.process_ns_size(ns_parent_file))
-
-    def process_ns_size(self, parent_file: LogseqFile) -> int:
-        """
-        Process the size of namespaces.
-
-        Args:
-            parent_file (LogseqFile): The parent file to process.
-
-        Returns:
-            int: The size of the namespace.
-        """
-        if not hasattr(parent_file, "ns_size"):
-            ns_children = getattr(parent_file, "ns_children")
-            return len(ns_children)
-        ns_size = getattr(parent_file, "ns_size")
-        return ns_size + 1
+            setattr(ns_parent_file, "ns_size", _process_ns_size(ns_parent_file))
 
     def process_summary_data(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
@@ -160,3 +144,20 @@ class LogseqGraph:
         all_linked_refs.difference_update(all_file_names)
         all_linked_refs.difference_update(unique_aliases)
         return set(sorted(all_linked_refs))
+
+
+def _process_ns_size(parent_file: LogseqFile) -> int:
+    """
+    Process the size of namespaces.
+
+    Args:
+        parent_file (LogseqFile): The parent file to process.
+
+    Returns:
+        int: The size of the namespace.
+    """
+    if not hasattr(parent_file, "ns_size"):
+        ns_children = getattr(parent_file, "ns_children")
+        return len(ns_children)
+    ns_size = getattr(parent_file, "ns_size")
+    return ns_size + 1

@@ -79,20 +79,10 @@ class Cache:
             for key in index_keys:
                 if key in self.cache[OutputDir.META.value]:
                     setattr(index, key, self.cache[OutputDir.META.value][key])
-        files_to_remove = set()
-        for file in self.yield_deleted_files(index):
-            files_to_remove.add(file)
-            logging.debug("File removed from index: %s", file.file_path)
+        files_to_remove = set(_yield_deleted_files(index))
         for file in files_to_remove:
+            logging.warning("File removed from index: %s", file.file_path)
             index.remove(file)
-
-    def yield_deleted_files(self, index: FileIndex) -> Generator[LogseqFile, Any, None]:
-        """Yield deleted files from the cache."""
-        for file in index.files:
-            path = file.file_path
-            if not path.exists():
-                logging.debug("File deleted: %s", path)
-                yield file
 
     def iter_modified_files(self) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
@@ -110,3 +100,12 @@ class Cache:
                 logging.debug("File modified: %s", path)
                 yield path
         self.cache[Output.MOD_TRACKER.value] = mod_tracker
+
+
+def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
+    """Yield deleted files from the cache."""
+    for file in index.files:
+        path = file.file_path
+        if not path.exists():
+            logging.debug("File deleted: %s", path)
+            yield file

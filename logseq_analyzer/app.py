@@ -285,10 +285,7 @@ def get_graph_data(files: list[LogseqFile]) -> dict[LogseqFile, dict[str, Any]]:
 
 def get_graph_content(files: list[LogseqFile]) -> dict[LogseqFile, list[str]]:
     """Get graph content."""
-    graph_content = {}
-    for file in files:
-        graph_content[file] = file.bullets.all_bullets
-    return graph_content
+    return {file: file.bullets.all_bullets for file in files}
 
 
 def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:
