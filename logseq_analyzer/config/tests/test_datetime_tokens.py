@@ -5,7 +5,9 @@ Test the LogseqDateTimeTokens class.
 import pytest
 import re
 
-from ..datetime_tokens import LogseqDateTimeTokens
+from ..graph_config import LogseqGraphConfig
+from ..analyzer_config import LogseqAnalyzerConfig
+from ..datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
 
 
 @pytest.fixture
@@ -25,7 +27,7 @@ def test_singleton_instance(datetime_tokens):
 
 def test_get_datetime_token_map(datetime_tokens):
     """Test the get_token_map method."""
-    datetime_tokens.get_datetime_token_map()
+    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
     assert datetime_tokens.token_map is not None
     assert isinstance(datetime_tokens.token_map, dict), "Datetime token map should be a dictionary."
     assert len(datetime_tokens.token_map) > 0, "Datetime token map should not be empty."
@@ -40,7 +42,7 @@ def test_get_datetime_token_map(datetime_tokens):
 
 def test_set_datetime_token_pattern(datetime_tokens):
     """Test the set_datetime_token_pattern method."""
-    datetime_tokens.get_datetime_token_map()
+    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
     datetime_tokens.set_datetime_token_pattern()
     assert datetime_tokens.token_pattern is not None, "Datetime token pattern should be set."
     assert isinstance(datetime_tokens.token_pattern, re.Pattern), "Datetime token pattern should be a compiled regex."
@@ -54,7 +56,7 @@ def test_set_datetime_token_pattern(datetime_tokens):
 
 def test_convert_cljs_date_to_py(datetime_tokens):
     """Test the convert_cljs_date_to_py method."""
-    datetime_tokens.get_datetime_token_map()
+    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
     test_format = "yyyy-MM-dd"
     converted_format = datetime_tokens.convert_cljs_date_to_py(test_format)
     assert isinstance(converted_format, str), "Converted format should be a string."
@@ -73,7 +75,7 @@ def test_convert_cljs_date_to_py(datetime_tokens):
 
 def test_replace_token(datetime_tokens):
     """Test the replace_token method."""
-    datetime_tokens.get_datetime_token_map()
+    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
     test_string = "yyyy-MM-dd"
     match = datetime_tokens.token_pattern.search(test_string)
     assert match is not None, "Match should not be None."
