@@ -18,7 +18,7 @@ from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
-from .io.file_mover import LogseqFileMover
+from .io.file_mover import LogseqFileMover, handle_move_directory, handle_move_assets
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,
@@ -239,12 +239,13 @@ def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     lfm = LogseqFileMover()
     dbd = DeleteBakDirectory()
     bd = BakDirectory()
-    drd = DeleteDirectory()
+    drd = DeleteRecycleDirectory()
     rd = RecycleDirectory()
+    dad = DeleteAssetsDirectory()
     moved_files = {}
-    moved_files[Moved.ASSETS.value] = lfm.handle_move_assets()
-    moved_files[Moved.BAK.value] = lfm.handle_move_directory(args.move_bak, dbd.path, bd.path)
-    moved_files[Moved.RECYCLE.value] = lfm.handle_move_directory(args.move_recycle, drd.path, rd.path)
+    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path)
+    moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd.path, bd.path)
+    moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd.path, rd.path)
     lfm.moved_files = moved_files
     logging.debug("run_app: setup_logseq_file_mover")
     return lfm
