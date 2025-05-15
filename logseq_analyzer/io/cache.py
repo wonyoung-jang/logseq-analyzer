@@ -79,7 +79,6 @@ class Cache:
             for key in index_keys:
                 if key in self.cache[OutputDir.META.value]:
                     setattr(index, key, self.cache[OutputDir.META.value][key])
-
         files_to_remove = set()
         for file in self.yield_deleted_files(index):
             files_to_remove.add(file)
@@ -90,8 +89,9 @@ class Cache:
     def yield_deleted_files(self, index: FileIndex) -> Generator[LogseqFile, Any, None]:
         """Yield deleted files from the cache."""
         for file in index.files:
-            if not file.file_path.exists():
-                logging.debug("File deleted: %s", file.file_path)
+            path = file.file_path
+            if not path.exists():
+                logging.debug("File deleted: %s", path)
                 yield file
 
     def iter_modified_files(self) -> Generator[Path, Any, None]:
