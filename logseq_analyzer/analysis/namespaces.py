@@ -112,7 +112,7 @@ class LogseqNamespaces:
         """
         ns_queries: dict[str, dict[str, Any]] = {}
         index = LogseqNamespaces.index
-        for file in index.files:
+        for file in index:
             for query in file.data.get("namespace_queries", []):
                 page_refs = ContentPatterns.page_reference.findall(query)
                 if len(page_refs) != 1:

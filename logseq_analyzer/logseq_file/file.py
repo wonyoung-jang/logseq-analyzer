@@ -59,6 +59,13 @@ class LogseqFile:
             return self.path.parts == other.path.parts
         return NotImplemented
 
+    def __lt__(self, other) -> bool:
+        if isinstance(other, LogseqFile):
+            return self.path.name < other.path.name
+        if isinstance(other, str):
+            return self.path.name < other
+        return NotImplemented
+
     def init_file_data(self) -> None:
         """
         Extract metadata from a file.

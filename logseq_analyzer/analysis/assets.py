@@ -40,7 +40,7 @@ class LogseqAssets:
         """Handle assets for the Logseq Analyzer."""
         index = LogseqAssets.index
         criteria = {"file_type": "asset"}
-        for file in index.files:
+        for file in index:
             file_data = file.data
             emb_link_asset = file_data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file_data.get(Criteria.ASSETS.value, [])

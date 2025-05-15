@@ -44,10 +44,11 @@ class LogseqGraph:
         """Return the number of unique linked references."""
         return len(self.all_linked_references)
 
-    def process_graph_files(self) -> None:
+    @classmethod
+    def process_graph_files(cls) -> None:
         """Process all files in the Logseq graph folder."""
         cache = Cache()
-        index = LogseqGraph.index
+        index = cls.index
         for file_path in cache.iter_modified_files():
             file = LogseqFile(file_path)
             file.init_file_data()
@@ -60,7 +61,7 @@ class LogseqGraph:
         unique_aliases = set()
         index = LogseqGraph.index
         all_linked_references = {}
-        for file in index.files:
+        for file in index:
             if file.path.is_namespace:
                 self.post_processing_content_namespaces(file)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
@@ -93,7 +94,7 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
 
-        all_file_names = (file.path.name for file in index.files)
+        all_file_names = (file.path.name for file in index)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
     def post_processing_content_namespaces(self, file: LogseqFile) -> None:
@@ -104,31 +105,31 @@ class LogseqGraph:
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
         index = LogseqGraph.index
-        for ns_root_file in index.get(ns_root):
+        for ns_root_file in index[ns_root]:
             if not hasattr(ns_root_file, "ns_level"):
                 setattr(ns_root_file, "ns_level", 1)
-            if not hasattr(ns_root_file, "ns_children"):
+            if not (ns_children_root := getattr(ns_root_file, "ns_children", None)):
                 setattr(ns_root_file, "ns_children", set())
-            ns_children_root = getattr(ns_root_file, "ns_children")
+                ns_children_root = getattr(ns_root_file, "ns_children")
             ns_children_root.add(file.path.name)
-            setattr(ns_root_file, "ns_size", _process_ns_size(ns_root_file))
+            setattr(ns_root_file, "ns_size", LogseqGraph.process_ns_size(ns_root_file))
 
         if ns_level <= 2:
             return
 
-        for ns_parent_file in index.get(ns_parent):
+        for ns_parent_file in index[ns_parent]:
             if not hasattr(ns_parent_file, "ns_level"):
                 setattr(ns_parent_file, "ns_level", ns_level - 1)
-            if not hasattr(ns_parent_file, "ns_children"):
+            if not (ns_children_parent := getattr(ns_parent_file, "ns_children", None)):
                 setattr(ns_parent_file, "ns_children", set())
-            ns_children_parent = getattr(ns_parent_file, "ns_children")
+                ns_children_parent = getattr(ns_parent_file, "ns_children")
             ns_children_parent.add(file.path.name)
-            setattr(ns_parent_file, "ns_size", _process_ns_size(ns_parent_file))
+            setattr(ns_parent_file, "ns_size", LogseqGraph.process_ns_size(ns_parent_file))
 
     def process_summary_data(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
         index = LogseqGraph.index
-        for file in index.files:
+        for file in index:
             if not file.is_backlinked:
                 file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
             if not file.is_backlinked_by_ns_only:
@@ -145,19 +146,19 @@ class LogseqGraph:
         all_linked_refs.difference_update(unique_aliases)
         return set(sorted(all_linked_refs))
 
+    @staticmethod
+    def process_ns_size(parent_file: LogseqFile) -> int:
+        """
+        Process the size of namespaces.
 
-def _process_ns_size(parent_file: LogseqFile) -> int:
-    """
-    Process the size of namespaces.
+        Args:
+            parent_file (LogseqFile): The parent file to process.
 
-    Args:
-        parent_file (LogseqFile): The parent file to process.
-
-    Returns:
-        int: The size of the namespace.
-    """
-    if not hasattr(parent_file, "ns_size"):
-        ns_children = getattr(parent_file, "ns_children")
-        return len(ns_children)
-    ns_size = getattr(parent_file, "ns_size")
-    return ns_size + 1
+        Returns:
+            int: The size of the namespace.
+        """
+        if not hasattr(parent_file, "ns_size"):
+            ns_children = getattr(parent_file, "ns_children")
+            return len(ns_children)
+        ns_size = getattr(parent_file, "ns_size")
+        return ns_size + 1

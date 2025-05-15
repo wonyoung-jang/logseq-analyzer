@@ -54,7 +54,7 @@ class LogseqJournals:
     def process_journals_timelines(self) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         ls_journal_formats = LogseqJournalFormats()
-        py_page_base_format: str = ls_journal_formats.page
+        py_page_base_format = ls_journal_formats.page
         graph = LogseqGraph()
         dangling_links = graph.dangling_links
         for dateobj in self.process_journal_keys_to_datetime(dangling_links, py_page_base_format):

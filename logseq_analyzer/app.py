@@ -267,26 +267,26 @@ def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[s
         Output.HASH_TO_FILE.value: index.hash_to_file,
         Output.NAME_TO_FILES.value: index.name_to_files,
         Output.PATH_TO_FILE.value: index.path_to_file,
-        Output.GRAPH_DATA.value: get_graph_data(index.files),
+        Output.GRAPH_DATA.value: get_graph_data(index),
     }
     if a.write_graph:
-        meta_reports[Output.GRAPH_CONTENT.value] = get_graph_content(index.files)
+        meta_reports[Output.GRAPH_CONTENT.value] = get_graph_content(index)
     logging.debug("run_app: get_meta_reports")
     return meta_reports
 
 
-def get_graph_data(files: list[LogseqFile]) -> dict[LogseqFile, dict[str, Any]]:
+def get_graph_data(index: FileIndex) -> dict[LogseqFile, dict[str, Any]]:
     """Get metadata file data from the graph."""
     graph_data = {}
-    for file in files:
+    for file in index:
         data = {k: v for k, v in file.__dict__.items() if k not in ("content", "content_bullets", "primary_bullet")}
         graph_data[file] = data
     return graph_data
 
 
-def get_graph_content(files: list[LogseqFile]) -> dict[LogseqFile, list[str]]:
+def get_graph_content(index: FileIndex) -> dict[LogseqFile, list[str]]:
     """Get graph content."""
-    return {file: file.bullets.all_bullets for file in files}
+    return {file: file.bullets.all_bullets for file in index}
 
 
 def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:

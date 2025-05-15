@@ -29,25 +29,27 @@ class LogseqContentSummarizer:
     def generate_summary(self) -> dict[str, dict]:
         """Generate summary subsets for content data in the Logseq graph."""
         subsets = {}
+        index = LogseqContentSummarizer.index
         for criteria in list(Criteria):
             criteria_value = criteria.value
-            subsets[criteria_value] = self.extract_summary_subset_content(criteria_value)
+            subsets[criteria_value] = LogseqContentSummarizer.extract_summary_subset_content(criteria_value, index)
         return subsets
 
-    def extract_summary_subset_content(self, criteria) -> dict[str, Any]:
+    @staticmethod
+    def extract_summary_subset_content(criteria: str, index: FileIndex) -> dict[str, Any]:
         """
         Extract a subset of data based on a specific criteria.
         Asks: What content matches the criteria? And where is it found? How many times?
 
         Args:
             criteria (str): The criteria for extraction.
+            index (FileIndex): The file index to search through.
 
         Returns:
             dict[str, Any]: A dictionary containing the count and locations of the extracted values.
         """
         subset_counter = {}
-        index = LogseqContentSummarizer.index
-        for file in index.files:
+        for file in index:
             for value in file.data.get(criteria, []):
                 subset_counter.setdefault(value, {"count": 0, "found_in": Counter()})
                 subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1

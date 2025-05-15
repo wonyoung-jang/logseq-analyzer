@@ -86,7 +86,9 @@ class ReportWriter:
         # Handle TXT format and fallback
         with out_path.open("w", encoding="utf-8") as f:
             if count is not None:
-                f.write(f"{filename} | Items: {count}\n\n")
+                f.write(f"{filename}\n")
+                f.write(f"Items: {count}\n")
+                f.write(f"Type: {type(self.items)}\n\n")
             ReportWriter.write_recursive(f, self.items)
 
         if output_format not in (Format.TXT.value, Format.JSON.value, Format.HTML.value):
@@ -171,7 +173,7 @@ class ReportWriter:
         """
         f.write(f"{indent}Values ({len(values)}):")
         ReportWriter.write_newlines(f)
-        for index, value in enumerate(values, start=1):
+        for index, value in enumerate(sorted(values), start=1):
             f.write(f"{indent}\t{index}\t|\t{value}")
             ReportWriter.write_newlines(f)
         ReportWriter.write_newlines(f)

@@ -104,7 +104,7 @@ class Cache:
 
 def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
     """Yield deleted files from the cache."""
-    for file in index.files:
+    for file in index:
         path = file.file_path
         if not path.exists():
             logging.debug("File deleted: %s", path)

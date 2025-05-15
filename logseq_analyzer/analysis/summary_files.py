@@ -59,17 +59,17 @@ class LogseqFileSummarizer:
         for output_name, criteria in summary_categories.items():
             files = index.yield_files_with_keys_and_values(**criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
-        subsets[SummaryFiles.FILE_EXTS.value] = _process_file_extensions(index)
+        subsets[SummaryFiles.FILE_EXTS.value] = LogseqFileSummarizer.process_file_extensions(index)
         return subsets
 
-
-def _process_file_extensions(index: FileIndex) -> dict[str, list[str]]:
-    """Process file extensions and create subsets for each."""
-    file_extension_dict: dict[str, list[str]] = {}
-    unique_exts = {file.path.suffix for file in index.files if file.path.suffix}
-    for ext in unique_exts:
-        subset_name = f"all {ext}s"
-        criteria = {"suffix": ext}
-        files = index.yield_files_with_keys_and_values(**criteria)
-        file_extension_dict[subset_name] = get_attribute_list(files, "name")
-    return file_extension_dict
+    @staticmethod
+    def process_file_extensions(index: FileIndex) -> dict[str, list[str]]:
+        """Process file extensions and create subsets for each."""
+        file_extension_dict = {}
+        unique_exts = {file.path.suffix for file in index if file.path.suffix}
+        for ext in unique_exts:
+            subset_name = f"all {ext}s"
+            criteria = {"suffix": ext}
+            files = index.yield_files_with_keys_and_values(**criteria)
+            file_extension_dict[subset_name] = get_attribute_list(files, "name")
+        return file_extension_dict

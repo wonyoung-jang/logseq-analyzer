@@ -26,8 +26,9 @@ class LogseqFilestats:
         """Post-initialization method to set file statistics attributes."""
 
         stat = self.file_path.stat()
-        self.size = stat.st_size
-        self.has_content = bool(self.size)
+        size = stat.st_size
+        self.size = size
+        self.has_content = bool(size)
 
         try:
             _created_ts = stat.st_birthtime
