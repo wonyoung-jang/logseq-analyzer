@@ -39,6 +39,8 @@ class AnalysisWorker(QThread):
     progress_signal = Signal(int)
     finished_signal = Signal(bool, str, float)
 
+    __slots__ = ("args",)
+
     def __init__(self, args) -> None:
         """Initialize the worker with arguments."""
         super().__init__()
@@ -60,6 +62,24 @@ class AnalysisWorker(QThread):
 
 class LogseqAnalyzerGUI(QMainWindow):
     """Main GUI class for the Logseq Analyzer application."""
+
+    __slots__ = (
+        "graph_folder_input",
+        "global_config_input",
+        "report_format_combo",
+        "move_assets_checkbox",
+        "move_bak_checkbox",
+        "move_recycle_checkbox",
+        "write_graph_checkbox",
+        "graph_cache_checkbox",
+        "setup_progress_bar",
+        "run_button",
+        "output_button",
+        "delete_button",
+        "log_button",
+        "settings",
+        "worker",
+    )
 
     def __init__(self) -> None:
         """Initialize the GUI components and layout."""

@@ -360,7 +360,6 @@ def update_cache(c: Cache, output_subdirs: list[str], data_reports: list[Any]) -
         shelve_output_data = zip(output_subdirs, data_reports)
         for output_subdir, data_report in shelve_output_data:
             c.update({output_subdir: data_report})
-
     except Exception as e:
         logging.error("Error updating cache: %s", e)
         raise RuntimeError("Failed to update cache") from e
@@ -372,7 +371,6 @@ def write_reports(c: Cache) -> None:
     for output_dir, reports in c.cache.items():
         if output_dir in (Output.MOD_TRACKER.value):
             continue
-
         for name, report in reports.items():
             ReportWriter(name, report, output_dir).write()
     logging.debug("run_app: write_reports")

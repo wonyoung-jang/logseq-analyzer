@@ -204,52 +204,32 @@ class LogseqFile:
 
         Args:
             content (str): The content to mask.
-
         Returns:
-            tuple[str, dict[str, str]]: Masked content and a dictionary mapping placeholders to original blocks.
+            masked_content: the content with placeholders in place of each match
+            masked_blocks: a dict mapping each placeholder to the original text
         """
-        masked_blocks = {}
+        patterns = [
+            (CodePatterns.all, "__CODE_BLOCK_"),
+            (CodePatterns.inline_code_block, "__INLINE_CODE_"),
+            (AdvancedCommandPatterns.all, "__ADV_COMMAND_"),
+            (DoubleCurlyBracketsPatterns.all, "__DBLCURLY_"),
+            (EmbeddedLinksPatterns.all, "__EMB_LINK_"),
+            (ExternalLinksPatterns.all, "__EXT_LINK_"),
+            (DoubleParenthesesPatterns.all, "__DBLPAREN_"),
+            (ContentPatterns.any_link, "__ANY_LINK_"),
+        ]
+
+        masked_blocks: dict[str, str] = {}
         masked_content = content
 
-        for match in CodePatterns.all.finditer(masked_content):
-            block_id = f"__CODE_BLOCK_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
+        for regex, prefix in patterns:
 
-        for match in CodePatterns.inline_code_block.finditer(masked_content):
-            block_id = f"__INLINE_CODE_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
+            def _repl(match) -> str:
+                placeholder = f"{prefix}{uuid.uuid4()}__"
+                masked_blocks[placeholder] = match.group(0)
+                return placeholder
 
-        for match in AdvancedCommandPatterns.all.finditer(masked_content):
-            block_id = f"__ADV_COMMAND_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
-
-        for match in DoubleCurlyBracketsPatterns.all.finditer(masked_content):
-            block_id = f"__DOUBLE_CURLY_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
-
-        for match in EmbeddedLinksPatterns.all.finditer(masked_content):
-            block_id = f"__EMB_LINK_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
-
-        for match in ExternalLinksPatterns.all.finditer(masked_content):
-            block_id = f"__EXT_LINK_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
-
-        for match in DoubleParenthesesPatterns.all.finditer(masked_content):
-            block_id = f"__DBLPAREN_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
-
-        for match in ContentPatterns.any_link.finditer(masked_content):
-            block_id = f"__ANY_LINK_{uuid.uuid4()}__"
-            masked_blocks[block_id] = match.group(0)
-            masked_content = masked_content.replace(match.group(0), block_id)
+            masked_content = regex.sub(_repl, masked_content)
 
         return masked_content, masked_blocks
 
