@@ -91,7 +91,6 @@ class ReportWriter:
 
         if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
             logging.error("Unsupported output format: %s. Defaulted to text.", ext)
-            ReportWriter.write_recursive(f, items)
 
     def get_output_path(self, filename: str) -> Path:
         """

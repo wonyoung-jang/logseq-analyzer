@@ -18,6 +18,7 @@ class LogseqGraph:
 
     __slots__ = (
         "all_linked_references",
+        "all_dangling_links",
         "dangling_links",
         "unique_linked_references",
         "unique_linked_references_ns",
@@ -28,6 +29,7 @@ class LogseqGraph:
     def __init__(self) -> None:
         """Initialize the LogseqGraph instance."""
         self.all_linked_references = {}
+        self.all_dangling_links = {}
         self.dangling_links = set()
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
@@ -82,26 +84,24 @@ class LogseqGraph:
                 [getattr(file, "ns_parent", "")],
             ]
             linked_references = [item for sublist in linked_references for item in sublist if item]
-
             for item in linked_references:
                 all_linked_references.setdefault(item, {"count": 0, "found_in": Counter()})
                 all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
                 all_linked_references[item]["found_in"][file.path.name] += 1
-
             if ns_parent := getattr(file, "ns_parent", ""):
                 linked_references.remove(ns_parent)
-
             unique_linked_references.update(linked_references)
-
         self.unique_linked_references = unique_linked_references
         self.unique_linked_references_ns = unique_linked_references_ns
-
         for _, values in all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
-        self.all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
-
+        all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
         all_file_names = (file.path.name for file in index)
-        self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
+        dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
+        all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
+        self.dangling_links = dangling_links
+        self.all_linked_references = all_linked_references
+        self.all_dangling_links = all_dangling_links
 
     def post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> tuple[str, str]:
         """Post-process namespaces in the content data."""

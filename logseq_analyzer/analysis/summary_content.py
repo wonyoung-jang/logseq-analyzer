@@ -26,14 +26,14 @@ class LogseqContentSummarizer:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self) -> dict[str, dict]:
+    def generate_summary(self) -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         subsets = {}
         index = LogseqContentSummarizer.index
         for criteria in list(Criteria):
             criteria_value = criteria.value
             subsets[criteria_value] = LogseqContentSummarizer._extract_summary_subset_content(criteria_value, index)
-        return subsets
+        self.subsets = subsets
 
     @staticmethod
     def _extract_summary_subset_content(criteria: str, index: FileIndex) -> dict[str, Any]:

@@ -185,7 +185,7 @@ def setup_logseq_graph() -> LogseqGraph:
 def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
     """Setup the Logseq file summarizer."""
     lfs = LogseqFileSummarizer()
-    lfs.subsets = lfs.generate_summary()
+    lfs.generate_summary()
     logging.debug("run_app: setup_logseq_file_summarizer")
     return lfs
 
@@ -193,7 +193,7 @@ def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
 def setup_logseq_content_summarizer() -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
     lcs = LogseqContentSummarizer()
-    lcs.subsets = lcs.generate_summary()
+    lcs.generate_summary()
     logging.debug("run_app: setup_logseq_content_summarizer")
     return lcs
 
@@ -202,9 +202,9 @@ def setup_logseq_namespaces() -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
     ln.init_ns_parts()
-    ln.namespace_queries = ln.analyze_ns_queries()
-    ln.conflicts_non_namespace, ln.conflicts_dangling = ln.detect_non_ns_conflicts()
-    ln.conflicts_parent_depth, ln.conflicts_parent_unique = ln.detect_parent_depth_conflicts()
+    ln.analyze_ns_queries()
+    ln.detect_non_ns_conflicts()
+    ln.detect_parent_depth_conflicts()
     logging.debug("run_app: setup_logseq_namespaces")
     return ln
 
@@ -229,10 +229,10 @@ def setup_logseq_hls_assets() -> LogseqAssetsHls:
 
 def setup_logseq_assets() -> LogseqAssets:
     """Setup LogseqAssets for handling assets."""
-    ls_assets = LogseqAssets()
-    ls_assets.handle_assets()
+    lsa = LogseqAssets()
+    lsa.handle_assets()
     logging.debug("run_app: setup_logseq_assets")
-    return ls_assets
+    return lsa
 
 
 def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
@@ -259,6 +259,7 @@ def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[s
     index = FileIndex()
     meta_reports = {
         Output.ALL_REFS.value: lg.all_linked_references,
+        "all_dangling_links": lg.all_dangling_links,
         Output.CONFIG_MERGED.value: lgc.config_merged,
         Output.CONFIG_USER.value: lgc.config_user,
         Output.CONFIG_GLOBAL.value: lgc.config_global,

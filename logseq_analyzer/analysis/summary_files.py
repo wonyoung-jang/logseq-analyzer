@@ -23,7 +23,7 @@ class LogseqFileSummarizer:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self) -> dict[str, dict]:
+    def generate_summary(self) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = {
             # Process general categories
@@ -60,7 +60,7 @@ class LogseqFileSummarizer:
             files = index.yield_files_with_keys_and_values(**criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
         subsets[SummaryFiles.FILE_EXTS.value] = LogseqFileSummarizer._process_file_extensions(index)
-        return subsets
+        self.subsets = subsets
 
     @staticmethod
     def _process_file_extensions(index: FileIndex) -> dict[str, list[str]]:

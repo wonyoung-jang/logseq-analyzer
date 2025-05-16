@@ -118,13 +118,8 @@ class LogseqNamespaces:
         self._part_levels = _part_levels
         self._part_entries = _part_entries
 
-    def analyze_ns_queries(self) -> dict[str, dict[str, Any]]:
-        """
-        Analyze namespace queries.
-
-        Returns:
-            dict[str, dict[str, Any]]: A dictionary mapping namespace queries to their details.
-        """
+    def analyze_ns_queries(self) -> None:
+        """Analyze namespace queries."""
         ns_queries: dict[str, dict[str, Any]] = {}
         index = LogseqNamespaces.index
         page_ref_pattern = ContentPatterns.page_reference
@@ -143,17 +138,10 @@ class LogseqNamespaces:
                 ns_queries[query]["ns_size"] = namespace_data.get(page_ref, {}).get("ns_size", 0)
                 ns_queries[query]["uri"] = getattr(file, "uri", "")
                 ns_queries[query]["logseq_url"] = getattr(file, "logseq_url", "")
-        return sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
+        self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
-    def detect_non_ns_conflicts(self) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-        """
-        Check for conflicts between split namespace parts and existing non-namespace page names.
-
-        Returns:
-            tuple[dict[str, list[str]], dict[str, list[str]]]: A tuple containing two dictionaries:
-                - conflicts_non_namespace: A dictionary mapping namespace parts to the entries they appear in.
-                - conflicts_dangling: A dictionary mapping namespace parts to the entries they appear in.
-        """
+    def detect_non_ns_conflicts(self) -> None:
+        """Check for conflicts between split namespace parts and existing non-namespace page names."""
         index = LogseqNamespaces.index
         lg = LogseqGraph()
         dangling_links = lg.dangling_links
@@ -171,17 +159,11 @@ class LogseqNamespaces:
                     conflicts_non_namespace[part].append(entry)
                 if part in potential_dangling:
                     conflicts_dangling[part].append(entry)
-        return conflicts_non_namespace, conflicts_dangling
+        self.conflicts_non_namespace = conflicts_non_namespace
+        self.conflicts_dangling = conflicts_dangling
 
-    def detect_parent_depth_conflicts(self) -> tuple[dict[str, list[str]], dict[str, set[str]]]:
-        """
-        Identify namespace parts that appear at different depths (levels) across entries.
-
-        Returns:
-            tuple[dict[str, list[str]], dict[str, set[str]]]: A tuple containing two dictionaries:
-                - conflicts_parent_depth: A dictionary mapping parts and levels to the entries they appear in.
-                - conflicts_parent_unique: A dictionary mapping parts and levels to unique pages at that level.
-        """
+    def detect_parent_depth_conflicts(self) -> None:
+        """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels
         part_entries = self._part_entries
         conflicts_parent_depth: dict[str, list[str]] = {}
@@ -203,4 +185,5 @@ class LogseqNamespaces:
                     up_to_level = parts[:level]
                     unique_pages.add(ns_sep.join(up_to_level))
                 conflicts_parent_unique[key] = unique_pages
-        return conflicts_parent_depth, conflicts_parent_unique
+        self.conflicts_parent_depth = conflicts_parent_depth
+        self.conflicts_parent_unique = conflicts_parent_unique
