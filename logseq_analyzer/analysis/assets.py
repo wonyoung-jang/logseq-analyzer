@@ -24,14 +24,6 @@ class LogseqAssets:
         self.backlinked = []
         self.not_backlinked = []
 
-    def __repr__(self) -> Literal["LogseqAssets()"]:
-        """Return a string representation of the LogseqAssets instance."""
-        return "LogseqAssets()"
-
-    def __str__(self) -> Literal["LogseqAssets"]:
-        """Return a string representation of the LogseqAssets instance."""
-        return "LogseqAssets"
-
     def __len__(self) -> int:
         """Return the number of assets."""
         return len(self.backlinked) + len(self.not_backlinked)

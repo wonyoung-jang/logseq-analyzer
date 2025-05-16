@@ -53,9 +53,9 @@ class LogseqAnalyzerConfig:
 
     def get_section(self, section) -> dict[str, str]:
         """Get a section from the config file as a dictionary"""
-        if section in self.config:
-            return dict(self.config[section])
-        return {}
+        if section not in self.config:
+            return {}
+        return dict(self.config[section])
 
     def write_to_file(self, output_path: Path = Path("configuration/user_config.ini")) -> None:
         """Write the config to a file"""

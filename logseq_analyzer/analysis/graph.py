@@ -58,12 +58,12 @@ class LogseqGraph:
 
     def post_processing_content(self) -> None:
         """Post-process the content data for all files."""
+        all_linked_references = {}
         unique_aliases = set()
         index = LogseqGraph.index
-        all_linked_references = {}
         for file in index:
             if file.path.is_namespace:
-                self.post_processing_content_namespaces(file)
+                self.post_processing_content_namespaces(file, index)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
@@ -97,14 +97,13 @@ class LogseqGraph:
         all_file_names = (file.path.name for file in index)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
-    def post_processing_content_namespaces(self, file: LogseqFile) -> None:
+    def post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> None:
         """Post-process namespaces in the content data."""
         ns_level = getattr(file, "ns_level")
         ns_root = getattr(file, "ns_root")
         ns_parent = getattr(file, "ns_parent_full")
         self.unique_linked_references_ns.update([ns_root, file.path.name])
 
-        index = LogseqGraph.index
         for ns_root_file in index[ns_root]:
             if not hasattr(ns_root_file, "ns_level"):
                 setattr(ns_root_file, "ns_level", 1)

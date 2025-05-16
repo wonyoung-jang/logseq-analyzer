@@ -13,11 +13,6 @@ def logseq_assets_hls():
     return LogseqAssetsHls()
 
 
-def test_representation(logseq_assets):
-    assert repr(logseq_assets) == "LogseqAssets()"
-    assert str(logseq_assets) == "LogseqAssets"
-
-
 def test_len(logseq_assets):
     assert len(logseq_assets) == 0
     logseq_assets.backlinked = ["a", "b"]
