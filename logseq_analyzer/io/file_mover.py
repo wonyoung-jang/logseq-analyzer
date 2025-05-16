@@ -6,7 +6,7 @@ import logging
 import shutil
 from pathlib import Path
 
-from ..analysis.assets import LogseqAssets
+from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
@@ -25,36 +25,36 @@ class LogseqFileMover:
         self.moved_files = {}
 
 
-def handle_move_assets(argument: bool, delete_assets_dir: Path) -> list[str]:
+def handle_move_assets(argument: bool, delete_assets_dir: Path, not_backlinked: list[LogseqFile]) -> list[str]:
     """
     Handle the moving of unlinked assets, bak, and recycle files to a specified directory.
 
     Args:
         argument (bool): If True, move the files. If False, simulate the move.
         delete_assets_dir (Path): The directory to delete assets to.
+        not_backlinked (list[LogseqFile]): A list of unlinked assets.
 
     Returns:
         list[str]: A list of names of the moved files/folders.
     """
-    lsa = LogseqAssets()
-    if lsa.not_backlinked:
+    if not_backlinked:
         if argument:
-            _move_unlinked_assets(lsa, delete_assets_dir)
-            return lsa.not_backlinked
-        lsa.not_backlinked.insert(0, "=== Simulated only ===")
-        return lsa.not_backlinked
+            _move_unlinked_assets(not_backlinked, delete_assets_dir)
+            return not_backlinked
+        not_backlinked.insert(0, "=== Simulated only ===")
+        return not_backlinked
     return []
 
 
-def _move_unlinked_assets(lsa: LogseqAssets, delete_assets_dir: Path) -> None:
+def _move_unlinked_assets(not_backlinked: list[LogseqFile], delete_assets_dir: Path) -> None:
     """
     Move unlinked assets to a separate directory.
 
     Args:
-        lsa (LogseqAssets): The LogseqAssets instance.
+        not_backlinked (list[LogseqFile]): A list of unlinked asset file paths.
         delete_assets_dir (Path): The directory to move unlinked assets to.
     """
-    for asset in lsa.not_backlinked:
+    for asset in not_backlinked:
         file_path = asset.file_path
         new_path = delete_assets_dir / file_path.name
         try:

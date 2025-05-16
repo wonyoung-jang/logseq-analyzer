@@ -243,8 +243,10 @@ def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     drd = DeleteRecycleDirectory()
     rd = RecycleDirectory()
     dad = DeleteAssetsDirectory()
+    lsa = LogseqAssets()
+    not_backlinked = lsa.not_backlinked
     moved_files = {}
-    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path)
+    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path, not_backlinked)
     moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd.path, bd.path)
     moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd.path, rd.path)
     lfm.moved_files = moved_files

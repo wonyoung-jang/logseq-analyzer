@@ -15,74 +15,73 @@ from .filesystem import OutputDirectory
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    __slots__ = ("filename_prefix", "items", "output_subdir")
+    __slots__ = ("filename_prefix", "items", "subdir")
 
     lac = LogseqAnalyzerConfig()
     od = OutputDirectory()
 
-    def __init__(self, filename_prefix: str, items: Any, output_subdir: str = "") -> None:
+    def __init__(self, filename_prefix: str, items: Any, subdir: str = "") -> None:
         """
         Initialize the ReportWriter class.
 
         Args:
             filename_prefix (str): The prefix for the output filename.
             items (Any): The data to be written to the file.
-            output_subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
+            subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
         """
         self.filename_prefix = filename_prefix
         self.items = items
-        self.output_subdir = output_subdir
+        self.subdir = subdir
 
     def __repr__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, output_subdir={self.output_subdir})"
+        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, subdir={self.subdir})"
 
     def __str__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter: {self.filename_prefix}, Items: data, Output Subdir: {self.output_subdir}"
+        return f"ReportWriter: {self.filename_prefix}, Items: data, Output Subdir: {self.subdir}"
 
     def write(self) -> None:
         """
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
-        output_format = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
-        filename_prefix = self.filename_prefix
-        logging.info("Writing %s as %s", filename_prefix, output_format)
+        ext = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
+        prefix = self.filename_prefix
+        logging.info("Writing %s as %s", prefix, ext)
         items = self.items
         count = len(items) if hasattr(items, "__len__") else None
-        ext = output_format
-        filename = f"{filename_prefix}{ext}" if count else f"___EMPTY___{filename_prefix}{ext}"
+        filename = f"{prefix}{ext}" if count else f"___EMPTY___{prefix}{ext}"
         out_path = self.get_output_path(filename)
 
         # Handle JSON format
-        if output_format == Format.JSON.value:
+        if ext == Format.JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(items, f, indent=4)
                 return
             except TypeError:
-                logging.error("Failed to write JSON for %s, falling back to TXT.", filename_prefix)
+                logging.error("Failed to write JSON for %s, falling back to TXT.", prefix)
 
         # Handle HTML format
-        if output_format == Format.HTML.value:
+        if ext == Format.HTML.value:
             with out_path.open("w", encoding="utf-8") as f:
                 # HTML header
                 f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
-                f.write(f'  <meta charset="utf-8">\n  <title>{filename_prefix}</title>\n')
+                f.write(f'  <meta charset="utf-8">\n  <title>{prefix}</title>\n')
                 f.write(
                     """  <style> body { font-family: sans-serif; margin: 2em; } dl { margin-left: 1em; }
                     ol { margin-left: 1em; } span { display: inline-block; } </style>\n"""
                 )
                 f.write("</head>\n<body>\n")
-                f.write(f"<h1>{filename_prefix}</h1>\n")
+                f.write(f"<h1>{prefix}</h1>\n")
                 if count is not None:
                     f.write(f"<p>Items: {count}</p>\n")
                 # Recursive content
                 ReportWriter.write_html_recursive(f, items)
                 f.write("</body>\n</html>\n")
 
-        # Handle TXT format and fallback
-        if output_format == Format.TXT.value:
+        # Handle TXT and MD format and fallback
+        if ext in (Format.TXT.value, Format.MD.value):
             with out_path.open("w", encoding="utf-8") as f:
                 if count is not None:
                     f.write(f"{filename}\n")
@@ -90,8 +89,9 @@ class ReportWriter:
                     f.write(f"Type: {type(items)}\n\n")
                 ReportWriter.write_recursive(f, items)
 
-        if output_format not in (Format.TXT.value, Format.JSON.value, Format.HTML.value):
-            logging.error("Unsupported output format: %s. Defaulted to text.", output_format)
+        if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
+            logging.error("Unsupported output format: %s. Defaulted to text.", ext)
+            ReportWriter.write_recursive(f, items)
 
     def get_output_path(self, filename: str) -> Path:
         """
@@ -103,12 +103,11 @@ class ReportWriter:
         Returns:
             Path: The output path for the report file.
         """
-        output_subdir = self.output_subdir
-        if output_subdir:
-            output_dir = ReportWriter.od.path / output_subdir
-            output_dir.mkdir(parents=True, exist_ok=True)
-        out_path = output_dir / filename
-        return out_path
+        output_dir = ReportWriter.od.path
+        if self.subdir:
+            output_dir = output_dir / self.subdir
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return output_dir / filename
 
     @staticmethod
     def write_nested_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
@@ -128,14 +127,14 @@ class ReportWriter:
         Write collections (lists, sets) to a file with indentation.
         """
         try:
-            for index, item in enumerate(sorted(data), start=1):
+            for index, item in enumerate(sorted(data), 1):
                 if isinstance(item, (list, set, dict)):
                     f.write(f"{indent}{index}:\n")
                     ReportWriter.write_recursive(f, item, indent_level + 1)
                 else:
                     f.write(f"{indent}{index}\t|\t{item}\n")
         except TypeError:
-            for index, item in enumerate(data, start=1):
+            for index, item in enumerate(data, 1):
                 f.write(f"{indent}{index}\t|\t{item}\n")
 
     @staticmethod
@@ -164,7 +163,7 @@ class ReportWriter:
         Write values of a dictionary to a file with indentation.
         """
         f.write(f"{indent}Values ({len(values)}):\n")
-        for index, value in enumerate(sorted(values), start=1):
+        for index, value in enumerate(sorted(values), 1):
             f.write(f"{indent}\t{index}\t|\t{value}\n")
         f.write("\n")
 
