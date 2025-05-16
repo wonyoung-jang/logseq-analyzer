@@ -31,7 +31,8 @@ class LogseqGraphConfig:
             cf_path (Path): The path to the config file.
         """
         with cf_path.open("r", encoding="utf-8") as user_config:
-            self.config_user = loads(user_config.read())
+            config_user = loads(user_config.read())
+        self.config_user = config_user
 
     def initialize_global_config_edn(self, gcf_path: Path) -> None:
         """
@@ -41,7 +42,8 @@ class LogseqGraphConfig:
             gcf_path (Path): The path to the global config file.
         """
         with gcf_path.open("r", encoding="utf-8") as global_config:
-            self.config_global = loads(global_config.read())
+            config_global = loads(global_config.read())
+        self.config_global = config_global
 
     def merge(self) -> dict[str, Any]:
         """
@@ -51,8 +53,10 @@ class LogseqGraphConfig:
             dict: Merged configuration.
         """
         config = _get_default_logseq_config_edn()
-        config.update(self.config_user)
-        config.update(self.config_global)
+        config_user = self.config_user
+        config_global = self.config_global
+        config.update(config_user)
+        config.update(config_global)
         return config
 
 

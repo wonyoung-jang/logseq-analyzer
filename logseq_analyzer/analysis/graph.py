@@ -60,10 +60,13 @@ class LogseqGraph:
         """Post-process the content data for all files."""
         all_linked_references = {}
         unique_aliases = set()
+        unique_linked_references = set()
+        unique_linked_references_ns = set()
         index = LogseqGraph.index
         for file in index:
             if file.path.is_namespace:
-                self.post_processing_content_namespaces(file, index)
+                ns_refs = self.post_processing_content_namespaces(file, index)
+                unique_linked_references_ns.update(ns_refs)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
@@ -88,7 +91,10 @@ class LogseqGraph:
             if ns_parent := getattr(file, "ns_parent", ""):
                 linked_references.remove(ns_parent)
 
-            self.unique_linked_references.update(linked_references)
+            unique_linked_references.update(linked_references)
+
+        self.unique_linked_references = unique_linked_references
+        self.unique_linked_references_ns = unique_linked_references_ns
 
         for _, values in all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
@@ -97,12 +103,12 @@ class LogseqGraph:
         all_file_names = (file.path.name for file in index)
         self.dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
 
-    def post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> None:
+    def post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         ns_level = getattr(file, "ns_level")
         ns_root = getattr(file, "ns_root")
         ns_parent = getattr(file, "ns_parent_full")
-        self.unique_linked_references_ns.update([ns_root, file.path.name])
+        ns_refs = (ns_root, file.path.name)
 
         for ns_root_file in index[ns_root]:
             if not hasattr(ns_root_file, "ns_level"):
@@ -111,10 +117,10 @@ class LogseqGraph:
                 setattr(ns_root_file, "ns_children", set())
                 ns_children_root = getattr(ns_root_file, "ns_children")
             ns_children_root.add(file.path.name)
-            setattr(ns_root_file, "ns_size", LogseqGraph.process_ns_size(ns_root_file))
+            setattr(ns_root_file, "ns_size", LogseqGraph._process_ns_size(ns_root_file))
 
         if ns_level <= 2:
-            return
+            return ns_refs
 
         for ns_parent_file in index[ns_parent]:
             if not hasattr(ns_parent_file, "ns_level"):
@@ -123,16 +129,20 @@ class LogseqGraph:
                 setattr(ns_parent_file, "ns_children", set())
                 ns_children_parent = getattr(ns_parent_file, "ns_children")
             ns_children_parent.add(file.path.name)
-            setattr(ns_parent_file, "ns_size", LogseqGraph.process_ns_size(ns_parent_file))
+            setattr(ns_parent_file, "ns_size", LogseqGraph._process_ns_size(ns_parent_file))
+
+        return ns_refs
 
     def process_summary_data(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
         index = LogseqGraph.index
+        unique_linked_references = self.unique_linked_references
+        unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
             if not file.is_backlinked:
-                file.is_backlinked = file.check_is_backlinked(self.unique_linked_references)
+                file.is_backlinked = file.check_is_backlinked(unique_linked_references)
             if not file.is_backlinked_by_ns_only:
-                file.is_backlinked_by_ns_only = file.check_is_backlinked(self.unique_linked_references_ns)
+                file.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
             if file.is_backlinked and file.is_backlinked_by_ns_only:
                 file.is_backlinked = False
             if file.file_type in ("journal", "page"):
@@ -140,13 +150,15 @@ class LogseqGraph:
 
     def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> set:
         """Process dangling links in the graph."""
-        all_linked_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
+        unique_linked_references = self.unique_linked_references
+        unique_linked_references_ns = self.unique_linked_references_ns
+        all_linked_refs = unique_linked_references.union(unique_linked_references_ns)
         all_linked_refs.difference_update(all_file_names)
         all_linked_refs.difference_update(unique_aliases)
         return set(sorted(all_linked_refs))
 
     @staticmethod
-    def process_ns_size(parent_file: LogseqFile) -> int:
+    def _process_ns_size(parent_file: LogseqFile) -> int:
         """
         Process the size of namespaces.
 

@@ -32,11 +32,11 @@ class LogseqContentSummarizer:
         index = LogseqContentSummarizer.index
         for criteria in list(Criteria):
             criteria_value = criteria.value
-            subsets[criteria_value] = LogseqContentSummarizer.extract_summary_subset_content(criteria_value, index)
+            subsets[criteria_value] = LogseqContentSummarizer._extract_summary_subset_content(criteria_value, index)
         return subsets
 
     @staticmethod
-    def extract_summary_subset_content(criteria: str, index: FileIndex) -> dict[str, Any]:
+    def _extract_summary_subset_content(criteria: str, index: FileIndex) -> dict[str, Any]:
         """
         Extract a subset of data based on a specific criteria.
         Asks: What content matches the criteria? And where is it found? How many times?

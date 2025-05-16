@@ -46,40 +46,39 @@ class ReportWriter:
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
         output_format = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
-        logging.info("Writing %s as %s", self.filename_prefix, output_format)
-
-        count = len(self.items) if hasattr(self.items, "__len__") else None
+        filename_prefix = self.filename_prefix
+        logging.info("Writing %s as %s", filename_prefix, output_format)
+        items = self.items
+        count = len(items) if hasattr(items, "__len__") else None
         ext = output_format
-        filename = f"{self.filename_prefix}{ext}" if count else f"___EMPTY___{self.filename_prefix}{ext}"
-
-        # Determine output path
+        filename = f"{filename_prefix}{ext}" if count else f"___EMPTY___{filename_prefix}{ext}"
         out_path = self.get_output_path(filename)
 
         # Handle JSON format
         if output_format == Format.JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
-                    json.dump(self.items, f, indent=4)
+                    json.dump(items, f, indent=4)
                 return
             except TypeError:
-                logging.error("Failed to write JSON for %s, falling back to TXT.", self.filename_prefix)
+                logging.error("Failed to write JSON for %s, falling back to TXT.", filename_prefix)
 
         # Handle HTML format
         if output_format == Format.HTML.value:
             with out_path.open("w", encoding="utf-8") as f:
                 # HTML header
                 f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
-                f.write(f'  <meta charset="utf-8">\n  <title>{self.filename_prefix}</title>\n')
+                f.write(f'  <meta charset="utf-8">\n  <title>{filename_prefix}</title>\n')
                 f.write(
                     """  <style> body { font-family: sans-serif; margin: 2em; } dl { margin-left: 1em; }
                     ol { margin-left: 1em; } span { display: inline-block; } </style>\n"""
                 )
                 f.write("</head>\n<body>\n")
-                f.write(f"<h1>{self.filename_prefix}</h1>\n")
+                f.write(f"<h1>{filename_prefix}</h1>\n")
                 if count is not None:
                     f.write(f"<p>Items: {count}</p>\n")
                 # Recursive content
-                ReportWriter.write_html_recursive(f, self.items)
+                ReportWriter.write_html_recursive(f, items)
                 f.write("</body>\n</html>\n")
 
         # Handle TXT format and fallback
@@ -88,8 +87,8 @@ class ReportWriter:
                 if count is not None:
                     f.write(f"{filename}\n")
                     f.write(f"Items: {count}\n")
-                    f.write(f"Type: {type(self.items)}\n\n")
-                ReportWriter.write_recursive(f, self.items)
+                    f.write(f"Type: {type(items)}\n\n")
+                ReportWriter.write_recursive(f, items)
 
         if output_format not in (Format.TXT.value, Format.JSON.value, Format.HTML.value):
             logging.error("Unsupported output format: %s. Defaulted to text.", output_format)
@@ -104,8 +103,9 @@ class ReportWriter:
         Returns:
             Path: The output path for the report file.
         """
-        if self.output_subdir:
-            output_dir = ReportWriter.od.path / self.output_subdir
+        output_subdir = self.output_subdir
+        if output_subdir:
+            output_dir = ReportWriter.od.path / output_subdir
             output_dir.mkdir(parents=True, exist_ok=True)
         out_path = output_dir / filename
         return out_path

@@ -4,6 +4,7 @@ Process logseq journals.
 
 import logging
 from datetime import datetime, timedelta
+from multiprocessing import process
 from typing import Any, Generator, Literal, Optional
 
 from ..config.datetime_tokens import LogseqJournalFormats
@@ -57,23 +58,29 @@ class LogseqJournals:
         py_page_base_format = ljf.page
         graph = LogseqGraph()
         dangling_links = graph.dangling_links
-        for dateobj in self.process_journal_keys_to_datetime(dangling_links, py_page_base_format):
-            self.dangling_journals.append(dateobj)
-        self.dangling_journals.sort()
+        dangling_journals = []
+        for dateobj in LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format):
+            dangling_journals.append(dateobj)
+        dangling_journals.sort()
 
         summaries = LogseqFileSummarizer()
         journal_keys = summaries.subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
-        for dateobj in self.process_journal_keys_to_datetime(journal_keys, py_page_base_format):
-            self.processed_keys.append(dateobj)
-        self.processed_keys.sort()
+        processed_keys = []
+        for dateobj in LogseqJournals._process_journal_keys_to_datetime(journal_keys, py_page_base_format):
+            processed_keys.append(dateobj)
+        processed_keys.sort()
 
-        self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = _get_date_stats(self.complete_timeline)
-        self.timeline_stats["dangling_journals"] = _get_date_stats(self.dangling_journals)
+        self.dangling_journals = dangling_journals
+        self.processed_keys = processed_keys
+        complete_timeline = self.build_complete_timeline()
+        self.timeline_stats["complete_timeline"] = _get_date_stats(complete_timeline)
+        self.timeline_stats["dangling_journals"] = _get_date_stats(dangling_journals)
+        self.complete_timeline = complete_timeline
         self.get_dangling_journals_outside_range()
 
-    def process_journal_keys_to_datetime(
-        self, list_of_keys: list[str], py_page_base_format: str = ""
+    @staticmethod
+    def _process_journal_keys_to_datetime(
+        list_of_keys: list[str], py_page_base_format: str = ""
     ) -> Generator[datetime, Any, None]:
         """
         Convert journal keys from strings to datetime objects.
@@ -86,42 +93,51 @@ class LogseqJournals:
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
-    def build_complete_timeline(self) -> None:
+    def build_complete_timeline(self) -> list[datetime]:
         """
         Build a complete timeline of journal entries, filling in any missing dates.
         """
-        # Iterate over the sorted keys to construct a continuous timeline.
-        for i in range(len(self.processed_keys) - 1):
-            current_date = self.processed_keys[i]
+        processed_keys = self.processed_keys
+        dangling_journals = self.dangling_journals
+        missing_keys = []
+        complete_timeline = []
+        for i in range(len(processed_keys) - 1):
+            current_date = processed_keys[i]
             next_expected_date = _get_next_day(current_date)
-            next_actual_date = self.processed_keys[i + 1]
+            next_actual_date = processed_keys[i + 1]
 
-            # Always include the current date
-            self.complete_timeline.append(current_date)
+            complete_timeline.append(current_date)
 
-            # If there is a gap, fill in missing dates
             while next_expected_date < next_actual_date:
-                self.complete_timeline.append(next_expected_date)
-                if next_expected_date in self.dangling_journals:
-                    # Remove matching dangling link if found (assuming dangling_links are datetime objects)
-                    self.dangling_journals.remove(next_expected_date)
+                complete_timeline.append(next_expected_date)
+                if next_expected_date in dangling_journals:
+                    dangling_journals.remove(next_expected_date)
                 else:
-                    self.missing_keys.append(next_expected_date)
+                    missing_keys.append(next_expected_date)
                 next_expected_date = _get_next_day(next_expected_date)
 
-        # Add the last journal key if available.
-        if self.processed_keys:
-            self.complete_timeline.append(self.processed_keys[-1])
+        if processed_keys:
+            complete_timeline.append(processed_keys[-1])
+
+        self.dangling_journals = dangling_journals
+        self.missing_keys = missing_keys
+        return complete_timeline
 
     def get_dangling_journals_outside_range(self) -> None:
         """
         Check for dangling journals that are outside the range of the complete timeline.
         """
-        for link in self.dangling_journals:
-            if link < self.timeline_stats["complete_timeline"]["first_date"]:
-                self.dangling_journals_past.append(link)
-            elif link > self.timeline_stats["complete_timeline"]["last_date"]:
-                self.dangling_journals_future.append(link)
+        dangling_journals = self.dangling_journals
+        timeline_stats = self.timeline_stats["complete_timeline"]
+        dangling_journals_past = []
+        dangling_journals_future = []
+        for link in dangling_journals:
+            if link < timeline_stats["first_date"]:
+                dangling_journals_past.append(link)
+            elif link > timeline_stats["last_date"]:
+                dangling_journals_future.append(link)
+        self.dangling_journals_past = dangling_journals_past
+        self.dangling_journals_future = dangling_journals_future
 
 
 def _get_next_day(date_obj: datetime) -> datetime:
@@ -131,7 +147,7 @@ def _get_next_day(date_obj: datetime) -> datetime:
     return date_obj + timedelta(days=1)
 
 
-def _get_date_stats(timeline) -> dict[str, Any]:
+def _get_date_stats(timeline: list[datetime]) -> dict[str, Any]:
     """
     Get statistics about the timeline.
     """

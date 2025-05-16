@@ -104,7 +104,9 @@ class LogseqAssetsHls:
     def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         index = LogseqAssetsHls.index
+        property_value_pattern = ContentPatterns.property_value
         criteria = {"is_hls": True}
+        formatted_bullets = set()
         for file in index.yield_files_with_keys_and_values(**criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
@@ -112,7 +114,7 @@ class LogseqAssetsHls:
                     continue
 
                 hl_page, id_bullet, hl_stamp = "", "", ""
-                for match in ContentPatterns.property_value.finditer(bullet):
+                for match in property_value_pattern.finditer(bullet):
                     if match.group(1) == "hl-page":
                         hl_page = match.group(2)
                     elif match.group(1) == "id":
@@ -122,18 +124,24 @@ class LogseqAssetsHls:
 
                 if all([hl_page, id_bullet, hl_stamp]):
                     formatted_bullet = f"{hl_page.strip()}_{id_bullet.strip()}_{hl_stamp.strip()}"
-                    self.formatted_bullets.add(formatted_bullet)
+                    formatted_bullets.add(formatted_bullet)
+        self.formatted_bullets = formatted_bullets
 
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
-        self.backlinked = self.asset_names.intersection(self.formatted_bullets)
-        self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
+        asset_names = self.asset_names
+        formatted_bullets = self.formatted_bullets
+        self.backlinked = asset_names.intersection(formatted_bullets)
+        self.not_backlinked = asset_names.difference(formatted_bullets)
         self.update_sub_asset_files()
 
     def update_sub_asset_files(self) -> None:
         """Update the asset files with backlink status and file type."""
-        for name in self.backlinked:
-            self.asset_mapping[name].is_backlinked = True
-            self.asset_mapping[name].file_type = "asset"
-        for name in self.not_backlinked:
-            self.asset_mapping[name].file_type = "asset"
+        backlinked = self.backlinked
+        not_backlinked = self.not_backlinked
+        asset_mapping = self.asset_mapping
+        for name in backlinked:
+            asset_mapping[name].is_backlinked = True
+            asset_mapping[name].file_type = "asset"
+        for name in not_backlinked:
+            asset_mapping[name].file_type = "asset"

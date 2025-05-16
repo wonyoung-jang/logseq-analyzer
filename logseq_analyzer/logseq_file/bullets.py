@@ -60,25 +60,31 @@ class LogseqBullets:
         """Get the Logseq primary bullet if available"""
         primary = ""
         all_bullets = self.all_bullets
+        bullet_count = 0
+        bullet_count_empty = 0
+        content_bullets = []
         if len(all_bullets) == 1:
             if primary := all_bullets[0].strip():
-                self.bullet_count = 1
+                bullet_count = 1
             else:
-                self.bullet_count_empty = 1
+                bullet_count_empty = 1
         elif len(all_bullets) > 1:
             primary = all_bullets[0].strip()
             for bullet in all_bullets[1:]:
                 if not (stripped_bullet := bullet.strip()):
-                    self.bullet_count_empty += 1
+                    bullet_count_empty += 1
                 else:
-                    self.content_bullets.append(stripped_bullet)
-                    self.bullet_count += 1
+                    content_bullets.append(stripped_bullet)
+                    bullet_count += 1
+        self.bullet_count = bullet_count
+        self.bullet_count_empty = bullet_count_empty
+        self.content_bullets = content_bullets
         return primary
 
     def get_bullet_density(self) -> float:
         """Calculate bullet density: ~Char count / Bullet count"""
         if not self.bullet_count:
-            return 0.0
+            return 0
         return round(self.char_count / self.bullet_count, 2)
 
     def is_primary_bullet_page_properties(self) -> bool:

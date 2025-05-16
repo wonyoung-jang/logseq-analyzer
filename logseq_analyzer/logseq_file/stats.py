@@ -39,8 +39,8 @@ class LogseqFilestats:
                 self.file_path,
             )
         _modified_ts = stat.st_mtime
-        now = datetime.now()
-        self.time_existed = now.timestamp() - _created_ts
-        self.time_unmodified = now.timestamp() - _modified_ts
+        _now = datetime.now()
+        self.time_existed = _now.timestamp() - _created_ts
+        self.time_unmodified = _now.timestamp() - _modified_ts
         self.date_created = datetime.fromtimestamp(_created_ts).isoformat()
         self.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
