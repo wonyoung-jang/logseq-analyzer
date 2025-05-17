@@ -4,7 +4,7 @@ Tests for LogseqGraphConfig.
 
 import pytest
 
-from ..graph_config import LogseqGraphConfig, _get_default_logseq_config_edn
+from ..graph_config import LogseqGraphConfig, DEFAULT_LOGSEQ_CONFIG_EDN
 
 
 @pytest.fixture
@@ -23,14 +23,14 @@ def test_merge(graph_config):
     """Test the merging of user and global config."""
     graph_config.config_user = {":key1": "value1"}
     graph_config.config_global = {":key2": "value2"}
-    graph_config.config_merged = graph_config.merge()
+    graph_config.merge()
     assert (
         graph_config.config_merged[":key1"] == "value1" and graph_config.config_merged[":key2"] == "value2"
     ), "Merged config should contain both user and global data."
 
 
 def test_default_logseq_config():
-    config = _get_default_logseq_config_edn()
+    config = DEFAULT_LOGSEQ_CONFIG_EDN
     assert config is not None
     assert isinstance(config, dict)
     assert ":meta/version" in config

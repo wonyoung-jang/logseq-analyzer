@@ -1,11 +1,5 @@
 import pytest
-from ..builtin_properties import LogseqBuiltInProperties, split_builtin_user_properties
-
-
-@pytest.fixture
-def builtin_properties():
-    """Fixture for LogseqBuiltInProperties."""
-    return LogseqBuiltInProperties()
+from ..builtin_properties import split_builtin_user_properties, BUILT_INS
 
 
 @pytest.fixture
@@ -69,22 +63,12 @@ def builtin_properties_set_static():
     )
 
 
-def test_singleton(builtin_properties):
-    """Test singleton behavior."""
-    another_instance = LogseqBuiltInProperties()
-    assert builtin_properties is another_instance, "LogseqBuiltInProperties should be a singleton."
-    assert builtin_properties.built_in_properties is not None, "Built-in properties should be set."
-    assert isinstance(builtin_properties.built_in_properties, frozenset), "Built-in properties should be a frozenset."
-
-
-def test_set_builtin_properties_content(builtin_properties, builtin_properties_set_static):
+def test_set_builtin_properties_content(builtin_properties_set_static):
     """Test the content of built-in properties."""
-    assert (
-        builtin_properties.built_in_properties == builtin_properties_set_static
-    ), "Built-in properties content should match."
+    assert builtin_properties_set_static == BUILT_INS, "Built-in properties content should match."
 
 
-def test_split_builtin_user_properties(builtin_properties):
+def test_split_builtin_user_properties(builtin_properties_set_static):
     """Test splitting built-in and user-defined properties."""
     properties = [
         "alias",
@@ -102,5 +86,5 @@ def test_split_builtin_user_properties(builtin_properties):
         properties
     ), "Total properties should match the input list."
     assert all(
-        prop in builtin_properties.built_in_properties for prop in result["built_ins"]
+        prop in builtin_properties_set_static for prop in result["built_ins"]
     ), "All built-in properties should be in the built-in properties set."

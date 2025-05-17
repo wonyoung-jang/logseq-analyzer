@@ -29,10 +29,4 @@ def test_report_writer_init(report_writer):
         "key3": ["list_item1", "list_item2"],
         "key4": {"set_item1", "set_item2"},
     }
-    assert report_writer.output_subdir == "test"
-
-
-def test_representation(report_writer):
-    """Test the string representation of ReportWriter."""
-    assert repr(report_writer) == "ReportWriter(filename_prefix=test_report, items=data, output_subdir=test)"
-    assert str(report_writer) == "ReportWriter: test_report, Items: data, Output Subdir: test"
+    assert report_writer.subdir == "test"
