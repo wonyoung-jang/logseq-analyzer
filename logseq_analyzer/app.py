@@ -18,7 +18,7 @@ from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
 from .config.graph_config import LogseqGraphConfig
 from .io.cache import Cache
-from .io.file_mover import LogseqFileMover, handle_move_directory, handle_move_assets
+from .io.file_mover import handle_move_directory, handle_move_assets
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,
@@ -235,9 +235,8 @@ def setup_logseq_assets() -> LogseqAssets:
     return lsa
 
 
-def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
+def setup_logseq_file_mover(args: Args) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    lfm = LogseqFileMover()
     dbd = DeleteBakDirectory()
     bd = BakDirectory()
     drd = DeleteRecycleDirectory()
@@ -249,9 +248,8 @@ def setup_logseq_file_mover(args: Args) -> LogseqFileMover:
     moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path, not_backlinked)
     moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd.path, bd.path)
     moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd.path, rd.path)
-    lfm.moved_files = moved_files
     logging.debug("run_app: setup_logseq_file_mover")
-    return lfm
+    return moved_files
 
 
 def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[str, Any]:
@@ -324,11 +322,11 @@ def get_namespace_reports(ln: LogseqNamespaces) -> dict[str, Any]:
     }
 
 
-def get_moved_files_reports(lfm: LogseqFileMover, la: LogseqAssets, lah: LogseqAssetsHls) -> dict[str, Any]:
+def get_moved_files_reports(moved_files: dict[str, Any], la: LogseqAssets, lah: LogseqAssetsHls) -> dict[str, Any]:
     """Get reports for moved files and assets."""
     logging.debug("run_app: get_moved_files_reports")
     return {
-        Output.MOVED_FILES.value: lfm.moved_files,
+        Output.MOVED_FILES.value: moved_files,
         Output.ASSETS_BACKLINKED.value: la.backlinked,
         Output.ASSETS_NOT_BACKLINKED.value: la.not_backlinked,
         Output.HLS_ASSET_MAPPING.value: lah.asset_mapping,
@@ -420,13 +418,13 @@ def run_app(**kwargs) -> None:
     ls_assets = setup_logseq_assets()
     progress(85)
     # Move files
-    ls_file_mover = setup_logseq_file_mover(args)
+    moved_files = setup_logseq_file_mover(args)
     progress(90)
     # Output writing
     meta_reports = get_meta_reports(graph, graph_config, args)
     journal_reports = get_journal_reports(graph_journals)
     namespace_reports = get_namespace_reports(graph_namespaces)
-    moved_files_reports = get_moved_files_reports(ls_file_mover, ls_assets, hls_assets)
+    moved_files_reports = get_moved_files_reports(moved_files, ls_assets, hls_assets)
     output_subdirectories = get_output_subdirs()
     data_reports = [
         journal_reports,

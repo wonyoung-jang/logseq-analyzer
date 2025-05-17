@@ -7,22 +7,6 @@ import shutil
 from pathlib import Path
 
 from ..logseq_file.file import LogseqFile
-from ..utils.helpers import singleton
-
-
-@singleton
-class LogseqFileMover:
-    """
-    Class to handle moving files in a Logseq graph directory.
-    """
-
-    __slots__ = ("moved_files",)
-
-    def __init__(self) -> None:
-        """
-        Initialize the LogseqFileMover class.
-        """
-        self.moved_files = {}
 
 
 def handle_move_assets(argument: bool, delete_assets_dir: Path, not_backlinked: list[LogseqFile]) -> list[str]:
