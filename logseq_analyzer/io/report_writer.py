@@ -15,41 +15,41 @@ from .filesystem import OutputDirectory
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    __slots__ = ("filename_prefix", "items", "subdir")
+    __slots__ = ("prefix", "data", "subdir")
 
     lac = LogseqAnalyzerConfig()
     od = OutputDirectory()
 
-    def __init__(self, filename_prefix: str, items: Any, subdir: str = "") -> None:
+    def __init__(self, prefix: str, data: Any, subdir: str = "") -> None:
         """
         Initialize the ReportWriter class.
 
         Args:
-            filename_prefix (str): The prefix for the output filename.
-            items (Any): The data to be written to the file.
+            prefix (str): The prefix for the output filename.
+            data (Any): The data to be written to the file.
             subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
         """
-        self.filename_prefix = filename_prefix
-        self.items = items
+        self.prefix = prefix
+        self.data = data
         self.subdir = subdir
 
     def __repr__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter(filename_prefix={self.filename_prefix}, items=data, subdir={self.subdir})"
+        return f"ReportWriter(prefix={self.prefix}, items=data, subdir={self.subdir})"
 
     def __str__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter: {self.filename_prefix}, Items: data, Output Subdir: {self.subdir}"
+        return f"ReportWriter: {self.prefix}, Items: data, Output Subdir: {self.subdir}"
 
     def write(self) -> None:
         """
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
         ext = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
-        prefix = self.filename_prefix
+        prefix = self.prefix
         logging.info("Writing %s as %s", prefix, ext)
-        items = self.items
-        count = len(items) if hasattr(items, "__len__") else None
+        data = self.data
+        count = len(data) if hasattr(data, "__len__") else None
         filename = f"{prefix}{ext}" if count else f"___EMPTY___{prefix}{ext}"
         out_path = self.get_output_path(filename)
 
@@ -57,7 +57,7 @@ class ReportWriter:
         if ext == Format.JSON.value:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
-                    json.dump(items, f, indent=4)
+                    json.dump(data, f, indent=4)
                 return
             except TypeError:
                 logging.error("Failed to write JSON for %s, falling back to TXT.", prefix)
@@ -75,9 +75,9 @@ class ReportWriter:
                 f.write("</head>\n<body>\n")
                 f.write(f"<h1>{prefix}</h1>\n")
                 if count is not None:
-                    f.write(f"<p>Items: {count}</p>\n")
+                    f.write(f"<p>Count: {count}</p>\n")
                 # Recursive content
-                ReportWriter.write_html_recursive(f, items)
+                ReportWriter.write_html_recursive(f, data)
                 f.write("</body>\n</html>\n")
 
         # Handle TXT and MD format and fallback
@@ -85,9 +85,9 @@ class ReportWriter:
             with out_path.open("w", encoding="utf-8") as f:
                 if count is not None:
                     f.write(f"{filename}\n")
-                    f.write(f"Items: {count}\n")
-                    f.write(f"Type: {type(items)}\n\n")
-                ReportWriter.write_recursive(f, items)
+                    f.write(f"Count: {count}\n")
+                    f.write(f"Type: {type(data)}\n\n")
+                ReportWriter.write_recursive(f, data)
 
         if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
             logging.error("Unsupported output format: %s. Defaulted to text.", ext)

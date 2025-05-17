@@ -43,25 +43,25 @@ class LogseqFilename:
         self.parts = path.parts
         self.uri = path.as_uri()
 
-    def process_logseq_filename(self) -> str:
+    def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
         lac = LogseqAnalyzerConfig()
         ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
         name = self.name.strip(ns_file_sep)
         if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
-            return LogseqFilename._process_logseq_journal_key(name)
-        name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
-        return name
+            self.name = LogseqFilename._process_logseq_journal_key(name)
+        else:
+            self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
-    def check_is_namespace(self) -> bool:
+    def check_is_namespace(self) -> None:
         """Check if the filename is a namespace."""
-        return Core.NS_SEP.value in self.name
+        self.is_namespace = Core.NS_SEP.value in self.name
 
-    def check_is_hls(self) -> bool:
+    def check_is_hls(self) -> None:
         """Check if the filename is a HLS (Hierarchical Logseq Structure)."""
-        return self.name.startswith(Core.HLS_PREFIX.value)
+        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
 
-    def convert_uri_to_logseq_url(self) -> str:
+    def convert_uri_to_logseq_url(self) -> None:
         """Convert a file URI to a Logseq URL."""
         uri = self.uri
         uri_path = Path(uri)
@@ -70,20 +70,15 @@ class LogseqFilename:
         len_uri = len(uri_path.parts)
         target_index = len_uri - len_gd
         target_segment = uri_path.parts[target_index]
-
-        if target_segment[:-1] not in ("page", "block-id"):
-            return ""
-
-        prefix = f"file:///{str(gd.path)}/{target_segment}/"
-        if not uri.startswith(prefix):
-            return ""
-
-        len_suffix = len(uri_path.suffix)
-        path_without_prefix = uri[len(prefix) : -(len_suffix)]
-        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
-        encoded_path = path_with_slashes
-        target_segment = target_segment[:-1]
-        return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+        if target_segment[:-1] in ("page", "block-id"):
+            prefix = f"file:///{str(gd.path)}/{target_segment}/"
+            if uri.startswith(prefix):
+                len_suffix = len(uri_path.suffix)
+                path_without_prefix = uri[len(prefix) : -(len_suffix)]
+                path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
+                encoded_path = path_with_slashes
+                target_segment = target_segment[:-1]
+                self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
 
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
@@ -103,7 +98,7 @@ class LogseqFilename:
             if value:
                 setattr(self, key, value)
 
-    def determine_file_type(self) -> str:
+    def determine_file_type(self) -> None:
         """
         Helper function to determine the file type based on the directory structure.
         """
@@ -118,20 +113,20 @@ class LogseqFilename:
         }.get(self.parent, "other")
 
         if result != "other":
-            return result
-
-        parts = self.parts
-        if config["DIR_ASSETS"] in parts:
-            result = "sub_asset"
-        elif config["DIR_DRAWS"] in parts:
-            result = "sub_draw"
-        elif config["DIR_JOURNALS"] in parts:
-            result = "sub_journal"
-        elif config["DIR_PAGES"] in parts:
-            result = "sub_page"
-        elif config["DIR_WHITEBOARDS"] in parts:
-            result = "sub_whiteboard"
-        return result
+            self.file_type = result
+        else:
+            parts = self.parts
+            if config["DIR_ASSETS"] in parts:
+                result = "sub_asset"
+            elif config["DIR_DRAWS"] in parts:
+                result = "sub_draw"
+            elif config["DIR_JOURNALS"] in parts:
+                result = "sub_journal"
+            elif config["DIR_PAGES"] in parts:
+                result = "sub_page"
+            elif config["DIR_WHITEBOARDS"] in parts:
+                result = "sub_whiteboard"
+            self.file_type = result
 
     @staticmethod
     def _process_logseq_journal_key(name: str) -> str:

@@ -38,25 +38,23 @@ class LogseqBullets:
         self.bullet_density = 0.0
         self.has_page_properties = False
 
-    def get_content(self) -> str:
+    def get_content(self) -> None:
         """Read the text content of a file."""
         try:
-            return self.file_path.read_text(encoding="utf-8")
+            self.content = self.file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
-            return ""
 
-    def get_char_count(self) -> int:
+    def get_char_count(self) -> None:
         """Get character count of content"""
-        return len(self.content)
+        self.char_count = len(self.content)
 
-    def get_bullet_content(self) -> list[str]:
+    def get_bullet_content(self) -> None:
         """Get all bullets split into a list"""
-        if not self.content:
-            return []
-        return ContentPatterns.bullet.split(self.content)
+        if self.content:
+            self.all_bullets = ContentPatterns.bullet.split(self.content)
 
-    def get_primary_bullet(self) -> str:
+    def get_primary_bullet(self) -> None:
         """Get the Logseq primary bullet if available"""
         primary = ""
         all_bullets = self.all_bullets
@@ -79,17 +77,15 @@ class LogseqBullets:
         self.bullet_count = bullet_count
         self.bullet_count_empty = bullet_count_empty
         self.content_bullets = content_bullets
-        return primary
+        self.primary_bullet = primary
 
-    def get_bullet_density(self) -> float:
+    def get_bullet_density(self) -> None:
         """Calculate bullet density: ~Char count / Bullet count"""
-        if not self.bullet_count:
-            return 0
-        return round(self.char_count / self.bullet_count, 2)
+        if self.bullet_count:
+            self.bullet_density = round(self.char_count / self.bullet_count, 2)
 
-    def is_primary_bullet_page_properties(self) -> bool:
+    def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""
         bullet = self.primary_bullet.strip()
         if bullet and not bullet.startswith("#"):
-            return True
-        return False
+            self.has_page_properties = True

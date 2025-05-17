@@ -66,9 +66,8 @@ def setup_logseq_arguments(**kwargs) -> Args:
 
 def init_logseq_paths() -> LogFile:
     """Setup Logseq paths for the analyzer."""
-    od = OutputDirectory()
+    OutputDirectory().initialize_dir()
     lf = LogFile()
-    od.initialize_dir()
     lf.initialize_file()
     return lf
 
@@ -100,22 +99,14 @@ def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
 
 def setup_logseq_paths() -> None:
     """Setup Logseq paths for the analyzer."""
-    gd = GraphDirectory()
-    ld = LogseqDirectory()
-    gd.validate()
-    ld.validate()
-    dd = DeleteDirectory()
-    dd.get_or_create_dir()
-    dbd = DeleteBakDirectory()
-    drd = DeleteRecycleDirectory()
-    dad = DeleteAssetsDirectory()
-    dbd.get_or_create_dir()
-    drd.get_or_create_dir()
-    dad.get_or_create_dir()
-    bd = BakDirectory()
-    rd = RecycleDirectory()
-    bd.get_or_create_dir()
-    rd.get_or_create_dir()
+    GraphDirectory().validate()
+    LogseqDirectory().validate()
+    DeleteDirectory().get_or_create_dir()
+    DeleteBakDirectory().get_or_create_dir()
+    DeleteRecycleDirectory().get_or_create_dir()
+    DeleteAssetsDirectory().get_or_create_dir()
+    BakDirectory().get_or_create_dir()
+    RecycleDirectory().get_or_create_dir()
     logging.debug("run_app: setup_logseq_paths")
 
 
@@ -137,16 +128,11 @@ def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
 def setup_target_dirs(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     lac.set_logseq_config_edn_data(lgc.config_merged)
-    ad = AssetsDirectory()
-    dd = DrawsDirectory()
-    jd = JournalsDirectory()
-    pd = PagesDirectory()
-    wd = WhiteboardsDirectory()
-    ad.get_or_create_dir()
-    dd.get_or_create_dir()
-    jd.get_or_create_dir()
-    pd.get_or_create_dir()
-    wd.get_or_create_dir()
+    AssetsDirectory().get_or_create_dir()
+    DrawsDirectory().get_or_create_dir()
+    JournalsDirectory().get_or_create_dir()
+    PagesDirectory().get_or_create_dir()
+    WhiteboardsDirectory().get_or_create_dir()
     lac.target_dirs = lac.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
@@ -369,11 +355,11 @@ def update_cache(c: Cache, output_subdirs: list[str], data_reports: list[Any]) -
 
 def write_reports(c: Cache) -> None:
     """Write reports to the specified output directories."""
-    for output_dir, reports in c.cache.items():
-        if output_dir in (Output.MOD_TRACKER.value):
+    for subdir, reports in c.cache.items():
+        if subdir in (Output.MOD_TRACKER.value):
             continue
-        for name, report in reports.items():
-            ReportWriter(name, report, output_dir).write()
+        for prefix, data in reports.items():
+            ReportWriter(prefix, data, subdir).write()
     logging.debug("run_app: write_reports")
 
 
