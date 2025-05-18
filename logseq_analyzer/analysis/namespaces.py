@@ -16,7 +16,7 @@ Problems:
 
 import logging
 from collections import Counter, defaultdict
-from typing import Any, Literal
+from typing import Any
 
 from ..utils.enums import Core
 from ..utils.helpers import singleton, sort_dict_by_value

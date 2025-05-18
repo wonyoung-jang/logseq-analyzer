@@ -11,20 +11,6 @@ from ..utils.patterns import ContentPatterns
 class LogseqBullets:
     """LogseqBullets class."""
 
-    __slots__ = (
-        "file_path",
-        "content",
-        "primary_bullet",
-        "all_bullets",
-        "content_bullets",
-        "char_count",
-        "bullet_count",
-        "bullet_count_empty",
-        "bullet_density",
-        "has_page_properties",
-        "__dict__",
-    )
-
     def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
         self.file_path = file_path
@@ -37,18 +23,6 @@ class LogseqBullets:
         self.bullet_count_empty = 0
         self.bullet_density = 0.0
         self.has_page_properties = False
-        self.__dict__ = {
-            "file_path": self.file_path,
-            "content": self.content,
-            "primary_bullet": self.primary_bullet,
-            "all_bullets": self.all_bullets,
-            "content_bullets": self.content_bullets,
-            "char_count": self.char_count,
-            "bullet_count": self.bullet_count,
-            "bullet_count_empty": self.bullet_count_empty,
-            "bullet_density": self.bullet_density,
-            "has_page_properties": self.has_page_properties,
-        }
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqBullets object."""

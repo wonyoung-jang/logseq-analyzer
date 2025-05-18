@@ -19,20 +19,6 @@ DATE_ORDINAL_SUFFIX = "o"
 class LogseqFilename:
     """LogseqFilename class."""
 
-    __slots__ = (
-        "file_path",
-        "name",
-        "parent",
-        "suffix",
-        "parts",
-        "uri",
-        "logseq_url",
-        "file_type",
-        "is_namespace",
-        "is_hls",
-        "__dict__",
-    )
-
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
         self.file_path = file_path
@@ -45,18 +31,6 @@ class LogseqFilename:
         self.file_type = ""
         self.is_namespace = False
         self.is_hls = False
-        self.__dict__ = {
-            "file_path": self.file_path,
-            "name": self.name,
-            "parent": self.parent,
-            "suffix": self.suffix,
-            "parts": self.parts,
-            "uri": self.uri,
-            "logseq_url": self.logseq_url,
-            "file_type": self.file_type,
-            "is_namespace": self.is_namespace,
-            "is_hls": self.is_hls,
-        }
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""

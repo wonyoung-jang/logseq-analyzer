@@ -10,17 +10,6 @@ from pathlib import Path
 class LogseqFilestats:
     """LogseqFilestats class."""
 
-    __slots__ = (
-        "file_path",
-        "size",
-        "has_content",
-        "time_existed",
-        "time_unmodified",
-        "date_created",
-        "date_modified",
-        "__dict__",
-    )
-
     def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set file statistics attributes."""
 
@@ -44,15 +33,6 @@ class LogseqFilestats:
         self.time_unmodified = _now.timestamp() - _modified_ts
         self.date_created = datetime.fromtimestamp(_created_ts).isoformat()
         self.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
-        self.__dict__ = {
-            "file_path": self.file_path,
-            "size": self.size,
-            "has_content": self.has_content,
-            "time_existed": self.time_existed,
-            "time_unmodified": self.time_unmodified,
-            "date_created": self.date_created,
-            "date_modified": self.date_modified,
-        }
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilestats object."""

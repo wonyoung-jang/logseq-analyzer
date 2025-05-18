@@ -6,8 +6,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Generator, Literal, Optional
 
+from ..analysis.index import FileIndex, get_attribute_list
 from ..config.datetime_tokens import LogseqJournalFormats
-from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
 from .graph import LogseqGraph
 from .summary_files import LogseqFileSummarizer
@@ -28,6 +28,8 @@ class LogseqJournals:
         "dangling_journals_past",
         "dangling_journals_future",
     )
+
+    index = FileIndex()
 
     def __init__(self) -> None:
         """Initialize the LogseqJournals class."""
@@ -57,24 +59,20 @@ class LogseqJournals:
         py_page_base_format = ljf.page
         graph = LogseqGraph()
         dangling_links = graph.dangling_links
-        dangling_journals = []
-        for dateobj in LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format):
-            dangling_journals.append(dateobj)
+        dangling_journals = list(LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         dangling_journals.sort()
-
-        summaries = LogseqFileSummarizer()
-        journal_keys = summaries.subsets.get(SummaryFiles.FILETYPE_JOURNAL.value, [])
-        processed_keys = []
-        for dateobj in LogseqJournals._process_journal_keys_to_datetime(journal_keys, py_page_base_format):
-            processed_keys.append(dateobj)
+        index = LogseqJournals.index
+        criteria = {"file_type": "journal"}
+        j_keys = index.yield_files_with_keys_and_values(**criteria)
+        journal_keys = get_attribute_list(j_keys, "name")
+        processed_keys = list(LogseqJournals._process_journal_keys_to_datetime(journal_keys, py_page_base_format))
         processed_keys.sort()
 
         self.dangling_journals = dangling_journals
         self.processed_keys = processed_keys
-        complete_timeline = self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = _get_date_stats(complete_timeline)
+        self.build_complete_timeline()
+        self.timeline_stats["complete_timeline"] = _get_date_stats(self.complete_timeline)
         self.timeline_stats["dangling_journals"] = _get_date_stats(dangling_journals)
-        self.complete_timeline = complete_timeline
         self.get_dangling_journals_outside_range()
 
     @staticmethod
@@ -92,7 +90,7 @@ class LogseqJournals:
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
-    def build_complete_timeline(self) -> list[datetime]:
+    def build_complete_timeline(self) -> None:
         """
         Build a complete timeline of journal entries, filling in any missing dates.
         """
@@ -120,7 +118,7 @@ class LogseqJournals:
 
         self.dangling_journals = dangling_journals
         self.missing_keys = missing_keys
-        return complete_timeline
+        self.complete_timeline = complete_timeline
 
     def get_dangling_journals_outside_range(self) -> None:
         """

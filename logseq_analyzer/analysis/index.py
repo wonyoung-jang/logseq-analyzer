@@ -5,13 +5,13 @@ FileIndex class.
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Generator, Iterator, Literal
+from typing import Any, Generator, Iterator, Literal
 
 from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
-def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[str | int]:
+def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
