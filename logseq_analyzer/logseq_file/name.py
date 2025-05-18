@@ -58,6 +58,14 @@ class LogseqFilename:
             "is_hls": self.is_hls,
         }
 
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqFilename object."""
+        return f"{self.__class__.__qualname__}({self.file_path})"
+
+    def __str__(self) -> str:
+        """Return a user-friendly string representation of the LogseqFilename object."""
+        return f"{self.__class__.__qualname__}: {self.file_path}"
+
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
         lac = LogseqAnalyzerConfig()

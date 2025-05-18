@@ -50,6 +50,14 @@ class LogseqBullets:
             "has_page_properties": self.has_page_properties,
         }
 
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqBullets object."""
+        return f"{self.__class__.__qualname__}({self.file_path})"
+
+    def __str__(self) -> str:
+        """Return a user-friendly string representation of the LogseqBullets object."""
+        return f"{self.__class__.__qualname__}: {self.file_path}"
+
     def get_content(self) -> None:
         """Read the text content of a file."""
         try:

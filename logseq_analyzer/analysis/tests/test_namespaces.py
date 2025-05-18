@@ -18,6 +18,7 @@ def test_singleton(logseq_namespaces):
     another_instance = LogseqNamespaces()
     assert logseq_namespaces is another_instance
 
+
 def test_len(logseq_namespaces):
     """Test length of unique namespace parts."""
     assert len(logseq_namespaces) == 0

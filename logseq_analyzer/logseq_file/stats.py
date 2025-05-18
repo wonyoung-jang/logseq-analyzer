@@ -53,3 +53,11 @@ class LogseqFilestats:
             "date_created": self.date_created,
             "date_modified": self.date_modified,
         }
+
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqFilestats object."""
+        return f"{self.__class__.__qualname__}({self.file_path})"
+
+    def __str__(self) -> str:
+        """Return a user-friendly string representation of the LogseqFilestats object."""
+        return f"{self.__class__.__qualname__}: {self.file_path}"
