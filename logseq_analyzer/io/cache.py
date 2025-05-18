@@ -1,7 +1,5 @@
 """
 This module handles caching mechanisms for the application.
-
-Imported once in app.py
 """
 
 import logging

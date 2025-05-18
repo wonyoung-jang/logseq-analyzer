@@ -3,24 +3,46 @@ LogseqAnalyzerArguments Class
 """
 
 import argparse
-from dataclasses import dataclass
 
 from ..utils.helpers import singleton
 
 
 @singleton
-@dataclass
 class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
-    graph_folder: str = ""
-    global_config: str = ""
-    move_unlinked_assets: bool = False
-    move_bak: bool = False
-    move_recycle: bool = False
-    write_graph: bool = False
-    graph_cache: bool = False
-    report_format: str = ".txt"
+    __slots__ = (
+        "graph_folder",
+        "global_config",
+        "move_unlinked_assets",
+        "move_bak",
+        "move_recycle",
+        "write_graph",
+        "graph_cache",
+        "report_format",
+        "__dict__",
+    )
+
+    def __init__(self) -> None:
+        """Initialize the Args class with default values."""
+        self.graph_folder: str = ""
+        self.global_config: str = ""
+        self.move_unlinked_assets: bool = False
+        self.move_bak: bool = False
+        self.move_recycle: bool = False
+        self.write_graph: bool = False
+        self.graph_cache: bool = False
+        self.report_format: str = ".txt"
+        self.__dict__ = {
+            "graph_folder": self.graph_folder,
+            "global_config": self.global_config,
+            "move_unlinked_assets": self.move_unlinked_assets,
+            "move_bak": self.move_bak,
+            "move_recycle": self.move_recycle,
+            "write_graph": self.write_graph,
+            "graph_cache": self.graph_cache,
+            "report_format": self.report_format,
+        }
 
     def setup_args(self, **kwargs) -> None:
         """Set up command line arguments and GUI arguments."""

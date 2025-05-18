@@ -16,7 +16,6 @@ Problems:
 
 import logging
 from collections import Counter, defaultdict
-from os import name
 from typing import Any, Literal
 
 from ..utils.enums import Core
@@ -67,14 +66,6 @@ class LogseqNamespaces:
         self.conflicts_dangling: dict[str, list[str]] = {}
         self.conflicts_parent_depth: dict[str, list[str]] = {}
         self.conflicts_parent_unique: dict[str, set[str]] = {}
-
-    def __repr__(self) -> Literal["LogseqNamespaces()"]:
-        """Return a string representation of the NamespaceAnalyzer instance."""
-        return "LogseqNamespaces()"
-
-    def __str__(self) -> Literal["LogseqNamespaces"]:
-        """Return a string representation of the NamespaceAnalyzer instance."""
-        return "LogseqNamespaces"
 
     def __len__(self) -> int:
         """Return the number of unique namespace parts."""

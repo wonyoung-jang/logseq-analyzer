@@ -4,7 +4,6 @@ Process logseq journals.
 
 import logging
 from datetime import datetime, timedelta
-from multiprocessing import process
 from typing import Any, Generator, Literal, Optional
 
 from ..config.datetime_tokens import LogseqJournalFormats

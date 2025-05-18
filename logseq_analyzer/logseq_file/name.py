@@ -3,7 +3,6 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -17,31 +16,47 @@ from ..utils.enums import Core
 DATE_ORDINAL_SUFFIX = "o"
 
 
-@dataclass
 class LogseqFilename:
-    """
-    LogseqFilename class.
-    """
+    """LogseqFilename class."""
 
-    file_path: Path
-    name: str = field(init=False, repr=False)
-    parent: str = field(init=False, repr=False)
-    suffix: str = field(init=False, repr=False)
-    parts: tuple = field(init=False, repr=False)
-    uri: str = field(init=False, repr=False)
-    logseq_url: str = field(init=False, repr=False)
-    file_type: str = field(init=False, repr=False)
-    is_namespace: bool = field(init=False, repr=False)
-    is_hls: bool = field(init=False, repr=False)
+    __slots__ = (
+        "file_path",
+        "name",
+        "parent",
+        "suffix",
+        "parts",
+        "uri",
+        "logseq_url",
+        "file_type",
+        "is_namespace",
+        "is_hls",
+        "__dict__",
+    )
 
-    def __post_init__(self) -> None:
+    def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
-        path = self.file_path
-        self.name = path.stem
-        self.parent = path.parent.name
-        self.suffix = path.suffix if path.suffix else ""
-        self.parts = path.parts
-        self.uri = path.as_uri()
+        self.file_path = file_path
+        self.name = file_path.stem
+        self.parent = file_path.parent.name
+        self.suffix = file_path.suffix if file_path.suffix else ""
+        self.parts = file_path.parts
+        self.uri = file_path.as_uri()
+        self.logseq_url = ""
+        self.file_type = ""
+        self.is_namespace = False
+        self.is_hls = False
+        self.__dict__ = {
+            "file_path": self.file_path,
+            "name": self.name,
+            "parent": self.parent,
+            "suffix": self.suffix,
+            "parts": self.parts,
+            "uri": self.uri,
+            "logseq_url": self.logseq_url,
+            "file_type": self.file_type,
+            "is_namespace": self.is_namespace,
+            "is_hls": self.is_hls,
+        }
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""

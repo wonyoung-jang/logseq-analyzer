@@ -3,6 +3,7 @@ LogseqFile class to process Logseq files.
 """
 
 import uuid
+from re import Pattern
 from pathlib import Path
 from typing import Any
 
@@ -178,7 +179,7 @@ class LogseqFile:
         Args:
             pattern: The pattern to find and process.
         """
-        all_pattern = getattr(pattern, "all", None)
+        all_pattern: Pattern = getattr(pattern, "all", None)
         results = all_pattern.findall(self.bullets.content)
         return pattern.process(results)
 

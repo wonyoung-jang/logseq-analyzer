@@ -268,11 +268,13 @@ def get_graph_data(index: FileIndex) -> dict[LogseqFile, dict[str, Any]]:
     for file in index:
         data = {k: v for k, v in file.__dict__.items() if k not in ("content", "content_bullets", "primary_bullet")}
         graph_data[file] = data
+    logging.debug("run_app: get_graph_data")
     return graph_data
 
 
 def get_graph_content(index: FileIndex) -> dict[LogseqFile, list[str]]:
     """Get graph content."""
+    logging.debug("run_app: get_graph_content")
     return {file: file.bullets.all_bullets for file in index}
 
 
@@ -344,8 +346,8 @@ def get_output_subdirs() -> list[str]:
 def update_cache(c: Cache, output_subdirs: list[str], data_reports: list[Any]) -> None:
     """Update the cache with the output data."""
     try:
-        shelve_output_data = zip(output_subdirs, data_reports)
-        for output_subdir, data_report in shelve_output_data:
+        data_to_shelve = zip(output_subdirs, data_reports)
+        for output_subdir, data_report in data_to_shelve:
             c.update({output_subdir: data_report})
     except Exception as e:
         logging.error("Error updating cache: %s", e)

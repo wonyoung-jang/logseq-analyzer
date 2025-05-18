@@ -113,63 +113,59 @@ class ReportWriter:
         """
         Write nested dictionaries to a file with indentation.
         """
-        for k, v in data.items():
-            if isinstance(v, (list, set, dict)):
-                f.write(f"{indent}{k}:\n")
-                ReportWriter.write_recursive(f, v, indent_level + 1)
+        for key, values in data.items():
+            if isinstance(values, (list, set, dict)):
+                f.write(f"{indent}{key}:\n")
+                ReportWriter.write_recursive(f, values, indent_level + 1)
             else:
-                f.write(f"{indent}{k:<60}: {v}\n")
+                f.write(f"{indent}{key:<60}: {values}\n")
 
     @staticmethod
-    def write_nested_collection(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
+    def write_nested_collection(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
         """
         Write collections (lists, sets) to a file with indentation.
         """
-        try:
-            for index, item in enumerate(sorted(data), 1):
-                if isinstance(item, (list, set, dict)):
-                    f.write(f"{indent}{index}:\n")
-                    ReportWriter.write_recursive(f, item, indent_level + 1)
-                else:
-                    f.write(f"{indent}{index}\t|\t{item}\n")
-        except TypeError:
-            for index, item in enumerate(data, 1):
+        for index, item in enumerate(data, 1):
+            if isinstance(item, (list, set, dict)):
+                f.write(f"{indent}{index}:\n")
+                ReportWriter.write_recursive(f, item, indent_level + 1)
+            else:
                 f.write(f"{indent}{index}\t|\t{item}\n")
 
     @staticmethod
-    def write_nested_other(f: TextIO, data: dict, indent: str) -> None:
+    def write_nested_other(f: TextIO, data: Any, indent: str) -> None:
         """
         Write other types of data to a file with indentation.
         """
         f.write(f"{indent}{data}\n")
 
     @staticmethod
-    def write_values_is_dict(f: TextIO, values: dict, indent: str, indent_level: int = 0) -> None:
+    def write_values_is_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
         """
         Write values of a dictionary to a file with indentation.
         """
-        for k, v in values.items():
-            if not isinstance(v, (list, set, dict)):
-                f.write(f"{indent}\t{k:<60}: {v}\n")
+        for key, values in data.items():
+            if not isinstance(values, (list, set, dict)):
+                f.write(f"{indent}\t{key:<60}: {values}\n")
             else:
-                f.write(f"{indent}\t{k:<60}:\n")
-                ReportWriter.write_recursive(f, v, indent_level + 2)
+                f.write(f"{indent}\t{key:<60}:\n")
+                ReportWriter.write_recursive(f, values, indent_level + 2)
         f.write("\n")
 
     @staticmethod
-    def write_values_is_collection(f: TextIO, values: dict, indent: str) -> None:
+    def write_values_is_collection(f: TextIO, values: Any, indent: str) -> None:
         """
-        Write values of a dictionary to a file with indentation.
+        Write values of a collection to a file with indentation.
         """
         f.write(f"{indent}Values ({len(values)}):\n")
-        for index, value in enumerate(sorted(values), 1):
+        for index, value in enumerate(values, 1):
             f.write(f"{indent}\t{index}\t|\t{value}\n")
         f.write("\n")
 
     @staticmethod
-    def write_values_is_other(f: TextIO, values: dict, indent: str) -> None:
+    def write_values_is_other(f: TextIO, values: Any, indent: str) -> None:
         """
-        Write values of a dictionary to a file with indentation.
+        Write values to a file with indentation.
         """
         f.write(f"{indent}Value: {values}\n\n")
 

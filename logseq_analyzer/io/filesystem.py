@@ -29,13 +29,11 @@ class File:
         """Return a string representation of the File object."""
         return f"File: {str(self.path)}"
 
-    # Getter for path property
     @property
     def path(self) -> Path:
         """Get the path of the file."""
         return self._path
 
-    # Setter for path property
     @path.setter
     def path(self, value: str | Path) -> None:
         """Set the path of the file."""

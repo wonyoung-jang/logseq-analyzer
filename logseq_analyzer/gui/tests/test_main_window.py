@@ -65,7 +65,7 @@ def test_main_window_controls(main_window):
     assert main_window.move_recycle_checkbox is not None
     assert main_window.write_graph_checkbox is not None
     assert main_window.graph_cache_checkbox is not None
-    assert main_window.setup_progress_bar is not None
+    assert main_window.progress_bar is not None
     assert main_window.run_button is not None
     assert main_window.output_button is not None
     assert main_window.delete_button is not None

@@ -67,7 +67,7 @@ class LogseqGraph:
         index = LogseqGraph.index
         for file in index:
             if file.path.is_namespace:
-                ns_refs = self.post_processing_content_namespaces(file, index)
+                ns_refs = self._post_processing_content_namespaces(file, index)
                 unique_linked_references_ns.update(ns_refs)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
@@ -97,13 +97,13 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
         all_file_names = (file.path.name for file in index)
-        dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
+        dangling_links = self._process_dangling_links(all_file_names, unique_aliases)
         all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
         self.dangling_links = dangling_links
         self.all_linked_references = all_linked_references
         self.all_dangling_links = all_dangling_links
 
-    def post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> tuple[str, str]:
+    def _post_processing_content_namespaces(self, file: LogseqFile, index: FileIndex) -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         ns_level = getattr(file, "ns_level")
         ns_root = getattr(file, "ns_root")
@@ -148,7 +148,7 @@ class LogseqGraph:
             if file.file_type in ("journal", "page"):
                 file.node_type = file.determine_node_type()
 
-    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> set:
+    def _process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> set:
         """Process dangling links in the graph."""
         unique_linked_references = self.unique_linked_references
         unique_linked_references_ns = self.unique_linked_references_ns

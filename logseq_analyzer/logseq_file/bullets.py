@@ -3,31 +3,31 @@ Module for LogseqBullets class
 """
 
 import logging
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..utils.patterns import ContentPatterns
 
 
-@dataclass
 class LogseqBullets:
-    """
-    LogseqBullets class.
-    """
+    """LogseqBullets class."""
 
-    file_path: Path
-    content: str = field(init=False, repr=False)
-    primary_bullet: str = field(init=False, repr=False)
-    all_bullets: list[str] = field(init=False, repr=False)
-    content_bullets: list[str] = field(init=False, repr=False)
-    char_count: int = field(init=False, repr=False)
-    bullet_count: int = field(init=False, repr=False)
-    bullet_count_empty: int = field(init=False, repr=False)
-    bullet_density: float = field(init=False, repr=False)
-    has_page_properties: bool = field(init=False, repr=False)
+    __slots__ = (
+        "file_path",
+        "content",
+        "primary_bullet",
+        "all_bullets",
+        "content_bullets",
+        "char_count",
+        "bullet_count",
+        "bullet_count_empty",
+        "bullet_density",
+        "has_page_properties",
+        "__dict__",
+    )
 
-    def __post_init__(self) -> None:
+    def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
+        self.file_path = file_path
         self.content = ""
         self.primary_bullet = ""
         self.all_bullets = []
@@ -37,6 +37,18 @@ class LogseqBullets:
         self.bullet_count_empty = 0
         self.bullet_density = 0.0
         self.has_page_properties = False
+        self.__dict__ = {
+            "file_path": self.file_path,
+            "content": self.content,
+            "primary_bullet": self.primary_bullet,
+            "all_bullets": self.all_bullets,
+            "content_bullets": self.content_bullets,
+            "char_count": self.char_count,
+            "bullet_count": self.bullet_count,
+            "bullet_count_empty": self.bullet_count_empty,
+            "bullet_density": self.bullet_density,
+            "has_page_properties": self.has_page_properties,
+        }
 
     def get_content(self) -> None:
         """Read the text content of a file."""

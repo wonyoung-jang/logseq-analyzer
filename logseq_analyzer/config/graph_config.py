@@ -2,6 +2,7 @@
 Logseq Graph Class
 """
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -166,6 +167,7 @@ class LogseqGraphConfig:
         """
         with cf_path.open("r", encoding="utf-8") as user_config:
             self.config_user = loads(user_config.read())
+            logging.debug("Initialized user config: %s", user_config)
 
     def initialize_global_config_edn(self, gcf_path: Path) -> None:
         """
@@ -176,12 +178,12 @@ class LogseqGraphConfig:
         """
         with gcf_path.open("r", encoding="utf-8") as global_config:
             self.config_global = loads(global_config.read())
+            logging.debug("Initialized global config: %s", global_config)
 
     def merge(self) -> None:
-        """
-        Merge default, user, and global config.
-        """
+        """Merge default, user, and global config."""
         config = DEFAULT_LOGSEQ_CONFIG_EDN
         config.update(self.config_user)
         config.update(self.config_global)
         self.config_merged = config
+        logging.debug("Merged config: length - %s", len(self.config_merged))
