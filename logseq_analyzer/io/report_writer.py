@@ -58,7 +58,6 @@ class ReportWriter:
             try:
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4)
-                return
             except TypeError:
                 logging.error("Failed to write JSON for %s, falling back to TXT.", prefix)
 

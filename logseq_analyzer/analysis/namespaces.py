@@ -21,7 +21,6 @@ from typing import Any
 from ..utils.enums import Core
 from ..utils.helpers import singleton, sort_dict_by_value
 from ..utils.patterns import ContentPatterns
-from .graph import LogseqGraph
 from .index import FileIndex, get_attribute_list
 
 
@@ -47,8 +46,6 @@ class LogseqNamespaces:
         "conflicts_parent_unique",
     )
 
-    index = FileIndex()
-
     def __init__(self) -> None:
         """
         Initialize the NamespaceAnalyzer instance.
@@ -71,11 +68,10 @@ class LogseqNamespaces:
         """Return the number of unique namespace parts."""
         return len(self.namespace_data)
 
-    def init_ns_parts(self) -> None:
+    def init_ns_parts(self, index: FileIndex) -> None:
         """
         Create namespace parts from the data.
         """
-        index = LogseqNamespaces.index
         level_distribution = Counter()
         namespace_data = {}
         namespace_parts = {}
@@ -84,7 +80,8 @@ class LogseqNamespaces:
         _part_levels = defaultdict(set)
         _part_entries = defaultdict(list)
         tree = self.tree
-        for file in index.yield_files_with_keys("ns_level"):
+        criteria = {"is_namespace": True}
+        for file in index.yield_files_with_keys_and_values(**criteria):
             current_level = tree
             meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             namespace_data[file.path.name] = meta
@@ -109,10 +106,9 @@ class LogseqNamespaces:
         self._part_levels = _part_levels
         self._part_entries = _part_entries
 
-    def analyze_ns_queries(self) -> None:
+    def analyze_ns_queries(self, index: FileIndex) -> None:
         """Analyze namespace queries."""
         ns_queries: dict[str, dict[str, Any]] = {}
-        index = LogseqNamespaces.index
         page_ref_pattern = ContentPatterns.page_reference
         namespace_data = self.namespace_data
         for file in index:
@@ -127,16 +123,14 @@ class LogseqNamespaces:
                 ns_queries[query].setdefault("found_in", []).append(file.path.name)
                 ns_queries[query]["namespace"] = page_ref
                 ns_queries[query]["ns_size"] = namespace_data.get(page_ref, {}).get("ns_size", 0)
-                ns_queries[query]["uri"] = getattr(file, "uri", "")
-                ns_queries[query]["logseq_url"] = getattr(file, "logseq_url", "")
+                ns_queries[query]["uri"] = file.path.uri
+                ns_queries[query]["logseq_url"] = file.path.logseq_url
         self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
-    def detect_non_ns_conflicts(self) -> None:
+    def detect_non_ns_conflicts(self, index: FileIndex, dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        index = LogseqNamespaces.index
-        lg = LogseqGraph()
-        dangling_links = lg.dangling_links
-        non_ns_files = index.yield_files_without_keys("ns_level")
+        criteria = {"is_namespace": False}
+        non_ns_files = index.yield_files_with_keys_and_values(**criteria)
         non_ns_names = get_attribute_list(non_ns_files, "name")
         unique_namespace_parts = self.unique_namespace_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
@@ -159,7 +153,6 @@ class LogseqNamespaces:
         part_entries = self._part_entries
         conflicts_parent_depth: dict[str, list[str]] = {}
         conflicts_parent_unique: dict[str, set[str]] = {}
-        ns_sep = Core.NS_SEP.value
         for part, levels in part_levels.items():
             if len(levels) < 2:
                 continue
@@ -169,12 +162,11 @@ class LogseqNamespaces:
                 key = f"{part} {level}"
                 entries = [i["entry"] for i in details if i["level"] == level]
                 conflicts_parent_depth[key] = entries
+                conflicts_parent_unique[key] = set()
                 level = int(key.rsplit(" ", maxsplit=1)[-1])
-                unique_pages = set()
                 for page in entries:
-                    parts = page.split(ns_sep)
+                    parts = page.split(Core.NS_SEP.value)
                     up_to_level = parts[:level]
-                    unique_pages.add(ns_sep.join(up_to_level))
-                conflicts_parent_unique[key] = unique_pages
+                    conflicts_parent_unique[key].add(Core.NS_SEP.value.join(up_to_level))
         self.conflicts_parent_depth = conflicts_parent_depth
         self.conflicts_parent_unique = conflicts_parent_unique

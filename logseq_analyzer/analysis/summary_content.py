@@ -16,8 +16,6 @@ class LogseqContentSummarizer:
 
     __slots__ = ("subsets",)
 
-    index = FileIndex()
-
     def __init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
         self.subsets = {}
@@ -26,10 +24,9 @@ class LogseqContentSummarizer:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self) -> None:
+    def generate_summary(self, index: FileIndex) -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         subsets = {}
-        index = LogseqContentSummarizer.index
         for criteria in list(Criteria):
             criteria_value = criteria.value
             subsets[criteria_value] = LogseqContentSummarizer._extract_summary_subset_content(criteria_value, index)

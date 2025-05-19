@@ -135,6 +135,14 @@ class ContentPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    bold = re.compile(
+        r"""
+        \*\*                # Opening double asterisks
+        .*?                 # Any characters (non-greedy)
+        \*\*                # Closing double asterisks
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
 
 
 @singleton

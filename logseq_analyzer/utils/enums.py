@@ -154,6 +154,7 @@ class Criteria(Enum):
     ALIASES = "aliases"
     ANY_LINKS = "any_links"
     ASSETS = "assets"
+    BOLD = "bold"
     BLOCK_EMBEDS = "block_embeds"
     BLOCK_REFERENCES = "block_references"
     BLOCKQUOTES = "blockquotes"

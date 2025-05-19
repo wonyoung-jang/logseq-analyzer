@@ -70,12 +70,14 @@ def test_set_builtin_properties_content(builtin_properties_set_static):
 
 def test_split_builtin_user_properties(builtin_properties_set_static):
     """Test splitting built-in and user-defined properties."""
-    properties = [
-        "alias",
-        "custom-id",
-        "user-defined-property-1",
-        "user-defined-property-2",
-    ]
+    properties = set(
+        [
+            "alias",
+            "custom-id",
+            "user-defined-property-1",
+            "user-defined-property-2",
+        ]
+    )
     result = split_builtin_user_properties(properties)
     assert result["built_ins"] == ["alias", "custom-id"], "Built-in properties should be correctly identified."
     assert result["user_props"] == [

@@ -31,13 +31,16 @@ def logseq_file(temp_file):
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
     assert logseq_file.file_path == Path(temp_file)
+    assert isinstance(logseq_file.path, LogseqFilename)
+    assert isinstance(logseq_file.stat, LogseqFilestats)
+    assert isinstance(logseq_file.bullets, LogseqBullets)
+    assert logseq_file.data == {}
+    assert logseq_file.has_backlinks == False
     assert logseq_file.is_backlinked == False
     assert logseq_file.is_backlinked_by_ns_only == False
     assert logseq_file.node_type == "other"
     assert logseq_file.file_type == "other"
-    assert isinstance(logseq_file.path, LogseqFilename)
-    assert isinstance(logseq_file.stat, LogseqFilestats)
-    assert isinstance(logseq_file.bullets, LogseqBullets)
+    assert logseq_file.masked_blocks == {}
 
 
 def test_representation(logseq_file):

@@ -10,7 +10,6 @@ from ..analysis.index import FileIndex, get_attribute_list
 from ..config.datetime_tokens import LogseqJournalFormats
 from ..utils.helpers import singleton
 from .graph import LogseqGraph
-from .summary_files import LogseqFileSummarizer
 
 
 @singleton
@@ -28,8 +27,6 @@ class LogseqJournals:
         "dangling_journals_past",
         "dangling_journals_future",
     )
-
-    index = FileIndex()
 
     def __init__(self) -> None:
         """Initialize the LogseqJournals class."""
@@ -53,15 +50,12 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.complete_timeline)
 
-    def process_journals_timelines(self) -> None:
+    def process_journals_timelines(self, index: FileIndex, graph: LogseqGraph, ljf: LogseqJournalFormats) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        ljf = LogseqJournalFormats()
         py_page_base_format = ljf.page
-        graph = LogseqGraph()
         dangling_links = graph.dangling_links
         dangling_journals = list(LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         dangling_journals.sort()
-        index = LogseqJournals.index
         criteria = {"file_type": "journal"}
         j_keys = index.yield_files_with_keys_and_values(**criteria)
         journal_keys = get_attribute_list(j_keys, "name")

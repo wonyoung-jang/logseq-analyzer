@@ -31,6 +31,14 @@ class LogseqFilename:
         self.file_type = ""
         self.is_namespace = False
         self.is_hls = False
+        self.ns_parts = {}
+        self.ns_level = 0
+        self.ns_root = ""
+        self.ns_parent = ""
+        self.ns_parent_full = ""
+        self.ns_stem = ""
+        self.ns_children = set()
+        self.ns_size = 0
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""
@@ -82,18 +90,12 @@ class LogseqFilename:
         ns_parts_list = self.name.split(Core.NS_SEP.value)
         ns_level = len(ns_parts_list)
         ns_root = ns_parts_list[0]
-        namespace_name_data = {
-            "ns_parts": {part: level for level, part in enumerate(ns_parts_list, start=1)},
-            "ns_level": ns_level,
-            "ns_root": ns_root,
-            "ns_parent": ns_parts_list[-2] if ns_level > 2 else ns_root,
-            "ns_parent_full": Core.NS_SEP.value.join(ns_parts_list[:-1]),
-            "ns_stem": ns_parts_list[-1],
-        }
-
-        for key, value in namespace_name_data.items():
-            if value:
-                setattr(self, key, value)
+        self.ns_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
+        self.ns_level = ns_level
+        self.ns_root = ns_root
+        self.ns_parent = ns_parts_list[-2] if ns_level > 2 else ns_root
+        self.ns_parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
+        self.ns_stem = ns_parts_list[-1]
 
     def determine_file_type(self) -> None:
         """

@@ -13,8 +13,6 @@ class LogseqFileSummarizer:
 
     __slots__ = ("subsets",)
 
-    index = FileIndex()
-
     def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: dict[str, dict] = {}
@@ -23,7 +21,7 @@ class LogseqFileSummarizer:
         """Return the number of subsets."""
         return len(self.subsets)
 
-    def generate_summary(self) -> None:
+    def generate_summary(self, index: FileIndex) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = {
             # Process general categories
@@ -55,7 +53,6 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         subsets = {}
-        index = LogseqFileSummarizer.index
         for output_name, criteria in summary_categories.items():
             files = index.yield_files_with_keys_and_values(**criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")

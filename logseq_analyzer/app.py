@@ -137,7 +137,7 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None:
+def setup_datetime_tokens(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
@@ -145,60 +145,62 @@ def setup_datetime_tokens(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> 
     ldtt.set_datetime_token_pattern()
     ldtt.set_journal_py_formatting(lgc, ljf)
     logging.debug("run_app: setup_datetime_tokens")
+    return ljf
 
 
-def setup_cache(a: Args) -> Cache:
+def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
     c = Cache()
     if a.graph_cache:
         c.clear()
     else:
         c.clear_deleted_files()
+    index = FileIndex()
     logging.debug("run_app: setup_cache")
-    return c
+    return c, index
 
 
-def setup_logseq_graph() -> LogseqGraph:
+def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
     """Setup the Logseq graph."""
     lg = LogseqGraph()
-    lg.process_graph_files()
-    lg.post_processing_content()
-    lg.process_summary_data()
+    lg.process_graph_files(index)
+    lg.post_processing_content(index)
+    lg.process_summary_data(index)
     logging.debug("run_app: setup_logseq_graph")
     return lg
 
 
-def setup_logseq_file_summarizer() -> LogseqFileSummarizer:
+def setup_logseq_file_summarizer(index: FileIndex) -> LogseqFileSummarizer:
     """Setup the Logseq file summarizer."""
     lfs = LogseqFileSummarizer()
-    lfs.generate_summary()
+    lfs.generate_summary(index)
     logging.debug("run_app: setup_logseq_file_summarizer")
     return lfs
 
 
-def setup_logseq_content_summarizer() -> LogseqContentSummarizer:
+def setup_logseq_content_summarizer(index: FileIndex) -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
     lcs = LogseqContentSummarizer()
-    lcs.generate_summary()
+    lcs.generate_summary(index)
     logging.debug("run_app: setup_logseq_content_summarizer")
     return lcs
 
 
-def setup_logseq_namespaces() -> LogseqNamespaces:
+def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
-    ln.init_ns_parts()
-    ln.analyze_ns_queries()
-    ln.detect_non_ns_conflicts()
+    ln.init_ns_parts(index)
+    ln.analyze_ns_queries(index)
+    ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
     logging.debug("run_app: setup_logseq_namespaces")
     return ln
 
 
-def setup_logseq_journals() -> LogseqJournals:
+def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, ljf: LogseqJournalFormats) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process_journals_timelines()
+    lj.process_journals_timelines(index, graph, ljf)
     logging.debug("run_app: setup_logseq_journals")
     return lj
 
@@ -385,20 +387,20 @@ def run_app(**kwargs) -> None:
     progress(35)
     setup_target_dirs(analyzer_config, graph_config)
     progress(40)
-    setup_datetime_tokens(analyzer_config, graph_config)
+    journal_formats = setup_datetime_tokens(analyzer_config, graph_config)
     progress(45)
-    cache = setup_cache(args)
+    cache, index = setup_cache(args)
     progress(50)
     # Main analysis
-    graph = setup_logseq_graph()
+    graph = setup_logseq_graph(index)
     progress(55)
-    summary_files = setup_logseq_file_summarizer()
+    summary_files = setup_logseq_file_summarizer(index)
     progress(60)
-    summary_content = setup_logseq_content_summarizer()
+    summary_content = setup_logseq_content_summarizer(index)
     progress(65)
-    graph_namespaces = setup_logseq_namespaces()
+    graph_namespaces = setup_logseq_namespaces(graph, index)
     progress(70)
-    graph_journals = setup_logseq_journals()
+    graph_journals = setup_logseq_journals(graph, index, journal_formats)
     progress(75)
     # Assets
     hls_assets = setup_logseq_hls_assets()

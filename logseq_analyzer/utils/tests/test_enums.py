@@ -203,6 +203,7 @@ def test_criteria_values():
         "ALIASES": "aliases",
         "ANY_LINKS": "any_links",
         "ASSETS": "assets",
+        "BOLD": "bold",
         "BLOCK_EMBEDS": "block_embeds",
         "BLOCK_REFERENCES": "block_references",
         "BLOCKQUOTES": "blockquotes",
@@ -246,7 +247,7 @@ def test_criteria_values():
 
 
 def test_criteria_member_count():
-    assert len(Criteria) == 56
+    assert len(Criteria) == 57
 
 
 def test_args_values():

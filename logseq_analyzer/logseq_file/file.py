@@ -45,12 +45,13 @@ class LogseqFile:
         self.node_type: str = "other"
         self.file_type: str = "other"
         self.masked_blocks: dict[str, str] = {}
+        self.lspath = self.path.__dict__
 
     def __repr__(self) -> str:
-        return f'LogseqFile(file_path="{self.file_path}")'
+        return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
 
     def __str__(self) -> str:
-        return f"LogseqFile: {self.file_path}"
+        return f"{self.__class__.__qualname__}: {self.file_path}"
 
     def __hash__(self) -> int:
         return hash(self.path.parts)
@@ -115,6 +116,7 @@ class LogseqFile:
             Criteria.TAGGED_BACKLINKS.value: ContentPatterns.tagged_backlink.findall(masked_content),
             Criteria.TAGS.value: ContentPatterns.tag.findall(masked_content),
             Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.dynamic_variable.findall(masked_content),
+            Criteria.BOLD.value: ContentPatterns.bold.findall(masked_content),
         }
 
         # Process aliases and property:values
@@ -123,11 +125,11 @@ class LogseqFile:
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
         # Process aliases and properties
-        page_properties = []
+        page_properties = set()
         if self.bullets.has_page_properties:
-            page_properties = ContentPatterns.property.findall(self.bullets.primary_bullet)
+            page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))
             self.bullets.content = "\n".join(self.bullets.content_bullets)
-        block_properties = ContentPatterns.property.findall(self.bullets.content)
+        block_properties = set(ContentPatterns.property.findall(self.bullets.content))
         page_props = split_builtin_user_properties(page_properties)
         block_props = split_builtin_user_properties(block_properties)
         aliases_and_properties = {
@@ -183,11 +185,12 @@ class LogseqFile:
         results = all_pattern.findall(self.bullets.content)
         return pattern.process(results)
 
-    def determine_node_type(self) -> str:
+    def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
-        return {
+        self.node_type = {
             (True, True, True, True): "branch",
             (True, True, False, True): "branch",
+            (True, False, True, True): "branch",
             (True, True, True, False): "leaf",
             (True, True, False, False): "leaf",
             (False, True, True, False): "leaf",
