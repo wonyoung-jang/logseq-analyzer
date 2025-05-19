@@ -2,6 +2,7 @@
 Test the AnalyzerConfig class in the logseq_analyzer.config module.
 """
 
+from pathlib import Path
 import pytest
 
 from ..analyzer_config import LogseqAnalyzerConfig, lambda_optionxform
@@ -19,6 +20,12 @@ def test_singleton(config):
     config2 = LogseqAnalyzerConfig()
     assert config1 is config2, "LogseqAnalyzerConfig should be a singleton."
     assert config1.config is config2.config, "Config objects should be the same instance."
+
+
+def test_init(config):
+    """Test the initialization of LogseqAnalyzerConfig."""
+    assert config.config is not None, "Config should be initialized."
+    assert config.target_dirs == set(), "Target directories should be empty on initialization."
 
 
 def test_lambda_optionxform():
@@ -92,6 +99,14 @@ def test_set_logseq_config_edn_data(config):
         config.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar"
     ), "NAMESPACE_FORMAT should be set correctly."
     assert config.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP") == "___", "NAMESPACE_FILE_SEP should be set correctly."
+    ls_config.update(
+        {
+            ":file/name-format": ":legacy",
+        }
+    )
+    config.set_logseq_config_edn_data(ls_config)
+    assert config.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":legacy", "NAMESPACE_FORMAT should be set correctly."
+    assert config.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP") == "%2F", "NAMESPACE_FILE_SEP should be set correctly."
 
 
 def test_set_logseq_target_dirs(config):

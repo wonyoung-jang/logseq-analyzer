@@ -2,10 +2,10 @@
 
 import sys
 
+from PySide6.QtWidgets import QApplication
+
 from logseq_analyzer.app import run_app
 from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
-
-from PySide6.QtWidgets import QApplication
 
 
 def main():
