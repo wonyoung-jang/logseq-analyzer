@@ -13,8 +13,6 @@ from ..config.graph_config import LogseqGraphConfig
 from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
 
-DATE_ORDINAL_SUFFIX = "o"
-
 
 class LogseqFilename:
     """LogseqFilename class."""
@@ -145,7 +143,7 @@ class LogseqFilename:
             lgc = LogseqGraphConfig()
             date_object = datetime.strptime(name, ljf.file)
             page_title_base = date_object.strftime(ljf.page)
-            if DATE_ORDINAL_SUFFIX in lgc.config_merged.get(":journal/page-title-format"):
+            if Core.DATE_ORDINAL_SUFFIX.value in lgc.config_merged.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename._add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)

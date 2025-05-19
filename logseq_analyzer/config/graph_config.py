@@ -150,13 +150,13 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
-    __slots__ = ("config_merged", "config_user", "config_global")
+    __slots__ = ("config_merged", "_config_user", "_config_global")
 
     def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
         self.config_merged: dict[str, Any] = {}
-        self.config_user: dict[str, Any] = {}
-        self.config_global: dict[str, Any] = {}
+        self._config_user: dict[str, Any] = {}
+        self._config_global: dict[str, Any] = {}
 
     def initialize_user_config_edn(self, cf_path: Path) -> None:
         """
@@ -166,7 +166,7 @@ class LogseqGraphConfig:
             cf_path (Path): The path to the config file.
         """
         with cf_path.open("r", encoding="utf-8") as user_config:
-            self.config_user = loads(user_config.read())
+            self._config_user = loads(user_config.read())
             logging.debug("Initialized user config: %s", user_config)
 
     def initialize_global_config_edn(self, gcf_path: Path) -> None:
@@ -177,13 +177,13 @@ class LogseqGraphConfig:
             gcf_path (Path): The path to the global config file.
         """
         with gcf_path.open("r", encoding="utf-8") as global_config:
-            self.config_global = loads(global_config.read())
+            self._config_global = loads(global_config.read())
             logging.debug("Initialized global config: %s", global_config)
 
     def merge(self) -> None:
         """Merge default, user, and global config."""
         config = DEFAULT_LOGSEQ_CONFIG_EDN
-        config.update(self.config_user)
-        config.update(self.config_global)
+        config.update(self._config_user)
+        config.update(self._config_global)
         self.config_merged = config
         logging.debug("Merged config: length - %s", len(self.config_merged))

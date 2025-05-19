@@ -65,9 +65,9 @@ class LogseqDateTimeTokens:
         self._token_map = {}
         self._token_pattern = None
 
-    def get_datetime_token_map(self, lac: LogseqAnalyzerConfig) -> None:
+    def get_datetime_token_map(self, token_map: dict[str, str]) -> None:
         """Return the datetime token mapping as a dictionary"""
-        self._token_map = lac.get_section("DATETIME_TOKEN_MAP")
+        self._token_map = token_map
         logging.debug("LogseqDateTimeTokens: get_datetime_token_map()")
 
     def set_datetime_token_pattern(self) -> None:
@@ -77,12 +77,12 @@ class LogseqDateTimeTokens:
         self._token_pattern = re.compile(pattern)
         logging.debug("LogseqDateTimeTokens: set_datetime_token_pattern()")
 
-    def set_journal_py_formatting(self, lgc: LogseqGraphConfig, ljf: LogseqJournalFormats) -> None:
+    def set_journal_py_formatting(self, graph_config: dict[str, str], ljf: LogseqJournalFormats) -> None:
         """
         Set the formatting for journal files and pages in Python format.
         """
-        journal_file_format = lgc.config_merged.get(":journal/file-name-format")
-        journal_page_format = lgc.config_merged.get(":journal/page-title-format")
+        journal_file_format = graph_config.get(":journal/file-name-format")
+        journal_page_format = graph_config.get(":journal/page-title-format")
         journal_page_format = journal_page_format.replace("o", "")
         ljf.file = self._convert_cljs_date_to_py(journal_file_format)
         ljf.page = self._convert_cljs_date_to_py(journal_page_format)

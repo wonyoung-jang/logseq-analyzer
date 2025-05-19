@@ -4,6 +4,7 @@ This module contains the main application logic for the Logseq analyzer.
 
 import logging
 from pathlib import Path
+import token
 from typing import Any
 
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
@@ -125,25 +126,25 @@ def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
     return lgc
 
 
-def setup_target_dirs(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> None:
+def setup_target_dirs(lac: LogseqAnalyzerConfig, graph_config: dict[str, str]) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    lac.set_logseq_config_edn_data(lgc.config_merged)
+    lac.set_logseq_config_edn_data(graph_config)
     AssetsDirectory().get_or_create_dir()
     DrawsDirectory().get_or_create_dir()
     JournalsDirectory().get_or_create_dir()
     PagesDirectory().get_or_create_dir()
     WhiteboardsDirectory().get_or_create_dir()
-    lac.target_dirs = lac.set_logseq_target_dirs()
+    lac.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(lac: LogseqAnalyzerConfig, lgc: LogseqGraphConfig) -> LogseqJournalFormats:
+def setup_datetime_tokens(token_map: dict[str, str], graph_config: dict[str, str]) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
-    ldtt.get_datetime_token_map(lac)
+    ldtt.get_datetime_token_map(token_map)
     ldtt.set_datetime_token_pattern()
-    ldtt.set_journal_py_formatting(lgc, ljf)
+    ldtt.set_journal_py_formatting(graph_config, ljf)
     logging.debug("run_app: setup_datetime_tokens")
     return ljf
 
@@ -244,11 +245,11 @@ def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[s
     """Get metadata reports from the graph and configuration."""
     index = FileIndex()
     meta_reports = {
-        Output.ALL_REFS.value: lg.all_linked_references,
+        Output.ALL_LINKED_REFERENCES.value: lg.all_linked_references,
         Output.ALL_DANGLING_LINKS.value: lg.all_dangling_links,
         Output.CONFIG_MERGED.value: lgc.config_merged,
-        Output.CONFIG_USER.value: lgc.config_user,
-        Output.CONFIG_GLOBAL.value: lgc.config_global,
+        Output.CONFIG_USER.value: lgc._config_user,
+        Output.CONFIG_GLOBAL.value: lgc._config_global,
         Output.DANGLING_LINKS.value: lg.dangling_links,
         Output.UNIQUE_LINKED_REFERENCES_NS.value: lg.unique_linked_references_ns,
         Output.UNIQUE_LINKED_REFERENCES.value: lg.unique_linked_references,
@@ -385,9 +386,10 @@ def run_app(**kwargs) -> None:
     progress(30)
     graph_config = setup_logseq_graph_config(args)
     progress(35)
-    setup_target_dirs(analyzer_config, graph_config)
+    setup_target_dirs(analyzer_config, graph_config.config_merged)
     progress(40)
-    journal_formats = setup_datetime_tokens(analyzer_config, graph_config)
+    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    journal_formats = setup_datetime_tokens(token_map, graph_config.config_merged)
     progress(45)
     cache, index = setup_cache(args)
     progress(50)

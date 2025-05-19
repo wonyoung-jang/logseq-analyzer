@@ -17,6 +17,13 @@ def datetime_tokens():
     return dtt
 
 
+@pytest.fixture
+def analyzer_config():
+    """Fixture for LogseqAnalyzerConfig."""
+    ac = LogseqAnalyzerConfig()
+    return ac
+
+
 def test_singleton_instance(datetime_tokens):
     """Test that LogseqDateTimeTokens is a singleton."""
     instance1 = LogseqDateTimeTokens()
@@ -25,9 +32,10 @@ def test_singleton_instance(datetime_tokens):
     assert instance1 is datetime_tokens
 
 
-def test_get_datetime_token_map(datetime_tokens):
+def test_get_datetime_token_map(datetime_tokens, analyzer_config):
     """Test the get_token_map method."""
-    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
+    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    datetime_tokens.get_datetime_token_map(token_map)
     assert datetime_tokens._token_map is not None
     assert isinstance(datetime_tokens._token_map, dict), "Datetime token map should be a dictionary."
     assert len(datetime_tokens._token_map) > 0, "Datetime token map should not be empty."
@@ -40,9 +48,10 @@ def test_get_datetime_token_map(datetime_tokens):
     assert all(v != "" for v in datetime_tokens._token_map.values()), "Values should not be empty strings."
 
 
-def test_set_datetime_token_pattern(datetime_tokens):
+def test_set_datetime_token_pattern(datetime_tokens, analyzer_config):
     """Test the set_datetime_token_pattern method."""
-    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
+    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    datetime_tokens.get_datetime_token_map(token_map)
     datetime_tokens.set_datetime_token_pattern()
     assert datetime_tokens._token_pattern is not None, "Datetime token pattern should be set."
     assert isinstance(datetime_tokens._token_pattern, re.Pattern), "Datetime token pattern should be a compiled regex."
@@ -54,9 +63,10 @@ def test_set_datetime_token_pattern(datetime_tokens):
     assert all(k != v for k, v in datetime_tokens._token_map.items()), "Keys and values should not be the same."
 
 
-def test_convert_cljs_date_to_py(datetime_tokens):
+def test_convert_cljs_date_to_py(datetime_tokens, analyzer_config):
     """Test the convert_cljs_date_to_py method."""
-    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
+    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    datetime_tokens.get_datetime_token_map(token_map)
     test_format = "yyyy-MM-dd"
     converted_format = datetime_tokens._convert_cljs_date_to_py(test_format)
     assert isinstance(converted_format, str), "Converted format should be a string."
@@ -73,9 +83,10 @@ def test_convert_cljs_date_to_py(datetime_tokens):
     assert converted_format != None, "Converted format should not be None."
 
 
-def test_replace_token(datetime_tokens):
+def test_replace_token(datetime_tokens, analyzer_config):
     """Test the replace_token method."""
-    datetime_tokens.get_datetime_token_map(LogseqAnalyzerConfig())
+    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    datetime_tokens.get_datetime_token_map(token_map)
     test_string = "yyyy-MM-dd"
     match = datetime_tokens._token_pattern.search(test_string)
     assert match is not None, "Match should not be None."

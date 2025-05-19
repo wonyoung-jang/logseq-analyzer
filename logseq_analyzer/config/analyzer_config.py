@@ -62,22 +62,24 @@ class LogseqAnalyzerConfig:
         with open(output_path, "w", encoding="utf-8") as file:
             self.config.write(file)
 
-    def set_logseq_config_edn_data(self, ls_config: dict[str, str]) -> None:
+    def set_logseq_config_edn_data(self, graph_config: dict[str, str]) -> None:
         """set the Logseq configuration data."""
-        config = self.config["LOGSEQ_CONFIG"]
-        config["DIR_PAGES"] = ls_config.get(":pages-directory", "pages")
-        config["DIR_JOURNALS"] = ls_config.get(":journals-directory", "journals")
-        config["DIR_WHITEBOARDS"] = ls_config.get(":whiteboards-directory", "whiteboards")
+        self.set_value("LOGSEQ_CONFIG", "DIR_PAGES", graph_config.get(":pages-directory", "pages"))
+        self.set_value("LOGSEQ_CONFIG", "DIR_JOURNALS", graph_config.get(":journals-directory", "journals"))
+        self.set_value("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", graph_config.get(":whiteboards-directory", "whiteboards"))
 
-        ns_format = ls_config.get(":file/name-format", ":legacy")
-        config["NAMESPACE_FORMAT"] = ns_format
-        if ns_format == ":triple-lowbar":
-            self.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] = Core.NS_FILE_SEP_TRIPLE_LOWBAR.value
+        ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
+        self.set_value("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
 
-    def set_logseq_target_dirs(self) -> set[str]:
+        if ns_format == Core.NS_CONFIG_LEGACY.value:
+            self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_LEGACY.value)
+        elif ns_format == Core.NS_CONFIG_TRIPLE_LOWBAR.value:
+            self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+
+    def set_logseq_target_dirs(self) -> None:
         """Get the target directories based on the configuration data."""
-        config = self.config["LOGSEQ_CONFIG"]
-        return {
+        config = self.get_section("LOGSEQ_CONFIG")
+        self.target_dirs = {
             config["DIR_ASSETS"],
             config["DIR_DRAWS"],
             config["DIR_PAGES"],

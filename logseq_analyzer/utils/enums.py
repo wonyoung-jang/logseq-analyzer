@@ -33,16 +33,13 @@ class Format(Enum):
 class Core(Enum):
     """Core components of the Logseq Analyzer."""
 
+    DATE_ORDINAL_SUFFIX = "o"
     HLS_PREFIX = "hls__"
     NS_SEP = "/"
     NS_FILE_SEP_LEGACY = "%2F"
     NS_FILE_SEP_TRIPLE_LOWBAR = "___"
-
-
-class Phase(Enum):
-    """Phase of the application."""
-
-    GUI_INSTANCE = "gui_instance"
+    NS_CONFIG_LEGACY = ":legacy"
+    NS_CONFIG_TRIPLE_LOWBAR = ":triple-lowbar"
 
 
 class OutputDir(Enum):
@@ -60,7 +57,7 @@ class OutputDir(Enum):
 class Output(Enum):
     """Output types for the Logseq Analyzer."""
 
-    ALL_REFS = "all_linked_references"
+    ALL_LINKED_REFERENCES = "all_linked_references"
     ALL_DANGLING_LINKS = "all_dangling_links"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"

@@ -2,7 +2,7 @@
 Test the Criteria enum class.
 """
 
-from ..enums import Format, Core, Phase, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments
+from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments
 
 
 # Format
@@ -66,36 +66,26 @@ def test_output_dir_member_count():
 # Core
 def test_core_values():
     expected = {
+        "DATE_ORDINAL_SUFFIX": "o",
         "HLS_PREFIX": "hls__",
         "NS_SEP": "/",
         "NS_FILE_SEP_LEGACY": "%2F",
         "NS_FILE_SEP_TRIPLE_LOWBAR": "___",
+        "NS_CONFIG_LEGACY": ":legacy",
+        "NS_CONFIG_TRIPLE_LOWBAR": ":triple-lowbar",
     }
     for member_name, string_value in expected.items():
         assert getattr(Core, member_name).value == string_value
 
 
 def test_core_member_count():
-    assert len(Core) == 4
-
-
-# Phase
-def test_phase_values():
-    expected = {
-        "GUI_INSTANCE": "gui_instance",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Phase, member_name).value == string_value
-
-
-def test_phase_member_count():
-    assert len(Phase) == 1
+    assert len(Core) == 7
 
 
 # Output
 def test_output_values():
     expected = {
-        "ALL_REFS": "all_linked_references",
+        "ALL_LINKED_REFERENCES": "all_linked_references",
         "ALL_DANGLING_LINKS": "all_dangling_links",
         "ASSETS_BACKLINKED": "assets_backlinked",
         "ASSETS_NOT_BACKLINKED": "assets_not_backlinked",

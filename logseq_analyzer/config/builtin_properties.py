@@ -71,10 +71,23 @@ def split_builtin_user_properties(properties: set[str]) -> dict[str, list[str]]:
         dict[str, list[str]]: Dictionary containing built-in and user-defined properties.
     """
     properties_dict = {
-        "built_ins": sorted(properties.intersection(BUILT_INS)),
-        "user_props": sorted(properties.difference(BUILT_INS)),
+        "built_ins": sorted(get_builtin_properties(properties)),
+        "user_props": sorted(get_not_builtin_properties(properties)),
     }
     return properties_dict
+
+
+def get_builtin_properties(properties: set[str]) -> set[str]:
+    """
+    Helper function to get built-in properties.
+
+    Args:
+        properties (set[str]): List of properties to check.
+
+    Returns:
+        set[str]: Set of built-in properties.
+    """
+    return properties.intersection(BUILT_INS)
 
 
 def get_not_builtin_properties(properties: set[str]) -> set[str]:

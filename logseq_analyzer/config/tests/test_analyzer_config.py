@@ -101,6 +101,6 @@ def test_set_logseq_target_dirs(config):
     config.set_value("LOGSEQ_CONFIG", "DIR_PAGES", "pages")
     config.set_value("LOGSEQ_CONFIG", "DIR_JOURNALS", "journals")
     config.set_value("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", "whiteboards")
-    config.target_dirs = config.set_logseq_target_dirs()
+    config.set_logseq_target_dirs()
     expected_dirs = {"assets", "draws", "pages", "journals", "whiteboards"}
     assert config.target_dirs == expected_dirs, "Target directories should be set correctly."
