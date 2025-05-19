@@ -71,26 +71,14 @@ class LogseqFile:
         """
         Extract metadata from a file.
         """
-        self.path.determine_file_type()
-        self.path.process_logseq_filename()
-        self.path.check_is_hls()
-        self.path.convert_uri_to_logseq_url()
-        self.path.check_is_namespace()
-        if self.path.is_namespace:
-            self.path.get_namespace_name_data()
-        self.bullets.get_content()
-        self.bullets.get_char_count()
-        self.bullets.get_bullet_content()
-        self.bullets.get_primary_bullet()
-        self.bullets.get_bullet_density()
-        self.bullets.is_primary_bullet_page_properties()
-
+        self.path.process_filename()
         for attr, value in self.path.__dict__.items():
             setattr(self, attr, value)
 
         for attr, value in self.stat.__dict__.items():
             setattr(self, attr, value)
 
+        self.bullets.process_bullets()
         for attr, value in self.bullets.__dict__.items():
             if attr in ("all_bullets", "content_bullets", "content"):
                 continue

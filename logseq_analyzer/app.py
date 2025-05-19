@@ -245,7 +245,7 @@ def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[s
     index = FileIndex()
     meta_reports = {
         Output.ALL_REFS.value: lg.all_linked_references,
-        "all_dangling_links": lg.all_dangling_links,
+        Output.ALL_DANGLING_LINKS.value: lg.all_dangling_links,
         Output.CONFIG_MERGED.value: lgc.config_merged,
         Output.CONFIG_USER.value: lgc.config_user,
         Output.CONFIG_GLOBAL.value: lgc.config_global,

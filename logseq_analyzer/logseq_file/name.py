@@ -48,6 +48,16 @@ class LogseqFilename:
         """Return a user-friendly string representation of the LogseqFilename object."""
         return f"{self.__class__.__qualname__}: {self.file_path}"
 
+    def process_filename(self) -> None:
+        """Process the filename based on its parent directory."""
+        self.determine_file_type()
+        self.process_logseq_filename()
+        self.check_is_hls()
+        self.convert_uri_to_logseq_url()
+        self.check_is_namespace()
+        if self.is_namespace:
+            self.get_namespace_name_data()
+
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
         lac = LogseqAnalyzerConfig()

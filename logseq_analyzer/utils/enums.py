@@ -61,6 +61,7 @@ class Output(Enum):
     """Output types for the Logseq Analyzer."""
 
     ALL_REFS = "all_linked_references"
+    ALL_DANGLING_LINKS = "all_dangling_links"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
     COMPLETE_TIMELINE = "complete_timeline"
