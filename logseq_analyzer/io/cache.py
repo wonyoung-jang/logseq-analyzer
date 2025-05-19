@@ -10,7 +10,7 @@ from typing import Any, Generator
 from ..analysis.index import FileIndex
 from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import Output, OutputDir
+from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
 from .filesystem import CacheFile, GraphDirectory
 
@@ -39,7 +39,7 @@ class Cache:
         """Close the cache file."""
         self.cache.close()
 
-    def update(self, data: dict) -> None:
+    def update(self, data: Any) -> None:
         """Update the cache with new data."""
         self.cache.update(data)
 
@@ -55,28 +55,10 @@ class Cache:
 
     def clear_deleted_files(self) -> None:
         """Clear the deleted files from the cache."""
-        analysis_keys = [
-            OutputDir.JOURNALS.value,
-            OutputDir.SUMMARY_FILES.value,
-            OutputDir.SUMMARY_CONTENT.value,
-            OutputDir.NAMESPACES.value,
-            OutputDir.MOVED_FILES.value,
-        ]
-        for key in analysis_keys:
-            if key in self.cache:
-                self.cache[key] = {}
-
-        index_keys = [
-            Output.FILES.value,
-            Output.HASH_TO_FILE.value,
-            Output.NAME_TO_FILES.value,
-            Output.PATH_TO_FILE.value,
-        ]
         index = FileIndex()
-        if OutputDir.META.value in self.cache:
-            for key in index_keys:
-                if key in self.cache[OutputDir.META.value]:
-                    setattr(index, key, self.cache[OutputDir.META.value][key])
+        if "index" in self.cache:
+            del index
+            index = self.cache["index"]
         files_to_remove = set(_yield_deleted_files(index))
         for file in files_to_remove:
             logging.warning("File removed from index: %s", file.file_path)

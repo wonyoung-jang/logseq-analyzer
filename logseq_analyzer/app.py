@@ -6,8 +6,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from logseq_analyzer.utils.patterns import ContentPatterns
-
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -43,6 +41,7 @@ from .io.filesystem import (
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .utils.enums import Moved, Output, OutputDir
+from .utils.patterns import ContentPatterns
 
 
 class GUIInstanceDummy:
@@ -348,21 +347,15 @@ def get_output_subdirs() -> list[str]:
     ]
 
 
-def update_cache(c: Cache, output_subdirs: list[str], data_reports: list[Any]) -> None:
-    """Update the cache with the output data."""
-    try:
-        data_to_shelve = zip(output_subdirs, data_reports)
-        for output_subdir, data_report in data_to_shelve:
-            c.update({output_subdir: data_report})
-    except Exception as e:
-        logging.error("Error updating cache: %s", e)
-        raise RuntimeError("Failed to update cache") from e
+def update_cache(cache: Cache, index: FileIndex) -> None:
+    """Update the cache with the current index."""
+    cache.cache["index"] = index
     logging.debug("run_app: update_cache")
 
 
-def write_reports(c: Cache) -> None:
+def write_reports(output_subdirs: list[str], data_reports: list[Any]) -> None:
     """Write reports to the specified output directories."""
-    for subdir, reports in c.cache.items():
+    for subdir, reports in zip(output_subdirs, data_reports):
         if subdir in (Output.MOD_TRACKER.value):
             continue
         for prefix, data in reports.items():
@@ -429,9 +422,9 @@ def run_app(**kwargs) -> None:
         summary_files.subsets,
     ]
     progress(95)
-    update_cache(cache, output_subdirectories, data_reports)
+    update_cache(cache, index)
     progress(97)
-    write_reports(cache)
+    write_reports(output_subdirectories, data_reports)
     progress(98)
     analyzer_config.write_to_file()
     progress(99)

@@ -9,9 +9,7 @@ from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 
 def main():
-    """
-    Main function to run the Logseq Analyzer application.
-    """
+    """Main function to run the Logseq Analyzer application."""
     if "--gui" in sys.argv:
         app = QApplication()
         gui = LogseqAnalyzerGUI()
