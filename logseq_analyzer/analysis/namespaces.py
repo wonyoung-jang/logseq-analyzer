@@ -48,7 +48,7 @@ class LogseqNamespaces:
 
     def __init__(self) -> None:
         """
-        Initialize the NamespaceAnalyzer instance.
+        Initialize the LogseqNamespaces instance.
         """
         self._part_levels = defaultdict(set)
         self._part_entries = defaultdict(list)
@@ -63,6 +63,14 @@ class LogseqNamespaces:
         self.conflicts_dangling: dict[str, list[str]] = {}
         self.conflicts_parent_depth: dict[str, list[str]] = {}
         self.conflicts_parent_unique: dict[str, set[str]] = {}
+
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqNamespaces instance."""
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        """Return a string representation of the LogseqNamespaces instance."""
+        return f"{self.__class__.__name__}"
 
     def init_ns_parts(self, index: FileIndex) -> None:
         """

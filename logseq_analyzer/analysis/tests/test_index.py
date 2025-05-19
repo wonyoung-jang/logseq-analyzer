@@ -19,6 +19,12 @@ def test_file_index_singleton(file_index):
     assert file_index is another_index, "FileIndex should be a singleton."
 
 
+def test_file_index_representation(file_index):
+    """Test the string representation of FileIndex."""
+    assert repr(file_index) == "FileIndex()"
+    assert str(file_index) == "FileIndex"
+
+
 def test_file_index_initialization(file_index):
     """Test the initialization of FileIndex."""
     assert file_index.files == set()

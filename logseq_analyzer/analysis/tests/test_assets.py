@@ -25,6 +25,16 @@ def test_logseq_assets_hls_singleton(logseq_assets_hls):
     assert isinstance(logseq_assets_hls, LogseqAssetsHls)
 
 
+def test_logseq_assets_representation(logseq_assets):
+    assert repr(logseq_assets) == "LogseqAssets()"
+    assert str(logseq_assets) == "LogseqAssets"
+
+
+def test_logseq_assets_hls_representation(logseq_assets_hls):
+    assert repr(logseq_assets_hls) == "LogseqAssetsHls()"
+    assert str(logseq_assets_hls) == "LogseqAssetsHls"
+
+
 def test_logseq_assets_initialization(logseq_assets):
     assert logseq_assets.backlinked == []
     assert logseq_assets.not_backlinked == []
