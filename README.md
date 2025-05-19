@@ -17,17 +17,17 @@ Simple utility to analyze a Logseq graph for basic information to assist with th
 
 - Ensure Python 3 is installed
 
-- If using the GUI, ensure PySide6 is installed and install requirements with:
+- Install requirements with:
 
 `pip install -r requirements.txt`
 
 ## Usage
 
-- To run: `python main.py -g path_to_your_graph_folder`
+- To run: `py -m logseq_analyzer -g path_to_your_graph_folder`
 
-- For help: `python main.py -h`
+- For help: `py -m logseq_analyzer -h`
 
-- For a simple GUI (WIP): `python gui.py`
+- For a simple GUI (WIP): `py -m logseq_analyzer --gui`
 
 ### Useful flags
 

@@ -146,6 +146,7 @@ def setup_datetime_tokens(token_map: dict[str, str], graph_config: dict[str, str
     ldtt.get_datetime_token_map(token_map)
     ldtt.set_datetime_token_pattern()
     ldtt.set_journal_py_formatting(graph_config, ljf)
+    del ldtt
     logging.debug("run_app: setup_datetime_tokens")
     return ljf
 
