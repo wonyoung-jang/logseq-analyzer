@@ -6,8 +6,6 @@ import logging
 import re
 
 from ..utils.helpers import singleton
-from .analyzer_config import LogseqAnalyzerConfig
-from .graph_config import LogseqGraphConfig
 
 
 @singleton

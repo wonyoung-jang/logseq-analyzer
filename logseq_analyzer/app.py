@@ -4,8 +4,9 @@ This module contains the main application logic for the Logseq analyzer.
 
 import logging
 from pathlib import Path
-import token
 from typing import Any
+
+from logseq_analyzer.utils.patterns import ContentPatterns
 
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
@@ -191,7 +192,7 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
     ln.init_ns_parts(index)
-    ln.analyze_ns_queries(index)
+    ln.analyze_ns_queries(index, ContentPatterns.page_reference)
     ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
     logging.debug("run_app: setup_logseq_namespaces")
@@ -210,7 +211,7 @@ def setup_logseq_hls_assets(index: FileIndex) -> LogseqAssetsHls:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
     lah.get_asset_files(index)
-    lah.convert_names_to_data(index)
+    lah.convert_names_to_data(index, ContentPatterns.property_value)
     lah.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
     return lah

@@ -617,7 +617,7 @@ class CodePatterns:
     inline_code_block = re.compile(
         r"""
         `                   # One backtick
-        .+?                 # One or more characters (non-greedy)
+        [^`].+?             # Any characters except backtick (non-greedy)
         `                   # One backtick
         """,
         re.IGNORECASE | re.VERBOSE,

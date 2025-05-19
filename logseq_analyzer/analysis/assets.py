@@ -2,10 +2,10 @@
 Logseq Assets Analysis Module.
 """
 
+from re import Pattern
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton
-from ..utils.patterns import ContentPatterns
 from .index import FileIndex
 
 
@@ -32,9 +32,8 @@ class LogseqAssets:
         """Handle assets for the Logseq Analyzer."""
         criteria = {"file_type": "asset"}
         for file in index:
-            file_data = file.data
-            emb_link_asset = file_data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
-            asset_captured = file_data.get(Criteria.ASSETS.value, [])
+            emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
+            asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_file in index.yield_files_with_keys_and_values(**criteria):
@@ -42,20 +41,18 @@ class LogseqAssets:
                     continue
                 file_name = file.path.name
                 if emb_link_asset:
-                    LogseqAssets.update_asset_backlink(file_name, emb_link_asset, asset_file)
+                    LogseqAssets._update_asset_backlink(file_name, emb_link_asset, asset_file)
                 if asset_captured:
-                    LogseqAssets.update_asset_backlink(file_name, asset_captured, asset_file)
+                    LogseqAssets._update_asset_backlink(file_name, asset_captured, asset_file)
         backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = list(index.yield_files_with_keys_and_values(**backlinked_kwargs))
-        self.not_backlinked = list(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
+        self.backlinked = sorted(index.yield_files_with_keys_and_values(**backlinked_kwargs))
+        self.not_backlinked = sorted(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
 
     @staticmethod
-    def update_asset_backlink(file_name: str, asset_mentions: list[str], asset_file: LogseqFile) -> None:
+    def _update_asset_backlink(file_name: str, asset_mentions: list[str], asset: LogseqFile) -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
-        asset_file.is_backlinked = any(
-            asset_file.path.name in mention or file_name in mention for mention in asset_mentions
-        )
+        asset.is_backlinked = any(asset.path.name in mention or file_name in mention for mention in asset_mentions)
 
 
 @singleton
@@ -93,9 +90,8 @@ class LogseqAssetsHls:
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
-    def convert_names_to_data(self, index: FileIndex) -> None:
+    def convert_names_to_data(self, index: FileIndex, property_value_pattern: Pattern) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        property_value_pattern = ContentPatterns.property_value
         criteria = {"is_hls": True}
         formatted_bullets = set()
         for file in index.yield_files_with_keys_and_values(**criteria):

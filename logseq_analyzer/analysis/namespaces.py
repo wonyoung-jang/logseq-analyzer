@@ -16,11 +16,11 @@ Problems:
 
 import logging
 from collections import Counter, defaultdict
+from re import Pattern
 from typing import Any
 
 from ..utils.enums import Core
 from ..utils.helpers import singleton, sort_dict_by_value
-from ..utils.patterns import ContentPatterns
 from .index import FileIndex, get_attribute_list
 
 
@@ -102,10 +102,9 @@ class LogseqNamespaces:
         self._part_levels = _part_levels
         self._part_entries = _part_entries
 
-    def analyze_ns_queries(self, index: FileIndex) -> None:
+    def analyze_ns_queries(self, index: FileIndex, page_ref_pattern: Pattern) -> None:
         """Analyze namespace queries."""
         ns_queries: dict[str, dict[str, Any]] = {}
-        page_ref_pattern = ContentPatterns.page_reference
         namespace_data = self.namespace_data
         for file in index:
             for query in file.data.get("namespace_queries", []):

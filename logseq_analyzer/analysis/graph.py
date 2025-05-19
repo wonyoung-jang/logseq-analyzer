@@ -144,13 +144,12 @@ class LogseqGraph:
 
     def _process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:
         """Process dangling links in the graph."""
-        unique_linked_references = self.unique_linked_references
-        unique_linked_references_ns = self.unique_linked_references_ns
-        all_linked_refs = unique_linked_references.union(unique_linked_references_ns)
-        all_linked_refs.difference_update(all_file_names)
-        all_linked_refs.difference_update(unique_aliases)
-        dangling_links = sorted(get_not_builtin_properties(all_linked_refs))
-        return dangling_links
+        linked_refs = self.unique_linked_references
+        linked_refs_ns = self.unique_linked_references_ns
+        all_refs = linked_refs.union(linked_refs_ns)
+        all_refs.difference_update(all_file_names)
+        all_refs.difference_update(unique_aliases)
+        return sorted(get_not_builtin_properties(all_refs))
 
     @staticmethod
     def _process_ns_size(file: LogseqFile) -> int:
