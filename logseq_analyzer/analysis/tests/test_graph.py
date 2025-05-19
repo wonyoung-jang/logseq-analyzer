@@ -20,9 +20,3 @@ def test_singleton(logseq_graph):
 def test_representation(logseq_graph):
     assert repr(logseq_graph) == "LogseqGraph()"
     assert str(logseq_graph) == "LogseqGraph"
-
-
-def test_len(logseq_graph):
-    assert len(logseq_graph) == 0
-    logseq_graph.all_linked_references = {"a": 1, "b": 2}
-    assert len(logseq_graph) == 2

@@ -3,7 +3,6 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import Counter
-from typing import Literal
 
 from ..config.builtin_properties import get_not_builtin_properties
 from ..io.cache import Cache
@@ -33,17 +32,13 @@ class LogseqGraph:
         self.unique_linked_references = set()
         self.unique_linked_references_ns = set()
 
-    def __repr__(self) -> Literal["LogseqGraph()"]:
+    def __repr__(self) -> str:
         """Return a string representation of the LogseqGraph instance."""
-        return "LogseqGraph()"
+        return f"{self.__class__.__qualname__}()"
 
-    def __str__(self) -> Literal["LogseqGraph"]:
+    def __str__(self) -> str:
         """Return a string representation of the LogseqGraph instance."""
-        return "LogseqGraph"
-
-    def __len__(self) -> int:
-        """Return the number of unique linked references."""
-        return len(self.all_linked_references)
+        return f"{self.__class__.__qualname__}"
 
     @staticmethod
     def process_graph_files(index: FileIndex) -> None:

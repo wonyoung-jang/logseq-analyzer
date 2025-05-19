@@ -4,7 +4,7 @@ Process logseq journals.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Generator, Literal, Optional
+from typing import Any, Generator, Optional
 
 from ..analysis.index import FileIndex, get_attribute_list
 from ..config.datetime_tokens import LogseqJournalFormats
@@ -38,13 +38,13 @@ class LogseqJournals:
         self.dangling_journals_past = []
         self.dangling_journals_future = []
 
-    def __repr__(self) -> Literal["LogseqJournals()"]:
+    def __repr__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
-        return "LogseqJournals()"
+        return f"{self.__class__.__qualname__}()"
 
-    def __str__(self) -> Literal["LogseqJournals"]:
+    def __str__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
-        return "LogseqJournals"
+        return f"{self.__class__.__qualname__}"
 
     def __len__(self) -> int:
         """Return the number of processed keys."""

@@ -35,11 +35,11 @@ class ReportWriter:
 
     def __repr__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter(prefix={self.prefix}, items=data, subdir={self.subdir})"
+        return f"{self.__class__.__qualname__}(prefix={self.prefix}, items=data, subdir={self.subdir})"
 
     def __str__(self) -> str:
         """String representation of the ReportWriter object."""
-        return f"ReportWriter: {self.prefix}, Items: data, Output Subdir: {self.subdir}"
+        return f"{self.__class__.__qualname__}: {self.prefix}, Items: data, Output Subdir: {self.subdir}"
 
     def write(self) -> None:
         """
@@ -51,20 +51,19 @@ class ReportWriter:
         data = self.data
         count = len(data) if hasattr(data, "__len__") else None
         filename = f"{prefix}{ext}" if count else f"___EMPTY___{prefix}{ext}"
-        out_path = self.get_output_path(filename)
+        outputpath = self.get_output_path(filename)
 
-        # Handle JSON format
+        # JSON format
         if ext == Format.JSON.value:
             try:
-                with out_path.open("w", encoding="utf-8") as f:
+                with outputpath.open("w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4)
             except TypeError:
                 logging.error("Failed to write JSON for %s, falling back to TXT.", prefix)
 
-        # Handle HTML format
+        # HTML format
         if ext == Format.HTML.value:
-            with out_path.open("w", encoding="utf-8") as f:
-                # HTML header
+            with outputpath.open("w", encoding="utf-8") as f:
                 f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
                 f.write(f'  <meta charset="utf-8">\n  <title>{prefix}</title>\n')
                 f.write(
@@ -75,13 +74,12 @@ class ReportWriter:
                 f.write(f"<h1>{prefix}</h1>\n")
                 if count is not None:
                     f.write(f"<p>Count: {count}</p>\n")
-                # Recursive content
                 ReportWriter.write_html_recursive(f, data)
                 f.write("</body>\n</html>\n")
 
-        # Handle TXT and MD format and fallback
+        # TXT and MD format and fallback
         if ext in (Format.TXT.value, Format.MD.value):
-            with out_path.open("w", encoding="utf-8") as f:
+            with outputpath.open("w", encoding="utf-8") as f:
                 if count is not None:
                     f.write(f"{filename}\n")
                     f.write(f"Count: {count}\n")

@@ -64,10 +64,6 @@ class LogseqNamespaces:
         self.conflicts_parent_depth: dict[str, list[str]] = {}
         self.conflicts_parent_unique: dict[str, set[str]] = {}
 
-    def __len__(self) -> int:
-        """Return the number of unique namespace parts."""
-        return len(self.namespace_data)
-
     def init_ns_parts(self, index: FileIndex) -> None:
         """
         Create namespace parts from the data.

@@ -30,10 +30,10 @@ class Cache:
         self.cache = shelve.open(self.cache_path, protocol=5)
 
     def __repr__(self) -> str:
-        return f'Cache(cache_path="{self.cache_path}")'
+        return f'{self.__class__.__qualname__}(cache_path="{self.cache_path}")'
 
     def __str__(self) -> str:
-        return f"Cache: {self.cache_path}"
+        return f"{self.__class__.__qualname__}: {self.cache_path}"
 
     def close(self) -> None:
         """Close the cache file."""

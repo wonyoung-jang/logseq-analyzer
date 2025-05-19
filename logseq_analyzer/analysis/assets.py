@@ -2,8 +2,6 @@
 Logseq Assets Analysis Module.
 """
 
-from typing import Literal
-
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton
@@ -22,9 +20,13 @@ class LogseqAssets:
         self.backlinked = []
         self.not_backlinked = []
 
-    def __len__(self) -> int:
-        """Return the number of assets."""
-        return len(self.backlinked) + len(self.not_backlinked)
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqAssets instance."""
+        return f"{self.__class__.__qualname__}()"
+
+    def __str__(self) -> str:
+        """Return a string representation of the LogseqAssets instance."""
+        return f"{self.__class__.__qualname__}"
 
     def handle_assets(self, index: FileIndex) -> None:
         """Handle assets for the Logseq Analyzer."""
@@ -76,17 +78,13 @@ class LogseqAssetsHls:
         self.formatted_bullets = set()
         self.not_backlinked = set()
 
-    def __repr__(self) -> Literal["LogseqAssetsHls()"]:
+    def __repr__(self) -> str:
         """Return a string representation of the LogseqAssetsHls instance."""
-        return "LogseqAssetsHls()"
+        return f"{self.__class__.__qualname__}()"
 
-    def __str__(self) -> Literal["LogseqAssetsHls"]:
+    def __str__(self) -> str:
         """Return a string representation of the LogseqAssetsHls instance."""
-        return "LogseqAssetsHls"
-
-    def __len__(self) -> int:
-        """Return the number of hls assets found."""
-        return len(self.formatted_bullets)
+        return f"{self.__class__.__qualname__}"
 
     def get_asset_files(self, index: FileIndex) -> None:
         """Retrieve asset files based on specific criteria."""

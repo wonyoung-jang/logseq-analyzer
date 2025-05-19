@@ -23,11 +23,11 @@ class File:
 
     def __repr__(self) -> str:
         """Return a string representation of the File object."""
-        return f'File(path="{str(self.path)}")'
+        return f'{self.__class__.__qualname__}(path="{str(self.path)}")'
 
     def __str__(self) -> str:
         """Return a string representation of the File object."""
-        return f"File: {str(self.path)}"
+        return f"{self.__class__.__qualname__}: {str(self.path)}"
 
     @property
     def path(self) -> Path:
