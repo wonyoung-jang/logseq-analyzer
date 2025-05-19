@@ -205,20 +205,20 @@ def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, ljf: LogseqJourn
     return lj
 
 
-def setup_logseq_hls_assets() -> LogseqAssetsHls:
+def setup_logseq_hls_assets(index: FileIndex) -> LogseqAssetsHls:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
-    lah.get_asset_files()
-    lah.convert_names_to_data()
+    lah.get_asset_files(index)
+    lah.convert_names_to_data(index)
     lah.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
     return lah
 
 
-def setup_logseq_assets() -> LogseqAssets:
+def setup_logseq_assets(index: FileIndex) -> LogseqAssets:
     """Setup LogseqAssets for handling assets."""
     lsa = LogseqAssets()
-    lsa.handle_assets()
+    lsa.handle_assets(index)
     logging.debug("run_app: setup_logseq_assets")
     return lsa
 
@@ -403,9 +403,9 @@ def run_app(**kwargs) -> None:
     graph_journals = setup_logseq_journals(graph, index, journal_formats)
     progress(75)
     # Assets
-    hls_assets = setup_logseq_hls_assets()
+    hls_assets = setup_logseq_hls_assets(index)
     progress(80)
-    ls_assets = setup_logseq_assets()
+    ls_assets = setup_logseq_assets(index)
     progress(85)
     # Move files
     moved_files = setup_logseq_file_mover(args)

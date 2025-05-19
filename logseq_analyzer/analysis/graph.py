@@ -110,22 +110,26 @@ class LogseqGraph:
 
         for ns_root_file in index[ns_root]:
             ns_root_file: LogseqFile
-            setattr(ns_root_file, "is_namespace", True)
             ns_root_file.path.is_namespace = True
             ns_root_file.path.ns_level = 1
             ns_root_file.path.ns_children.add(file.path.name)
             ns_root_file.path.ns_size = LogseqGraph._process_ns_size(ns_root_file)
+            for key, value in ns_root_file.path.__dict__.items():
+                if key.startswith("ns_") or key == "is_namespace":
+                    setattr(ns_root_file, key, value)
 
         if ns_level <= 2:
             return ns_refs
 
         for ns_parent_file in index[ns_parent]:
             ns_parent_file: LogseqFile
-            setattr(ns_parent_file, "is_namespace", True)
             ns_parent_file.path.is_namespace = True
             ns_parent_file.path.ns_level = ns_level - 1
             ns_parent_file.path.ns_children.add(file.path.name)
             ns_parent_file.path.ns_size = LogseqGraph._process_ns_size(ns_parent_file)
+            for key, value in ns_parent_file.path.__dict__.items():
+                if key.startswith("ns_") or key == "is_namespace":
+                    setattr(ns_parent_file, key, value)
 
         return ns_refs
 
@@ -154,18 +158,16 @@ class LogseqGraph:
         return dangling_links
 
     @staticmethod
-    def _process_ns_size(parent_file: LogseqFile) -> int:
+    def _process_ns_size(file: LogseqFile) -> int:
         """
         Process the size of namespaces.
 
         Args:
-            parent_file (LogseqFile): The parent file to process.
+            file (LogseqFile): The parent file to process.
 
         Returns:
             int: The size of the namespace.
         """
-        if not hasattr(parent_file, "ns_size"):
-            ns_children = getattr(parent_file, "ns_children")
-            return len(ns_children)
-        ns_size = getattr(parent_file, "ns_size")
-        return ns_size + 1
+        if not file.path.ns_size:
+            return len(file.path.ns_children)
+        return file.path.ns_size + 1

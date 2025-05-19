@@ -17,8 +17,6 @@ class LogseqAssets:
 
     __slots__ = ("backlinked", "not_backlinked")
 
-    index = FileIndex()
-
     def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
         self.backlinked = []
@@ -28,9 +26,8 @@ class LogseqAssets:
         """Return the number of assets."""
         return len(self.backlinked) + len(self.not_backlinked)
 
-    def handle_assets(self) -> None:
+    def handle_assets(self, index: FileIndex) -> None:
         """Handle assets for the Logseq Analyzer."""
-        index = LogseqAssets.index
         criteria = {"file_type": "asset"}
         for file in index:
             file_data = file.data
@@ -71,8 +68,6 @@ class LogseqAssetsHls:
         "not_backlinked",
     )
 
-    index = FileIndex()
-
     def __init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
         self.asset_mapping = {}
@@ -93,17 +88,15 @@ class LogseqAssetsHls:
         """Return the number of hls assets found."""
         return len(self.formatted_bullets)
 
-    def get_asset_files(self) -> None:
+    def get_asset_files(self, index: FileIndex) -> None:
         """Retrieve asset files based on specific criteria."""
-        index = LogseqAssetsHls.index
         criteria = {"file_type": "sub_asset"}
         asset_files = index.yield_files_with_keys_and_values(**criteria)
         self.asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(self.asset_mapping.keys())
 
-    def convert_names_to_data(self) -> None:
+    def convert_names_to_data(self, index: FileIndex) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        index = LogseqAssetsHls.index
         property_value_pattern = ContentPatterns.property_value
         criteria = {"is_hls": True}
         formatted_bullets = set()

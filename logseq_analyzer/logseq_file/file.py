@@ -45,7 +45,6 @@ class LogseqFile:
         self.node_type: str = "other"
         self.file_type: str = "other"
         self.masked_blocks: dict[str, str] = {}
-        self.lspath = self.path.__dict__
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
