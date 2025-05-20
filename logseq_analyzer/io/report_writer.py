@@ -15,8 +15,8 @@ class ReportWriter:
 
     __slots__ = ("prefix", "data", "subdir")
 
-    ext = ""
-    output_dir = ""
+    ext: str = ""
+    output_dir: Path = None
 
     def __init__(self, prefix: str, data: Any, subdir: str = "") -> None:
         """
@@ -145,8 +145,7 @@ class ReportWriter:
             else:
                 f.write(f"{indent}\t{key:<60}:\n")
                 ReportWriter.write_recursive(f, values, indent_level + 2)
-        f.write("\n" + "-" * 180 + "\n")
-        f.write("\n")
+        f.write("\n" + "-" * 180 + "\n\n")
 
     @staticmethod
     def write_values_is_collection(f: TextIO, values: Any, indent: str) -> None:

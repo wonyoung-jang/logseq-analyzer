@@ -12,7 +12,7 @@ from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
-from .filesystem import CacheFile, GraphDirectory
+from .filesystem import GraphDirectory
 
 
 @singleton
@@ -23,11 +23,10 @@ class Cache:
 
     __slots__ = ("cache_path", "cache")
 
-    def __init__(self) -> None:
+    def __init__(self, cache_path: Path) -> None:
         """Initialize the class."""
-        cache_file = CacheFile()
-        self.cache_path = cache_file.path
-        self.cache = shelve.open(self.cache_path, protocol=5)
+        self.cache_path = cache_path
+        self.cache = shelve.open(cache_path, protocol=5)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(cache_path="{self.cache_path}")'
@@ -53,13 +52,12 @@ class Cache:
         self.cache_path.unlink()
         self.cache = shelve.open(self.cache_path, protocol=5)
 
-    def clear_deleted_files(self) -> None:
+    def clear_deleted_files(self, index: FileIndex) -> None:
         """Clear the deleted files from the cache."""
-        index = FileIndex()
         if "index" in self.cache:
             del index
             index = self.cache["index"]
-        files_to_remove = set(_yield_deleted_files(index))
+        files_to_remove = set(Cache._yield_deleted_files(index))
         for file in files_to_remove:
             logging.warning("File removed from index: %s", file.file_path)
             index.remove(file)
@@ -81,11 +79,11 @@ class Cache:
                 yield path
         self.cache[Output.MOD_TRACKER.value] = mod_tracker
 
-
-def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
-    """Yield deleted files from the cache."""
-    for file in index:
-        path = file.file_path
-        if not path.exists():
-            logging.debug("File deleted: %s", path)
-            yield file
+    @staticmethod
+    def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
+        """Yield deleted files from the cache."""
+        for file in index:
+            path = file.file_path
+            if not path.exists():
+                logging.debug("File deleted: %s", path)
+                yield file

@@ -89,13 +89,77 @@ class LogseqFile:
         Process content data to extract various elements like backlinks, tags, and properties.
         """
         # Mask code blocks to avoid interference with pattern matching
-        masked_content, masked_blocks = self.mask_blocks(self.bullets.content)
+        raw_content = self.bullets.content
+        masked_content, masked_blocks = self.mask_blocks(raw_content)
         self.masked_blocks = masked_blocks
 
-        primary_data = {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(self.bullets.content),
-            Criteria.ASSETS.value: ContentPatterns.asset.findall(self.bullets.content),
-            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(self.bullets.content),
+        primary_data = LogseqFile._extract_primary_data(masked_content, raw_content)
+
+        # Process aliases and property:values
+        properties_values = dict(ContentPatterns.property_value.findall(raw_content))
+        if aliases := properties_values.get("alias"):
+            aliases = process_aliases(aliases)
+        # Process aliases and properties
+        page_properties = set()
+        if self.bullets.has_page_properties:
+            page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))
+            raw_content = "\n".join(self.bullets.content_bullets)
+        block_properties = set(ContentPatterns.property.findall(raw_content))
+        self.bullets.content = raw_content
+        # Process families of patterns
+        aliases_and_properties = LogseqFile._extract_aliases_and_properties(
+            properties_values, aliases, page_properties, block_properties
+        )
+        primary_data.update(aliases_and_properties)
+        primary_data.update(self.find_and_process_pattern(CodePatterns))
+        primary_data.update(self.find_and_process_pattern(DoubleParenthesesPatterns))
+        primary_data.update(self.find_and_process_pattern(ExternalLinksPatterns))
+        primary_data.update(self.find_and_process_pattern(EmbeddedLinksPatterns))
+        primary_data.update(self.find_and_process_pattern(DoubleCurlyBracketsPatterns))
+        primary_data.update(self.find_and_process_pattern(AdvancedCommandPatterns))
+        self.check_has_backlinks(primary_data)
+
+    @staticmethod
+    def _extract_aliases_and_properties(
+        properties_values: dict, aliases: list, page_properties: set, block_properties: set
+    ) -> dict[str, Any]:
+        """
+        Extract aliases and properties from the content.
+
+        Args:
+            properties_values (dict): Dictionary containing property values.
+            aliases (list): List of aliases.
+            page_properties (set): Set of page properties.
+            block_properties (set): Set of block properties.
+        Returns:
+            dict: A dictionary containing the extracted aliases and properties.
+        """
+        page_props = split_builtin_user_properties(page_properties)
+        block_props = split_builtin_user_properties(block_properties)
+        return {
+            Criteria.ALIASES.value: aliases,
+            Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props.get("built_ins", []),
+            Criteria.PROPERTIES_BLOCK_USER.value: block_props.get("user_props", []),
+            Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props.get("built_ins", []),
+            Criteria.PROPERTIES_PAGE_USER.value: page_props.get("user_props", []),
+            Criteria.PROPERTIES_VALUES.value: properties_values,
+        }
+
+    @staticmethod
+    def _extract_primary_data(masked_content: str, raw_content: str) -> dict[str, str]:
+        """
+        Extract primary data from the content.
+
+        Args:
+            masked_content (str): The content to extract data from.
+            raw_content (str): The raw content to extract data from.
+        Returns:
+            dict: A dictionary containing the extracted data.
+        """
+        return {
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(raw_content),
+            Criteria.ASSETS.value: ContentPatterns.asset.findall(raw_content),
+            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(raw_content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
             Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
             Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
@@ -106,47 +170,6 @@ class LogseqFile:
             Criteria.BOLD.value: ContentPatterns.bold.findall(masked_content),
         }
 
-        # Process aliases and property:values
-        property_value_all = ContentPatterns.property_value.findall(self.bullets.content)
-        properties_values = dict(property_value_all)
-        if aliases := properties_values.get("alias"):
-            aliases = process_aliases(aliases)
-        # Process aliases and properties
-        page_properties = set()
-        if self.bullets.has_page_properties:
-            page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))
-            self.bullets.content = "\n".join(self.bullets.content_bullets)
-        block_properties = set(ContentPatterns.property.findall(self.bullets.content))
-        page_props = split_builtin_user_properties(page_properties)
-        block_props = split_builtin_user_properties(block_properties)
-        aliases_and_properties = {
-            Criteria.ALIASES.value: aliases,
-            Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props.get("built_ins", []),
-            Criteria.PROPERTIES_BLOCK_USER.value: block_props.get("user_props", []),
-            Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props.get("built_ins", []),
-            Criteria.PROPERTIES_PAGE_USER.value: page_props.get("user_props", []),
-            Criteria.PROPERTIES_VALUES.value: properties_values,
-        }
-        primary_data.update(aliases_and_properties)
-        # Process specific families of patterns
-        code_blocks_family = self.find_and_process_pattern(CodePatterns)
-        double_paren_family = self.find_and_process_pattern(DoubleParenthesesPatterns)
-        external_links_family = self.find_and_process_pattern(ExternalLinksPatterns)
-        embedded_links_family = self.find_and_process_pattern(EmbeddedLinksPatterns)
-        double_curly_family = self.find_and_process_pattern(DoubleCurlyBracketsPatterns)
-        advanced_commands_family = self.find_and_process_pattern(AdvancedCommandPatterns)
-        capture_families = [
-            code_blocks_family,
-            double_paren_family,
-            external_links_family,
-            embedded_links_family,
-            double_curly_family,
-            advanced_commands_family,
-        ]
-        for family in capture_families:
-            primary_data.update(family)
-        self.check_has_backlinks(primary_data)
-
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
         """
         Check has backlinks in the content.
@@ -154,12 +177,17 @@ class LogseqFile:
         Args:
             primary_data (dict[str, str]): Dictionary containing primary data.
         """
+        data = {}
+        has_backlinks = self.has_backlinks
         for key, value in primary_data.items():
             if value:
-                self.data[key] = value
-            if not self.has_backlinks:
-                if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
-                    self.has_backlinks = True
+                data[key] = value
+            if has_backlinks:
+                continue
+            if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+                has_backlinks = True
+        self.data = data
+        self.has_backlinks = has_backlinks
 
     def find_and_process_pattern(self, pattern) -> Any:
         """
@@ -168,8 +196,9 @@ class LogseqFile:
         Args:
             pattern: The pattern to find and process.
         """
+        content = self.bullets.content
         all_pattern: Pattern = getattr(pattern, "all", None)
-        results = all_pattern.findall(self.bullets.content)
+        results = all_pattern.findall(content)
         return pattern.process(results)
 
     def determine_node_type(self) -> None:

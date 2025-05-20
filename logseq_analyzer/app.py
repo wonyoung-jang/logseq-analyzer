@@ -22,6 +22,7 @@ from .io.file_mover import handle_move_directory, handle_move_assets
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,
+    CacheFile,
     ConfigFile,
     DeleteAssetsDirectory,
     DeleteBakDirectory,
@@ -152,12 +153,14 @@ def setup_datetime_tokens(token_map: dict[str, str], graph_config: dict[str, str
 
 def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
-    c = Cache()
+    cache_file = CacheFile()
+    cache_path = cache_file.path
+    c = Cache(cache_path)
+    index = FileIndex()
     if a.graph_cache:
         c.clear()
     else:
-        c.clear_deleted_files()
-    index = FileIndex()
+        c.clear_deleted_files(index)
     logging.debug("run_app: setup_cache")
     return c, index
 
