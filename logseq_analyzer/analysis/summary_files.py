@@ -2,9 +2,14 @@
 Logseq File Summarizer Module
 """
 
+from typing import TYPE_CHECKING
+
 from ..utils.enums import SummaryFiles
 from ..utils.helpers import singleton
-from .index import FileIndex, get_attribute_list
+from .index import get_attribute_list
+
+if TYPE_CHECKING:
+    from .index import FileIndex
 
 
 @singleton
@@ -17,7 +22,7 @@ class LogseqFileSummarizer:
         """Initialize the LogseqFileSummarizer instance."""
         self.subsets: dict[str, dict] = {}
 
-    def generate_summary(self, index: FileIndex) -> None:
+    def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = {
             # Process general categories
@@ -56,7 +61,7 @@ class LogseqFileSummarizer:
         self.subsets = subsets
 
     @staticmethod
-    def _process_file_extensions(index: FileIndex) -> dict[str, list[str]]:
+    def _process_file_extensions(index: "FileIndex") -> dict[str, list[str]]:
         """Process file extensions and create subsets for each."""
         file_extension_dict = {}
         unique_exts = {file.path.suffix for file in index if file.path.suffix}

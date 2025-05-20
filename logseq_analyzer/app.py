@@ -54,6 +54,14 @@ class GUIInstanceDummy:
         """Initialize dummy GUI instance."""
         self.progress = {}
 
+    def __repr__(self) -> str:
+        """Return a string representation of the dummy GUI instance."""
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        """Return a string representation of the dummy GUI instance."""
+        return f"{self.__class__.__name__}"
+
     def update_progress(self, percentage) -> None:
         """Simulate updating progress in a GUI."""
         logging.info("Updating progress: %d%%", percentage)
@@ -165,10 +173,12 @@ def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     return c, index
 
 
-def setup_logseq_graph(index: FileIndex, cache: Cache) -> LogseqGraph:
+def setup_logseq_graph(index: FileIndex, cache: Cache, target_dirs: set[str]) -> LogseqGraph:
     """Setup the Logseq graph."""
+    graph_directory = GraphDirectory()
+    graph_dir = graph_directory.path
     lg = LogseqGraph()
-    lg.process_graph_files(index, cache)
+    lg.process_graph_files(index, cache, graph_dir, target_dirs)
     lg.post_processing_content(index)
     lg.process_summary_data(index)
     logging.debug("run_app: setup_logseq_graph")
@@ -332,15 +342,17 @@ def get_moved_files_reports(moved_files: dict[str, Any], la: LogseqAssets, lah: 
     }
 
 
-def get_output_subdirs() -> list[str]:
-    """
-    Combine all reports into a single list.
+def update_cache(cache: Cache, index: FileIndex) -> None:
+    """Update the cache with the current index."""
+    cache.cache["index"] = index
+    logging.debug("run_app: update_cache")
 
-    Returns:
-        list[str]: A list of output subdirectories.
-    """
-    logging.debug("run_app: get_output_subdirs")
-    return [
+
+def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path: Path) -> None:
+    """Write reports to the specified output directories."""
+    ReportWriter.ext = report_format
+    ReportWriter.output_dir = output_dir_path
+    output_subdirs = [
         OutputDir.JOURNALS.value,
         OutputDir.META.value,
         OutputDir.MOVED_FILES.value,
@@ -348,20 +360,6 @@ def get_output_subdirs() -> list[str]:
         OutputDir.SUMMARY_CONTENT.value,
         OutputDir.SUMMARY_FILES.value,
     ]
-
-
-def update_cache(cache: Cache, index: FileIndex) -> None:
-    """Update the cache with the current index."""
-    cache.cache["index"] = index
-    logging.debug("run_app: update_cache")
-
-
-def write_reports(
-    output_subdirs: list[str], data_reports: list[Any], report_format: str, output_dir_path: Path
-) -> None:
-    """Write reports to the specified output directories."""
-    ReportWriter.ext = report_format
-    ReportWriter.output_dir = output_dir_path
     for subdir, reports in zip(output_subdirs, data_reports):
         if subdir in (Output.MOD_TRACKER.value):
             continue
@@ -396,7 +394,8 @@ def run_app(**kwargs) -> None:
     cache, index = setup_cache(args)
     progress(50)
     # Main analysis
-    graph = setup_logseq_graph(index, cache)
+    target_dirs = analyzer_config.target_dirs
+    graph = setup_logseq_graph(index, cache, target_dirs)
     progress(55)
     summary_files = setup_logseq_file_summarizer(index)
     progress(60)
@@ -419,21 +418,20 @@ def run_app(**kwargs) -> None:
     journal_reports = get_journal_reports(graph_journals)
     namespace_reports = get_namespace_reports(graph_namespaces)
     moved_files_reports = get_moved_files_reports(moved_files, ls_assets, hls_assets)
-    output_subdirectories = get_output_subdirs()
-    data_reports = [
+    data_reports = (
         journal_reports,
         meta_reports,
         moved_files_reports,
         namespace_reports,
         summary_content.subsets,
         summary_files.subsets,
-    ]
+    )
     progress(95)
     update_cache(cache, index)
     progress(97)
     report_format = analyzer_config.config["ANALYZER"]["REPORT_FORMAT"]
     output_dir_path = OutputDirectory().path
-    write_reports(output_subdirectories, data_reports, report_format, output_dir_path)
+    write_reports(data_reports, report_format, output_dir_path)
     progress(98)
     analyzer_config.write_to_file()
     progress(99)

@@ -17,11 +17,14 @@ Problems:
 import logging
 from collections import Counter, defaultdict
 from re import Pattern
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from ..utils.enums import Core
 from ..utils.helpers import singleton, sort_dict_by_value
-from .index import FileIndex, get_attribute_list
+from .index import get_attribute_list
+
+if TYPE_CHECKING:
+    from .index import FileIndex
 
 
 @singleton
@@ -72,7 +75,7 @@ class LogseqNamespaces:
         """Return a string representation of the LogseqNamespaces instance."""
         return f"{self.__class__.__name__}"
 
-    def init_ns_parts(self, index: FileIndex) -> None:
+    def init_ns_parts(self, index: "FileIndex") -> None:
         """
         Create namespace parts from the data.
         """
@@ -110,7 +113,7 @@ class LogseqNamespaces:
         self._part_levels = _part_levels
         self._part_entries = _part_entries
 
-    def analyze_ns_queries(self, index: FileIndex, page_ref_pattern: Pattern) -> None:
+    def analyze_ns_queries(self, index: "FileIndex", page_ref_pattern: Pattern) -> None:
         """Analyze namespace queries."""
         ns_queries: dict[str, dict[str, Any]] = {}
         namespace_data = self.namespace_data
@@ -130,7 +133,7 @@ class LogseqNamespaces:
                 ns_queries[query]["logseq_url"] = file.path.logseq_url
         self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
-    def detect_non_ns_conflicts(self, index: FileIndex, dangling_links: set[str]) -> None:
+    def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         criteria = {"is_namespace": False}
         non_ns_files = index.yield_files_with_keys_and_values(**criteria)

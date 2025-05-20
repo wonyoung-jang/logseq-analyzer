@@ -3,6 +3,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import Counter
+from pathlib import Path
 
 from ..config.builtin_properties import get_not_builtin_properties
 from ..io.cache import Cache
@@ -41,9 +42,9 @@ class LogseqGraph:
         return f"{self.__class__.__qualname__}"
 
     @staticmethod
-    def process_graph_files(index: FileIndex, cache: Cache) -> None:
+    def process_graph_files(index: FileIndex, cache: Cache, graph_dir: Path, target_dirs: set[str]) -> None:
         """Process all files in the Logseq graph folder."""
-        for file_path in cache.iter_modified_files():
+        for file_path in cache.iter_modified_files(graph_dir, target_dirs):
             file = LogseqFile(file_path)
             file.init_file_data()
             if file.stat.has_content:

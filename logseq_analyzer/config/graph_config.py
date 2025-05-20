@@ -186,4 +186,4 @@ class LogseqGraphConfig:
         config.update(self._config_user)
         config.update(self._config_global)
         self.config_merged = config
-        logging.debug("Merged config: length - %s", len(self.config_merged))
+        logging.debug("Merged config: length - %s", len(config))

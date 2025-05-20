@@ -8,11 +8,9 @@ from pathlib import Path
 from typing import Any, Generator
 
 from ..analysis.index import FileIndex
-from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
-from .filesystem import GraphDirectory
 
 
 @singleton
@@ -62,13 +60,9 @@ class Cache:
             logging.warning("File removed from index: %s", file.file_path)
             index.remove(file)
 
-    def iter_modified_files(self) -> Generator[Path, Any, None]:
+    def iter_modified_files(self, graph_dir: Path, target_dirs: set[str]) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
         mod_tracker = self.cache.setdefault(Output.MOD_TRACKER.value, {})
-        gd = GraphDirectory()
-        graph_dir = gd.path
-        lac = LogseqAnalyzerConfig()
-        target_dirs = lac.target_dirs
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
@@ -83,7 +77,6 @@ class Cache:
     def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
         """Yield deleted files from the cache."""
         for file in index:
-            path = file.file_path
-            if not path.exists():
-                logging.debug("File deleted: %s", path)
+            if not file.file_path.exists():
+                logging.debug("File deleted: %s", file)
                 yield file

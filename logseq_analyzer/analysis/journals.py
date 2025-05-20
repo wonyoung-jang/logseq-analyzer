@@ -4,12 +4,15 @@ Process logseq journals.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Generator, Optional
+from typing import Any, Generator, TYPE_CHECKING
 
-from ..analysis.index import FileIndex, get_attribute_list
-from ..config.datetime_tokens import LogseqJournalFormats
+from ..analysis.index import get_attribute_list
 from ..utils.helpers import singleton
-from .graph import LogseqGraph
+
+if TYPE_CHECKING:
+    from ..analysis.index import FileIndex
+    from ..config.datetime_tokens import LogseqJournalFormats
+    from .graph import LogseqGraph
 
 
 @singleton
@@ -50,7 +53,7 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.complete_timeline)
 
-    def process_journals_timelines(self, index: FileIndex, graph: LogseqGraph, ljf: LogseqJournalFormats) -> None:
+    def process_journals_timelines(self, index: "FileIndex", graph: "LogseqGraph", ljf: "LogseqJournalFormats") -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         py_page_base_format = ljf.page
         dangling_links = graph.dangling_links
@@ -163,8 +166,8 @@ def _get_date_stats(timeline: list[datetime]) -> dict[str, Any]:
 
 
 def _get_date_ranges(
-    most_recent_date: Optional[datetime], least_recent_date: Optional[datetime]
-) -> tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
+    most_recent_date: datetime | None, least_recent_date: datetime | None
+) -> tuple[int | None, float | None, float | None, float | None]:
     """
     Compute the range between two dates in days, weeks, months, and years.
     """

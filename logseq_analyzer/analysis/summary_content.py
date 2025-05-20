@@ -3,11 +3,13 @@ Logseq Content Summarizer Module
 """
 
 from collections import Counter
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from .index import FileIndex
 
 
 @singleton
@@ -20,7 +22,7 @@ class LogseqContentSummarizer:
         """Initialize the LogseqContentSummarizer instance."""
         self.subsets = {}
 
-    def generate_summary(self, index: FileIndex) -> None:
+    def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         subsets = {}
         for criteria in list(Criteria):
@@ -29,7 +31,7 @@ class LogseqContentSummarizer:
         self.subsets = subsets
 
     @staticmethod
-    def _extract_summary_subset_content(criteria: str, index: FileIndex) -> dict[str, Any]:
+    def _extract_summary_subset_content(criteria: str, index: "FileIndex") -> dict[str, Any]:
         """
         Extract a subset of data based on a specific criteria.
         Asks: What content matches the criteria? And where is it found? How many times?

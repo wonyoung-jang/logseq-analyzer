@@ -35,9 +35,9 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path: Path = file_path
-        self.path: LogseqFilename = LogseqFilename(file_path)
-        self.stat: LogseqFilestats = LogseqFilestats(file_path)
-        self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.path = LogseqFilename(file_path)
+        self.stat = LogseqFilestats(file_path)
+        self.bullets = LogseqBullets(file_path)
         self.data: dict = {}
         self.has_backlinks: bool = False
         self.is_backlinked: bool = False

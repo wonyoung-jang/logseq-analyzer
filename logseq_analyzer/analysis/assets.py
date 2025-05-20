@@ -3,10 +3,14 @@ Logseq Assets Analysis Module.
 """
 
 from re import Pattern
-from ..logseq_file.file import LogseqFile
+from typing import TYPE_CHECKING
+
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from ..logseq_file.file import LogseqFile
+    from .index import FileIndex
 
 
 @singleton
@@ -28,7 +32,7 @@ class LogseqAssets:
         """Return a string representation of the LogseqAssets instance."""
         return f"{self.__class__.__qualname__}"
 
-    def handle_assets(self, index: FileIndex) -> None:
+    def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
         criteria = {"file_type": "asset"}
         for file in index:
@@ -50,7 +54,7 @@ class LogseqAssets:
         self.not_backlinked = sorted(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
 
     @staticmethod
-    def _update_asset_backlink(file_name: str, asset_mentions: list[str], asset: LogseqFile) -> None:
+    def _update_asset_backlink(file_name: str, asset_mentions: list[str], asset: "LogseqFile") -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
         asset.is_backlinked = any(asset.path.name in mention or file_name in mention for mention in asset_mentions)
 
@@ -83,7 +87,7 @@ class LogseqAssetsHls:
         """Return a string representation of the LogseqAssetsHls instance."""
         return f"{self.__class__.__qualname__}"
 
-    def get_asset_files(self, index: FileIndex) -> None:
+    def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
         asset_files = index.yield_files_with_keys_and_values(**criteria)
@@ -91,7 +95,7 @@ class LogseqAssetsHls:
         self.asset_names = set(asset_mapping.keys())
         self.asset_mapping = asset_mapping
 
-    def convert_names_to_data(self, index: FileIndex, property_value_pattern: Pattern) -> None:
+    def convert_names_to_data(self, index: "FileIndex", property_value_pattern: Pattern) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         criteria = {"is_hls": True}
         formatted_bullets = set()
