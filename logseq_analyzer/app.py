@@ -135,9 +135,9 @@ def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
     return lgc
 
 
-def setup_target_dirs(lac: LogseqAnalyzerConfig, graph_config: dict[str, str]) -> None:
+def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    lac.set_logseq_config_edn_data(graph_config)
+    lac.set_logseq_config_edn_data(config)
     AssetsDirectory().get_or_create_dir()
     DrawsDirectory().get_or_create_dir()
     JournalsDirectory().get_or_create_dir()
@@ -147,13 +147,13 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, graph_config: dict[str, str]) -
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(token_map: dict[str, str], graph_config: dict[str, str]) -> LogseqJournalFormats:
+def setup_datetime_tokens(token_map: dict[str, str], config: dict[str, str]) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
     ldtt.get_datetime_token_map(token_map)
     ldtt.set_datetime_token_pattern()
-    ldtt.set_journal_py_formatting(graph_config, ljf)
+    ldtt.set_journal_py_formatting(config, ljf)
     del ldtt
     logging.debug("run_app: setup_datetime_tokens")
     return ljf
@@ -386,10 +386,11 @@ def run_app(**kwargs) -> None:
     progress(30)
     graph_config = setup_logseq_graph_config(args)
     progress(35)
-    setup_target_dirs(analyzer_config, graph_config.config_merged)
+    config = graph_config.config_merged
+    setup_target_dirs(analyzer_config, config)
     progress(40)
     token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
-    journal_formats = setup_datetime_tokens(token_map, graph_config.config_merged)
+    journal_formats = setup_datetime_tokens(token_map, config)
     progress(45)
     cache, index = setup_cache(args)
     progress(50)
