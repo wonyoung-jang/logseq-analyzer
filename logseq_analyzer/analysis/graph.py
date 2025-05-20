@@ -41,9 +41,8 @@ class LogseqGraph:
         return f"{self.__class__.__qualname__}"
 
     @staticmethod
-    def process_graph_files(index: FileIndex) -> None:
+    def process_graph_files(index: FileIndex, cache: Cache) -> None:
         """Process all files in the Logseq graph folder."""
-        cache = Cache()
         for file_path in cache.iter_modified_files():
             file = LogseqFile(file_path)
             file.init_file_data()
@@ -105,26 +104,21 @@ class LogseqGraph:
 
         for ns_root_file in index[ns_root]:
             ns_root_file: LogseqFile
-            ns_root_file.path.is_namespace = True
-            ns_root_file.path.ns_level = 1
+            if not ns_root_file.path.is_namespace:
+                ns_root_file.path.is_namespace = True
+                ns_root_file.path.ns_level = 1
             ns_root_file.path.ns_children.add(file.path.name)
-            ns_root_file.path.ns_size = LogseqGraph._process_ns_size(ns_root_file)
-            for key, value in ns_root_file.path.__dict__.items():
-                if key.startswith("ns_") or key == "is_namespace":
-                    setattr(ns_root_file, key, value)
+            ns_root_file.path.ns_size = len(ns_root_file.path.ns_children)
+            LogseqGraph._set_ns_data(ns_root_file)
 
         if ns_level <= 2:
             return ns_refs
 
         for ns_parent_file in index[ns_parent]:
             ns_parent_file: LogseqFile
-            ns_parent_file.path.is_namespace = True
-            ns_parent_file.path.ns_level = ns_level - 1
             ns_parent_file.path.ns_children.add(file.path.name)
-            ns_parent_file.path.ns_size = LogseqGraph._process_ns_size(ns_parent_file)
-            for key, value in ns_parent_file.path.__dict__.items():
-                if key.startswith("ns_") or key == "is_namespace":
-                    setattr(ns_parent_file, key, value)
+            ns_parent_file.path.ns_size = len(ns_parent_file.path.ns_children)
+            LogseqGraph._set_ns_data(ns_parent_file)
 
         return ns_refs
 
@@ -152,16 +146,7 @@ class LogseqGraph:
         return sorted(get_not_builtin_properties(all_refs))
 
     @staticmethod
-    def _process_ns_size(file: LogseqFile) -> int:
-        """
-        Process the size of namespaces.
-
-        Args:
-            file (LogseqFile): The parent file to process.
-
-        Returns:
-            int: The size of the namespace.
-        """
-        if not file.path.ns_size:
-            return len(file.path.ns_children)
-        return file.path.ns_size + 1
+    def _set_ns_data(file: LogseqFile) -> None:
+        for attr, value in file.path.__dict__.items():
+            if attr.startswith("ns_") or attr == "is_namespace":
+                setattr(file, attr, value)

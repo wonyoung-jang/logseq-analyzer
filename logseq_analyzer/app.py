@@ -162,10 +162,10 @@ def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     return c, index
 
 
-def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
+def setup_logseq_graph(index: FileIndex, cache: Cache) -> LogseqGraph:
     """Setup the Logseq graph."""
     lg = LogseqGraph()
-    lg.process_graph_files(index)
+    lg.process_graph_files(index, cache)
     lg.post_processing_content(index)
     lg.process_summary_data(index)
     logging.debug("run_app: setup_logseq_graph")
@@ -353,8 +353,12 @@ def update_cache(cache: Cache, index: FileIndex) -> None:
     logging.debug("run_app: update_cache")
 
 
-def write_reports(output_subdirs: list[str], data_reports: list[Any]) -> None:
+def write_reports(
+    output_subdirs: list[str], data_reports: list[Any], report_format: str, output_dir_path: Path
+) -> None:
     """Write reports to the specified output directories."""
+    ReportWriter.ext = report_format
+    ReportWriter.output_dir = output_dir_path
     for subdir, reports in zip(output_subdirs, data_reports):
         if subdir in (Output.MOD_TRACKER.value):
             continue
@@ -389,7 +393,7 @@ def run_app(**kwargs) -> None:
     cache, index = setup_cache(args)
     progress(50)
     # Main analysis
-    graph = setup_logseq_graph(index)
+    graph = setup_logseq_graph(index, cache)
     progress(55)
     summary_files = setup_logseq_file_summarizer(index)
     progress(60)
@@ -424,7 +428,9 @@ def run_app(**kwargs) -> None:
     progress(95)
     update_cache(cache, index)
     progress(97)
-    write_reports(output_subdirectories, data_reports)
+    report_format = analyzer_config.config["ANALYZER"]["REPORT_FORMAT"]
+    output_dir_path = OutputDirectory().path
+    write_reports(output_subdirectories, data_reports, report_format, output_dir_path)
     progress(98)
     analyzer_config.write_to_file()
     progress(99)

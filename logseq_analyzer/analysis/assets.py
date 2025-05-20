@@ -87,8 +87,9 @@ class LogseqAssetsHls:
         """Retrieve asset files based on specific criteria."""
         criteria = {"file_type": "sub_asset"}
         asset_files = index.yield_files_with_keys_and_values(**criteria)
-        self.asset_mapping = {file.path.name: file for file in asset_files}
-        self.asset_names = set(self.asset_mapping.keys())
+        asset_mapping = {file.path.name: file for file in asset_files}
+        self.asset_names = set(asset_mapping.keys())
+        self.asset_mapping = asset_mapping
 
     def convert_names_to_data(self, index: FileIndex, property_value_pattern: Pattern) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
@@ -120,9 +121,9 @@ class LogseqAssetsHls:
         formatted_bullets = self.formatted_bullets
         self.backlinked = asset_names.intersection(formatted_bullets)
         self.not_backlinked = asset_names.difference(formatted_bullets)
-        self.update_sub_asset_files()
+        self._update_sub_asset_files()
 
-    def update_sub_asset_files(self) -> None:
+    def _update_sub_asset_files(self) -> None:
         """Update the asset files with backlink status and file type."""
         backlinked = self.backlinked
         not_backlinked = self.not_backlinked

@@ -7,9 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any, TextIO
 
-from ..config.analyzer_config import LogseqAnalyzerConfig
 from ..utils.enums import Format
-from .filesystem import OutputDirectory
 
 
 class ReportWriter:
@@ -17,8 +15,8 @@ class ReportWriter:
 
     __slots__ = ("prefix", "data", "subdir")
 
-    lac = LogseqAnalyzerConfig()
-    od = OutputDirectory()
+    ext = ""
+    output_dir = ""
 
     def __init__(self, prefix: str, data: Any, subdir: str = "") -> None:
         """
@@ -45,13 +43,13 @@ class ReportWriter:
         """
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
-        ext = ReportWriter.lac.config["ANALYZER"]["REPORT_FORMAT"]
+        ext = ReportWriter.ext
         prefix = self.prefix
-        logging.info("Writing %s as %s", prefix, ext)
         data = self.data
         count = len(data) if hasattr(data, "__len__") else None
         filename = f"{prefix}{ext}" if count else f"___EMPTY___{prefix}{ext}"
         outputpath = self.get_output_path(filename)
+        logging.info("Writing %s as %s", prefix, ext)
 
         # JSON format
         if ext == Format.JSON.value:
@@ -99,7 +97,7 @@ class ReportWriter:
         Returns:
             Path: The output path for the report file.
         """
-        output_dir = ReportWriter.od.path
+        output_dir = ReportWriter.output_dir
         if self.subdir:
             output_dir = output_dir / self.subdir
         output_dir.mkdir(parents=True, exist_ok=True)
