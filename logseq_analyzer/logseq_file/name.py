@@ -7,9 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 
-from ..config.analyzer_config import LogseqAnalyzerConfig
-from ..config.datetime_tokens import LogseqJournalFormats
-from ..config.graph_config import LogseqGraphConfig
 from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core
 
@@ -37,6 +34,12 @@ class LogseqFilename:
         "ns_children",
         "ns_size",
     )
+
+    gc_config = {}
+    journal_file_format = ""
+    journal_page_format = ""
+    lac_ls_config = {}
+    ns_file_sep = ""
 
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
@@ -79,10 +82,10 @@ class LogseqFilename:
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
-        lac = LogseqAnalyzerConfig()
-        ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+        ns_file_sep = LogseqFilename.ns_file_sep
+        lac_ls_config = LogseqFilename.lac_ls_config
         name = self.name.strip(ns_file_sep)
-        if self.parent == lac.config["LOGSEQ_CONFIG"]["DIR_JOURNALS"]:
+        if self.parent == lac_ls_config["DIR_JOURNALS"]:
             self.name = LogseqFilename._process_logseq_journal_key(name)
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
@@ -130,8 +133,7 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        lac = LogseqAnalyzerConfig()
-        config = lac.config["LOGSEQ_CONFIG"]
+        config = LogseqFilename.lac_ls_config
         result = {
             config["DIR_ASSETS"]: "asset",
             config["DIR_DRAWS"]: "draw",
@@ -156,15 +158,16 @@ class LogseqFilename:
                 result = "sub_whiteboard"
             self.file_type = result
 
-    @staticmethod
-    def _process_logseq_journal_key(name: str) -> str:
+    @classmethod
+    def _process_logseq_journal_key(cls, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
-            ljf = LogseqJournalFormats()
-            lgc = LogseqGraphConfig()
-            date_object = datetime.strptime(name, ljf.file)
-            page_title_base = date_object.strftime(ljf.page)
-            if Core.DATE_ORDINAL_SUFFIX.value in lgc.config_merged.get(":journal/page-title-format"):
+            file_format = cls.journal_file_format
+            page_format = cls.journal_page_format
+            gc_config = cls.gc_config
+            date_object = datetime.strptime(name, file_format)
+            page_title_base = date_object.strftime(page_format)
+            if Core.DATE_ORDINAL_SUFFIX.value in gc_config.get(":journal/page-title-format"):
                 day_number = date_object.day
                 day_with_ordinal = LogseqFilename._add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
@@ -173,7 +176,7 @@ class LogseqFilename:
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, ljf.page, e)
+            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
             return ""
 
     @staticmethod

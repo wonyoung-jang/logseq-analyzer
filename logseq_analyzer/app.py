@@ -6,6 +6,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from logseq_analyzer.logseq_file.name import LogseqFilename
+
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -171,6 +173,18 @@ def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
         c.clear_deleted_files(index)
     logging.debug("run_app: setup_cache")
     return c, index
+
+
+def setup_logseq_filename_class(
+    lac: LogseqAnalyzerConfig, gc_config: dict[str, str], ljf: LogseqJournalFormats
+) -> LogseqFile:
+    """Setup the Logseq file class."""
+    LogseqFilename.gc_config = gc_config
+    LogseqFilename.journal_file_format = ljf.file
+    LogseqFilename.journal_page_format = ljf.page
+    LogseqFilename.lac_ls_config = lac.config["LOGSEQ_CONFIG"]
+    LogseqFilename.ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+    logging.debug("run_app: setup_logseq_filename_class")
 
 
 def setup_logseq_graph(index: FileIndex, cache: Cache, target_dirs: set[str]) -> LogseqGraph:
@@ -395,6 +409,7 @@ def run_app(**kwargs) -> None:
     cache, index = setup_cache(args)
     progress(50)
     # Main analysis
+    setup_logseq_filename_class(analyzer_config, config, journal_formats)
     target_dirs = analyzer_config.target_dirs
     graph = setup_logseq_graph(index, cache, target_dirs)
     progress(55)
