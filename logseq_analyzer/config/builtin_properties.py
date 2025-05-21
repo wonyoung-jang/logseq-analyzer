@@ -60,7 +60,7 @@ BUILT_INS = frozenset(
 )
 
 
-def split_builtin_user_properties(properties: set[str]) -> dict[str, list[str]]:
+def split_builtin_user_properties(properties: set[str]) -> tuple[list[str], list[str]]:
     """
     Helper function to split properties into built-in and user-defined.
 
@@ -68,13 +68,13 @@ def split_builtin_user_properties(properties: set[str]) -> dict[str, list[str]]:
         properties (set[str]): List of properties to split.
 
     Returns:
-        dict[str, list[str]]: Dictionary containing built-in and user-defined properties.
+        tuple[list[str], list[str]]: Tuple containing two lists:
+            - List of built-in properties.
+            - List of user-defined properties.
     """
-    properties_dict = {
-        "built_ins": sorted(get_builtin_properties(properties)),
-        "user_props": sorted(get_not_builtin_properties(properties)),
-    }
-    return properties_dict
+    built_ins = sorted(get_builtin_properties(properties))
+    user_props = sorted(get_not_builtin_properties(properties))
+    return built_ins, user_props
 
 
 def get_builtin_properties(properties: set[str]) -> set[str]:
