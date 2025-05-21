@@ -78,15 +78,13 @@ def test_split_builtin_user_properties(builtin_properties_set_static):
             "user-defined-property-2",
         ]
     )
-    result = split_builtin_user_properties(properties)
-    assert result["built_ins"] == ["alias", "custom-id"], "Built-in properties should be correctly identified."
-    assert result["user_props"] == [
+    result_builtins, result_user = split_builtin_user_properties(properties)
+    assert result_builtins == ["alias", "custom-id"], "Built-in properties should be correctly identified."
+    assert result_user == [
         "user-defined-property-1",
         "user-defined-property-2",
     ], "User-defined properties should be correctly identified."
-    assert len(result["built_ins"]) + len(result["user_props"]) == len(
-        properties
-    ), "Total properties should match the input list."
+    assert len(result_builtins) + len(result_user) == len(properties), "Total properties should match the input list."
     assert all(
-        prop in builtin_properties_set_static for prop in result["built_ins"]
+        prop in builtin_properties_set_static for prop in result_builtins
     ), "All built-in properties should be in the built-in properties set."
