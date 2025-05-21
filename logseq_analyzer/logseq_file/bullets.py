@@ -11,6 +11,19 @@ from ..utils.patterns import ContentPatterns
 class LogseqBullets:
     """LogseqBullets class."""
 
+    __slots__ = (
+        "file_path",
+        "content",
+        "primary_bullet",
+        "all_bullets",
+        "content_bullets",
+        "char_count",
+        "bullet_count",
+        "bullet_count_empty",
+        "bullet_density",
+        "has_page_properties",
+    )
+
     def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
         self.file_path = file_path

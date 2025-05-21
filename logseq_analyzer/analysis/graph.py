@@ -151,6 +151,8 @@ class LogseqGraph:
 
     @staticmethod
     def _set_ns_data(file: LogseqFile) -> None:
-        for attr, value in file.path.__dict__.items():
+        """Set namespace data for a file."""
+        file_path_data = LogseqFile.collect_attrs(file.path)
+        for attr, value in file_path_data:
             if attr.startswith("ns_") or attr == "is_namespace":
                 setattr(file, attr, value)

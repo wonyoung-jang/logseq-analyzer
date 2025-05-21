@@ -17,6 +17,27 @@ from ..utils.enums import Core
 class LogseqFilename:
     """LogseqFilename class."""
 
+    __slots__ = (
+        "file_path",
+        "name",
+        "parent",
+        "suffix",
+        "parts",
+        "uri",
+        "logseq_url",
+        "file_type",
+        "is_namespace",
+        "is_hls",
+        "ns_parts",
+        "ns_level",
+        "ns_root",
+        "ns_parent",
+        "ns_parent_full",
+        "ns_stem",
+        "ns_children",
+        "ns_size",
+    )
+
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
         self.file_path = file_path

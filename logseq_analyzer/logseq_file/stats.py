@@ -11,6 +11,16 @@ from pathlib import Path
 class LogseqFilestats:
     """LogseqFilestats class."""
 
+    __slots__ = (
+        "file_path",
+        "size",
+        "has_content",
+        "time_existed",
+        "time_unmodified",
+        "date_created",
+        "date_modified",
+    )
+
     _now_ts = datetime.now().timestamp()
 
     def __init__(self, file_path: Path) -> None:

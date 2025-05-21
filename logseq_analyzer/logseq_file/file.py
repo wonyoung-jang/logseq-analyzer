@@ -5,7 +5,7 @@ LogseqFile class to process Logseq files.
 import uuid
 from re import Pattern
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
@@ -76,18 +76,18 @@ class LogseqFile:
 
     def _set_file_data_attributes(self) -> None:
         """Set file data attributes."""
-        path_data = self.path.__dict__
-        stat_data = self.stat.__dict__
-        bullets_data = self.bullets.__dict__
-        _large_attributes = ("all_bullets", "content_bullets", "content")
-
-        for attr, value in path_data.items():
-            setattr(self, attr, value)
-        for attr, value in stat_data.items():
-            setattr(self, attr, value)
-        for attr, value in bullets_data.items():
-            if attr not in _large_attributes:
+        _large = ("all_bullets", "content_bullets", "content")
+        for subdata in (self.stat, self.path, self.bullets):
+            for attr, value in LogseqFile.collect_attrs(subdata):
+                if subdata is self.bullets and attr in _large:
+                    continue
                 setattr(self, attr, value)
+
+    @staticmethod
+    def collect_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
+        """Collect slotted attributes from an object."""
+        for slot in getattr(type(obj), "__slots__", ()):
+            yield slot, getattr(obj, slot)
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
