@@ -56,15 +56,15 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
     moving_plan = []
     moved_names = []
     for root, dirs, files in Path.walk(source_dir):
-        for directory in dirs:
-            current_dir_path = root / directory
-            moved_dir_path = target_dir / directory
-            moving_plan.append((current_dir_path, moved_dir_path))
-            moved_names.append(directory)
+        for dir in dirs:
+            src = root / dir
+            dest = target_dir / dir
+            moving_plan.append((src, dest))
+            moved_names.append(dir)
         for file in files:
-            current_file_path = root / file
-            moved_file_path = target_dir / file
-            moving_plan.append((current_file_path, moved_file_path))
+            src = root / file
+            dest = target_dir / file
+            moving_plan.append((src, dest))
             moved_names.append(file)
 
     if not moving_plan:
