@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from ..config.builtin_properties import get_not_builtin_properties
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import Criteria
+from ..utils.enums import Criteria, FileTypes
 from ..utils.helpers import singleton, sort_dict_by_value, yield_attrs
 
 if TYPE_CHECKING:
@@ -137,7 +137,7 @@ class LogseqGraph:
                 file.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
                 if file.is_backlinked and file.is_backlinked_by_ns_only:
                     file.is_backlinked = False
-            if file.file_type in ("journal", "page"):
+            if file.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 
     def _process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:

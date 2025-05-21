@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from ..io.filesystem import GraphDirectory
-from ..utils.enums import Core
+from ..utils.enums import Core, FileTypes
 
 
 class LogseqFilename:
@@ -135,27 +135,27 @@ class LogseqFilename:
         """
         config = LogseqFilename.lac_ls_config
         result = {
-            config["DIR_ASSETS"]: "asset",
-            config["DIR_DRAWS"]: "draw",
-            config["DIR_JOURNALS"]: "journal",
-            config["DIR_PAGES"]: "page",
-            config["DIR_WHITEBOARDS"]: "whiteboard",
-        }.get(self.parent, "other")
+            config["DIR_ASSETS"]: FileTypes.ASSET.value,
+            config["DIR_DRAWS"]: FileTypes.DRAW.value,
+            config["DIR_JOURNALS"]: FileTypes.JOURNAL.value,
+            config["DIR_PAGES"]: FileTypes.PAGE.value,
+            config["DIR_WHITEBOARDS"]: FileTypes.WHITEBOARD.value,
+        }.get(self.parent, FileTypes.OTHER.value)
 
-        if result != "other":
+        if result != FileTypes.OTHER.value:
             self.file_type = result
         else:
             parts = self.parts
             if config["DIR_ASSETS"] in parts:
-                result = "sub_asset"
+                result = FileTypes.SUB_ASSET.value
             elif config["DIR_DRAWS"] in parts:
-                result = "sub_draw"
+                result = FileTypes.SUB_DRAW.value
             elif config["DIR_JOURNALS"] in parts:
-                result = "sub_journal"
+                result = FileTypes.SUB_JOURNAL.value
             elif config["DIR_PAGES"] in parts:
-                result = "sub_page"
+                result = FileTypes.SUB_PAGE.value
             elif config["DIR_WHITEBOARDS"] in parts:
-                result = "sub_whiteboard"
+                result = FileTypes.SUB_WHITEBOARD.value
             self.file_type = result
 
     @classmethod

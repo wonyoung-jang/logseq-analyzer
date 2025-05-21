@@ -2,7 +2,7 @@
 Test the Criteria enum class.
 """
 
-from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments
+from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments, Nodes, FileTypes
 
 
 # Format
@@ -259,3 +259,44 @@ def test_args_values():
 
 def test_args_member_count():
     assert len(Arguments) == 9
+
+
+def test_nodes_values():
+    expected = {
+        "BRANCH": "branch",
+        "LEAF": "leaf",
+        "ROOT": "root",
+        "ORPHAN_GRAPH": "orphan_graph",
+        "ORPHAN_NAMESPACE": "orphan_namespace",
+        "ORPHAN_NAMESPACE_TRUE": "orphan_namespace_true",
+        "ORPHAN_TRUE": "orphan_true",
+        "OTHER": "other",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Nodes, member_name).value == string_value
+
+
+def test_nodes_member_count():
+    assert len(Nodes) == 8
+
+
+def test_file_types_values():
+    expected = {
+        "ASSET": "asset",
+        "DRAW": "draw",
+        "JOURNAL": "journal",
+        "PAGE": "page",
+        "WHITEBOARD": "whiteboard",
+        "SUB_ASSET": "sub_asset",
+        "SUB_DRAW": "sub_draw",
+        "SUB_JOURNAL": "sub_journal",
+        "SUB_PAGE": "sub_page",
+        "SUB_WHITEBOARD": "sub_whiteboard",
+        "OTHER": "other",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(FileTypes, member_name).value == string_value
+
+
+def test_file_types_member_count():
+    assert len(FileTypes) == 11

@@ -204,3 +204,32 @@ class Arguments(Enum):
     GRAPH_CACHE = "graph_cache"
     REPORT_FORMAT = "report_format"
     GEOMETRY = "geometry"
+
+
+class Nodes(Enum):
+    """Node types for the Logseq Analyzer."""
+
+    BRANCH = "branch"
+    LEAF = "leaf"
+    ROOT = "root"
+    ORPHAN_GRAPH = "orphan_graph"
+    ORPHAN_NAMESPACE = "orphan_namespace"
+    ORPHAN_NAMESPACE_TRUE = "orphan_namespace_true"
+    ORPHAN_TRUE = "orphan_true"
+    OTHER = "other"
+
+
+class FileTypes(Enum):
+    """File types for the Logseq Analyzer."""
+
+    ASSET = "asset"
+    DRAW = "draw"
+    JOURNAL = "journal"
+    PAGE = "page"
+    WHITEBOARD = "whiteboard"
+    SUB_ASSET = "sub_asset"
+    SUB_DRAW = "sub_draw"
+    SUB_JOURNAL = "sub_journal"
+    SUB_PAGE = "sub_page"
+    SUB_WHITEBOARD = "sub_whiteboard"
+    OTHER = "other"

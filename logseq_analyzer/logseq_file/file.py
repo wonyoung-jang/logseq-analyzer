@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ..config.builtin_properties import split_builtin_user_properties
-from ..utils.enums import Criteria
+from ..utils.enums import Criteria, Nodes, FileTypes
 from ..utils.helpers import process_aliases, yield_attrs
 from ..utils.patterns import (
     AdvancedCommandPatterns,
@@ -42,8 +42,8 @@ class LogseqFile:
         self.has_backlinks: bool = False
         self.is_backlinked: bool = False
         self.is_backlinked_by_ns_only: bool = False
-        self.node_type: str = "other"
-        self.file_type: str = "other"
+        self.node_type: str = Nodes.OTHER.value
+        self.file_type: str = FileTypes.OTHER.value
         self.masked_content: str = ""
         self.masked_blocks: dict[str, str] = {}
 
@@ -227,12 +227,17 @@ class LogseqFile:
         """
         data = {}
         has_backlinks = self.has_backlinks
+        backlinks = (
+            Criteria.PAGE_REFERENCES.value,
+            Criteria.TAGGED_BACKLINKS.value,
+            Criteria.TAGS.value,
+        )
         for key, value in primary_data.items():
             if value:
                 data[key] = value
             if has_backlinks:
                 continue
-            if key in ("page_references", "tags", "tagged_backlinks") or "properties" in key:
+            if key in backlinks or "properties" in key:
                 has_backlinks = True
         self.data = data
         self.has_backlinks = has_backlinks
@@ -240,19 +245,22 @@ class LogseqFile:
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
         self.node_type = {
-            (True, True, True, True): "branch",
-            (True, True, False, True): "branch",
-            (True, False, True, True): "branch",
-            (True, True, True, False): "leaf",
-            (True, True, False, False): "leaf",
-            (False, True, True, False): "leaf",
-            (False, True, False, False): "leaf",
-            (True, False, False, True): "root",
-            (True, False, True, False): "orphan_namespace",
-            (False, False, True, False): "orphan_namespace_true",
-            (True, False, False, False): "orphan_graph",
-            (False, False, False, False): "orphan_true",
-        }.get((self.stat.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
+            (True, True, True, True): Nodes.BRANCH.value,
+            (True, True, False, True): Nodes.BRANCH.value,
+            (True, False, True, True): Nodes.BRANCH.value,
+            (True, True, True, False): Nodes.LEAF.value,
+            (True, True, False, False): Nodes.LEAF.value,
+            (False, True, True, False): Nodes.LEAF.value,
+            (False, True, False, False): Nodes.LEAF.value,
+            (True, False, False, True): Nodes.ROOT.value,
+            (True, False, True, False): Nodes.ORPHAN_NAMESPACE.value,
+            (False, False, True, False): Nodes.ORPHAN_NAMESPACE_TRUE.value,
+            (True, False, False, False): Nodes.ORPHAN_GRAPH.value,
+            (False, False, False, False): Nodes.ORPHAN_TRUE.value,
+        }.get(
+            (self.stat.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks),
+            Nodes.OTHER.value,
+        )
 
     def unmask_blocks(self) -> str:
         """
