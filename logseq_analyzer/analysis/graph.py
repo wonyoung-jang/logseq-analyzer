@@ -4,13 +4,16 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from collections import Counter
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ..config.builtin_properties import get_not_builtin_properties
-from ..io.cache import Cache
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from ..io.cache import Cache
+    from .index import FileIndex
 
 
 @singleton
@@ -42,7 +45,7 @@ class LogseqGraph:
         return f"{self.__class__.__qualname__}"
 
     @staticmethod
-    def process_graph_files(index: FileIndex, cache: Cache, graph_dir: Path, target_dirs: set[str]) -> None:
+    def process_graph_files(index: "FileIndex", cache: "Cache", graph_dir: Path, target_dirs: set[str]) -> None:
         """Process all files in the Logseq graph folder."""
         for file_path in cache.iter_modified_files(graph_dir, target_dirs):
             file = LogseqFile(file_path)
@@ -51,7 +54,7 @@ class LogseqGraph:
                 file.process_content_data()
             index.add(file)
 
-    def post_processing_content(self, index: FileIndex) -> None:
+    def post_processing_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
         all_linked_references = {}
         unique_aliases = set()
@@ -96,7 +99,7 @@ class LogseqGraph:
         self.all_dangling_links = all_dangling_links
 
     @staticmethod
-    def _post_processing_content_namespaces(file: LogseqFile, index: FileIndex) -> tuple[str, str]:
+    def _post_processing_content_namespaces(file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         ns_level = file.path.ns_level
         ns_root = file.path.ns_root
@@ -123,7 +126,7 @@ class LogseqGraph:
 
         return ns_refs
 
-    def process_summary_data(self, index: FileIndex) -> None:
+    def process_summary_data(self, index: "FileIndex") -> None:
         """Process summary data for each file based on metadata and content analysis."""
         unique_linked_references = self.unique_linked_references
         unique_linked_references_ns = self.unique_linked_references_ns

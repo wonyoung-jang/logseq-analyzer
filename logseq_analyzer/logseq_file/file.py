@@ -68,26 +68,30 @@ class LogseqFile:
         return NotImplemented
 
     def init_file_data(self) -> None:
-        """
-        Extract metadata from a file.
-        """
+        """Extract metadata from a file."""
         self.path.process_filename()
-        for attr, value in self.path.__dict__.items():
-            setattr(self, attr, value)
-
-        for attr, value in self.stat.__dict__.items():
-            setattr(self, attr, value)
-
+        self.stat.process_stats()
         self.bullets.process_bullets()
-        for attr, value in self.bullets.__dict__.items():
-            if attr in ("all_bullets", "content_bullets", "content"):
-                continue
+        self._set_file_data_attributes()
+
+    def _set_file_data_attributes(self) -> None:
+        """Set file data attributes."""
+        path_data = self.path.__dict__
+        stat_data = self.stat.__dict__
+        bullets_data = self.bullets.__dict__
+        _large_attributes = ("all_bullets", "content_bullets", "content")
+
+        for attr, value in path_data.items():
             setattr(self, attr, value)
+        for attr, value in stat_data.items():
+            setattr(self, attr, value)
+        for attr, value in bullets_data.items():
+            if attr not in _large_attributes:
+                setattr(self, attr, value)
 
     def process_content_data(self) -> None:
-        """
-        Process content data to extract various elements like backlinks, tags, and properties.
-        """
+        """Process content data to extract various elements like backlinks, tags, and properties."""
+
         # Mask code blocks to avoid interference with pattern matching
         raw_content = self.bullets.content
         masked_content, masked_blocks = self.mask_blocks(raw_content)

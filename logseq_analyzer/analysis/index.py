@@ -5,15 +5,13 @@ FileIndex class.
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Generator, Iterator, TYPE_CHECKING
+from typing import Any, Generator, Iterator
 
+from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
-if TYPE_CHECKING:
-    from ..logseq_file.file import LogseqFile
 
-
-def get_attribute_list(file_list: Generator["LogseqFile", None, None], attribute: str) -> list[Any]:
+def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
@@ -54,7 +52,7 @@ class FileIndex:
         """Return the number of files in the index."""
         return len(self.files)
 
-    def __iter__(self) -> Iterator["LogseqFile"]:
+    def __iter__(self) -> Iterator[LogseqFile]:
         """Iterate over the files in the index."""
         return iter(self.files)
 
@@ -70,7 +68,7 @@ class FileIndex:
 
     def __contains__(self, key) -> bool:
         """Check if a file is in the index."""
-        if isinstance(key, "LogseqFile"):
+        if isinstance(key, LogseqFile):
             return key in self.files
         if isinstance(key, int):
             return key in self.hash_to_file
@@ -80,7 +78,7 @@ class FileIndex:
             return key in self.path_to_file
         raise TypeError(f"Invalid key type: {type(key)}. Expected LogseqFile, int, str, or Path.")
 
-    def add(self, file: "LogseqFile") -> None:
+    def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
         self.files.add(file)
         self.hash_to_file[hash(file)] = file
@@ -89,7 +87,7 @@ class FileIndex:
 
     def remove(self, key: Any) -> None:
         """Remove a file from the index."""
-        if isinstance(key, "LogseqFile"):
+        if isinstance(key, LogseqFile):
             if key in self.files:
                 self.files.remove(key)
                 del self.hash_to_file[hash(key)]
@@ -122,19 +120,19 @@ class FileIndex:
                     del self.name_to_files[file.path.name]
             logging.debug("Key %s removed from index.", key)
 
-    def yield_files_with_keys_and_values(self, **criteria) -> Generator["LogseqFile", None, None]:
+    def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         for file in self:
             if all(getattr(file, key) == expected for key, expected in criteria.items()):
                 yield file
 
-    def yield_files_without_keys(self, *criteria) -> Generator["LogseqFile", None, None]:
+    def yield_files_without_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys do not exist."""
         for file in self:
             if all(not hasattr(file, key) for key in criteria):
                 yield file
 
-    def yield_files_with_keys(self, *criteria) -> Generator["LogseqFile", None, None]:
+    def yield_files_with_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys exists."""
         for file in self:
             if all(hasattr(file, key) for key in criteria):
