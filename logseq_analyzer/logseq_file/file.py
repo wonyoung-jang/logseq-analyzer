@@ -5,7 +5,7 @@ LogseqFile class to process Logseq files.
 import uuid
 from re import Pattern
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
@@ -44,6 +44,7 @@ class LogseqFile:
         self.is_backlinked_by_ns_only: bool = False
         self.node_type: str = "other"
         self.file_type: str = "other"
+        self.masked_content: str = ""
         self.masked_blocks: dict[str, str] = {}
 
     def __repr__(self) -> str:
