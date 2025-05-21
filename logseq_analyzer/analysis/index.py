@@ -58,6 +58,10 @@ class FileIndex:
 
     def __getitem__(self, key) -> Any:
         """Get a file by its key."""
+        if isinstance(key, LogseqFile):
+            if key in self:
+                return key
+            raise KeyError(f"File {key} not found in index.")
         if isinstance(key, int):
             return self.hash_to_file.get(key)
         if isinstance(key, str):
@@ -87,53 +91,71 @@ class FileIndex:
 
     def remove(self, key: Any) -> None:
         """Remove a file from the index."""
+        files = self.files
+        hash_to_file = self.hash_to_file
+        name_to_files = self.name_to_files
+        path_to_file = self.path_to_file
         if isinstance(key, LogseqFile):
-            if key in self.files:
-                self.files.remove(key)
-                del self.hash_to_file[hash(key)]
-                self.name_to_files[key.path.name].remove(key)
-                if not self.name_to_files[key.path.name]:
-                    del self.name_to_files[key.path.name]
-                del self.path_to_file[key.file_path]
+            if key in self:
+                file = key
+                name = file.path.name
+                files.remove(file)
+                del hash_to_file[hash(file)]
+                name_to_files[name].remove(file)
+                if not name_to_files[name]:
+                    del name_to_files[name]
+                del path_to_file[file.file_path]
             logging.debug("Key %s removed from index.", key)
         elif isinstance(key, int):
-            if file := self.hash_to_file.pop(key, None):
-                self.files.remove(file)
-                self.name_to_files[file.path.name].remove(file)
-                if not self.name_to_files[file.path.name]:
-                    del self.name_to_files[file.path.name]
-                del self.path_to_file[file.file_path]
+            if file := hash_to_file.pop(key, None):
+                name = file.path.name
+                files.remove(file)
+                name_to_files[name].remove(file)
+                if not name_to_files[name]:
+                    del name_to_files[name]
+                del path_to_file[file.file_path]
             logging.debug("Key %s removed from index.", key)
         elif isinstance(key, str):
-            files = self.name_to_files.pop(key, [])
-            for file in files:
-                self.files.remove(file)
-                del self.hash_to_file[hash(file)]
-                del self.path_to_file[file.file_path]
+            for file in name_to_files.pop(key, []):
+                files.remove(file)
+                del hash_to_file[hash(file)]
+                del path_to_file[file.file_path]
             logging.debug("Key %s removed from index.", key)
         elif isinstance(key, Path):
-            if file := self.path_to_file.pop(key, None):
-                self.files.remove(file)
-                del self.hash_to_file[hash(file)]
-                self.name_to_files[file.path.name].remove(file)
-                if not self.name_to_files[file.path.name]:
-                    del self.name_to_files[file.path.name]
+            if file := path_to_file.pop(key, None):
+                name = file.path.name
+                files.remove(file)
+                del hash_to_file[hash(file)]
+                name_to_files[name].remove(file)
+                if not name_to_files[name]:
+                    del name_to_files[name]
             logging.debug("Key %s removed from index.", key)
 
     def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         for file in self:
-            if all(getattr(file, key) == expected for key, expected in criteria.items()):
+            for key, expected in criteria.items():
+                if not hasattr(file, key):
+                    break
+                if not getattr(file, key) == expected:
+                    break
+            else:
                 yield file
 
     def yield_files_without_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys do not exist."""
         for file in self:
-            if all(not hasattr(file, key) for key in criteria):
+            for key in criteria:
+                if hasattr(file, key):
+                    break
+            else:
                 yield file
 
     def yield_files_with_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on whether the keys exists."""
         for file in self:
-            if all(hasattr(file, key) for key in criteria):
+            for key in criteria:
+                if not hasattr(file, key):
+                    break
+            else:
                 yield file
