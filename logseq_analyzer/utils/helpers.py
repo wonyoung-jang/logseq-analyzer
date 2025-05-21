@@ -119,3 +119,9 @@ def singleton(cls: Type[_T]) -> Type[_T]:
     cls.__init__ = init_wrapper
 
     return cls
+
+
+def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
+    """Collect slotted attributes from an object."""
+    for slot in getattr(type(obj), "__slots__", ()):
+        yield slot, getattr(obj, slot)

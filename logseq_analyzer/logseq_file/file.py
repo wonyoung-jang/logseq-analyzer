@@ -9,7 +9,7 @@ from typing import Any, Generator
 
 from ..config.builtin_properties import split_builtin_user_properties
 from ..utils.enums import Criteria
-from ..utils.helpers import process_aliases
+from ..utils.helpers import process_aliases, yield_attrs
 from ..utils.patterns import (
     AdvancedCommandPatterns,
     CodePatterns,
@@ -78,26 +78,73 @@ class LogseqFile:
         """Set file data attributes."""
         _large = ("all_bullets", "content_bullets", "content")
         for subdata in (self.stat, self.path, self.bullets):
-            for attr, value in LogseqFile.collect_attrs(subdata):
+            for attr, value in yield_attrs(subdata):
                 if subdata is self.bullets and attr in _large:
                     continue
                 setattr(self, attr, value)
 
-    @staticmethod
-    def collect_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
-        """Collect slotted attributes from an object."""
-        for slot in getattr(type(obj), "__slots__", ()):
-            yield slot, getattr(obj, slot)
-
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
-        self.masked_content, self.masked_blocks = self.mask_blocks()
+        self.mask_blocks()
         primary_data = {}
         primary_data.update(self.extract_primary_data())
         primary_data.update(self.extract_aliases_and_propvalues())
         primary_data.update(self.extract_properties())
         primary_data.update(self.extract_patterns())
         self.check_has_backlinks(primary_data)
+
+    def mask_blocks(self) -> None:
+        """
+        Mask code blocks and other patterns in the content.
+        """
+        patterns = [
+            (CodePatterns.all, "__CODE_BLOCK_"),
+            (CodePatterns.inline_code_block, "__INLINE_CODE_"),
+            (AdvancedCommandPatterns.all, "__ADV_COMMAND_"),
+            (DoubleCurlyBracketsPatterns.all, "__DBLCURLY_"),
+            (EmbeddedLinksPatterns.all, "__EMB_LINK_"),
+            (ExternalLinksPatterns.all, "__EXT_LINK_"),
+            (DoubleParenthesesPatterns.all, "__DBLPAREN_"),
+            (ContentPatterns.any_link, "__ANY_LINK_"),
+        ]
+
+        masked_blocks: dict[str, str] = {}
+        masked_content = self.bullets.content
+
+        for regex, prefix in patterns:
+
+            def _repl(match) -> str:
+                placeholder = f"{prefix}{uuid.uuid4()}__"
+                masked_blocks[placeholder] = match.group(0)
+                return placeholder
+
+            masked_content = regex.sub(_repl, masked_content)
+
+        self.masked_blocks = masked_blocks
+        self.masked_content = masked_content
+
+    def extract_primary_data(self) -> dict[str, str]:
+        """
+        Extract primary data from the content.
+
+        Returns:
+            dict: A dictionary containing the extracted data.
+        """
+        raw_content = self.bullets.content
+        masked_content = self.masked_content
+        return {
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(raw_content),
+            Criteria.ASSETS.value: ContentPatterns.asset.findall(raw_content),
+            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(raw_content),
+            Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
+            Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
+            Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
+            Criteria.PAGE_REFERENCES.value: ContentPatterns.page_reference.findall(masked_content),
+            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.tagged_backlink.findall(masked_content),
+            Criteria.TAGS.value: ContentPatterns.tag.findall(masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.dynamic_variable.findall(masked_content),
+            Criteria.BOLD.value: ContentPatterns.bold.findall(masked_content),
+        }
 
     def extract_aliases_and_propvalues(self) -> dict[str, Any]:
         """
@@ -138,28 +185,37 @@ class LogseqFile:
             Criteria.PROPERTIES_PAGE_USER.value: page_props_user,
         }
 
-    def extract_primary_data(self) -> dict[str, str]:
+    def extract_patterns(self) -> dict[str, Any]:
         """
-        Extract primary data from the content.
+        Process patterns in the content.
 
         Returns:
-            dict: A dictionary containing the extracted data.
+            dict: A dictionary containing the processed patterns.
         """
-        raw_content = self.bullets.content
-        masked_content = self.masked_content
-        return {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(raw_content),
-            Criteria.ASSETS.value: ContentPatterns.asset.findall(raw_content),
-            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(raw_content),
-            Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
-            Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
-            Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
-            Criteria.PAGE_REFERENCES.value: ContentPatterns.page_reference.findall(masked_content),
-            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.tagged_backlink.findall(masked_content),
-            Criteria.TAGS.value: ContentPatterns.tag.findall(masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.dynamic_variable.findall(masked_content),
-            Criteria.BOLD.value: ContentPatterns.bold.findall(masked_content),
-        }
+        patterns = (
+            CodePatterns,
+            DoubleParenthesesPatterns,
+            ExternalLinksPatterns,
+            EmbeddedLinksPatterns,
+            DoubleCurlyBracketsPatterns,
+            AdvancedCommandPatterns,
+        )
+        result = {}
+        for pattern in patterns:
+            result.update(self._find_and_process_pattern(pattern))
+        return result
+
+    def _find_and_process_pattern(self, pattern) -> Any:
+        """
+        Find and process a specific pattern in the content.
+
+        Args:
+            pattern: The pattern to find and process.
+        """
+        content = self.bullets.content
+        all_pattern: Pattern = getattr(pattern, "all", None)
+        results = all_pattern.findall(content)
+        return pattern.process(results)
 
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
         """
@@ -180,38 +236,6 @@ class LogseqFile:
         self.data = data
         self.has_backlinks = has_backlinks
 
-    def extract_patterns(self) -> dict[str, Any]:
-        """
-        Process patterns in the content.
-
-        Returns:
-            dict: A dictionary containing the processed patterns.
-        """
-        patterns = (
-            CodePatterns,
-            DoubleParenthesesPatterns,
-            ExternalLinksPatterns,
-            EmbeddedLinksPatterns,
-            DoubleCurlyBracketsPatterns,
-            AdvancedCommandPatterns,
-        )
-        result = {}
-        for pattern in patterns:
-            result.update(self.find_and_process_pattern(pattern))
-        return result
-
-    def find_and_process_pattern(self, pattern) -> Any:
-        """
-        Find and process a specific pattern in the content.
-
-        Args:
-            pattern: The pattern to find and process.
-        """
-        content = self.bullets.content
-        all_pattern: Pattern = getattr(pattern, "all", None)
-        results = all_pattern.findall(content)
-        return pattern.process(results)
-
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
         self.node_type = {
@@ -229,52 +253,15 @@ class LogseqFile:
             (False, False, False, False): "orphan_true",
         }.get((self.stat.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks), "other")
 
-    def mask_blocks(self) -> tuple[str, dict[str, str]]:
-        """
-        Mask code blocks and other patterns in the content.
-
-        Returns:
-            masked_content: the content with placeholders in place of each match
-            masked_blocks: a dict mapping each placeholder to the original text
-        """
-        content = self.bullets.content
-        patterns = [
-            (CodePatterns.all, "__CODE_BLOCK_"),
-            (CodePatterns.inline_code_block, "__INLINE_CODE_"),
-            (AdvancedCommandPatterns.all, "__ADV_COMMAND_"),
-            (DoubleCurlyBracketsPatterns.all, "__DBLCURLY_"),
-            (EmbeddedLinksPatterns.all, "__EMB_LINK_"),
-            (ExternalLinksPatterns.all, "__EXT_LINK_"),
-            (DoubleParenthesesPatterns.all, "__DBLPAREN_"),
-            (ContentPatterns.any_link, "__ANY_LINK_"),
-        ]
-
-        masked_blocks: dict[str, str] = {}
-        masked_content = content
-
-        for regex, prefix in patterns:
-
-            def _repl(match) -> str:
-                placeholder = f"{prefix}{uuid.uuid4()}__"
-                masked_blocks[placeholder] = match.group(0)
-                return placeholder
-
-            masked_content = regex.sub(_repl, masked_content)
-
-        return masked_content, masked_blocks
-
-    def unmask_blocks(self, masked_content: str, masked_blocks: dict[str, str]) -> str:
+    def unmask_blocks(self) -> str:
         """
         Restore the original content by replacing placeholders with their blocks.
-
-        Args:
-            masked_content (str): Content with code block placeholders.
-            masked_blocks (dict[str, str]): Mapping of placeholders to original code blocks.
 
         Returns:
             str: Original content with code blocks restored.
         """
-        content = masked_content
+        content = self.masked_content
+        masked_blocks = self.masked_blocks
         for placeholder, block in masked_blocks.items():
             content = content.replace(placeholder, block)
         return content
