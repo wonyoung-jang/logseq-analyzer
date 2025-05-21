@@ -98,7 +98,7 @@ class LogseqFile:
         """
         Mask code blocks and other patterns in the content.
         """
-        patterns = [
+        patterns = (
             (CodePatterns.all, "__CODE_BLOCK_"),
             (CodePatterns.inline_code_block, "__INLINE_CODE_"),
             (AdvancedCommandPatterns.all, "__ADV_COMMAND_"),
@@ -107,7 +107,7 @@ class LogseqFile:
             (ExternalLinksPatterns.all, "__EXT_LINK_"),
             (DoubleParenthesesPatterns.all, "__DBLPAREN_"),
             (ContentPatterns.any_link, "__ANY_LINK_"),
-        ]
+        )
 
         masked_blocks: dict[str, str] = {}
         masked_content = self.bullets.content

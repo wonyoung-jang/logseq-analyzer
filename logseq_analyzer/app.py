@@ -366,14 +366,14 @@ def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path:
     """Write reports to the specified output directories."""
     ReportWriter.ext = report_format
     ReportWriter.output_dir = output_dir_path
-    output_subdirs = [
+    output_subdirs = (
         OutputDir.JOURNALS.value,
         OutputDir.META.value,
         OutputDir.MOVED_FILES.value,
         OutputDir.NAMESPACES.value,
         OutputDir.SUMMARY_CONTENT.value,
         OutputDir.SUMMARY_FILES.value,
-    ]
+    )
     for subdir, reports in zip(output_subdirs, data_reports):
         if subdir in (Output.MOD_TRACKER.value):
             continue
