@@ -23,12 +23,18 @@ class LogseqConfigEDN:
     A simple EDN parser that converts EDN data into Python data structures.
     """
 
-    __slots__ = ("tokens", "pos")
+    __slots__ = ("tokens", "pos", "_tok_map")
 
     def __init__(self, tokens: Generator[str, Any, None]) -> None:
         """Initialize the parser with a list of tokens."""
         self.tokens = list(tokens)
         self.pos = 0
+        self._tok_map = {
+            "{": self.parse_map,
+            "[": self.parse_vector,
+            "(": self.parse_list,
+            "#{": self.parse_set,
+        }
 
     def peek(self) -> Any | None:
         """Return the next token without advancing the position."""
@@ -52,14 +58,9 @@ class LogseqConfigEDN:
         tok = self.peek()
         if tok is None:
             raise ValueError("Unexpected end of EDN input")
-        if tok == "{":
-            return self.parse_map()
-        if tok == "[":
-            return self.parse_vector()
-        if tok == "(":
-            return self.parse_list()
-        if tok == "#{":
-            return self.parse_set()
+        tok_map = self._tok_map
+        if tok in tok_map:
+            return tok_map[tok]()
         if tok.startswith('"'):
             return self.parse_string()
         if tok in ("true", "false", "nil"):
@@ -134,12 +135,11 @@ class LogseqConfigEDN:
     def parse_literal(self) -> None | bool:
         """Parse a literal value from EDN."""
         tok = self.next()
-        if tok == "true":
-            return True
-        if tok == "false":
-            return False
-        if tok == "nil":
-            return None
+        return {
+            "true": True,
+            "false": False,
+            "nil": None,
+        }.get(tok)
 
     def is_number(self, tok) -> bool:
         """Check if the token is a valid number (integer or float)."""

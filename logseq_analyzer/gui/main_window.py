@@ -56,8 +56,11 @@ class AnalysisWorker(QThread):
 
             run_app(**self.args, progress_callback=update_progress)
             self.finished_signal.emit(True, "", time.time() - curr_time)
+        except KeyboardInterrupt:
+            self.finished_signal.emit(False, "Analysis interrupted by user.", 0)
         except Exception as e:
             self.finished_signal.emit(False, str(e), 0)
+            raise
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -367,5 +370,5 @@ class LogseqAnalyzerGUI(QMainWindow):
 def resource_path(relative_path) -> Any:
     """Get the absolute path to the resource."""
     if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS) / relative_path
+        return Path(getattr(sys, "_MEIPASS")) / relative_path
     return Path(os.path.abspath(".")) / relative_path

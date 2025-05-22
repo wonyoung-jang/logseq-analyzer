@@ -113,7 +113,7 @@ class LogseqFile:
 
         for regex, prefix in patterns:
 
-            def _repl(match) -> str:
+            def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{uuid.uuid4()}__"
                 masked_blocks[placeholder] = match.group(0)
                 return placeholder

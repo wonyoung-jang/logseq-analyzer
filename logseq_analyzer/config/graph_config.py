@@ -187,3 +187,11 @@ class LogseqGraphConfig:
         config.update(self._config_global)
         self.config_merged = config
         logging.debug("Merged config: length - %s", len(config))
+
+    def get_user_config(self) -> dict[str, Any]:
+        """Get user config."""
+        return self._config_user
+
+    def get_global_config(self) -> dict[str, Any]:
+        """Get global config."""
+        return self._config_global
