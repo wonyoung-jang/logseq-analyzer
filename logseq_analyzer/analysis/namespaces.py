@@ -86,13 +86,11 @@ class LogseqNamespaces:
         unique_namespaces_per_level = defaultdict(set)
         _part_levels = defaultdict(set)
         _part_entries = defaultdict(list)
-        tree = self.tree
         criteria = {"is_namespace": True}
         for file in index.yield_files_with_keys_and_values(**criteria):
-            current_level = tree
-            meta = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
-            namespace_data[file.path.name] = meta
-            if not (parts := meta.get("ns_parts")):
+            current_level = self.tree
+            namespace_data[file.path.name] = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
+            if not (parts := namespace_data[file.path.name].get("ns_parts")):
                 continue
             namespace_parts[file.path.name] = parts
             for part, level in parts.items():
@@ -105,7 +103,6 @@ class LogseqNamespaces:
                 _part_entries[part].append({"entry": file.path.name, "level": level})
         self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.namespace_details["level_distribution"] = dict(level_distribution)
-        self.tree = tree
         self.namespace_data = namespace_data
         self.namespace_parts = namespace_parts
         self.unique_namespace_parts = unique_namespace_parts
@@ -141,8 +138,8 @@ class LogseqNamespaces:
         unique_namespace_parts = self.unique_namespace_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)
-        conflicts_non_namespace: dict[str, list[str]] = defaultdict(list)
-        conflicts_dangling: dict[str, list[str]] = defaultdict(list)
+        conflicts_non_namespace = defaultdict(list)
+        conflicts_dangling = defaultdict(list)
         namespace_parts = self.namespace_parts
         for entry, parts in namespace_parts.items():
             for part in parts:
@@ -157,8 +154,8 @@ class LogseqNamespaces:
         """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels
         part_entries = self._part_entries
-        conflicts_parent_depth: dict[str, list[str]] = {}
-        conflicts_parent_unique: dict[str, set[str]] = {}
+        conflicts_parent_depth = {}
+        conflicts_parent_unique = {}
         for part, levels in part_levels.items():
             if len(levels) < 2:
                 continue

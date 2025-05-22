@@ -5,12 +5,14 @@ This module handles caching mechanisms for the application.
 import logging
 import shelve
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, TYPE_CHECKING
 
-from ..analysis.index import FileIndex
-from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
 from ..utils.helpers import iter_files, singleton
+
+if TYPE_CHECKING:
+    from ..analysis.index import FileIndex
+    from ..logseq_file.file import LogseqFile
 
 
 @singleton
@@ -50,7 +52,7 @@ class Cache:
         self.cache_path.unlink()
         self.cache = shelve.open(self.cache_path, protocol=5)
 
-    def clear_deleted_files(self, index: FileIndex) -> None:
+    def clear_deleted_files(self, index: "FileIndex") -> None:
         """Clear the deleted files from the cache."""
         if "index" in self.cache:
             del index
@@ -67,14 +69,14 @@ class Cache:
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str_path)
-            if last_date_mod is None or last_date_mod != curr_date_mod:
+            if last_date_mod != curr_date_mod:
                 mod_tracker[str_path] = curr_date_mod
                 logging.debug("File modified: %s", path)
                 yield path
         self.cache[Output.MOD_TRACKER.value] = mod_tracker
 
     @staticmethod
-    def _yield_deleted_files(index: FileIndex) -> Generator[LogseqFile, Any, None]:
+    def _yield_deleted_files(index: "FileIndex") -> Generator["LogseqFile", Any, None]:
         """Yield deleted files from the cache."""
         for file in index:
             if not file.file_path.exists():

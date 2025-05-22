@@ -262,6 +262,20 @@ class DoubleCurlyBracketsPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        page_embed: Criteria.PAGE_EMBEDS.value,
+        block_embed: Criteria.BLOCK_EMBEDS.value,
+        embed: Criteria.EMBEDS.value,
+        namespace_query: Criteria.NAMESPACE_QUERIES.value,
+        card: Criteria.CARDS.value,
+        cloze: Criteria.CLOZES.value,
+        simple_query: Criteria.SIMPLE_QUERIES.value,
+        query_function: Criteria.QUERY_FUNCTIONS.value,
+        embed_video_url: Criteria.EMBED_VIDEO_URLS.value,
+        embed_twitter_tweet: Criteria.EMBED_TWITTER_TWEETS.value,
+        embed_youtube_timestamp: Criteria.EMBED_YOUTUBE_TIMESTAMPS.value,
+        renderer: Criteria.RENDERERS.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -276,35 +290,16 @@ class DoubleCurlyBracketsPatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.embed.search(result):
-                if cls.page_embed.search(result):
-                    output[Criteria.PAGE_EMBEDS.value].append(result)
-                elif cls.block_embed.search(result):
-                    output[Criteria.BLOCK_EMBEDS.value].append(result)
-                else:
-                    output[Criteria.EMBEDS.value].append(result)
-            elif cls.namespace_query.search(result):
-                output[Criteria.NAMESPACE_QUERIES.value].append(result)
-            elif cls.card.search(result):
-                output[Criteria.CARDS.value].append(result)
-            elif cls.cloze.search(result):
-                output[Criteria.CLOZES.value].append(result)
-            elif cls.simple_query.search(result):
-                output[Criteria.SIMPLE_QUERIES.value].append(result)
-            elif cls.query_function.search(result):
-                output[Criteria.QUERY_FUNCTIONS.value].append(result)
-            elif cls.embed_video_url.search(result):
-                output[Criteria.EMBED_VIDEO_URLS.value].append(result)
-            elif cls.embed_twitter_tweet.search(result):
-                output[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
-            elif cls.embed_youtube_timestamp.search(result):
-                output[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
-            elif cls.renderer.search(result):
-                output[Criteria.RENDERERS.value].append(result)
+        pattern_map = cls.pattern_map
+
+        for match in results:
+            text = match.group(0)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
-                output[Criteria.MACROS.value].append(result)
+                output[Criteria.MACROS.value].append(text)
 
         return output
 
@@ -477,6 +472,23 @@ class AdvancedCommandPatterns:
         """,
         re.DOTALL | re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        export_ascii: Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value,
+        export_latex: Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value,
+        export: Criteria.ADVANCED_COMMANDS_EXPORT.value,
+        caution: Criteria.ADVANCED_COMMANDS_CAUTION.value,
+        center: Criteria.ADVANCED_COMMANDS_CENTER.value,
+        comment: Criteria.ADVANCED_COMMANDS_COMMENT.value,
+        example: Criteria.ADVANCED_COMMANDS_EXAMPLE.value,
+        important: Criteria.ADVANCED_COMMANDS_IMPORTANT.value,
+        note: Criteria.ADVANCED_COMMANDS_NOTE.value,
+        pinned: Criteria.ADVANCED_COMMANDS_PINNED.value,
+        query: Criteria.ADVANCED_COMMANDS_QUERY.value,
+        quote: Criteria.ADVANCED_COMMANDS_QUOTE.value,
+        tip: Criteria.ADVANCED_COMMANDS_TIP.value,
+        verse: Criteria.ADVANCED_COMMANDS_VERSE.value,
+        warning: Criteria.ADVANCED_COMMANDS_WARNING.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -491,41 +503,16 @@ class AdvancedCommandPatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.export.search(result):
-                if cls.export_ascii.search(result):
-                    output[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
-                elif cls.export_latex.search(result):
-                    output[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
-                else:
-                    output[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
-            elif cls.caution.search(result):
-                output[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
-            elif cls.center.search(result):
-                output[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
-            elif cls.comment.search(result):
-                output[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
-            elif cls.example.search(result):
-                output[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
-            elif cls.important.search(result):
-                output[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
-            elif cls.note.search(result):
-                output[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
-            elif cls.pinned.search(result):
-                output[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
-            elif cls.query.search(result):
-                output[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
-            elif cls.quote.search(result):
-                output[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
-            elif cls.tip.search(result):
-                output[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
-            elif cls.verse.search(result):
-                output[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
-            elif cls.warning.search(result):
-                output[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
+        pattern_map = cls.pattern_map
+
+        for match in results:
+            text = match.group(0)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
-                output[Criteria.ADVANCED_COMMANDS.value].append(result)
+                output[Criteria.ADVANCED_COMMANDS.value].append(text)
 
         return output
 
@@ -567,6 +554,10 @@ class CodePatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        calc_block: Criteria.CALC_BLOCKS.value,
+        multiline_code_lang: Criteria.MULTILINE_CODE_LANGS.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -581,14 +572,16 @@ class CodePatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.calc_block.search(result):
-                output[Criteria.CALC_BLOCKS.value].append(result)
-            elif cls.multiline_code_lang.search(result):
-                output[Criteria.MULTILINE_CODE_LANGS.value].append(result)
+        pattern_map = cls.pattern_map
+
+        for match in results:
+            text = match.group(0)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
-                output[Criteria.MULTILINE_CODE_BLOCKS.value].append(result)
+                output[Criteria.MULTILINE_CODE_BLOCKS.value].append(text)
 
         return output
 
@@ -633,12 +626,12 @@ class DoubleParenthesesPatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.block_reference.search(result):
-                output[Criteria.BLOCK_REFERENCES.value].append(result)
+        for match in results:
+            text = match.group(0)
+            if cls.block_reference.search(text):
+                output[Criteria.BLOCK_REFERENCES.value].append(text)
             else:
-                output[Criteria.REFERENCES_GENERAL.value].append(result)
+                output[Criteria.REFERENCES_GENERAL.value].append(text)
 
         return output
 
@@ -688,6 +681,10 @@ class EmbeddedLinksPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        internet: Criteria.EMBEDDED_LINKS_INTERNET.value,
+        asset: Criteria.EMBEDDED_LINKS_ASSET.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -702,14 +699,16 @@ class EmbeddedLinksPatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.internet.search(result):
-                output[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
-            elif cls.asset.search(result):
-                output[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
+        pattern_map = cls.pattern_map
+
+        for match in results:
+            text = match.group(0)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
-                output[Criteria.EMBEDDED_LINKS_OTHER.value].append(result)
+                output[Criteria.EMBEDDED_LINKS_OTHER.value].append(text)
 
         return output
 
@@ -761,6 +760,10 @@ class ExternalLinksPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        internet: Criteria.EXTERNAL_LINKS_INTERNET.value,
+        alias: Criteria.EXTERNAL_LINKS_ALIAS.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -775,13 +778,15 @@ class ExternalLinksPatterns:
         """
         output = defaultdict(list)
 
-        for result in results:
-            result = result.group(0)
-            if cls.internet.search(result):
-                output[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
-            elif cls.alias.search(result):
-                output[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
+        pattern_map = cls.pattern_map
+
+        for match in results:
+            text = match.group(0)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
-                output[Criteria.EXTERNAL_LINKS_OTHER.value].append(result)
+                output[Criteria.EXTERNAL_LINKS_OTHER.value].append(text)
 
         return output

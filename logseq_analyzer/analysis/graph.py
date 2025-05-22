@@ -83,8 +83,8 @@ class LogseqGraph:
                 all_linked_references.setdefault(item, {"count": 0, "found_in": Counter()})
                 all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
                 all_linked_references[item]["found_in"][file.path.name] += 1
-            if ns_parent := file.path.ns_parent:
-                linked_references.remove(ns_parent)
+            if file.path.ns_parent:
+                linked_references.remove(file.path.ns_parent)
             unique_linked_references.update(linked_references)
         self.unique_linked_references = unique_linked_references
         self.unique_linked_references_ns = unique_linked_references_ns
