@@ -49,11 +49,12 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         self.get_content()
         if self.content:
-            self.get_char_count()
-            self.get_bullet_content()
+            self.char_count = len(self.content)
+            self.all_bullets = ContentPatterns.bullet.split(self.content)
             self.get_primary_bullet()
-            self.get_bullet_density()
             self.is_primary_bullet_page_properties()
+            if self.bullet_count:
+                self.bullet_density = round(self.char_count / self.bullet_count, 2)
 
     def get_content(self) -> None:
         """Read the text content of a file."""
@@ -61,15 +62,6 @@ class LogseqBullets:
             self.content = self.file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
-
-    def get_char_count(self) -> None:
-        """Get character count of content"""
-        self.char_count = len(self.content)
-
-    def get_bullet_content(self) -> None:
-        """Get all bullets split into a list"""
-        if self.content:
-            self.all_bullets = ContentPatterns.bullet.split(self.content)
 
     def get_primary_bullet(self) -> None:
         """Get the Logseq primary bullet if available"""
@@ -95,11 +87,6 @@ class LogseqBullets:
         self.bullet_count_empty = bullet_count_empty
         self.content_bullets = content_bullets
         self.primary_bullet = primary_bullet
-
-    def get_bullet_density(self) -> None:
-        """Calculate bullet density: ~Char count / Bullet count"""
-        if self.bullet_count:
-            self.bullet_density = round(self.char_count / self.bullet_count, 2)
 
     def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""
