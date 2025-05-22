@@ -130,6 +130,7 @@ RENDERER = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
+
 PATTERN_MAP = {
     PAGE_EMBED: Criteria.PAGE_EMBEDS.value,
     BLOCK_EMBED: Criteria.BLOCK_EMBEDS.value,

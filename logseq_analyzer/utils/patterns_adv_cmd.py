@@ -16,6 +16,7 @@ ALL = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 EXPORT = re.compile(
     r"""
     \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT"
@@ -26,6 +27,7 @@ EXPORT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 EXPORT_ASCII = re.compile(
     r"""
     \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
@@ -38,6 +40,7 @@ EXPORT_ASCII = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 EXPORT_LATEX = re.compile(
     r"""
     \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
@@ -50,6 +53,7 @@ EXPORT_LATEX = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 CAUTION = re.compile(
     r"""
     \#\+BEGIN_CAUTION   # "#+BEGIN_CAUTION"
@@ -60,6 +64,7 @@ CAUTION = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 CENTER = re.compile(
     r"""
     \#\+BEGIN_CENTER    # "#+BEGIN_CENTER"
@@ -70,6 +75,7 @@ CENTER = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 COMMENT = re.compile(
     r"""
     \#\+BEGIN_COMMENT   # "#+BEGIN_COMMENT"
@@ -80,6 +86,7 @@ COMMENT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 EXAMPLE = re.compile(
     r"""
     \#\+BEGIN_EXAMPLE   # "#+BEGIN_EXAMPLE"
@@ -90,6 +97,7 @@ EXAMPLE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 IMPORTANT = re.compile(
     r"""
     \#\+BEGIN_IMPORTANT # "#+BEGIN_IMPORTANT"
@@ -100,6 +108,7 @@ IMPORTANT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 NOTE = re.compile(
     r"""
     \#\+BEGIN_NOTE      # "#+BEGIN_NOTE"
@@ -110,6 +119,7 @@ NOTE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 PINNED = re.compile(
     r"""
     \#\+BEGIN_PINNED    # "#+BEGIN_PINNED"
@@ -120,6 +130,7 @@ PINNED = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 QUERY = re.compile(
     r"""
     \#\+BEGIN_QUERY     # "#+BEGIN_QUERY"
@@ -130,6 +141,7 @@ QUERY = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 QUOTE = re.compile(
     r"""
     \#\+BEGIN_QUOTE     # "#+BEGIN_QUOTE"
@@ -140,6 +152,7 @@ QUOTE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
+
 TIP = re.compile(
     r"""
     \#\+BEGIN_TIP       # "#+BEGIN_TIP"

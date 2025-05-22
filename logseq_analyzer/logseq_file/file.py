@@ -203,8 +203,8 @@ class LogseqFile:
         result = {}
         content = self.bullets.content
         for pattern in patterns:
-            all_pattern = pattern.ALL.finditer(content)
-            result.update(pattern.process(all_pattern))
+            iter_all = pattern.ALL.finditer(content)
+            result.update(pattern.process(iter_all))
         return result
 
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
