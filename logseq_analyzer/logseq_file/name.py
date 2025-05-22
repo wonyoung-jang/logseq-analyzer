@@ -35,32 +35,32 @@ class LogseqFilename:
         "ns_size",
     )
 
-    gc_config = {}
-    journal_file_format = ""
-    journal_page_format = ""
-    lac_ls_config = {}
-    ns_file_sep = ""
+    gc_config: dict = {}
+    journal_file_format: str = ""
+    journal_page_format: str = ""
+    lac_ls_config: dict = {}
+    ns_file_sep: str = ""
 
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
-        self.file_path = file_path
-        self.name = file_path.stem
-        self.parent = file_path.parent.name
-        self.suffix = file_path.suffix if file_path.suffix else ""
-        self.parts = file_path.parts
-        self.uri = file_path.as_uri()
-        self.logseq_url = ""
-        self.file_type = ""
-        self.is_namespace = False
-        self.is_hls = False
-        self.ns_parts = {}
-        self.ns_level = 0
-        self.ns_root = ""
-        self.ns_parent = ""
-        self.ns_parent_full = ""
-        self.ns_stem = ""
-        self.ns_children = set()
-        self.ns_size = 0
+        self.file_path: Path = file_path
+        self.name: str = file_path.stem
+        self.parent: str = file_path.parent.name
+        self.suffix: str = file_path.suffix if file_path.suffix else ""
+        self.parts: tuple = file_path.parts
+        self.uri: str = file_path.as_uri()
+        self.logseq_url: str = ""
+        self.file_type: str = ""
+        self.is_namespace: bool = False
+        self.is_hls: bool = False
+        self.ns_parts: dict = {}
+        self.ns_level: int = 0
+        self.ns_root: str = ""
+        self.ns_parent: str = ""
+        self.ns_parent_full: str = ""
+        self.ns_stem: str = ""
+        self.ns_children: set = set()
+        self.ns_size: int = 0
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""

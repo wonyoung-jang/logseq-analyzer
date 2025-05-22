@@ -25,7 +25,7 @@ class LogseqFilestats:
 
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilestats object."""
-        self.file_path = file_path
+        self.file_path: Path = file_path
         self.size: int = 0
         self.has_content: bool = False
         self.time_existed: float = 0.0

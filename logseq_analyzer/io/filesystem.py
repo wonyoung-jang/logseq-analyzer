@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 from ..config.analyzer_config import LogseqAnalyzerConfig
+from ..utils.enums import Config
 from ..utils.helpers import singleton
 
 
@@ -229,7 +230,7 @@ class AssetsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerAssetsDir class."""
-        super().__init__(File.config.get("TARGET_DIRS", "DIR_ASSETS"))
+        super().__init__(File.config.get("TARGET_DIRS", Config.DIR_ASSETS.value))
 
 
 @singleton
@@ -238,7 +239,7 @@ class DrawsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerDrawsDir class."""
-        super().__init__(File.config.get("TARGET_DIRS", "DIR_DRAWS"))
+        super().__init__(File.config.get("TARGET_DIRS", Config.DIR_DRAWS.value))
 
 
 @singleton
@@ -247,7 +248,7 @@ class JournalsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerJournalsDir class."""
-        super().__init__(File.config.get("TARGET_DIRS", "DIR_JOURNALS"))
+        super().__init__(File.config.get("TARGET_DIRS", Config.DIR_JOURNALS.value))
 
 
 @singleton
@@ -256,7 +257,7 @@ class PagesDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerPagesDir class."""
-        super().__init__(File.config.get("TARGET_DIRS", "DIR_PAGES"))
+        super().__init__(File.config.get("TARGET_DIRS", Config.DIR_PAGES.value))
 
 
 @singleton
@@ -265,4 +266,4 @@ class WhiteboardsDirectory(File):
 
     def __init__(self) -> None:
         """Initialize the LogseqAnalyzerWhiteboardsDir class."""
-        super().__init__(File.config.get("TARGET_DIRS", "DIR_WHITEBOARDS"))
+        super().__init__(File.config.get("TARGET_DIRS", Config.DIR_WHITEBOARDS.value))

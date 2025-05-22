@@ -612,6 +612,9 @@ class DoubleParenthesesPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    pattern_map = {
+        block_reference: Criteria.BLOCK_REFERENCES.value,
+    }
 
     @classmethod
     def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
@@ -626,10 +629,14 @@ class DoubleParenthesesPatterns:
         """
         output = defaultdict(list)
 
+        pattern_map = cls.pattern_map
+
         for match in results:
             text = match.group(0)
-            if cls.block_reference.search(text):
-                output[Criteria.BLOCK_REFERENCES.value].append(text)
+            for pattern, criteria in pattern_map.items():
+                if pattern.search(text):
+                    output[criteria].append(text)
+                    break
             else:
                 output[Criteria.REFERENCES_GENERAL.value].append(text)
 

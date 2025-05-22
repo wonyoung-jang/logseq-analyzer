@@ -59,9 +59,9 @@ class LogseqJournals:
         dangling_links = graph.dangling_links
         dangling_journals = list(LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         dangling_journals.sort()
-        criteria = {"file_type": "journal"}
-        j_keys = index.yield_files_with_keys_and_values(**criteria)
-        journal_keys = get_attribute_list(j_keys, "name")
+        journal_criteria = {"file_type": "journal"}
+        journal_keys = index.yield_files_with_keys_and_values(**journal_criteria)
+        journal_keys = get_attribute_list(journal_keys, "name")
         processed_keys = list(LogseqJournals._process_journal_keys_to_datetime(journal_keys, py_page_base_format))
         processed_keys.sort()
 

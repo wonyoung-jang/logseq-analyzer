@@ -86,8 +86,8 @@ class LogseqNamespaces:
         unique_namespaces_per_level = defaultdict(set)
         _part_levels = defaultdict(set)
         _part_entries = defaultdict(list)
-        criteria = {"is_namespace": True}
-        for file in index.yield_files_with_keys_and_values(**criteria):
+        ns_criteria = {"is_namespace": True}
+        for file in index.yield_files_with_keys_and_values(**ns_criteria):
             current_level = self.tree
             namespace_data[file.path.name] = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             if not (parts := namespace_data[file.path.name].get("ns_parts")):
@@ -132,8 +132,8 @@ class LogseqNamespaces:
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        criteria = {"is_namespace": False}
-        non_ns_files = index.yield_files_with_keys_and_values(**criteria)
+        not_ns_criteria = {"is_namespace": False}
+        non_ns_files = index.yield_files_with_keys_and_values(**not_ns_criteria)
         non_ns_names = get_attribute_list(non_ns_files, "name")
         unique_namespace_parts = self.unique_namespace_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)

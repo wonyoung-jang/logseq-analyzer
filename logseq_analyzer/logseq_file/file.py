@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from ..config.builtin_properties import split_builtin_user_properties
+from ..config.builtin_properties import get_builtin_properties, get_not_builtin_properties
 from ..utils.enums import Criteria, Nodes, FileTypes
 from ..utils.helpers import process_aliases, yield_attrs
 from ..utils.patterns import (
@@ -34,10 +34,10 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path: Path = file_path
-        self.path = LogseqFilename(file_path)
-        self.stat = LogseqFilestats(file_path)
-        self.bullets = LogseqBullets(file_path)
-        self.data: dict = {}
+        self.path: LogseqFilename = LogseqFilename(file_path)
+        self.stat: LogseqFilestats = LogseqFilestats(file_path)
+        self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.data: dict[str, Any] = {}
         self.has_backlinks: bool = False
         self.is_backlinked: bool = False
         self.is_backlinked_by_ns_only: bool = False
@@ -130,12 +130,12 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted data.
         """
-        raw_content = self.bullets.content
+        content = self.bullets.content
         masked_content = self.masked_content
         return {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(raw_content),
-            Criteria.ASSETS.value: ContentPatterns.asset.findall(raw_content),
-            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(raw_content),
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(content),
+            Criteria.ASSETS.value: ContentPatterns.asset.findall(content),
+            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
             Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
             Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
@@ -153,7 +153,7 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.bullets.content
+        content = self.masked_content
         properties_values = dict(ContentPatterns.property_value.findall(content))
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
@@ -169,15 +169,17 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.bullets.content
+        content = self.masked_content
         page_properties = set()
         if self.bullets.has_page_properties:
             page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
         block_properties = set(ContentPatterns.property.findall(content))
         self.bullets.content = content
-        page_props_builtins, page_props_user = split_builtin_user_properties(page_properties)
-        block_props_builtins, block_props_user = split_builtin_user_properties(block_properties)
+        page_props_builtins = sorted(get_builtin_properties(page_properties))
+        page_props_user = sorted(get_not_builtin_properties(page_properties))
+        block_props_builtins = sorted(get_builtin_properties(block_properties))
+        block_props_user = sorted(get_not_builtin_properties(block_properties))
         return {
             Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props_builtins,
             Criteria.PROPERTIES_BLOCK_USER.value: block_props_user,

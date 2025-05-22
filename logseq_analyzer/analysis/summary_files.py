@@ -54,8 +54,8 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
         subsets = {}
-        for output_name, criteria in summary_categories.items():
-            files = index.yield_files_with_keys_and_values(**criteria)
+        for output_name, file_criteria in summary_categories.items():
+            files = index.yield_files_with_keys_and_values(**file_criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
         subsets[SummaryFiles.FILE_EXTS.value] = LogseqFileSummarizer.process_file_extensions(index)
         self.subsets = subsets
@@ -67,7 +67,7 @@ class LogseqFileSummarizer:
         unique_exts = {file.path.suffix for file in index if file.path.suffix}
         for ext in unique_exts:
             subset_name = f"all {ext}s"
-            criteria = {"suffix": ext}
-            files = index.yield_files_with_keys_and_values(**criteria)
+            ext_criteria = {"suffix": ext}
+            files = index.yield_files_with_keys_and_values(**ext_criteria)
             file_extension_dict[subset_name] = get_attribute_list(files, "name")
         return file_extension_dict

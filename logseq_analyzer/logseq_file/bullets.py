@@ -26,16 +26,16 @@ class LogseqBullets:
 
     def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
-        self.file_path = file_path
-        self.content = ""
-        self.primary_bullet = ""
-        self.all_bullets = []
-        self.content_bullets = []
-        self.char_count = 0
-        self.bullet_count = 0
-        self.bullet_count_empty = 0
-        self.bullet_density = 0.0
-        self.has_page_properties = False
+        self.file_path: Path = file_path
+        self.content: str = ""
+        self.primary_bullet: str = ""
+        self.all_bullets: list[str | None] = []
+        self.content_bullets: list[str | None] = []
+        self.char_count: int = 0
+        self.bullet_count: int = 0
+        self.bullet_count_empty: int = 0
+        self.bullet_density: float = 0.0
+        self.has_page_properties: bool = False
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqBullets object."""

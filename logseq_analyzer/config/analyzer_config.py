@@ -6,7 +6,7 @@ import configparser
 import logging
 from pathlib import Path
 
-from ..utils.enums import Core
+from ..utils.enums import Core, Config
 from ..utils.helpers import singleton
 
 
@@ -64,9 +64,11 @@ class LogseqAnalyzerConfig:
 
     def set_logseq_config_edn_data(self, graph_config: dict[str, str]) -> None:
         """set the Logseq configuration data."""
-        self.set_value("LOGSEQ_CONFIG", "DIR_PAGES", graph_config.get(":pages-directory", "pages"))
-        self.set_value("LOGSEQ_CONFIG", "DIR_JOURNALS", graph_config.get(":journals-directory", "journals"))
-        self.set_value("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", graph_config.get(":whiteboards-directory", "whiteboards"))
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, graph_config.get(":pages-directory", "pages"))
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, graph_config.get(":journals-directory", "journals"))
+        self.set_value(
+            "LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, graph_config.get(":whiteboards-directory", "whiteboards")
+        )
 
         ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
         self.set_value("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
@@ -80,9 +82,9 @@ class LogseqAnalyzerConfig:
         """Get the target directories based on the configuration data."""
         config = self.get_section("LOGSEQ_CONFIG")
         self.target_dirs = {
-            config["DIR_ASSETS"],
-            config["DIR_DRAWS"],
-            config["DIR_PAGES"],
-            config["DIR_JOURNALS"],
-            config["DIR_WHITEBOARDS"],
+            config[Config.DIR_ASSETS.value],
+            config[Config.DIR_DRAWS.value],
+            config[Config.DIR_PAGES.value],
+            config[Config.DIR_JOURNALS.value],
+            config[Config.DIR_WHITEBOARDS.value],
         }

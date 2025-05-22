@@ -34,13 +34,13 @@ class LogseqAssets:
 
     def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
-        criteria = {"file_type": "asset"}
+        asset_criteria = {"file_type": "asset"}
         for file in index:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
-            for asset_file in index.yield_files_with_keys_and_values(**criteria):
+            for asset_file in index.yield_files_with_keys_and_values(**asset_criteria):
                 if asset_file.is_backlinked:
                     continue
                 file_name = file.path.name
@@ -89,17 +89,17 @@ class LogseqAssetsHls:
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
-        criteria = {"file_type": "sub_asset"}
-        asset_files = index.yield_files_with_keys_and_values(**criteria)
+        sub_asset_criteria = {"file_type": "sub_asset"}
+        asset_files = index.yield_files_with_keys_and_values(**sub_asset_criteria)
         asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names = set(asset_mapping.keys())
         self.asset_mapping = asset_mapping
 
     def convert_names_to_data(self, index: "FileIndex", property_value_pattern: Pattern) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        criteria = {"is_hls": True}
+        hls_criteria = {"is_hls": True}
         formatted_bullets = set()
-        for file in index.yield_files_with_keys_and_values(**criteria):
+        for file in index.yield_files_with_keys_and_values(**hls_criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):
