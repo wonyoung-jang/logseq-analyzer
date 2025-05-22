@@ -276,61 +276,39 @@ class DoubleCurlyBracketsPatterns:
         if not results:
             return {}
 
-        double_curly_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.embed.search(result):
-                double_curly_family[Criteria.EMBEDS.value].append(result)
-                results.pop()
                 if cls.page_embed.search(result):
-                    double_curly_family[Criteria.PAGE_EMBEDS.value].append(result)
-                    double_curly_family[Criteria.EMBEDS.value].remove(result)
-                    continue
-                if cls.block_embed.search(result):
-                    double_curly_family[Criteria.BLOCK_EMBEDS.value].append(result)
-                    double_curly_family[Criteria.EMBEDS.value].remove(result)
-                    continue
-            if cls.namespace_query.search(result):
-                double_curly_family[Criteria.NAMESPACE_QUERIES.value].append(result)
-                results.pop()
-                continue
-            if cls.card.search(result):
-                double_curly_family[Criteria.CARDS.value].append(result)
-                results.pop()
-                continue
-            if cls.cloze.search(result):
-                double_curly_family[Criteria.CLOZES.value].append(result)
-                results.pop()
-                continue
-            if cls.simple_query.search(result):
-                double_curly_family[Criteria.SIMPLE_QUERIES.value].append(result)
-                results.pop()
-                continue
-            if cls.query_function.search(result):
-                double_curly_family[Criteria.QUERY_FUNCTIONS.value].append(result)
-                results.pop()
-                continue
-            if cls.embed_video_url.search(result):
-                double_curly_family[Criteria.EMBED_VIDEO_URLS.value].append(result)
-                results.pop()
-                continue
-            if cls.embed_twitter_tweet.search(result):
-                double_curly_family[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
-                results.pop()
-                continue
-            if cls.embed_youtube_timestamp.search(result):
-                double_curly_family[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
-                results.pop()
-                continue
-            if cls.renderer.search(result):
-                double_curly_family[Criteria.RENDERERS.value].append(result)
-                results.pop()
-                continue
+                    output[Criteria.PAGE_EMBEDS.value].append(result)
+                elif cls.block_embed.search(result):
+                    output[Criteria.BLOCK_EMBEDS.value].append(result)
+                else:
+                    output[Criteria.EMBEDS.value].append(result)
+            elif cls.namespace_query.search(result):
+                output[Criteria.NAMESPACE_QUERIES.value].append(result)
+            elif cls.card.search(result):
+                output[Criteria.CARDS.value].append(result)
+            elif cls.cloze.search(result):
+                output[Criteria.CLOZES.value].append(result)
+            elif cls.simple_query.search(result):
+                output[Criteria.SIMPLE_QUERIES.value].append(result)
+            elif cls.query_function.search(result):
+                output[Criteria.QUERY_FUNCTIONS.value].append(result)
+            elif cls.embed_video_url.search(result):
+                output[Criteria.EMBED_VIDEO_URLS.value].append(result)
+            elif cls.embed_twitter_tweet.search(result):
+                output[Criteria.EMBED_TWITTER_TWEETS.value].append(result)
+            elif cls.embed_youtube_timestamp.search(result):
+                output[Criteria.EMBED_YOUTUBE_TIMESTAMPS.value].append(result)
+            elif cls.renderer.search(result):
+                output[Criteria.RENDERERS.value].append(result)
+            else:
+                output[Criteria.MACROS.value].append(result)
 
-        double_curly_family[Criteria.MACROS.value] = results
-
-        return double_curly_family
+        return output
 
 
 @singleton
@@ -516,73 +494,45 @@ class AdvancedCommandPatterns:
         if not results:
             return {}
 
-        advanced_command_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.export.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
-                results.pop()
                 if cls.export_ascii.search(result):
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
-                    continue
-                if cls.export_latex.search(result):
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
-                    advanced_command_family[Criteria.ADVANCED_COMMANDS_EXPORT.value].pop()
-                    continue
-            if cls.caution.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
-                results.pop()
-                continue
-            if cls.center.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
-                results.pop()
-                continue
-            if cls.comment.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
-                results.pop()
-                continue
-            if cls.example.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
-                results.pop()
-                continue
-            if cls.important.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
-                results.pop()
-                continue
-            if cls.note.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
-                results.pop()
-                continue
-            if cls.pinned.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
-                results.pop()
-                continue
-            if cls.query.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
-                results.pop()
-                continue
-            if cls.quote.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
-                results.pop()
-                continue
-            if cls.tip.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
-                results.pop()
-                continue
-            if cls.verse.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
-                results.pop()
-                continue
-            if cls.warning.search(result):
-                advanced_command_family[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
-                results.pop()
-                continue
+                    output[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
+                elif cls.export_latex.search(result):
+                    output[Criteria.ADVANCED_COMMANDS_EXPORT_LATEX.value].append(result)
+                else:
+                    output[Criteria.ADVANCED_COMMANDS_EXPORT.value].append(result)
+            elif cls.caution.search(result):
+                output[Criteria.ADVANCED_COMMANDS_CAUTION.value].append(result)
+            elif cls.center.search(result):
+                output[Criteria.ADVANCED_COMMANDS_CENTER.value].append(result)
+            elif cls.comment.search(result):
+                output[Criteria.ADVANCED_COMMANDS_COMMENT.value].append(result)
+            elif cls.example.search(result):
+                output[Criteria.ADVANCED_COMMANDS_EXAMPLE.value].append(result)
+            elif cls.important.search(result):
+                output[Criteria.ADVANCED_COMMANDS_IMPORTANT.value].append(result)
+            elif cls.note.search(result):
+                output[Criteria.ADVANCED_COMMANDS_NOTE.value].append(result)
+            elif cls.pinned.search(result):
+                output[Criteria.ADVANCED_COMMANDS_PINNED.value].append(result)
+            elif cls.query.search(result):
+                output[Criteria.ADVANCED_COMMANDS_QUERY.value].append(result)
+            elif cls.quote.search(result):
+                output[Criteria.ADVANCED_COMMANDS_QUOTE.value].append(result)
+            elif cls.tip.search(result):
+                output[Criteria.ADVANCED_COMMANDS_TIP.value].append(result)
+            elif cls.verse.search(result):
+                output[Criteria.ADVANCED_COMMANDS_VERSE.value].append(result)
+            elif cls.warning.search(result):
+                output[Criteria.ADVANCED_COMMANDS_WARNING.value].append(result)
+            else:
+                output[Criteria.ADVANCED_COMMANDS.value].append(result)
 
-        advanced_command_family[Criteria.ADVANCED_COMMANDS.value] = results
-
-        return advanced_command_family
+        return output
 
 
 @singleton
@@ -637,22 +587,18 @@ class CodePatterns:
         if not results:
             return {}
 
-        code_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.calc_block.search(result):
-                code_family[Criteria.CALC_BLOCKS.value].append(result)
-                results.pop()
-                continue
-            if cls.multiline_code_lang.search(result):
-                code_family[Criteria.MULTILINE_CODE_LANGS.value].append(result)
-                results.pop()
-                continue
+                output[Criteria.CALC_BLOCKS.value].append(result)
+            elif cls.multiline_code_lang.search(result):
+                output[Criteria.MULTILINE_CODE_LANGS.value].append(result)
+            else:
+                output[Criteria.MULTILINE_CODE_BLOCKS.value].append(result)
 
-        code_family[Criteria.MULTILINE_CODE_BLOCKS.value] = results
-
-        return code_family
+        return output
 
 
 @singleton
@@ -696,18 +642,16 @@ class DoubleParenthesesPatterns:
         if not results:
             return {}
 
-        double_paren_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.block_reference.search(result):
-                double_paren_family[Criteria.BLOCK_REFERENCES.value].append(result)
-                results.pop()
-                continue
+                output[Criteria.BLOCK_REFERENCES.value].append(result)
+            else:
+                output[Criteria.REFERENCES_GENERAL.value].append(result)
 
-        double_paren_family[Criteria.REFERENCES_GENERAL.value] = results
-
-        return double_paren_family
+        return output
 
 
 @singleton
@@ -716,39 +660,42 @@ class EmbeddedLinksPatterns:
 
     all = re.compile(
         r"""
-        \!                  # Exclamation mark
-        \[                  # Opening bracket
-        .*?                 # Any characters (non-greedy)
-        \]                  # Closing bracket
-        \(                  # Opening parenthesis
-        .*?                 # Any characters (non-greedy)
-        \)                  # Closing parenthesis
+        \!\[.*?\]           # ![...]
+        \(.*?\)             # (...)
         """,
         re.IGNORECASE | re.VERBOSE,
     )
     internet = re.compile(
         r"""
-        \!                  # Exclamation mark
-        \[                  # Opening bracket
-        .*?                 # Any characters (non-greedy)
-        \]                  # Closing bracket
+        \!\[.*?\]           # ![...]
         \(                  # Opening parenthesis
-        http.*?             # "http" followed by any characters (non-greedy)
-        \)                  # Closing parenthesis
+        (                        
+            (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
+            (?:\S+(?::\S*)?@)?                      #   optional user:pass@
+            (?:                                     
+                \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
+                |
+                \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
+                |
+                (?:[A-Z0-9-]+\.)+[A-Z]{2,}          #   domain name
+            )
+            (?::\d{2,5})?                           #   optional port
+            (?:/[^\s]*)?                            #   optional path/query/fragment
+        )
+        (?:\s+["\'][^)]*["\'])?\)             # Optional: space followed by quoted string
         """,
         re.IGNORECASE | re.VERBOSE,
     )
     asset = re.compile(
         r"""
-        \!                  # Exclamation mark
-        \[                  # Opening bracket
-        .*?                 # Any characters (non-greedy)
-        \]                  # Closing bracket
-        \(                  # Opening parenthesis
-        .*?                 # Any characters (non-greedy)
-        assets/             # Literal "assets/"
-        .*?                 # Any characters (non-greedy)
-        \)                  # Closing parenthesis
+        \!\[.*?\]               # ![...]
+        \(                      # Opening parenthesis
+        .*?                     # Any characters (non-greedy)
+            assets/             # Literal "assets/" 
+            |
+            \.\.assets/         # or "..assets/"
+        .*?                     # Any characters (non-greedy)
+        \)                      # Closing parenthesis
         """,
         re.IGNORECASE | re.VERBOSE,
     )
@@ -767,22 +714,18 @@ class EmbeddedLinksPatterns:
         if not results:
             return {}
 
-        embedded_links_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.internet.search(result):
-                embedded_links_family[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
-                results.pop()
-                continue
-            if cls.asset.search(result):
-                embedded_links_family[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
-                results.pop()
-                continue
+                output[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
+            elif cls.asset.search(result):
+                output[Criteria.EMBEDDED_LINKS_ASSET.value].append(result)
+            else:
+                output[Criteria.EMBEDDED_LINKS_OTHER.value].append(result)
 
-        embedded_links_family[Criteria.EMBEDDED_LINKS_OTHER.value] = results
-
-        return embedded_links_family
+        return output
 
 
 @singleton
@@ -791,40 +734,44 @@ class ExternalLinksPatterns:
 
     all = re.compile(
         r"""
-        (?<!\!)            # Negative lookbehind: not preceded by !
-        \[                 # Opening bracket
-        .*?                # Any characters (non-greedy)
-        \]                 # Closing bracket
-        \(                 # Opening parenthesis
-        .*?                # Any characters (non-greedy)
-        \)                 # Closing parenthesis
+        (?<!\!)             # Negative lookbehind: not preceded by !
+        \[.*?\]             # [...]
+        \(.*?\)             # (...)
         """,
         re.IGNORECASE | re.VERBOSE,
     )
     internet = re.compile(
         r"""
-        (?<!\!)            # Negative lookbehind: not preceded by !
-        \[                 # Opening bracket
-        .*?                # Any characters (non-greedy)
-        \]                 # Closing bracket
-        \(                 # Opening parenthesis
-        http.*?            # "http" followed by any characters (non-greedy)
-        \)                 # Closing parenthesis
+        (?<!\!)             # Negative lookbehind: not preceded by !
+        \[.*?\]             # [...]
+        \(                  # Opening parenthesis
+        (                        
+            (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
+            (?:\S+(?::\S*)?@)?                      #   optional user:pass@
+            (?:                                     
+                \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
+                |
+                \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
+                |
+                (?:[A-Z0-9-]+\.)+[A-Z]{2,}          #   domain name
+            )
+            (?::\d{2,5})?                           #   optional port
+            (?:/[^\s]*)?                            #   optional path/query/fragment
+        )
+        (?:\s+["\'][^)]*["\'])?\)             # Optional: space followed by quoted string
         """,
         re.IGNORECASE | re.VERBOSE,
     )
     alias = re.compile(
         r"""
-        (?<!\!)                # Negative lookbehind: not preceded by !
-        \[                     # Opening bracket
-        .*?                    # Any characters (non-greedy)
-        \]                     # Closing bracket
-        \(                     # Opening parenthesis
-        [\[\[|\(\(]            # Either [[ or ((
-        .*?                    # Any characters (non-greedy)
-        [\]\]|\)\)]            # Either ]] or ))
-        .*?                    # Any characters (non-greedy)
-        \)                     # Closing parenthesis
+        (?<!\!)             # Negative lookbehind: not preceded by !
+        \[.*?\]             # [...]
+        \(                  # Opening parenthesis
+            [\[\[|\(\(]         # Either [[ or ((
+            .*?                 # Any characters (non-greedy)
+            [\]\]|\)\)]         # Either ]] or ))
+            .*?                 # Any characters (non-greedy)
+        \)                  # Closing parenthesis
         """,
         re.IGNORECASE | re.VERBOSE,
     )
@@ -843,19 +790,15 @@ class ExternalLinksPatterns:
         if not results:
             return {}
 
-        external_links_family = defaultdict(list)
+        output = defaultdict(list)
 
         for _ in range(len(results)):
-            result = results[-1]
+            result = results.pop()
             if cls.internet.search(result):
-                external_links_family[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
-                results.pop()
-                continue
-            if cls.alias.search(result):
-                external_links_family[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
-                results.pop()
-                continue
+                output[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
+            elif cls.alias.search(result):
+                output[Criteria.EXTERNAL_LINKS_ALIAS.value].append(result)
+            else:
+                output[Criteria.EXTERNAL_LINKS_OTHER.value].append(result)
 
-        external_links_family[Criteria.EXTERNAL_LINKS_OTHER.value] = results
-
-        return external_links_family
+        return output
