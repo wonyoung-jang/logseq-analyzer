@@ -153,7 +153,7 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.masked_content
+        content = self.bullets.content
         properties_values = dict(ContentPatterns.property_value.findall(content))
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
@@ -169,7 +169,7 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.masked_content
+        content = self.bullets.content
         page_properties = set()
         if self.bullets.has_page_properties:
             page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))

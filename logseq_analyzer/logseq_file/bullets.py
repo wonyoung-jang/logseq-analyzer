@@ -67,9 +67,9 @@ class LogseqBullets:
         """Get the Logseq primary bullet if available"""
         primary_bullet = ""
         all_bullets = self.all_bullets
+        content_bullets = self.content_bullets
         bullet_count = 0
         bullet_count_empty = 0
-        content_bullets = []
         if len(all_bullets) == 1:
             if primary_bullet := all_bullets[0].strip():
                 bullet_count = 1
@@ -85,7 +85,6 @@ class LogseqBullets:
                     bullet_count += 1
         self.bullet_count = bullet_count
         self.bullet_count_empty = bullet_count_empty
-        self.content_bullets = content_bullets
         self.primary_bullet = primary_bullet
 
     def is_primary_bullet_page_properties(self) -> None:

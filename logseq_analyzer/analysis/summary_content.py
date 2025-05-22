@@ -27,7 +27,7 @@ class LogseqContentSummarizer:
         subsets = {}
         for criteria in list(Criteria):
             criteria_value = criteria.value
-            subsets[criteria_value] = LogseqContentSummarizer.extract_summary_subset_content(criteria_value, index)
+            subsets[criteria_value] = self.extract_summary_subset_content(criteria_value, index)
         self.subsets = subsets
 
     @staticmethod
