@@ -4,6 +4,7 @@ Compile frequently used regex patterns for Logseq content.
 
 import re
 from collections import defaultdict
+from typing import Iterator
 
 from .enums import Criteria
 from .helpers import singleton
@@ -263,23 +264,20 @@ class DoubleCurlyBracketsPatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process double curly braces and extract relevant data.
 
         Args:
-            results (list[str]): List of double curly brace strings.
+            results (Iterator[re.Match[str]]): Iterator of regex match objects for double curly braces.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing double curly brace data.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.embed.search(result):
                 if cls.page_embed.search(result):
                     output[Criteria.PAGE_EMBEDS.value].append(result)
@@ -481,23 +479,20 @@ class AdvancedCommandPatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process advanced commands and extract relevant data.
 
         Args:
-            results (list[str]): List of advanced command strings.
+            results (Iterator[re.Match[str]]): Iterator of regex match objects for advanced commands.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing advanced commands.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.export.search(result):
                 if cls.export_ascii.search(result):
                     output[Criteria.ADVANCED_COMMANDS_EXPORT_ASCII.value].append(result)
@@ -574,23 +569,20 @@ class CodePatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process code blocks and categorize them.
 
         Args:
-            results (list[str]): List of code block strings.
+            results (Iterator[re.Match[str]]): Iterator of regex match objects for code blocks.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing code blocks.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.calc_block.search(result):
                 output[Criteria.CALC_BLOCKS.value].append(result)
             elif cls.multiline_code_lang.search(result):
@@ -629,23 +621,20 @@ class DoubleParenthesesPatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process double parentheses and categorize them.
 
         Args:
-            results (list[str]): List of double parenthesis strings.
+            results (Iterator[re.Match[str]]): Iterator of regex match objects for double parentheses.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing double parentheses.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.block_reference.search(result):
                 output[Criteria.BLOCK_REFERENCES.value].append(result)
             else:
@@ -701,23 +690,20 @@ class EmbeddedLinksPatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process embedded links and categorize them.
 
         Args:
-            results (list[str]): List of embedded link strings.
+            results (Iterator[re.Match[str]]): Iterator of regex match objects for embedded links.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing embedded links.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.internet.search(result):
                 output[Criteria.EMBEDDED_LINKS_INTERNET.value].append(result)
             elif cls.asset.search(result):
@@ -777,23 +763,20 @@ class ExternalLinksPatterns:
     )
 
     @classmethod
-    def process(cls, results: list[str]) -> dict[str, list[str]]:
+    def process(cls, results: Iterator[re.Match[str]]) -> dict[str, list[str]]:
         """
         Process external links and categorize them.
 
         Args:
-            results (list[str]): List of external link strings.
+            Iterator[re.Match[str]]: Iterator of regex match objects for external links.
 
         Returns:
             dict[str, list[str]]: Dictionary categorizing external links.
         """
-        if not results:
-            return {}
-
         output = defaultdict(list)
 
-        for _ in range(len(results)):
-            result = results.pop()
+        for result in results:
+            result = result.group(0)
             if cls.internet.search(result):
                 output[Criteria.EXTERNAL_LINKS_INTERNET.value].append(result)
             elif cls.alias.search(result):

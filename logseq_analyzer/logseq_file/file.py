@@ -202,21 +202,11 @@ class LogseqFile:
             AdvancedCommandPatterns,
         )
         result = {}
-        for pattern in patterns:
-            result.update(self._find_and_process_pattern(pattern))
-        return result
-
-    def _find_and_process_pattern(self, pattern) -> Any:
-        """
-        Find and process a specific pattern in the content.
-
-        Args:
-            pattern: The pattern to find and process.
-        """
         content = self.bullets.content
-        all_pattern: Pattern = getattr(pattern, "all", None)
-        results = all_pattern.findall(content)
-        return pattern.process(results)
+        for pattern in patterns:
+            all_pattern = pattern.all.finditer(content)
+            result.update(pattern.process(all_pattern))
+        return result
 
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
         """
