@@ -3,7 +3,6 @@ LogseqFile class to process Logseq files.
 """
 
 import uuid
-from re import Pattern
 from pathlib import Path
 from typing import Any
 
