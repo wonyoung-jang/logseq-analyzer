@@ -6,18 +6,16 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
+import logseq_analyzer.utils.patterns_code as CodePatterns
+import logseq_analyzer.utils.patterns_double_curly as DoubleCurlyBracketsPatterns
+import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPatterns
+import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
+import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..config.builtin_properties import get_builtin_properties, get_not_builtin_properties
 from ..utils.enums import Criteria, Nodes, FileTypes
 from ..utils.helpers import process_aliases, yield_attrs
-from ..utils.patterns import (
-    AdvancedCommandPatterns,
-    CodePatterns,
-    ContentPatterns,
-    DoubleCurlyBracketsPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinksPatterns,
-    ExternalLinksPatterns,
-)
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
@@ -98,14 +96,14 @@ class LogseqFile:
         Mask code blocks and other patterns in the content.
         """
         patterns = (
-            (CodePatterns.all, "__CODE_BLOCK_"),
-            (CodePatterns.inline_code_block, "__INLINE_CODE_"),
-            (AdvancedCommandPatterns.all, "__ADV_COMMAND_"),
-            (DoubleCurlyBracketsPatterns.all, "__DBLCURLY_"),
-            (EmbeddedLinksPatterns.all, "__EMB_LINK_"),
-            (ExternalLinksPatterns.all, "__EXT_LINK_"),
-            (DoubleParenthesesPatterns.all, "__DBLPAREN_"),
-            (ContentPatterns.any_link, "__ANY_LINK_"),
+            (CodePatterns.ALL, "__CODE_BLOCK_"),
+            (CodePatterns.INLINE_CODE_BLOCK, "__INLINE_CODE_"),
+            (AdvancedCommandPatterns.ALL, "__ADV_COMMAND_"),
+            (DoubleCurlyBracketsPatterns.ALL, "__DBLCURLY_"),
+            (EmbeddedLinksPatterns.ALL, "__EMB_LINK_"),
+            (ExternalLinksPatterns.ALL, "__EXT_LINK_"),
+            (DoubleParenthesesPatterns.ALL, "__DBLPAREN_"),
+            (ContentPatterns.ANY_LINK, "__ANY_LINK_"),
         )
 
         masked_blocks: dict[str, str] = {}
@@ -133,17 +131,17 @@ class LogseqFile:
         content = self.bullets.content
         masked_content = self.masked_content
         return {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.inline_code_block.findall(content),
-            Criteria.ASSETS.value: ContentPatterns.asset.findall(content),
-            Criteria.ANY_LINKS.value: ContentPatterns.any_link.findall(content),
-            Criteria.BLOCKQUOTES.value: ContentPatterns.blockquote.findall(masked_content),
-            Criteria.DRAWS.value: ContentPatterns.draw.findall(masked_content),
-            Criteria.FLASHCARDS.value: ContentPatterns.flashcard.findall(masked_content),
-            Criteria.PAGE_REFERENCES.value: ContentPatterns.page_reference.findall(masked_content),
-            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.tagged_backlink.findall(masked_content),
-            Criteria.TAGS.value: ContentPatterns.tag.findall(masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.dynamic_variable.findall(masked_content),
-            Criteria.BOLD.value: ContentPatterns.bold.findall(masked_content),
+            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
+            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
+            Criteria.ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
+            Criteria.BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
+            Criteria.DRAWS.value: ContentPatterns.DRAW.findall(masked_content),
+            Criteria.FLASHCARDS.value: ContentPatterns.FLASHCARD.findall(masked_content),
+            Criteria.PAGE_REFERENCES.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
+            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
+            Criteria.TAGS.value: ContentPatterns.TAG.findall(masked_content),
+            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
+            Criteria.BOLD.value: ContentPatterns.BOLD.findall(masked_content),
         }
 
     def extract_aliases_and_propvalues(self) -> dict[str, Any]:
@@ -154,7 +152,7 @@ class LogseqFile:
             dict: A dictionary containing the extracted aliases and properties.
         """
         content = self.bullets.content
-        properties_values = dict(ContentPatterns.property_value.findall(content))
+        properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
         if aliases := properties_values.get("alias"):
             aliases = process_aliases(aliases)
         return {
@@ -172,9 +170,9 @@ class LogseqFile:
         content = self.bullets.content
         page_properties = set()
         if self.bullets.has_page_properties:
-            page_properties = set(ContentPatterns.property.findall(self.bullets.primary_bullet))
+            page_properties = set(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
-        block_properties = set(ContentPatterns.property.findall(content))
+        block_properties = set(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
         page_props_builtins = sorted(get_builtin_properties(page_properties))
         page_props_user = sorted(get_not_builtin_properties(page_properties))
@@ -195,17 +193,17 @@ class LogseqFile:
             dict: A dictionary containing the processed patterns.
         """
         patterns = (
-            CodePatterns,
-            DoubleParenthesesPatterns,
             ExternalLinksPatterns,
             EmbeddedLinksPatterns,
-            DoubleCurlyBracketsPatterns,
+            DoubleParenthesesPatterns,
+            CodePatterns,
             AdvancedCommandPatterns,
+            DoubleCurlyBracketsPatterns,
         )
         result = {}
         content = self.bullets.content
         for pattern in patterns:
-            all_pattern = pattern.all.finditer(content)
+            all_pattern = pattern.ALL.finditer(content)
             result.update(pattern.process(all_pattern))
         return result
 

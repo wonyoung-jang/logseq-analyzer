@@ -6,8 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from logseq_analyzer.logseq_file.name import LogseqFilename
-
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -43,8 +42,8 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
+from .logseq_file.name import LogseqFilename
 from .utils.enums import Moved, Output, OutputDir
-from .utils.patterns import ContentPatterns
 
 
 class GUIInstanceDummy:
@@ -219,7 +218,7 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
     ln.init_ns_parts(index)
-    ln.analyze_ns_queries(index, ContentPatterns.page_reference)
+    ln.analyze_ns_queries(index, ContentPatterns.PAGE_REFERENCE)
     ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
     logging.debug("run_app: setup_logseq_namespaces")
@@ -238,7 +237,7 @@ def setup_logseq_hls_assets(index: FileIndex) -> LogseqAssetsHls:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
     lah.get_asset_files(index)
-    lah.convert_names_to_data(index, ContentPatterns.property_value)
+    lah.convert_names_to_data(index, ContentPatterns.PROPERTY_VALUE)
     lah.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
     return lah

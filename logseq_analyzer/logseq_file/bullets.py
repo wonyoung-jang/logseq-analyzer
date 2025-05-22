@@ -5,7 +5,7 @@ Module for LogseqBullets class
 import logging
 from pathlib import Path
 
-from ..utils.patterns import ContentPatterns
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 
 
 class LogseqBullets:
@@ -50,7 +50,7 @@ class LogseqBullets:
         self.get_content()
         if self.content:
             self.char_count = len(self.content)
-            self.all_bullets = ContentPatterns.bullet.split(self.content)
+            self.all_bullets = ContentPatterns.BULLET.split(self.content)
             self.get_primary_bullet()
             self.is_primary_bullet_page_properties()
             if self.bullet_count:
