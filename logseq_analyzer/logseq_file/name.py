@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from ..io.filesystem import GraphDirectory
-from ..utils.enums import Core, FileTypes
+from ..utils.enums import Core, FileTypes, Config
 
 
 class LogseqFilename:
@@ -135,26 +135,26 @@ class LogseqFilename:
         """
         config = LogseqFilename.lac_ls_config
         result = {
-            config["DIR_ASSETS"]: FileTypes.ASSET.value,
-            config["DIR_DRAWS"]: FileTypes.DRAW.value,
-            config["DIR_JOURNALS"]: FileTypes.JOURNAL.value,
-            config["DIR_PAGES"]: FileTypes.PAGE.value,
-            config["DIR_WHITEBOARDS"]: FileTypes.WHITEBOARD.value,
+            config[Config.DIR_ASSETS.value]: FileTypes.ASSET.value,
+            config[Config.DIR_DRAWS.value]: FileTypes.DRAW.value,
+            config[Config.DIR_JOURNALS.value]: FileTypes.JOURNAL.value,
+            config[Config.DIR_PAGES.value]: FileTypes.PAGE.value,
+            config[Config.DIR_WHITEBOARDS.value]: FileTypes.WHITEBOARD.value,
         }.get(self.parent, FileTypes.OTHER.value)
 
         if result != FileTypes.OTHER.value:
             self.file_type = result
         else:
             parts = self.parts
-            if config["DIR_ASSETS"] in parts:
+            if config[Config.DIR_ASSETS.value] in parts:
                 result = FileTypes.SUB_ASSET.value
-            elif config["DIR_DRAWS"] in parts:
+            elif config[Config.DIR_DRAWS.value] in parts:
                 result = FileTypes.SUB_DRAW.value
-            elif config["DIR_JOURNALS"] in parts:
+            elif config[Config.DIR_JOURNALS.value] in parts:
                 result = FileTypes.SUB_JOURNAL.value
-            elif config["DIR_PAGES"] in parts:
+            elif config[Config.DIR_PAGES.value] in parts:
                 result = FileTypes.SUB_PAGE.value
-            elif config["DIR_WHITEBOARDS"] in parts:
+            elif config[Config.DIR_WHITEBOARDS.value] in parts:
                 result = FileTypes.SUB_WHITEBOARD.value
             self.file_type = result
 

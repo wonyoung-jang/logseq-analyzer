@@ -252,17 +252,15 @@ def setup_logseq_assets(index: FileIndex) -> LogseqAssets:
     return lsa
 
 
-def setup_logseq_file_mover(args: Args) -> dict[str, Any]:
+def setup_logseq_file_mover(args: Args, unlinked_assets: list[LogseqFile]) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
     dbd = DeleteBakDirectory()
     bd = BakDirectory()
     drd = DeleteRecycleDirectory()
     rd = RecycleDirectory()
     dad = DeleteAssetsDirectory()
-    lsa = LogseqAssets()
-    not_backlinked = lsa.not_backlinked
     moved_files = {}
-    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path, not_backlinked)
+    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path, unlinked_assets)
     moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd.path, bd.path)
     moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd.path, rd.path)
     logging.debug("run_app: setup_logseq_file_mover")
@@ -427,7 +425,7 @@ def run_app(**kwargs) -> None:
     ls_assets = setup_logseq_assets(index)
     progress(85)
     # Move files
-    moved_files = setup_logseq_file_mover(args)
+    moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
     progress(90)
     # Output writing
     meta_reports = get_meta_reports(graph, graph_config, args)

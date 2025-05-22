@@ -2,7 +2,7 @@
 Test the Criteria enum class.
 """
 
-from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments, Nodes, FileTypes
+from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments, Nodes, FileTypes, Config
 
 
 # Format
@@ -175,22 +175,22 @@ def test_summary_files_member_count():
 # Criteria
 def test_criteria_values():
     expected = {
-        "ADVANCED_COMMANDS_CAUTION": "advanced_commands_caution",
-        "ADVANCED_COMMANDS_CENTER": "advanced_commands_center",
-        "ADVANCED_COMMANDS_COMMENT": "advanced_commands_comment",
-        "ADVANCED_COMMANDS_EXAMPLE": "advanced_commands_example",
-        "ADVANCED_COMMANDS_EXPORT_ASCII": "advanced_commands_export_ascii",
-        "ADVANCED_COMMANDS_EXPORT_LATEX": "advanced_commands_export_latex",
-        "ADVANCED_COMMANDS_EXPORT": "advanced_commands_export",
-        "ADVANCED_COMMANDS_IMPORTANT": "advanced_commands_important",
-        "ADVANCED_COMMANDS_NOTE": "advanced_commands_note",
-        "ADVANCED_COMMANDS_PINNED": "advanced_commands_pinned",
-        "ADVANCED_COMMANDS_QUERY": "advanced_commands_query",
-        "ADVANCED_COMMANDS_QUOTE": "advanced_commands_quote",
-        "ADVANCED_COMMANDS_TIP": "advanced_commands_tip",
-        "ADVANCED_COMMANDS_VERSE": "advanced_commands_verse",
-        "ADVANCED_COMMANDS_WARNING": "advanced_commands_warning",
-        "ADVANCED_COMMANDS": "advanced_commands",
+        "ADVANCED_COMMANDS_CAUTION": "adv_cmd_caution",
+        "ADVANCED_COMMANDS_CENTER": "adv_cmd_center",
+        "ADVANCED_COMMANDS_COMMENT": "adv_cmd_comment",
+        "ADVANCED_COMMANDS_EXAMPLE": "adv_cmd_example",
+        "ADVANCED_COMMANDS_EXPORT_ASCII": "adv_cmd_export_ascii",
+        "ADVANCED_COMMANDS_EXPORT_LATEX": "adv_cmd_export_latex",
+        "ADVANCED_COMMANDS_EXPORT": "adv_cmd_export",
+        "ADVANCED_COMMANDS_IMPORTANT": "adv_cmd_important",
+        "ADVANCED_COMMANDS_NOTE": "adv_cmd_note",
+        "ADVANCED_COMMANDS_PINNED": "adv_cmd_pinned",
+        "ADVANCED_COMMANDS_QUERY": "adv_cmd_query",
+        "ADVANCED_COMMANDS_QUOTE": "adv_cmd_quote",
+        "ADVANCED_COMMANDS_TIP": "adv_cmd_tip",
+        "ADVANCED_COMMANDS_VERSE": "adv_cmd_verse",
+        "ADVANCED_COMMANDS_WARNING": "adv_cmd_warning",
+        "ADVANCED_COMMANDS": "adv_cmd",
         "ALIASES": "aliases",
         "ANY_LINKS": "any_links",
         "ASSETS": "assets",
@@ -300,3 +300,21 @@ def test_file_types_values():
 
 def test_file_types_member_count():
     assert len(FileTypes) == 11
+
+
+def test_config_values():
+    expected = {
+        "DIR_ASSETS": "DIR_ASSETS",
+        "DIR_DRAWS": "DIR_DRAWS",
+        "DIR_JOURNALS": "DIR_JOURNALS",
+        "DIR_PAGES": "DIR_PAGES",
+        "DIR_WHITEBOARDS": "DIR_WHITEBOARDS",
+        "DIR_BAK": "DIR_BAK",
+        "DIR_RECYCLE": "DIR_RECYCLE",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Config, member_name).value == string_value
+
+
+def test_config_member_count():
+    assert len(Config) == 7

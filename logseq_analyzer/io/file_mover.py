@@ -9,6 +9,21 @@ from pathlib import Path
 from ..logseq_file.file import LogseqFile
 
 
+def _move_src_to_dest(src: Path, dest: Path) -> None:
+    """
+    Move a file from source to destination.
+
+    Args:
+        src (Path): Source file path.
+        dest (Path): Destination file path.
+    """
+    try:
+        shutil.move(src, dest)
+        logging.warning("Moved file: %s to %s", src, dest)
+    except (shutil.Error, OSError) as e:
+        logging.error("Failed to move file: %s to %s: %s", src, dest, e)
+
+
 def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list[LogseqFile]) -> list[str]:
     """
     Handle the moving of unlinked assets to a specified directory.
@@ -25,18 +40,13 @@ def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list[Logse
         return []
 
     if not move:
-        prefix = "=== Simulated only ==="
-        unlinked_assets.insert(0, prefix)
+        unlinked_assets.insert(0, "=== Simulated only ===")
         return unlinked_assets
 
     for asset in unlinked_assets:
         src = asset.file_path
         dest = target_dir / src.name
-        try:
-            shutil.move(src, dest)
-            logging.warning("Moved unlinked asset: %s to %s", src, dest)
-        except (shutil.Error, OSError) as e:
-            logging.error("Failed to move unlinked asset: %s to %s: %s", src, dest, e)
+        _move_src_to_dest(src, dest)
 
     return unlinked_assets
 
@@ -71,15 +81,10 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
         return []
 
     if not move:
-        prefix = "=== Simulated only ==="
-        moved_names.insert(0, prefix)
+        moved_names.insert(0, "=== Simulated only ===")
         return moved_names
 
     for src, dest in moving_plan:
-        try:
-            shutil.move(src, dest)
-            logging.warning("Moved folder: %s to %s", src, dest)
-        except (shutil.Error, OSError) as e:
-            logging.error("Failed to move folder: %s to %s: %s", src, dest, e)
+        _move_src_to_dest(src, dest)
 
     return moved_names
