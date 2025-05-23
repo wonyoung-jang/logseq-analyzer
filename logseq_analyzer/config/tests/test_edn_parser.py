@@ -4,7 +4,7 @@ Tests for LogseqConfigEDN.
 
 import pytest
 
-from ..edn_parser import LogseqConfigEDN, loads, tokenize
+from ..graph_config import LogseqConfigEDN, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas():
