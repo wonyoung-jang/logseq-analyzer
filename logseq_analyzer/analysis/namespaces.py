@@ -135,12 +135,12 @@ class LogseqNamespaces:
         conflicts_non_namespace = self.conflicts_non_namespace
         conflicts_dangling = self.conflicts_dangling
         namespace_parts = self.namespace_parts
+
         for entry, parts in namespace_parts.items():
-            for part in parts:
-                if part in potential_non_ns_names:
-                    conflicts_non_namespace[part].append(entry)
-                if part in potential_dangling:
-                    conflicts_dangling[part].append(entry)
+            for part in (part for part in parts if part in potential_non_ns_names):
+                conflicts_non_namespace[part].append(entry)
+            for part in (part for part in parts if part in potential_dangling):
+                conflicts_dangling[part].append(entry)
 
     def detect_parent_depth_conflicts(self) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""

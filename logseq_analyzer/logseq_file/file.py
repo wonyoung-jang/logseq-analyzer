@@ -196,7 +196,7 @@ class LogseqFile:
             (EmbeddedLinksPatterns, Criteria.EMBEDDED_LINKS_OTHER.value),
             (DoubleParenthesesPatterns, Criteria.REFERENCES_GENERAL.value),
             (CodePatterns, Criteria.MULTILINE_CODE_BLOCKS.value),
-            (AdvancedCommandPatterns, Criteria.ADVANCED_COMMANDS.value),
+            (AdvancedCommandPatterns, Criteria.ADV_CMD.value),
             (DoubleCurlyBracketsPatterns, Criteria.MACROS.value),
         )
         result = {}
