@@ -62,10 +62,10 @@ class LogseqNamespaces:
         self.unique_namespaces_per_level = defaultdict(set)
         self.namespace_queries = {}
         self.tree = {}
-        self.conflicts_non_namespace: dict[str, list[str]] = {}
-        self.conflicts_dangling: dict[str, list[str]] = {}
+        self.conflicts_non_namespace: dict[str, list[str]] = defaultdict(list)
+        self.conflicts_dangling: dict[str, list[str]] = defaultdict(list)
         self.conflicts_parent_depth: dict[str, list[str]] = {}
-        self.conflicts_parent_unique: dict[str, set[str]] = {}
+        self.conflicts_parent_unique: dict[str, set[str]] = defaultdict(set)
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""
@@ -80,12 +80,12 @@ class LogseqNamespaces:
         Create namespace parts from the data.
         """
         level_distribution = Counter()
-        namespace_data = {}
-        namespace_parts = {}
-        unique_namespace_parts = set()
-        unique_namespaces_per_level = defaultdict(set)
-        _part_levels = defaultdict(set)
-        _part_entries = defaultdict(list)
+        namespace_data = self.namespace_data
+        namespace_parts = self.namespace_parts
+        unique_namespace_parts = self.unique_namespace_parts
+        unique_namespaces_per_level = self.unique_namespaces_per_level
+        _part_levels = self._part_levels
+        _part_entries = self._part_entries
         ns_criteria = {"is_namespace": True}
         for file in index.yield_files_with_keys_and_values(**ns_criteria):
             current_level = self.tree
@@ -103,12 +103,6 @@ class LogseqNamespaces:
                 _part_entries[part].append({"entry": file.path.name, "level": level})
         self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.namespace_details["level_distribution"] = dict(level_distribution)
-        self.namespace_data = namespace_data
-        self.namespace_parts = namespace_parts
-        self.unique_namespace_parts = unique_namespace_parts
-        self.unique_namespaces_per_level = unique_namespaces_per_level
-        self._part_levels = _part_levels
-        self._part_entries = _part_entries
 
     def analyze_ns_queries(self, index: "FileIndex", page_ref_pattern: Pattern) -> None:
         """Analyze namespace queries."""
@@ -138,8 +132,8 @@ class LogseqNamespaces:
         unique_namespace_parts = self.unique_namespace_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)
-        conflicts_non_namespace = defaultdict(list)
-        conflicts_dangling = defaultdict(list)
+        conflicts_non_namespace = self.conflicts_non_namespace
+        conflicts_dangling = self.conflicts_dangling
         namespace_parts = self.namespace_parts
         for entry, parts in namespace_parts.items():
             for part in parts:
@@ -147,15 +141,13 @@ class LogseqNamespaces:
                     conflicts_non_namespace[part].append(entry)
                 if part in potential_dangling:
                     conflicts_dangling[part].append(entry)
-        self.conflicts_non_namespace = conflicts_non_namespace
-        self.conflicts_dangling = conflicts_dangling
 
     def detect_parent_depth_conflicts(self) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels
         part_entries = self._part_entries
-        conflicts_parent_depth = {}
-        conflicts_parent_unique = {}
+        conflicts_parent_depth = self.conflicts_parent_depth
+        conflicts_parent_unique = self.conflicts_parent_unique
         for part, levels in part_levels.items():
             if len(levels) < 2:
                 continue
@@ -165,11 +157,8 @@ class LogseqNamespaces:
                 key = f"{part} {level}"
                 entries = [i["entry"] for i in details if i["level"] == level]
                 conflicts_parent_depth[key] = entries
-                conflicts_parent_unique[key] = set()
                 level = int(key.rsplit(" ", maxsplit=1)[-1])
                 for page in entries:
                     parts = page.split(Core.NS_SEP.value)
                     up_to_level = parts[:level]
                     conflicts_parent_unique[key].add(Core.NS_SEP.value.join(up_to_level))
-        self.conflicts_parent_depth = conflicts_parent_depth
-        self.conflicts_parent_unique = conflicts_parent_unique

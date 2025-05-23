@@ -44,18 +44,18 @@ class LogseqAssets:
                 if asset_file.is_backlinked:
                     continue
                 file_name = file.path.name
-                if emb_link_asset:
-                    LogseqAssets._update_asset_backlink(file_name, emb_link_asset, asset_file)
-                if asset_captured:
-                    LogseqAssets._update_asset_backlink(file_name, asset_captured, asset_file)
-        backlinked_kwargs = {"is_backlinked": True, "file_type": "asset"}
-        not_backlinked_kwargs = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = sorted(index.yield_files_with_keys_and_values(**backlinked_kwargs))
-        self.not_backlinked = sorted(index.yield_files_with_keys_and_values(**not_backlinked_kwargs))
+                self.update_asset_backlink(file_name, emb_link_asset, asset_file)
+                self.update_asset_backlink(file_name, asset_captured, asset_file)
+        backlinked_criteria = {"is_backlinked": True, "file_type": "asset"}
+        not_backlinked_criteria = {"is_backlinked": False, "file_type": "asset"}
+        self.backlinked = sorted(index.yield_files_with_keys_and_values(**backlinked_criteria))
+        self.not_backlinked = sorted(index.yield_files_with_keys_and_values(**not_backlinked_criteria))
 
     @staticmethod
-    def _update_asset_backlink(file_name: str, asset_mentions: list[str], asset: "LogseqFile") -> None:
+    def update_asset_backlink(file_name: str, asset_mentions: list[str], asset: "LogseqFile") -> None:
         """Update the backlink status of an asset file based on mentions in another file."""
+        if not asset_mentions:
+            return
         asset.is_backlinked = any(asset.path.name in mention or file_name in mention for mention in asset_mentions)
 
 
@@ -98,7 +98,7 @@ class LogseqAssetsHls:
     def convert_names_to_data(self, index: "FileIndex", property_value_pattern: Pattern) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         hls_criteria = {"is_hls": True}
-        formatted_bullets = set()
+        formatted_bullets = self.formatted_bullets
         for file in index.yield_files_with_keys_and_values(**hls_criteria):
             for bullet in file.bullets.all_bullets:
                 bullet = bullet.strip()
@@ -117,7 +117,6 @@ class LogseqAssetsHls:
                 if all([hl_page, id_bullet, hl_stamp]):
                     formatted_bullet = f"{hl_page.strip()}_{id_bullet.strip()}_{hl_stamp.strip()}"
                     formatted_bullets.add(formatted_bullet)
-        self.formatted_bullets = formatted_bullets
 
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""

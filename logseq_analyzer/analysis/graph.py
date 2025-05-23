@@ -56,10 +56,10 @@ class LogseqGraph:
 
     def post_processing_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
-        all_linked_references = {}
+        all_linked_references = self.all_linked_references
         unique_aliases = set()
-        unique_linked_references = set()
-        unique_linked_references_ns = set()
+        unique_linked_references = self.unique_linked_references
+        unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
             if file.path.is_namespace:
                 ns_refs = self._post_processing_content_namespaces(file, index)
@@ -86,20 +86,15 @@ class LogseqGraph:
             if file.path.ns_parent:
                 linked_references.remove(file.path.ns_parent)
             unique_linked_references.update(linked_references)
-        self.unique_linked_references = unique_linked_references
-        self.unique_linked_references_ns = unique_linked_references_ns
         for _, values in all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
         all_file_names = (file.path.name for file in index)
         dangling_links = self._process_dangling_links(all_file_names, unique_aliases)
-        all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
         self.dangling_links = dangling_links
-        self.all_linked_references = all_linked_references
-        self.all_dangling_links = all_dangling_links
+        self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
 
-    @staticmethod
-    def _post_processing_content_namespaces(file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
+    def _post_processing_content_namespaces(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         ns_level = file.path.ns_level
         ns_root = file.path.ns_root
@@ -113,7 +108,7 @@ class LogseqGraph:
                 ns_root_file.path.ns_level = 1
             ns_root_file.path.ns_children.add(file.path.name)
             ns_root_file.path.ns_size = len(ns_root_file.path.ns_children)
-            LogseqGraph._set_ns_data(ns_root_file)
+            self._set_ns_data(ns_root_file)
 
         if ns_level <= 2:
             return ns_refs
@@ -122,7 +117,7 @@ class LogseqGraph:
             ns_parent_file: LogseqFile
             ns_parent_file.path.ns_children.add(file.path.name)
             ns_parent_file.path.ns_size = len(ns_parent_file.path.ns_children)
-            LogseqGraph._set_ns_data(ns_parent_file)
+            self._set_ns_data(ns_parent_file)
 
         return ns_refs
 

@@ -57,16 +57,16 @@ class LogseqJournals:
         """Process journal keys to build the complete timeline and detect missing entries."""
         py_page_base_format = ljf.page
         dangling_links = graph.dangling_links
-        dangling_journals = list(LogseqJournals._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
+        dangling_journals = self.dangling_journals
+        dangling_journals = list(self._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         dangling_journals.sort()
         journal_criteria = {"file_type": "journal"}
         journal_keys = index.yield_files_with_keys_and_values(**journal_criteria)
         journal_keys = get_attribute_list(journal_keys, "name")
-        processed_keys = list(LogseqJournals._process_journal_keys_to_datetime(journal_keys, py_page_base_format))
+        processed_keys = self.processed_keys
+        processed_keys = list(self._process_journal_keys_to_datetime(journal_keys, py_page_base_format))
         processed_keys.sort()
 
-        self.dangling_journals = dangling_journals
-        self.processed_keys = processed_keys
         self.build_complete_timeline()
         self.timeline_stats["complete_timeline"] = _get_date_stats(self.complete_timeline)
         self.timeline_stats["dangling_journals"] = _get_date_stats(dangling_journals)
@@ -93,8 +93,8 @@ class LogseqJournals:
         """
         processed_keys = self.processed_keys
         dangling_journals = self.dangling_journals
-        missing_keys = []
-        complete_timeline = []
+        missing_keys = self.missing_keys
+        complete_timeline = self.complete_timeline
         for i in range(len(processed_keys) - 1):
             current_date = processed_keys[i]
             next_expected_date = _get_next_day(current_date)
@@ -113,25 +113,19 @@ class LogseqJournals:
         if processed_keys:
             complete_timeline.append(processed_keys[-1])
 
-        self.dangling_journals = dangling_journals
-        self.missing_keys = missing_keys
-        self.complete_timeline = complete_timeline
-
     def get_dangling_journals_outside_range(self) -> None:
         """
         Check for dangling journals that are outside the range of the complete timeline.
         """
         dangling_journals = self.dangling_journals
         timeline_stats = self.timeline_stats["complete_timeline"]
-        dangling_journals_past = []
-        dangling_journals_future = []
+        dangling_journals_past = self.dangling_journals_past
+        dangling_journals_future = self.dangling_journals_future
         for link in dangling_journals:
             if link < timeline_stats["first_date"]:
                 dangling_journals_past.append(link)
             elif link > timeline_stats["last_date"]:
                 dangling_journals_future.append(link)
-        self.dangling_journals_past = dangling_journals_past
-        self.dangling_journals_future = dangling_journals_future
 
 
 def _get_next_day(date_obj: datetime) -> datetime:

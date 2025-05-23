@@ -4,9 +4,11 @@ Helper functions for file and date processing.
 
 import functools
 import logging
+import re
 import threading
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Generator, Type, TypeVar
+from typing import Any, Generator, Iterator, Type, TypeVar
 
 from ..utils.enums import Format
 
@@ -125,3 +127,29 @@ def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
     """Collect slotted attributes from an object."""
     for slot in getattr(type(obj), "__slots__", ()):
         yield slot, getattr(obj, slot)
+
+
+def process_pattern_hierarchy(results: Iterator[re.Match[str]], pattern_map: dict, fallback: str) -> dict:
+    """
+    Process a pattern hierarchy to create a mapping of patterns to their respective values.
+
+    Args:
+        results (Iterator[re.Match[str]]): An iterator of regex match objects.
+        pattern_map (dict): The pattern map to process.
+        fallback (str): The fallback value for missing patterns.
+
+    Returns:
+        dict: A dictionary mapping patterns to their respective values.
+    """
+    output = defaultdict(list)
+
+    for match in results:
+        text = match.group(0)
+        for pattern, criteria in pattern_map.items():
+            if re.search(pattern, text):
+                output[criteria].append(text)
+                break
+        else:
+            output[fallback].append(text)
+
+    return output

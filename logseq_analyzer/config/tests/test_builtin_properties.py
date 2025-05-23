@@ -1,5 +1,5 @@
 import pytest
-from ..builtin_properties import split_builtin_user_properties, BUILT_INS
+from ..builtin_properties import BUILT_INS
 
 
 @pytest.fixture
@@ -66,25 +66,3 @@ def builtin_properties_set_static():
 def test_set_builtin_properties_content(builtin_properties_set_static):
     """Test the content of built-in properties."""
     assert builtin_properties_set_static == BUILT_INS, "Built-in properties content should match."
-
-
-def test_split_builtin_user_properties(builtin_properties_set_static):
-    """Test splitting built-in and user-defined properties."""
-    properties = set(
-        [
-            "alias",
-            "custom-id",
-            "user-defined-property-1",
-            "user-defined-property-2",
-        ]
-    )
-    result_builtins, result_user = split_builtin_user_properties(properties)
-    assert result_builtins == ["alias", "custom-id"], "Built-in properties should be correctly identified."
-    assert result_user == [
-        "user-defined-property-1",
-        "user-defined-property-2",
-    ], "User-defined properties should be correctly identified."
-    assert len(result_builtins) + len(result_user) == len(properties), "Total properties should match the input list."
-    assert all(
-        prop in builtin_properties_set_static for prop in result_builtins
-    ), "All built-in properties should be in the built-in properties set."

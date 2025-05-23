@@ -53,11 +53,10 @@ class LogseqFileSummarizer:
             SummaryFiles.NODE_BRANCH: {"node_type": "branch"},
             SummaryFiles.NODE_OTHER: {"node_type": "other"},
         }
-        subsets = {}
+        subsets = self.subsets
         for output_name, file_criteria in summary_categories.items():
             files = index.yield_files_with_keys_and_values(**file_criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
-        self.subsets = subsets
         self.process_file_extensions(index)
 
     def process_file_extensions(self, index: "FileIndex") -> None:

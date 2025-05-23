@@ -15,7 +15,7 @@ import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..config.builtin_properties import get_builtin_properties, get_not_builtin_properties
 from ..utils.enums import Criteria, Nodes, FileTypes
-from ..utils.helpers import process_aliases, yield_attrs
+from ..utils.helpers import process_aliases, yield_attrs, process_pattern_hierarchy
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
@@ -193,18 +193,21 @@ class LogseqFile:
             dict: A dictionary containing the processed patterns.
         """
         patterns = (
-            ExternalLinksPatterns,
-            EmbeddedLinksPatterns,
-            DoubleParenthesesPatterns,
-            CodePatterns,
-            AdvancedCommandPatterns,
-            DoubleCurlyBracketsPatterns,
+            (ExternalLinksPatterns, Criteria.EXTERNAL_LINKS_OTHER.value),
+            (EmbeddedLinksPatterns, Criteria.EMBEDDED_LINKS_OTHER.value),
+            (DoubleParenthesesPatterns, Criteria.REFERENCES_GENERAL.value),
+            (CodePatterns, Criteria.MULTILINE_CODE_BLOCKS.value),
+            (AdvancedCommandPatterns, Criteria.ADVANCED_COMMANDS.value),
+            (DoubleCurlyBracketsPatterns, Criteria.MACROS.value),
         )
         result = {}
         content = self.bullets.content
-        for pattern in patterns:
+        for pattern, fallback in patterns:
             iter_all = pattern.ALL.finditer(content)
-            result.update(pattern.process(iter_all))
+            pattern_map = pattern.PATTERN_MAP
+            processed_patterns = process_pattern_hierarchy(iter_all, pattern_map, fallback)
+            result.update(processed_patterns)
+
         return result
 
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
