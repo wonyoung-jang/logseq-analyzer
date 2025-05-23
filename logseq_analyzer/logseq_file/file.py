@@ -235,11 +235,11 @@ class LogseqFile:
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
         if self.stat.has_content:
-            self.node_type = self._check_node_type_has_content()
+            self.node_type = self.check_node_type_has_content()
         else:
-            self.node_type = self._check_node_type_has_no_content()
+            self.node_type = self.check_node_type_has_no_content()
 
-    def _check_node_type_has_content(self) -> str:
+    def check_node_type_has_content(self) -> str:
         """
         Helper function to check node type based on content.
         """
@@ -253,7 +253,7 @@ class LogseqFile:
             return Nodes.ORPHAN_NAMESPACE.value
         return Nodes.ORPHAN_GRAPH.value
 
-    def _check_node_type_has_no_content(self) -> str:
+    def check_node_type_has_no_content(self) -> str:
         """
         Helper function to check node type based on no content.
         """

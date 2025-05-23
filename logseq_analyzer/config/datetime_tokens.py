@@ -82,19 +82,19 @@ class LogseqDateTimeTokens:
         journal_file_format = graph_config.get(":journal/file-name-format")
         journal_page_format = graph_config.get(":journal/page-title-format")
         journal_page_format = journal_page_format.replace("o", "")
-        ljf.file = self._convert_cljs_date_to_py(journal_file_format)
-        ljf.page = self._convert_cljs_date_to_py(journal_page_format)
+        ljf.file = self.convert_cljs_date_to_py(journal_file_format)
+        ljf.page = self.convert_cljs_date_to_py(journal_page_format)
         logging.debug("LogseqDateTimeTokens: set_journal_py_formatting()")
 
-    def _convert_cljs_date_to_py(self, cljs_format: str) -> str:
+    def convert_cljs_date_to_py(self, cljs_format: str) -> str:
         """
         Convert a Clojure-style date format to a Python-style date format.
         """
         cljs_format = cljs_format.replace("o", "")
         logging.debug("LogseqDateTimeTokens: _convert_cljs_date_to_py()")
-        return self._token_pattern.sub(self._replace_token, cljs_format)
+        return self._token_pattern.sub(self.replace_token, cljs_format)
 
-    def _replace_token(self, match: re.Match) -> str:
+    def replace_token(self, match: re.Match) -> str:
         """
         Replace a date token with its corresponding Python format.
         """

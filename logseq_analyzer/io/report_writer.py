@@ -47,7 +47,7 @@ class ReportWriter:
         prefix = self.prefix
         data = self.data
         count = len(data) if hasattr(data, "__len__") else None
-        filename = f"{prefix}{ext}" if count else f"___EMPTY___{prefix}{ext}"
+        filename = f"{prefix}{ext}" if count else f"(EMPTY) {prefix}{ext}"
         outputpath = self.get_output_path(filename)
         logging.info("Writing %s as %s", prefix, ext)
 

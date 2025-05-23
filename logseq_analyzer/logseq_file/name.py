@@ -86,7 +86,7 @@ class LogseqFilename:
         lac_ls_config = LogseqFilename.lac_ls_config
         name = self.name.strip(ns_file_sep)
         if self.parent == lac_ls_config["DIR_JOURNALS"]:
-            self.name = LogseqFilename._process_logseq_journal_key(name)
+            self.name = self.process_logseq_journal_key(name)
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
@@ -159,7 +159,7 @@ class LogseqFilename:
             self.file_type = result
 
     @classmethod
-    def _process_logseq_journal_key(cls, name: str) -> str:
+    def process_logseq_journal_key(cls, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
             file_format = cls.journal_file_format
@@ -169,7 +169,7 @@ class LogseqFilename:
             page_title_base = date_object.strftime(page_format)
             if Core.DATE_ORDINAL_SUFFIX.value in gc_config.get(":journal/page-title-format"):
                 day_number = date_object.day
-                day_with_ordinal = LogseqFilename._add_ordinal_suffix_to_day_of_month(day_number)
+                day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
                 page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
             else:
                 page_title = page_title_base
@@ -180,7 +180,7 @@ class LogseqFilename:
             return ""
 
     @staticmethod
-    def _add_ordinal_suffix_to_day_of_month(day) -> str:
+    def add_ordinal_suffix_to_day_of_month(day) -> str:
         """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
         if 11 <= day <= 13:
             suffix = "th"

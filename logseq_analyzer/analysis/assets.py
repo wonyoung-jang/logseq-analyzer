@@ -127,9 +127,9 @@ class LogseqAssetsHls:
         formatted_bullets = self.formatted_bullets
         self.backlinked = asset_names.intersection(formatted_bullets)
         self.not_backlinked = asset_names.difference(formatted_bullets)
-        self._update_sub_asset_files()
+        self.update_sub_asset_files()
 
-    def _update_sub_asset_files(self) -> None:
+    def update_sub_asset_files(self) -> None:
         """Update the asset files with backlink status and file type."""
         backlinked = self.backlinked
         not_backlinked = self.not_backlinked

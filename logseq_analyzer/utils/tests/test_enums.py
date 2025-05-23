@@ -245,6 +245,7 @@ def test_args_values():
     expected = {
         "GRAPH_FOLDER": "graph_folder",
         "GLOBAL_CONFIG": "global_config",
+        "MOVE_ALL": "move_all",
         "MOVE_UNLINKED_ASSETS": "move_unlinked_assets",
         "MOVE_BAK": "move_bak",
         "MOVE_RECYCLE": "move_recycle",
@@ -258,7 +259,7 @@ def test_args_values():
 
 
 def test_args_member_count():
-    assert len(Arguments) == 9
+    assert len(Arguments) == 10
 
 
 def test_nodes_values():

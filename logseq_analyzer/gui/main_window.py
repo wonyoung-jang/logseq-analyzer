@@ -90,6 +90,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.graph_folder_input = QLineEdit(readOnly=True)
         self.global_config_input = QLineEdit(readOnly=True)
         self.report_format_combo = QComboBox()
+        self.move_all_checkbox = QCheckBox("Enable all move options")
         self.move_assets_checkbox = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
         self.move_bak_checkbox = QCheckBox("Move Bak to 'to_delete' folder")
         self.move_recycle_checkbox = QCheckBox("Move Recycle to 'to_delete' folder")
@@ -223,12 +224,25 @@ class LogseqAnalyzerGUI(QMainWindow):
     def create_checkboxes_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for checkboxes."""
         checkboxes_layout = QVBoxLayout()
+        checkboxes_layout.addWidget(self.move_all_checkbox)
         checkboxes_layout.addWidget(self.move_assets_checkbox)
         checkboxes_layout.addWidget(self.move_bak_checkbox)
         checkboxes_layout.addWidget(self.move_recycle_checkbox)
         checkboxes_layout.addWidget(self.write_graph_checkbox)
         checkboxes_layout.addWidget(self.graph_cache_checkbox)
+        self.move_all_checkbox.toggled.connect(self.update_move_options)
         return checkboxes_layout
+
+    def update_move_options(self) -> None:
+        """Update the state of move options checkboxes based on the main checkbox."""
+        if self.move_all_checkbox.isChecked():
+            self.move_assets_checkbox.setChecked(True)
+            self.move_bak_checkbox.setChecked(True)
+            self.move_recycle_checkbox.setChecked(True)
+        else:
+            self.move_assets_checkbox.setChecked(False)
+            self.move_bak_checkbox.setChecked(False)
+            self.move_recycle_checkbox.setChecked(False)
 
     def force_enable_graph_cache(self) -> None:
         """Force enable and check the graph cache checkbox when the graph folder changes."""
@@ -344,6 +358,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Save current settings using QSettings."""
         self.settings.setValue(Arguments.GRAPH_FOLDER.value, self.graph_folder_input.text())
         self.settings.setValue(Arguments.GLOBAL_CONFIG.value, self.global_config_input.text())
+        self.settings.setValue(Arguments.MOVE_ALL.value, self.move_all_checkbox.isChecked())
         self.settings.setValue(Arguments.MOVE_UNLINKED_ASSETS.value, self.move_assets_checkbox.isChecked())
         self.settings.setValue(Arguments.MOVE_BAK.value, self.move_bak_checkbox.isChecked())
         self.settings.setValue(Arguments.MOVE_RECYCLE.value, self.move_recycle_checkbox.isChecked())
@@ -356,6 +371,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Load settings using QSettings."""
         self.graph_folder_input.setText(self.settings.value(Arguments.GRAPH_FOLDER.value, ""))
         self.global_config_input.setText(self.settings.value(Arguments.GLOBAL_CONFIG.value, ""))
+        self.move_all_checkbox.setChecked(self.settings.value(Arguments.MOVE_ALL.value, False, type=bool))
         self.move_assets_checkbox.setChecked(
             self.settings.value(Arguments.MOVE_UNLINKED_ASSETS.value, False, type=bool)
         )

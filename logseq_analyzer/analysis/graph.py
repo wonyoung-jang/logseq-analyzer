@@ -62,7 +62,7 @@ class LogseqGraph:
         unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
             if file.path.is_namespace:
-                ns_refs = self._post_processing_content_namespaces(file, index)
+                ns_refs = self.post_processing_content_namespaces(file, index)
                 unique_linked_references_ns.update(ns_refs)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
@@ -90,11 +90,11 @@ class LogseqGraph:
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
         all_file_names = (file.path.name for file in index)
-        dangling_links = self._process_dangling_links(all_file_names, unique_aliases)
+        dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
         self.dangling_links = dangling_links
         self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
 
-    def _post_processing_content_namespaces(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
+    def post_processing_content_namespaces(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         ns_level = file.path.ns_level
         ns_root = file.path.ns_root
@@ -108,7 +108,7 @@ class LogseqGraph:
                 ns_root_file.path.ns_level = 1
             ns_root_file.path.ns_children.add(file.path.name)
             ns_root_file.path.ns_size = len(ns_root_file.path.ns_children)
-            self._set_ns_data(ns_root_file)
+            self.set_ns_data(ns_root_file)
 
         if ns_level <= 2:
             return ns_refs
@@ -117,7 +117,7 @@ class LogseqGraph:
             ns_parent_file: LogseqFile
             ns_parent_file.path.ns_children.add(file.path.name)
             ns_parent_file.path.ns_size = len(ns_parent_file.path.ns_children)
-            self._set_ns_data(ns_parent_file)
+            self.set_ns_data(ns_parent_file)
 
         return ns_refs
 
@@ -135,7 +135,7 @@ class LogseqGraph:
             if file.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 
-    def _process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:
+    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:
         """Process dangling links in the graph."""
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
@@ -145,7 +145,7 @@ class LogseqGraph:
         return sorted(get_not_builtin_properties(all_refs))
 
     @staticmethod
-    def _set_ns_data(file: LogseqFile) -> None:
+    def set_ns_data(file: LogseqFile) -> None:
         """Set namespace data for a file."""
         for attr, value in yield_attrs(file.path):
             if attr.startswith("ns_") or attr == "is_namespace":

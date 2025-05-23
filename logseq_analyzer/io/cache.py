@@ -57,7 +57,7 @@ class Cache:
         if "index" in self.cache:
             del index
             index = self.cache["index"]
-        files_to_remove = set(Cache._yield_deleted_files(index))
+        files_to_remove = set(self.yield_deleted_files(index))
         for file in files_to_remove:
             logging.warning("File removed from index: %s", file.file_path)
             index.remove(file)
@@ -76,7 +76,7 @@ class Cache:
         self.cache[Output.MOD_TRACKER.value] = mod_tracker
 
     @staticmethod
-    def _yield_deleted_files(index: "FileIndex") -> Generator["LogseqFile", Any, None]:
+    def yield_deleted_files(index: "FileIndex") -> Generator["LogseqFile", Any, None]:
         """Yield deleted files from the cache."""
         for file in index:
             if not file.file_path.exists():

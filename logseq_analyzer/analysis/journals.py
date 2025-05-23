@@ -103,12 +103,12 @@ class LogseqJournals:
         self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str
     ) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        dangling_journals = list(self._process_journal_keys_to_datetime(dangling_links, py_page_base_format))
+        dangling_journals = list(self.process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         self.dangling_journals = sorted(dangling_journals)
         journal_criteria = {"file_type": "journal"}
         journal_keys = index.yield_files_with_keys_and_values(**journal_criteria)
         journal_keys = get_attribute_list(journal_keys, "name")
-        processed_keys = list(self._process_journal_keys_to_datetime(journal_keys, py_page_base_format))
+        processed_keys = list(self.process_journal_keys_to_datetime(journal_keys, py_page_base_format))
         self.processed_keys = sorted(processed_keys)
 
         self.build_complete_timeline()
@@ -117,7 +117,7 @@ class LogseqJournals:
         self.get_dangling_journals_outside_range()
 
     @staticmethod
-    def _process_journal_keys_to_datetime(
+    def process_journal_keys_to_datetime(
         list_of_keys: list[str], py_page_base_format: str = ""
     ) -> Generator[datetime, Any, None]:
         """Convert journal keys from strings to datetime objects."""

@@ -68,7 +68,7 @@ def test_convert_cljs_date_to_py(datetime_tokens, analyzer_config):
     token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
     datetime_tokens.get_datetime_token_map(token_map)
     test_format = "yyyy-MM-dd"
-    converted_format = datetime_tokens._convert_cljs_date_to_py(test_format)
+    converted_format = datetime_tokens.convert_cljs_date_to_py(test_format)
     assert isinstance(converted_format, str), "Converted format should be a string."
     assert len(converted_format) > 0, "Converted format should not be empty."
     assert all(isinstance(k, str) for k in datetime_tokens._token_map.keys()), "Keys should be strings."
@@ -90,7 +90,7 @@ def test_replace_token(datetime_tokens, analyzer_config):
     test_string = "yyyy-MM-dd"
     match = datetime_tokens._token_pattern.search(test_string)
     assert match is not None, "Match should not be None."
-    replaced_string = datetime_tokens._replace_token(match)
+    replaced_string = datetime_tokens.replace_token(match)
     assert isinstance(replaced_string, str), "Replaced string should be a string."
     assert len(replaced_string) > 0, "Replaced string should not be empty."
     assert replaced_string != test_string, "Replaced string should not be the same as the original string."
