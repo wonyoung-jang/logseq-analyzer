@@ -6,7 +6,7 @@ import configparser
 import logging
 from pathlib import Path
 
-from ..utils.enums import Core, Config
+from ..utils.enums import Core, Config, Constants
 from ..utils.helpers import singleton
 
 
@@ -23,7 +23,7 @@ class LogseqAnalyzerConfig:
 
     __slots__ = ("config", "target_dirs")
 
-    def __init__(self, config_path: Path = Path("configuration/config.ini")) -> None:
+    def __init__(self, config_path: Path = Path(Constants.CONFIG_INI_FILE.value)) -> None:
         """Initialize the LogseqAnalyzerConfig class."""
         if not config_path.exists():
             logging.error("Configuration file not found: %s", config_path)
@@ -47,23 +47,13 @@ class LogseqAnalyzerConfig:
             return {}
         return dict(self.config[section])
 
-    def get(self, section, key, fallback=None) -> str | None:
-        """Get a value from the config file"""
-        return self.config.get(section, key, fallback=fallback)
-
     def set_value(self, section, key, value) -> None:
         """set a value in the config file"""
         if section not in self.config:
             self.config.add_section(section)
         self.config.set(section, key, str(value))
 
-    def get_section(self, section) -> dict[str, str]:
-        """Get a section from the config file as a dictionary"""
-        if section not in self.config:
-            return {}
-        return dict(self.config[section])
-
-    def write_to_file(self, output_path: Path = Path("configuration/user_config.ini")) -> None:
+    def write_to_file(self, output_path: Path = Path(Constants.CONFIG_USER_INI_FILE.value)) -> None:
         """Write the config to a file"""
         with open(output_path, "w", encoding="utf-8") as file:
             self.config.write(file)
@@ -86,7 +76,7 @@ class LogseqAnalyzerConfig:
 
     def set_logseq_target_dirs(self) -> None:
         """Get the target directories based on the configuration data."""
-        config = self.get_section("LOGSEQ_CONFIG")
+        config = self["LOGSEQ_CONFIG"]
         self.target_dirs = {
             config[Config.DIR_ASSETS.value],
             config[Config.DIR_DRAWS.value],

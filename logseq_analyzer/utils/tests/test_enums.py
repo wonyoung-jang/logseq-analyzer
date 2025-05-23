@@ -21,6 +21,8 @@ from ..enums import (
 # Constants
 def test_constants_values():
     expected = {
+        "CONFIG_INI_FILE": "configuration/config.ini",
+        "CONFIG_USER_INI_FILE": "configuration/user_config.ini",
         "CACHE_FILE": "logseq-analyzer-cache",
         "OUTPUT_DIR": "logseq-analyzer-output",
         "LOG_FILE": "logseq-analyzer-output/logseq_analyzer.log",
@@ -34,7 +36,7 @@ def test_constants_values():
 
 
 def test_constants_member_count():
-    assert len(Constants) == 7
+    assert len(Constants) == 9
 
 
 # Format

@@ -38,19 +38,16 @@ def test_lambda_optionxform():
 def test_get_set(config):
     """Test the get and set methods."""
     config.set_value("TEST_SECTION", "test_key", "test_value")
-    assert config.get("TEST_SECTION", "test_key") == "test_value", "get should return the correct value."
-    assert (
-        config.get("TEST_SECTION", "non_existent_key", fallback="fallback_value") == "fallback_value"
-    ), "get should return the fallback value for non-existent keys."
+    assert config["TEST_SECTION"]["test_key"] == "test_value", "get should return the correct value."
 
 
 def test_get_section(config):
     """Test the get_section method."""
     config.set_value("TEST_SECTION", "test_key", "test_value")
-    section = config.get_section("TEST_SECTION")
+    section = config["TEST_SECTION"]
     assert section["test_key"] == "test_value", "get_section should return the correct section."
 
-    non_section = config.get_section("NON_EXISTENT_SECTION")
+    non_section = config["NON_EXISTENT_SECTION"]
     assert non_section == {}, "get_section should return an empty dict for non-existent sections."
 
 
@@ -92,21 +89,19 @@ def test_set_logseq_config_edn_data(config):
         ":file/name-format": ":triple-lowbar",
     }
     config.set_logseq_config_edn_data(ls_config)
-    assert config.get("LOGSEQ_CONFIG", "DIR_PAGES") == "pages", "DIR_PAGES should be set correctly."
-    assert config.get("LOGSEQ_CONFIG", "DIR_JOURNALS") == "journals", "DIR_JOURNALS should be set correctly."
-    assert config.get("LOGSEQ_CONFIG", "DIR_WHITEBOARDS") == "whiteboards", "DIR_WHITEBOARDS should be set correctly."
-    assert (
-        config.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":triple-lowbar"
-    ), "NAMESPACE_FORMAT should be set correctly."
-    assert config.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP") == "___", "NAMESPACE_FILE_SEP should be set correctly."
+    assert config["LOGSEQ_CONFIG"]["DIR_PAGES"] == "pages", "DIR_PAGES should be set correctly."
+    assert config["LOGSEQ_CONFIG"]["DIR_JOURNALS"] == "journals", "DIR_JOURNALS should be set correctly."
+    assert config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] == "whiteboards", "DIR_WHITEBOARDS should be set correctly."
+    assert config["LOGSEQ_CONFIG"]["NAMESPACE_FORMAT"] == ":triple-lowbar", "NAMESPACE_FORMAT should be set correctly."
+    assert config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] == "___", "NAMESPACE_FILE_SEP should be set correctly."
     ls_config.update(
         {
             ":file/name-format": ":legacy",
         }
     )
     config.set_logseq_config_edn_data(ls_config)
-    assert config.get("LOGSEQ_CONFIG", "NAMESPACE_FORMAT") == ":legacy", "NAMESPACE_FORMAT should be set correctly."
-    assert config.get("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP") == "%2F", "NAMESPACE_FILE_SEP should be set correctly."
+    assert config["LOGSEQ_CONFIG"]["NAMESPACE_FORMAT"] == ":legacy", "NAMESPACE_FORMAT should be set correctly."
+    assert config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] == "%2F", "NAMESPACE_FILE_SEP should be set correctly."
 
 
 def test_set_logseq_target_dirs(config):

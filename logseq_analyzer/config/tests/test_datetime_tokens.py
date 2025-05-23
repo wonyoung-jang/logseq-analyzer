@@ -34,7 +34,7 @@ def test_singleton_instance(datetime_tokens):
 
 def test_get_datetime_token_map(datetime_tokens, analyzer_config):
     """Test the get_token_map method."""
-    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
     datetime_tokens.get_datetime_token_map(token_map)
     assert datetime_tokens._token_map is not None
     assert isinstance(datetime_tokens._token_map, dict), "Datetime token map should be a dictionary."
@@ -50,7 +50,7 @@ def test_get_datetime_token_map(datetime_tokens, analyzer_config):
 
 def test_set_datetime_token_pattern(datetime_tokens, analyzer_config):
     """Test the set_datetime_token_pattern method."""
-    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
     datetime_tokens.get_datetime_token_map(token_map)
     datetime_tokens.set_datetime_token_pattern()
     assert datetime_tokens._token_pattern is not None, "Datetime token pattern should be set."
@@ -65,7 +65,7 @@ def test_set_datetime_token_pattern(datetime_tokens, analyzer_config):
 
 def test_convert_cljs_date_to_py(datetime_tokens, analyzer_config):
     """Test the convert_cljs_date_to_py method."""
-    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
     datetime_tokens.get_datetime_token_map(token_map)
     test_format = "yyyy-MM-dd"
     converted_format = datetime_tokens.convert_cljs_date_to_py(test_format)
@@ -85,7 +85,7 @@ def test_convert_cljs_date_to_py(datetime_tokens, analyzer_config):
 
 def test_replace_token(datetime_tokens, analyzer_config):
     """Test the replace_token method."""
-    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
     datetime_tokens.get_datetime_token_map(token_map)
     test_string = "yyyy-MM-dd"
     match = datetime_tokens._token_pattern.search(test_string)
