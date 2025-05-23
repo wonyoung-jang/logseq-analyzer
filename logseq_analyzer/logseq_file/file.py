@@ -234,23 +234,34 @@ class LogseqFile:
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
-        self.node_type = {
-            (True, True, True, True): Nodes.BRANCH.value,
-            (True, True, False, True): Nodes.BRANCH.value,
-            (True, False, True, True): Nodes.BRANCH.value,
-            (True, True, True, False): Nodes.LEAF.value,
-            (True, True, False, False): Nodes.LEAF.value,
-            (False, True, True, False): Nodes.LEAF.value,
-            (False, True, False, False): Nodes.LEAF.value,
-            (True, False, False, True): Nodes.ROOT.value,
-            (True, False, True, False): Nodes.ORPHAN_NAMESPACE.value,
-            (False, False, True, False): Nodes.ORPHAN_NAMESPACE_TRUE.value,
-            (True, False, False, False): Nodes.ORPHAN_GRAPH.value,
-            (False, False, False, False): Nodes.ORPHAN_TRUE.value,
-        }.get(
-            (self.stat.has_content, self.is_backlinked, self.is_backlinked_by_ns_only, self.has_backlinks),
-            Nodes.OTHER.value,
-        )
+        if self.stat.has_content:
+            self.node_type = self._check_node_type_has_content()
+        else:
+            self.node_type = self._check_node_type_has_no_content()
+
+    def _check_node_type_has_content(self) -> str:
+        """
+        Helper function to check node type based on content.
+        """
+        if self.has_backlinks:
+            if self.is_backlinked or self.is_backlinked_by_ns_only:
+                return Nodes.BRANCH.value
+            return Nodes.ROOT.value
+        if self.is_backlinked:
+            return Nodes.LEAF.value
+        if self.is_backlinked_by_ns_only and not self.is_backlinked:
+            return Nodes.ORPHAN_NAMESPACE.value
+        return Nodes.ORPHAN_GRAPH.value
+
+    def _check_node_type_has_no_content(self) -> str:
+        """
+        Helper function to check node type based on no content.
+        """
+        if self.is_backlinked:
+            return Nodes.LEAF.value
+        if self.is_backlinked_by_ns_only and not self.is_backlinked:
+            return Nodes.ORPHAN_NAMESPACE_TRUE.value
+        return Nodes.ORPHAN_TRUE.value
 
     def unmask_blocks(self) -> str:
         """
