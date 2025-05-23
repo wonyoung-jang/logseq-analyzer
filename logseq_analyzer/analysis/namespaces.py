@@ -16,6 +16,7 @@ Problems:
 
 import logging
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from re import Pattern
 from typing import Any, TYPE_CHECKING
 
@@ -27,6 +28,30 @@ if TYPE_CHECKING:
     from .index import FileIndex
 
 
+@dataclass
+class NamespaceConflicts:
+    """Class to hold namespace conflict data."""
+
+    non_namespace: dict[str, list[str]]
+    dangling: dict[str, list[str]]
+    parent_depth: dict[str, list[str]]
+    parent_unique: dict[str, set[str]]
+
+
+@dataclass
+class NamespaceStructure:
+    """
+    Class to hold namespace structure data.
+    """
+
+    data: dict[str, Any]
+    parts: dict[str, Any]
+    unique_parts: set[str]
+    details: dict[str, Any]
+    unique_namespaces_per_level: dict[str, set[str]]
+    tree: dict[str, Any]
+
+
 @singleton
 class LogseqNamespaces:
     """
@@ -36,17 +61,9 @@ class LogseqNamespaces:
     __slots__ = (
         "_part_levels",
         "_part_entries",
-        "namespace_data",
-        "namespace_parts",
-        "unique_namespace_parts",
-        "namespace_details",
-        "unique_namespaces_per_level",
-        "namespace_queries",
-        "tree",
-        "conflicts_non_namespace",
-        "conflicts_dangling",
-        "conflicts_parent_depth",
-        "conflicts_parent_unique",
+        "queries",
+        "conflicts",
+        "structure",
     )
 
     def __init__(self) -> None:
@@ -55,17 +72,21 @@ class LogseqNamespaces:
         """
         self._part_levels = defaultdict(set)
         self._part_entries = defaultdict(list)
-        self.namespace_data = {}
-        self.namespace_parts = {}
-        self.unique_namespace_parts = set()
-        self.namespace_details = {}
-        self.unique_namespaces_per_level = defaultdict(set)
-        self.namespace_queries = {}
-        self.tree = {}
-        self.conflicts_non_namespace: dict[str, list[str]] = defaultdict(list)
-        self.conflicts_dangling: dict[str, list[str]] = defaultdict(list)
-        self.conflicts_parent_depth: dict[str, list[str]] = {}
-        self.conflicts_parent_unique: dict[str, set[str]] = defaultdict(set)
+        self.queries = {}
+        self.conflicts = NamespaceConflicts(
+            non_namespace=defaultdict(list),
+            dangling=defaultdict(list),
+            parent_depth={},
+            parent_unique=defaultdict(set),
+        )
+        self.structure = NamespaceStructure(
+            data={},
+            parts={},
+            unique_parts=set(),
+            details={},
+            unique_namespaces_per_level=defaultdict(set),
+            tree={},
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""
@@ -80,15 +101,15 @@ class LogseqNamespaces:
         Create namespace parts from the data.
         """
         level_distribution = Counter()
-        namespace_data = self.namespace_data
-        namespace_parts = self.namespace_parts
-        unique_namespace_parts = self.unique_namespace_parts
-        unique_namespaces_per_level = self.unique_namespaces_per_level
+        namespace_data = self.structure.data
+        namespace_parts = self.structure.parts
+        unique_namespace_parts = self.structure.unique_parts
+        unique_namespaces_per_level = self.structure.unique_namespaces_per_level
         _part_levels = self._part_levels
         _part_entries = self._part_entries
         ns_criteria = {"is_namespace": True}
         for file in index.yield_files_with_keys_and_values(**ns_criteria):
-            current_level = self.tree
+            current_level = self.structure.tree
             namespace_data[file.path.name] = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
             if not (parts := namespace_data[file.path.name].get("ns_parts")):
                 continue
@@ -101,15 +122,15 @@ class LogseqNamespaces:
                 current_level = current_level[part]
                 _part_levels[part].add(level)
                 _part_entries[part].append({"entry": file.path.name, "level": level})
-        self.namespace_details["max_depth"] = max(level_distribution) if level_distribution else 0
-        self.namespace_details["level_distribution"] = dict(level_distribution)
+        self.structure.details["max_depth"] = max(level_distribution) if level_distribution else 0
+        self.structure.details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(self, index: "FileIndex", page_ref_pattern: Pattern) -> None:
         """Analyze namespace queries."""
         ns_queries: dict[str, dict[str, Any]] = {}
-        namespace_data = self.namespace_data
+        namespace_data = self.structure.data
         for file in index:
-            for query in file.data.get("namespace_queries", []):
+            for query in file.data.get("queries", []):
                 page_refs = page_ref_pattern.findall(query)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", query)
@@ -122,19 +143,19 @@ class LogseqNamespaces:
                 ns_queries[query]["ns_size"] = namespace_data.get(page_ref, {}).get("ns_size", 0)
                 ns_queries[query]["uri"] = file.path.uri
                 ns_queries[query]["logseq_url"] = file.path.logseq_url
-        self.namespace_queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
+        self.queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         not_ns_criteria = {"is_namespace": False}
         non_ns_files = index.yield_files_with_keys_and_values(**not_ns_criteria)
         non_ns_names = get_attribute_list(non_ns_files, "name")
-        unique_namespace_parts = self.unique_namespace_parts
+        unique_namespace_parts = self.structure.unique_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)
-        conflicts_non_namespace = self.conflicts_non_namespace
-        conflicts_dangling = self.conflicts_dangling
-        namespace_parts = self.namespace_parts
+        conflicts_non_namespace = self.conflicts.non_namespace
+        conflicts_dangling = self.conflicts.dangling
+        namespace_parts = self.structure.parts
 
         for entry, parts in namespace_parts.items():
             for part in (part for part in parts if part in potential_non_ns_names):
@@ -146,8 +167,8 @@ class LogseqNamespaces:
         """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels
         part_entries = self._part_entries
-        conflicts_parent_depth = self.conflicts_parent_depth
-        conflicts_parent_unique = self.conflicts_parent_unique
+        conflicts_parent_depth = self.conflicts.parent_depth
+        conflicts_parent_unique = self.conflicts.parent_unique
         for part, levels in part_levels.items():
             if len(levels) < 2:
                 continue

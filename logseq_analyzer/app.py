@@ -346,17 +346,17 @@ def get_namespace_reports(ln: LogseqNamespaces) -> dict[str, Any]:
     """Get namespace reports from the graph namespaces."""
     logging.debug("run_app: get_namespace_reports")
     return {
-        Output.NAMESPACE_DATA.value: ln.namespace_data,
-        Output.NAMESPACE_PARTS.value: ln.namespace_parts,
-        Output.UNIQUE_NAMESPACE_PARTS.value: ln.unique_namespace_parts,
-        Output.NAMESPACE_DETAILS.value: ln.namespace_details,
-        Output.UNIQUE_NAMESPACES_PER_LEVEL.value: ln.unique_namespaces_per_level,
-        Output.NAMESPACE_QUERIES.value: ln.namespace_queries,
-        Output.NAMESPACE_HIERARCHY.value: ln.tree,
-        Output.CONFLICTS_NON_NAMESPACE.value: ln.conflicts_non_namespace,
-        Output.CONFLICTS_DANGLING.value: ln.conflicts_dangling,
-        Output.CONFLICTS_PARENT_DEPTH.value: ln.conflicts_parent_depth,
-        Output.CONFLICTS_PARENT_UNIQUE.value: ln.conflicts_parent_unique,
+        Output.NAMESPACE_DATA.value: ln.structure.data,
+        Output.NAMESPACE_PARTS.value: ln.structure.parts,
+        Output.UNIQUE_NAMESPACE_PARTS.value: ln.structure.unique_parts,
+        Output.NAMESPACE_DETAILS.value: ln.structure.details,
+        Output.UNIQUE_NAMESPACES_PER_LEVEL.value: ln.structure.unique_namespaces_per_level,
+        Output.NAMESPACE_QUERIES.value: ln.queries,
+        Output.NAMESPACE_HIERARCHY.value: ln.structure.tree,
+        Output.CONFLICTS_NON_NAMESPACE.value: ln.conflicts.non_namespace,
+        Output.CONFLICTS_DANGLING.value: ln.conflicts.dangling,
+        Output.CONFLICTS_PARENT_DEPTH.value: ln.conflicts.parent_depth,
+        Output.CONFLICTS_PARENT_UNIQUE.value: ln.conflicts.parent_unique,
     }
 
 

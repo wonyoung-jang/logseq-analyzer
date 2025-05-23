@@ -157,19 +157,19 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def setup_ui(self, main_layout) -> None:
         """Sets up the main user interface layout and elements."""
-        form_layout = self.create_input_fields_layout()
+        form_layout = self._create_input_fields_layout()
         main_layout.addLayout(form_layout, 0, 0)
 
-        checkboxes_layout = self.create_checkboxes_layout()
+        checkboxes_layout = self._create_checkboxes_layout()
         form_layout.addRow(checkboxes_layout)
 
-        progress_bars_layout = self.create_progress_bars_layout()
+        progress_bars_layout = self._create_progress_bars_layout()
         form_layout.addRow(progress_bars_layout)
 
-        buttons_layout = self.create_buttons_layout()
+        buttons_layout = self._create_buttons_layout()
         main_layout.addLayout(buttons_layout, 1, 0)
 
-    def create_input_fields_layout(self) -> QFormLayout:
+    def _create_input_fields_layout(self) -> QFormLayout:
         """Creates and returns the layout for input fields (graph folder, config file, report format)."""
         form_layout = QFormLayout()
 
@@ -221,7 +221,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Clear the global config input field."""
         self.global_config_input.clear()
 
-    def create_checkboxes_layout(self) -> QVBoxLayout:
+    def _create_checkboxes_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for checkboxes."""
         checkboxes_layout = QVBoxLayout()
         checkboxes_layout.addWidget(self.move_all_checkbox)
@@ -249,7 +249,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.graph_cache_checkbox.setChecked(True)
         self.graph_cache_checkbox.setEnabled(False)
 
-    def create_progress_bars_layout(self) -> QFormLayout:
+    def _create_progress_bars_layout(self) -> QFormLayout:
         """Creates and returns the layout for progress bars."""
         progress_bars_layout = QFormLayout()
         progress_bars_layout.addRow("Progress:", self.progress_bar)
@@ -262,7 +262,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         progress_bar.setValue(0)
         return progress_bar
 
-    def create_buttons_layout(self) -> QVBoxLayout:
+    def _create_buttons_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for all buttons (Run, Exit, Open Directories, Log)."""
         buttons_layout = QVBoxLayout()
         button_layout_primary = QHBoxLayout()
