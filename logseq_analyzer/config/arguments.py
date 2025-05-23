@@ -9,6 +9,8 @@ from ..utils.helpers import singleton
 
 @singleton
 class Args:
+    # pylint: disable=R0902 
+    # Arguments class naturally holds many attributes
     """A class to represent command line arguments for the Logseq Analyzer."""
 
     __slots__ = (

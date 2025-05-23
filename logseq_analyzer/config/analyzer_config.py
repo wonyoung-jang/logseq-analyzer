@@ -3,10 +3,9 @@ Config class for loading and managing configuration files.
 """
 
 import configparser
-import logging
 from pathlib import Path
 
-from ..utils.enums import Core, Config, Constants
+from ..utils.enums import Core, Config
 from ..utils.helpers import singleton
 
 
@@ -23,11 +22,8 @@ class LogseqAnalyzerConfig:
 
     __slots__ = ("config", "target_dirs")
 
-    def __init__(self, config_path: Path = Path(Constants.CONFIG_INI_FILE.value)) -> None:
+    def __init__(self, config_path: Path = None) -> None:
         """Initialize the LogseqAnalyzerConfig class."""
-        if not config_path.exists():
-            logging.error("Configuration file not found: %s", config_path)
-            raise FileNotFoundError(f"Configuration file not found: {config_path}")
         config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
@@ -53,7 +49,7 @@ class LogseqAnalyzerConfig:
             self.config.add_section(section)
         self.config.set(section, key, str(value))
 
-    def write_to_file(self, output_path: Path = Path(Constants.CONFIG_USER_INI_FILE.value)) -> None:
+    def write_to_file(self, output_path: Path = None) -> None:
         """Write the config to a file"""
         with open(output_path, "w", encoding="utf-8") as file:
             self.config.write(file)

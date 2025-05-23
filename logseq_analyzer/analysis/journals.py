@@ -3,6 +3,7 @@ Process logseq journals.
 """
 
 import logging
+from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Generator, TYPE_CHECKING
 
@@ -71,8 +72,7 @@ class LogseqJournals:
         "complete_timeline",
         "missing_keys",
         "timeline_stats",
-        "dangling_journals_past",
-        "dangling_journals_future",
+        "dangling_journals_dict",
         "date_util",
     )
 
@@ -83,8 +83,7 @@ class LogseqJournals:
         self.complete_timeline = []
         self.missing_keys = []
         self.timeline_stats = {}
-        self.dangling_journals_past = []
-        self.dangling_journals_future = []
+        self.dangling_journals_dict = defaultdict(list)
         self.date_util = date_utilities
 
     def __repr__(self) -> str:
@@ -157,10 +156,9 @@ class LogseqJournals:
         """Check for dangling journals that are outside the range of the complete timeline."""
         dangling_journals = self.dangling_journals
         timeline_stats = self.timeline_stats["complete_timeline"]
-        dangling_journals_past = self.dangling_journals_past
-        dangling_journals_future = self.dangling_journals_future
+        dangling_journals_dict = self.dangling_journals_dict
         for link in dangling_journals:
             if link < timeline_stats["first_date"]:
-                dangling_journals_past.append(link)
+                dangling_journals_dict["past"].append(link)
             elif link > timeline_stats["last_date"]:
-                dangling_journals_future.append(link)
+                dangling_journals_dict["future"].append(link)

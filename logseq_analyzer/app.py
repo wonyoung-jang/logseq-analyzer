@@ -25,6 +25,7 @@ from .io.filesystem import (
     BakDirectory,
     CacheFile,
     ConfigFile,
+    ConfigIniFile,
     DeleteAssetsDirectory,
     DeleteBakDirectory,
     DeleteDirectory,
@@ -38,6 +39,7 @@ from .io.filesystem import (
     OutputDirectory,
     PagesDirectory,
     RecycleDirectory,
+    UserConfigIniFile,
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
@@ -102,7 +104,9 @@ def setup_logging(log_file: Path) -> None:
 
 def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
     """Setup Logseq analyzer configuration based on arguments."""
-    lac = LogseqAnalyzerConfig()
+    config_ini_file = ConfigIniFile(Constants.CONFIG_INI_FILE.value)
+    config_ini_file.validate()
+    lac = LogseqAnalyzerConfig(config_ini_file.path)
     lac.set_value("ANALYZER", "GRAPH_DIR", a.graph_folder)
     lac.set_value("ANALYZER", "REPORT_FORMAT", a.report_format)
     if a.global_config:
@@ -333,8 +337,8 @@ def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:
         Output.COMPLETE_TIMELINE.value: lj.complete_timeline,
         Output.MISSING_KEYS.value: lj.missing_keys,
         Output.TIMELINE_STATS.value: lj.timeline_stats,
-        Output.DANGLING_JOURNALS_PAST.value: lj.dangling_journals_past,
-        Output.DANGLING_JOURNALS_FUTURE.value: lj.dangling_journals_future,
+        Output.DANGLING_JOURNALS_PAST.value: lj.dangling_journals_dict["past"],
+        Output.DANGLING_JOURNALS_FUTURE.value: lj.dangling_journals_dict["future"],
     }
 
 
@@ -464,7 +468,9 @@ def run_app(**kwargs) -> None:
     output_dir_path = OutputDirectory().path
     write_reports(data_reports, report_format, output_dir_path)
     progress(98)
-    analyzer_config.write_to_file()
+    user_config_ini_file = UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value)
+    user_config_ini_file.initialize_file()
+    analyzer_config.write_to_file(user_config_ini_file.path)
     progress(99)
     cache.close()
     progress(100)

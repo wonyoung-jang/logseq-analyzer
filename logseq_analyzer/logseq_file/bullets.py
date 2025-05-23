@@ -3,9 +3,20 @@ Module for LogseqBullets class
 """
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
+
+
+@dataclass
+class BulletStats:
+    """Bullet statistics class."""
+
+    char_count: int = 0
+    bullet_count: int = 0
+    bullet_count_empty: int = 0
+    bullet_density: float = 0.0
 
 
 class LogseqBullets:
@@ -17,24 +28,18 @@ class LogseqBullets:
         "primary_bullet",
         "all_bullets",
         "content_bullets",
-        "char_count",
-        "bullet_count",
-        "bullet_count_empty",
-        "bullet_density",
+        "stats",
         "has_page_properties",
     )
 
     def __init__(self, file_path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
         self.file_path: Path = file_path
+        self.stats: BulletStats = BulletStats()
         self.content: str = ""
         self.primary_bullet: str = ""
         self.all_bullets: list[str | None] = []
         self.content_bullets: list[str | None] = []
-        self.char_count: int = 0
-        self.bullet_count: int = 0
-        self.bullet_count_empty: int = 0
-        self.bullet_density: float = 0.0
         self.has_page_properties: bool = False
 
     def __repr__(self) -> str:
@@ -49,12 +54,12 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         self.get_content()
         if self.content:
-            self.char_count = len(self.content)
+            self.stats.char_count = len(self.content)
             self.all_bullets = ContentPatterns.BULLET.split(self.content)
             self.get_primary_bullet()
             self.is_primary_bullet_page_properties()
-            if self.bullet_count:
-                self.bullet_density = round(self.char_count / self.bullet_count, 2)
+            if self.stats.bullet_count:
+                self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
 
     def get_content(self) -> None:
         """Read the text content of a file."""
@@ -83,8 +88,8 @@ class LogseqBullets:
                 else:
                     content_bullets.append(stripped_bullet)
                     bullet_count += 1
-        self.bullet_count = bullet_count
-        self.bullet_count_empty = bullet_count_empty
+        self.stats.bullet_count = bullet_count
+        self.stats.bullet_count_empty = bullet_count_empty
         self.primary_bullet = primary_bullet
 
     def is_primary_bullet_page_properties(self) -> None:

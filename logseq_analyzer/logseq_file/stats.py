@@ -3,9 +3,20 @@ This module defines the LogseqFilestats class, which is used to gather file stat
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from os import stat_result
 from pathlib import Path
+
+
+@dataclass
+class FileTimestampInfo:
+    """File timestamp information class."""
+
+    time_existed: float = 0.0
+    time_unmodified: float = 0.0
+    date_created: str = ""
+    date_modified: str = ""
 
 
 class LogseqFilestats:
@@ -15,10 +26,7 @@ class LogseqFilestats:
         "file_path",
         "size",
         "has_content",
-        "time_existed",
-        "time_unmodified",
-        "date_created",
-        "date_modified",
+        "timestamps",
         "_stat",
     )
 
@@ -29,10 +37,7 @@ class LogseqFilestats:
         self.file_path: Path = file_path
         self.size: int = 0
         self.has_content: bool = False
-        self.time_existed: float = 0.0
-        self.time_unmodified: float = 0.0
-        self.date_created: str = ""
-        self.date_modified: str = ""
+        self.timestamps: FileTimestampInfo = FileTimestampInfo()
         self._stat: stat_result = file_path.stat()
 
     def __repr__(self) -> str:
@@ -61,10 +66,10 @@ class LogseqFilestats:
         _stat = self._stat
         _created_ts = self.get_created_timestamp()
         _modified_ts = _stat.st_mtime
-        self.time_existed = _now_ts - _created_ts
-        self.time_unmodified = _now_ts - _modified_ts
-        self.date_created = datetime.fromtimestamp(_created_ts).isoformat()
-        self.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
+        self.timestamps.time_existed = _now_ts - _created_ts
+        self.timestamps.time_unmodified = _now_ts - _modified_ts
+        self.timestamps.date_created = datetime.fromtimestamp(_created_ts).isoformat()
+        self.timestamps.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
 
     def get_created_timestamp(self) -> float:
         """Get the created timestamp of the file."""
