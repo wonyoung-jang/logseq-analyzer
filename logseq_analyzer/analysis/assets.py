@@ -35,17 +35,17 @@ class LogseqAssets:
     def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
         asset_criteria = {"file_type": "asset"}
+        is_assets = list(index.yield_files_with_keys_and_values(**asset_criteria))
         for file in index:
             emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue
-            for asset_file in index.yield_files_with_keys_and_values(**asset_criteria):
+            for asset_file in is_assets:
                 if asset_file.is_backlinked:
                     continue
-                file_name = file.path.name
-                self.update_asset_backlink(file_name, emb_link_asset, asset_file)
-                self.update_asset_backlink(file_name, asset_captured, asset_file)
+                self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
+                self.update_asset_backlink(file.path.name, asset_captured, asset_file)
         backlinked_criteria = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_criteria = {"is_backlinked": False, "file_type": "asset"}
         self.backlinked = sorted(index.yield_files_with_keys_and_values(**backlinked_criteria))
@@ -56,7 +56,10 @@ class LogseqAssets:
         """Update the backlink status of an asset file based on mentions in another file."""
         if not asset_mentions:
             return
-        asset.is_backlinked = any(asset.path.name in mention or file_name in mention for mention in asset_mentions)
+        for mention in asset_mentions:
+            if asset.path.name in mention or file_name in mention:
+                asset.is_backlinked = True
+                return
 
 
 @singleton

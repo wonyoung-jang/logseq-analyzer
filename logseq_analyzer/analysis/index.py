@@ -141,21 +141,3 @@ class FileIndex:
                     break
             else:
                 yield file
-
-    def yield_files_without_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
-        """Extract a subset of the summary data based on whether the keys do not exist."""
-        for file in self:
-            for key in criteria:
-                if hasattr(file, key):
-                    break
-            else:
-                yield file
-
-    def yield_files_with_keys(self, *criteria) -> Generator[LogseqFile, None, None]:
-        """Extract a subset of the summary data based on whether the keys exists."""
-        for file in self:
-            for key in criteria:
-                if not hasattr(file, key):
-                    break
-            else:
-                yield file

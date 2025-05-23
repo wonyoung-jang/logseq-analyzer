@@ -106,7 +106,7 @@ class LogseqFile:
             (ContentPatterns.ANY_LINK, "__ANY_LINK_"),
         )
 
-        masked_blocks: dict[str, str] = {}
+        masked_blocks: dict[str, str] = self.masked_blocks
         masked_content = self.bullets.content
 
         for regex, prefix in patterns:
@@ -118,7 +118,6 @@ class LogseqFile:
 
             masked_content = regex.sub(_repl, masked_content)
 
-        self.masked_blocks = masked_blocks
         self.masked_content = masked_content
 
     def extract_primary_data(self) -> dict[str, str]:
@@ -217,7 +216,7 @@ class LogseqFile:
         Args:
             primary_data (dict[str, str]): Dictionary containing primary data.
         """
-        data = {}
+        data = self.data
         has_backlinks = self.has_backlinks
         backlinks = (
             Criteria.PAGE_REFERENCES.value,
@@ -231,7 +230,6 @@ class LogseqFile:
                 continue
             if key in backlinks or "properties" in key:
                 has_backlinks = True
-        self.data = data
         self.has_backlinks = has_backlinks
 
     def determine_node_type(self) -> None:

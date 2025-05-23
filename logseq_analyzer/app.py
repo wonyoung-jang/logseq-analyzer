@@ -228,7 +228,7 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
 def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, ljf: LogseqJournalFormats) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process_journals_timelines(index, graph, ljf)
+    lj.process_journals_timelines(index, graph.dangling_links, ljf.page)
     logging.debug("run_app: setup_logseq_journals")
     return lj
 
