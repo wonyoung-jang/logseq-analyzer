@@ -13,6 +13,18 @@ class Moved(Enum):
     BAK = "moved_bak"
 
 
+class Constants(Enum):
+    """Constants used in the Logseq Analyzer."""
+
+    CACHE_FILE = "logseq-analyzer-cache"
+    OUTPUT_DIR = "logseq-analyzer-output"
+    LOG_FILE = "logseq-analyzer-output/logseq_analyzer.log"
+    TO_DELETE_DIR = "to-delete"
+    TO_DELETE_BAK_DIR = "to-delete/bak"
+    TO_DELETE_RECYCLE_DIR = "to-delete/.recycle"
+    TO_DELETE_ASSETS_DIR = "to-delete/assets"
+
+
 class Format(Enum):
     """File formats used in the Logseq Analyzer."""
 

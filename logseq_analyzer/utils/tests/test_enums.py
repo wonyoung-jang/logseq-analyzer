@@ -2,7 +2,39 @@
 Test the Criteria enum class.
 """
 
-from ..enums import Format, Core, Output, SummaryFiles, Criteria, OutputDir, Moved, Arguments, Nodes, FileTypes, Config
+from ..enums import (
+    Constants,
+    Format,
+    Core,
+    Output,
+    SummaryFiles,
+    Criteria,
+    OutputDir,
+    Moved,
+    Arguments,
+    Nodes,
+    FileTypes,
+    Config,
+)
+
+
+# Constants
+def test_constants_values():
+    expected = {
+        "CACHE_FILE": "logseq-analyzer-cache",
+        "OUTPUT_DIR": "logseq-analyzer-output",
+        "LOG_FILE": "logseq-analyzer-output/logseq_analyzer.log",
+        "TO_DELETE_DIR": "to-delete",
+        "TO_DELETE_BAK_DIR": "to-delete/bak",
+        "TO_DELETE_RECYCLE_DIR": "to-delete/.recycle",
+        "TO_DELETE_ASSETS_DIR": "to-delete/assets",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Constants, member_name).value == string_value
+
+
+def test_constants_member_count():
+    assert len(Constants) == 7
 
 
 # Format

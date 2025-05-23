@@ -41,6 +41,12 @@ class LogseqAnalyzerConfig:
         self.config = config
         self.target_dirs = set()
 
+    def __getitem__(self, section: str) -> dict[str, str]:
+        """Get a section from the config file as a dictionary."""
+        if section not in self.config:
+            return {}
+        return dict(self.config[section])
+
     def get(self, section, key, fallback=None) -> str | None:
         """Get a value from the config file"""
         return self.config.get(section, key, fallback=fallback)

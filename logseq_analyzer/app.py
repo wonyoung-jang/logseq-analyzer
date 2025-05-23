@@ -43,7 +43,7 @@ from .io.filesystem import (
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
-from .utils.enums import Moved, Output, OutputDir
+from .utils.enums import Config, Constants, Moved, Output, OutputDir
 
 
 class GUIInstanceDummy:
@@ -77,8 +77,11 @@ def setup_logseq_arguments(**kwargs) -> Args:
 
 def init_logseq_paths() -> LogFile:
     """Setup Logseq paths for the analyzer."""
-    OutputDirectory().initialize_dir()
-    lf = LogFile()
+    output_dir = Constants.OUTPUT_DIR.value
+    OutputDirectory(output_dir).initialize_dir()
+
+    log_file_path = Constants.LOG_FILE.value
+    lf = LogFile(log_file_path)
     lf.initialize_file()
     return lf
 
@@ -103,32 +106,43 @@ def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
     lac.set_value("ANALYZER", "GRAPH_DIR", a.graph_folder)
     lac.set_value("ANALYZER", "REPORT_FORMAT", a.report_format)
     if a.global_config:
-        lac.set_value("LOGSEQ_FILESYSTEM", "GLOBAL_CONFIG_FILE", a.global_config)
+        lac.set_value("ANALYZER", "GLOBAL_CONFIG_FILE", a.global_config)
     logging.debug("run_app: setup_logseq_analyzer_config")
     return lac
 
 
-def setup_logseq_paths() -> None:
+def setup_logseq_paths(lac: LogseqAnalyzerConfig) -> None:
     """Setup Logseq paths for the analyzer."""
-    GraphDirectory().validate()
-    LogseqDirectory().validate()
-    DeleteDirectory().get_or_create_dir()
-    DeleteBakDirectory().get_or_create_dir()
-    DeleteRecycleDirectory().get_or_create_dir()
-    DeleteAssetsDirectory().get_or_create_dir()
-    BakDirectory().get_or_create_dir()
-    RecycleDirectory().get_or_create_dir()
+    graph_dir = lac["ANALYZER"]["GRAPH_DIR"]
+    logseq_dir = lac["ANALYZER"]["LOGSEQ_DIR"]
+    bak_dir = lac["ANALYZER"]["BAK_DIR"]
+    recycle_dir = lac["ANALYZER"]["RECYCLE_DIR"]
+    GraphDirectory(graph_dir).validate()
+    LogseqDirectory(logseq_dir).validate()
+    BakDirectory(bak_dir).get_or_create_dir()
+    RecycleDirectory(recycle_dir).get_or_create_dir()
+
+    delete_dir = Constants.TO_DELETE_DIR.value
+    delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
+    delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
+    delete_assets_dir = Constants.TO_DELETE_ASSETS_DIR.value
+    DeleteDirectory(delete_dir).get_or_create_dir()
+    DeleteBakDirectory(delete_bak_dir).get_or_create_dir()
+    DeleteRecycleDirectory(delete_recycle_dir).get_or_create_dir()
+    DeleteAssetsDirectory(delete_assets_dir).get_or_create_dir()
     logging.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
+def setup_logseq_graph_config(a: Args, lac: LogseqAnalyzerConfig) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     lgc = LogseqGraphConfig()
-    cf = ConfigFile()
+    config_path = lac["ANALYZER"]["USER_CONFIG_FILE"]
+    cf = ConfigFile(config_path)
     cf.validate()
     lgc.initialize_user_config_edn(cf.path)
     if a.global_config:
-        gcf = GlobalConfigFile()
+        global_config_path = lac["ANALYZER"]["GLOBAL_CONFIG_FILE"]
+        gcf = GlobalConfigFile(global_config_path)
         gcf.validate()
         lgc.initialize_global_config_edn(gcf.path)
     lgc.merge()
@@ -139,11 +153,16 @@ def setup_logseq_graph_config(a: Args) -> LogseqGraphConfig:
 def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     lac.set_logseq_config_edn_data(config)
-    AssetsDirectory().get_or_create_dir()
-    DrawsDirectory().get_or_create_dir()
-    JournalsDirectory().get_or_create_dir()
-    PagesDirectory().get_or_create_dir()
-    WhiteboardsDirectory().get_or_create_dir()
+    dir_assets = lac["TARGET_DIRS"][Config.DIR_ASSETS.value]
+    dir_draws = lac["TARGET_DIRS"][Config.DIR_DRAWS.value]
+    dir_journals = lac["TARGET_DIRS"][Config.DIR_JOURNALS.value]
+    dir_pages = lac["TARGET_DIRS"][Config.DIR_PAGES.value]
+    dir_whiteboards = lac["TARGET_DIRS"][Config.DIR_WHITEBOARDS.value]
+    AssetsDirectory(dir_assets).get_or_create_dir()
+    DrawsDirectory(dir_draws).get_or_create_dir()
+    JournalsDirectory(dir_journals).get_or_create_dir()
+    PagesDirectory(dir_pages).get_or_create_dir()
+    WhiteboardsDirectory(dir_whiteboards).get_or_create_dir()
     lac.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
@@ -162,8 +181,7 @@ def setup_datetime_tokens(token_map: dict[str, str], config: dict[str, str]) -> 
 
 def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
-    cache_file = CacheFile()
-    cache_path = cache_file.path
+    cache_path = CacheFile().path
     c = Cache(cache_path)
     index = FileIndex()
     if a.graph_cache:
@@ -181,8 +199,8 @@ def setup_logseq_filename_class(
     LogseqFilename.gc_config = gc_config
     LogseqFilename.journal_file_format = ljf.file
     LogseqFilename.journal_page_format = ljf.page
-    LogseqFilename.lac_ls_config = lac.config["LOGSEQ_CONFIG"]
-    LogseqFilename.ns_file_sep = lac.config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+    LogseqFilename.lac_ls_config = lac["LOGSEQ_CONFIG"]
+    LogseqFilename.ns_file_sep = lac["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
     logging.debug("run_app: setup_logseq_filename_class")
 
 
@@ -253,15 +271,15 @@ def setup_logseq_assets(index: FileIndex) -> LogseqAssets:
 
 def setup_logseq_file_mover(args: Args, unlinked_assets: list[LogseqFile]) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    dbd = DeleteBakDirectory()
-    bd = BakDirectory()
-    drd = DeleteRecycleDirectory()
-    rd = RecycleDirectory()
-    dad = DeleteAssetsDirectory()
+    dbd = DeleteBakDirectory().path
+    bd = BakDirectory().path
+    drd = DeleteRecycleDirectory().path
+    rd = RecycleDirectory().path
+    dad = DeleteAssetsDirectory().path
     moved_files = {}
-    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad.path, unlinked_assets)
-    moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd.path, bd.path)
-    moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd.path, rd.path)
+    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad, unlinked_assets)
+    moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd, bd)
+    moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd, rd)
     logging.debug("run_app: setup_logseq_file_mover")
     return moved_files
 
@@ -393,14 +411,14 @@ def run_app(**kwargs) -> None:
     progress(20)
     analyzer_config = setup_logseq_analyzer_config(args)
     progress(25)
-    setup_logseq_paths()
+    setup_logseq_paths(analyzer_config)
     progress(30)
-    graph_config = setup_logseq_graph_config(args)
+    graph_config = setup_logseq_graph_config(args, analyzer_config)
     progress(35)
     config = graph_config.config_merged
     setup_target_dirs(analyzer_config, config)
     progress(40)
-    token_map = analyzer_config.get_section("DATETIME_TOKEN_MAP")
+    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
     journal_formats = setup_datetime_tokens(token_map, config)
     progress(45)
     cache, index = setup_cache(args)
@@ -442,7 +460,7 @@ def run_app(**kwargs) -> None:
     progress(95)
     update_cache(cache, index)
     progress(97)
-    report_format = analyzer_config.config["ANALYZER"]["REPORT_FORMAT"]
+    report_format = analyzer_config["ANALYZER"]["REPORT_FORMAT"]
     output_dir_path = OutputDirectory().path
     write_reports(data_reports, report_format, output_dir_path)
     progress(98)
