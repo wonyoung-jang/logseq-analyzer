@@ -1,8 +1,6 @@
 """External link patterns for Logseq."""
 
 import re
-from collections import defaultdict
-from typing import Iterator
 
 from .enums import Criteria
 
