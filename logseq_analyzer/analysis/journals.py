@@ -18,12 +18,12 @@ class DateUtilities:
     """DateUtilities class to handle date-related operations."""
 
     @staticmethod
-    def get_next_day(date_obj: datetime) -> datetime:
+    def next(date_obj: datetime) -> datetime:
         """Return the date of the next day."""
         return date_obj + timedelta(days=1)
 
     @staticmethod
-    def get_date_ranges(
+    def range(
         most_recent_date: datetime | None, least_recent_date: datetime | None
     ) -> tuple[int | None, float | None, float | None, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
@@ -38,7 +38,7 @@ class DateUtilities:
         return days, weeks, months, years
 
     @staticmethod
-    def get_date_stats(timeline: list[datetime]) -> dict[str, Any]:
+    def stats(timeline: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
         date_stats = {
             "first_date": datetime.min,
@@ -52,7 +52,7 @@ class DateUtilities:
             return date_stats
         date_stats["first_date"] = min(timeline)
         date_stats["last_date"] = max(timeline)
-        days, weeks, months, years = DateUtilities.get_date_ranges(date_stats["last_date"], date_stats["first_date"])
+        days, weeks, months, years = DateUtilities.range(date_stats["last_date"], date_stats["first_date"])
         date_stats["days"] = days
         date_stats["weeks"] = weeks
         date_stats["months"] = months
@@ -73,7 +73,7 @@ class LogseqJournals:
         "missing_keys",
         "timeline_stats",
         "dangling_journals_dict",
-        "date_util",
+        "date",
     )
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:
@@ -84,7 +84,7 @@ class LogseqJournals:
         self.missing_keys = []
         self.timeline_stats = {}
         self.dangling_journals_dict = defaultdict(list)
-        self.date_util = date_utilities
+        self.date = date_utilities
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
@@ -111,8 +111,8 @@ class LogseqJournals:
         self.processed_keys = sorted(processed_keys)
 
         self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = self.date_util.get_date_stats(self.complete_timeline)
-        self.timeline_stats["dangling_journals"] = self.date_util.get_date_stats(self.dangling_journals)
+        self.timeline_stats["complete_timeline"] = self.date.stats(self.complete_timeline)
+        self.timeline_stats["dangling_journals"] = self.date.stats(self.dangling_journals)
         self.get_dangling_journals_outside_range()
 
     @staticmethod
@@ -136,7 +136,7 @@ class LogseqJournals:
         complete_timeline = self.complete_timeline
         for i in range(len(processed_keys) - 1):
             current_date = processed_keys[i]
-            next_expected_date = self.date_util.get_next_day(current_date)
+            next_expected_date = self.date.next(current_date)
             next_actual_date = processed_keys[i + 1]
 
             complete_timeline.append(current_date)
@@ -147,7 +147,7 @@ class LogseqJournals:
                     dangling_journals.remove(next_expected_date)
                 else:
                     missing_keys.append(next_expected_date)
-                next_expected_date = self.date_util.get_next_day(next_expected_date)
+                next_expected_date = self.date.next(next_expected_date)
 
         if processed_keys:
             complete_timeline.append(processed_keys[-1])

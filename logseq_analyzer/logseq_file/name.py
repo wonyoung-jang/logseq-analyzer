@@ -3,7 +3,7 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -16,13 +16,13 @@ from ..utils.enums import Core, FileTypes, Config
 class NamespaceInfo:
     """NamespaceInfo class."""
 
-    parts: dict[str, int]
-    root: str
-    parent: str
-    parent_full: str
-    stem: str
-    children: set[str]
-    size: int
+    parts: dict[str, int] = field(default_factory=dict)
+    root: str = ""
+    parent: str = ""
+    parent_full: str = ""
+    stem: str = ""
+    children: set[str] = field(default_factory=set)
+    size: int = 0
 
 
 class LogseqFilename:
@@ -50,15 +50,7 @@ class LogseqFilename:
         self.file_type: str = ""
         self.is_hls: bool = False
         self.is_namespace: bool = False
-        self.ns_info: NamespaceInfo = NamespaceInfo(
-            parts={},
-            root="",
-            parent="",
-            parent_full="",
-            stem="",
-            children=set(),
-            size=0,
-        )
+        self.ns_info: NamespaceInfo = NamespaceInfo()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""

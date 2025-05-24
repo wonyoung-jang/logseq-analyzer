@@ -3,7 +3,7 @@ LogseqFile class to process Logseq files.
 """
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -26,18 +26,18 @@ from .stats import LogseqFilestats
 class MaskedBlocks:
     """Class to hold masked blocks data."""
 
-    content: str
-    blocks: dict[str, str]
+    content: str = ""
+    blocks: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
 class NodeType:
     """Class to hold node type data."""
 
-    has_backlinks: bool
-    is_backlinked: bool
-    is_backlinked_by_ns_only: bool
-    type: str
+    has_backlinks: bool = False
+    is_backlinked: bool = False
+    is_backlinked_by_ns_only: bool = False
+    type: str = Nodes.OTHER.value
 
 
 class LogseqFile:
@@ -51,17 +51,12 @@ class LogseqFile:
             file_path (Path): The path to the Logseq file.
         """
         self.file_path: Path = file_path
+        self.data: dict[str, Any] = {}
         self.path: LogseqFilename = LogseqFilename(file_path)
         self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.bullets: LogseqBullets = LogseqBullets(file_path)
-        self.masked: MaskedBlocks = MaskedBlocks(content="", blocks={})
-        self.data: dict[str, Any] = {}
-        self.node: NodeType = NodeType(
-            has_backlinks=False,
-            is_backlinked=False,
-            is_backlinked_by_ns_only=False,
-            type=Nodes.OTHER.value,
-        )
+        self.masked: MaskedBlocks = MaskedBlocks()
+        self.node: NodeType = NodeType()
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
@@ -207,7 +202,7 @@ class LogseqFile:
         """
         content = self.bullets.content
         page_properties = set()
-        if self.bullets.has_page_properties:
+        if self.bullets.stats.has_page_properties:
             page_properties = set(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
         block_properties = set(ContentPatterns.PROPERTY.findall(content))

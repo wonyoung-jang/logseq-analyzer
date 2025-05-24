@@ -16,7 +16,7 @@ Problems:
 
 import logging
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from re import Pattern
 from typing import Any, TYPE_CHECKING
 
@@ -31,10 +31,10 @@ if TYPE_CHECKING:
 class NamespaceConflicts:
     """Class to hold namespace conflict data."""
 
-    non_namespace: dict[str, list[str]]
-    dangling: dict[str, list[str]]
-    parent_depth: dict[str, list[str]]
-    parent_unique: dict[str, set[str]]
+    non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    parent_depth: dict[str, list[str]] = field(default_factory=dict)
+    parent_unique: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
 
 
 @dataclass
@@ -43,12 +43,12 @@ class NamespaceStructure:
     Class to hold namespace structure data.
     """
 
-    data: dict[str, Any]
-    parts: dict[str, Any]
-    unique_parts: set[str]
-    details: dict[str, Any]
-    unique_namespaces_per_level: dict[str, set[str]]
-    tree: dict[str, Any]
+    data: dict[str, Any] = field(default_factory=dict)
+    parts: dict[str, Any] = field(default_factory=dict)
+    unique_parts: set[str] = field(default_factory=set)
+    details: dict[str, Any] = field(default_factory=dict)
+    unique_namespaces_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    tree: dict[str, Any] = field(default_factory=dict)
 
 
 @singleton
@@ -72,20 +72,8 @@ class LogseqNamespaces:
         self._part_levels = defaultdict(set)
         self._part_entries = defaultdict(list)
         self.queries = {}
-        self.conflicts = NamespaceConflicts(
-            non_namespace=defaultdict(list),
-            dangling=defaultdict(list),
-            parent_depth={},
-            parent_unique=defaultdict(set),
-        )
-        self.structure = NamespaceStructure(
-            data={},
-            parts={},
-            unique_parts=set(),
-            details={},
-            unique_namespaces_per_level=defaultdict(set),
-            tree={},
-        )
+        self.conflicts = NamespaceConflicts()
+        self.structure = NamespaceStructure()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""

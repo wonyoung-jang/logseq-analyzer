@@ -27,7 +27,6 @@ class LogseqFilestats:
         "size",
         "has_content",
         "timestamps",
-        "_stat",
     )
 
     _now_ts = datetime.now().timestamp()
@@ -38,7 +37,6 @@ class LogseqFilestats:
         self.size: int = 0
         self.has_content: bool = False
         self.timestamps: FileTimestampInfo = FileTimestampInfo()
-        self._stat: stat_result = file_path.stat()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilestats object."""
@@ -50,31 +48,30 @@ class LogseqFilestats:
 
     def process_stats(self) -> None:
         """Process the file statistics."""
-        self.set_size_and_content()
-        self.set_timestamps()
+        _stat = self.file_path.stat()
+        self.set_size_and_content(_stat)
+        self.set_timestamps(_stat)
 
-    def set_size_and_content(self) -> None:
+    def set_size_and_content(self, stat: stat_result) -> None:
         """Set the size and content attributes."""
-        _stat = self._stat
-        _size = _stat.st_size
+        _size = stat.st_size
         self.size = _size
         self.has_content = bool(_size)
 
-    def set_timestamps(self) -> None:
+    def set_timestamps(self, stat: stat_result) -> None:
         """Set the timestamps attributes."""
         _now_ts = LogseqFilestats._now_ts
-        _stat = self._stat
-        _created_ts = self.get_created_timestamp()
-        _modified_ts = _stat.st_mtime
+        _created_ts = self.get_created_timestamp(stat)
+        _modified_ts = stat.st_mtime
         self.timestamps.time_existed = _now_ts - _created_ts
         self.timestamps.time_unmodified = _now_ts - _modified_ts
         self.timestamps.date_created = datetime.fromtimestamp(_created_ts).isoformat()
         self.timestamps.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
 
-    def get_created_timestamp(self) -> float:
+    def get_created_timestamp(self, stat: stat_result) -> float:
         """Get the created timestamp of the file."""
         try:
-            return self._stat.st_birthtime
+            return stat.st_birthtime
         except AttributeError:
             logging.warning("st_birthtime not available for %s. Using st_ctime.", self.file_path)
-            return self._stat.st_ctime
+            return stat.st_ctime

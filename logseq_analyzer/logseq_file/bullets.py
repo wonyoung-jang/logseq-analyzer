@@ -17,6 +17,7 @@ class BulletStats:
     bullet_count: int = 0
     bullet_count_empty: int = 0
     bullet_density: float = 0.0
+    has_page_properties: bool = False
 
 
 class LogseqBullets:
@@ -29,7 +30,6 @@ class LogseqBullets:
         "all_bullets",
         "content_bullets",
         "stats",
-        "has_page_properties",
     )
 
     def __init__(self, file_path: Path) -> None:
@@ -40,7 +40,6 @@ class LogseqBullets:
         self.primary_bullet: str = ""
         self.all_bullets: list[str | None] = []
         self.content_bullets: list[str | None] = []
-        self.has_page_properties: bool = False
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqBullets object."""
@@ -96,4 +95,4 @@ class LogseqBullets:
         """Process primary bullet data."""
         bullet = self.primary_bullet.strip()
         if bullet and not bullet.startswith("#"):
-            self.has_page_properties = True
+            self.stats.has_page_properties = True

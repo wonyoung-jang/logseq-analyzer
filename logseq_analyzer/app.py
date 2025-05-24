@@ -3,6 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +69,15 @@ class GUIInstanceDummy:
     def update_progress(self, percentage) -> None:
         """Simulate updating progress in a GUI."""
         logging.info("Updating progress: %d%%", percentage)
+
+
+@dataclass
+class Configurations:
+    """Class to hold configurations for the Logseq analyzer."""
+
+    analyzer: LogseqAnalyzerConfig
+    graph: LogseqGraphConfig
+    journal_formats: LogseqJournalFormats
 
 
 def setup_logseq_arguments(**kwargs) -> Args:
@@ -385,20 +395,59 @@ def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path:
     """Write reports to the specified output directories."""
     ReportWriter.ext = report_format
     ReportWriter.output_dir = output_dir_path
-    output_subdirs = (
-        OutputDir.JOURNALS.value,
-        OutputDir.META.value,
-        OutputDir.MOVED_FILES.value,
-        OutputDir.NAMESPACES.value,
-        OutputDir.SUMMARY_CONTENT.value,
-        OutputDir.SUMMARY_FILES.value,
-    )
-    for subdir, reports in zip(output_subdirs, data_reports):
-        if subdir in (Output.MOD_TRACKER.value):
-            continue
+    for subdir, reports in data_reports:
         for prefix, data in reports.items():
             ReportWriter(prefix, data, subdir).write()
     logging.debug("run_app: write_reports")
+
+
+def initialize_configurations(args: Args) -> Configurations:
+    """Initialize configurations for the Logseq analyzer."""
+    analyzer_config = setup_logseq_analyzer_config(args)
+    setup_logseq_paths(analyzer_config)
+    graph_config = setup_logseq_graph_config(args, analyzer_config)
+    gc_config_merged = graph_config.config_merged
+    setup_target_dirs(analyzer_config, gc_config_merged)
+    datetime_token_map = analyzer_config["DATETIME_TOKEN_MAP"]
+    journal_formats = setup_datetime_tokens(datetime_token_map, gc_config_merged)
+    configs = Configurations(analyzer_config, graph_config, journal_formats)
+    return configs
+
+
+def perform_core_analysis(
+    args: Args,
+    index: FileIndex,
+    cache: Cache,
+    configs: Configurations,
+) -> tuple[tuple[str, Any], ...]:
+    """Perform core analysis on the Logseq graph."""
+    setup_logseq_filename_class(configs.analyzer, configs.graph.config_merged, configs.journal_formats)
+    graph = setup_logseq_graph(index, cache, configs.analyzer.target_dirs)
+    summary_files = setup_logseq_file_summarizer(index)
+    summary_content = setup_logseq_content_summarizer(index)
+    graph_namespaces = setup_logseq_namespaces(graph, index)
+    graph_journals = setup_logseq_journals(graph, index, configs.journal_formats)
+    hls_assets = setup_logseq_hls_assets(index)
+    ls_assets = setup_logseq_assets(index)
+    moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
+    data_reports = (
+        (OutputDir.META.value, get_meta_reports(graph, configs.graph, args)),
+        (OutputDir.JOURNALS.value, get_journal_reports(graph_journals)),
+        (OutputDir.NAMESPACES.value, get_namespace_reports(graph_namespaces)),
+        (OutputDir.MOVED_FILES.value, get_moved_files_reports(moved_files, ls_assets, hls_assets)),
+        (OutputDir.SUMMARY_FILES.value, summary_files.subsets),
+        (OutputDir.SUMMARY_CONTENT.value, summary_content.subsets),
+    )
+    return data_reports
+
+
+def finish_analysis(cache: Cache, index: FileIndex, configs: Configurations) -> None:
+    """Finish the analysis by closing the cache and writing the user configuration."""
+    update_cache(cache, index)
+    UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value).initialize_file()
+    configs.analyzer.write_to_file(UserConfigIniFile().path)
+    cache.close()
+    logging.debug("run_app: finish_analysis")
 
 
 def run_app(**kwargs) -> None:
@@ -406,60 +455,29 @@ def run_app(**kwargs) -> None:
     progress = kwargs.get("progress_callback", GUIInstanceDummy())
     if isinstance(progress, GUIInstanceDummy):
         progress = progress.update_progress
-    progress(5)
-    args = setup_logseq_arguments(**kwargs)
+
     progress(10)
-    log_file = init_logseq_paths()
-    progress(15)
-    setup_logging(log_file.path)
-    progress(20)
-    analyzer_config = setup_logseq_analyzer_config(args)
+    args = setup_logseq_arguments(**kwargs)
+
     progress(25)
-    setup_logseq_paths(analyzer_config)
-    progress(30)
-    graph_config = setup_logseq_graph_config(args, analyzer_config)
-    progress(35)
-    setup_target_dirs(analyzer_config, graph_config.config_merged)
+    log_file = init_logseq_paths()
+
     progress(40)
-    journal_formats = setup_datetime_tokens(analyzer_config["DATETIME_TOKEN_MAP"], graph_config.config_merged)
-    progress(45)
-    cache, index = setup_cache(args)
-    progress(50)
-    # Main analysis
-    setup_logseq_filename_class(analyzer_config, graph_config.config_merged, journal_formats)
-    graph = setup_logseq_graph(index, cache, analyzer_config.target_dirs)
+    setup_logging(log_file.path)
+
     progress(55)
-    summary_files = setup_logseq_file_summarizer(index)
-    progress(60)
-    summary_content = setup_logseq_content_summarizer(index)
-    progress(65)
-    graph_namespaces = setup_logseq_namespaces(graph, index)
+    configs = initialize_configurations(args)
+
     progress(70)
-    graph_journals = setup_logseq_journals(graph, index, journal_formats)
-    progress(75)
-    # Assets
-    hls_assets = setup_logseq_hls_assets(index)
-    progress(80)
-    ls_assets = setup_logseq_assets(index)
+    cache, index = setup_cache(args)
+
     progress(85)
-    # Move files
-    moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
+    data_reports = perform_core_analysis(args, index, cache, configs)
+
     progress(90)
-    # Output writing
-    data_reports = (
-        get_meta_reports(graph, graph_config, args),
-        get_journal_reports(graph_journals),
-        get_namespace_reports(graph_namespaces),
-        get_moved_files_reports(moved_files, ls_assets, hls_assets),
-        summary_content.subsets,
-        summary_files.subsets,
-    )
+    write_reports(data_reports, configs.analyzer["ANALYZER"]["REPORT_FORMAT"], OutputDirectory().path)
+
     progress(95)
-    update_cache(cache, index)
-    progress(97)
-    write_reports(data_reports, analyzer_config["ANALYZER"]["REPORT_FORMAT"], OutputDirectory().path)
-    progress(98)
-    UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value).initialize_file()
-    analyzer_config.write_to_file(UserConfigIniFile().path)
-    cache.close()
+    finish_analysis(cache, index, configs)
+
     progress(100)
