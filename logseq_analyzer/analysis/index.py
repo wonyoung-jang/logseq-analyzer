@@ -29,16 +29,16 @@ def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: 
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    __slots__ = ("files", "hash_to_file", "name_to_files", "path_to_file")
+    __slots__ = ("_files", "_hash_to_file", "_name_to_files", "_path_to_file")
 
     def __init__(self) -> None:
         """
         Initialize the FileIndex instance.
         """
-        self.files: set[LogseqFile] = set()
-        self.hash_to_file: dict[int, LogseqFile] = {}
-        self.name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
-        self.path_to_file: dict[Path, LogseqFile] = {}
+        self._files: set[LogseqFile] = set()
+        self._hash_to_file: dict[int, LogseqFile] = {}
+        self._name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
+        self._path_to_file: dict[Path, LogseqFile] = {}
 
     def __repr__(self) -> str:
         """Return a string representation of the FileIndex."""
@@ -50,86 +50,102 @@ class FileIndex:
 
     def __len__(self) -> int:
         """Return the number of files in the index."""
-        return len(self.files)
+        return len(self._files)
 
     def __iter__(self) -> Iterator[LogseqFile]:
         """Iterate over the files in the index."""
-        return iter(self.files)
+        return iter(self._files)
 
-    def __getitem__(self, key) -> Any:
+    def __getitem__(self, key: LogseqFile | int | str | Path) -> Any:
         """Get a file by its key."""
         if isinstance(key, LogseqFile):
             if key in self:
                 return key
             raise KeyError(f"File {key} not found in index.")
         if isinstance(key, int):
-            return self.hash_to_file.get(key)
+            return self._hash_to_file.get(key)
         if isinstance(key, str):
-            return self.name_to_files.get(key, [])
+            return self._name_to_files.get(key, [])
         if isinstance(key, Path):
-            return self.path_to_file.get(key)
-        raise TypeError(f"Invalid key type: {type(key)}. Expected int, str, or Path.")
+            return self._path_to_file.get(key)
+        raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
 
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: LogseqFile | int | str | Path) -> bool:
         """Check if a file is in the index."""
         if isinstance(key, LogseqFile):
-            return key in self.files
+            return key in self._files
         if isinstance(key, int):
-            return key in self.hash_to_file
+            return key in self._hash_to_file
         if isinstance(key, str):
-            return key in self.name_to_files
+            return key in self._name_to_files
         if isinstance(key, Path):
-            return key in self.path_to_file
-        raise TypeError(f"Invalid key type: {type(key)}. Expected LogseqFile, int, str, or Path.")
+            return key in self._path_to_file
+        raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
+
+    @property
+    def files(self) -> set[LogseqFile]:
+        """Return the set of files in the index."""
+        return self._files
+
+    @property
+    def hash_to_file(self) -> dict[int, LogseqFile]:
+        """Return the mapping of hashes to LogseqFile objects."""
+        return self._hash_to_file
+
+    @property
+    def name_to_files(self) -> dict[str, list[LogseqFile]]:
+        """Return the mapping of file names to lists of LogseqFile objects."""
+        return self._name_to_files
+
+    @property
+    def path_to_file(self) -> dict[Path, LogseqFile]:
+        """Return the mapping of file paths to LogseqFile objects."""
+        return self._path_to_file
 
     def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
-        self.files.add(file)
-        self.hash_to_file[hash(file)] = file
-        self.name_to_files[file.path.name].append(file)
-        self.path_to_file[file.file_path] = file
+        h = hash(file)
+        name = file.path.name
+        path = file.file_path
+        self._files.add(file)
+        self._hash_to_file[h] = file
+        self._name_to_files[name].append(file)
+        self._path_to_file[path] = file
 
-    def remove(self, key: Any) -> None:
-        """Remove a file from the index."""
-        files = self.files
-        hash_to_file = self.hash_to_file
-        name_to_files = self.name_to_files
-        path_to_file = self.path_to_file
+    def remove(self, key: LogseqFile | int | str | Path) -> None:
+        """Strategy to remove a file from the index."""
         if isinstance(key, LogseqFile):
-            if key in self:
-                file = key
-                name = file.path.name
-                files.remove(file)
-                del hash_to_file[hash(file)]
-                name_to_files[name].remove(file)
-                if not name_to_files[name]:
-                    del name_to_files[name]
-                del path_to_file[file.file_path]
-            logging.debug("Key %s removed from index.", key)
+            target = key
         elif isinstance(key, int):
-            if file := hash_to_file.pop(key, None):
-                name = file.path.name
-                files.remove(file)
-                name_to_files[name].remove(file)
-                if not name_to_files[name]:
-                    del name_to_files[name]
-                del path_to_file[file.file_path]
-            logging.debug("Key %s removed from index.", key)
+            target = self._hash_to_file.get(key)
         elif isinstance(key, str):
-            for file in name_to_files.pop(key, []):
-                files.remove(file)
-                del hash_to_file[hash(file)]
-                del path_to_file[file.file_path]
-            logging.debug("Key %s removed from index.", key)
+            for target in self._name_to_files.pop(key, []):
+                self._remove_file(target)
+            return
         elif isinstance(key, Path):
-            if file := path_to_file.pop(key, None):
-                name = file.path.name
-                files.remove(file)
-                del hash_to_file[hash(file)]
-                name_to_files[name].remove(file)
-                if not name_to_files[name]:
-                    del name_to_files[name]
-            logging.debug("Key %s removed from index.", key)
+            target = self._path_to_file.get(key)
+        else:
+            raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
+
+        if target is None:
+            logging.warning("Key %s not found in index.", key)
+            return
+        self._remove_file(target)
+        logging.debug("Key %s removed from index.", key)
+
+    def _remove_file(self, file: LogseqFile) -> None:
+        """Helper method to remove a file from the index."""
+        self._files.discard(file)
+        self._hash_to_file.pop(hash(file), None)
+        name = file.path.name
+        if lst := self._name_to_files.get(name):
+            try:
+                lst.remove(file)
+            except ValueError:
+                logging.warning("File %s not found in name_to_files list for name %s.", file, name)
+        else:
+            del self._name_to_files[name]
+        self._path_to_file.pop(file.file_path, None)
 
     def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""

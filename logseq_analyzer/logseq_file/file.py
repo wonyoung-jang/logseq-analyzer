@@ -187,7 +187,7 @@ class LogseqFile:
         content = self.bullets.content
         properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
         if aliases := properties_values.get("alias"):
-            aliases = process_aliases(aliases)
+            aliases = sorted(process_aliases(aliases))
         return {
             Criteria.ALIASES.value: aliases,
             Criteria.PROPERTIES_VALUES.value: properties_values,

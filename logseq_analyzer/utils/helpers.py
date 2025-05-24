@@ -34,10 +34,9 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
             dirs.clear()
 
 
-def process_aliases(aliases: str) -> list[str]:
+def process_aliases(aliases: str) -> Generator[str, None, None]:
     """Process aliases to extract individual aliases."""
     aliases = aliases.strip()
-    results = []
     current = []
     inside_brackets = False
     i = 0
@@ -49,19 +48,16 @@ def process_aliases(aliases: str) -> list[str]:
             inside_brackets = False
             i += 2
         elif aliases[i] == "," and not inside_brackets:
-            part = "".join(current).strip().lower()
-            if part:
-                results.append(part)
-            current = []
+            if part := "".join(current).strip().lower():
+                yield part
+            current.clear()
             i += 1
         else:
             current.append(aliases[i])
             i += 1
 
-    part = "".join(current).strip().lower()
-    if part:
-        results.append(part)
-    return results
+    if part := "".join(current).strip().lower():
+        yield part
 
 
 def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True) -> dict:

@@ -68,4 +68,4 @@ def test_sort_dict_by_value():
     ],
 )
 def test_process_aliases_various(input_str, expected):
-    assert process_aliases(input_str) == expected
+    assert list(process_aliases(input_str)) == expected
