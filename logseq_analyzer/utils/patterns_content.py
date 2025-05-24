@@ -141,9 +141,9 @@ ANY_LINK = re.compile(
 
 BOLD = re.compile(
     r"""
-    \*\*                # Opening double asterisks
-    .*?                 # Any characters (non-greedy)
-    \*\*                # Closing double asterisks
+    \*{2}               # Opening double asterisks
+    .+?                 # One or more characters (non-greedy)
+    \*{2}               # Closing double asterisks
     """,
     re.IGNORECASE | re.VERBOSE,
 )
