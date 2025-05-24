@@ -419,18 +419,15 @@ def run_app(**kwargs) -> None:
     progress(30)
     graph_config = setup_logseq_graph_config(args, analyzer_config)
     progress(35)
-    config = graph_config.config_merged
-    setup_target_dirs(analyzer_config, config)
+    setup_target_dirs(analyzer_config, graph_config.config_merged)
     progress(40)
-    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
-    journal_formats = setup_datetime_tokens(token_map, config)
+    journal_formats = setup_datetime_tokens(analyzer_config["DATETIME_TOKEN_MAP"], graph_config.config_merged)
     progress(45)
     cache, index = setup_cache(args)
     progress(50)
     # Main analysis
-    setup_logseq_filename_class(analyzer_config, config, journal_formats)
-    target_dirs = analyzer_config.target_dirs
-    graph = setup_logseq_graph(index, cache, target_dirs)
+    setup_logseq_filename_class(analyzer_config, graph_config.config_merged, journal_formats)
+    graph = setup_logseq_graph(index, cache, analyzer_config.target_dirs)
     progress(55)
     summary_files = setup_logseq_file_summarizer(index)
     progress(60)
@@ -449,28 +446,20 @@ def run_app(**kwargs) -> None:
     moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
     progress(90)
     # Output writing
-    meta_reports = get_meta_reports(graph, graph_config, args)
-    journal_reports = get_journal_reports(graph_journals)
-    namespace_reports = get_namespace_reports(graph_namespaces)
-    moved_files_reports = get_moved_files_reports(moved_files, ls_assets, hls_assets)
     data_reports = (
-        journal_reports,
-        meta_reports,
-        moved_files_reports,
-        namespace_reports,
+        get_meta_reports(graph, graph_config, args),
+        get_journal_reports(graph_journals),
+        get_namespace_reports(graph_namespaces),
+        get_moved_files_reports(moved_files, ls_assets, hls_assets),
         summary_content.subsets,
         summary_files.subsets,
     )
     progress(95)
     update_cache(cache, index)
     progress(97)
-    report_format = analyzer_config["ANALYZER"]["REPORT_FORMAT"]
-    output_dir_path = OutputDirectory().path
-    write_reports(data_reports, report_format, output_dir_path)
+    write_reports(data_reports, analyzer_config["ANALYZER"]["REPORT_FORMAT"], OutputDirectory().path)
     progress(98)
-    user_config_ini_file = UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value)
-    user_config_ini_file.initialize_file()
-    analyzer_config.write_to_file(user_config_ini_file.path)
-    progress(99)
+    UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value).initialize_file()
+    analyzer_config.write_to_file(UserConfigIniFile().path)
     cache.close()
     progress(100)
