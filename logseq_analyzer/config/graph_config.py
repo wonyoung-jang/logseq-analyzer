@@ -10,6 +10,7 @@ from typing import Any, Generator
 
 from ..utils.helpers import singleton
 
+type EDNToken = dict | list | set | Any | None | bool | float | int
 
 TOKEN_REGEX = re.compile(
     r"""
@@ -40,24 +41,24 @@ class LogseqConfigEDN:
             "#{": self.parse_set,
         }
 
-    def peek(self) -> Any | None:
+    def peek(self) -> EDNToken | None:
         """Return the next token without advancing the position."""
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def next(self) -> Any | None:
+    def next(self) -> EDNToken | None:
         """Return the next token and advance the position."""
         tok = self.peek()
         self.pos += 1
         return tok
 
-    def parse(self) -> dict | list | set | Any | None | bool | float | int:
+    def parse(self) -> EDNToken:
         """Parse the entire EDN input and return the resulting Python object."""
         value = self.parse_value()
         if self.peek() is not None:
             raise ValueError(f"Unexpected extra EDN data: {self.peek()}")
         return value
 
-    def parse_value(self) -> dict | list | set | Any | None | bool | float | int:
+    def parse_value(self) -> EDNToken:
         """Parse a single EDN value."""
         tok = self.peek()
         if tok is None:
@@ -131,7 +132,7 @@ class LogseqConfigEDN:
             result.add(self.parse_value())
         return result
 
-    def parse_string(self) -> Any:
+    def parse_string(self) -> str:
         """Parse a string from EDN."""
         tok = self.next()
         return ast.literal_eval(tok)
@@ -156,18 +157,18 @@ class LogseqConfigEDN:
             return float(tok)
         return int(tok)
 
-    def parse_keyword(self) -> Any | None:
+    def parse_keyword(self) -> EDNToken | None:
         """Parse a keyword from EDN."""
         tok = self.next()
         return tok
 
-    def parse_symbol(self) -> Any | None:
+    def parse_symbol(self) -> EDNToken | None:
         """Parse a symbol from EDN."""
         tok = self.next()
         return tok
 
 
-def loads(edn_str: str) -> dict | list | set | Any | None | bool | float | int:
+def loads(edn_str: str) -> EDNToken:
     """
     Parse an EDN-formatted string and return the corresponding Python data structure.
 
