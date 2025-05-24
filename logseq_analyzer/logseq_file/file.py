@@ -279,23 +279,28 @@ class LogseqFile:
         """
         if self.node.has_backlinks:
             if self.node.is_backlinked or self.node.is_backlinked_by_ns_only:
-                return Nodes.BRANCH.value
-            return Nodes.ROOT.value
-        if self.node.is_backlinked:
-            return Nodes.LEAF.value
-        if self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
-            return Nodes.ORPHAN_NAMESPACE.value
-        return Nodes.ORPHAN_GRAPH.value
+                node_type = Nodes.BRANCH.value
+            else:
+                node_type = Nodes.ROOT.value
+        elif self.node.is_backlinked:
+            node_type = Nodes.LEAF.value
+        elif self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
+            node_type = Nodes.ORPHAN_NAMESPACE.value
+        else:
+            node_type = Nodes.ORPHAN_GRAPH.value
+        return node_type
 
     def check_node_type_has_no_content(self) -> str:
         """
         Helper function to check node type based on no content.
         """
         if self.node.is_backlinked:
-            return Nodes.LEAF.value
-        if self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
-            return Nodes.ORPHAN_NAMESPACE_TRUE.value
-        return Nodes.ORPHAN_TRUE.value
+            node_type = Nodes.LEAF.value
+        elif self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
+            node_type = Nodes.ORPHAN_NAMESPACE_TRUE.value
+        else:
+            node_type = Nodes.ORPHAN_TRUE.value
+        return node_type
 
     def unmask_blocks(self) -> str:
         """
