@@ -43,6 +43,17 @@ class NodeType:
 class LogseqFile:
     """A class to represent a Logseq file."""
 
+    __slots__ = (
+        "file_path",
+        "data",
+        "path",
+        "stat",
+        "bullets",
+        "masked",
+        "node",
+        "__dict__",
+    )
+
     def __init__(self, file_path: Path) -> None:
         """
         Initialize the LogseqFile object.

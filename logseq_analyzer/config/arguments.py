@@ -35,16 +35,6 @@ class Args:
         self.write_graph: bool = False
         self.graph_cache: bool = False
         self.report_format: str = ".txt"
-        self.__dict__ = {
-            "graph_folder": self.graph_folder,
-            "global_config": self.global_config,
-            "move_unlinked_assets": self.move_unlinked_assets,
-            "move_bak": self.move_bak,
-            "move_recycle": self.move_recycle,
-            "write_graph": self.write_graph,
-            "graph_cache": self.graph_cache,
-            "report_format": self.report_format,
-        }
 
     def setup_args(self, **kwargs) -> None:
         """Set up command line arguments and GUI arguments."""
