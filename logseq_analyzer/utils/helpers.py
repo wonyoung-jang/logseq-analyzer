@@ -26,7 +26,7 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
 
         if root.name in target_dirs or root.parent.name in target_dirs:
             for file in files:
-                if Path(file).suffix in [Format.ORG.value]:
+                if Path(file).suffix in (Format.ORG.value):
                     logging.info("Skipping org-mode file %s in %s", file, root)
                     continue
                 yield root / file
