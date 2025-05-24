@@ -136,6 +136,6 @@ class LogseqAssetsHls:
         asset_mapping = self.asset_mapping
         for name in backlinked:
             asset_mapping[name].is_backlinked = True
-            asset_mapping[name].file_type = "asset"
+            asset_mapping[name].path.file_type = "asset"
         for name in not_backlinked:
-            asset_mapping[name].file_type = "asset"
+            asset_mapping[name].path.file_type = "asset"

@@ -3,6 +3,7 @@ This module handles processing of Logseq filenames based on their parent directo
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -11,28 +12,29 @@ from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core, FileTypes, Config
 
 
+@dataclass
+class NamespaceInfo:
+    """NamespaceInfo class."""
+
+    parts: dict[str, int]
+    root: str
+    parent: str
+    parent_full: str
+    stem: str
+    children: set[str]
+    size: int
+
+
 class LogseqFilename:
     """LogseqFilename class."""
 
     __slots__ = (
         "file_path",
         "name",
-        "parent",
-        "suffix",
-        "parts",
-        "uri",
-        "logseq_url",
         "file_type",
-        "is_namespace",
         "is_hls",
-        "ns_parts",
-        "ns_level",
-        "ns_root",
-        "ns_parent",
-        "ns_parent_full",
-        "ns_stem",
-        "ns_children",
-        "ns_size",
+        "is_namespace",
+        "ns_info",
     )
 
     gc_config: dict = {}
@@ -45,22 +47,18 @@ class LogseqFilename:
         """Initialize the LogseqFilename class."""
         self.file_path: Path = file_path
         self.name: str = file_path.stem
-        self.parent: str = file_path.parent.name
-        self.suffix: str = file_path.suffix if file_path.suffix else ""
-        self.parts: tuple = file_path.parts
-        self.uri: str = file_path.as_uri()
-        self.logseq_url: str = ""
         self.file_type: str = ""
-        self.is_namespace: bool = False
         self.is_hls: bool = False
-        self.ns_parts: dict = {}
-        self.ns_level: int = 0
-        self.ns_root: str = ""
-        self.ns_parent: str = ""
-        self.ns_parent_full: str = ""
-        self.ns_stem: str = ""
-        self.ns_children: set = set()
-        self.ns_size: int = 0
+        self.is_namespace: bool = False
+        self.ns_info: NamespaceInfo = NamespaceInfo(
+            parts={},
+            root="",
+            parent="",
+            parent_full="",
+            stem="",
+            children=set(),
+            size=0,
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""
@@ -70,12 +68,55 @@ class LogseqFilename:
         """Return a user-friendly string representation of the LogseqFilename object."""
         return f"{self.__class__.__qualname__}: {self.file_path}"
 
+    @property
+    def parent(self) -> str:
+        """Return the parent directory of the file."""
+        return self.file_path.parent.name
+
+    @property
+    def suffix(self) -> str:
+        """Return the file extension."""
+        return self.file_path.suffix if self.file_path.suffix else ""
+
+    @property
+    def parts(self) -> tuple[str, ...]:
+        """Return the parts of the file path."""
+        return self.file_path.parts
+
+    @property
+    def uri(self) -> str:
+        """Return the file URI."""
+        return self.file_path.as_uri()
+
+    @property
+    def logseq_url(self) -> str:
+        """Return the Logseq URL."""
+        uri = self.uri
+        uri_path = Path(uri)
+        gd = GraphDirectory()
+        len_gd = len(gd.path.parts)
+        len_uri = len(uri_path.parts)
+        target_index = len_uri - len_gd
+        target_segment = uri_path.parts[target_index]
+        if target_segment[:-1] not in ("page", "block-id"):
+            return ""
+
+        prefix = f"file:///{str(gd.path)}/{target_segment}/"
+        if not uri.startswith(prefix):
+            return ""
+
+        len_suffix = len(uri_path.suffix)
+        path_without_prefix = uri[len(prefix) : -(len_suffix)]
+        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
+        encoded_path = path_with_slashes
+        target_segment = target_segment[:-1]
+        return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+
     def process_filename(self) -> None:
         """Process the filename based on its parent directory."""
         self.determine_file_type()
         self.process_logseq_filename()
         self.check_is_hls()
-        self.convert_uri_to_logseq_url()
         self.check_is_namespace()
         if self.is_namespace:
             self.get_namespace_name_data()
@@ -90,48 +131,25 @@ class LogseqFilename:
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
+    def check_is_hls(self) -> None:
+        """Check if the filename is a HLS."""
+        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
+
     def check_is_namespace(self) -> None:
         """Check if the filename is a namespace."""
         self.is_namespace = Core.NS_SEP.value in self.name
 
-    def check_is_hls(self) -> None:
-        """Check if the filename is a HLS (Hierarchical Logseq Structure)."""
-        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
-
-    def convert_uri_to_logseq_url(self) -> None:
-        """Convert a file URI to a Logseq URL."""
-        uri = self.uri
-        uri_path = Path(uri)
-        gd = GraphDirectory()
-        len_gd = len(gd.path.parts)
-        len_uri = len(uri_path.parts)
-        target_index = len_uri - len_gd
-        target_segment = uri_path.parts[target_index]
-        if target_segment[:-1] not in ("page", "block-id"):
-            return
-
-        prefix = f"file:///{str(gd.path)}/{target_segment}/"
-        if not uri.startswith(prefix):
-            return
-
-        len_suffix = len(uri_path.suffix)
-        path_without_prefix = uri[len(prefix) : -(len_suffix)]
-        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
-        encoded_path = path_with_slashes
-        target_segment = target_segment[:-1]
-        self.logseq_url = f"logseq://graph/Logseq?{target_segment}={encoded_path}"
-
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
         ns_parts_list = self.name.split(Core.NS_SEP.value)
-        ns_level = len(ns_parts_list)
         ns_root = ns_parts_list[0]
-        self.ns_parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-        self.ns_level = ns_level
-        self.ns_root = ns_root
-        self.ns_parent = ns_parts_list[-2] if ns_level > 2 else ns_root
-        self.ns_parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
-        self.ns_stem = ns_parts_list[-1]
+        self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
+        self.ns_info.root = ns_root
+        self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
+        self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
+        self.ns_info.stem = ns_parts_list[-1]
+        self.ns_info.children = set()
+        self.ns_info.size = 0
 
     def determine_file_type(self) -> None:
         """

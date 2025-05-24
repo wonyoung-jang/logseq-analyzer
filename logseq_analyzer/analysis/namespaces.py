@@ -22,7 +22,6 @@ from typing import Any, TYPE_CHECKING
 
 from ..utils.enums import Core
 from ..utils.helpers import singleton, sort_dict_by_value
-from .index import get_attribute_list
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -107,11 +106,12 @@ class LogseqNamespaces:
         unique_namespaces_per_level = self.structure.unique_namespaces_per_level
         _part_levels = self._part_levels
         _part_entries = self._part_entries
-        ns_criteria = {"is_namespace": True}
-        for file in index.yield_files_with_keys_and_values(**ns_criteria):
+        for file in index:
+            if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
+                continue
             current_level = self.structure.tree
-            namespace_data[file.path.name] = {k: v for k, v in file.__dict__.items() if "ns_" in k and v}
-            if not (parts := namespace_data[file.path.name].get("ns_parts")):
+            namespace_data[file.path.name] = {k: v for k, v in curr_ns_info.__dict__.items() if v}
+            if not (parts := namespace_data[file.path.name].get("parts")):
                 continue
             namespace_parts[file.path.name] = parts
             for part, level in parts.items():
@@ -127,10 +127,10 @@ class LogseqNamespaces:
 
     def analyze_ns_queries(self, index: "FileIndex", page_ref_pattern: Pattern) -> None:
         """Analyze namespace queries."""
-        ns_queries: dict[str, dict[str, Any]] = {}
+        ns_queries = {}
         namespace_data = self.structure.data
         for file in index:
-            for query in file.data.get("queries", []):
+            for query in file.data.get("namespace_queries", []):
                 page_refs = page_ref_pattern.findall(query)
                 if len(page_refs) != 1:
                     logging.warning("Invalid references found in query: %s", query)
@@ -140,16 +140,19 @@ class LogseqNamespaces:
                 ns_queries.setdefault(query, {})
                 ns_queries[query].setdefault("found_in", []).append(file.path.name)
                 ns_queries[query]["namespace"] = page_ref
-                ns_queries[query]["ns_size"] = namespace_data.get(page_ref, {}).get("ns_size", 0)
+                ns_queries[query]["size"] = namespace_data.get(page_ref, {}).get("size", 0)
                 ns_queries[query]["uri"] = file.path.uri
                 ns_queries[query]["logseq_url"] = file.path.logseq_url
-        self.queries = sort_dict_by_value(ns_queries, value="ns_size", reverse=True)
+        self.queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        not_ns_criteria = {"is_namespace": False}
-        non_ns_files = index.yield_files_with_keys_and_values(**not_ns_criteria)
-        non_ns_names = get_attribute_list(non_ns_files, "name")
+        non_ns_names = []
+        for file in index:
+            if not file.path.ns_info or file.path.is_namespace:
+                continue
+            non_ns_names.append(file.path.name)
+        non_ns_names.sort()
         unique_namespace_parts = self.structure.unique_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)

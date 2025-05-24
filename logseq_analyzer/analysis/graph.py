@@ -61,7 +61,7 @@ class LogseqGraph:
         unique_linked_references = self.unique_linked_references
         unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
-            if file.path.is_namespace:
+            if (curr_ns_info := file.path.ns_info) and file.path.is_namespace:
                 ns_refs = self.post_processing_content_namespaces(file, index)
                 unique_linked_references_ns.update(ns_refs)
             found_aliases = file.data.get(Criteria.ALIASES.value, [])
@@ -76,15 +76,16 @@ class LogseqGraph:
                 file.data.get(Criteria.PROPERTIES_PAGE_USER.value, []),
                 file.data.get(Criteria.PROPERTIES_BLOCK_BUILTIN.value, []),
                 file.data.get(Criteria.PROPERTIES_BLOCK_USER.value, []),
-                [file.path.ns_parent],
             ]
             linked_references = [item for sublist in linked_references for item in sublist if item]
+            if curr_ns_info:
+                linked_references.append(curr_ns_info.parent)
             for item in linked_references:
                 all_linked_references.setdefault(item, {"count": 0, "found_in": Counter()})
                 all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
                 all_linked_references[item]["found_in"][file.path.name] += 1
-            if file.path.ns_parent:
-                linked_references.remove(file.path.ns_parent)
+            if curr_ns_info and curr_ns_info.parent:
+                linked_references.remove(curr_ns_info.parent)
             unique_linked_references.update(linked_references)
         for _, values in all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
@@ -96,27 +97,29 @@ class LogseqGraph:
 
     def post_processing_content_namespaces(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
-        ns_level = file.path.ns_level
-        ns_root = file.path.ns_root
-        ns_parent = file.path.ns_parent_full
+        if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
+            return ("", file.path.name)
+
+        ns_level = len(curr_ns_info.parts)
+        ns_root = curr_ns_info.root
+        ns_parent_full = curr_ns_info.parent_full
         ns_refs = (ns_root, file.path.name)
 
         for ns_root_file in index[ns_root]:
             ns_root_file: LogseqFile
             if not ns_root_file.path.is_namespace:
                 ns_root_file.path.is_namespace = True
-                ns_root_file.path.ns_level = 1
-            ns_root_file.path.ns_children.add(file.path.name)
-            ns_root_file.path.ns_size = len(ns_root_file.path.ns_children)
+            ns_root_file.path.ns_info.children.add(file.path.name)
+            ns_root_file.path.ns_info.size = len(ns_root_file.path.ns_info.children)
             self.set_ns_data(ns_root_file)
 
         if ns_level <= 2:
             return ns_refs
 
-        for ns_parent_file in index[ns_parent]:
+        for ns_parent_file in index[ns_parent_full]:
             ns_parent_file: LogseqFile
-            ns_parent_file.path.ns_children.add(file.path.name)
-            ns_parent_file.path.ns_size = len(ns_parent_file.path.ns_children)
+            ns_parent_file.path.ns_info.children.add(file.path.name)
+            ns_parent_file.path.ns_info.size = len(ns_parent_file.path.ns_info.children)
             self.set_ns_data(ns_parent_file)
 
         return ns_refs
@@ -132,7 +135,7 @@ class LogseqGraph:
                 file.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
                 if file.is_backlinked and file.is_backlinked_by_ns_only:
                     file.is_backlinked = False
-            if file.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
+            if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 
     def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:

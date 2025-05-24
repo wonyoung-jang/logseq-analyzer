@@ -3,6 +3,7 @@ LogseqFile class to process Logseq files.
 """
 
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -14,11 +15,19 @@ import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..config.builtin_properties import get_builtin_properties, get_not_builtin_properties
-from ..utils.enums import Criteria, Nodes, FileTypes
+from ..utils.enums import Criteria, Nodes
 from ..utils.helpers import process_aliases, yield_attrs, process_pattern_hierarchy
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
+
+
+@dataclass
+class MaskedBlocks:
+    """Class to hold masked blocks data."""
+
+    content: str
+    blocks: dict[str, str]
 
 
 class LogseqFile:
@@ -40,9 +49,7 @@ class LogseqFile:
         self.is_backlinked: bool = False
         self.is_backlinked_by_ns_only: bool = False
         self.node_type: str = Nodes.OTHER.value
-        self.file_type: str = FileTypes.OTHER.value
-        self.masked_content: str = ""
-        self.masked_blocks: dict[str, str] = {}
+        self.masked: MaskedBlocks = MaskedBlocks(content="", blocks={})
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
@@ -106,7 +113,7 @@ class LogseqFile:
             (ContentPatterns.ANY_LINK, "__ANY_LINK_"),
         )
 
-        masked_blocks: dict[str, str] = self.masked_blocks
+        masked_blocks: dict[str, str] = self.masked.blocks
         masked_content = self.bullets.content
 
         for regex, prefix in patterns:
@@ -118,7 +125,7 @@ class LogseqFile:
 
             masked_content = regex.sub(_repl, masked_content)
 
-        self.masked_content = masked_content
+        self.masked.content = masked_content
 
     def extract_primary_data(self) -> dict[str, str]:
         """
@@ -128,7 +135,7 @@ class LogseqFile:
             dict: A dictionary containing the extracted data.
         """
         content = self.bullets.content
-        masked_content = self.masked_content
+        masked_content = self.masked.content
         return {
             Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
             Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
@@ -270,8 +277,8 @@ class LogseqFile:
         Returns:
             str: Original content with code blocks restored.
         """
-        content = self.masked_content
-        masked_blocks = self.masked_blocks
+        content = self.masked.content
+        masked_blocks = self.masked.blocks
         for placeholder, block in masked_blocks.items():
             content = content.replace(placeholder, block)
         return content
