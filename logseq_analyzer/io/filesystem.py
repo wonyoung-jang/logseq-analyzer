@@ -111,6 +111,7 @@ class ConfigIniFile(File):
     def __init__(self, path: Path = None) -> None:
         """Initialize the LogseqAnalyzerConfigIniFile class."""
         super().__init__(path)
+        self.validate()
 
 
 @singleton
@@ -120,6 +121,7 @@ class UserConfigIniFile(File):
     def __init__(self, path: Path = None) -> None:
         """Initialize the LogseqAnalyzerUserConfigIniFile class."""
         super().__init__(path)
+        self.initialize_file()
 
 
 @singleton
@@ -129,6 +131,7 @@ class OutputDirectory(File):
     def __init__(self, path: str = Constants.OUTPUT_DIR.value) -> None:
         """Initialize the LogseqAnalyzerOutputDir class."""
         super().__init__(path)
+        self.initialize_dir()
 
 
 @singleton
@@ -138,6 +141,7 @@ class LogFile(File):
     def __init__(self, path: str = Constants.LOG_FILE.value) -> None:
         """Initialize the LogseqAnalyzerLogFile class."""
         super().__init__(path)
+        self.initialize_file()
 
 
 @singleton
@@ -147,6 +151,7 @@ class GraphDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerGraphDir class."""
         super().__init__(path)
+        self.validate()
 
 
 @singleton
@@ -156,6 +161,7 @@ class LogseqDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerLogseqDir class."""
         super().__init__(path)
+        self.validate()
 
 
 @singleton
@@ -165,6 +171,7 @@ class ConfigFile(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerConfigFile class."""
         super().__init__(path)
+        self.validate()
 
 
 @singleton
@@ -174,6 +181,7 @@ class DeleteDirectory(File):
     def __init__(self, path: str = Constants.TO_DELETE_DIR.value) -> None:
         """Initialize the LogseqAnalyzerDeleteDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -183,6 +191,7 @@ class DeleteBakDirectory(File):
     def __init__(self, path: str = Constants.TO_DELETE_BAK_DIR.value) -> None:
         """Initialize the LogseqAnalyzerDeleteBakDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -192,6 +201,7 @@ class DeleteRecycleDirectory(File):
     def __init__(self, path: str = Constants.TO_DELETE_RECYCLE_DIR.value) -> None:
         """Initialize the LogseqAnalyzerDeleteRecycleDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -201,6 +211,7 @@ class DeleteAssetsDirectory(File):
     def __init__(self, path: str = Constants.TO_DELETE_ASSETS_DIR.value) -> None:
         """Initialize the LogseqAnalyzerDeleteAssetsDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -219,6 +230,7 @@ class BakDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerBakDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -228,6 +240,7 @@ class RecycleDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerRecycleDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -237,6 +250,7 @@ class GlobalConfigFile(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerGlobalConfigFile class."""
         super().__init__(path)
+        self.validate()
 
 
 @singleton
@@ -246,6 +260,7 @@ class AssetsDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerAssetsDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -255,6 +270,7 @@ class DrawsDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerDrawsDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -264,6 +280,7 @@ class JournalsDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerJournalsDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -273,6 +290,7 @@ class PagesDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerPagesDir class."""
         super().__init__(path)
+        self.get_or_create_dir()
 
 
 @singleton
@@ -282,3 +300,4 @@ class WhiteboardsDirectory(File):
     def __init__(self, path: str = "") -> None:
         """Initialize the LogseqAnalyzerWhiteboardsDir class."""
         super().__init__(path)
+        self.get_or_create_dir()

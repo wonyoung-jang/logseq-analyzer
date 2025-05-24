@@ -10,13 +10,13 @@ from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 def main():
     """Main function to run the Logseq Analyzer application."""
-    if "--gui" in sys.argv:
+    if "--cli" in sys.argv:
+        run_app()
+    else:
         app = QApplication()
         gui = LogseqAnalyzerGUI()
         gui.show()
         sys.exit(app.exec())
-    else:
-        run_app()
 
 
 if __name__ == "__main__":

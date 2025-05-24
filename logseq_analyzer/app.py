@@ -90,11 +90,10 @@ def setup_logseq_arguments(**kwargs) -> Args:
 def init_logseq_paths() -> LogFile:
     """Setup Logseq paths for the analyzer."""
     output_dir = Constants.OUTPUT_DIR.value
-    OutputDirectory(output_dir).initialize_dir()
+    OutputDirectory(output_dir)
 
     log_file_path = Constants.LOG_FILE.value
     lf = LogFile(log_file_path)
-    lf.initialize_file()
     return lf
 
 
@@ -115,8 +114,9 @@ def setup_logging(log_file: Path) -> None:
 def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
     """Setup Logseq analyzer configuration based on arguments."""
     path = Path.cwd() / Constants.CONFIG_INI_FILE.value
+    if not path.exists():
+        path = Path.cwd() / "_internal" / Constants.CONFIG_INI_FILE.value
     config_ini_file = ConfigIniFile(path)
-    config_ini_file.validate()
     lac = LogseqAnalyzerConfig(config_ini_file.path)
     lac.set_value("ANALYZER", "GRAPH_DIR", a.graph_folder)
     lac.set_value("ANALYZER", "REPORT_FORMAT", a.report_format)
@@ -132,19 +132,19 @@ def setup_logseq_paths(lac: LogseqAnalyzerConfig) -> None:
     logseq_dir = lac["ANALYZER"]["LOGSEQ_DIR"]
     bak_dir = lac["ANALYZER"]["BAK_DIR"]
     recycle_dir = lac["ANALYZER"]["RECYCLE_DIR"]
-    GraphDirectory(graph_dir).validate()
-    LogseqDirectory(logseq_dir).validate()
-    BakDirectory(bak_dir).get_or_create_dir()
-    RecycleDirectory(recycle_dir).get_or_create_dir()
+    GraphDirectory(graph_dir)
+    LogseqDirectory(logseq_dir)
+    BakDirectory(bak_dir)
+    RecycleDirectory(recycle_dir)
 
     delete_dir = Constants.TO_DELETE_DIR.value
     delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
     delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
     delete_assets_dir = Constants.TO_DELETE_ASSETS_DIR.value
-    DeleteDirectory(delete_dir).get_or_create_dir()
-    DeleteBakDirectory(delete_bak_dir).get_or_create_dir()
-    DeleteRecycleDirectory(delete_recycle_dir).get_or_create_dir()
-    DeleteAssetsDirectory(delete_assets_dir).get_or_create_dir()
+    DeleteDirectory(delete_dir)
+    DeleteBakDirectory(delete_bak_dir)
+    DeleteRecycleDirectory(delete_recycle_dir)
+    DeleteAssetsDirectory(delete_assets_dir)
     logging.debug("run_app: setup_logseq_paths")
 
 
@@ -153,12 +153,10 @@ def setup_logseq_graph_config(a: Args, lac: LogseqAnalyzerConfig) -> LogseqGraph
     lgc = LogseqGraphConfig()
     config_path = lac["ANALYZER"]["USER_CONFIG_FILE"]
     cf = ConfigFile(config_path)
-    cf.validate()
     lgc.initialize_user_config_edn(cf.path)
     if a.global_config:
         global_config_path = lac["ANALYZER"]["GLOBAL_CONFIG_FILE"]
         gcf = GlobalConfigFile(global_config_path)
-        gcf.validate()
         lgc.initialize_global_config_edn(gcf.path)
     lgc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
@@ -173,11 +171,11 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None
     dir_journals = lac["TARGET_DIRS"][Config.DIR_JOURNALS.value]
     dir_pages = lac["TARGET_DIRS"][Config.DIR_PAGES.value]
     dir_whiteboards = lac["TARGET_DIRS"][Config.DIR_WHITEBOARDS.value]
-    AssetsDirectory(dir_assets).get_or_create_dir()
-    DrawsDirectory(dir_draws).get_or_create_dir()
-    JournalsDirectory(dir_journals).get_or_create_dir()
-    PagesDirectory(dir_pages).get_or_create_dir()
-    WhiteboardsDirectory(dir_whiteboards).get_or_create_dir()
+    AssetsDirectory(dir_assets)
+    DrawsDirectory(dir_draws)
+    JournalsDirectory(dir_journals)
+    PagesDirectory(dir_pages)
+    WhiteboardsDirectory(dir_whiteboards)
     lac.set_logseq_target_dirs()
     logging.debug("run_app: setup_target_dirs")
 
@@ -220,10 +218,8 @@ def setup_logseq_filename_class(
 
 def setup_logseq_graph(index: FileIndex, cache: Cache, target_dirs: set[str]) -> LogseqGraph:
     """Setup the Logseq graph."""
-    graph_directory = GraphDirectory()
-    graph_dir = graph_directory.path
     lg = LogseqGraph()
-    lg.process_graph_files(index, cache, graph_dir, target_dirs)
+    lg.process_graph_files(index, cache, GraphDirectory().path, target_dirs)
     lg.post_processing_content(index)
     lg.process_summary_data(index)
     logging.debug("run_app: setup_logseq_graph")
@@ -445,7 +441,9 @@ def finish_analysis(cache: Cache, index: FileIndex, configs: Configurations) -> 
     """Finish the analysis by closing the cache and writing the user configuration."""
     update_cache(cache, index)
     path = Path.cwd() / Constants.CONFIG_USER_INI_FILE.value
-    UserConfigIniFile(path).initialize_file()
+    if not path.exists():
+        path = Path.cwd() / "_internal" / Constants.CONFIG_USER_INI_FILE.value
+    UserConfigIniFile(path)
     configs.analyzer.write_to_file(UserConfigIniFile().path)
     cache.close()
     logging.debug("run_app: finish_analysis")
