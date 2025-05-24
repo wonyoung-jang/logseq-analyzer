@@ -114,7 +114,8 @@ def setup_logging(log_file: Path) -> None:
 
 def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
     """Setup Logseq analyzer configuration based on arguments."""
-    config_ini_file = ConfigIniFile(Constants.CONFIG_INI_FILE.value)
+    path = Path.cwd() / Constants.CONFIG_INI_FILE.value
+    config_ini_file = ConfigIniFile(path)
     config_ini_file.validate()
     lac = LogseqAnalyzerConfig(config_ini_file.path)
     lac.set_value("ANALYZER", "GRAPH_DIR", a.graph_folder)
@@ -443,7 +444,8 @@ def perform_core_analysis(
 def finish_analysis(cache: Cache, index: FileIndex, configs: Configurations) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
     update_cache(cache, index)
-    UserConfigIniFile(Constants.CONFIG_USER_INI_FILE.value).initialize_file()
+    path = Path.cwd() / Constants.CONFIG_USER_INI_FILE.value
+    UserConfigIniFile(path).initialize_file()
     configs.analyzer.write_to_file(UserConfigIniFile().path)
     cache.close()
     logging.debug("run_app: finish_analysis")

@@ -108,7 +108,7 @@ class File:
 class ConfigIniFile(File):
     """Class to handle the config.ini file for the Logseq Analyzer."""
 
-    def __init__(self, path: str = Constants.CONFIG_INI_FILE.value) -> None:
+    def __init__(self, path: Path = None) -> None:
         """Initialize the LogseqAnalyzerConfigIniFile class."""
         super().__init__(path)
 
@@ -117,7 +117,7 @@ class ConfigIniFile(File):
 class UserConfigIniFile(File):
     """Class to handle the user_config.ini file for the Logseq Analyzer."""
 
-    def __init__(self, path: str = Constants.CONFIG_USER_INI_FILE.value) -> None:
+    def __init__(self, path: Path = None) -> None:
         """Initialize the LogseqAnalyzerUserConfigIniFile class."""
         super().__init__(path)
 

@@ -15,7 +15,6 @@ dist/
 
 # Logseq Analyzer specific files
 ~notes/
-configuration/user_config.ini
 docs/build
 logseq_analyzer/data.py
 logseq-analyzer-cache*
@@ -23,3 +22,4 @@ logseq-analyzer-output/
 setup.cfg
 setup.py
 to_delete/
+user_config.ini

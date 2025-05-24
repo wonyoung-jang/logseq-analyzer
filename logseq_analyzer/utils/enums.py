@@ -16,8 +16,8 @@ class Moved(Enum):
 class Constants(Enum):
     """Constants used in the Logseq Analyzer."""
 
-    CONFIG_INI_FILE = "configuration/config.ini"
-    CONFIG_USER_INI_FILE = "configuration/user_config.ini"
+    CONFIG_INI_FILE = "logseq_analyzer/config/configuration/config.ini"
+    CONFIG_USER_INI_FILE = "logseq_analyzer/config/configuration/user_config.ini"
     CACHE_FILE = "logseq-analyzer-cache"
     OUTPUT_DIR = "logseq-analyzer-output"
     LOG_FILE = "logseq-analyzer-output/logseq_analyzer.log"
