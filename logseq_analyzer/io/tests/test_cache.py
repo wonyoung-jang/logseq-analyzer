@@ -3,14 +3,16 @@ Test Cache class.
 """
 
 import pytest
+from pathlib import Path
 
 from ..cache import Cache
+from ...utils.enums import Constants
 
 
 @pytest.fixture
 def cache():
     """Fixture to create a Cache object."""
-    cache = Cache()
+    cache = Cache(Path(Constants.CACHE_FILE.value))
     yield cache
     cache.close()
 

@@ -101,9 +101,7 @@ class ReportWriter:
         Returns:
             Path: The output path for the report file.
         """
-        output_dir = ReportWriter.output_dir
-        if self.subdir:
-            output_dir = output_dir / self.subdir
+        output_dir = ReportWriter.output_dir / self.subdir if self.subdir else ReportWriter.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
         return output_dir / filename
 
@@ -245,7 +243,6 @@ class ReportWriter:
                     f.write(f"<span>{value}</span>")
                 f.write("</dd>\n")
             f.write("</dl>\n")
-
         elif isinstance(data, (list, set)):
             f.write("<ol>\n")
             for item in data:
@@ -258,7 +255,6 @@ class ReportWriter:
                     f.write(f"<span>{item}</span>")
                 f.write("</li>\n")
             f.write("</ol>\n")
-
         else:
             f.write(f"<span>{data}</span>\n")
 

@@ -23,7 +23,7 @@ class Cache:
 
     __slots__ = ("cache_path", "cache")
 
-    def __init__(self, cache_path: Path = Path("logseq-analyzer-cache")) -> None:
+    def __init__(self, cache_path: Path = None) -> None:
         """Initialize the class."""
         self.cache_path = cache_path
         self.cache = shelve.open(cache_path, protocol=5)

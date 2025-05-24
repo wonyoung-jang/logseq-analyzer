@@ -56,17 +56,12 @@ class LogseqDateTimeTokens:
 
     __slots__ = ("_token_map", "_token_pattern")
 
-    def __init__(self) -> None:
+    def __init__(self, token_map: dict[str, str]) -> None:
         """
         Initialize the LogseqDateTimeTokens class.
         """
-        self._token_map = {}
-        self._token_pattern = None
-
-    def get_datetime_token_map(self, token_map: dict[str, str]) -> None:
-        """Return the datetime token mapping as a dictionary"""
         self._token_map = token_map
-        logging.debug("LogseqDateTimeTokens: get_datetime_token_map()")
+        self._token_pattern = None
 
     def set_datetime_token_pattern(self) -> None:
         """Return a compiled regex pattern for datetime tokens"""

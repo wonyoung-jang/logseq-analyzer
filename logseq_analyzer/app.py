@@ -184,8 +184,7 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None
 def setup_datetime_tokens(token_map: dict[str, str], config: dict[str, str]) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
-    ldtt = LogseqDateTimeTokens()
-    ldtt.get_datetime_token_map(token_map)
+    ldtt = LogseqDateTimeTokens(token_map)
     ldtt.set_datetime_token_pattern()
     ldtt.set_journal_py_formatting(config, ljf)
     del ldtt
