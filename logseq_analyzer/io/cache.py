@@ -7,12 +7,11 @@ import shelve
 from pathlib import Path
 from typing import Any, Generator, TYPE_CHECKING
 
-from ..utils.enums import Output
+from ..utils.enums import CacheKeys
 from ..utils.helpers import iter_files, singleton
 
 if TYPE_CHECKING:
     from ..analysis.index import FileIndex
-    from ..logseq_file.file import LogseqFile
 
 
 @singleton
@@ -54,17 +53,14 @@ class Cache:
 
     def clear_deleted_files(self, index: "FileIndex") -> None:
         """Clear the deleted files from the cache."""
-        if "index" in self.cache:
+        if CacheKeys.INDEX.value in self.cache:
             del index
-            index = self.cache["index"]
-        files_to_remove = set(self.yield_deleted_files(index))
-        for file in files_to_remove:
-            logging.warning("File removed from index: %s", file.file_path)
-            index.remove(file)
+            index = self.cache[CacheKeys.INDEX.value]
+        index.remove_deleted_files()
 
     def iter_modified_files(self, graph_dir: Path, target_dirs: set[str]) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
-        mod_tracker = self.cache.setdefault(Output.MOD_TRACKER.value, {})
+        mod_tracker = self.cache.setdefault(CacheKeys.MOD_TRACKER.value, {})
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
@@ -73,12 +69,4 @@ class Cache:
                 mod_tracker[str_path] = curr_date_mod
                 logging.debug("File modified: %s", path)
                 yield path
-        self.cache[Output.MOD_TRACKER.value] = mod_tracker
-
-    @staticmethod
-    def yield_deleted_files(index: "FileIndex") -> Generator["LogseqFile", Any, None]:
-        """Yield deleted files from the cache."""
-        for file in index:
-            if not file.file_path.exists():
-                logging.debug("File deleted: %s", file)
-                yield file
+        self.cache[CacheKeys.MOD_TRACKER.value] = mod_tracker

@@ -3,6 +3,7 @@ Test the Criteria enum class.
 """
 
 from ..enums import (
+    CacheKeys,
     Constants,
     Format,
     Core,
@@ -16,6 +17,20 @@ from ..enums import (
     FileTypes,
     Config,
 )
+
+
+# CacheKeys
+def test_cache_keys_values():
+    expected = {
+        "INDEX": "index",
+        "MOD_TRACKER": "mod_tracker",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(CacheKeys, member_name).value == string_value
+
+
+def test_cache_keys_member_count():
+    assert len(CacheKeys) == 2
 
 
 # Constants
@@ -148,7 +163,6 @@ def test_output_values():
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "MISSING_KEYS": "missing_keys",
-        "MOD_TRACKER": "mod_tracker",
         "MOVED_FILES": "moved_files",
         "NAMESPACE_DATA": "namespace_data",
         "NAMESPACE_DETAILS": "namespace_details",
@@ -166,7 +180,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 41
+    assert len(Output) == 40
 
 
 # SummaryFiles

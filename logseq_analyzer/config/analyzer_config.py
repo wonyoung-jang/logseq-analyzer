@@ -73,10 +73,12 @@ class LogseqAnalyzerConfig:
     def set_logseq_target_dirs(self) -> None:
         """Get the target directories based on the configuration data."""
         config = self["LOGSEQ_CONFIG"]
-        self.target_dirs = {
-            config[Config.DIR_ASSETS.value],
-            config[Config.DIR_DRAWS.value],
-            config[Config.DIR_PAGES.value],
-            config[Config.DIR_JOURNALS.value],
-            config[Config.DIR_WHITEBOARDS.value],
-        }
+        self.target_dirs.update(
+            (
+                config[Config.DIR_ASSETS.value],
+                config[Config.DIR_DRAWS.value],
+                config[Config.DIR_PAGES.value],
+                config[Config.DIR_JOURNALS.value],
+                config[Config.DIR_WHITEBOARDS.value],
+            )
+        )

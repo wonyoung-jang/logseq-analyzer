@@ -46,7 +46,7 @@ from .io.filesystem import (
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
-from .utils.enums import Config, Constants, Moved, Output, OutputDir
+from .utils.enums import CacheKeys, Config, Constants, Moved, Output, OutputDir
 
 
 class GUIInstanceDummy:
@@ -383,7 +383,7 @@ def get_moved_files_reports(moved_files: dict[str, Any], la: LogseqAssets, lah: 
 
 def update_cache(cache: Cache, index: FileIndex) -> None:
     """Update the cache with the current index."""
-    cache.cache["index"] = index
+    cache.cache[CacheKeys.INDEX.value] = index
     logging.debug("run_app: update_cache")
 
 

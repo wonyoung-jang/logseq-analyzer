@@ -13,6 +13,13 @@ class Moved(Enum):
     BAK = "moved_bak"
 
 
+class CacheKeys(Enum):
+    """Cache keys for the Logseq Analyzer."""
+
+    INDEX = "index"
+    MOD_TRACKER = "mod_tracker"
+
+
 class Constants(Enum):
     """Constants used in the Logseq Analyzer."""
 
@@ -100,7 +107,6 @@ class Output(Enum):
     UNIQUE_LINKED_REFERENCES = "unique_linked_references"
     UNIQUE_LINKED_REFERENCES_NS = "unique_linked_references_ns"
     MISSING_KEYS = "missing_keys"
-    MOD_TRACKER = "mod_tracker"
     MOVED_FILES = "moved_files"
     NAMESPACE_DATA = "namespace_data"
     NAMESPACE_DETAILS = "namespace_details"

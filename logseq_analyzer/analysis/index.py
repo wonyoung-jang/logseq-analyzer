@@ -147,13 +147,20 @@ class FileIndex:
             del self._name_to_files[name]
         self._path_to_file.pop(file.file_path, None)
 
+    def remove_deleted_files(self):
+        """Remove deleted files from the cache.
+        don't cause size errors"""
+        to_delete = set()
+        for file in self:
+            if not file.file_path.exists():
+                to_delete.add(file)
+        for file in to_delete:
+            self.remove(file)
+
     def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         for file in self:
             for key, expected in criteria.items():
-                if not hasattr(file, key):
+                if not getattr(file, key, None) == expected:
                     break
-                if not getattr(file, key) == expected:
-                    break
-            else:
-                yield file
+            yield file
