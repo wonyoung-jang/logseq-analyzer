@@ -47,6 +47,7 @@ from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
 from .utils.enums import CacheKeys, Config, Constants, Moved, Output, OutputDir
+from .utils.helpers import yield_attrs
 
 
 class GUIInstanceDummy:
@@ -322,7 +323,7 @@ def get_graph_data(index: FileIndex) -> dict[LogseqFile, dict[str, Any]]:
     """Get metadata file data from the graph."""
     graph_data = {}
     for file in index:
-        data = {k: v for k, v in file.__dict__.items() if k not in ("content", "content_bullets", "primary_bullet")}
+        data = {k: v for k, v in yield_attrs(file) if k not in ("content", "content_bullets", "primary_bullet")}
         graph_data[file] = data
     logging.debug("run_app: get_graph_data")
     return graph_data

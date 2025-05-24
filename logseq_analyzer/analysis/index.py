@@ -161,6 +161,9 @@ class FileIndex:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         for file in self:
             for key, expected in criteria.items():
+                if not hasattr(file, key):
+                    break
                 if not getattr(file, key, None) == expected:
                     break
-            yield file
+            else:
+                yield file

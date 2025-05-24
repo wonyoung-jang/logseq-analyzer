@@ -122,8 +122,8 @@ class LogseqJournals:
         """Convert journal keys from strings to datetime objects."""
         for key in list_of_keys:
             try:
-                if any(ordinal in key for ordinal in ("st", "nd", "rd", "th")):
-                    key = key.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
+                for ordinal in ("st", "nd", "rd", "th"):
+                    key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_base_format.replace("#", ""))
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
@@ -136,11 +136,9 @@ class LogseqJournals:
         complete_timeline = self.complete_timeline
         for i in range(len(processed_keys) - 1):
             current_date = processed_keys[i]
+            complete_timeline.append(current_date)
             next_expected_date = self.date.next(current_date)
             next_actual_date = processed_keys[i + 1]
-
-            complete_timeline.append(current_date)
-
             while next_expected_date < next_actual_date:
                 complete_timeline.append(next_expected_date)
                 if next_expected_date in dangling_journals:
