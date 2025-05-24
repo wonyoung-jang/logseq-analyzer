@@ -65,8 +65,9 @@ class Cache:
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
             last_date_mod = mod_tracker.get(str_path)
-            if last_date_mod != curr_date_mod:
-                mod_tracker[str_path] = curr_date_mod
-                logging.debug("File modified: %s", path)
-                yield path
+            if last_date_mod == curr_date_mod:
+                continue
+            mod_tracker[str_path] = curr_date_mod
+            logging.debug("File modified: %s", path)
+            yield path
         self.cache[CacheKeys.MOD_TRACKER.value] = mod_tracker
