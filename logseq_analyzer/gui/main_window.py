@@ -115,6 +115,12 @@ class LogseqAnalyzerGUI(QMainWindow):
             global_config=QLineEdit(readOnly=True),
             report_format=QComboBox(),
         )
+        self.buttons = Buttons(
+            run=QPushButton("Run Analysis"),
+            output=QPushButton("Open Output Directory"),
+            delete=QPushButton("Open Delete Directory"),
+            log=QPushButton("Open Log File"),
+        )
         self.checkboxes = Checkboxes(
             move_all=QCheckBox("Enable all move options"),
             move_assets=QCheckBox("Move Unlinked Assets to 'to_delete' folder"),
@@ -123,24 +129,21 @@ class LogseqAnalyzerGUI(QMainWindow):
             write_graph=QCheckBox("Write Full Graph Content (large)"),
             graph_cache=QCheckBox("Reindex Graph Cache"),
         )
-        self.buttons = Buttons(
-            run=QPushButton("Run Analysis"),
-            output=QPushButton("Open Output Directory"),
-            delete=QPushButton("Open Delete Directory"),
-            log=QPushButton("Open Log File"),
-        )
         self.checkboxes.graph_cache.setEnabled(True)
         self.progress_bar = self.create_progress_bar()
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.worker = None
+        self.init_ui()
+        self.inputs.graph_folder.textChanged.connect(self.force_enable_graph_cache)
+
+    def init_ui(self) -> None:
+        """Initialize the user interface."""
         central_widget = QWidget()
-        main_layout = QGridLayout(central_widget)
         self.setWindowTitle("Logseq Analyzer")
         self.resize(500, 500)
         self.setCentralWidget(central_widget)
-        self.setup_ui(main_layout)
+        self.setup_ui(QGridLayout(central_widget))
         self.load_settings()
-        self.inputs.graph_folder.textChanged.connect(self.force_enable_graph_cache)
 
     def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
@@ -207,48 +210,38 @@ class LogseqAnalyzerGUI(QMainWindow):
         graph_folder_button = QPushButton("Browse")
         graph_folder_button.clicked.connect(self.select_graph_folder)
         graph_folder_clear_button = QPushButton("Clear")
-        graph_folder_clear_button.clicked.connect(self.clear_graph_folder_input)
-        graph_folder_hbox = QWidget()
-        graph_folder_layout = QHBoxLayout(graph_folder_hbox)
+        graph_folder_clear_button.clicked.connect(self.inputs.graph_folder.clear)
+        graph_folder_layout = QHBoxLayout()
         graph_folder_layout.addWidget(self.inputs.graph_folder)
         graph_folder_layout.addWidget(graph_folder_button)
         graph_folder_layout.addWidget(graph_folder_clear_button)
-        form_layout.addRow(graph_folder_label, graph_folder_hbox)
+        form_layout.addRow(graph_folder_label, graph_folder_layout)
 
         # --- Global Config File Input ---
         global_config_label = QLabel("Logseq Global Config File (Optional):")
         global_config_button = QPushButton("Browse")
         global_config_button.clicked.connect(self.select_global_config_file)
         global_config_clear_button = QPushButton("Clear")
-        global_config_clear_button.clicked.connect(self.clear_global_config_input)
-        global_config_hbox = QWidget()
-        global_config_layout = QHBoxLayout(global_config_hbox)
+        global_config_clear_button.clicked.connect(self.inputs.global_config.clear)
+        global_config_layout = QHBoxLayout()
         global_config_layout.addWidget(self.inputs.global_config)
         global_config_layout.addWidget(global_config_button)
         global_config_layout.addWidget(global_config_clear_button)
-        form_layout.addRow(global_config_label, global_config_hbox)
+        form_layout.addRow(global_config_label, global_config_layout)
 
         # --- Report Format Dropdown ---
         report_format_label = QLabel("Report Format:")
         self.inputs.report_format.addItems(
-            [
+            (
                 Format.TXT.value,
                 Format.JSON.value,
                 Format.MD.value,
                 Format.HTML.value,
-            ]
+            )
         )
         form_layout.addRow(report_format_label, self.inputs.report_format)
 
         return form_layout
-
-    def clear_graph_folder_input(self) -> None:
-        """Clear the graph folder input field."""
-        self.inputs.graph_folder.clear()
-
-    def clear_global_config_input(self) -> None:
-        """Clear the global config input field."""
-        self.inputs.global_config.clear()
 
     def _create_checkboxes_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for checkboxes."""
@@ -293,35 +286,31 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def _create_buttons_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for all buttons (Run, Exit, Open Directories, Log)."""
-        buttons_layout = QVBoxLayout()
-        button_layout_primary = QHBoxLayout()
-        button_layout_secondary = QHBoxLayout()
-        buttons_layout.addLayout(button_layout_primary)
-        buttons_layout.addLayout(button_layout_secondary)
+        buttons_layout = QGridLayout()
 
         self.buttons.run.clicked.connect(self.run_analysis)
         self.buttons.run.setShortcut("Ctrl+R")
         self.buttons.run.setToolTip("Ctrl+R to run analysis")
-        button_layout_primary.addWidget(self.buttons.run)
+        buttons_layout.addWidget(self.buttons.run, 0, 0, 1, 2)
 
         exit_button = QPushButton("Exit")
         exit_button.clicked.connect(self.close_analyzer)
         exit_button.setShortcut("Ctrl+W")
         exit_button.setToolTip("Ctrl+W to exit")
-        button_layout_primary.addWidget(exit_button)
+        buttons_layout.addWidget(exit_button, 0, 2, 1, 1)
 
         # --- Secondary Buttons ---
-        self.buttons.output.clicked.connect(self.open_output_directory)
+        self.buttons.output.clicked.connect(self._open_output_dir)
         self.buttons.output.setEnabled(False)
-        button_layout_secondary.addWidget(self.buttons.output)
+        buttons_layout.addWidget(self.buttons.output, 1, 0)
 
-        self.buttons.delete.clicked.connect(self.open_delete_directory)
+        self.buttons.delete.clicked.connect(self._open_delete_dir)
         self.buttons.delete.setEnabled(False)
-        button_layout_secondary.addWidget(self.buttons.delete)
+        buttons_layout.addWidget(self.buttons.delete, 1, 1)
 
-        self.buttons.log.clicked.connect(self.open_log_file)
+        self.buttons.log.clicked.connect(self._open_log_file)
         self.buttons.log.setEnabled(False)
-        button_layout_secondary.addWidget(self.buttons.log)
+        buttons_layout.addWidget(self.buttons.log, 1, 2)
 
         return buttons_layout
 
@@ -330,20 +319,17 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.save_settings()
         self.close()
 
-    def open_output_directory(self) -> None:
+    def _open_output_dir(self) -> None:
         """Open the output directory in the file explorer."""
-        od = OutputDirectory()
-        self._open_path(od.path)
+        self._open_path(OutputDirectory().path)
 
-    def open_delete_directory(self) -> None:
+    def _open_delete_dir(self) -> None:
         """Open the delete directory in the file explorer."""
-        dd = DeleteDirectory()
-        self._open_path(dd.path)
+        self._open_path(DeleteDirectory().path)
 
-    def open_log_file(self) -> None:
+    def _open_log_file(self) -> None:
         """Open the log file in the default text editor."""
-        lf = LogFile()
-        self._open_path(lf.path)
+        self._open_path(LogFile().path)
 
     def _open_path(self, path) -> None:
         """Open a path in the file explorer."""
@@ -358,13 +344,13 @@ class LogseqAnalyzerGUI(QMainWindow):
         else:
             self.show_error(f"Path not found: {path}")
 
-    def update_progress(self, progress_value=0) -> None:
+    def update_progress(self, progress_value: int = 0) -> None:
         """Updates the progress bar for a given phase."""
         if self.progress_bar:
             self.progress_bar.setValue(progress_value)
             QApplication.processEvents()
 
-    def show_error(self, message) -> None:
+    def show_error(self, message: str) -> None:
         """Show an error message in a dialog."""
         error_dialog = QMessageBox(self)
         error_dialog.setIcon(QMessageBox.Critical)

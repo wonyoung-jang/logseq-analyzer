@@ -226,19 +226,17 @@ class LogseqFile:
             dict: A dictionary containing the processed patterns.
         """
         patterns = (
-            (ExternalLinksPatterns, Criteria.EXTERNAL_LINKS_OTHER.value),
-            (EmbeddedLinksPatterns, Criteria.EMBEDDED_LINKS_OTHER.value),
-            (DoubleParenthesesPatterns, Criteria.REFERENCES_GENERAL.value),
-            (CodePatterns, Criteria.MULTILINE_CODE_BLOCKS.value),
-            (AdvancedCommandPatterns, Criteria.ADV_CMD.value),
-            (DoubleCurlyBracketsPatterns, Criteria.MACROS.value),
+            ExternalLinksPatterns,
+            EmbeddedLinksPatterns,
+            DoubleParenthesesPatterns,
+            CodePatterns,
+            AdvancedCommandPatterns,
+            DoubleCurlyBracketsPatterns,
         )
         result = {}
         content = self.bullets.content
-        for pattern, fallback in patterns:
-            iter_all = pattern.ALL.finditer(content)
-            pattern_map = pattern.PATTERN_MAP
-            processed_patterns = process_pattern_hierarchy(iter_all, pattern_map, fallback)
+        for pattern in patterns:
+            processed_patterns = process_pattern_hierarchy(content, pattern)
             result.update(processed_patterns)
 
         return result

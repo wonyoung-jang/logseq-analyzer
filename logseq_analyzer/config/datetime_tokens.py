@@ -81,7 +81,6 @@ class LogseqDateTimeTokens:
         """
         journal_file_format = graph_config.get(":journal/file-name-format")
         journal_page_format = graph_config.get(":journal/page-title-format")
-        journal_page_format = journal_page_format.replace("o", "")
         ljf.file = self.convert_cljs_date_to_py(journal_file_format)
         ljf.page = self.convert_cljs_date_to_py(journal_page_format)
         logging.debug("LogseqDateTimeTokens: set_journal_py_formatting()")

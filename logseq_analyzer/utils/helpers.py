@@ -8,7 +8,8 @@ import re
 import threading
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Generator, Iterator, Type, TypeVar
+from types import ModuleType
+from typing import Any, Generator, Type, TypeVar
 
 from ..utils.enums import Format
 
@@ -125,27 +126,26 @@ def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
         yield slot, getattr(obj, slot)
 
 
-def process_pattern_hierarchy(results: Iterator[re.Match[str]], pattern_map: dict, fallback: str) -> dict:
+def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
     """
     Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
     Args:
-        results (Iterator[re.Match[str]]): An iterator of regex match objects.
-        pattern_map (dict): The pattern map to process.
-        fallback (str): The fallback value for missing patterns.
+        content (str): The content to process.
+        pattern_mod (ModuleType): A module containing regex patterns and their corresponding criteria.
 
     Returns:
         dict: A dictionary mapping patterns to their respective values.
     """
     output = defaultdict(list)
 
-    for match in results:
+    for match in pattern_mod.ALL.finditer(content):
         text = match.group(0)
-        for pattern, criteria in pattern_map.items():
+        for pattern, criteria in pattern_mod.PATTERN_MAP.items():
             if re.search(pattern, text):
                 output[criteria].append(text)
                 break
         else:
-            output[fallback].append(text)
+            output[pattern_mod.FALLBACK].append(text)
 
     return output

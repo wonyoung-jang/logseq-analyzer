@@ -201,3 +201,5 @@ PATTERN_MAP = {
     VERSE: Criteria.ADV_CMD_VERSE.value,
     WARNING: Criteria.ADV_CMD_WARNING.value,
 }
+
+FALLBACK = Criteria.ADV_CMD.value
