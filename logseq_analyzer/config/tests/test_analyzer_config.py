@@ -6,12 +6,13 @@ from pathlib import Path
 import pytest
 
 from ..analyzer_config import LogseqAnalyzerConfig, lambda_optionxform
+from ...utils.enums import Constants
 
 
 @pytest.fixture
 def config():
     """Fixture for LogseqAnalyzerConfig."""
-    return LogseqAnalyzerConfig()
+    return LogseqAnalyzerConfig(Path(Constants.CONFIG_INI_FILE.value))
 
 
 def test_singleton(config):
