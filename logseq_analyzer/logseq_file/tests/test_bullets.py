@@ -31,8 +31,8 @@ def test_logseq_bullets(logseq_bullets, temp_file):
     assert logseq_bullets.content == ""
     assert logseq_bullets.primary_bullet == ""
     assert logseq_bullets.all_bullets == []
-    assert logseq_bullets.char_count == 0
-    assert logseq_bullets.bullet_count == 0
-    assert logseq_bullets.bullet_count_empty == 0
-    assert logseq_bullets.bullet_density == 0.0
+    assert logseq_bullets.stats.char_count == 0
+    assert logseq_bullets.stats.bullet_count == 0
+    assert logseq_bullets.stats.bullet_count_empty == 0
+    assert logseq_bullets.stats.bullet_density == 0.0
     assert logseq_bullets.has_page_properties == False

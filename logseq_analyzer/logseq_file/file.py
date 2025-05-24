@@ -30,6 +30,16 @@ class MaskedBlocks:
     blocks: dict[str, str]
 
 
+@dataclass
+class NodeType:
+    """Class to hold node type data."""
+
+    has_backlinks: bool
+    is_backlinked: bool
+    is_backlinked_by_ns_only: bool
+    type: str
+
+
 class LogseqFile:
     """A class to represent a Logseq file."""
 
@@ -44,12 +54,14 @@ class LogseqFile:
         self.path: LogseqFilename = LogseqFilename(file_path)
         self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.bullets: LogseqBullets = LogseqBullets(file_path)
-        self.data: dict[str, Any] = {}
-        self.has_backlinks: bool = False
-        self.is_backlinked: bool = False
-        self.is_backlinked_by_ns_only: bool = False
-        self.node_type: str = Nodes.OTHER.value
         self.masked: MaskedBlocks = MaskedBlocks(content="", blocks={})
+        self.data: dict[str, Any] = {}
+        self.node: NodeType = NodeType(
+            has_backlinks=False,
+            is_backlinked=False,
+            is_backlinked_by_ns_only=False,
+            type=Nodes.OTHER.value,
+        )
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
@@ -71,6 +83,26 @@ class LogseqFile:
         if isinstance(other, str):
             return self.path.name < other
         return NotImplemented
+
+    @property
+    def has_backlinks(self) -> bool:
+        """Return whether the file has backlinks."""
+        return self.node.has_backlinks
+
+    @property
+    def node_type(self) -> str:
+        """Return the node type."""
+        return self.node.type
+
+    @property
+    def is_backlinked(self) -> bool:
+        """Return whether the file is backlinked."""
+        return self.node.is_backlinked
+
+    @property
+    def is_backlinked_by_ns_only(self) -> bool:
+        """Return whether the file is backlinked by namespace only."""
+        return self.node.is_backlinked_by_ns_only
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
@@ -224,7 +256,7 @@ class LogseqFile:
             primary_data (dict[str, str]): Dictionary containing primary data.
         """
         data = self.data
-        has_backlinks = self.has_backlinks
+        has_backlinks = self.node.has_backlinks
         backlinks = (
             Criteria.PAGE_REFERENCES.value,
             Criteria.TAGGED_BACKLINKS.value,
@@ -237,26 +269,26 @@ class LogseqFile:
                 continue
             if key in backlinks or "properties" in key:
                 has_backlinks = True
-        self.has_backlinks = has_backlinks
+        self.node.has_backlinks = has_backlinks
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
         if self.stat.has_content:
-            self.node_type = self.check_node_type_has_content()
+            self.node.type = self.check_node_type_has_content()
         else:
-            self.node_type = self.check_node_type_has_no_content()
+            self.node.type = self.check_node_type_has_no_content()
 
     def check_node_type_has_content(self) -> str:
         """
         Helper function to check node type based on content.
         """
-        if self.has_backlinks:
-            if self.is_backlinked or self.is_backlinked_by_ns_only:
+        if self.node.has_backlinks:
+            if self.node.is_backlinked or self.node.is_backlinked_by_ns_only:
                 return Nodes.BRANCH.value
             return Nodes.ROOT.value
-        if self.is_backlinked:
+        if self.node.is_backlinked:
             return Nodes.LEAF.value
-        if self.is_backlinked_by_ns_only and not self.is_backlinked:
+        if self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
             return Nodes.ORPHAN_NAMESPACE.value
         return Nodes.ORPHAN_GRAPH.value
 
@@ -264,9 +296,9 @@ class LogseqFile:
         """
         Helper function to check node type based on no content.
         """
-        if self.is_backlinked:
+        if self.node.is_backlinked:
             return Nodes.LEAF.value
-        if self.is_backlinked_by_ns_only and not self.is_backlinked:
+        if self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
             return Nodes.ORPHAN_NAMESPACE_TRUE.value
         return Nodes.ORPHAN_TRUE.value
 

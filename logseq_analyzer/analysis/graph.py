@@ -129,12 +129,12 @@ class LogseqGraph:
         unique_linked_references = self.unique_linked_references
         unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
-            if not file.is_backlinked:
-                file.is_backlinked = file.check_is_backlinked(unique_linked_references)
-            if not file.is_backlinked_by_ns_only:
-                file.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
-                if file.is_backlinked and file.is_backlinked_by_ns_only:
-                    file.is_backlinked = False
+            if not file.node.is_backlinked:
+                file.node.is_backlinked = file.check_is_backlinked(unique_linked_references)
+            if not file.node.is_backlinked_by_ns_only:
+                file.node.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
+                if file.node.is_backlinked and file.node.is_backlinked_by_ns_only:
+                    file.node.is_backlinked = False
             if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 

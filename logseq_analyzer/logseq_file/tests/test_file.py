@@ -39,9 +39,9 @@ def test_logseq_file(logseq_file, temp_file):
     assert logseq_file.is_backlinked == False
     assert logseq_file.is_backlinked_by_ns_only == False
     assert logseq_file.node_type == "other"
-    assert logseq_file.file_type == "other"
-    assert logseq_file.masked_content == ""
-    assert logseq_file.masked_blocks == {}
+    assert logseq_file.path.file_type == ""
+    assert logseq_file.masked.content == ""
+    assert logseq_file.masked.blocks == {}
 
 
 def test_representation(logseq_file):

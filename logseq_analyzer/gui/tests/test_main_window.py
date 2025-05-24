@@ -57,16 +57,16 @@ def test_main_window_layout(main_window):
 
 def test_main_window_controls(main_window):
     """Test if the main window controls are present."""
-    assert main_window.graph_folder_input is not None
-    assert main_window.global_config_input is not None
-    assert main_window.report_format_combo is not None
-    assert main_window.move_assets_checkbox is not None
-    assert main_window.move_bak_checkbox is not None
-    assert main_window.move_recycle_checkbox is not None
-    assert main_window.write_graph_checkbox is not None
-    assert main_window.graph_cache_checkbox is not None
+    assert main_window.inputs.graph_folder is not None
+    assert main_window.inputs.global_config is not None
+    assert main_window.inputs.report_format is not None
+    assert main_window.checkboxes.move_assets is not None
+    assert main_window.checkboxes.move_bak is not None
+    assert main_window.checkboxes.move_recycle is not None
+    assert main_window.checkboxes.write_graph is not None
+    assert main_window.checkboxes.graph_cache is not None
     assert main_window.progress_bar is not None
-    assert main_window.run_button is not None
-    assert main_window.output_button is not None
-    assert main_window.delete_button is not None
-    assert main_window.log_button is not None
+    assert main_window.buttons.run is not None
+    assert main_window.buttons.output is not None
+    assert main_window.buttons.delete is not None
+    assert main_window.buttons.log is not None

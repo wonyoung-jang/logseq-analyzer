@@ -42,7 +42,7 @@ class LogseqAssets:
             if not (emb_link_asset or asset_captured):
                 continue
             for asset_file in is_assets:
-                if asset_file.is_backlinked:
+                if asset_file.node.is_backlinked:
                     continue
                 self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
                 self.update_asset_backlink(file.path.name, asset_captured, asset_file)
@@ -58,7 +58,7 @@ class LogseqAssets:
             return
         for mention in asset_mentions:
             if asset.path.name in mention or file_name in mention:
-                asset.is_backlinked = True
+                asset.node.is_backlinked = True
                 return
 
 
@@ -135,7 +135,7 @@ class LogseqAssetsHls:
         not_backlinked = self.not_backlinked
         asset_mapping = self.asset_mapping
         for name in backlinked:
-            asset_mapping[name].is_backlinked = True
+            asset_mapping[name].node.is_backlinked = True
             asset_mapping[name].path.file_type = "asset"
         for name in not_backlinked:
             asset_mapping[name].path.file_type = "asset"

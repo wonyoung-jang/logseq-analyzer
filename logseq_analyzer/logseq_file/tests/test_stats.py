@@ -30,9 +30,9 @@ def test_logseq_filestats(logseq_filestats, temp_file):
     assert logseq_filestats.file_path == Path(temp_file)
     assert logseq_filestats.size == 0
     assert logseq_filestats.has_content == False
-    assert logseq_filestats.time_existed == 0.0
-    assert logseq_filestats.time_unmodified == 0.0
-    assert logseq_filestats.date_created is not None
-    assert logseq_filestats.date_modified is not None
-    assert isinstance(logseq_filestats.date_created, str)
-    assert isinstance(logseq_filestats.date_modified, str)
+    assert logseq_filestats.timestamps.time_existed == 0.0
+    assert logseq_filestats.timestamps.time_unmodified == 0.0
+    assert logseq_filestats.timestamps.date_created is not None
+    assert logseq_filestats.timestamps.date_modified is not None
+    assert isinstance(logseq_filestats.timestamps.date_created, str)
+    assert isinstance(logseq_filestats.timestamps.date_modified, str)
