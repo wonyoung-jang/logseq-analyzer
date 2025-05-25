@@ -72,10 +72,10 @@ class LogseqGraph:
                 file.data.get(Criteria.PAGE_REFERENCES.value, []),
                 file.data.get(Criteria.TAGS.value, []),
                 file.data.get(Criteria.TAGGED_BACKLINKS.value, []),
-                file.data.get(Criteria.PROPERTIES_PAGE_BUILTIN.value, []),
-                file.data.get(Criteria.PROPERTIES_PAGE_USER.value, []),
-                file.data.get(Criteria.PROPERTIES_BLOCK_BUILTIN.value, []),
-                file.data.get(Criteria.PROPERTIES_BLOCK_USER.value, []),
+                file.data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
+                file.data.get(Criteria.PROP_PAGE_USER.value, []),
+                file.data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
+                file.data.get(Criteria.PROP_BLOCK_USER.value, []),
             ]
             linked_references = [item for sublist in linked_references for item in sublist if item]
             if curr_ns_info:

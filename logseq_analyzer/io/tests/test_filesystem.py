@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 
 from ..filesystem import (
@@ -11,7 +10,6 @@ from ..filesystem import (
     DeleteDirectory,
     DeleteRecycleDirectory,
     DrawsDirectory,
-    File,
     GlobalConfigFile,
     GraphDirectory,
     JournalsDirectory,
@@ -25,112 +23,93 @@ from ..filesystem import (
 
 
 @pytest.fixture
-def generic_file():
-    return File("test.txt")
-
-
-@pytest.fixture
 def output_dir():
-    return OutputDirectory()
+    return OutputDirectory("test.txt")
 
 
 @pytest.fixture
 def log_file():
-    return LogFile()
+    return LogFile("test.txt")
 
 
 @pytest.fixture
 def graph_dir():
-    return GraphDirectory()
+    return GraphDirectory("test.txt")
 
 
 @pytest.fixture
 def logseq_dir():
-    return LogseqDirectory()
+    return LogseqDirectory("test.txt")
 
 
 @pytest.fixture
 def config_file():
-    return ConfigFile()
+    return ConfigFile("test.txt")
 
 
 @pytest.fixture
 def delete_dir():
-    return DeleteDirectory()
+    return DeleteDirectory("test.txt")
 
 
 @pytest.fixture
 def delete_bak_dir():
-    return DeleteBakDirectory()
+    return DeleteBakDirectory("test.txt")
 
 
 @pytest.fixture
 def delete_recycle_dir():
-    return DeleteRecycleDirectory()
+    return DeleteRecycleDirectory("test.txt")
 
 
 @pytest.fixture
 def delete_assets_dir():
-    return DeleteAssetsDirectory()
+    return DeleteAssetsDirectory("test.txt")
 
 
 @pytest.fixture
 def cache_file():
-    return CacheFile()
+    return CacheFile("test.txt")
 
 
 @pytest.fixture
 def bak_dir():
-    return BakDirectory()
+    return BakDirectory("test.txt")
 
 
 @pytest.fixture
 def recycle_dir():
-    return RecycleDirectory()
+    return RecycleDirectory("test.txt")
 
 
 @pytest.fixture
 def global_config_file():
-    return GlobalConfigFile()
+    return GlobalConfigFile("test.txt")
 
 
 @pytest.fixture
 def assets_dir():
-    return AssetsDirectory()
+    return AssetsDirectory("test.txt")
 
 
 @pytest.fixture
 def draws_dir():
-    return DrawsDirectory()
+    return DrawsDirectory("test.txt")
 
 
 @pytest.fixture
 def journals_dir():
-    return JournalsDirectory()
+    return JournalsDirectory("test.txt")
 
 
 @pytest.fixture
 def pages_dir():
-    return PagesDirectory()
+    return PagesDirectory("test.txt")
 
 
 @pytest.fixture
 def whiteboards_dir():
-    return WhiteboardsDirectory()
-
-
-def test_file_initialization(generic_file):
-    """Test that the File class is initialized correctly."""
-    assert generic_file.path == Path("test.txt")
-    assert generic_file.path.exists() is False
-    assert generic_file.path.is_dir() is False
-    assert generic_file.path.is_file() is False
-
-
-def test_representation(generic_file):
-    """Test the string representation of the File class."""
-    assert repr(generic_file) == 'File(path="test.txt")'
-    assert str(generic_file) == "File: test.txt"
+    return WhiteboardsDirectory("test.txt")
 
 
 def test_output_dir_singleton(output_dir):

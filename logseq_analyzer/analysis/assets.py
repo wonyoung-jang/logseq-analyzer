@@ -37,7 +37,7 @@ class LogseqAssets:
         asset_criteria = {"file_type": "asset"}
         is_assets = list(index.filter_files(**asset_criteria))
         for file in index:
-            emb_link_asset = file.data.get(Criteria.EMBEDDED_LINKS_ASSET.value, [])
+            emb_link_asset = file.data.get(Criteria.EMB_LINK_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
             if not (emb_link_asset or asset_captured):
                 continue

@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
 
 
+SIMULATED_PREFIX = "======== Simulated only ========"
+
+
 def _move_src_to_dest(src: Path, dest: Path) -> None:
     """
     Move a file from source to destination.
@@ -42,7 +45,7 @@ def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["Logs
         return []
 
     if not move:
-        unlinked_assets.insert(0, "=== Simulated only ===")
+        unlinked_assets.insert(0, SIMULATED_PREFIX)
         return unlinked_assets
 
     for asset in unlinked_assets:
@@ -83,7 +86,7 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
         return []
 
     if not move:
-        moved_names.insert(0, "=== Simulated only ===")
+        moved_names.insert(0, SIMULATED_PREFIX)
         return moved_names
 
     for src, dest in moving_plan:

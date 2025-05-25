@@ -49,8 +49,8 @@ ASSET = re.compile(
 )
 
 PATTERN_MAP = {
-    INTERNET: Criteria.EMBEDDED_LINKS_INTERNET.value,
-    ASSET: Criteria.EMBEDDED_LINKS_ASSET.value,
+    INTERNET: Criteria.EMB_LINK_INTERNET.value,
+    ASSET: Criteria.EMB_LINK_ASSET.value,
 }
 
-FALLBACK = Criteria.EMBEDDED_LINKS_OTHER.value
+FALLBACK = Criteria.EMB_LINK_OTHER.value

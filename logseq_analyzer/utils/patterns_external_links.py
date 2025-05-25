@@ -51,8 +51,8 @@ ALIAS = re.compile(
 )
 
 PATTERN_MAP = {
-    INTERNET: Criteria.EXTERNAL_LINKS_INTERNET.value,
-    ALIAS: Criteria.EXTERNAL_LINKS_ALIAS.value,
+    INTERNET: Criteria.EXT_LINK_INTERNET.value,
+    ALIAS: Criteria.EXT_LINK_ALIAS.value,
 }
 
-FALLBACK = Criteria.EXTERNAL_LINKS_OTHER.value
+FALLBACK = Criteria.EXT_LINK_OTHER.value

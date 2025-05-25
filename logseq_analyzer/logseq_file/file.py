@@ -201,7 +201,7 @@ class LogseqFile:
             aliases = sorted(process_aliases(aliases))
         return {
             Criteria.ALIASES.value: aliases,
-            Criteria.PROPERTIES_VALUES.value: properties_values,
+            Criteria.PROP_VALUES.value: properties_values,
         }
 
     def extract_properties(self) -> dict[str, Any]:
@@ -223,10 +223,10 @@ class LogseqFile:
         block_props_builtins = sorted(get_builtin_properties(block_properties))
         block_props_user = sorted(get_not_builtin_properties(block_properties))
         return {
-            Criteria.PROPERTIES_BLOCK_BUILTIN.value: block_props_builtins,
-            Criteria.PROPERTIES_BLOCK_USER.value: block_props_user,
-            Criteria.PROPERTIES_PAGE_BUILTIN.value: page_props_builtins,
-            Criteria.PROPERTIES_PAGE_USER.value: page_props_user,
+            Criteria.PROP_BLOCK_BUILTIN.value: block_props_builtins,
+            Criteria.PROP_BLOCK_USER.value: block_props_user,
+            Criteria.PROP_PAGE_BUILTIN.value: page_props_builtins,
+            Criteria.PROP_PAGE_USER.value: page_props_user,
         }
 
     def extract_patterns(self) -> dict[str, Any]:

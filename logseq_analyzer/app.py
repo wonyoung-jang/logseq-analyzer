@@ -90,11 +90,8 @@ def setup_logseq_arguments(**kwargs) -> Args:
 
 def init_logseq_paths() -> LogFile:
     """Setup Logseq paths for the analyzer."""
-    output_dir = Constants.OUTPUT_DIR.value
-    OutputDirectory(output_dir)
-
-    log_file_path = Constants.LOG_FILE.value
-    lf = LogFile(log_file_path)
+    OutputDirectory(Constants.OUTPUT_DIR.value)
+    lf = LogFile(Constants.LOG_FILE.value)
     return lf
 
 
@@ -194,7 +191,7 @@ def setup_datetime_tokens(config: dict[str, str]) -> LogseqJournalFormats:
 
 def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
-    cache_path = CacheFile().path
+    cache_path = CacheFile(Constants.CACHE_FILE.value).path
     c = Cache(cache_path)
     index = FileIndex()
     if a.graph_cache:
@@ -407,8 +404,7 @@ def initialize_configurations(args: Args) -> Configurations:
     gc_config_merged = graph_config.config_merged
     setup_target_dirs(analyzer_config, gc_config_merged)
     journal_formats = setup_datetime_tokens(gc_config_merged)
-    configs = Configurations(analyzer_config, graph_config, journal_formats)
-    return configs
+    return Configurations(analyzer=analyzer_config, graph=graph_config, journal_formats=journal_formats)
 
 
 def perform_core_analysis(
