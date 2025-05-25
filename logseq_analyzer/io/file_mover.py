@@ -7,11 +7,10 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..utils.enums import Moved
+
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
-
-
-SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 def _move_src_to_dest(src: Path, dest: Path) -> None:
@@ -45,7 +44,7 @@ def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["Logs
         return []
 
     if not move:
-        unlinked_assets.insert(0, SIMULATED_PREFIX)
+        unlinked_assets.insert(0, Moved.SIMULATED_PREFIX.value)
         return unlinked_assets
 
     for asset in unlinked_assets:
@@ -86,7 +85,7 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
         return []
 
     if not move:
-        moved_names.insert(0, SIMULATED_PREFIX)
+        moved_names.insert(0, Moved.SIMULATED_PREFIX.value)
         return moved_names
 
     for src, dest in moving_plan:

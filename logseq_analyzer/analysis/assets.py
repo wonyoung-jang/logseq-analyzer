@@ -13,6 +13,12 @@ if TYPE_CHECKING:
     from .index import FileIndex
 
 
+__all__ = [
+    "LogseqAssets",
+    "LogseqAssetsHls",
+]
+
+
 @singleton
 class LogseqAssets:
     """Class to handle assets in Logseq."""

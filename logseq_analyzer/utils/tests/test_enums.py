@@ -19,6 +19,28 @@ from ..enums import (
 )
 
 
+# Arguments
+def test_args_values():
+    expected = {
+        "GEOMETRY": "geometry",
+        "GLOBAL_CONFIG": "global_config",
+        "GRAPH_CACHE": "graph_cache",
+        "GRAPH_FOLDER": "graph_folder",
+        "MOVE_ALL": "move_all",
+        "MOVE_BAK": "move_bak",
+        "MOVE_RECYCLE": "move_recycle",
+        "MOVE_UNLINKED_ASSETS": "move_unlinked_assets",
+        "REPORT_FORMAT": "report_format",
+        "WRITE_GRAPH": "write_graph",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Arguments, member_name).value == string_value
+
+
+def test_args_member_count():
+    assert len(Arguments) == 10
+
+
 # CacheKeys
 def test_cache_keys_values():
     expected = {
@@ -31,6 +53,25 @@ def test_cache_keys_values():
 
 def test_cache_keys_member_count():
     assert len(CacheKeys) == 2
+
+
+# Config
+def test_config_values():
+    expected = {
+        "DIR_ASSETS": "DIR_ASSETS",
+        "DIR_BAK": "DIR_BAK",
+        "DIR_DRAWS": "DIR_DRAWS",
+        "DIR_JOURNALS": "DIR_JOURNALS",
+        "DIR_PAGES": "DIR_PAGES",
+        "DIR_RECYCLE": "DIR_RECYCLE",
+        "DIR_WHITEBOARDS": "DIR_WHITEBOARDS",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Config, member_name).value == string_value
+
+
+def test_config_member_count():
+    assert len(Config) == 7
 
 
 # Constants
@@ -54,64 +95,6 @@ def test_constants_member_count():
     assert len(Constants) == 9
 
 
-# Format
-def test_format_values():
-    expected = {
-        "CSV": ".csv",
-        "GIF": ".gif",
-        "HTML": ".html",
-        "JPEG": ".jpeg",
-        "JPG": ".jpg",
-        "JSON": ".json",
-        "MD": ".md",
-        "ORG": ".org",
-        "PNG": ".png",
-        "SVG": ".svg",
-        "TSV": ".tsv",
-        "TXT": ".txt",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Format, member_name).value == string_value
-
-
-def test_format_member_count():
-    assert len(Format) == 12
-
-
-# Moved
-def test_moved_values():
-    expected = {
-        "ASSETS": "moved_assets",
-        "BAK": "moved_bak",
-        "RECYCLE": "moved_recycle",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Moved, member_name).value == string_value
-
-
-def test_moved_member_count():
-    assert len(Moved) == 3
-
-
-# OutputDir
-def test_output_dir_values():
-    expected = {
-        "JOURNALS": "journals",
-        "META": "_meta",
-        "MOVED_FILES": "moved_files",
-        "NAMESPACES": "namespaces",
-        "SUMMARY_CONTENT": "summary_content",
-        "SUMMARY_FILES": "summary_files",
-        "TEST": "test",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(OutputDir, member_name).value == string_value
-
-
-def test_output_dir_member_count():
-    assert len(OutputDir) == 7
-
-
 # Core
 def test_core_values():
     expected = {
@@ -129,95 +112,6 @@ def test_core_values():
 
 def test_core_member_count():
     assert len(Core) == 7
-
-
-# Output
-def test_output_values():
-    expected = {
-        "ALL_DANGLING_LINKS": "all_dangling_links",
-        "ALL_LINKED_REFERENCES": "all_linked_references",
-        "ASSETS_BACKLINKED": "assets_backlinked",
-        "ASSETS_NOT_BACKLINKED": "assets_not_backlinked",
-        "COMPLETE_TIMELINE": "complete_timeline",
-        "CONFIG_GLOBAL": "config_global",
-        "CONFIG_MERGED": "config_merged",
-        "CONFIG_USER": "config_user",
-        "CONFLICTS_DANGLING": "conflicts_dangling",
-        "CONFLICTS_NON_NAMESPACE": "conflicts_non_namespace",
-        "CONFLICTS_PARENT_DEPTH": "conflicts_parent_depth",
-        "CONFLICTS_PARENT_UNIQUE": "conflicts_parent_unique",
-        "DANGLING_JOURNALS_FUTURE": "dangling_journals_future",
-        "DANGLING_JOURNALS_PAST": "dangling_journals_past",
-        "DANGLING_JOURNALS": "dangling_journals",
-        "DANGLING_LINKS": "dangling_links",
-        "FILES": "files",
-        "GRAPH_CONTENT": "content_bullets",
-        "GRAPH_DATA": "data",
-        "HASH_TO_FILE": "hash_to_file",
-        "HLS_ASSET_MAPPING": "hls_asset_mapping",
-        "HLS_ASSET_NAMES": "hls_asset_names",
-        "HLS_BACKLINKED": "hls_backlinked",
-        "HLS_FORMATTED_BULLETS": "hls_formatted_bullets",
-        "HLS_NOT_BACKLINKED": "hls_not_backlinked",
-        "MISSING_KEYS": "missing_keys",
-        "MOVED_FILES": "moved_files",
-        "NAME_TO_FILES": "name_to_files",
-        "NAMESPACE_DATA": "namespace_data",
-        "NAMESPACE_DETAILS": "namespace_details",
-        "NAMESPACE_HIERARCHY": "namespace_hierarchy",
-        "NAMESPACE_PARTS": "namespace_parts",
-        "NAMESPACE_QUERIES": "namespace_queries",
-        "PATH_TO_FILE": "path_to_file",
-        "PROCESSED_KEYS": "processed_keys",
-        "TIMELINE_STATS": "timeline_stats",
-        "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
-        "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
-        "UNIQUE_NAMESPACE_PARTS": "unique_namespace_parts",
-        "UNIQUE_NAMESPACES_PER_LEVEL": "unique_namespaces_per_level",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Output, member_name).value == string_value
-
-
-def test_output_member_count():
-    assert len(Output) == 40
-
-
-# SummaryFiles
-def test_summary_files_values():
-    expected = {
-        "FILE_EXTS": "file_extensions_dict",
-        "FILETYPE_ASSET": "filetype_asset",
-        "FILETYPE_DRAW": "filetype_draw",
-        "FILETYPE_JOURNAL": "filetype_journal",
-        "FILETYPE_OTHER": "filetype_other",
-        "FILETYPE_PAGE": "filetype_page",
-        "FILETYPE_SUB_ASSET": "filetype_sub_asset",
-        "FILETYPE_SUB_DRAW": "filetype_sub_draw",
-        "FILETYPE_SUB_JOURNAL": "filetype_sub_journal",
-        "FILETYPE_SUB_PAGE": "filetype_sub_page",
-        "FILETYPE_SUB_WHITEBOARD": "filetype_sub_whiteboard",
-        "FILETYPE_WHITEBOARD": "filetype_whiteboard",
-        "HAS_BACKLINKS": "has_backlinks",
-        "HAS_CONTENT": "has_content",
-        "IS_BACKLINKED_BY_NS_ONLY": "is_backlinked_by_ns_only",
-        "IS_BACKLINKED": "is_backlinked",
-        "IS_HLS": "is_hls",
-        "NODE_BRANCH": "node_branch",
-        "NODE_LEAF": "node_leaf",
-        "NODE_ORPHAN_GRAPH": "node_orphan_graph",
-        "NODE_ORPHAN_NAMESPACE_TRUE": "node_orphan_namespace_true",
-        "NODE_ORPHAN_NAMESPACE": "node_orphan_namespace",
-        "NODE_ORPHAN_TRUE": "node_orphan_true",
-        "NODE_OTHER": "node_other",
-        "NODE_ROOT": "node_root",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(SummaryFiles, member_name).value == string_value
-
-
-def test_summary_files_member_count():
-    assert len(SummaryFiles) == 25
 
 
 # Criteria
@@ -289,46 +183,7 @@ def test_criteria_member_count():
     assert len(Criteria) == 57
 
 
-def test_args_values():
-    expected = {
-        "GEOMETRY": "geometry",
-        "GLOBAL_CONFIG": "global_config",
-        "GRAPH_CACHE": "graph_cache",
-        "GRAPH_FOLDER": "graph_folder",
-        "MOVE_ALL": "move_all",
-        "MOVE_BAK": "move_bak",
-        "MOVE_RECYCLE": "move_recycle",
-        "MOVE_UNLINKED_ASSETS": "move_unlinked_assets",
-        "REPORT_FORMAT": "report_format",
-        "WRITE_GRAPH": "write_graph",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Arguments, member_name).value == string_value
-
-
-def test_args_member_count():
-    assert len(Arguments) == 10
-
-
-def test_nodes_values():
-    expected = {
-        "BRANCH": "branch",
-        "LEAF": "leaf",
-        "ORPHAN_GRAPH": "orphan_graph",
-        "ORPHAN_NAMESPACE_TRUE": "orphan_namespace_true",
-        "ORPHAN_NAMESPACE": "orphan_namespace",
-        "ORPHAN_TRUE": "orphan_true",
-        "OTHER": "other",
-        "ROOT": "root",
-    }
-    for member_name, string_value in expected.items():
-        assert getattr(Nodes, member_name).value == string_value
-
-
-def test_nodes_member_count():
-    assert len(Nodes) == 8
-
-
+# FileTypes
 def test_file_types_values():
     expected = {
         "ASSET": "asset",
@@ -351,19 +206,169 @@ def test_file_types_member_count():
     assert len(FileTypes) == 11
 
 
-def test_config_values():
+# Format
+def test_format_values():
     expected = {
-        "DIR_ASSETS": "DIR_ASSETS",
-        "DIR_BAK": "DIR_BAK",
-        "DIR_DRAWS": "DIR_DRAWS",
-        "DIR_JOURNALS": "DIR_JOURNALS",
-        "DIR_PAGES": "DIR_PAGES",
-        "DIR_RECYCLE": "DIR_RECYCLE",
-        "DIR_WHITEBOARDS": "DIR_WHITEBOARDS",
+        "CSV": ".csv",
+        "GIF": ".gif",
+        "HTML": ".html",
+        "JPEG": ".jpeg",
+        "JPG": ".jpg",
+        "JSON": ".json",
+        "MD": ".md",
+        "ORG": ".org",
+        "PNG": ".png",
+        "SVG": ".svg",
+        "TSV": ".tsv",
+        "TXT": ".txt",
     }
     for member_name, string_value in expected.items():
-        assert getattr(Config, member_name).value == string_value
+        assert getattr(Format, member_name).value == string_value
 
 
-def test_config_member_count():
-    assert len(Config) == 7
+def test_format_member_count():
+    assert len(Format) == 12
+
+
+# Moved
+def test_moved_values():
+    expected = {
+        "ASSETS": "moved_assets",
+        "BAK": "moved_bak",
+        "RECYCLE": "moved_recycle",
+        "SIMULATED_PREFIX": "======== Simulated only ========",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Moved, member_name).value == string_value
+
+
+def test_moved_member_count():
+    assert len(Moved) == 4
+
+
+# Nodes
+def test_nodes_values():
+    expected = {
+        "BRANCH": "branch",
+        "LEAF": "leaf",
+        "ORPHAN_GRAPH": "orphan_graph",
+        "ORPHAN_NAMESPACE_TRUE": "orphan_namespace_true",
+        "ORPHAN_NAMESPACE": "orphan_namespace",
+        "ORPHAN_TRUE": "orphan_true",
+        "OTHER": "other",
+        "ROOT": "root",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Nodes, member_name).value == string_value
+
+
+def test_nodes_member_count():
+    assert len(Nodes) == 8
+
+
+# Output
+def test_output_values():
+    expected = {
+        "ALL_DANGLING_LINKS": "all_dangling_links",
+        "ALL_LINKED_REFERENCES": "all_linked_references",
+        "ASSETS_BACKLINKED": "assets_backlinked",
+        "ASSETS_NOT_BACKLINKED": "assets_not_backlinked",
+        "COMPLETE_TIMELINE": "complete_timeline",
+        "CONFIG_GLOBAL": "config_global",
+        "CONFIG_MERGED": "config_merged",
+        "CONFIG_USER": "config_user",
+        "CONFLICTS_DANGLING": "conflicts_dangling",
+        "CONFLICTS_NON_NAMESPACE": "conflicts_non_namespace",
+        "CONFLICTS_PARENT_DEPTH": "conflicts_parent_depth",
+        "CONFLICTS_PARENT_UNIQUE": "conflicts_parent_unique",
+        "DANGLING_JOURNALS_FUTURE": "dangling_journals_future",
+        "DANGLING_JOURNALS_PAST": "dangling_journals_past",
+        "DANGLING_JOURNALS": "dangling_journals",
+        "DANGLING_LINKS": "dangling_links",
+        "FILES": "files",
+        "GRAPH_CONTENT": "content_bullets",
+        "GRAPH_DATA": "data",
+        "HASH_TO_FILE": "hash_to_file",
+        "HLS_ASSET_MAPPING": "hls_asset_mapping",
+        "HLS_ASSET_NAMES": "hls_asset_names",
+        "HLS_BACKLINKED": "hls_backlinked",
+        "HLS_FORMATTED_BULLETS": "hls_formatted_bullets",
+        "HLS_NOT_BACKLINKED": "hls_not_backlinked",
+        "MISSING_KEYS": "missing_keys",
+        "MOVED_FILES": "moved_files",
+        "NAME_TO_FILES": "name_to_files",
+        "NAMESPACE_DATA": "namespace_data",
+        "NAMESPACE_DETAILS": "namespace_details",
+        "NAMESPACE_HIERARCHY": "namespace_hierarchy",
+        "NAMESPACE_PARTS": "namespace_parts",
+        "NAMESPACE_QUERIES": "namespace_queries",
+        "PATH_TO_FILE": "path_to_file",
+        "PROCESSED_KEYS": "processed_keys",
+        "TIMELINE_STATS": "timeline_stats",
+        "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
+        "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
+        "UNIQUE_NAMESPACE_PARTS": "unique_namespace_parts",
+        "UNIQUE_NAMESPACES_PER_LEVEL": "unique_namespaces_per_level",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(Output, member_name).value == string_value
+
+
+def test_output_member_count():
+    assert len(Output) == 40
+
+
+# OutputDir
+def test_output_dir_values():
+    expected = {
+        "JOURNALS": "journals",
+        "META": "_meta",
+        "MOVED_FILES": "moved_files",
+        "NAMESPACES": "namespaces",
+        "SUMMARY_CONTENT": "summary_content",
+        "SUMMARY_FILES": "summary_files",
+        "TEST": "test",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(OutputDir, member_name).value == string_value
+
+
+def test_output_dir_member_count():
+    assert len(OutputDir) == 7
+
+
+# SummaryFiles
+def test_summary_files_values():
+    expected = {
+        "FILE_EXTS": "file_extensions_dict",
+        "FILETYPE_ASSET": "filetype_asset",
+        "FILETYPE_DRAW": "filetype_draw",
+        "FILETYPE_JOURNAL": "filetype_journal",
+        "FILETYPE_OTHER": "filetype_other",
+        "FILETYPE_PAGE": "filetype_page",
+        "FILETYPE_SUB_ASSET": "filetype_sub_asset",
+        "FILETYPE_SUB_DRAW": "filetype_sub_draw",
+        "FILETYPE_SUB_JOURNAL": "filetype_sub_journal",
+        "FILETYPE_SUB_PAGE": "filetype_sub_page",
+        "FILETYPE_SUB_WHITEBOARD": "filetype_sub_whiteboard",
+        "FILETYPE_WHITEBOARD": "filetype_whiteboard",
+        "HAS_BACKLINKS": "has_backlinks",
+        "HAS_CONTENT": "has_content",
+        "IS_BACKLINKED_BY_NS_ONLY": "is_backlinked_by_ns_only",
+        "IS_BACKLINKED": "is_backlinked",
+        "IS_HLS": "is_hls",
+        "NODE_BRANCH": "node_branch",
+        "NODE_LEAF": "node_leaf",
+        "NODE_ORPHAN_GRAPH": "node_orphan_graph",
+        "NODE_ORPHAN_NAMESPACE_TRUE": "node_orphan_namespace_true",
+        "NODE_ORPHAN_NAMESPACE": "node_orphan_namespace",
+        "NODE_ORPHAN_TRUE": "node_orphan_true",
+        "NODE_OTHER": "node_other",
+        "NODE_ROOT": "node_root",
+    }
+    for member_name, string_value in expected.items():
+        assert getattr(SummaryFiles, member_name).value == string_value
+
+
+def test_summary_files_member_count():
+    assert len(SummaryFiles) == 25

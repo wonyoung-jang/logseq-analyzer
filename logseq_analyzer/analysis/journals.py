@@ -14,6 +14,12 @@ if TYPE_CHECKING:
     from ..analysis.index import FileIndex
 
 
+__all__ = [
+    "LogseqJournals",
+    "DateUtilities",
+]
+
+
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
 

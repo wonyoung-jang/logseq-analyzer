@@ -182,6 +182,7 @@ class Moved(Enum):
     ASSETS = "moved_assets"
     BAK = "moved_bak"
     RECYCLE = "moved_recycle"
+    SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 class Nodes(Enum):

@@ -16,6 +16,11 @@ if TYPE_CHECKING:
     from .index import FileIndex
 
 
+__all__ = [
+    "LogseqGraph",
+]
+
+
 @singleton
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""

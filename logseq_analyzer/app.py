@@ -191,13 +191,10 @@ def setup_datetime_tokens(config: dict[str, str]) -> LogseqJournalFormats:
 
 def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
+    index = FileIndex()
     cache_path = CacheFile(Constants.CACHE_FILE.value).path
     c = Cache(cache_path)
-    index = FileIndex()
-    if a.graph_cache:
-        c.clear()
-    else:
-        c.clear_deleted_files(index)
+    c.initialize(a.graph_cache, index)
     logging.debug("run_app: setup_cache")
     return c, index
 

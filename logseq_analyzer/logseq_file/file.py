@@ -269,10 +269,10 @@ class LogseqFile:
         for key, value in primary_data.items():
             if value:
                 data[key] = value
-            if has_backlinks:
-                continue
-            if key in backlinks or "properties" in key:
-                has_backlinks = True
+                if has_backlinks:
+                    continue
+                if key in backlinks or "properties" in key:
+                    has_backlinks = True
         self.node.has_backlinks = has_backlinks
 
     def determine_node_type(self) -> None:

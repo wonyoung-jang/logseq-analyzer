@@ -45,6 +45,15 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
+    def initialize(self, clear: bool, index: "FileIndex") -> None:
+        """Clear the cache if needed."""
+        if clear:
+            self.clear()
+            logging.info("Cache cleared.")
+        else:
+            self.clear_deleted_files(index)
+            logging.info("Cache not cleared.")
+
     def clear(self) -> None:
         """Clear the cache."""
         self.close()

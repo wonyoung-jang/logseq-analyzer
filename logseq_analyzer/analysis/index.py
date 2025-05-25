@@ -11,6 +11,12 @@ from ..logseq_file.file import LogseqFile
 from ..utils.helpers import singleton
 
 
+__all__ = [
+    "FileIndex",
+    "get_attribute_list",
+]
+
+
 def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
