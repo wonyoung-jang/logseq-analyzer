@@ -5,8 +5,10 @@ Module to handle moving files in a Logseq graph directory.
 import logging
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from ..logseq_file.file import LogseqFile
+if TYPE_CHECKING:
+    from ..logseq_file.file import LogseqFile
 
 
 def _move_src_to_dest(src: Path, dest: Path) -> None:
@@ -24,7 +26,7 @@ def _move_src_to_dest(src: Path, dest: Path) -> None:
         logging.error("Failed to move file: %s to %s: %s", src, dest, e)
 
 
-def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list[LogseqFile]) -> list[str]:
+def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["LogseqFile"]) -> list[str]:
     """
     Handle the moving of unlinked assets to a specified directory.
 

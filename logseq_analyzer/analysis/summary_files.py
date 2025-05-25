@@ -51,14 +51,14 @@ class LogseqFileSummarizer:
 
     def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
-        self.subsets: dict[str, dict] = {}
+        self.subsets: dict[str, dict[str, list[str]]] = {}
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         summary_categories = self.summary_categories
         subsets = self.subsets
         for output_name, file_criteria in summary_categories.items():
-            files = index.yield_files_with_keys_and_values(**file_criteria)
+            files = index.filter_files(**file_criteria)
             subsets[output_name.value] = get_attribute_list(files, "name")
         self.process_file_extensions(index)
 

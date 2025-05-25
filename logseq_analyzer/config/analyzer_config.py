@@ -34,8 +34,8 @@ class LogseqAnalyzerConfig:
         )
         config.optionxform = lambda_optionxform
         config.read(config_path)
-        self.config = config
-        self.target_dirs = set()
+        self.config: configparser.ConfigParser = config
+        self.target_dirs: set[str] = set()
 
     def __getitem__(self, section: str) -> dict[str, str]:
         """Get a section from the config file as a dictionary."""

@@ -78,13 +78,13 @@ class LogseqJournals:
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqJournals class."""
-        self.dangling_journals = []
-        self.processed_keys = []
-        self.complete_timeline = []
-        self.missing_keys = []
-        self.timeline_stats = {}
-        self.dangling_journals_dict = defaultdict(list)
-        self.date = date_utilities
+        self.dangling_journals: list[datetime] = []
+        self.processed_keys: list[datetime] = []
+        self.complete_timeline: list[datetime] = []
+        self.missing_keys: list[datetime] = []
+        self.timeline_stats: dict[str, Any] = {}
+        self.dangling_journals_dict: defaultdict[str, list[datetime]] = defaultdict(list)
+        self.date: DateUtilities = date_utilities
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
@@ -105,7 +105,7 @@ class LogseqJournals:
         dangling_journals = list(self.process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         self.dangling_journals = sorted(dangling_journals)
         journal_criteria = {"file_type": "journal"}
-        journal_keys = index.yield_files_with_keys_and_values(**journal_criteria)
+        journal_keys = index.filter_files(**journal_criteria)
         journal_keys = get_attribute_list(journal_keys, "name")
         processed_keys = list(self.process_journal_keys_to_datetime(journal_keys, py_page_base_format))
         self.processed_keys = sorted(processed_keys)

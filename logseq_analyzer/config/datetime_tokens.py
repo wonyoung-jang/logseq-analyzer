@@ -8,7 +8,7 @@ import re
 from ..utils.helpers import singleton
 
 
-DATETIME_TOKEN_MAP = {
+DATETIME_TOKEN_MAP: dict[str, str] = {
     "yyyy": "%Y",
     "xxxx": "%Y",
     "yy": "%y",
@@ -93,8 +93,8 @@ class LogseqDateTimeTokens:
         """
         Initialize the LogseqDateTimeTokens class.
         """
-        self._token_map = DATETIME_TOKEN_MAP
-        self._token_pattern = None
+        self._token_map: dict[str, str] = DATETIME_TOKEN_MAP
+        self._token_pattern: re.Pattern = None
 
     def set_datetime_token_pattern(self) -> None:
         """Return a compiled regex pattern for datetime tokens"""

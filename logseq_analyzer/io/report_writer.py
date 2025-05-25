@@ -27,9 +27,9 @@ class ReportWriter:
             data (Any): The data to be written to the file.
             subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
         """
-        self.prefix = prefix
-        self.data = data
-        self.subdir = subdir
+        self.prefix: str = prefix
+        self.data: Any = data
+        self.subdir: str = subdir
 
     def __repr__(self) -> str:
         """String representation of the ReportWriter object."""

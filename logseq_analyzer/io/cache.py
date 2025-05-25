@@ -24,8 +24,8 @@ class Cache:
 
     def __init__(self, cache_path: Path = None) -> None:
         """Initialize the class."""
-        self.cache_path = cache_path
-        self.cache = shelve.open(cache_path, protocol=5)
+        self.cache_path: Path = cache_path
+        self.cache: shelve.Shelf = shelve.open(cache_path, protocol=5)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(cache_path="{self.cache_path}")'

@@ -2,7 +2,7 @@
 Logseq Built-in Properties Module
 """
 
-BUILT_INS = frozenset(
+BUILT_INS: frozenset[str] = frozenset(
     [
         "alias",
         "aliases",

@@ -69,11 +69,11 @@ class LogseqNamespaces:
         """
         Initialize the LogseqNamespaces instance.
         """
-        self._part_levels = defaultdict(set)
-        self._part_entries = defaultdict(list)
-        self.queries = {}
-        self.conflicts = NamespaceConflicts()
-        self.structure = NamespaceStructure()
+        self._part_levels: defaultdict[str, set[int]] = defaultdict(set)
+        self._part_entries: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
+        self.queries: dict[str, dict[str, Any]] = {}
+        self.conflicts: NamespaceConflicts = NamespaceConflicts()
+        self.structure: NamespaceStructure = NamespaceStructure()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""

@@ -17,7 +17,7 @@ class File:
 
     def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
-        self.path = path
+        self.path: Path = path
         logging.info("File initialized: %s", self.path)
 
     def __repr__(self) -> str:

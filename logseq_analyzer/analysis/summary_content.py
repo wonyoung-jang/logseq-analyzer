@@ -20,7 +20,7 @@ class LogseqContentSummarizer:
 
     def __init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
-        self.subsets = {}
+        self.subsets: dict[str, dict[str, Any]] = {}
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""

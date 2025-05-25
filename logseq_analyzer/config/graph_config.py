@@ -12,7 +12,7 @@ from ..utils.helpers import singleton
 
 type EDNToken = dict | list | set | Any | None | bool | float | int
 
-TOKEN_REGEX = re.compile(
+TOKEN_REGEX: re.Pattern = re.compile(
     r"""
     "(?:\\.|[^"\\])*"         | # strings
     \#\{                      | # set literal
@@ -32,9 +32,9 @@ class LogseqConfigEDN:
 
     def __init__(self, tokens: Generator[str, Any, None]) -> None:
         """Initialize the parser with a list of tokens."""
-        self.tokens = list(tokens)
-        self.pos = 0
-        self._tok_map = {
+        self.tokens: list[str] = list(tokens)
+        self.pos: int = 0
+        self._tok_map: dict[str, Any] = {
             "{": self.parse_map,
             "[": self.parse_vector,
             "(": self.parse_list,
@@ -199,7 +199,7 @@ def tokenize(edn_str: str) -> Generator[str, Any, None]:
         yield tok
 
 
-DEFAULT_LOGSEQ_CONFIG_EDN = {
+DEFAULT_LOGSEQ_CONFIG_EDN: dict[str, Any] = {
     ":meta/version": 1,
     ":preferred-format": "Markdown",
     ":preferred-workflow": ":now",

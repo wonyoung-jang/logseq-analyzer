@@ -210,6 +210,7 @@ def setup_logseq_filename_class(
 ) -> LogseqFile:
     """Setup the Logseq file class."""
     LogseqFilename.gc_config = gc_config
+    LogseqFilename.graph_path = GraphDirectory().path
     LogseqFilename.journal_file_format = ljf.file
     LogseqFilename.journal_page_format = ljf.page
     LogseqFilename.lac_ls_config = lac["LOGSEQ_CONFIG"]

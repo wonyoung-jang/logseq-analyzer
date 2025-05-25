@@ -157,7 +157,7 @@ class FileIndex:
         for file in to_delete:
             self.remove(file)
 
-    def yield_files_with_keys_and_values(self, **criteria) -> Generator[LogseqFile, None, None]:
+    def filter_files(self, **criteria) -> Generator[LogseqFile, None, None]:
         """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
         for file in self:
             for key, expected in criteria.items():

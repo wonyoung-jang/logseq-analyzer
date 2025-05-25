@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 
-from ..io.filesystem import GraphDirectory
 from ..utils.enums import Core, FileTypes, Config
 
 
@@ -28,6 +27,13 @@ class NamespaceInfo:
 class LogseqFilename:
     """LogseqFilename class."""
 
+    gc_config: dict = {}
+    graph_path: Path = None
+    journal_file_format: str = ""
+    journal_page_format: str = ""
+    lac_ls_config: dict = {}
+    ns_file_sep: str = ""
+
     __slots__ = (
         "file_path",
         "name",
@@ -36,12 +42,6 @@ class LogseqFilename:
         "is_namespace",
         "ns_info",
     )
-
-    gc_config: dict = {}
-    journal_file_format: str = ""
-    journal_page_format: str = ""
-    lac_ls_config: dict = {}
-    ns_file_sep: str = ""
 
     def __init__(self, file_path: Path) -> None:
         """Initialize the LogseqFilename class."""
@@ -85,15 +85,15 @@ class LogseqFilename:
         """Return the Logseq URL."""
         uri = self.uri
         uri_path = Path(uri)
-        gd = GraphDirectory()
-        len_gd = len(gd.path.parts)
+        graph_path = LogseqFilename.graph_path
+        len_gd = len(graph_path.parts)
         len_uri = len(uri_path.parts)
         target_index = len_uri - len_gd
         target_segment = uri_path.parts[target_index]
         if target_segment[:-1] not in ("page", "block-id"):
             return ""
 
-        prefix = f"file:///{str(gd.path)}/{target_segment}/"
+        prefix = f"file:///{str(graph_path)}/{target_segment}/"
         if not uri.startswith(prefix):
             return ""
 
@@ -140,8 +140,6 @@ class LogseqFilename:
         self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
         self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
         self.ns_info.stem = ns_parts_list[-1]
-        self.ns_info.children = set()
-        self.ns_info.size = 0
 
     def determine_file_type(self) -> None:
         """

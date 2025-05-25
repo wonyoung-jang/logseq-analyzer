@@ -30,11 +30,11 @@ class LogseqGraph:
 
     def __init__(self) -> None:
         """Initialize the LogseqGraph instance."""
-        self.all_linked_references = {}
-        self.all_dangling_links = {}
-        self.dangling_links = []
-        self.unique_linked_references = set()
-        self.unique_linked_references_ns = set()
+        self.all_linked_references: dict[str, dict[str, dict]] = {}
+        self.all_dangling_links: dict[str, dict[str, dict]] = {}
+        self.dangling_links: list[str] = []
+        self.unique_linked_references: set[str] = set()
+        self.unique_linked_references_ns: set[str] = set()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqGraph instance."""
