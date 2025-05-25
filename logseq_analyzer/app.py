@@ -181,10 +181,10 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(token_map: dict[str, str], config: dict[str, str]) -> LogseqJournalFormats:
+def setup_datetime_tokens(config: dict[str, str]) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
-    ldtt = LogseqDateTimeTokens(token_map)
+    ldtt = LogseqDateTimeTokens()
     ldtt.set_datetime_token_pattern()
     ldtt.set_journal_py_formatting(config, ljf)
     del ldtt
@@ -405,8 +405,7 @@ def initialize_configurations(args: Args) -> Configurations:
     graph_config = setup_logseq_graph_config(args, analyzer_config)
     gc_config_merged = graph_config.config_merged
     setup_target_dirs(analyzer_config, gc_config_merged)
-    datetime_token_map = analyzer_config["DATETIME_TOKEN_MAP"]
-    journal_formats = setup_datetime_tokens(datetime_token_map, gc_config_merged)
+    journal_formats = setup_datetime_tokens(gc_config_merged)
     configs = Configurations(analyzer_config, graph_config, journal_formats)
     return configs
 

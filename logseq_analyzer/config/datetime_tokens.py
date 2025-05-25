@@ -8,6 +8,39 @@ import re
 from ..utils.helpers import singleton
 
 
+DATETIME_TOKEN_MAP = {
+    "yyyy": "%Y",
+    "xxxx": "%Y",
+    "yy": "%y",
+    "xx": "%y",
+    "MMMM": "%B",
+    "MMM": "%b",
+    "MM": "%m",
+    "M": "%#m",
+    "dd": "%d",
+    "d": "%#d",
+    "D": "%j",
+    "EEEE": "%A",
+    "EEE": "%a",
+    "EE": "%a",
+    "E": "%a",
+    "e": "%u",
+    "HH": "%H",
+    "H": "%H",
+    "hh": "%I",
+    "h": "%I",
+    "mm": "%M",
+    "m": "%#M",
+    "ss": "%S",
+    "s": "%#S",
+    "SSS": "%f",
+    "a": "%p",
+    "A": "%p",
+    "Z": "%z",
+    "ZZ": "%z",
+}
+
+
 @singleton
 class LogseqJournalFormats:
     """
@@ -56,11 +89,11 @@ class LogseqDateTimeTokens:
 
     __slots__ = ("_token_map", "_token_pattern")
 
-    def __init__(self, token_map: dict[str, str]) -> None:
+    def __init__(self) -> None:
         """
         Initialize the LogseqDateTimeTokens class.
         """
-        self._token_map = token_map
+        self._token_map = DATETIME_TOKEN_MAP
         self._token_pattern = None
 
     def set_datetime_token_pattern(self) -> None:

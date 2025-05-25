@@ -5,22 +5,13 @@ Test the LogseqDateTimeTokens class.
 import pytest
 import re
 
-from ..analyzer_config import LogseqAnalyzerConfig
 from ..datetime_tokens import LogseqDateTimeTokens
 
 
 @pytest.fixture
-def analyzer_config():
-    """Fixture for LogseqAnalyzerConfig."""
-    ac = LogseqAnalyzerConfig()
-    return ac
-
-
-@pytest.fixture
-def datetime_tokens(analyzer_config):
+def datetime_tokens():
     """Fixture for LogseqDateTimeTokens."""
-    token_map = analyzer_config["DATETIME_TOKEN_MAP"]
-    dtt = LogseqDateTimeTokens(token_map)
+    dtt = LogseqDateTimeTokens()
     return dtt
 
 
