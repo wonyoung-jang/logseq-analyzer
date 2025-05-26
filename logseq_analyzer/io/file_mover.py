@@ -5,7 +5,7 @@ Module to handle moving files in a Logseq graph directory.
 import logging
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 from ..utils.enums import Moved
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
 
 
-def _move_src_to_dest(src: Path, dest: Path) -> None:
+def _move_src_to_dest(moving_plan: list[tuple[Path, Path]]) -> None:
     """
     Move a file from source to destination.
 
@@ -22,10 +22,45 @@ def _move_src_to_dest(src: Path, dest: Path) -> None:
         dest (Path): Destination file path.
     """
     try:
-        shutil.move(src, dest)
-        logging.warning("Moved file: %s to %s", src, dest)
+        for src, dest in moving_plan:
+            shutil.move(src, dest)
+            logging.warning("Moved file: %s to %s", src, dest)
     except (shutil.Error, OSError) as e:
         logging.error("Failed to move file: %s to %s: %s", src, dest, e)
+
+
+def _yield_moved_assets(unlinked_assets: list["LogseqFile"], target_dir: Path) -> Generator[Path, None, None]:
+    """
+    Yield the paths of moved assets.
+
+    Args:
+        unlinked_assets (list[LogseqFile]): A list of unlinked assets.
+        target_dir (Path): The directory to move assets to.
+
+    Yields:
+        Generator[Path, None, None]: A generator yielding the paths of moved assets.
+    """
+    for asset in unlinked_assets:
+        src = asset.file_path
+        dest = target_dir / src.name
+        yield (src, dest)
+
+
+def _yield_recycle_bak_dirs(source_dir: Path, target_dir: Path) -> Generator[Path, None, None]:
+    """
+    Yield the paths of recycle and bak directories.
+
+    Args:
+        source_dir (Path): The directory to search for recycle and bak directories.
+
+    Yields:
+        Generator[Path, None, None]: A generator yielding the paths of recycle and bak directories.
+    """
+    for root, dirs, files in Path.walk(source_dir):
+        for name in dirs + files:
+            src = root / name
+            dest = target_dir / name
+            yield (src, dest)
 
 
 def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["LogseqFile"]) -> list[str]:
@@ -47,10 +82,8 @@ def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["Logs
         unlinked_assets.insert(0, Moved.SIMULATED_PREFIX.value)
         return unlinked_assets
 
-    for asset in unlinked_assets:
-        src = asset.file_path
-        dest = target_dir / src.name
-        _move_src_to_dest(src, dest)
+    moving_plan = _yield_moved_assets(unlinked_assets, target_dir)
+    _move_src_to_dest(moving_plan)
 
     return unlinked_assets
 
@@ -67,28 +100,15 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
     Returns:
         list[str]: A list of names of the moved files/folders.
     """
-    moving_plan = []
-    moved_names = []
-    for root, dirs, files in Path.walk(source_dir):
-        for directory in dirs:
-            src = root / directory
-            dest = target_dir / directory
-            moving_plan.append((src, dest))
-            moved_names.append(directory)
-        for file in files:
-            src = root / file
-            dest = target_dir / file
-            moving_plan.append((src, dest))
-            moved_names.append(file)
-
+    moving_plan = list(_yield_recycle_bak_dirs(source_dir, target_dir))
     if not moving_plan:
         return []
 
     if not move:
-        moved_names.insert(0, Moved.SIMULATED_PREFIX.value)
-        return moved_names
+        moving_plan.insert(0, Moved.SIMULATED_PREFIX.value)
+        return moving_plan
 
-    for src, dest in moving_plan:
-        _move_src_to_dest(src, dest)
+    moving_plan = _yield_recycle_bak_dirs(source_dir, target_dir)
+    _move_src_to_dest(moving_plan)
 
-    return moved_names
+    return moving_plan

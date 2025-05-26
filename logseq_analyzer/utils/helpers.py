@@ -15,6 +15,16 @@ from ..utils.enums import Format
 
 _T = TypeVar("_T")
 
+__all__ = [
+    "iter_files",
+    "process_aliases",
+    "sort_dict_by_value",
+    "singleton",
+    "yield_attrs",
+    "process_pattern_hierarchy",
+    "iter_pattern_split",
+]
+
 
 def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, None]:
     """
@@ -26,7 +36,7 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
 
         if root.name in target_dirs or root.parent.name in target_dirs:
             for file in files:
-                if Path(file).suffix in (Format.ORG.value):
+                if Path(file).suffix == Format.ORG.value:
                     logging.info("Skipping org-mode file %s in %s", file, root)
                     continue
                 yield root / file
@@ -151,3 +161,37 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
             output[pattern_mod.FALLBACK].append(text)
 
     return output
+
+
+def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[str, None, None]:
+    """
+    Emulates re.Pattern.split() but yields sections of text instead of returning a list.
+    Iterate over sections of text separated by bullet markers.
+
+    Args:
+        pattern (re.Pattern): The regex pattern to match bullet markers.
+        text (str): The text to split into sections.
+        maxsplit (int): Maximum number of splits. If 0, all sections are returned.
+
+    Yields:
+        Generator[str, None, None]: Sections of text.
+    """
+    count = 0
+
+    for m in pattern.finditer(text):
+        if maxsplit and count >= maxsplit:
+            break
+
+        if count == 0:
+            yield text[: m.start()]
+
+        start_of_content = m.end()
+        next_match = next(pattern.finditer(text, start_of_content), None)
+        end_of_content = next_match.start() if next_match else len(text)
+
+        yield text[start_of_content:end_of_content].strip()
+
+        count += 1
+
+    if count == 0:
+        yield text

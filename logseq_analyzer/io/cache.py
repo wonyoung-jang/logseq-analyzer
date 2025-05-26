@@ -25,13 +25,17 @@ class Cache:
     def __init__(self, cache_path: Path = None) -> None:
         """Initialize the class."""
         self.cache_path: Path = cache_path
-        self.cache: shelve.Shelf = shelve.open(cache_path, protocol=5)
+        self.cache: shelve.Shelf[Any] = self.open(protocol=5)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(cache_path="{self.cache_path}")'
 
     def __str__(self) -> str:
         return f"{self.__class__.__qualname__}: {self.cache_path}"
+
+    def open(self, protocol: int = 5) -> shelve.Shelf[Any]:
+        """Open the cache file."""
+        return shelve.open(self.cache_path, protocol=protocol)
 
     def close(self) -> None:
         """Close the cache file."""
@@ -58,7 +62,7 @@ class Cache:
         """Clear the cache."""
         self.close()
         self.cache_path.unlink()
-        self.cache = shelve.open(self.cache_path, protocol=5)
+        self.cache = self.open(protocol=5)
 
     def clear_deleted_files(self, index: "FileIndex") -> None:
         """Clear the deleted files from the cache."""
