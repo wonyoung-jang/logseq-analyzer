@@ -3,7 +3,8 @@ DateUtilities class to handle date-related operations.
 """
 
 from datetime import datetime, timedelta
-from typing import Any
+import logging
+from typing import Any, Generator
 
 from ..utils.helpers import singleton
 
@@ -65,3 +66,14 @@ class DateUtilities:
         if 11 <= day_number <= 13:
             return day + "th"
         return day + {1: "st", 2: "nd", 3: "rd"}.get(day_number % 10, "th")
+
+    @staticmethod
+    def journals_to_datetime(keys: list[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
+        """Convert journal keys from strings to datetime objects."""
+        for key in keys:
+            try:
+                for ordinal in ("st", "nd", "rd", "th"):
+                    key = key.replace(ordinal, "")
+                yield datetime.strptime(key, py_page_format.replace("#", ""))
+            except ValueError as e:
+                logging.warning("Invalid date format for key: %s. Error: %s", key, e)

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from ..config.builtin_properties import get_user_properties
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import singleton, sort_dict_by_value, yield_attrs
+from ..utils.helpers import singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
     from ..io.cache import Cache
@@ -116,7 +116,7 @@ class LogseqGraph:
                 ns_root_file.path.is_namespace = True
             ns_root_file.path.ns_info.children.add(file.path.name)
             ns_root_file.path.ns_info.size = len(ns_root_file.path.ns_info.children)
-            self.set_ns_data(ns_root_file)
+            ns_root_file.set_ns_data()
 
         if ns_level <= 2:
             return ns_refs
@@ -125,7 +125,7 @@ class LogseqGraph:
             ns_parent_file: LogseqFile
             ns_parent_file.path.ns_info.children.add(file.path.name)
             ns_parent_file.path.ns_info.size = len(ns_parent_file.path.ns_info.children)
-            self.set_ns_data(ns_parent_file)
+            ns_parent_file.set_ns_data()
 
         return ns_refs
 
@@ -151,13 +151,6 @@ class LogseqGraph:
         all_refs.difference_update(all_file_names)
         all_refs.difference_update(unique_aliases)
         return sorted(get_user_properties(all_refs))
-
-    @staticmethod
-    def set_ns_data(file: LogseqFile) -> None:
-        """Set namespace data for a file."""
-        for attr, value in yield_attrs(file.path):
-            if attr.startswith("ns_") or attr == "is_namespace":
-                setattr(file, attr, value)
 
     @property
     def report(self) -> dict[str, Any]:

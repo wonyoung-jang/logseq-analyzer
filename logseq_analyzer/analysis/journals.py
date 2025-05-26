@@ -2,10 +2,9 @@
 Process logseq journals.
 """
 
-import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Generator, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from ..analysis.index import get_attribute_list
 from ..utils.date_utilities import DateUtilities
@@ -61,27 +60,13 @@ class LogseqJournals:
         self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str
     ) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        dangling_journals = sorted(self.process_journal_keys_to_datetime(dangling_links, py_page_base_format))
+        dangling_journals = sorted(self.date.journals_to_datetime(dangling_links, py_page_base_format))
         journal_criteria = {"file_type": "journal"}
         journal_keys = index.filter_files(**journal_criteria)
         journal_keys = get_attribute_list(journal_keys, "name")
-        processed = sorted(self.process_journal_keys_to_datetime(journal_keys, py_page_base_format))
-        self.processed = processed
+        self.processed = sorted(self.date.journals_to_datetime(journal_keys, py_page_base_format))
         self.build_complete_timeline(dangling_journals)
         self.get_dangling_journals_outside_range(dangling_journals)
-
-    @staticmethod
-    def process_journal_keys_to_datetime(
-        list_of_keys: list[str], py_page_base_format: str = ""
-    ) -> Generator[datetime, Any, None]:
-        """Convert journal keys from strings to datetime objects."""
-        for key in list_of_keys:
-            try:
-                for ordinal in ("st", "nd", "rd", "th"):
-                    key = key.replace(ordinal, "")
-                yield datetime.strptime(key, py_page_base_format.replace("#", ""))
-            except ValueError as e:
-                logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
     def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""

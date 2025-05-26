@@ -340,3 +340,9 @@ class LogseqFile:
             return True
         except KeyError:
             return False
+
+    def set_ns_data(self) -> None:
+        """Set namespace data for a file."""
+        for attr, value in yield_attrs(self.path):
+            if attr.startswith("ns_") or attr == "is_namespace":
+                setattr(self, attr, value)
