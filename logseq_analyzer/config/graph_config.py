@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 from typing import Any, Generator
 
+from ..utils.enums import Output
 from ..utils.helpers import singleton
 
 __all__ = [
@@ -386,10 +387,11 @@ class LogseqGraphConfig:
         self.config_merged = config
         logging.debug("Merged config: length - %s", len(config))
 
-    def get_user_config(self) -> dict[str, Any]:
-        """Get user config."""
-        return self._config_user
-
-    def get_global_config(self) -> dict[str, Any]:
-        """Get global config."""
-        return self._config_global
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the merged configuration."""
+        return {
+            Output.CONFIG_MERGED.value: self.config_merged,
+            Output.CONFIG_USER.value: self._config_user,
+            Output.CONFIG_GLOBAL.value: self._config_global,
+        }

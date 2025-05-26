@@ -85,7 +85,7 @@ class ReportWriter:
                 if count is not None:
                     f.write(f"{filename}\n")
                     f.write(f"Count: {count}\n")
-                    f.write(f"Type: {type(data)}\n\n")
+                    f.write(f"Type: {type(data).__class__.__qualname__}\n\n")
                 ReportWriter.write_recursive(f, data)
 
         if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):

@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Any, Generator, Iterator
 
 from ..logseq_file.file import LogseqFile
-from ..utils.helpers import singleton
+from ..utils.enums import Output
+from ..utils.helpers import singleton, yield_attrs
 
 
 __all__ = [
@@ -173,3 +174,28 @@ class FileIndex:
                     break
             else:
                 yield file
+
+    def get_graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
+        """Get metadata file data from the graph."""
+        graph_data = {}
+        for file in self:
+            data = {k: v for k, v in yield_attrs(file) if k not in ("content", "content_bullets", "primary_bullet")}
+            graph_data[file] = data
+        return graph_data
+
+    def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:
+        """Get content data from the graph."""
+        if not write_graph:
+            return {}
+        return {Output.GRAPH_CONTENT.value: {file: file.bullets.content_bullets for file in self}}
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the indexed files."""
+        return {
+            Output.GRAPH_DATA.value: self.get_graph_data(),
+            Output.FILES.value: self.files,
+            Output.HASH_TO_FILE.value: self.hash_to_file,
+            Output.NAME_TO_FILES.value: self.name_to_files,
+            Output.PATH_TO_FILE.value: self.path_to_file,
+        }

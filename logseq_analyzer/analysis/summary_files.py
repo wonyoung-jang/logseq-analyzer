@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    __slots__ = ("subsets",)
+    __slots__ = ("report",)
 
     summary_categories = {
         # Process general categories
@@ -51,15 +51,15 @@ class LogseqFileSummarizer:
 
     def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
-        self.subsets: dict[str, dict[str, list[str]]] = {}
+        self.report: dict[str, dict[str, list[str]]] = {}
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
-        summary_categories = self.summary_categories
-        subsets = self.subsets
+        summary_categories = LogseqFileSummarizer.summary_categories
+        report = self.report
         for output_name, file_criteria in summary_categories.items():
             files = index.filter_files(**file_criteria)
-            subsets[output_name.value] = get_attribute_list(files, "name")
+            report[output_name.value] = get_attribute_list(files, "name")
         self.process_file_extensions(index)
 
     def process_file_extensions(self, index: "FileIndex") -> None:
@@ -69,4 +69,4 @@ class LogseqFileSummarizer:
             if suffix := file.path.suffix:
                 name = f"all {suffix}s"
                 ext_map[name].append(file.path.name)
-        self.subsets[SummaryFiles.FILE_EXTS.value] = ext_map
+        self.report[SummaryFiles.FILE_EXTS.value] = ext_map

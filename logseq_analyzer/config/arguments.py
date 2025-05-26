@@ -14,27 +14,29 @@ class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
     __slots__ = (
-        "graph_folder",
+        "__dict__",
         "global_config",
-        "move_unlinked_assets",
+        "graph_cache",
+        "graph_folder",
+        "move_all",
         "move_bak",
         "move_recycle",
-        "write_graph",
-        "graph_cache",
+        "move_unlinked_assets",
         "report_format",
-        "__dict__",
+        "write_graph",
     )
 
     def __init__(self) -> None:
         """Initialize the Args class with default values."""
-        self.graph_folder: str = ""
         self.global_config: str = ""
-        self.move_unlinked_assets: bool = False
+        self.graph_cache: bool = False
+        self.graph_folder: str = ""
+        self.move_all: bool = False
         self.move_bak: bool = False
         self.move_recycle: bool = False
-        self.write_graph: bool = False
-        self.graph_cache: bool = False
+        self.move_unlinked_assets: bool = False
         self.report_format: str = ".txt"
+        self.write_graph: bool = False
 
     def setup_args(self, **kwargs) -> None:
         """Set up command line arguments and GUI arguments."""
@@ -70,22 +72,27 @@ class Args:
             help="reindex graph cache on run",
         )
         parser.add_argument(
+            "--move-all",
+            action="store_true",
+            help="move all (assets, bak, recycle) to their respective folders in 'to-delete' directory",
+        )
+        parser.add_argument(
             "-ma",
             "--move-unlinked-assets",
             action="store_true",
-            help='move unlinked assets to "unlinked_assets" folder',
+            help='move unlinked assets to "to-delete/assets" folder',
         )
         parser.add_argument(
             "-mb",
             "--move-bak",
             action="store_true",
-            help="move bak files to bak folder in output directory",
+            help="move bak files to 'to-delete/bak' folder",
         )
         parser.add_argument(
             "-mr",
             "--move-recycle",
             action="store_true",
-            help="move recycle files to recycle folder in output directory",
+            help="move recycle files to 'to-delete/recycle' folder",
         )
         parser.add_argument(
             "--global-config",

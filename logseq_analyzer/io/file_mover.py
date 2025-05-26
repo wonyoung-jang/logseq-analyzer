@@ -108,7 +108,6 @@ def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> lis
         moving_plan.insert(0, Moved.SIMULATED_PREFIX.value)
         return moving_plan
 
-    moving_plan = _yield_recycle_bak_dirs(source_dir, target_dir)
-    _move_src_to_dest(moving_plan)
+    _move_src_to_dest(_yield_recycle_bak_dirs(source_dir, target_dir))
 
     return moving_plan

@@ -5,7 +5,7 @@ Logseq Assets Analysis Module.
 from re import Pattern
 from typing import TYPE_CHECKING
 
-from ..utils.enums import Criteria
+from ..utils.enums import Criteria, Output
 from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
@@ -64,6 +64,14 @@ class LogseqAssets:
             if asset.path.name in mention or file_name in mention:
                 asset.node.is_backlinked = True
                 return
+
+    @property
+    def report(self) -> str:
+        """Generate a report of the asset analysis."""
+        return {
+            Output.ASSETS_BACKLINKED.value: self.backlinked,
+            Output.ASSETS_NOT_BACKLINKED.value: self.not_backlinked,
+        }
 
 
 @singleton
@@ -147,3 +155,14 @@ class LogseqAssetsHls:
             asset_mapping[name].path.file_type = "asset"
         for name in not_backlinked:
             asset_mapping[name].path.file_type = "asset"
+
+    @property
+    def report(self) -> str:
+        """Generate a report of the asset analysis."""
+        return {
+            Output.HLS_ASSET_MAPPING.value: self.asset_mapping,
+            Output.HLS_ASSET_NAMES.value: self.asset_names,
+            Output.HLS_FORMATTED_BULLETS.value: self.formatted_bullets,
+            Output.HLS_NOT_BACKLINKED.value: self.not_backlinked,
+            Output.HLS_BACKLINKED.value: self.backlinked,
+        }

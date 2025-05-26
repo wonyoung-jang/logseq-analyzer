@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Generator, TYPE_CHECKING
 
 from ..analysis.index import get_attribute_list
+from ..utils.enums import Output
 from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
@@ -161,3 +162,14 @@ class LogseqJournals:
                 dangling["past"].append(link)
             elif link > timeline_stats["last_date"]:
                 dangling["future"].append(link)
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Get a report of the journal processing results."""
+        return {
+            Output.DANGLING_JOURNALS.value: self.dangling,
+            Output.PROCESSED_JOURNALS.value: self.processed,
+            Output.COMPLETE_TIMELINE.value: self.complete_timeline,
+            Output.MISSING_JOURNALS.value: self.missing,
+            Output.TIMELINE_STATS.value: self.timeline_stats,
+        }

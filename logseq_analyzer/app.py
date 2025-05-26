@@ -47,7 +47,6 @@ from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
 from .utils.enums import CacheKeys, Config, Constants, Moved, Output, OutputDir
-from .utils.helpers import yield_attrs
 
 
 class GUIInstanceDummy:
@@ -290,91 +289,6 @@ def setup_logseq_file_mover(args: Args, unlinked_assets: list[LogseqFile]) -> di
     return moved_files
 
 
-def get_meta_reports(lg: LogseqGraph, lgc: LogseqGraphConfig, a: Args) -> dict[str, Any]:
-    """Get metadata reports from the graph and configuration."""
-    index = FileIndex()
-    meta_reports = {
-        Output.ALL_LINKED_REFERENCES.value: lg.all_linked_references,
-        Output.ALL_DANGLING_LINKS.value: lg.all_dangling_links,
-        Output.CONFIG_MERGED.value: lgc.config_merged,
-        Output.CONFIG_USER.value: lgc.get_user_config(),
-        Output.CONFIG_GLOBAL.value: lgc.get_global_config(),
-        Output.DANGLING_LINKS.value: lg.dangling_links,
-        Output.UNIQUE_LINKED_REFERENCES_NS.value: lg.unique_linked_references_ns,
-        Output.UNIQUE_LINKED_REFERENCES.value: lg.unique_linked_references,
-        Output.FILES.value: index.files,
-        Output.HASH_TO_FILE.value: index.hash_to_file,
-        Output.NAME_TO_FILES.value: index.name_to_files,
-        Output.PATH_TO_FILE.value: index.path_to_file,
-        Output.GRAPH_DATA.value: get_graph_data(index),
-    }
-    if a.write_graph:
-        meta_reports[Output.GRAPH_CONTENT.value] = get_graph_content(index)
-    logging.debug("run_app: get_meta_reports")
-    return meta_reports
-
-
-def get_graph_data(index: FileIndex) -> dict[LogseqFile, dict[str, Any]]:
-    """Get metadata file data from the graph."""
-    graph_data = {}
-    for file in index:
-        data = {k: v for k, v in yield_attrs(file) if k not in ("content", "content_bullets", "primary_bullet")}
-        graph_data[file] = data
-    logging.debug("run_app: get_graph_data")
-    return graph_data
-
-
-def get_graph_content(index: FileIndex) -> dict[LogseqFile, list[str]]:
-    """Get graph content."""
-    logging.debug("run_app: get_graph_content")
-    return {file: file.bullets.content_bullets for file in index}
-
-
-def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:
-    """Get journal reports from the graph journals."""
-    logging.debug("run_app: get_journal_reports")
-    return {
-        Output.DANGLING_JOURNALS.value: lj.dangling,
-        Output.PROCESSED_JOURNALS.value: lj.processed,
-        Output.COMPLETE_TIMELINE.value: lj.complete_timeline,
-        Output.MISSING_JOURNALS.value: lj.missing,
-        Output.TIMELINE_STATS.value: lj.timeline_stats,
-    }
-
-
-def get_namespace_reports(ln: LogseqNamespaces) -> dict[str, Any]:
-    """Get namespace reports from the graph namespaces."""
-    logging.debug("run_app: get_namespace_reports")
-    return {
-        Output.NAMESPACE_DATA.value: ln.structure.data,
-        Output.NAMESPACE_PARTS.value: ln.structure.parts,
-        Output.UNIQUE_NAMESPACE_PARTS.value: ln.structure.unique_parts,
-        Output.NAMESPACE_DETAILS.value: ln.structure.details,
-        Output.UNIQUE_NAMESPACES_PER_LEVEL.value: ln.structure.unique_namespaces_per_level,
-        Output.NAMESPACE_QUERIES.value: ln.queries,
-        Output.NAMESPACE_HIERARCHY.value: ln.structure.tree,
-        Output.CONFLICTS_NON_NAMESPACE.value: ln.conflicts.non_namespace,
-        Output.CONFLICTS_DANGLING.value: ln.conflicts.dangling,
-        Output.CONFLICTS_PARENT_DEPTH.value: ln.conflicts.parent_depth,
-        Output.CONFLICTS_PARENT_UNIQUE.value: ln.conflicts.parent_unique,
-    }
-
-
-def get_moved_files_reports(moved_files: dict[str, Any], la: LogseqAssets, lah: LogseqAssetsHls) -> dict[str, Any]:
-    """Get reports for moved files and assets."""
-    logging.debug("run_app: get_moved_files_reports")
-    return {
-        Output.MOVED_FILES.value: moved_files,
-        Output.ASSETS_BACKLINKED.value: la.backlinked,
-        Output.ASSETS_NOT_BACKLINKED.value: la.not_backlinked,
-        Output.HLS_ASSET_MAPPING.value: lah.asset_mapping,
-        Output.HLS_ASSET_NAMES.value: lah.asset_names,
-        Output.HLS_FORMATTED_BULLETS.value: lah.formatted_bullets,
-        Output.HLS_NOT_BACKLINKED.value: lah.not_backlinked,
-        Output.HLS_BACKLINKED.value: lah.backlinked,
-    }
-
-
 def update_cache(cache: Cache, index: FileIndex) -> None:
     """Update the cache with the current index."""
     cache.cache[CacheKeys.INDEX.value] = index
@@ -413,18 +327,23 @@ def perform_core_analysis(
     graph = setup_logseq_graph(index, cache, configs.analyzer.target_dirs)
     summary_files = setup_logseq_file_summarizer(index)
     summary_content = setup_logseq_content_summarizer(index)
-    graph_namespaces = setup_logseq_namespaces(graph, index)
-    graph_journals = setup_logseq_journals(graph, index, configs.journal_formats)
+    namespaces = setup_logseq_namespaces(graph, index)
+    journals = setup_logseq_journals(graph, index, configs.journal_formats)
     hls_assets = setup_logseq_hls_assets(index)
     ls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
     data_reports = (
-        (OutputDir.META.value, get_meta_reports(graph, configs.graph, args)),
-        (OutputDir.JOURNALS.value, get_journal_reports(graph_journals)),
-        (OutputDir.NAMESPACES.value, get_namespace_reports(graph_namespaces)),
-        (OutputDir.MOVED_FILES.value, get_moved_files_reports(moved_files, ls_assets, hls_assets)),
-        (OutputDir.SUMMARY_FILES.value, summary_files.subsets),
-        (OutputDir.SUMMARY_CONTENT.value, summary_content.subsets),
+        (OutputDir.META.value, graph.report),
+        (OutputDir.META.value, configs.graph.report),
+        (OutputDir.META.value, index.report),
+        (OutputDir.META.value, index.get_graph_content(args.write_graph)),
+        (OutputDir.JOURNALS.value, journals.report),
+        (OutputDir.NAMESPACES.value, namespaces.report),
+        (OutputDir.MOVED_FILES.value, {Output.MOVED_FILES.value: moved_files}),
+        (OutputDir.MOVED_FILES.value, ls_assets.report),
+        (OutputDir.MOVED_FILES.value, hls_assets.report),
+        (OutputDir.SUMMARY_FILES.value, summary_files.report),
+        (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )
     return data_reports
 

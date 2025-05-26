@@ -16,21 +16,21 @@ if TYPE_CHECKING:
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    __slots__ = ("subsets",)
+    __slots__ = ("report",)
 
     def __init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
-        self.subsets: dict[str, dict[str, Any]] = {}
+        self.report: dict[str, dict[str, Any]] = {}
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""
-        subsets = self.subsets
+        report = self.report
         for criteria in list(Criteria):
             criteria_value = criteria.value
-            subsets[criteria_value] = self.extract_summary_subset_content(criteria_value, index)
+            report[criteria_value] = LogseqContentSummarizer.extract_content(criteria_value, index)
 
     @staticmethod
-    def extract_summary_subset_content(criteria: str, index: "FileIndex") -> dict[str, Any]:
+    def extract_content(criteria: str, index: "FileIndex") -> dict[str, Any]:
         """
         Extract a subset of data based on a specific criteria.
         Asks: What content matches the criteria? And where is it found? How many times?

@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from re import Pattern
 from typing import Any, TYPE_CHECKING
 
-from ..utils.enums import Core
+from ..utils.enums import Core, Output
 from ..utils.helpers import singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -174,3 +174,20 @@ class LogseqNamespaces:
                     parts = page.split(Core.NS_SEP.value)
                     up_to_level = parts[:level]
                     conflicts_parent_unique[key].add(Core.NS_SEP.value.join(up_to_level))
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the namespace analysis."""
+        return {
+            Output.NAMESPACE_DATA.value: self.structure.data,
+            Output.NAMESPACE_PARTS.value: self.structure.parts,
+            Output.UNIQUE_NAMESPACE_PARTS.value: self.structure.unique_parts,
+            Output.NAMESPACE_DETAILS.value: self.structure.details,
+            Output.UNIQUE_NAMESPACES_PER_LEVEL.value: self.structure.unique_namespaces_per_level,
+            Output.NAMESPACE_QUERIES.value: self.queries,
+            Output.NAMESPACE_HIERARCHY.value: self.structure.tree,
+            Output.CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
+            Output.CONFLICTS_DANGLING.value: self.conflicts.dangling,
+            Output.CONFLICTS_PARENT_DEPTH.value: self.conflicts.parent_depth,
+            Output.CONFLICTS_PARENT_UNIQUE.value: self.conflicts.parent_unique,
+        }

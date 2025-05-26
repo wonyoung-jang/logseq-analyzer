@@ -4,11 +4,11 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..config.builtin_properties import get_user_properties
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import Criteria, FileTypes
+from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import singleton, sort_dict_by_value, yield_attrs
 
 if TYPE_CHECKING:
@@ -158,3 +158,14 @@ class LogseqGraph:
         for attr, value in yield_attrs(file.path):
             if attr.startswith("ns_") or attr == "is_namespace":
                 setattr(file, attr, value)
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the graph analysis."""
+        return {
+            Output.ALL_LINKED_REFERENCES.value: self.all_linked_references,
+            Output.ALL_DANGLING_LINKS.value: self.all_dangling_links,
+            Output.DANGLING_LINKS.value: self.dangling_links,
+            Output.UNIQUE_LINKED_REFERENCES_NS.value: self.unique_linked_references_ns,
+            Output.UNIQUE_LINKED_REFERENCES.value: self.unique_linked_references,
+        }
