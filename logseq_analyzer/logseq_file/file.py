@@ -129,8 +129,7 @@ class LogseqFile:
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
         self.mask_blocks()
-        primary_data = {}
-        primary_data.update(self.extract_primary_data())
+        primary_data = self.extract_primary_data()
         primary_data.update(self.extract_aliases_and_propvalues())
         primary_data.update(self.extract_properties())
         primary_data.update(self.extract_patterns())
@@ -141,14 +140,14 @@ class LogseqFile:
         Mask code blocks and other patterns in the content.
         """
         patterns = (
-            (CodePatterns.ALL, "__CODE_BLOCK_"),
-            (CodePatterns.INLINE_CODE_BLOCK, "__INLINE_CODE_"),
-            (AdvancedCommandPatterns.ALL, "__ADV_COMMAND_"),
-            (DoubleCurlyBracketsPatterns.ALL, "__DBLCURLY_"),
-            (EmbeddedLinksPatterns.ALL, "__EMB_LINK_"),
-            (ExternalLinksPatterns.ALL, "__EXT_LINK_"),
-            (DoubleParenthesesPatterns.ALL, "__DBLPAREN_"),
-            (ContentPatterns.ANY_LINK, "__ANY_LINK_"),
+            (CodePatterns.ALL, f"__{Criteria.COD_INLINE.name}_"),
+            (CodePatterns.INLINE_CODE_BLOCK, f"__{Criteria.COD_INLINE.name}_"),
+            (AdvancedCommandPatterns.ALL, f"__{Criteria.ADV_CMD.name}_"),
+            (DoubleCurlyBracketsPatterns.ALL, f"__{Criteria.DBC_ALL.name}_"),
+            (EmbeddedLinksPatterns.ALL, f"__{Criteria.EMB_LINK_OTHER.name}_"),
+            (ExternalLinksPatterns.ALL, f"__{Criteria.EXT_LINK_OTHER.name}_"),
+            (DoubleParenthesesPatterns.ALL, f"__{Criteria.DBP_ALL_REFS.name}_"),
+            (ContentPatterns.ANY_LINK, f"__{Criteria.ANY_LINKS.name}_"),
         )
 
         masked_blocks: dict[str, str] = self.masked.blocks
@@ -176,8 +175,8 @@ class LogseqFile:
         masked_content = self.masked.content
         return {
             Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
-            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
             Criteria.ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
+            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(masked_content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
             Criteria.DRAWS.value: ContentPatterns.DRAW.findall(masked_content),
             Criteria.FLASHCARDS.value: ContentPatterns.FLASHCARD.findall(masked_content),
