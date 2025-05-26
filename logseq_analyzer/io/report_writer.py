@@ -85,7 +85,7 @@ class ReportWriter:
                 if count is not None:
                     f.write(f"{filename}\n")
                     f.write(f"Count: {count}\n")
-                    f.write(f"Type: {type(data).__class__.__qualname__}\n\n")
+                    f.write(f"Type: {data.__class__.__qualname__}\n\n")
                 ReportWriter.write_recursive(f, data)
 
         if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
@@ -154,7 +154,7 @@ class ReportWriter:
         """
         Write values of a collection to a file with indentation.
         """
-        f.write(f"{indent}Values ({len(values)}):\n")
+        f.write(f"{indent}VALUES ({len(values)}):\n")
         for index, value in enumerate(values, 1):
             f.write(f"{indent}\t{index}\t|\t{value}\n")
         f.write("\n")
@@ -164,14 +164,14 @@ class ReportWriter:
         """
         Write values to a file with indentation.
         """
-        f.write(f"{indent}Value: {values}\n\n")
+        f.write(f"{indent}VAL: {values}\n\n")
 
     @staticmethod
     def write_toplevel_dict_key(f: TextIO, key: str, indent: str) -> None:
         """
         Write the top-level dictionary key to a file.
         """
-        f.write(f"{indent}Key: {key}\n")
+        f.write(f"{indent}KEY: {key}\n")
 
     @staticmethod
     def get_indent(indent_level: int) -> str:
