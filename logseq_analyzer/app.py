@@ -335,6 +335,7 @@ def perform_core_analysis(
     data_reports = (
         (OutputDir.META.value, args.report),
         (OutputDir.META.value, graph.report),
+        (OutputDir.META.value, configs.analyzer.report),
         (OutputDir.META.value, configs.graph.report),
         (OutputDir.META.value, index.report),
         (OutputDir.META.value, index.get_graph_content(args.write_graph)),

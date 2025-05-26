@@ -5,7 +5,7 @@ Config class for loading and managing configuration files.
 import configparser
 from pathlib import Path
 
-from ..utils.enums import Core, Config
+from ..utils.enums import Core, Config, Output
 from ..utils.helpers import singleton
 
 
@@ -82,3 +82,25 @@ class LogseqAnalyzerConfig:
                 config[Config.DIR_WHITEBOARDS.value],
             )
         )
+
+    @property
+    def config_dict(self) -> dict[str, dict[str, str]]:
+        """Get the configuration as a dictionary."""
+        config_dict = {}
+        for section in self.config.sections():
+            if repr(section) == "<UNNAMED_SECTION>":
+                continue
+            config_dict[section] = {}
+            for key, value in self.config[section].items():
+                config_dict[section][key] = value
+        return config_dict
+
+    @property
+    def report(self) -> dict[str, str]:
+        """Get a report of the configuration settings."""
+        return {
+            Output.ANALYZER_CONFIG.value: {
+                Output.AC_TARGET_DIRS.value: self.target_dirs,
+                Output.AC_CONFIG.value: self.config_dict,
+            }
+        }

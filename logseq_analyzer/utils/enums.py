@@ -201,8 +201,11 @@ class Nodes(Enum):
 class Output(Enum):
     """Output types for the Logseq Analyzer."""
 
+    AC_CONFIG = "ac_config"
+    AC_TARGET_DIRS = "ac_target_dirs"
     ALL_DANGLING_LINKS = "all_dangling_links"
     ALL_LINKED_REFERENCES = "all_linked_references"
+    ANALYZER_CONFIG = "analyzer_config"
     ARGUMENTS = "arguments"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"

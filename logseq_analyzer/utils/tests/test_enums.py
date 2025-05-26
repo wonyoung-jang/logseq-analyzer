@@ -269,8 +269,11 @@ def test_nodes_member_count():
 # Output
 def test_output_values():
     expected = {
+        "AC_CONFIG": "ac_config",
+        "AC_TARGET_DIRS": "ac_target_dirs",
         "ALL_DANGLING_LINKS": "all_dangling_links",
         "ALL_LINKED_REFERENCES": "all_linked_references",
+        "ANALYZER_CONFIG": "analyzer_config",
         "ARGUMENTS": "arguments",
         "ASSETS_BACKLINKED": "assets_backlinked",
         "ASSETS_NOT_BACKLINKED": "assets_not_backlinked",
@@ -314,7 +317,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 39
+    assert len(Output) == 42
 
 
 # OutputDir
