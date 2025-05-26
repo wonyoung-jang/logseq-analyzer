@@ -327,7 +327,7 @@ def get_graph_data(index: FileIndex) -> dict[LogseqFile, dict[str, Any]]:
 def get_graph_content(index: FileIndex) -> dict[LogseqFile, list[str]]:
     """Get graph content."""
     logging.debug("run_app: get_graph_content")
-    return {file: file.bullets.all_bullets for file in index}
+    return {file: file.bullets.content_bullets for file in index}
 
 
 def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:

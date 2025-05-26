@@ -119,7 +119,7 @@ class LogseqFile:
 
     def _set_file_data_attributes(self) -> None:
         """Set file data attributes."""
-        _large = ("all_bullets", "content_bullets", "content")
+        _large = ("content_bullets", "content")
         for subdata in (self.stat, self.path, self.bullets):
             for attr, value in yield_attrs(subdata):
                 if subdata is self.bullets and attr in _large:

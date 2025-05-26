@@ -107,7 +107,7 @@ class LogseqAssetsHls:
         hls_criteria = {"is_hls": True}
         formatted_bullets = self.formatted_bullets
         for file in index.filter_files(**hls_criteria):
-            for bullet in file.bullets.all_bullets:
+            for bullet in file.bullets.content_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):
                     continue

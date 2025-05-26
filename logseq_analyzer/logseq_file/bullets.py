@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
+from ..utils.helpers import iter_pattern_split
 
 
 @dataclass
@@ -27,7 +28,6 @@ class LogseqBullets:
         "file_path",
         "content",
         "primary_bullet",
-        "all_bullets",
         "content_bullets",
         "stats",
     )
@@ -38,7 +38,6 @@ class LogseqBullets:
         self.stats: BulletStats = BulletStats()
         self.content: str = ""
         self.primary_bullet: str = ""
-        self.all_bullets: list[str | None] = []
         self.content_bullets: list[str | None] = []
 
     def __repr__(self) -> str:
@@ -53,12 +52,10 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         self.get_content()
         if self.content:
-            self.stats.char_count = len(self.content)
-            self.all_bullets = ContentPatterns.BULLET.split(self.content)
+            self.get_char_count()
             self.get_primary_bullet()
+            self.get_bullet_density()
             self.is_primary_bullet_page_properties()
-            if self.stats.bullet_count:
-                self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
 
     def get_content(self) -> None:
         """Read the text content of a file."""
@@ -67,32 +64,32 @@ class LogseqBullets:
         except UnicodeDecodeError:
             logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
 
+    def get_char_count(self) -> None:
+        """Get the character count of the content."""
+        self.stats.char_count = len(self.content)
+
     def get_primary_bullet(self) -> None:
         """Get the Logseq primary bullet if available"""
-        primary_bullet = ""
-        all_bullets = self.all_bullets
         content_bullets = self.content_bullets
         bullet_count = 0
         bullet_count_empty = 0
-        if len(all_bullets) == 1:
-            if primary_bullet := all_bullets[0].strip():
-                bullet_count = 1
+        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, self.content):
+            if bullet:
+                if count == 0:
+                    self.primary_bullet = bullet
+                content_bullets.append(bullet)
+                bullet_count += 1
             else:
-                bullet_count_empty = 1
-        elif len(all_bullets) > 1:
-            primary_bullet = all_bullets[0].strip()
-            for bullet in all_bullets[1:]:
-                if not (stripped_bullet := bullet.strip()):
-                    bullet_count_empty += 1
-                else:
-                    content_bullets.append(stripped_bullet)
-                    bullet_count += 1
+                bullet_count_empty += 1
         self.stats.bullet_count = bullet_count
         self.stats.bullet_count_empty = bullet_count_empty
-        self.primary_bullet = primary_bullet
+
+    def get_bullet_density(self) -> None:
+        """Get the bullet density of the content."""
+        if self.stats.bullet_count:
+            self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
 
     def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""
-        bullet = self.primary_bullet.strip()
-        if bullet and not bullet.startswith("#"):
+        if self.primary_bullet and not self.primary_bullet.startswith("#"):
             self.stats.has_page_properties = True

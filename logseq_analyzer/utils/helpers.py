@@ -163,7 +163,7 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
     return output
 
 
-def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[str, None, None]:
+def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[tuple[int, str], None, None]:
     """
     Emulates re.Pattern.split() but yields sections of text instead of returning a list.
     Iterate over sections of text separated by bullet markers.
@@ -174,24 +174,25 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
         maxsplit (int): Maximum number of splits. If 0, all sections are returned.
 
     Yields:
-        Generator[str, None, None]: Sections of text.
+        Generator[tuple[int, str], None, None]: Sections of text with their respective indices.
     """
     count = 0
 
-    for m in pattern.finditer(text):
+    for match in pattern.finditer(text):
         if maxsplit and count >= maxsplit:
             break
 
         if count == 0:
-            yield text[: m.start()]
+            yield count, text[: match.start()].strip()
+            count += 1
 
-        start_of_content = m.end()
+        # Has to include the match
+        start_of_content = match.end()
         next_match = next(pattern.finditer(text, start_of_content), None)
         end_of_content = next_match.start() if next_match else len(text)
 
-        yield text[start_of_content:end_of_content].strip()
-
+        yield count, text[start_of_content:end_of_content].strip()
         count += 1
 
     if count == 0:
-        yield text
+        yield count, text.strip()
