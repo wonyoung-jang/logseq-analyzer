@@ -281,8 +281,6 @@ def test_output_values():
         "CONFLICTS_NON_NAMESPACE": "conflicts_non_namespace",
         "CONFLICTS_PARENT_DEPTH": "conflicts_parent_depth",
         "CONFLICTS_PARENT_UNIQUE": "conflicts_parent_unique",
-        "DANGLING_JOURNALS_FUTURE": "dangling_journals_future",
-        "DANGLING_JOURNALS_PAST": "dangling_journals_past",
         "DANGLING_JOURNALS": "dangling_journals",
         "DANGLING_LINKS": "dangling_links",
         "FILES": "files",
@@ -294,7 +292,7 @@ def test_output_values():
         "HLS_BACKLINKED": "hls_backlinked",
         "HLS_FORMATTED_BULLETS": "hls_formatted_bullets",
         "HLS_NOT_BACKLINKED": "hls_not_backlinked",
-        "MISSING_KEYS": "missing_keys",
+        "MISSING_JOURNALS": "missing_journals",
         "MOVED_FILES": "moved_files",
         "NAME_TO_FILES": "name_to_files",
         "NAMESPACE_DATA": "namespace_data",
@@ -303,7 +301,7 @@ def test_output_values():
         "NAMESPACE_PARTS": "namespace_parts",
         "NAMESPACE_QUERIES": "namespace_queries",
         "PATH_TO_FILE": "path_to_file",
-        "PROCESSED_KEYS": "processed_keys",
+        "PROCESSED_JOURNALS": "processed_journals",
         "TIMELINE_STATS": "timeline_stats",
         "UNIQUE_LINKED_REFERENCES_NS": "unique_linked_references_ns",
         "UNIQUE_LINKED_REFERENCES": "unique_linked_references",
@@ -315,7 +313,7 @@ def test_output_values():
 
 
 def test_output_member_count():
-    assert len(Output) == 40
+    assert len(Output) == 38
 
 
 # OutputDir

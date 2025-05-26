@@ -213,10 +213,11 @@ class LogseqFile:
         """
         content = self.bullets.content
         page_properties = set()
+        block_properties = set()
         if self.bullets.stats.has_page_properties:
-            page_properties = set(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
+            page_properties.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
-        block_properties = set(ContentPatterns.PROPERTY.findall(content))
+        block_properties.update(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
         page_props_builtins = sorted(get_builtin_properties(page_properties))
         page_props_user = sorted(get_user_properties(page_properties))
@@ -237,12 +238,12 @@ class LogseqFile:
             dict: A dictionary containing the processed patterns.
         """
         patterns = (
-            ExternalLinksPatterns,
-            EmbeddedLinksPatterns,
-            DoubleParenthesesPatterns,
-            CodePatterns,
             AdvancedCommandPatterns,
+            CodePatterns,
             DoubleCurlyBracketsPatterns,
+            DoubleParenthesesPatterns,
+            EmbeddedLinksPatterns,
+            ExternalLinksPatterns,
         )
         result = {}
         content = self.bullets.content

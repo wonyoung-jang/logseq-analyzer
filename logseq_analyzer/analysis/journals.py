@@ -29,19 +29,22 @@ class DateUtilities:
         return date_obj + timedelta(days=1)
 
     @staticmethod
-    def range(
-        most_recent_date: datetime | None, least_recent_date: datetime | None
-    ) -> tuple[int | None, float | None, float | None, float | None]:
+    def range(date_stats: dict[str, datetime | None]) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
-        if not most_recent_date or not least_recent_date:
-            return None, None, None, None
-
-        delta = most_recent_date - least_recent_date
+        date_range = {
+            "days": None,
+            "weeks": None,
+            "months": None,
+            "years": None,
+        }
+        if not (delta := date_stats["last_date"] - date_stats["first_date"]):
+            return date_range
         days = delta.days + 1
-        weeks = round(days / 7, 2)
-        months = round(days / 30, 2)
-        years = round(days / 365, 2)
-        return days, weeks, months, years
+        date_range["days"] = days
+        date_range["weeks"] = round(days / 7, 2)
+        date_range["months"] = round(days / 30, 2)
+        date_range["years"] = round(days / 365, 2)
+        return date_range
 
     @staticmethod
     def stats(timeline: list[datetime]) -> dict[str, Any]:
@@ -56,13 +59,10 @@ class DateUtilities:
         }
         if not timeline:
             return date_stats
+
         date_stats["first_date"] = min(timeline)
         date_stats["last_date"] = max(timeline)
-        days, weeks, months, years = DateUtilities.range(date_stats["last_date"], date_stats["first_date"])
-        date_stats["days"] = days
-        date_stats["weeks"] = weeks
-        date_stats["months"] = months
-        date_stats["years"] = years
+        date_stats.update(DateUtilities.range(date_stats))
         return date_stats
 
 
@@ -73,24 +73,22 @@ class LogseqJournals:
     """
 
     __slots__ = (
-        "dangling_journals",
-        "processed_keys",
+        "dangling",
+        "processed",
         "complete_timeline",
-        "missing_keys",
+        "missing",
         "timeline_stats",
-        "dangling_journals_dict",
         "date",
     )
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqJournals class."""
-        self.dangling_journals: list[datetime] = []
-        self.processed_keys: list[datetime] = []
         self.complete_timeline: list[datetime] = []
-        self.missing_keys: list[datetime] = []
-        self.timeline_stats: dict[str, Any] = {}
-        self.dangling_journals_dict: defaultdict[str, list[datetime]] = defaultdict(list)
+        self.dangling: defaultdict[str, list[datetime]] = defaultdict(list)
         self.date: DateUtilities = date_utilities
+        self.missing: list[datetime] = []
+        self.processed: list[datetime] = []
+        self.timeline_stats: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
@@ -108,18 +106,14 @@ class LogseqJournals:
         self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str
     ) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        dangling_journals = list(self.process_journal_keys_to_datetime(dangling_links, py_page_base_format))
-        self.dangling_journals = sorted(dangling_journals)
+        dangling_journals = sorted(self.process_journal_keys_to_datetime(dangling_links, py_page_base_format))
         journal_criteria = {"file_type": "journal"}
         journal_keys = index.filter_files(**journal_criteria)
         journal_keys = get_attribute_list(journal_keys, "name")
-        processed_keys = list(self.process_journal_keys_to_datetime(journal_keys, py_page_base_format))
-        self.processed_keys = sorted(processed_keys)
-
-        self.build_complete_timeline()
-        self.timeline_stats["complete_timeline"] = self.date.stats(self.complete_timeline)
-        self.timeline_stats["dangling_journals"] = self.date.stats(self.dangling_journals)
-        self.get_dangling_journals_outside_range()
+        processed = sorted(self.process_journal_keys_to_datetime(journal_keys, py_page_base_format))
+        self.processed = processed
+        self.build_complete_timeline(dangling_journals)
+        self.get_dangling_journals_outside_range(dangling_journals)
 
     @staticmethod
     def process_journal_keys_to_datetime(
@@ -134,35 +128,36 @@ class LogseqJournals:
             except ValueError as e:
                 logging.warning("Invalid date format for key: %s. Error: %s", key, e)
 
-    def build_complete_timeline(self) -> None:
+    def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
-        processed_keys = self.processed_keys
-        dangling_journals = self.dangling_journals
-        missing_keys = self.missing_keys
+        processed = self.processed
+        missing = self.missing
         complete_timeline = self.complete_timeline
-        for i in range(len(processed_keys) - 1):
-            current_date = processed_keys[i]
+        for i in range(len(processed) - 1):
+            current_date = processed[i]
             complete_timeline.append(current_date)
             next_expected_date = self.date.next(current_date)
-            next_actual_date = processed_keys[i + 1]
+            next_actual_date = processed[i + 1]
             while next_expected_date < next_actual_date:
                 complete_timeline.append(next_expected_date)
                 if next_expected_date in dangling_journals:
                     dangling_journals.remove(next_expected_date)
                 else:
-                    missing_keys.append(next_expected_date)
+                    missing.append(next_expected_date)
                 next_expected_date = self.date.next(next_expected_date)
 
-        if processed_keys:
-            complete_timeline.append(processed_keys[-1])
+        if processed:
+            complete_timeline.append(processed[-1])
 
-    def get_dangling_journals_outside_range(self) -> None:
+        self.timeline_stats["complete_timeline"] = self.date.stats(complete_timeline)
+        self.timeline_stats["dangling_journals"] = self.date.stats(dangling_journals)
+
+    def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
         """Check for dangling journals that are outside the range of the complete timeline."""
-        dangling_journals = self.dangling_journals
         timeline_stats = self.timeline_stats["complete_timeline"]
-        dangling_journals_dict = self.dangling_journals_dict
+        dangling = self.dangling
         for link in dangling_journals:
             if link < timeline_stats["first_date"]:
-                dangling_journals_dict["past"].append(link)
+                dangling["past"].append(link)
             elif link > timeline_stats["last_date"]:
-                dangling_journals_dict["future"].append(link)
+                dangling["future"].append(link)

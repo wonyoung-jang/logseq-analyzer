@@ -334,13 +334,11 @@ def get_journal_reports(lj: LogseqJournals) -> dict[str, Any]:
     """Get journal reports from the graph journals."""
     logging.debug("run_app: get_journal_reports")
     return {
-        Output.DANGLING_JOURNALS.value: lj.dangling_journals,
-        Output.PROCESSED_KEYS.value: lj.processed_keys,
+        Output.DANGLING_JOURNALS.value: lj.dangling,
+        Output.PROCESSED_JOURNALS.value: lj.processed,
         Output.COMPLETE_TIMELINE.value: lj.complete_timeline,
-        Output.MISSING_KEYS.value: lj.missing_keys,
+        Output.MISSING_JOURNALS.value: lj.missing,
         Output.TIMELINE_STATS.value: lj.timeline_stats,
-        Output.DANGLING_JOURNALS_PAST.value: lj.dangling_journals_dict["past"],
-        Output.DANGLING_JOURNALS_FUTURE.value: lj.dangling_journals_dict["future"],
     }
 
 
