@@ -56,13 +56,13 @@ class LogseqAnalyzerConfig:
 
     def set_logseq_config_edn_data(self, graph_config: dict[str, str]) -> None:
         """set the Logseq configuration data."""
-        self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, graph_config.get(":pages-directory", "pages"))
-        self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, graph_config.get(":journals-directory", "journals"))
-        self.set_value(
-            "LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, graph_config.get(":whiteboards-directory", "whiteboards")
-        )
-
+        edn_pages_dir = graph_config.get(":pages-directory", "pages")
+        edn_journals_dir = graph_config.get(":journals-directory", "journals")
+        edn_whiteboards_dir = graph_config.get(":whiteboards-directory", "whiteboards")
         ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, edn_pages_dir)
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, edn_journals_dir)
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, edn_whiteboards_dir)
         self.set_value("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
 
         if ns_format == Core.NS_CONFIG_LEGACY.value:

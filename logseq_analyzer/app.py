@@ -333,6 +333,7 @@ def perform_core_analysis(
     ls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
     data_reports = (
+        (OutputDir.META.value, args.report),
         (OutputDir.META.value, graph.report),
         (OutputDir.META.value, configs.graph.report),
         (OutputDir.META.value, index.report),

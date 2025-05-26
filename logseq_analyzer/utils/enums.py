@@ -203,6 +203,7 @@ class Output(Enum):
 
     ALL_DANGLING_LINKS = "all_dangling_links"
     ALL_LINKED_REFERENCES = "all_linked_references"
+    ARGUMENTS = "arguments"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
     COMPLETE_TIMELINE = "complete_timeline"

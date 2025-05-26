@@ -3,7 +3,9 @@ LogseqAnalyzerArguments Class
 """
 
 import argparse
+from typing import Any
 
+from ..utils.enums import Output
 from ..utils.helpers import singleton
 
 
@@ -108,3 +110,11 @@ class Args:
         args = parser.parse_args()
         for key, value in vars(args).items():
             setattr(self, key, value)
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the arguments."""
+        report = {}
+        for key in self.__slots__:
+            report[key] = getattr(self, key)
+        return {Output.ARGUMENTS.value: report}
