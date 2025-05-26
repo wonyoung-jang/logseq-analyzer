@@ -87,11 +87,11 @@ def setup_logseq_arguments(**kwargs) -> Args:
     return a
 
 
-def init_logseq_paths() -> LogFile:
+def init_logseq_paths() -> None:
     """Setup Logseq paths for the analyzer."""
     OutputDirectory(Constants.OUTPUT_DIR.value)
     lf = LogFile(Constants.LOG_FILE.value)
-    return lf
+    setup_logging(lf.path)
 
 
 def setup_logging(log_file: Path) -> None:
@@ -305,7 +305,7 @@ def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path:
     logging.debug("run_app: write_reports")
 
 
-def initialize_configurations(args: Args) -> Configurations:
+def init_configs(args: Args) -> Configurations:
     """Initialize configurations for the Logseq analyzer."""
     analyzer_config = setup_logseq_analyzer_config(args)
     setup_logseq_paths(analyzer_config)
@@ -367,28 +367,25 @@ def run_app(**kwargs) -> None:
     if isinstance(progress, GUIInstanceDummy):
         progress = progress.update_progress
 
-    progress(10)
+    progress(10, "Starting Logseq Analyzer...")
     args = setup_logseq_arguments(**kwargs)
 
-    progress(25)
-    log_file = init_logseq_paths()
+    progress(20, "Initializing Logseq Analyzer paths and configurations...")
+    init_logseq_paths()
 
-    progress(40)
-    setup_logging(log_file.path)
+    progress(30, "Setting up Logseq Analyzer configurations...")
+    configs = init_configs(args)
 
-    progress(55)
-    configs = initialize_configurations(args)
-
-    progress(70)
+    progress(40, "Setting up Logseq cache...")
     cache, index = setup_cache(args)
 
-    progress(85)
+    progress(50, "Running core analysis on Logseq graph...")
     data_reports = perform_core_analysis(args, index, cache, configs)
 
-    progress(90)
+    progress(60, "Writing reports...")
     write_reports(data_reports, configs.analyzer["ANALYZER"]["REPORT_FORMAT"], OutputDirectory().path)
 
-    progress(95)
+    progress(80, "Finalizing analysis...")
     finish_analysis(cache, index, configs)
 
-    progress(100)
+    progress(100, "Logseq Analyzer completed successfully.")

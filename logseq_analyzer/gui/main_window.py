@@ -38,6 +38,7 @@ class AnalysisWorker(QThread):
     """Thread worker for running the Logseq Analyzer application."""
 
     progress_signal = Signal(int)
+    progress_label = Signal(str)
     finished_signal = Signal(bool, str, float)
 
     __slots__ = ("args",)
@@ -52,8 +53,9 @@ class AnalysisWorker(QThread):
         try:
             curr_time = time.time()
 
-            def update_progress(value) -> None:
+            def update_progress(value, label) -> None:
                 self.progress_signal.emit(value)
+                self.progress_label.emit(label)
 
             run_app(**self.args, progress_callback=update_progress)
             self.finished_signal.emit(True, "", time.time() - curr_time)
@@ -131,6 +133,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         )
         self.checkboxes.graph_cache.setEnabled(True)
         self.progress_bar = self.create_progress_bar()
+        self.progress_text = QLabel("Status: Ready")
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.worker = None
         self.init_ui()
@@ -151,6 +154,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             Arguments.GRAPH_FOLDER.value: self.inputs.graph_folder.text(),
             Arguments.GLOBAL_CONFIG.value: self.inputs.global_config.text(),
             Arguments.MOVE_UNLINKED_ASSETS.value: self.checkboxes.move_assets.isChecked(),
+            Arguments.MOVE_ALL.value: self.checkboxes.move_all.isChecked(),
             Arguments.MOVE_BAK.value: self.checkboxes.move_bak.isChecked(),
             Arguments.MOVE_RECYCLE.value: self.checkboxes.move_recycle.isChecked(),
             Arguments.WRITE_GRAPH.value: self.checkboxes.write_graph.isChecked(),
@@ -166,6 +170,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.progress_bar.setValue(0)
         self.worker = AnalysisWorker(args_gui)
         self.worker.progress_signal.connect(self.update_progress)
+        self.worker.progress_label.connect(self.update_progress_label)
         self.worker.finished_signal.connect(self.handle_analysis_complete)
         self.worker.start()
 
@@ -275,6 +280,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Creates and returns the layout for progress bars."""
         progress_bars_layout = QFormLayout()
         progress_bars_layout.addRow("Progress:", self.progress_bar)
+        progress_bars_layout.addRow("Status:", self.progress_text)
         return progress_bars_layout
 
     def create_progress_bar(self) -> QProgressBar:
@@ -348,6 +354,12 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Updates the progress bar for a given phase."""
         if self.progress_bar:
             self.progress_bar.setValue(progress_value)
+            QApplication.processEvents()
+
+    def update_progress_label(self, label: str) -> None:
+        """Updates the progress label with a given message."""
+        if self.progress_text:
+            self.progress_text.setText(f"Status: {label}")
             QApplication.processEvents()
 
     def show_error(self, message: str) -> None:
