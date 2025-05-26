@@ -130,18 +130,18 @@ RENDERER = re.compile(
 )
 
 PATTERN_MAP = {
-    PAGE_EMBED: Criteria.PAGE_EMBEDS.value,
-    BLOCK_EMBED: Criteria.BLOCK_EMBEDS.value,
-    EMBED: Criteria.EMBEDS.value,
-    NAMESPACE_QUERY: Criteria.NAMESPACE_QUERIES.value,
-    CARD: Criteria.CARDS.value,
-    CLOZE: Criteria.CLOZES.value,
-    SIMPLE_QUERY: Criteria.SIMPLE_QUERIES.value,
-    QUERY_FUNCTION: Criteria.QUERY_FUNCTIONS.value,
-    EMBED_VIDEO_URL: Criteria.EMBED_VIDEO_URLS.value,
-    EMBED_TWITTER_TWEET: Criteria.EMBED_TWITTER_TWEETS.value,
-    EMBED_YOUTUBE_TIMESTAMP: Criteria.EMBED_YOUTUBE_TIMESTAMPS.value,
-    RENDERER: Criteria.RENDERERS.value,
+    PAGE_EMBED: Criteria.DBC_PAGE_EMBEDS.value,
+    BLOCK_EMBED: Criteria.DBC_BLOCK_EMBEDS.value,
+    EMBED: Criteria.DBC_EMBEDS.value,
+    NAMESPACE_QUERY: Criteria.DBC_NAMESPACE_QUERIES.value,
+    CARD: Criteria.DBC_CARDS.value,
+    CLOZE: Criteria.DBC_CLOZES.value,
+    SIMPLE_QUERY: Criteria.DBC_SIMPLE_QUERIES.value,
+    QUERY_FUNCTION: Criteria.DBC_QUERY_FUNCTIONS.value,
+    EMBED_VIDEO_URL: Criteria.DBC_VIDEO_URLS.value,
+    EMBED_TWITTER_TWEET: Criteria.DBC_TWITTER_TWEETS.value,
+    EMBED_YOUTUBE_TIMESTAMP: Criteria.DBC_YOUTUBE_TIMESTAMPS.value,
+    RENDERER: Criteria.DBC_RENDERERS.value,
 }
 
-FALLBACK = Criteria.MACROS.value
+FALLBACK = Criteria.DBC_ALL.value

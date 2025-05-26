@@ -175,7 +175,7 @@ class LogseqFile:
         content = self.bullets.content
         masked_content = self.masked.content
         return {
-            Criteria.INLINE_CODE_BLOCKS.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
+            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
             Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
             Criteria.ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
