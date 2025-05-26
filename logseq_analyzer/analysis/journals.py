@@ -4,10 +4,11 @@ Process logseq journals.
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Generator, TYPE_CHECKING
 
 from ..analysis.index import get_attribute_list
+from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Output
 from ..utils.helpers import singleton
 
@@ -17,54 +18,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "LogseqJournals",
-    "DateUtilities",
 ]
-
-
-class DateUtilities:
-    """DateUtilities class to handle date-related operations."""
-
-    @staticmethod
-    def next(date_obj: datetime) -> datetime:
-        """Return the date of the next day."""
-        return date_obj + timedelta(days=1)
-
-    @staticmethod
-    def range(date_stats: dict[str, datetime | None]) -> dict[str, float | None]:
-        """Compute the range between two dates in days, weeks, months, and years."""
-        date_range = {
-            "days": None,
-            "weeks": None,
-            "months": None,
-            "years": None,
-        }
-        if not (delta := date_stats["last_date"] - date_stats["first_date"]):
-            return date_range
-        days = delta.days + 1
-        date_range["days"] = days
-        date_range["weeks"] = round(days / 7, 2)
-        date_range["months"] = round(days / 30, 2)
-        date_range["years"] = round(days / 365, 2)
-        return date_range
-
-    @staticmethod
-    def stats(timeline: list[datetime]) -> dict[str, Any]:
-        """Get statistics about the timeline."""
-        date_stats = {
-            "first_date": datetime.min,
-            "last_date": datetime.min,
-            "days": 0,
-            "weeks": 0,
-            "months": 0,
-            "years": 0,
-        }
-        if not timeline:
-            return date_stats
-
-        date_stats["first_date"] = min(timeline)
-        date_stats["last_date"] = max(timeline)
-        date_stats.update(DateUtilities.range(date_stats))
-        return date_stats
 
 
 @singleton
@@ -74,12 +28,12 @@ class LogseqJournals:
     """
 
     __slots__ = (
-        "dangling",
-        "processed",
         "complete_timeline",
-        "missing",
-        "timeline_stats",
+        "dangling",
         "date",
+        "missing",
+        "processed",
+        "timeline_stats",
     )
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:

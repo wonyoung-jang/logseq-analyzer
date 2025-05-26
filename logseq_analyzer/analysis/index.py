@@ -63,7 +63,7 @@ class FileIndex:
         """Iterate over the files in the index."""
         return iter(self._files)
 
-    def __getitem__(self, key: LogseqFile | int | str | Path) -> Any:
+    def __getitem__(self, key: Any) -> Any:
         """Get a file by its key."""
         if isinstance(key, LogseqFile):
             if key in self:
@@ -77,7 +77,7 @@ class FileIndex:
             return self._path_to_file.get(key)
         raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
 
-    def __contains__(self, key: LogseqFile | int | str | Path) -> bool:
+    def __contains__(self, key: Any) -> bool:
         """Check if a file is in the index."""
         if isinstance(key, LogseqFile):
             return key in self._files
@@ -119,7 +119,7 @@ class FileIndex:
         self._name_to_files[name].append(file)
         self._path_to_file[path] = file
 
-    def remove(self, key: LogseqFile | int | str | Path) -> None:
+    def remove(self, key: Any) -> None:
         """Strategy to remove a file from the index."""
         if isinstance(key, LogseqFile):
             target = key

@@ -47,7 +47,7 @@ class NamespaceStructure:
     parts: dict[str, Any] = field(default_factory=dict)
     unique_parts: set[str] = field(default_factory=set)
     details: dict[str, Any] = field(default_factory=dict)
-    unique_namespaces_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    unique_ns_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
     tree: dict[str, Any] = field(default_factory=dict)
 
 
@@ -91,7 +91,7 @@ class LogseqNamespaces:
         namespace_data = self.structure.data
         namespace_parts = self.structure.parts
         unique_namespace_parts = self.structure.unique_parts
-        unique_namespaces_per_level = self.structure.unique_namespaces_per_level
+        unique_namespaces_per_level = self.structure.unique_ns_per_level
         _part_levels = self._part_levels
         _part_entries = self._part_entries
         for file in index:
@@ -179,15 +179,15 @@ class LogseqNamespaces:
     def report(self) -> dict[str, Any]:
         """Generate a report of the namespace analysis."""
         return {
-            Output.NAMESPACE_DATA.value: self.structure.data,
-            Output.NAMESPACE_PARTS.value: self.structure.parts,
-            Output.UNIQUE_NAMESPACE_PARTS.value: self.structure.unique_parts,
-            Output.NAMESPACE_DETAILS.value: self.structure.details,
-            Output.UNIQUE_NAMESPACES_PER_LEVEL.value: self.structure.unique_namespaces_per_level,
-            Output.NAMESPACE_QUERIES.value: self.queries,
-            Output.NAMESPACE_HIERARCHY.value: self.structure.tree,
-            Output.CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
             Output.CONFLICTS_DANGLING.value: self.conflicts.dangling,
+            Output.CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
             Output.CONFLICTS_PARENT_DEPTH.value: self.conflicts.parent_depth,
             Output.CONFLICTS_PARENT_UNIQUE.value: self.conflicts.parent_unique,
+            Output.NAMESPACE_DATA.value: self.structure.data,
+            Output.NAMESPACE_DETAILS.value: self.structure.details,
+            Output.NAMESPACE_HIERARCHY.value: self.structure.tree,
+            Output.NAMESPACE_PARTS.value: self.structure.parts,
+            Output.NAMESPACE_QUERIES.value: self.queries,
+            Output.UNIQUE_NAMESPACE_PARTS.value: self.structure.unique_parts,
+            Output.UNIQUE_NAMESPACES_PER_LEVEL.value: self.structure.unique_ns_per_level,
         }

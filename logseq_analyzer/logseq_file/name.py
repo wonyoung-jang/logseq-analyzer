@@ -6,8 +6,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import unquote
 
+from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileTypes, Config
 
 
@@ -35,21 +37,20 @@ class LogseqFilename:
     ns_file_sep: str = ""
 
     __slots__ = (
+        "_is_namespace",
+        "date",
         "file_path",
-        "name",
         "file_type",
-        "is_hls",
-        "is_namespace",
+        "name",
         "ns_info",
     )
 
-    def __init__(self, file_path: Path) -> None:
+    def __init__(self, file_path: Path, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqFilename class."""
+        self.date: DateUtilities = date_utilities
         self.file_path: Path = file_path
-        self.name: str = file_path.stem
         self.file_type: str = ""
-        self.is_hls: bool = False
-        self.is_namespace: bool = False
+        self.name: str = file_path.stem
         self.ns_info: NamespaceInfo = NamespaceInfo()
 
     def __repr__(self) -> str:
@@ -108,8 +109,6 @@ class LogseqFilename:
         """Process the filename based on its parent directory."""
         self.determine_file_type()
         self.process_logseq_filename()
-        self.check_is_hls()
-        self.check_is_namespace()
         if self.is_namespace:
             self.get_namespace_name_data()
 
@@ -123,13 +122,23 @@ class LogseqFilename:
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
-    def check_is_hls(self) -> None:
+    @property
+    def is_hls(self) -> bool:
         """Check if the filename is a HLS."""
-        self.is_hls = self.name.startswith(Core.HLS_PREFIX.value)
+        return self.name.startswith(Core.HLS_PREFIX.value)
 
-    def check_is_namespace(self) -> None:
+    @property
+    def is_namespace(self) -> bool:
         """Check if the filename is a namespace."""
-        self.is_namespace = Core.NS_SEP.value in self.name
+        self._is_namespace = Core.NS_SEP.value in self.name
+        return self._is_namespace
+
+    @is_namespace.setter
+    def is_namespace(self, value: Any) -> None:
+        """Set the is_namespace property."""
+        if not isinstance(value, bool):
+            raise ValueError("is_namespace must be a boolean value.")
+        self._is_namespace = value
 
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
@@ -170,32 +179,20 @@ class LogseqFilename:
                 result = FileTypes.SUB_WHITEBOARD.value
             self.file_type = result
 
-    @classmethod
-    def process_logseq_journal_key(cls, name: str) -> str:
+    def process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
-            file_format = cls.journal_file_format
-            page_format = cls.journal_page_format
-            gc_config = cls.gc_config
+            file_format = LogseqFilename.journal_file_format
+            page_format = LogseqFilename.journal_page_format
+            gc_config = LogseqFilename.gc_config
             date_object = datetime.strptime(name, file_format)
-            page_title_base = date_object.strftime(page_format)
+            page_title = date_object.strftime(page_format)
             if Core.DATE_ORDINAL_SUFFIX.value in gc_config.get(":journal/page-title-format"):
-                day_number = date_object.day
-                day_with_ordinal = LogseqFilename.add_ordinal_suffix_to_day_of_month(day_number)
-                page_title = page_title_base.replace(str(day_number), day_with_ordinal, 1)
-            else:
-                page_title = page_title_base
+                day_number = str(date_object.day)
+                day_with_ordinal = self.date.add_ordinal_suffix_to_day_of_month(day_number)
+                page_title = page_title.replace(day_number, day_with_ordinal, 1)
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
             logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
             return ""
-
-    @staticmethod
-    def add_ordinal_suffix_to_day_of_month(day) -> str:
-        """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-        if 11 <= day <= 13:
-            suffix = "th"
-        else:
-            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
-        return str(day) + suffix
