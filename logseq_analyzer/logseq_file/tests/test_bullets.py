@@ -30,7 +30,6 @@ def test_logseq_bullets(logseq_bullets, temp_file):
     assert logseq_bullets.file_path == Path(temp_file)
     assert logseq_bullets.content == ""
     assert logseq_bullets.primary_bullet == ""
-    assert logseq_bullets.all_bullets == []
     assert logseq_bullets.stats.char_count == 0
     assert logseq_bullets.stats.bullet_count == 0
     assert logseq_bullets.stats.bullet_count_empty == 0

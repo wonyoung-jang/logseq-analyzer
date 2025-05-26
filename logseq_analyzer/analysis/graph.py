@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..config.builtin_properties import get_not_builtin_properties
+from ..config.builtin_properties import get_user_properties
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes
 from ..utils.helpers import singleton, sort_dict_by_value, yield_attrs
@@ -150,7 +150,7 @@ class LogseqGraph:
         all_refs = linked_refs.union(linked_refs_ns)
         all_refs.difference_update(all_file_names)
         all_refs.difference_update(unique_aliases)
-        return sorted(get_not_builtin_properties(all_refs))
+        return sorted(get_user_properties(all_refs))
 
     @staticmethod
     def set_ns_data(file: LogseqFile) -> None:

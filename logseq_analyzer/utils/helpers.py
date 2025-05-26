@@ -186,7 +186,6 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
             yield count, text[: match.start()].strip()
             count += 1
 
-        # Has to include the match
         start_of_content = match.end()
         next_match = next(pattern.finditer(text, start_of_content), None)
         end_of_content = next_match.start() if next_match else len(text)

@@ -14,7 +14,7 @@ import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPat
 import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 import logseq_analyzer.utils.patterns_content as ContentPatterns
-from ..config.builtin_properties import get_builtin_properties, get_not_builtin_properties
+from ..config.builtin_properties import get_builtin_properties, get_user_properties
 from ..utils.enums import Criteria, Nodes
 from ..utils.helpers import process_aliases, yield_attrs, process_pattern_hierarchy
 from .bullets import LogseqBullets
@@ -219,9 +219,9 @@ class LogseqFile:
         block_properties = set(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
         page_props_builtins = sorted(get_builtin_properties(page_properties))
-        page_props_user = sorted(get_not_builtin_properties(page_properties))
+        page_props_user = sorted(get_user_properties(page_properties))
         block_props_builtins = sorted(get_builtin_properties(block_properties))
-        block_props_user = sorted(get_not_builtin_properties(block_properties))
+        block_props_user = sorted(get_user_properties(block_properties))
         return {
             Criteria.PROP_BLOCK_BUILTIN.value: block_props_builtins,
             Criteria.PROP_BLOCK_USER.value: block_props_user,

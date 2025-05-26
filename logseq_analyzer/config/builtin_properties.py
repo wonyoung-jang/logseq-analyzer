@@ -73,7 +73,7 @@ def get_builtin_properties(properties: set[str]) -> set[str]:
     return properties.intersection(BUILT_INS)
 
 
-def get_not_builtin_properties(properties: set[str]) -> set[str]:
+def get_user_properties(properties: set[str]) -> set[str]:
     """
     Helper function to get properties that are not built-in.
 
