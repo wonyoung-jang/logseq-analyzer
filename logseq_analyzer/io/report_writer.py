@@ -10,6 +10,8 @@ from typing import Any, TextIO
 
 from ..utils.enums import Format
 
+logger = logging.getLogger(__name__)
+
 
 class TextWriter:
     """A class to handle recursive writing of nested data structures to text files."""
@@ -237,7 +239,7 @@ class ReportWriter:
         count = len(data) if hasattr(data, "__len__") else None
         filename = f"{prefix}{ext}" if count else f"(EMPTY) {prefix}{ext}"
         outputpath = self.get_output_path(filename)
-        logging.info("Writing %s as %s", prefix, ext)
+        logger.info("Writing %s as %s", prefix, ext)
 
         # JSON format
         if ext == Format.JSON.value:
@@ -245,7 +247,7 @@ class ReportWriter:
                 with outputpath.open("w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4)
             except TypeError:
-                logging.error("Failed to write JSON for %s, falling back to TXT.", prefix)
+                logger.error("Failed to write JSON for %s, falling back to TXT.", prefix)
 
         # HTML format
         if ext == Format.HTML.value:
@@ -279,7 +281,7 @@ class ReportWriter:
                 self.writer.text.write_recursive(f, data)
 
         if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
-            logging.error("Unsupported output format: %s. Defaulted to text.", ext)
+            logger.error("Unsupported output format: %s. Defaulted to text.", ext)
 
     def get_output_path(self, filename: str) -> Path:
         """

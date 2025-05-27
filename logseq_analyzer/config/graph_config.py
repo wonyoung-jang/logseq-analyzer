@@ -11,6 +11,8 @@ from typing import Any, Generator
 from ..utils.enums import Output
 from ..utils.helpers import singleton
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
     "TOKEN_REGEX",
     "NUMBER_REGEX",
@@ -357,7 +359,7 @@ def init_config_edn_from_file(path: Path) -> None:
     """
     with path.open("r", encoding="utf-8") as file:
         edn_data = file.read()
-        logging.debug("Initializing config from file: %s", path)
+        logger.debug("Initializing config from file: %s", path)
     return loads(edn_data)
 
 
@@ -403,7 +405,7 @@ class LogseqGraphConfig:
         config.update(self.user_edn)
         config.update(self.global_edn)
         self.config = config
-        logging.debug("Merged config: length - %s", len(config))
+        logger.debug("Merged config: length - %s", len(config))
 
     @property
     def report(self) -> dict[str, Any]:

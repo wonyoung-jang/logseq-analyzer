@@ -11,6 +11,8 @@ from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
 from ..utils.helpers import singleton, yield_attrs
 
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     "FileIndex",
@@ -138,7 +140,7 @@ class FileIndex:
             logging.warning("Key %s not found in index.", key)
             return
         self._remove_file(target)
-        logging.debug("Key %s removed from index.", key)
+        logger.debug("Key %s removed from index.", key)
 
     def _remove_file(self, file: LogseqFile) -> None:
         """Helper method to remove a file from the index."""
@@ -149,7 +151,7 @@ class FileIndex:
             try:
                 lst.remove(file)
             except ValueError:
-                logging.warning("File %s not found in name_to_files list for name %s.", file, name)
+                logger.warning("File %s not found in name_to_files list for name %s.", file, name)
         else:
             del self._name_to_files[name]
         self._path_to_file.pop(file.file_path, None)

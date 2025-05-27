@@ -8,6 +8,8 @@ from datetime import datetime
 from os import stat_result
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class FileTimestampInfo:
@@ -73,5 +75,5 @@ class LogseqFilestats:
         try:
             return stat.st_birthtime
         except AttributeError:
-            logging.warning("st_birthtime not available for %s. Using st_ctime.", self.file_path)
+            logger.warning("st_birthtime not available for %s. Using st_ctime.", self.file_path)
             return stat.st_ctime

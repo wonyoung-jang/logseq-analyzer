@@ -13,6 +13,8 @@ from ..utils.helpers import iter_files, singleton
 if TYPE_CHECKING:
     from ..analysis.index import FileIndex
 
+logger = logging.getLogger(__name__)
+
 
 @singleton
 class Cache:
@@ -53,10 +55,10 @@ class Cache:
         """Clear the cache if needed."""
         if clear:
             self.clear()
-            logging.info("Cache cleared.")
+            logger.info("Cache cleared.")
         else:
             self.clear_deleted_files(index)
-            logging.info("Cache not cleared.")
+            logger.info("Cache not cleared.")
 
     def clear(self) -> None:
         """Clear the cache."""
@@ -81,6 +83,6 @@ class Cache:
             if last_date_mod == curr_date_mod:
                 continue
             mod_tracker[str_path] = curr_date_mod
-            logging.debug("File modified: %s", path)
+            logger.debug("File modified: %s", path)
             yield path
         self.cache[CacheKeys.MOD_TRACKER.value] = mod_tracker

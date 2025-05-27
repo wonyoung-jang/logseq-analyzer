@@ -12,6 +12,8 @@ from ..utils.enums import Moved
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
 
+logger = logging.getLogger(__name__)
+
 
 def _move_src_to_dest(moving_plan: list[tuple[Path, Path]]) -> None:
     """
@@ -24,9 +26,9 @@ def _move_src_to_dest(moving_plan: list[tuple[Path, Path]]) -> None:
     try:
         for src, dest in moving_plan:
             shutil.move(src, dest)
-            logging.warning("Moved file: %s to %s", src, dest)
+            logger.warning("Moved file: %s to %s", src, dest)
     except (shutil.Error, OSError) as e:
-        logging.error("Failed to move file: %s to %s: %s", src, dest, e)
+        logger.error("Failed to move file: %s to %s: %s", src, dest, e)
 
 
 def _yield_moved_assets(unlinked_assets: list["LogseqFile"], target_dir: Path) -> Generator[Path, None, None]:

@@ -2,11 +2,13 @@
 DateUtilities class to handle date-related operations.
 """
 
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 from typing import Any, Generator
 
 from ..utils.helpers import singleton
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "DateUtilities",
@@ -79,4 +81,4 @@ class DateUtilities:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError as e:
-                logging.warning("Invalid date format for key: %s. Error: %s", key, e)
+                logger.warning("Invalid date format for key: %s. Error: %s", key, e)

@@ -8,6 +8,8 @@ from pathlib import Path
 
 from ..utils.helpers import singleton
 
+logger = logging.getLogger(__name__)
+
 
 class File:
     """A class to represent a file in the Logseq Analyzer."""
@@ -17,7 +19,7 @@ class File:
     def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
         self.path: Path = path
-        logging.info("File initialized: %s", self.path)
+        logger.info("File initialized: %s", self.path)
 
     def __repr__(self) -> str:
         """Return a string representation of the File object."""
@@ -42,65 +44,65 @@ class File:
     def validate(self) -> None:
         """Validate the file path."""
         if not self.path.exists():
-            logging.error("File does not exist: %s", self.path)
+            logger.error("File does not exist: %s", self.path)
             raise FileNotFoundError(f"File does not exist: {self.path}")
-        logging.info("File exists: %s", self.path)
+        logger.info("File exists: %s", self.path)
 
     def get_or_create_dir(self) -> None:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
-            logging.info("Path exists: %s", self.path)
+            logger.info("Path exists: %s", self.path)
         except FileNotFoundError:
             try:
                 self.path.mkdir(parents=True, exist_ok=True)
-                logging.info("Created path: %s", self.path)
+                logger.info("Created path: %s", self.path)
             except PermissionError:
-                logging.error("Permission denied to create path: %s", self.path)
+                logger.error("Permission denied to create path: %s", self.path)
             except OSError as e:
-                logging.error("Error creating path: %s", e)
+                logger.error("Error creating path: %s", e)
 
     def get_or_create_file(self) -> None:
         """Get a path or create it if it doesn't exist."""
         try:
             self.path.resolve(strict=True)
-            logging.info("Path exists: %s", self.path)
+            logger.info("Path exists: %s", self.path)
         except FileNotFoundError:
             try:
                 self.path.touch(exist_ok=True)
-                logging.info("Created file: %s", self.path)
+                logger.info("Created file: %s", self.path)
             except PermissionError:
-                logging.error("Permission denied to create path: %s", self.path)
+                logger.error("Permission denied to create path: %s", self.path)
             except OSError as e:
-                logging.error("Error creating path: %s", e)
+                logger.error("Error creating path: %s", e)
 
     def initialize_dir(self) -> None:
         """Initialize the directory."""
         try:
             if self.path.exists():
                 shutil.rmtree(self.path)
-                logging.info("Deleted path: %s", self.path)
+                logger.info("Deleted path: %s", self.path)
         except PermissionError:
-            logging.error("Permission denied to delete path: %s", self.path)
+            logger.error("Permission denied to delete path: %s", self.path)
         except OSError as e:
-            logging.error("Error deleting path: %s", e)
+            logger.error("Error deleting path: %s", e)
         finally:
             self.get_or_create_dir()
-            logging.info("Created path: %s", self.path)
+            logger.info("Created path: %s", self.path)
 
     def initialize_file(self) -> None:
         """Initialize the file or directory."""
         try:
             if self.path.exists():
                 self.path.unlink()
-                logging.info("Deleted path: %s", self.path)
+                logger.info("Deleted path: %s", self.path)
         except PermissionError:
-            logging.error("Permission denied to delete path: %s", self.path)
+            logger.error("Permission denied to delete path: %s", self.path)
         except OSError as e:
-            logging.error("Error deleting path: %s", e)
+            logger.error("Error deleting path: %s", e)
         finally:
             self.get_or_create_file()
-            logging.info("Created path: %s", self.path)
+            logger.info("Created path: %s", self.path)
 
 
 @singleton

@@ -13,6 +13,8 @@ from typing import Any, Generator, Type, TypeVar
 
 from ..utils.enums import Format
 
+logger = logging.getLogger(__name__)
+
 _T = TypeVar("_T")
 
 __all__ = [
@@ -37,11 +39,11 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
         if root.name in target_dirs or root.parent.name in target_dirs:
             for file in files:
                 if Path(file).suffix == Format.ORG.value:
-                    logging.info("Skipping org-mode file %s in %s", file, root)
+                    logger.info("Skipping org-mode file %s in %s", file, root)
                     continue
                 yield root / file
         else:
-            logging.info("Skipping directory %s outside target directories", root)
+            logger.info("Skipping directory %s outside target directories", root)
             dirs.clear()
 
 

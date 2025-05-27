@@ -9,6 +9,8 @@ from pathlib import Path
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..utils.helpers import iter_pattern_split
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class BulletStats:
@@ -62,7 +64,7 @@ class LogseqBullets:
         try:
             self.content = self.file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logging.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
+            logger.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
 
     def get_char_count(self) -> None:
         """Get the character count of the content."""

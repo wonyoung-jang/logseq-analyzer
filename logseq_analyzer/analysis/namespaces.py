@@ -26,6 +26,8 @@ from ..utils.helpers import singleton, sort_dict_by_value
 if TYPE_CHECKING:
     from .index import FileIndex
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class NamespaceConflicts:
@@ -122,7 +124,7 @@ class LogseqNamespaces:
             for query in file.data.get("namespace_queries", []):
                 page_refs = page_ref_pattern.findall(query)
                 if len(page_refs) != 1:
-                    logging.warning("Invalid references found in query: %s", query)
+                    logger.warning("Invalid references found in query: %s", query)
                     continue
 
                 page_ref = page_refs[0]

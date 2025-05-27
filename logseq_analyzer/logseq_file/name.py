@@ -12,6 +12,8 @@ from urllib.parse import unquote
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileTypes, Config
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class NamespaceInfo:
@@ -194,5 +196,5 @@ class LogseqFilename:
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
-            logging.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
+            logger.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
             return ""
