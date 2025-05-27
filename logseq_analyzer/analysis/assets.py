@@ -139,16 +139,12 @@ class LogseqAssetsHls:
 
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
-        asset_names = self.asset_names
-        formatted_bullets = self.formatted_bullets
-        self.backlinked = asset_names.intersection(formatted_bullets)
-        self.not_backlinked = asset_names.difference(formatted_bullets)
-        self.update_sub_asset_files()
+        self.backlinked = self.asset_names.intersection(self.formatted_bullets)
+        self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
+        self.update_sub_asset_files(self.backlinked, self.not_backlinked)
 
-    def update_sub_asset_files(self) -> None:
+    def update_sub_asset_files(self, backlinked: set[str], not_backlinked: set[str]) -> None:
         """Update the asset files with backlink status and file type."""
-        backlinked = self.backlinked
-        not_backlinked = self.not_backlinked
         asset_mapping = self.asset_mapping
         for name in backlinked:
             asset_mapping[name].node.is_backlinked = True

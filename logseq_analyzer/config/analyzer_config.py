@@ -59,16 +59,18 @@ class LogseqAnalyzerConfig:
         edn_pages_dir = graph_config.get(":pages-directory", "pages")
         edn_journals_dir = graph_config.get(":journals-directory", "journals")
         edn_whiteboards_dir = graph_config.get(":whiteboards-directory", "whiteboards")
-        ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
         self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, edn_pages_dir)
         self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, edn_journals_dir)
         self.set_value("LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, edn_whiteboards_dir)
+
+        ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
         self.set_value("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
 
-        if ns_format == Core.NS_CONFIG_LEGACY.value:
-            self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_LEGACY.value)
-        elif ns_format == Core.NS_CONFIG_TRIPLE_LOWBAR.value:
-            self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+        ns_file_sep = {
+            Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
+            Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
+        }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+        self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", ns_file_sep)
 
     def set_logseq_target_dirs(self) -> None:
         """Get the target directories based on the configuration data."""

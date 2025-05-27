@@ -21,11 +21,11 @@ def test_singleton_instance(graph_config):
 
 def test_merge(graph_config):
     """Test the merging of user and global config."""
-    graph_config._config_user = {":key1": "value1"}
-    graph_config._config_global = {":key2": "value2"}
+    graph_config.user_edn = {":key1": "value1"}
+    graph_config.global_edn = {":key2": "value2"}
     graph_config.merge()
     assert (
-        graph_config.config_merged[":key1"] == "value1" and graph_config.config_merged[":key2"] == "value2"
+        graph_config.config[":key1"] == "value1" and graph_config.config[":key2"] == "value2"
     ), "Merged config should contain both user and global data."
 
 

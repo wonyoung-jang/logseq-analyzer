@@ -354,49 +354,62 @@ class LogseqGraphConfig:
     A class to LogseqGraphConfig.
     """
 
-    __slots__ = ("config_merged", "_config_user", "_config_global")
+    __slots__ = ("config", "_user_edn", "_global_edn")
 
     def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
-        self.config_merged: dict[str, Any] = {}
-        self._config_user: dict[str, Any] = {}
-        self._config_global: dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
 
-    def initialize_user_config_edn(self, cf_path: Path) -> None:
+    @property
+    def user_edn(self) -> dict[str, Any]:
+        """Return the user configuration."""
+        return self._user_edn
+
+    @user_edn.setter
+    def user_edn(self, value: Any) -> None:
+        """Set the user configuration."""
+        if not isinstance(value, dict):
+            raise ValueError("User config must be a dictionary.")
+        self._user_edn = value
+
+    @property
+    def global_edn(self) -> dict[str, Any]:
+        """Return the global configuration."""
+        return self._global_edn
+
+    @global_edn.setter
+    def global_edn(self, value: Any) -> None:
+        """Set the global configuration."""
+        if not isinstance(value, dict):
+            raise ValueError("Global config must be a dictionary.")
+        self._global_edn = value
+
+    @staticmethod
+    def init_config_edn_from_file(path: Path) -> None:
         """
-        Extract user config.
+        Initialize the LogseqGraphConfig from a file.
 
         Args:
-            cf_path (Path): The path to the config file.
+            path (Path): The path to the config file.
         """
-        with cf_path.open("r", encoding="utf-8") as user_config:
-            self._config_user = loads(user_config.read())
-            logging.debug("Initialized user config: %s", user_config)
-
-    def initialize_global_config_edn(self, gcf_path: Path) -> None:
-        """
-        Extract global config.
-
-        Args:
-            gcf_path (Path): The path to the global config file.
-        """
-        with gcf_path.open("r", encoding="utf-8") as global_config:
-            self._config_global = loads(global_config.read())
-            logging.debug("Initialized global config: %s", global_config)
+        with path.open("r", encoding="utf-8") as file:
+            edn_data = file.read()
+            logging.debug("Initializing config from file: %s", path)
+        return loads(edn_data)
 
     def merge(self) -> None:
         """Merge default, user, and global config."""
         config = DEFAULT_LOGSEQ_CONFIG_EDN
-        config.update(self._config_user)
-        config.update(self._config_global)
-        self.config_merged = config
+        config.update(self.user_edn)
+        config.update(self.global_edn)
+        self.config = config
         logging.debug("Merged config: length - %s", len(config))
 
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the merged configuration."""
         return {
-            Output.CONFIG_MERGED.value: self.config_merged,
-            Output.CONFIG_USER.value: self._config_user,
-            Output.CONFIG_GLOBAL.value: self._config_global,
+            Output.CONFIG_MERGED.value: self.config,
+            Output.CONFIG_USER.value: self.user_edn,
+            Output.CONFIG_GLOBAL.value: self.global_edn,
         }

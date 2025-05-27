@@ -150,11 +150,11 @@ def setup_logseq_graph_config(a: Args, lac: LogseqAnalyzerConfig) -> LogseqGraph
     lgc = LogseqGraphConfig()
     config_path = lac["ANALYZER"]["USER_CONFIG_FILE"]
     cf = ConfigFile(config_path)
-    lgc.initialize_user_config_edn(cf.path)
+    lgc.user_edn = LogseqGraphConfig.init_config_edn_from_file(cf.path)
     if a.global_config:
         global_config_path = lac["ANALYZER"]["GLOBAL_CONFIG_FILE"]
         gcf = GlobalConfigFile(global_config_path)
-        lgc.initialize_global_config_edn(gcf.path)
+        lgc.global_edn = LogseqGraphConfig.init_config_edn_from_file(gcf.path)
     lgc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
     return lgc
@@ -310,7 +310,7 @@ def init_configs(args: Args) -> Configurations:
     analyzer_config = setup_logseq_analyzer_config(args)
     setup_logseq_paths(analyzer_config)
     graph_config = setup_logseq_graph_config(args, analyzer_config)
-    gc_config_merged = graph_config.config_merged
+    gc_config_merged = graph_config.config
     setup_target_dirs(analyzer_config, gc_config_merged)
     journal_formats = setup_datetime_tokens(gc_config_merged)
     return Configurations(analyzer=analyzer_config, graph=graph_config, journal_formats=journal_formats)
@@ -323,7 +323,7 @@ def perform_core_analysis(
     configs: Configurations,
 ) -> tuple[tuple[str, Any], ...]:
     """Perform core analysis on the Logseq graph."""
-    setup_logseq_filename_class(configs.analyzer, configs.graph.config_merged, configs.journal_formats)
+    setup_logseq_filename_class(configs.analyzer, configs.graph.config, configs.journal_formats)
     graph = setup_logseq_graph(index, cache, configs.analyzer.target_dirs)
     summary_files = setup_logseq_file_summarizer(index)
     summary_content = setup_logseq_content_summarizer(index)
