@@ -10,7 +10,10 @@ from ..utils.helpers import singleton
 
 __all__ = [
     "DateUtilities",
+    "DATE_ORDINAL_SUFFIXES",
 ]
+
+DATE_ORDINAL_SUFFIXES: tuple[str] = ("st", "nd", "rd", "th")
 
 
 @singleton
@@ -31,7 +34,7 @@ class DateUtilities:
             "months": None,
             "years": None,
         }
-        if not (delta := date_stats["last_date"] - date_stats["first_date"]):
+        if not (delta := date_stats["last"] - date_stats["first"]):
             return date_range
         days = delta.days + 1
         date_range["days"] = days
@@ -44,8 +47,8 @@ class DateUtilities:
     def stats(timeline: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
         date_stats = {
-            "first_date": datetime.min,
-            "last_date": datetime.min,
+            "first": datetime.min,
+            "last": datetime.min,
             "days": 0,
             "weeks": 0,
             "months": 0,
@@ -54,8 +57,8 @@ class DateUtilities:
         if not timeline:
             return date_stats
 
-        date_stats["first_date"] = min(timeline)
-        date_stats["last_date"] = max(timeline)
+        date_stats["first"] = min(timeline)
+        date_stats["last"] = max(timeline)
         date_stats.update(DateUtilities.range(date_stats))
         return date_stats
 
@@ -72,7 +75,7 @@ class DateUtilities:
         """Convert journal keys from strings to datetime objects."""
         for key in keys:
             try:
-                for ordinal in ("st", "nd", "rd", "th"):
+                for ordinal in DATE_ORDINAL_SUFFIXES:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError as e:

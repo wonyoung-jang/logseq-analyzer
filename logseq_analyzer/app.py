@@ -286,7 +286,7 @@ def setup_logseq_file_mover(args: Args, unlinked_assets: list[LogseqFile]) -> di
     moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd, bd)
     moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd, rd)
     logging.debug("run_app: setup_logseq_file_mover")
-    return moved_files
+    return {Output.MOVED_FILES.value: moved_files}
 
 
 def update_cache(cache: Cache, index: FileIndex) -> None:
@@ -341,7 +341,7 @@ def perform_core_analysis(
         (OutputDir.META.value, index.get_graph_content(args.write_graph)),
         (OutputDir.JOURNALS.value, journals.report),
         (OutputDir.NAMESPACES.value, namespaces.report),
-        (OutputDir.MOVED_FILES.value, {Output.MOVED_FILES.value: moved_files}),
+        (OutputDir.MOVED_FILES.value, moved_files),
         (OutputDir.MOVED_FILES.value, ls_assets.report),
         (OutputDir.MOVED_FILES.value, hls_assets.report),
         (OutputDir.SUMMARY_FILES.value, summary_files.report),

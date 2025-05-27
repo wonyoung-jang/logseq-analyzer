@@ -20,10 +20,22 @@ def lambda_optionxform(option: str) -> str:
 class LogseqAnalyzerConfig:
     """A class to handle configuration file loading and management."""
 
-    __slots__ = ("config", "target_dirs")
+    __slots__ = ("config", "config_path", "target_dirs")
 
     def __init__(self, config_path: Path = None) -> None:
         """Initialize the LogseqAnalyzerConfig class."""
+        self.config_path: Path = config_path
+        self.config: configparser.ConfigParser = self.initialize_configparser()
+        self.target_dirs: set[str] = set()
+
+    def __getitem__(self, section: str) -> dict[str, str]:
+        """Get a section from the config file as a dictionary."""
+        if section not in self.config:
+            return {}
+        return dict(self.config[section])
+
+    def initialize_configparser(self) -> configparser.ConfigParser:
+        """Initialize a ConfigParser with custom settings."""
         config = configparser.ConfigParser(
             allow_no_value=True,
             inline_comment_prefixes=("#", ";"),
@@ -33,15 +45,8 @@ class LogseqAnalyzerConfig:
             allow_unnamed_section=True,
         )
         config.optionxform = lambda_optionxform
-        config.read(config_path)
-        self.config: configparser.ConfigParser = config
-        self.target_dirs: set[str] = set()
-
-    def __getitem__(self, section: str) -> dict[str, str]:
-        """Get a section from the config file as a dictionary."""
-        if section not in self.config:
-            return {}
-        return dict(self.config[section])
+        config.read(self.config_path)
+        return config
 
     def set_value(self, section, key, value) -> None:
         """set a value in the config file"""

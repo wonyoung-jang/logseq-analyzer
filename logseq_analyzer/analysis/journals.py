@@ -97,9 +97,9 @@ class LogseqJournals:
         timeline_stats = self.timeline_stats["complete_timeline"]
         dangling = self.dangling
         for link in dangling_journals:
-            if link < timeline_stats["first_date"]:
+            if link < timeline_stats["first"]:
                 dangling["past"].append(link)
-            elif link > timeline_stats["last_date"]:
+            elif link > timeline_stats["last"]:
                 dangling["future"].append(link)
 
     @property
