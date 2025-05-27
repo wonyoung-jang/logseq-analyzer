@@ -60,14 +60,15 @@ class LogseqNamespaces:
     """
 
     __slots__ = (
-        "_part_levels",
         "_part_entries",
-        "queries",
+        "_part_levels",
         "conflicts",
+        "index",
+        "queries",
         "structure",
     )
 
-    def __init__(self) -> None:
+    def __init__(self, index: "FileIndex") -> None:
         """
         Initialize the LogseqNamespaces instance.
         """
@@ -76,6 +77,7 @@ class LogseqNamespaces:
         self.queries: dict[str, dict[str, Any]] = {}
         self.conflicts: NamespaceConflicts = NamespaceConflicts()
         self.structure: NamespaceStructure = NamespaceStructure()
+        self.index: FileIndex = index
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""
@@ -85,7 +87,7 @@ class LogseqNamespaces:
         """Return a string representation of the LogseqNamespaces instance."""
         return f"{self.__class__.__name__}"
 
-    def init_ns_parts(self, index: "FileIndex") -> None:
+    def init_ns_parts(self) -> None:
         """
         Create namespace parts from the data.
         """
@@ -96,6 +98,7 @@ class LogseqNamespaces:
         unique_namespaces_per_level = self.structure.unique_ns_per_level
         _part_levels = self._part_levels
         _part_entries = self._part_entries
+        index = self.index
         for file in index:
             if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
                 continue
@@ -115,11 +118,12 @@ class LogseqNamespaces:
         self.structure.details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.structure.details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, index: "FileIndex") -> None:
+    def analyze_ns_queries(self) -> None:
         """Analyze namespace queries."""
         page_ref_pattern = ContentPatterns.PAGE_REFERENCE
         ns_queries = {}
         namespace_data = self.structure.data
+        index = self.index
         for file in index:
             for query in file.data.get("namespace_queries", []):
                 page_refs = page_ref_pattern.findall(query)
@@ -136,9 +140,10 @@ class LogseqNamespaces:
                 ns_queries[query]["logseq_url"] = file.path.logseq_url
         self.queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
 
-    def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
+    def detect_non_ns_conflicts(self, dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         non_ns_names = []
+        index = self.index
         for file in index:
             if not file.path.ns_info or file.path.is_namespace:
                 continue

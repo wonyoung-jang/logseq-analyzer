@@ -374,6 +374,8 @@ class LogseqGraphConfig:
     def __init__(self) -> None:
         """Initialize the LogseqGraphConfig class."""
         self.config: dict[str, Any] = {}
+        self.user_edn = {}
+        self.global_edn = {}
 
     @property
     def user_edn(self) -> dict[str, Any]:
