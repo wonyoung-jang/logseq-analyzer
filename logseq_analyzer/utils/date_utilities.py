@@ -63,7 +63,7 @@ class DateUtilities:
         return date_stats
 
     @staticmethod
-    def add_ordinal_suffix_to_day_of_month(day: str) -> str:
+    def append_ordinal_to_day(day: str) -> str:
         """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
         day_number = int(day)
         if 11 <= day_number <= 13:

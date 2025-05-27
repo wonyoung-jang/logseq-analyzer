@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import logseq_analyzer.utils.patterns_content as ContentPatterns
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -18,7 +17,7 @@ from .analysis.summary_files import LogseqFileSummarizer
 from .config.analyzer_config import LogseqAnalyzerConfig
 from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
-from .config.graph_config import LogseqGraphConfig
+from .config.graph_config import LogseqGraphConfig, init_config_edn_from_file
 from .io.cache import Cache
 from .io.file_mover import handle_move_directory, handle_move_assets
 from .io.filesystem import (
@@ -77,14 +76,7 @@ class Configurations:
 
     analyzer: LogseqAnalyzerConfig
     graph: LogseqGraphConfig
-    journal_formats: LogseqJournalFormats
-
-
-def setup_logseq_arguments(**kwargs) -> Args:
-    """Setup Logseq arguments from keyword arguments."""
-    a = Args()
-    a.setup_args(**kwargs)
-    return a
+    journal: LogseqJournalFormats
 
 
 def init_logseq_paths() -> None:
@@ -106,6 +98,16 @@ def setup_logging(log_file: Path) -> None:
     )
     logging.info("Logseq Analyzer started.")
     logging.debug("Logging initialized to %s", log_file)
+
+
+def init_configs(args: Args) -> Configurations:
+    """Initialize configurations for the Logseq analyzer."""
+    ac = setup_logseq_analyzer_config(args)
+    setup_logseq_paths(ac)
+    gc = setup_logseq_graph_config(args, ac)
+    setup_target_dirs(ac, gc)
+    jf = setup_datetime_tokens(gc)
+    return Configurations(analyzer=ac, graph=gc, journal=jf)
 
 
 def setup_logseq_analyzer_config(a: Args) -> LogseqAnalyzerConfig:
@@ -150,19 +152,19 @@ def setup_logseq_graph_config(a: Args, lac: LogseqAnalyzerConfig) -> LogseqGraph
     lgc = LogseqGraphConfig()
     config_path = lac["ANALYZER"]["USER_CONFIG_FILE"]
     cf = ConfigFile(config_path)
-    lgc.user_edn = LogseqGraphConfig.init_config_edn_from_file(cf.path)
+    lgc.user_edn = init_config_edn_from_file(cf.path)
     if a.global_config:
         global_config_path = lac["ANALYZER"]["GLOBAL_CONFIG_FILE"]
         gcf = GlobalConfigFile(global_config_path)
-        lgc.global_edn = LogseqGraphConfig.init_config_edn_from_file(gcf.path)
+        lgc.global_edn = init_config_edn_from_file(gcf.path)
     lgc.merge()
     logging.debug("run_app: setup_logseq_graph_config")
     return lgc
 
 
-def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None:
+def setup_target_dirs(lac: LogseqAnalyzerConfig, gc: LogseqGraphConfig) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    lac.set_logseq_config_edn_data(config)
+    lac.set_logseq_config_edn_data(gc.config)
     dir_assets = lac["TARGET_DIRS"][Config.DIR_ASSETS.value]
     dir_draws = lac["TARGET_DIRS"][Config.DIR_DRAWS.value]
     dir_journals = lac["TARGET_DIRS"][Config.DIR_JOURNALS.value]
@@ -177,12 +179,12 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, config: dict[str, str]) -> None
     logging.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(config: dict[str, str]) -> LogseqJournalFormats:
+def setup_datetime_tokens(gc: LogseqGraphConfig) -> LogseqJournalFormats:
     """Setup datetime tokens."""
     ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
     ldtt.set_datetime_token_pattern()
-    ldtt.set_journal_py_formatting(config, ljf)
+    ldtt.set_journal_py_formatting(gc.config, ljf)
     del ldtt
     logging.debug("run_app: setup_datetime_tokens")
     return ljf
@@ -198,27 +200,71 @@ def setup_cache(a: Args) -> tuple[Cache, FileIndex]:
     return c, index
 
 
-def setup_logseq_filename_class(
-    lac: LogseqAnalyzerConfig, gc_config: dict[str, str], ljf: LogseqJournalFormats
-) -> LogseqFile:
+def perform_core_analysis(
+    args: Args,
+    index: FileIndex,
+    cache: Cache,
+    configs: Configurations,
+) -> tuple[tuple[str, Any], ...]:
+    """Perform core analysis on the Logseq graph."""
+    setup_logseq_filename_class(configs)
+    process_graph_files(index, cache, configs)
+    graph = setup_logseq_graph(index)
+    summary_files = setup_logseq_file_summarizer(index)
+    summary_content = setup_logseq_content_summarizer(index)
+    namespaces = setup_logseq_namespaces(graph, index)
+    journals = setup_logseq_journals(graph, index, configs)
+    hls_assets = setup_logseq_hls_assets(index)
+    ls_assets = setup_logseq_assets(index)
+    moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
+    data_reports = (
+        (OutputDir.META.value, args.report),
+        (OutputDir.META.value, graph.report),
+        (OutputDir.META.value, configs.analyzer.report),
+        (OutputDir.META.value, configs.graph.report),
+        (OutputDir.META.value, index.report),
+        (OutputDir.META.value, index.get_graph_content(args.write_graph)),
+        (OutputDir.JOURNALS.value, journals.report),
+        (OutputDir.NAMESPACES.value, namespaces.report),
+        (OutputDir.MOVED_FILES.value, moved_files),
+        (OutputDir.MOVED_FILES.value, ls_assets.report),
+        (OutputDir.MOVED_FILES.value, hls_assets.report),
+        (OutputDir.SUMMARY_FILES.value, summary_files.report),
+        (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
+    )
+    return data_reports
+
+
+def setup_logseq_filename_class(c: Configurations) -> LogseqFile:
     """Setup the Logseq file class."""
-    LogseqFilename.gc_config = gc_config
+    LogseqFilename.gc_config = c.graph.config
     LogseqFilename.graph_path = GraphDirectory().path
-    LogseqFilename.journal_file_format = ljf.file
-    LogseqFilename.journal_page_format = ljf.page
-    LogseqFilename.lac_ls_config = lac["LOGSEQ_CONFIG"]
-    LogseqFilename.ns_file_sep = lac["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+    LogseqFilename.journal_file_format = c.journal.file
+    LogseqFilename.journal_page_format = c.journal.page
+    LogseqFilename.lac_ls_config = c.analyzer["LOGSEQ_CONFIG"]
+    LogseqFilename.ns_file_sep = c.analyzer["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
     logging.debug("run_app: setup_logseq_filename_class")
 
 
-def setup_logseq_graph(index: FileIndex, cache: Cache, target_dirs: set[str]) -> LogseqGraph:
+def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
     """Setup the Logseq graph."""
     lg = LogseqGraph()
-    lg.process_graph_files(index, cache, GraphDirectory().path, target_dirs)
     lg.post_processing_content(index)
     lg.process_summary_data(index)
     logging.debug("run_app: setup_logseq_graph")
     return lg
+
+
+def process_graph_files(index: FileIndex, cache: Cache, configs: Configurations) -> None:
+    """Process all files in the Logseq graph folder."""
+    graph_dir = GraphDirectory().path
+    target_dirs = configs.analyzer.target_dirs
+    for file_path in cache.iter_modified_files(graph_dir, target_dirs):
+        file = LogseqFile(file_path)
+        file.init_file_data()
+        if file.stat.has_content:
+            file.process_content_data()
+        index.add(file)
 
 
 def setup_logseq_file_summarizer(index: FileIndex) -> LogseqFileSummarizer:
@@ -231,8 +277,8 @@ def setup_logseq_file_summarizer(index: FileIndex) -> LogseqFileSummarizer:
 
 def setup_logseq_content_summarizer(index: FileIndex) -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
-    lcs = LogseqContentSummarizer()
-    lcs.generate_summary(index)
+    lcs = LogseqContentSummarizer(index)
+    lcs.generate_summary()
     logging.debug("run_app: setup_logseq_content_summarizer")
     return lcs
 
@@ -241,17 +287,17 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
     ln.init_ns_parts(index)
-    ln.analyze_ns_queries(index, ContentPatterns.PAGE_REFERENCE)
+    ln.analyze_ns_queries(index)
     ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
     logging.debug("run_app: setup_logseq_namespaces")
     return ln
 
 
-def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, ljf: LogseqJournalFormats) -> LogseqJournals:
+def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, c: Configurations) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process_journals_timelines(index, graph.dangling_links, ljf.page)
+    lj.process_journals_timelines(index, graph.dangling_links, c.journal.page)
     logging.debug("run_app: setup_logseq_journals")
     return lj
 
@@ -260,7 +306,7 @@ def setup_logseq_hls_assets(index: FileIndex) -> LogseqAssetsHls:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
     lah.get_asset_files(index)
-    lah.convert_names_to_data(index, ContentPatterns.PROPERTY_VALUE)
+    lah.convert_names_to_data(index)
     lah.check_backlinks()
     logging.debug("run_app: setup_logseq_hls_assets")
     return lah
@@ -289,12 +335,6 @@ def setup_logseq_file_mover(args: Args, unlinked_assets: list[LogseqFile]) -> di
     return {Output.MOVED_FILES.value: moved_files}
 
 
-def update_cache(cache: Cache, index: FileIndex) -> None:
-    """Update the cache with the current index."""
-    cache.cache[CacheKeys.INDEX.value] = index
-    logging.debug("run_app: update_cache")
-
-
 def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path: Path) -> None:
     """Write reports to the specified output directories."""
     ReportWriter.ext = report_format
@@ -303,51 +343,6 @@ def write_reports(data_reports: tuple[Any], report_format: str, output_dir_path:
         for prefix, data in reports.items():
             ReportWriter(prefix, data, subdir).write()
     logging.debug("run_app: write_reports")
-
-
-def init_configs(args: Args) -> Configurations:
-    """Initialize configurations for the Logseq analyzer."""
-    analyzer_config = setup_logseq_analyzer_config(args)
-    setup_logseq_paths(analyzer_config)
-    graph_config = setup_logseq_graph_config(args, analyzer_config)
-    gc_config_merged = graph_config.config
-    setup_target_dirs(analyzer_config, gc_config_merged)
-    journal_formats = setup_datetime_tokens(gc_config_merged)
-    return Configurations(analyzer=analyzer_config, graph=graph_config, journal_formats=journal_formats)
-
-
-def perform_core_analysis(
-    args: Args,
-    index: FileIndex,
-    cache: Cache,
-    configs: Configurations,
-) -> tuple[tuple[str, Any], ...]:
-    """Perform core analysis on the Logseq graph."""
-    setup_logseq_filename_class(configs.analyzer, configs.graph.config, configs.journal_formats)
-    graph = setup_logseq_graph(index, cache, configs.analyzer.target_dirs)
-    summary_files = setup_logseq_file_summarizer(index)
-    summary_content = setup_logseq_content_summarizer(index)
-    namespaces = setup_logseq_namespaces(graph, index)
-    journals = setup_logseq_journals(graph, index, configs.journal_formats)
-    hls_assets = setup_logseq_hls_assets(index)
-    ls_assets = setup_logseq_assets(index)
-    moved_files = setup_logseq_file_mover(args, ls_assets.not_backlinked)
-    data_reports = (
-        (OutputDir.META.value, args.report),
-        (OutputDir.META.value, graph.report),
-        (OutputDir.META.value, configs.analyzer.report),
-        (OutputDir.META.value, configs.graph.report),
-        (OutputDir.META.value, index.report),
-        (OutputDir.META.value, index.get_graph_content(args.write_graph)),
-        (OutputDir.JOURNALS.value, journals.report),
-        (OutputDir.NAMESPACES.value, namespaces.report),
-        (OutputDir.MOVED_FILES.value, moved_files),
-        (OutputDir.MOVED_FILES.value, ls_assets.report),
-        (OutputDir.MOVED_FILES.value, hls_assets.report),
-        (OutputDir.SUMMARY_FILES.value, summary_files.report),
-        (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
-    )
-    return data_reports
 
 
 def finish_analysis(cache: Cache, index: FileIndex, configs: Configurations) -> None:
@@ -362,6 +357,12 @@ def finish_analysis(cache: Cache, index: FileIndex, configs: Configurations) -> 
     logging.debug("run_app: finish_analysis")
 
 
+def update_cache(c: Cache, index: FileIndex) -> None:
+    """Update the cache with the current index."""
+    c.cache[CacheKeys.INDEX.value] = index
+    logging.debug("run_app: update_cache")
+
+
 def run_app(**kwargs) -> None:
     """Main function to run the Logseq analyzer."""
     progress = kwargs.get("progress_callback", GUIInstanceDummy())
@@ -369,7 +370,7 @@ def run_app(**kwargs) -> None:
         progress = progress.update_progress
 
     progress(10, "Starting Logseq Analyzer...")
-    args = setup_logseq_arguments(**kwargs)
+    args = Args(**kwargs)
 
     progress(20, "Initializing Logseq Analyzer paths and configurations...")
     init_logseq_paths()

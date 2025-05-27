@@ -20,13 +20,13 @@ def reset_singleton():
 @pytest.fixture
 def args_instance():
     """Fixture for LogseqAnalyzerArguments instance."""
-    return Args()
+    return Args(graph_folder="")
 
 
 def test_singleton_instance(args_instance):
     """Test that LogseqAnalyzerArguments is a singleton."""
-    instance1 = Args()
-    instance2 = Args()
+    instance1 = Args(graph_folder="")
+    instance2 = Args(graph_folder="")
     assert instance1 is instance2
     assert instance1 is args_instance
 

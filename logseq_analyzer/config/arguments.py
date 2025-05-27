@@ -28,7 +28,7 @@ class Args:
         "write_graph",
     )
 
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initialize the Args class with default values."""
         self.global_config: str = ""
         self.graph_cache: bool = False
@@ -39,6 +39,7 @@ class Args:
         self.move_unlinked_assets: bool = False
         self.report_format: str = ".txt"
         self.write_graph: bool = False
+        self.setup_args(**kwargs)
 
     def setup_args(self, **kwargs) -> None:
         """Set up command line arguments and GUI arguments."""

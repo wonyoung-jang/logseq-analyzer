@@ -189,7 +189,7 @@ class LogseqFilename:
             page_title = date_object.strftime(page_format)
             if Core.DATE_ORDINAL_SUFFIX.value in gc_config.get(":journal/page-title-format"):
                 day_number = str(date_object.day)
-                day_with_ordinal = self.date.add_ordinal_suffix_to_day_of_month(day_number)
+                day_with_ordinal = self.date.append_ordinal_to_day(day_number)
                 page_title = page_title.replace(day_number, day_with_ordinal, 1)
             page_title = page_title.replace("'", "")
             return page_title

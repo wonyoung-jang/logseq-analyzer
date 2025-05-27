@@ -348,6 +348,19 @@ def tokenize(edn_str: str) -> Generator[str, Any, None]:
         yield tok
 
 
+def init_config_edn_from_file(path: Path) -> None:
+    """
+    Initialize the LogseqGraphConfig from a file.
+
+    Args:
+        path (Path): The path to the config file.
+    """
+    with path.open("r", encoding="utf-8") as file:
+        edn_data = file.read()
+        logging.debug("Initializing config from file: %s", path)
+    return loads(edn_data)
+
+
 @singleton
 class LogseqGraphConfig:
     """
@@ -383,19 +396,6 @@ class LogseqGraphConfig:
         if not isinstance(value, dict):
             raise ValueError("Global config must be a dictionary.")
         self._global_edn = value
-
-    @staticmethod
-    def init_config_edn_from_file(path: Path) -> None:
-        """
-        Initialize the LogseqGraphConfig from a file.
-
-        Args:
-            path (Path): The path to the config file.
-        """
-        with path.open("r", encoding="utf-8") as file:
-            edn_data = file.read()
-            logging.debug("Initializing config from file: %s", path)
-        return loads(edn_data)
 
     def merge(self) -> None:
         """Merge default, user, and global config."""

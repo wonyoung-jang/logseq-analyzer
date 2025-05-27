@@ -17,9 +17,9 @@ Problems:
 import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from re import Pattern
 from typing import Any, TYPE_CHECKING
 
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..utils.enums import Core, Output
 from ..utils.helpers import singleton, sort_dict_by_value
 
@@ -113,8 +113,9 @@ class LogseqNamespaces:
         self.structure.details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.structure.details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, index: "FileIndex", page_ref_pattern: Pattern) -> None:
+    def analyze_ns_queries(self, index: "FileIndex") -> None:
         """Analyze namespace queries."""
+        page_ref_pattern = ContentPatterns.PAGE_REFERENCE
         ns_queries = {}
         namespace_data = self.structure.data
         for file in index:

@@ -2,9 +2,9 @@
 Logseq Assets Analysis Module.
 """
 
-from re import Pattern
 from typing import TYPE_CHECKING
 
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 from ..utils.enums import Criteria, Output
 from ..utils.helpers import singleton
 
@@ -50,20 +50,12 @@ class LogseqAssets:
             for asset_file in is_assets:
                 if asset_file.node.is_backlinked:
                     continue
-                self.update_asset_backlink(file.path.name, emb_link_asset, asset_file)
-                self.update_asset_backlink(file.path.name, asset_captured, asset_file)
+                for mentions in (emb_link_asset, asset_captured):
+                    asset_file.update_asset_backlink(mentions, file.path.name)
         backlinked_criteria = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_criteria = {"is_backlinked": False, "file_type": "asset"}
         self.backlinked = sorted(index.filter_files(**backlinked_criteria))
         self.not_backlinked = sorted(index.filter_files(**not_backlinked_criteria))
-
-    @staticmethod
-    def update_asset_backlink(file_name: str, asset_mentions: list[str], asset: "LogseqFile") -> None:
-        """Update the backlink status of an asset file based on mentions in another file."""
-        for mention in asset_mentions:
-            if asset.path.name in mention or file_name in mention:
-                asset.node.is_backlinked = True
-                return
 
     @property
     def report(self) -> str:
@@ -110,8 +102,9 @@ class LogseqAssetsHls:
         self.asset_names.update(asset_mapping.keys())
         self.asset_mapping.update(asset_mapping)
 
-    def convert_names_to_data(self, index: "FileIndex", property_value_pattern: Pattern) -> None:
+    def convert_names_to_data(self, index: "FileIndex") -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
+        property_value_pattern = ContentPatterns.PROPERTY_VALUE
         hls_criteria = {"is_hls": True}
         formatted_bullets = self.formatted_bullets
         for file in index.filter_files(**hls_criteria):

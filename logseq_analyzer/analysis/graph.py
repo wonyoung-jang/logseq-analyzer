@@ -3,7 +3,6 @@ This module contains functions for processing and analyzing Logseq graph data.
 """
 
 from collections import Counter
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ..config.builtin_properties import get_user_properties
@@ -12,7 +11,6 @@ from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
-    from ..io.cache import Cache
     from .index import FileIndex
 
 
@@ -48,16 +46,6 @@ class LogseqGraph:
     def __str__(self) -> str:
         """Return a string representation of the LogseqGraph instance."""
         return f"{self.__class__.__qualname__}"
-
-    @staticmethod
-    def process_graph_files(index: "FileIndex", cache: "Cache", graph_dir: Path, target_dirs: set[str]) -> None:
-        """Process all files in the Logseq graph folder."""
-        for file_path in cache.iter_modified_files(graph_dir, target_dirs):
-            file = LogseqFile(file_path)
-            file.init_file_data()
-            if file.stat.has_content:
-                file.process_content_data()
-            index.add(file)
 
     def post_processing_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
@@ -134,12 +122,13 @@ class LogseqGraph:
         unique_linked_references = self.unique_linked_references
         unique_linked_references_ns = self.unique_linked_references_ns
         for file in index:
-            if not file.node.is_backlinked:
-                file.node.is_backlinked = file.check_is_backlinked(unique_linked_references)
-            if not file.node.is_backlinked_by_ns_only:
-                file.node.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
-                if file.node.is_backlinked and file.node.is_backlinked_by_ns_only:
-                    file.node.is_backlinked = False
+            fn = file.node
+            if not fn.is_backlinked:
+                fn.is_backlinked = file.check_is_backlinked(unique_linked_references)
+            if not fn.is_backlinked_by_ns_only:
+                fn.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
+                if fn.is_backlinked and fn.is_backlinked_by_ns_only:
+                    fn.is_backlinked = False
             if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 

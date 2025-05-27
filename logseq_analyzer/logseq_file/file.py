@@ -345,3 +345,17 @@ class LogseqFile:
         for attr, value in yield_attrs(self.path):
             if attr.startswith("ns_") or attr == "is_namespace":
                 setattr(self, attr, value)
+
+    def update_asset_backlink(self, asset_mentions: list[str], parent: str) -> None:
+        """
+        Update asset backlink status based on mentions and parent.
+
+        Args:
+            asset_mentions (list[str]): List of asset mentions.
+            parent (str): Parent file name.
+        """
+        nameset = (self.path.name, parent)
+        for asset_mention in asset_mentions:
+            if any(name in asset_mention for name in nameset):
+                self.node.is_backlinked = True
+                return
