@@ -25,8 +25,8 @@ def test_singleton(config):
 
 def test_init(config):
     """Test the initialization of LogseqAnalyzerConfig."""
+    assert config.path is not None, "Config path should be initialized."
     assert config.config is not None, "Config should be initialized."
-    assert config.target_dirs == set(), "Target directories should be empty on initialization."
 
 
 def test_lambda_optionxform():
@@ -83,31 +83,21 @@ def test_write_to_file_overwrites_existing(config, tmp_path):
 
 def test_set_logseq_config_edn_data(config):
     """Test the set_logseq_config_edn_data method."""
-    ls_config = {
-        ":pages-directory": "pages",
-        ":journals-directory": "journals",
-        ":whiteboards-directory": "whiteboards",
-        ":file/name-format": ":triple-lowbar",
+    target_dirs = {
+        "pages": "pages",
+        "journals": "journals",
+        "whiteboards": "whiteboards",
     }
-    config.set_logseq_config_edn_data(ls_config)
+    config.set_logseq_config_edn_data(target_dirs)
     assert config["LOGSEQ_CONFIG"]["DIR_PAGES"] == "pages", "DIR_PAGES should be set correctly."
     assert config["LOGSEQ_CONFIG"]["DIR_JOURNALS"] == "journals", "DIR_JOURNALS should be set correctly."
     assert config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] == "whiteboards", "DIR_WHITEBOARDS should be set correctly."
-    ls_config.update(
+    target_dirs.update(
         {
-            ":file/name-format": ":legacy",
+            "whiteboards": "different_whiteboards",
         }
     )
-    config.set_logseq_config_edn_data(ls_config)
-
-
-def test_set_logseq_target_dirs(config):
-    """Test the set_logseq_target_dirs method."""
-    config.set_value("LOGSEQ_CONFIG", "DIR_ASSETS", "assets")
-    config.set_value("LOGSEQ_CONFIG", "DIR_DRAWS", "draws")
-    config.set_value("LOGSEQ_CONFIG", "DIR_PAGES", "pages")
-    config.set_value("LOGSEQ_CONFIG", "DIR_JOURNALS", "journals")
-    config.set_value("LOGSEQ_CONFIG", "DIR_WHITEBOARDS", "whiteboards")
-    config.set_logseq_target_dirs()
-    expected_dirs = {"assets", "draws", "pages", "journals", "whiteboards"}
-    assert config.target_dirs == expected_dirs, "Target directories should be set correctly."
+    config.set_logseq_config_edn_data(target_dirs)
+    assert (
+        config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] == "different_whiteboards"
+    ), "DIR_WHITEBOARDS should be updated correctly."

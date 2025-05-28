@@ -47,11 +47,9 @@ class Config(Enum):
     """Configuration settings for the Logseq Analyzer."""
 
     DIR_ASSETS = "DIR_ASSETS"
-    DIR_BAK = "DIR_BAK"
     DIR_DRAWS = "DIR_DRAWS"
     DIR_JOURNALS = "DIR_JOURNALS"
     DIR_PAGES = "DIR_PAGES"
-    DIR_RECYCLE = "DIR_RECYCLE"
     DIR_WHITEBOARDS = "DIR_WHITEBOARDS"
 
 

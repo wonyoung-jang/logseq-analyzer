@@ -59,11 +59,9 @@ def test_cache_keys_member_count():
 def test_config_values():
     expected = {
         "DIR_ASSETS": "DIR_ASSETS",
-        "DIR_BAK": "DIR_BAK",
         "DIR_DRAWS": "DIR_DRAWS",
         "DIR_JOURNALS": "DIR_JOURNALS",
         "DIR_PAGES": "DIR_PAGES",
-        "DIR_RECYCLE": "DIR_RECYCLE",
         "DIR_WHITEBOARDS": "DIR_WHITEBOARDS",
     }
     for member_name, string_value in expected.items():
@@ -71,7 +69,7 @@ def test_config_values():
 
 
 def test_config_member_count():
-    assert len(Config) == 7
+    assert len(Config) == 5
 
 
 # Constants
