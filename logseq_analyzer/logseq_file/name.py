@@ -10,7 +10,7 @@ from typing import Any
 from urllib.parse import unquote
 
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Core, FileTypes, Config
+from ..utils.enums import Core, FileTypes
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +31,12 @@ class NamespaceInfo:
 class LogseqFilename:
     """LogseqFilename class."""
 
-    gc_config: dict = {}
     graph_path: Path = None
     journal_file_format: str = ""
     journal_page_format: str = ""
-    lac_ls_config: dict = {}
+    journal_page_title_format: str = ""
     ns_file_sep: str = ""
+    target_dirs: dict = {}
 
     __slots__ = (
         "_is_namespace",
@@ -117,9 +117,9 @@ class LogseqFilename:
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
         ns_file_sep = LogseqFilename.ns_file_sep
-        lac_ls_config = LogseqFilename.lac_ls_config
+        target_dirs = LogseqFilename.target_dirs
         name = self.name.strip(ns_file_sep)
-        if self.parent == lac_ls_config["DIR_JOURNALS"]:
+        if self.parent == target_dirs.get("journals"):
             self.name = self.process_logseq_journal_key(name)
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
@@ -156,40 +156,40 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        config = LogseqFilename.lac_ls_config
+        target_dirs = LogseqFilename.target_dirs
         result = {
-            config[Config.DIR_ASSETS.value]: FileTypes.ASSET.value,
-            config[Config.DIR_DRAWS.value]: FileTypes.DRAW.value,
-            config[Config.DIR_JOURNALS.value]: FileTypes.JOURNAL.value,
-            config[Config.DIR_PAGES.value]: FileTypes.PAGE.value,
-            config[Config.DIR_WHITEBOARDS.value]: FileTypes.WHITEBOARD.value,
+            target_dirs["assets"]: FileTypes.ASSET.value,
+            target_dirs["draws"]: FileTypes.DRAW.value,
+            target_dirs["journals"]: FileTypes.JOURNAL.value,
+            target_dirs["pages"]: FileTypes.PAGE.value,
+            target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
         }.get(self.parent, FileTypes.OTHER.value)
 
         if result != FileTypes.OTHER.value:
             self.file_type = result
         else:
             parts = self.parts
-            if config[Config.DIR_ASSETS.value] in parts:
-                result = FileTypes.SUB_ASSET.value
-            elif config[Config.DIR_DRAWS.value] in parts:
-                result = FileTypes.SUB_DRAW.value
-            elif config[Config.DIR_JOURNALS.value] in parts:
-                result = FileTypes.SUB_JOURNAL.value
-            elif config[Config.DIR_PAGES.value] in parts:
-                result = FileTypes.SUB_PAGE.value
-            elif config[Config.DIR_WHITEBOARDS.value] in parts:
-                result = FileTypes.SUB_WHITEBOARD.value
-            self.file_type = result
+            result_map = {
+                target_dirs["assets"]: FileTypes.SUB_ASSET.value,
+                target_dirs["draws"]: FileTypes.SUB_DRAW.value,
+                target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
+                target_dirs["pages"]: FileTypes.SUB_PAGE.value,
+                target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
+            }
+            for key, result in result_map.items():
+                if key in parts:
+                    self.file_type = result
+                    break
 
     def process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
             file_format = LogseqFilename.journal_file_format
             page_format = LogseqFilename.journal_page_format
-            gc_config = LogseqFilename.gc_config
+            journal_page_title_format = LogseqFilename.journal_page_title_format
             date_object = datetime.strptime(name, file_format)
             page_title = date_object.strftime(page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in gc_config.get(":journal/page-title-format"):
+            if Core.DATE_ORDINAL_SUFFIX.value in journal_page_title_format:
                 day_number = str(date_object.day)
                 day_with_ordinal = self.date.append_ordinal_to_day(day_number)
                 page_title = page_title.replace(day_number, day_with_ordinal, 1)

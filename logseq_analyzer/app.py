@@ -17,7 +17,13 @@ from .analysis.summary_files import LogseqFileSummarizer
 from .config.analyzer_config import LogseqAnalyzerConfig
 from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
-from .config.graph_config import LogseqGraphConfig, init_config_edn_from_file
+from .config.graph_config import (
+    LogseqGraphConfig,
+    get_ns_sep,
+    get_page_title_format,
+    get_target_dirs,
+    init_config_edn_from_file,
+)
 from .io.cache import Cache
 from .io.file_mover import handle_move_directory, handle_move_assets
 from .io.filesystem import (
@@ -169,7 +175,8 @@ def setup_logseq_graph_config(args: Args, lac: LogseqAnalyzerConfig) -> LogseqGr
 
 def setup_target_dirs(lac: LogseqAnalyzerConfig, gc: LogseqGraphConfig) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    lac.set_logseq_config_edn_data(gc.config)
+    target_dirs = get_target_dirs(gc.config)
+    lac.set_logseq_config_edn_data(target_dirs)
     dir_assets = lac["TARGET_DIRS"][Config.DIR_ASSETS.value]
     dir_draws = lac["TARGET_DIRS"][Config.DIR_DRAWS.value]
     dir_journals = lac["TARGET_DIRS"][Config.DIR_JOURNALS.value]
@@ -180,7 +187,6 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, gc: LogseqGraphConfig) -> None:
     JournalsDirectory(dir_journals)
     PagesDirectory(dir_pages)
     WhiteboardsDirectory(dir_whiteboards)
-    lac.set_logseq_target_dirs()
     logger.debug("run_app: setup_target_dirs")
 
 
@@ -242,12 +248,12 @@ def perform_core_analysis(
 
 def setup_logseq_filename_class(c: Configurations) -> LogseqFile:
     """Setup the Logseq file class."""
-    LogseqFilename.gc_config = c.graph.config
     LogseqFilename.graph_path = GraphDirectory().path
     LogseqFilename.journal_file_format = c.journal.file
     LogseqFilename.journal_page_format = c.journal.page
-    LogseqFilename.lac_ls_config = c.analyzer["LOGSEQ_CONFIG"]
-    LogseqFilename.ns_file_sep = c.analyzer["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"]
+    LogseqFilename.journal_page_title_format = get_page_title_format(c.graph.config)
+    LogseqFilename.target_dirs = get_target_dirs(c.graph.config)
+    LogseqFilename.ns_file_sep = get_ns_sep(c.graph.config)
     logger.debug("run_app: setup_logseq_filename_class")
 
 
@@ -263,7 +269,8 @@ def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
 def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
     graph_dir = GraphDirectory().path
-    target_dirs = c.analyzer.target_dirs
+    target_dirs = get_target_dirs(c.graph.config)
+    target_dirs = set(target_dirs.values())
     for file_path in cache.iter_modified_files(graph_dir, target_dirs):
         file = LogseqFile(file_path)
         file.init_file_data()

@@ -93,16 +93,12 @@ def test_set_logseq_config_edn_data(config):
     assert config["LOGSEQ_CONFIG"]["DIR_PAGES"] == "pages", "DIR_PAGES should be set correctly."
     assert config["LOGSEQ_CONFIG"]["DIR_JOURNALS"] == "journals", "DIR_JOURNALS should be set correctly."
     assert config["LOGSEQ_CONFIG"]["DIR_WHITEBOARDS"] == "whiteboards", "DIR_WHITEBOARDS should be set correctly."
-    assert config["LOGSEQ_CONFIG"]["NAMESPACE_FORMAT"] == ":triple-lowbar", "NAMESPACE_FORMAT should be set correctly."
-    assert config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] == "___", "NAMESPACE_FILE_SEP should be set correctly."
     ls_config.update(
         {
             ":file/name-format": ":legacy",
         }
     )
     config.set_logseq_config_edn_data(ls_config)
-    assert config["LOGSEQ_CONFIG"]["NAMESPACE_FORMAT"] == ":legacy", "NAMESPACE_FORMAT should be set correctly."
-    assert config["LOGSEQ_NAMESPACES"]["NAMESPACE_FILE_SEP"] == "%2F", "NAMESPACE_FILE_SEP should be set correctly."
 
 
 def test_set_logseq_target_dirs(config):

@@ -5,7 +5,7 @@ Config class for loading and managing configuration files.
 import configparser
 from pathlib import Path
 
-from ..utils.enums import Core, Config, Output
+from ..utils.enums import Config, Output
 from ..utils.helpers import singleton
 
 
@@ -20,13 +20,12 @@ def lambda_optionxform(option: str) -> str:
 class LogseqAnalyzerConfig:
     """A class to handle configuration file loading and management."""
 
-    __slots__ = ("config", "config_path", "target_dirs")
+    __slots__ = ("config", "path")
 
-    def __init__(self, config_path: Path = None) -> None:
+    def __init__(self, path: Path = None) -> None:
         """Initialize the LogseqAnalyzerConfig class."""
-        self.config_path: Path = config_path
+        self.path: Path = path
         self.config: configparser.ConfigParser = self.initialize_configparser()
-        self.target_dirs: set[str] = set()
 
     def __getitem__(self, section: str) -> dict[str, str]:
         """Get a section from the config file as a dictionary."""
@@ -45,7 +44,7 @@ class LogseqAnalyzerConfig:
             allow_unnamed_section=True,
         )
         config.optionxform = lambda_optionxform
-        config.read(self.config_path)
+        config.read(self.path)
         return config
 
     def set_value(self, section, key, value) -> None:
@@ -59,36 +58,11 @@ class LogseqAnalyzerConfig:
         with open(output_path, "w", encoding="utf-8") as file:
             self.config.write(file)
 
-    def set_logseq_config_edn_data(self, graph_config: dict[str, str]) -> None:
+    def set_logseq_config_edn_data(self, target_dirs: dict[str, str]) -> None:
         """set the Logseq configuration data."""
-        edn_pages_dir = graph_config.get(":pages-directory", "pages")
-        edn_journals_dir = graph_config.get(":journals-directory", "journals")
-        edn_whiteboards_dir = graph_config.get(":whiteboards-directory", "whiteboards")
-        self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, edn_pages_dir)
-        self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, edn_journals_dir)
-        self.set_value("LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, edn_whiteboards_dir)
-
-        ns_format = graph_config.get(":file/name-format", Core.NS_CONFIG_TRIPLE_LOWBAR.value)
-        self.set_value("LOGSEQ_CONFIG", "NAMESPACE_FORMAT", ns_format)
-
-        ns_file_sep = {
-            Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
-            Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
-        }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
-        self.set_value("LOGSEQ_NAMESPACES", "NAMESPACE_FILE_SEP", ns_file_sep)
-
-    def set_logseq_target_dirs(self) -> None:
-        """Get the target directories based on the configuration data."""
-        config = self["LOGSEQ_CONFIG"]
-        self.target_dirs.update(
-            (
-                config[Config.DIR_ASSETS.value],
-                config[Config.DIR_DRAWS.value],
-                config[Config.DIR_PAGES.value],
-                config[Config.DIR_JOURNALS.value],
-                config[Config.DIR_WHITEBOARDS.value],
-            )
-        )
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_PAGES.value, target_dirs["pages"])
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_JOURNALS.value, target_dirs["journals"])
+        self.set_value("LOGSEQ_CONFIG", Config.DIR_WHITEBOARDS.value, target_dirs["whiteboards"])
 
     @property
     def config_dict(self) -> dict[str, dict[str, str]]:
@@ -107,7 +81,6 @@ class LogseqAnalyzerConfig:
         """Get a report of the configuration settings."""
         return {
             Output.ANALYZER_CONFIG.value: {
-                Output.AC_TARGET_DIRS.value: self.target_dirs,
                 Output.AC_CONFIG.value: self.config_dict,
             }
         }

@@ -73,9 +73,9 @@ class LogseqBullets:
     def get_primary_bullet(self) -> None:
         """Get the Logseq primary bullet if available"""
         content_bullets = self.content_bullets
-        bullet_count = 0
-        bullet_count_empty = 0
-        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, self.content):
+        bullet_count, bullet_count_empty = 0, 0
+        bullet_pattern, content = ContentPatterns.BULLET, self.content
+        for count, bullet in iter_pattern_split(bullet_pattern, content):
             if bullet:
                 if count == 0:
                     self.primary_bullet = bullet

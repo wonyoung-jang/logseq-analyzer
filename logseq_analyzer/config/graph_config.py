@@ -3,12 +3,13 @@ Logseq Graph Class
 """
 
 import ast
+from enum import Enum
 import logging
 import re
 from pathlib import Path
 from typing import Any, Generator
 
-from ..utils.enums import Output
+from ..utils.enums import Core, Output
 from ..utils.helpers import singleton
 
 logger = logging.getLogger(__name__)
@@ -417,3 +418,70 @@ class LogseqGraphConfig:
             Output.CONFIG_USER.value: self.user_edn,
             Output.CONFIG_GLOBAL.value: self.global_edn,
         }
+
+
+def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
+    """
+    Get the target directories for Logseq.
+
+    Args:
+        config (dict[str, Any]): The configuration dictionary.
+
+    Returns:
+        dict[str, str]: A dictionary containing the target directories.
+    """
+    assets: str = "assets"
+    draws: str = "draws"
+    pages: str = config.get(EDN.PAGES_DIR.value, "pages")
+    journals: str = config.get(EDN.JOURNALS_DIR.value, "journals")
+    whiteboards: str = config.get(EDN.WHITEBOARDS_DIR.value, "whiteboards")
+    return {
+        "assets": assets,
+        "draws": draws,
+        "pages": pages,
+        "journals": journals,
+        "whiteboards": whiteboards,
+    }
+
+
+def get_ns_sep(config: dict[str, Any]) -> str:
+    """
+    Get the namespace separator based on the configuration.
+
+    Args:
+        config (dict[str, Any]): The configuration dictionary.
+
+    Returns:
+        str: The namespace separator.
+    """
+    ns_format = config.get(EDN.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
+    ns_file_sep = {
+        Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
+        Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
+    }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+    return ns_file_sep
+
+
+def get_page_title_format(config: dict[str, Any]) -> str:
+    """
+    Get the page title format from the configuration.
+
+    Args:
+        config (dict[str, Any]): The configuration dictionary.
+
+    Returns:
+        str: The page title format.
+    """
+    return config.get(EDN.PAGE_TITLE_FORMAT.value, "MMM do, yyyy")
+
+
+class EDN(Enum):
+    """
+    Enum for EDN data types.
+    """
+
+    PAGES_DIR = ":pages-directory"
+    JOURNALS_DIR = ":journals-directory"
+    WHITEBOARDS_DIR = ":whiteboards-directory"
+    NS_FILE = ":file/name-format"
+    PAGE_TITLE_FORMAT = ":journal/page-title-format"
