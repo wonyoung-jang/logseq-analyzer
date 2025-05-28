@@ -475,6 +475,19 @@ def get_page_title_format(config: dict[str, Any]) -> str:
     return config.get(EDN.PAGE_TITLE_FORMAT.value, "MMM do, yyyy")
 
 
+def get_file_name_format(config: dict[str, Any]) -> str:
+    """
+    Get the file name format from the configuration.
+
+    Args:
+        config (dict[str, Any]): The configuration dictionary.
+
+    Returns:
+        str: The file name format.
+    """
+    return config.get(EDN.FILE_NAME_FORMAT.value, "yyyy_MM_dd")
+
+
 class EDN(Enum):
     """
     Enum for EDN data types.
@@ -485,3 +498,4 @@ class EDN(Enum):
     WHITEBOARDS_DIR = ":whiteboards-directory"
     NS_FILE = ":file/name-format"
     PAGE_TITLE_FORMAT = ":journal/page-title-format"
+    FILE_NAME_FORMAT = ":journal/file-name-format"

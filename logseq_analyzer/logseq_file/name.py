@@ -89,23 +89,22 @@ class LogseqFilename:
         uri = self.uri
         uri_path = Path(uri)
         graph_path = LogseqFilename.graph_path
-        len_gd = len(graph_path.parts)
-        len_uri = len(uri_path.parts)
-        target_index = len_uri - len_gd
-        target_segment = uri_path.parts[target_index]
-        if target_segment[:-1] not in ("page", "block-id"):
+        uri_path_parts = uri_path.parts
+        graph_path_parts = graph_path.parts
+        target_index = len(uri_path_parts) - len(graph_path_parts)
+        target_segment = uri_path_parts[target_index]
+        target_segments_to_final = target_segment[:-1]
+        if target_segments_to_final not in ("page", "block-id"):
             return ""
 
         prefix = f"file:///{str(graph_path)}/{target_segment}/"
         if not uri.startswith(prefix):
             return ""
 
-        len_suffix = len(uri_path.suffix)
-        path_without_prefix = uri[len(prefix) : -(len_suffix)]
-        path_with_slashes = path_without_prefix.replace("___", "%2F").replace("%253A", "%3A")
-        encoded_path = path_with_slashes
-        target_segment = target_segment[:-1]
-        return f"logseq://graph/Logseq?{target_segment}={encoded_path}"
+        suffix = uri_path.suffix
+        encoded_path = uri[len(prefix) : -(len(suffix))]
+        encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
+        return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
     def process_filename(self) -> None:
         """Process the filename based on its parent directory."""

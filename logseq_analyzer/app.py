@@ -19,6 +19,7 @@ from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
 from .config.graph_config import (
     LogseqGraphConfig,
+    get_file_name_format,
     get_ns_sep,
     get_page_title_format,
     get_target_dirs,
@@ -192,10 +193,13 @@ def setup_target_dirs(lac: LogseqAnalyzerConfig, gc: LogseqGraphConfig) -> None:
 
 def setup_datetime_tokens(gc: LogseqGraphConfig) -> LogseqJournalFormats:
     """Setup datetime tokens."""
-    ljf = LogseqJournalFormats()
     ldtt = LogseqDateTimeTokens()
-    ldtt.set_datetime_token_pattern()
-    ldtt.set_journal_py_formatting(gc.config, ljf)
+    journal_file_format = get_file_name_format(gc.config)
+    journal_page_format = get_page_title_format(gc.config)
+
+    ljf = LogseqJournalFormats()
+    ljf.file = ldtt.convert_cljs_date_to_py(journal_file_format)
+    ljf.page = ldtt.convert_cljs_date_to_py(journal_page_format)
     del ldtt
     logger.debug("run_app: setup_datetime_tokens")
     return ljf
