@@ -14,7 +14,6 @@ from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
 from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.summary_files import LogseqFileSummarizer
-from .config.analyzer_config import LogseqAnalyzerConfig
 from .config.arguments import Args
 from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
 from .config.graph_config import (
@@ -32,7 +31,6 @@ from .io.filesystem import (
     BakDirectory,
     CacheFile,
     ConfigFile,
-    ConfigIniFile,
     DeleteAssetsDirectory,
     DeleteBakDirectory,
     DeleteDirectory,
@@ -46,13 +44,12 @@ from .io.filesystem import (
     OutputDirectory,
     PagesDirectory,
     RecycleDirectory,
-    UserConfigIniFile,
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
-from .utils.enums import CacheKeys, Config, Constants, Moved, Output, OutputDir
+from .utils.enums import CacheKeys, Constants, Moved, Output, OutputDir
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +80,6 @@ class GUIInstanceDummy:
 class Configurations:
     """Class to hold configurations for the Logseq analyzer."""
 
-    analyzer: LogseqAnalyzerConfig
     graph: LogseqGraphConfig
     journal: LogseqJournalFormats
 
@@ -106,48 +102,35 @@ def init_logseq_paths() -> None:
 
 def init_configs(args: Args) -> Configurations:
     """Initialize configurations for the Logseq analyzer."""
-    ac = setup_logseq_analyzer_config(args)
-    setup_logseq_paths(ac)
+    setup_logseq_analyzer_config(args)
+    setup_logseq_paths()
 
-    gc = setup_logseq_graph_config(args, ac)
-    setup_target_dirs(ac, gc)
+    gc = setup_logseq_graph_config(args)
+    setup_target_dirs(gc)
 
     jf = setup_datetime_tokens(gc)
-    return Configurations(analyzer=ac, graph=gc, journal=jf)
+    return Configurations(graph=gc, journal=jf)
 
 
-def setup_logseq_analyzer_config(args: Args) -> LogseqAnalyzerConfig:
+def setup_logseq_analyzer_config(args: Args) -> None:
     """Setup Logseq analyzer configuration based on arguments."""
-    path = get_config_ini_path(Constants.CONFIG_INI_FILE.value)
-    config_ini_file = ConfigIniFile(path)
-    lac = LogseqAnalyzerConfig(config_ini_file.path)
-    lac.set_value("ANALYZER", "GRAPH_DIR", args.graph_folder)
-    lac.set_value("ANALYZER", "REPORT_FORMAT", args.report_format)
-    if args.global_config:
-        lac.set_value("ANALYZER", "GLOBAL_CONFIG_FILE", args.global_config)
-    logger.debug("run_app: setup_logseq_analyzer_config")
-    return lac
-
-
-def get_config_ini_path(name: str) -> Path:
-    """Get the path to the config.ini file."""
-    path = Path.cwd() / name
-    if not path.exists():
-        path = Path.cwd() / "_internal" / name
-    return path
-
-
-def setup_logseq_paths(lac: LogseqAnalyzerConfig) -> None:
-    """Setup Logseq paths for the analyzer."""
-    graph_dir = lac["ANALYZER"]["GRAPH_DIR"]
-    logseq_dir = lac["ANALYZER"]["LOGSEQ_DIR"]
-    bak_dir = lac["ANALYZER"]["BAK_DIR"]
-    recycle_dir = lac["ANALYZER"]["RECYCLE_DIR"]
-    GraphDirectory(graph_dir)
+    graph_folder_path = Path(args.graph_folder)
+    logseq_dir = graph_folder_path / "logseq"
+    bak_dir = logseq_dir / "bak"
+    recycle_dir = logseq_dir / ".recycle"
+    user_config_file = logseq_dir / "config.edn"
+    GraphDirectory(graph_folder_path)
     LogseqDirectory(logseq_dir)
     BakDirectory(bak_dir)
     RecycleDirectory(recycle_dir)
+    ConfigFile(user_config_file)
+    if args.global_config:
+        GlobalConfigFile(Path(args.global_config))
+    logger.debug("run_app: setup_logseq_analyzer_config")
 
+
+def setup_logseq_paths() -> None:
+    """Setup Logseq paths for the analyzer."""
     delete_dir = Constants.TO_DELETE_DIR.value
     delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
     delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
@@ -159,30 +142,26 @@ def setup_logseq_paths(lac: LogseqAnalyzerConfig) -> None:
     logger.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(args: Args, lac: LogseqAnalyzerConfig) -> LogseqGraphConfig:
+def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
     """Setup Logseq graph configuration based on arguments."""
     lgc = LogseqGraphConfig()
-    config_path = lac["ANALYZER"]["USER_CONFIG_FILE"]
-    cf = ConfigFile(config_path)
-    lgc.user_edn = init_config_edn_from_file(cf.path)
+    lgc.user_edn = init_config_edn_from_file(ConfigFile().path)
     if args.global_config:
-        global_config_path = lac["ANALYZER"]["GLOBAL_CONFIG_FILE"]
-        gcf = GlobalConfigFile(global_config_path)
-        lgc.global_edn = init_config_edn_from_file(gcf.path)
+        lgc.global_edn = init_config_edn_from_file(GlobalConfigFile().path)
     lgc.merge()
     logger.debug("run_app: setup_logseq_graph_config")
     return lgc
 
 
-def setup_target_dirs(lac: LogseqAnalyzerConfig, gc: LogseqGraphConfig) -> None:
+def setup_target_dirs(gc: LogseqGraphConfig) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
+    graph_path = GraphDirectory().path
     target_dirs = get_target_dirs(gc.config)
-    lac.set_logseq_config_edn_data(target_dirs)
-    dir_assets = lac["TARGET_DIRS"][Config.DIR_ASSETS.value]
-    dir_draws = lac["TARGET_DIRS"][Config.DIR_DRAWS.value]
-    dir_journals = lac["TARGET_DIRS"][Config.DIR_JOURNALS.value]
-    dir_pages = lac["TARGET_DIRS"][Config.DIR_PAGES.value]
-    dir_whiteboards = lac["TARGET_DIRS"][Config.DIR_WHITEBOARDS.value]
+    dir_assets = graph_path / target_dirs["assets"]
+    dir_draws = graph_path / target_dirs["draws"]
+    dir_journals = graph_path / target_dirs["journals"]
+    dir_pages = graph_path / target_dirs["pages"]
+    dir_whiteboards = graph_path / target_dirs["whiteboards"]
     AssetsDirectory(dir_assets)
     DrawsDirectory(dir_draws)
     JournalsDirectory(dir_journals)
@@ -235,7 +214,6 @@ def perform_core_analysis(
     data_reports = (
         (OutputDir.META.value, args.report),
         (OutputDir.META.value, graph.report),
-        (OutputDir.META.value, configs.analyzer.report),
         (OutputDir.META.value, configs.graph.report),
         (OutputDir.META.value, index.report),
         (OutputDir.META.value, index.get_graph_content(args.write_graph)),
@@ -352,9 +330,9 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     return {Output.MOVED_FILES.value: moved_files}
 
 
-def write_reports(data_reports: tuple[Any], c: Configurations) -> None:
+def write_reports(data_reports: tuple[Any], args: Args) -> None:
     """Write reports to the specified output directories."""
-    ReportWriter.ext = c.analyzer["ANALYZER"]["REPORT_FORMAT"]
+    ReportWriter.ext = args.report_format
     ReportWriter.output_dir = OutputDirectory().path
     for subdir, reports in data_reports:
         for prefix, data in reports.items():
@@ -362,12 +340,9 @@ def write_reports(data_reports: tuple[Any], c: Configurations) -> None:
     logger.debug("run_app: write_reports")
 
 
-def finish_analysis(cache: Cache, index: FileIndex, c: Configurations) -> None:
+def finish_analysis(cache: Cache, index: FileIndex) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
     update_cache(cache, index)
-    path = get_config_ini_path(Constants.CONFIG_USER_INI_FILE.value)
-    UserConfigIniFile(path)
-    c.analyzer.write_to_file(UserConfigIniFile().path)
     cache.close()
     logger.debug("run_app: finish_analysis")
 
@@ -400,9 +375,9 @@ def run_app(**kwargs) -> None:
     data_reports = perform_core_analysis(args, index, cache, configs)
 
     progress(60, "Writing reports...")
-    write_reports(data_reports, configs)
+    write_reports(data_reports, args)
 
     progress(80, "Finalizing analysis...")
-    finish_analysis(cache, index, configs)
+    finish_analysis(cache, index)
 
     progress(100, "Logseq Analyzer completed successfully.")

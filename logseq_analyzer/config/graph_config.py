@@ -37,7 +37,7 @@ TOKEN_REGEX: re.Pattern = re.compile(
     """,
     re.VERBOSE,
 )
-
+COMMENT_REGEX: re.Pattern = re.compile(r";.*")
 NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
 
@@ -345,7 +345,7 @@ def tokenize(edn_str: str) -> Generator[str, Any, None]:
     Yields:
         str: The next token in the EDN string.
     """
-    edn_str = re.sub(r";.*", "", edn_str)
+    edn_str = COMMENT_REGEX.sub("", edn_str)
     for match in TOKEN_REGEX.finditer(edn_str):
         tok = match.group().strip()
         yield tok
