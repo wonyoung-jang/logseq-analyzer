@@ -106,26 +106,6 @@ class File:
 
 
 @singleton
-class ConfigIniFile(File):
-    """Class to handle the config.ini file for the Logseq Analyzer."""
-
-    def __init__(self, path: str | Path = None) -> None:
-        """Initialize the LogseqAnalyzerConfigIniFile class."""
-        super().__init__(path)
-        self.validate()
-
-
-@singleton
-class UserConfigIniFile(File):
-    """Class to handle the user_config.ini file for the Logseq Analyzer."""
-
-    def __init__(self, path: str | Path = None) -> None:
-        """Initialize the LogseqAnalyzerUserConfigIniFile class."""
-        super().__init__(path)
-        self.initialize_file()
-
-
-@singleton
 class OutputDirectory(File):
     """Class to handle the output directory for the Logseq Analyzer."""
 
