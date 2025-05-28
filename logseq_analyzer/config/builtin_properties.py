@@ -61,26 +61,10 @@ BUILT_INS: frozenset[str] = frozenset(
 
 
 def get_builtin_properties(properties: set[str]) -> set[str]:
-    """
-    Helper function to get built-in properties.
-
-    Args:
-        properties (set[str]): List of properties to check.
-
-    Returns:
-        set[str]: Set of built-in properties.
-    """
+    """Helper function to get built-in properties."""
     return properties.intersection(BUILT_INS)
 
 
 def get_user_properties(properties: set[str]) -> set[str]:
-    """
-    Helper function to get properties that are not built-in.
-
-    Args:
-        properties (set[str]): List of properties to check.
-
-    Returns:
-        set[str]: Set of properties that are not built-in.
-    """
+    """Helper function to get properties that are not built-in."""
     return properties.difference(BUILT_INS)

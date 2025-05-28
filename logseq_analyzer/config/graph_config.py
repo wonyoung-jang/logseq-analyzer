@@ -445,15 +445,7 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
 
 
 def get_ns_sep(config: dict[str, Any]) -> str:
-    """
-    Get the namespace separator based on the configuration.
-
-    Args:
-        config (dict[str, Any]): The configuration dictionary.
-
-    Returns:
-        str: The namespace separator.
-    """
+    """Get the namespace separator based on the configuration."""
     ns_format = config.get(EDN.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
     ns_file_sep = {
         Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
@@ -463,28 +455,12 @@ def get_ns_sep(config: dict[str, Any]) -> str:
 
 
 def get_page_title_format(config: dict[str, Any]) -> str:
-    """
-    Get the page title format from the configuration.
-
-    Args:
-        config (dict[str, Any]): The configuration dictionary.
-
-    Returns:
-        str: The page title format.
-    """
+    """Get the page title format from the configuration."""
     return config.get(EDN.PAGE_TITLE_FORMAT.value, "MMM do, yyyy")
 
 
 def get_file_name_format(config: dict[str, Any]) -> str:
-    """
-    Get the file name format from the configuration.
-
-    Args:
-        config (dict[str, Any]): The configuration dictionary.
-
-    Returns:
-        str: The file name format.
-    """
+    """Get the file name format from the configuration."""
     return config.get(EDN.FILE_NAME_FORMAT.value, "yyyy_MM_dd")
 
 
