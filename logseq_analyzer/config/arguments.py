@@ -68,39 +68,46 @@ class Args:
             "--write-graph",
             action="store_true",
             help="write all graph content to output folder (warning: may result in large file)",
+            default=False,
         )
         parser.add_argument(
             "--graph-cache",
             action="store_true",
             help="reindex graph cache on run",
+            default=True,
         )
         parser.add_argument(
             "--move-all",
             action="store_true",
             help="move all (assets, bak, recycle) to their respective folders in 'to-delete' directory",
+            default=False,
         )
         parser.add_argument(
             "-ma",
             "--move-unlinked-assets",
             action="store_true",
             help='move unlinked assets to "to-delete/assets" folder',
+            default=False,
         )
         parser.add_argument(
             "-mb",
             "--move-bak",
             action="store_true",
             help="move bak files to 'to-delete/bak' folder",
+            default=False,
         )
         parser.add_argument(
             "-mr",
             "--move-recycle",
             action="store_true",
             help="move recycle files to 'to-delete/recycle' folder",
+            default=False,
         )
         parser.add_argument(
             "--global-config",
             action="store",
             help="path to global configuration file",
+            default="",
         )
         parser.add_argument(
             "--report-format",

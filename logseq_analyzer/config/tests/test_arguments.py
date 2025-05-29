@@ -88,12 +88,12 @@ def test_set_cli_args_basic(monkeypatch, args_instance):
     assert (
         args_instance.graph_folder == test_graph_path
     )  # argparse handles Path conversion implicitly if type=Path is used, but here it's just stored
-    assert args_instance.global_config is None  # Default argparse value
+    assert args_instance.global_config == ""  # Default argparse value
     assert args_instance.move_unlinked_assets is True
     assert args_instance.move_bak is False  # Default argparse value
     assert args_instance.move_recycle is False  # Default argparse value
     assert args_instance.write_graph is True
-    assert args_instance.graph_cache is False  # Default argparse value
+    assert args_instance.graph_cache is True  # Default argparse value
     assert args_instance.report_format == ".md"
 
 
@@ -143,12 +143,12 @@ def test_set_cli_args_defaults(monkeypatch, args_instance):
     args_instance.setup_args()
 
     assert args_instance.graph_folder == test_graph_path
-    assert args_instance.global_config is None
+    assert args_instance.global_config == ""
     assert args_instance.move_unlinked_assets is False
     assert args_instance.move_bak is False
     assert args_instance.move_recycle is False
     assert args_instance.write_graph is False
-    assert args_instance.graph_cache is False
+    assert args_instance.graph_cache is True
     assert args_instance.report_format == ".txt"  # Default value specified in add_argument
 
 

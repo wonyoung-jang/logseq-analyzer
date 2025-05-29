@@ -61,8 +61,7 @@ class LogseqJournals:
     ) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         dangling_journals = sorted(self.date.journals_to_datetime(dangling_links, py_page_base_format))
-        journal_criteria = {"file_type": "journal"}
-        journal_keys = index.filter_files(**journal_criteria)
+        journal_keys = index.filter_files(file_type="journal")
         journal_keys = get_attribute_list(journal_keys, "name")
         self.processed = sorted(self.date.journals_to_datetime(journal_keys, py_page_base_format))
         self.build_complete_timeline(dangling_journals)

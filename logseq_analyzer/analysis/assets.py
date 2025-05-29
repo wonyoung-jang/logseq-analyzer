@@ -41,8 +41,7 @@ class LogseqAssets:
 
     def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
-        asset_criteria = {"file_type": "asset"}
-        is_assets = list(index.filter_files(**asset_criteria))
+        is_assets = list(index.filter_files(file_type="asset"))
         for file in index:
             emb_link_asset = file.data.get(Criteria.EMB_LINK_ASSET.value, [])
             asset_captured = file.data.get(Criteria.ASSETS.value, [])
@@ -97,8 +96,7 @@ class LogseqAssetsHls:
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
-        sub_asset_criteria = {"file_type": "sub_asset"}
-        asset_files = index.filter_files(**sub_asset_criteria)
+        asset_files = index.filter_files(file_type="sub_asset")
         asset_mapping = {file.path.name: file for file in asset_files}
         self.asset_names.update(asset_mapping.keys())
         self.asset_mapping.update(asset_mapping)
@@ -106,9 +104,8 @@ class LogseqAssetsHls:
     def convert_names_to_data(self, index: "FileIndex") -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         property_value_pattern = ContentPatterns.PROPERTY_VALUE
-        hls_criteria = {"is_hls": True}
         formatted_bullets = self.formatted_bullets
-        for file in index.filter_files(**hls_criteria):
+        for file in index.filter_files(is_hls=True):
             for bullet in file.bullets.content_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):

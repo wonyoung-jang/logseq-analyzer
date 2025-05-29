@@ -67,6 +67,5 @@ class LogseqFileSummarizer:
         ext_map = defaultdict(list)
         for file in index:
             if suffix := file.path.suffix:
-                name = f"all {suffix}s"
-                ext_map[name].append(file.path.name)
+                ext_map[suffix].append(file.path.name)
         self.report[SummaryFiles.FILE_EXTS.value] = ext_map
