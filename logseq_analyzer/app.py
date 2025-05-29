@@ -202,6 +202,7 @@ def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     index = FileIndex()
     cache_path = CacheFile(Constants.CACHE_FILE.value).path
     cache = Cache(cache_path)
+    cache.open(protocol=5)
     cache.initialize(args.graph_cache, index)
     logger.debug("run_app: setup_cache")
     return cache, index
