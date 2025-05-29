@@ -419,14 +419,20 @@ def get_file_name_format(config: dict[str, Any]) -> str:
     return config.get(EDN.FILE_NAME_FORMAT.value, "yyyy_MM_dd")
 
 
+def get_prop_pages_enabled(config: dict[str, Any]) -> bool:
+    """Check if property pages are enabled in the configuration."""
+    return config.get(EDN.PROP_PAGES.value, True)
+
+
 class EDN(Enum):
     """
     Enum for EDN data types.
     """
 
-    PAGES_DIR = ":pages-directory"
+    FILE_NAME_FORMAT = ":journal/file-name-format"
     JOURNALS_DIR = ":journals-directory"
-    WHITEBOARDS_DIR = ":whiteboards-directory"
     NS_FILE = ":file/name-format"
     PAGE_TITLE_FORMAT = ":journal/page-title-format"
-    FILE_NAME_FORMAT = ":journal/file-name-format"
+    PAGES_DIR = ":pages-directory"
+    PROP_PAGES = ":property-pages/enabled?"
+    WHITEBOARDS_DIR = ":whiteboards-directory"

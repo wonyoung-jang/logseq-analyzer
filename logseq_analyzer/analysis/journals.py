@@ -27,22 +27,22 @@ class LogseqJournals:
     """
 
     __slots__ = (
-        "complete_timeline",
         "dangling",
         "date",
+        "existing",
         "missing",
-        "processed",
         "timeline_stats",
+        "timeline",
     )
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqJournals class."""
-        self.complete_timeline: list[datetime] = []
         self.dangling: defaultdict[str, list[datetime]] = defaultdict(list)
         self.date: DateUtilities = date_utilities
+        self.existing: list[datetime] = []
         self.missing: list[datetime] = []
-        self.processed: list[datetime] = []
         self.timeline_stats: dict[str, Any] = {}
+        self.timeline: list[datetime] = []
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqJournals class."""
@@ -54,7 +54,7 @@ class LogseqJournals:
 
     def __len__(self) -> int:
         """Return the number of processed keys."""
-        return len(self.complete_timeline)
+        return len(self.timeline)
 
     def process_journals_timelines(
         self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str
@@ -63,51 +63,49 @@ class LogseqJournals:
         dangling_journals = sorted(self.date.journals_to_datetime(dangling_links, py_page_base_format))
         journal_keys = index.filter_files(file_type="journal")
         journal_keys = get_attribute_list(journal_keys, "name")
-        self.processed = sorted(self.date.journals_to_datetime(journal_keys, py_page_base_format))
+        self.existing = sorted(self.date.journals_to_datetime(journal_keys, py_page_base_format))
         self.build_complete_timeline(dangling_journals)
         self.get_dangling_journals_outside_range(dangling_journals)
 
     def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
-        processed = self.processed
+        existing = self.existing
         missing = self.missing
-        complete_timeline = self.complete_timeline
-        for i in range(len(processed) - 1):
-            current_date = processed[i]
-            complete_timeline.append(current_date)
-            next_expected_date = self.date.next(current_date)
-            next_actual_date = processed[i + 1]
-            while next_expected_date < next_actual_date:
-                complete_timeline.append(next_expected_date)
-                if next_expected_date in dangling_journals:
-                    dangling_journals.remove(next_expected_date)
-                else:
-                    missing.append(next_expected_date)
-                next_expected_date = self.date.next(next_expected_date)
-
-        if processed:
-            complete_timeline.append(processed[-1])
-
-        self.timeline_stats["complete_timeline"] = self.date.stats(complete_timeline)
-        self.timeline_stats["dangling_journals"] = self.date.stats(dangling_journals)
+        timeline = self.timeline
+        timeline_stats = self.timeline_stats
+        for i, date in enumerate(existing):
+            timeline.append(date)
+            next_expected = self.date.next(date)
+            next_existing = existing[i + 1] if i + 1 < len(existing) else None
+            while next_existing and next_expected < next_existing:
+                timeline.append(next_expected)
+                if next_expected not in dangling_journals:
+                    missing.append(next_expected)
+                next_expected = self.date.next(next_expected)
+        total_timeline = sorted(timeline + dangling_journals)
+        timeline_stats["timeline"] = self.date.stats(timeline)
+        timeline_stats["dangling"] = self.date.stats(dangling_journals)
+        timeline_stats["total"] = self.date.stats(total_timeline)
 
     def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
         """Check for dangling journals that are outside the range of the complete timeline."""
-        timeline_stats = self.timeline_stats["complete_timeline"]
+        timeline_stats = self.timeline_stats["timeline"]
         dangling = self.dangling
         for link in dangling_journals:
             if link < timeline_stats["first"]:
                 dangling["past"].append(link)
             elif link > timeline_stats["last"]:
                 dangling["future"].append(link)
+            else:
+                dangling["inside"].append(link)
 
     @property
     def report(self) -> dict[str, Any]:
         """Get a report of the journal processing results."""
         return {
-            Output.DANGLING_JOURNALS.value: self.dangling,
-            Output.PROCESSED_JOURNALS.value: self.processed,
-            Output.COMPLETE_TIMELINE.value: self.complete_timeline,
-            Output.MISSING_JOURNALS.value: self.missing,
-            Output.TIMELINE_STATS.value: self.timeline_stats,
+            Output.JOURNALS_DANGLING.value: self.dangling,
+            Output.JOURNALS_EXISTING.value: self.existing,
+            Output.JOURNALS_TIMELINE.value: self.timeline,
+            Output.JOURNALS_MISSING.value: self.missing,
+            Output.JOURNALS_TIMELINE_STATS.value: self.timeline_stats,
         }
