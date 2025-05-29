@@ -143,7 +143,8 @@ def setup_logseq_paths(args: Args) -> None:
 def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
     """Setup Logseq graph configuration based on arguments."""
     config = get_default_logseq_config()
-    user_edn = init_config_edn_from_file(ConfigFile().path)
+    cf = ConfigFile()
+    user_edn = init_config_edn_from_file(cf.path)
     global_edn = {}
     if args.global_config:
         global_config_path = Path(args.global_config)
@@ -309,11 +310,11 @@ def perform_core_analysis(
     """Perform core analysis on the Logseq graph."""
     process_graph_files(index, cache, configs)
     graph = setup_logseq_graph(index)
-    summary_files, summary_content = setup_logseq_summarizers(index)
     namespaces = setup_logseq_namespaces(graph, index)
     journals = setup_logseq_journals(graph, index, configs)
     ls_assets, hls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets)
+    summary_files, summary_content = setup_logseq_summarizers(index)
     data_reports = (
         (OutputDir.META.value, args.report),
         (OutputDir.META.value, configs.report),
@@ -323,8 +324,8 @@ def perform_core_analysis(
         (OutputDir.JOURNALS.value, journals.report),
         (OutputDir.NAMESPACES.value, namespaces.report),
         (OutputDir.MOVED_FILES.value, moved_files),
-        (OutputDir.MOVED_FILES.value, ls_assets.report),
-        (OutputDir.MOVED_FILES.value, hls_assets.report),
+        (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report),
+        (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report),
         (OutputDir.SUMMARY_FILES.value, summary_files.report),
         (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )

@@ -16,9 +16,14 @@ class File:
 
     __slots__ = ("_path",)
 
+    clean_on_init: bool = False
+    must_exist: bool = False
+    is_dir: bool = False
+
     def __init__(self, path: Path) -> None:
         """Initialize the File class with a path."""
         self.path: Path = path
+        self.startup()
         logger.info("File initialized: %s", self.path)
 
     def __repr__(self) -> str:
@@ -41,158 +46,159 @@ class File:
             value = Path(value)
         self._path = value
 
+    def startup(self) -> None:
+        """Perform startup operations for the File object."""
+        if self.must_exist:
+            self.validate()
+        if self.clean_on_init and self.path.exists():
+            self.clean()
+        self.make_if_missing()
+        if not (self.must_exist or self.clean_on_init):
+            self.validate()
+
     def validate(self) -> None:
         """Validate the file path."""
         if not self.path.exists():
             logger.error("File does not exist: %s", self.path)
             raise FileNotFoundError(f"File does not exist: {self.path}")
+        if self.is_dir and not self.path.is_dir():
+            logger.error("Path is not a directory: %s", self.path)
+            raise NotADirectoryError(f"Path is not a directory: {self.path}")
+        if not self.is_dir and not self.path.is_file():
+            logger.error("Path is not a file: %s", self.path)
+            raise FileNotFoundError(f"Path is not a file: {self.path}")
         logger.info("File exists: %s", self.path)
 
-    def get_or_create_dir(self) -> None:
-        """Get a path or create it if it doesn't exist."""
+    def clean(self) -> None:
+        """Clean up the file or directory."""
         try:
-            self.path.resolve(strict=True)
-            logger.info("Path exists: %s", self.path)
-        except FileNotFoundError:
-            try:
-                self.path.mkdir(parents=True, exist_ok=True)
-                logger.info("Created path: %s", self.path)
-            except PermissionError:
-                logger.error("Permission denied to create path: %s", self.path)
-            except OSError as e:
-                logger.error("Error creating path: %s", e)
-
-    def get_or_create_file(self) -> None:
-        """Get a path or create it if it doesn't exist."""
-        try:
-            self.path.resolve(strict=True)
-            logger.info("Path exists: %s", self.path)
-        except FileNotFoundError:
-            try:
-                self.path.touch(exist_ok=True)
-                logger.info("Created file: %s", self.path)
-            except PermissionError:
-                logger.error("Permission denied to create path: %s", self.path)
-            except OSError as e:
-                logger.error("Error creating path: %s", e)
-
-    def initialize_dir(self) -> None:
-        """Initialize the directory."""
-        try:
-            if self.path.exists():
+            if self.is_dir:
                 shutil.rmtree(self.path)
-                logger.info("Deleted path: %s", self.path)
-        except PermissionError:
-            logger.error("Permission denied to delete path: %s", self.path)
-        except OSError as e:
-            logger.error("Error deleting path: %s", e)
-        finally:
-            self.get_or_create_dir()
-            logger.info("Created path: %s", self.path)
-
-    def initialize_file(self) -> None:
-        """Initialize the file or directory."""
-        try:
-            if self.path.exists():
+                logger.info("Deleted directory: %s", self.path)
+            else:
                 self.path.unlink()
-                logger.info("Deleted path: %s", self.path)
+                logger.info("Deleted file: %s", self.path)
         except PermissionError:
             logger.error("Permission denied to delete path: %s", self.path)
         except OSError as e:
             logger.error("Error deleting path: %s", e)
-        finally:
-            self.get_or_create_file()
-            logger.info("Created path: %s", self.path)
+
+    def make_if_missing(self) -> None:
+        try:
+            if not self.path.exists():
+                if self.is_dir:
+                    self.path.mkdir(parents=True, exist_ok=True)
+                    logger.info("Created directory: %s", self.path)
+                else:
+                    self.path.parent.mkdir(parents=True, exist_ok=True)
+                    self.path.touch(exist_ok=True)
+                    logger.info("Created file: %s", self.path)
+        except PermissionError:
+            logger.error("Permission denied to create path: %s", self.path)
+        except OSError as e:
+            logger.error("Error creating path: %s", e)
 
 
 @singleton
 class OutputDirectory(File):
     """Class to handle the output directory for the Logseq Analyzer."""
 
+    clean_on_init = True
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerOutputDir class."""
         super().__init__(path)
-        self.initialize_dir()
 
 
 @singleton
 class LogFile(File):
     """Class to handle the log file for the Logseq Analyzer."""
 
+    clean_on_init = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerLogFile class."""
         super().__init__(path)
-        self.initialize_file()
 
 
 @singleton
 class GraphDirectory(File):
     """Class to handle the graph directory for the Logseq Analyzer."""
 
+    must_exist = True
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerGraphDir class."""
         super().__init__(path)
-        self.validate()
 
 
 @singleton
 class LogseqDirectory(File):
     """Class to handle the Logseq directory for the Logseq Analyzer."""
 
+    must_exist = True
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerLogseqDir class."""
         super().__init__(path)
-        self.validate()
 
 
 @singleton
 class ConfigFile(File):
     """Class to handle the config file for the Logseq Analyzer."""
 
+    must_exist = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerConfigFile class."""
         super().__init__(path)
-        self.validate()
 
 
 @singleton
 class DeleteDirectory(File):
     """Class to handle the delete directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerDeleteDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class DeleteBakDirectory(File):
     """Class to handle the delete bak directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerDeleteBakDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class DeleteRecycleDirectory(File):
     """Class to handle the delete recycle directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerDeleteRecycleDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class DeleteAssetsDirectory(File):
     """Class to handle the delete assets directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerDeleteAssetsDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
@@ -208,20 +214,22 @@ class CacheFile(File):
 class BakDirectory(File):
     """Class to handle the bak directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerBakDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class RecycleDirectory(File):
     """Class to handle the recycle directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerRecycleDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
@@ -231,54 +239,58 @@ class GlobalConfigFile(File):
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerGlobalConfigFile class."""
         super().__init__(path)
-        self.validate()
 
 
 @singleton
 class AssetsDirectory(File):
     """Class to handle the assets directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerAssetsDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class DrawsDirectory(File):
     """Class to handle the draws directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerDrawsDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class JournalsDirectory(File):
     """Class to handle the journals directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerJournalsDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class PagesDirectory(File):
     """Class to handle the pages directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerPagesDir class."""
         super().__init__(path)
-        self.get_or_create_dir()
 
 
 @singleton
 class WhiteboardsDirectory(File):
     """Class to handle the whiteboards directory for the Logseq Analyzer."""
 
+    is_dir = True
+
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerWhiteboardsDir class."""
         super().__init__(path)
-        self.get_or_create_dir()

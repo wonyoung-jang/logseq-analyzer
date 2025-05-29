@@ -254,6 +254,8 @@ class OutputDir(Enum):
     JOURNALS = "journals"
     META = "_meta"
     MOVED_FILES = "moved_files"
+    MOVED_FILES_ASSETS = "moved_files/assets"
+    MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
     NAMESPACES = "namespaces"
     SUMMARY_CONTENT = "summary_content"
     SUMMARY_FILES = "summary_files"
