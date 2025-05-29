@@ -84,11 +84,25 @@ class GUIInstanceDummy:
 class Configurations:
     """Class to hold configurations for the Logseq analyzer."""
 
-    graph: dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
     journal_file_fmt: str = ""
     journal_page_fmt: str = ""
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the configurations."""
+        journal_formats = {
+            Output.CONFIG_JOURNAL_FMT_FILE.value: self.journal_file_fmt,
+            Output.CONFIG_JOURNAL_FMT_PAGE.value: self.journal_page_fmt,
+        }
+        return {
+            Output.CONFIG_EDN.value: self.config,
+            Output.CONFIG_EDN_USER.value: self.user_edn,
+            Output.CONFIG_EDN_GLOBAL.value: self.global_edn,
+            Output.CONFIG_JOURNAL_FORMATS.value: journal_formats,
+        }
 
 
 def init_logseq_paths() -> None:
@@ -191,20 +205,32 @@ def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
     index = FileIndex()
     cache_path = CacheFile(Constants.CACHE_FILE.value).path
-    c = Cache(cache_path)
-    c.initialize(args.graph_cache, index)
+    cache = Cache(cache_path)
+    cache.initialize(args.graph_cache, index)
     logger.debug("run_app: setup_cache")
-    return c, index
+    return cache, index
+
+
+def setup_analyzer_class_attributes(args: Args, c: Configurations) -> None:
+    """Setup the attributes for the LogseqAnalyzer."""
+    LogseqFilename.graph_path = GraphDirectory().path
+    LogseqFilename.journal_file_format = c.journal_file_fmt
+    LogseqFilename.journal_page_format = c.journal_page_fmt
+    LogseqFilename.journal_page_title_format = get_page_title_format(c.config)
+    LogseqFilename.target_dirs = get_target_dirs(c.config)
+    LogseqFilename.ns_file_sep = get_ns_sep(c.config)
+    ReportWriter.ext = args.report_format
+    ReportWriter.output_dir = OutputDirectory().path
+    logger.debug("run_app: setup_analyzer_class_attributes")
 
 
 def perform_core_analysis(
     args: Args,
-    index: FileIndex,
-    cache: Cache,
     configs: Configurations,
+    cache: Cache,
+    index: FileIndex,
 ) -> tuple[tuple[str, Any], ...]:
     """Perform core analysis on the Logseq graph."""
-    setup_logseq_filename_class(configs)
     process_graph_files(index, cache, configs)
     graph = setup_logseq_graph(index)
     summary_files, summary_content = setup_logseq_summarizers(index)
@@ -214,7 +240,7 @@ def perform_core_analysis(
     moved_files = setup_logseq_file_mover(args, ls_assets)
     data_reports = (
         (OutputDir.META.value, args.report),
-        # (OutputDir.META.value, configs.graph),
+        (OutputDir.META.value, configs.report),
         (OutputDir.GRAPH.value, graph.report),
         (OutputDir.INDEX.value, index.report),
         (OutputDir.INDEX.value, index.get_graph_content(args.write_graph)),
@@ -229,18 +255,6 @@ def perform_core_analysis(
     return data_reports
 
 
-def setup_logseq_filename_class(c: Configurations) -> LogseqFile:
-    """Setup the Logseq file class."""
-    graph_config = c.graph
-    LogseqFilename.graph_path = GraphDirectory().path
-    LogseqFilename.journal_file_format = c.journal_file_fmt
-    LogseqFilename.journal_page_format = c.journal_page_fmt
-    LogseqFilename.journal_page_title_format = get_page_title_format(graph_config)
-    LogseqFilename.target_dirs = get_target_dirs(graph_config)
-    LogseqFilename.ns_file_sep = get_ns_sep(graph_config)
-    logger.debug("run_app: setup_logseq_filename_class")
-
-
 def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
     """Setup the Logseq graph."""
     lg = LogseqGraph()
@@ -253,7 +267,7 @@ def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
 def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
     graph_dir = GraphDirectory().path
-    target_dirs = get_target_dirs(c.graph)
+    target_dirs = get_target_dirs(c.config)
     target_dirs = set(target_dirs.values())
     for file_path in cache.iter_modified_files(graph_dir, target_dirs):
         file = LogseqFile(file_path)
@@ -311,18 +325,17 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     drd = DeleteRecycleDirectory().path
     rd = RecycleDirectory().path
     dad = DeleteAssetsDirectory().path
-    moved_files = {}
-    moved_files[Moved.ASSETS.value] = handle_move_assets(args.move_unlinked_assets, dad, lsa.not_backlinked)
-    moved_files[Moved.BAK.value] = handle_move_directory(args.move_bak, dbd, bd)
-    moved_files[Moved.RECYCLE.value] = handle_move_directory(args.move_recycle, drd, rd)
+    moved_files = {
+        Moved.ASSETS.value: handle_move_assets(args.move_unlinked_assets, dad, lsa.not_backlinked),
+        Moved.BAK.value: handle_move_directory(args.move_bak, dbd, bd),
+        Moved.RECYCLE.value: handle_move_directory(args.move_recycle, drd, rd),
+    }
     logger.debug("run_app: setup_logseq_file_mover")
     return {Output.MOVED_FILES.value: moved_files}
 
 
-def write_reports(data_reports: tuple[Any], args: Args) -> None:
+def write_reports(data_reports: tuple[Any]) -> None:
     """Write reports to the specified output directories."""
-    ReportWriter.ext = args.report_format
-    ReportWriter.output_dir = OutputDirectory().path
     for subdir, reports in data_reports:
         for prefix, data in reports.items():
             ReportWriter(prefix, data, subdir).write()
@@ -338,7 +351,7 @@ def finish_analysis(cache: Cache, index: FileIndex) -> None:
 
 def run_app(**kwargs) -> None:
     """Main function to run the Logseq analyzer."""
-    progress = kwargs.get("progress_callback", GUIInstanceDummy())
+    progress = kwargs.pop("progress_callback", GUIInstanceDummy())
     if isinstance(progress, GUIInstanceDummy):
         progress = progress.update_progress
 
@@ -354,11 +367,14 @@ def run_app(**kwargs) -> None:
     progress(40, "Setting up Logseq cache...")
     cache, index = setup_cache(args)
 
-    progress(50, "Running core analysis on Logseq graph...")
-    data_reports = perform_core_analysis(args, index, cache, configs)
+    progress(50, "Setup class attributes...")
+    setup_analyzer_class_attributes(args, configs)
 
-    progress(60, "Writing reports...")
-    write_reports(data_reports, args)
+    progress(60, "Running core analysis on Logseq graph...")
+    data_reports = perform_core_analysis(args, configs, cache, index)
+
+    progress(70, "Writing reports...")
+    write_reports(data_reports)
 
     progress(80, "Finalizing analysis...")
     finish_analysis(cache, index)

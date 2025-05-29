@@ -110,8 +110,7 @@ class LogseqFilename:
         """Process the filename based on its parent directory."""
         self.determine_file_type()
         self.process_logseq_filename()
-        if self.is_namespace:
-            self.get_namespace_name_data()
+        self.get_namespace_name_data()
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
@@ -143,6 +142,8 @@ class LogseqFilename:
 
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
+        if not self.is_namespace:
+            return
         ns_parts_list = self.name.split(Core.NS_SEP.value)
         ns_root = ns_parts_list[0]
         self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
