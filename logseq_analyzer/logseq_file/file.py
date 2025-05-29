@@ -62,13 +62,13 @@ class LogseqFile:
         Args:
             file_path (Path): The path to the Logseq file.
         """
-        self.file_path: Path = file_path
-        self.data: dict[str, Any] = {}
-        self.path: LogseqFilename = LogseqFilename(file_path)
-        self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.data: dict[str, Any] = {}
+        self.file_path: Path = file_path
         self.masked: MaskedBlocks = MaskedBlocks()
         self.node: NodeType = NodeType()
+        self.path: LogseqFilename = LogseqFilename(file_path)
+        self.stat: LogseqFilestats = LogseqFilestats(file_path)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
@@ -116,14 +116,14 @@ class LogseqFile:
         self.path.process_filename()
         self.stat.process_stats()
         self.bullets.process_bullets()
-        self._set_file_data_attributes()
+        self.set_file_data_attributes()
 
-    def _set_file_data_attributes(self) -> None:
+    def set_file_data_attributes(self) -> None:
         """Set file data attributes."""
-        _large = ("content_bullets", "content")
+        largeattrs = ("content_bullets", "content")
         for subdata in (self.stat, self.path, self.bullets):
             for attr, value in yield_attrs(subdata):
-                if subdata is self.bullets and attr in _large:
+                if subdata is self.bullets and attr in largeattrs:
                     continue
                 setattr(self, attr, value)
 
@@ -287,29 +287,38 @@ class LogseqFile:
         """
         Helper function to check node type based on content.
         """
-        if self.node.has_backlinks:
-            if self.node.is_backlinked or self.node.is_backlinked_by_ns_only:
+        match (self.node.has_backlinks, self.node.is_backlinked, self.node.is_backlinked_by_ns_only):
+            case (True, True, True):
                 node_type = Nodes.BRANCH.value
-            else:
+            case (True, True, False):
+                node_type = Nodes.BRANCH.value
+            case (True, False, True):
+                node_type = Nodes.BRANCH.value
+            case (True, False, False):
                 node_type = Nodes.ROOT.value
-        elif self.node.is_backlinked:
-            node_type = Nodes.LEAF.value
-        elif self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
-            node_type = Nodes.ORPHAN_NAMESPACE.value
-        else:
-            node_type = Nodes.ORPHAN_GRAPH.value
+            case (False, True, True):
+                node_type = Nodes.LEAF.value
+            case (False, True, False):
+                node_type = Nodes.LEAF.value
+            case (False, False, True):
+                node_type = Nodes.ORPHAN_NAMESPACE.value
+            case (False, False, False):
+                node_type = Nodes.ORPHAN_GRAPH.value
         return node_type
 
     def check_node_type_has_no_content(self) -> str:
         """
         Helper function to check node type based on no content.
         """
-        if self.node.is_backlinked:
-            node_type = Nodes.LEAF.value
-        elif self.node.is_backlinked_by_ns_only and not self.node.is_backlinked:
-            node_type = Nodes.ORPHAN_NAMESPACE_TRUE.value
-        else:
-            node_type = Nodes.ORPHAN_TRUE.value
+        match (self.node.is_backlinked, self.node.is_backlinked_by_ns_only):
+            case (True, True):
+                node_type = Nodes.LEAF.value
+            case (True, False):
+                node_type = Nodes.LEAF.value
+            case (False, True):
+                node_type = Nodes.ORPHAN_NAMESPACE_TRUE.value
+            case (False, False):
+                node_type = Nodes.ORPHAN_TRUE.value
         return node_type
 
     def unmask_blocks(self) -> str:

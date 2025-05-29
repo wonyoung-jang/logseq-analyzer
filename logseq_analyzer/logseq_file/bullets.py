@@ -89,8 +89,8 @@ class LogseqBullets:
 
     def get_bullet_density(self) -> None:
         """Get the bullet density of the content."""
-        if self.stats.bullet_count:
-            self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
+        if bullet_count := self.stats.bullet_count:
+            self.stats.bullet_density = round(self.stats.char_count / bullet_count, 2)
 
     def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""

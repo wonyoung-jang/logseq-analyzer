@@ -207,12 +207,10 @@ def perform_core_analysis(
     setup_logseq_filename_class(configs)
     process_graph_files(index, cache, configs)
     graph = setup_logseq_graph(index)
-    summary_files = setup_logseq_file_summarizer(index)
-    summary_content = setup_logseq_content_summarizer(index)
+    summary_files, summary_content = setup_logseq_summarizers(index)
     namespaces = setup_logseq_namespaces(graph, index)
     journals = setup_logseq_journals(graph, index, configs)
-    hls_assets = setup_logseq_hls_assets(index)
-    ls_assets = setup_logseq_assets(index)
+    ls_assets, hls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets)
     data_reports = (
         (OutputDir.META.value, args.report),
@@ -266,20 +264,14 @@ def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> No
     logger.debug("run_app: process_graph_files")
 
 
-def setup_logseq_file_summarizer(index: FileIndex) -> LogseqFileSummarizer:
-    """Setup the Logseq file summarizer."""
+def setup_logseq_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
+    """Setup the Logseq summarizers."""
     lfs = LogseqFileSummarizer()
     lfs.generate_summary(index)
-    logger.debug("run_app: setup_logseq_file_summarizer")
-    return lfs
-
-
-def setup_logseq_content_summarizer(index: FileIndex) -> LogseqContentSummarizer:
-    """Setup the Logseq content summarizer."""
     lcs = LogseqContentSummarizer()
     lcs.generate_summary(index)
-    logger.debug("run_app: setup_logseq_content_summarizer")
-    return lcs
+    logger.debug("run_app: setup_logseq_summarizers")
+    return lfs, lcs
 
 
 def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
@@ -301,22 +293,16 @@ def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, c: Configuration
     return lj
 
 
-def setup_logseq_hls_assets(index: FileIndex) -> LogseqAssetsHls:
+def setup_logseq_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
     lah.get_asset_files(index)
     lah.convert_names_to_data(index)
     lah.check_backlinks()
-    logger.debug("run_app: setup_logseq_hls_assets")
-    return lah
-
-
-def setup_logseq_assets(index: FileIndex) -> LogseqAssets:
-    """Setup LogseqAssets for handling assets."""
     lsa = LogseqAssets()
     lsa.handle_assets(index)
     logger.debug("run_app: setup_logseq_assets")
-    return lsa
+    return lsa, lah
 
 
 def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
@@ -346,15 +332,9 @@ def write_reports(data_reports: tuple[Any], args: Args) -> None:
 
 def finish_analysis(cache: Cache, index: FileIndex) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
-    update_cache(cache, index)
+    cache.cache[CacheKeys.INDEX.value] = index
     cache.close()
     logger.debug("run_app: finish_analysis")
-
-
-def update_cache(cache: Cache, index: FileIndex) -> None:
-    """Update the cache with the current index."""
-    cache.cache[CacheKeys.INDEX.value] = index
-    logger.debug("run_app: update_cache")
 
 
 def run_app(**kwargs) -> None:

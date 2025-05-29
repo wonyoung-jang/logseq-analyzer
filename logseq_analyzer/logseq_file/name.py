@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 class NamespaceInfo:
     """NamespaceInfo class."""
 
+    children: set[str] = field(default_factory=set)
+    parent_full: str = ""
+    parent: str = ""
     parts: dict[str, int] = field(default_factory=dict)
     root: str = ""
-    parent: str = ""
-    parent_full: str = ""
-    stem: str = ""
-    children: set[str] = field(default_factory=set)
     size: int = 0
+    stem: str = ""
 
 
 class LogseqFilename:
