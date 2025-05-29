@@ -4,14 +4,13 @@ Tests for LogseqJournals
 
 import pytest
 
-from ..index import FileIndex
 from ..namespaces import LogseqNamespaces
 
 
 @pytest.fixture
 def logseq_namespaces():
     """Fixture for LogseqNamespaces."""
-    return LogseqNamespaces(FileIndex())
+    return LogseqNamespaces()
 
 
 def test_singleton(logseq_namespaces):

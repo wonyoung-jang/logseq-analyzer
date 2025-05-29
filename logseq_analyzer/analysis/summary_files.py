@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    __slots__ = ("report", "index")
+    __slots__ = ("report",)
 
     summary_categories = {
         # Process general categories
@@ -49,24 +49,21 @@ class LogseqFileSummarizer:
         SummaryFiles.NODE_OTHER: {"node_type": "other"},
     }
 
-    def __init__(self, index: "FileIndex") -> None:
+    def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.report: dict[str, dict[str, list[str]]] = {}
-        self.index: FileIndex = index
 
-    def generate_summary(self) -> None:
+    def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
-        index = self.index
         summary_categories = LogseqFileSummarizer.summary_categories
         report = self.report
         for output_name, file_criteria in summary_categories.items():
             files = index.filter_files(**file_criteria)
             report[output_name.value] = get_attribute_list(files, "name")
-        self.process_file_extensions()
+        self.process_file_extensions(index)
 
-    def process_file_extensions(self) -> None:
+    def process_file_extensions(self, index: "FileIndex") -> None:
         """Process file extensions and create subsets for each."""
-        index = self.index
         ext_map = defaultdict(list)
         for file in index:
             if suffix := file.path.suffix:

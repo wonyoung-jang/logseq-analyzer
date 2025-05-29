@@ -102,8 +102,7 @@ def init_logseq_paths() -> None:
 
 def init_configs(args: Args) -> Configurations:
     """Initialize configurations for the Logseq analyzer."""
-    setup_logseq_analyzer_config(args)
-    setup_logseq_paths()
+    setup_logseq_paths(args)
 
     gc = setup_logseq_graph_config(args)
     setup_target_dirs(gc)
@@ -112,7 +111,7 @@ def init_configs(args: Args) -> Configurations:
     return Configurations(graph=gc, journal=jf)
 
 
-def setup_logseq_analyzer_config(args: Args) -> None:
+def setup_logseq_paths(args: Args) -> None:
     """Setup Logseq analyzer configuration based on arguments."""
     graph_folder_path = Path(args.graph_folder)
     logseq_dir = graph_folder_path / "logseq"
@@ -126,11 +125,6 @@ def setup_logseq_analyzer_config(args: Args) -> None:
     ConfigFile(user_config_file)
     if args.global_config:
         GlobalConfigFile(Path(args.global_config))
-    logger.debug("run_app: setup_logseq_analyzer_config")
-
-
-def setup_logseq_paths() -> None:
-    """Setup Logseq paths for the analyzer."""
     delete_dir = Constants.TO_DELETE_DIR.value
     delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
     delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
@@ -264,26 +258,26 @@ def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> No
 
 def setup_logseq_file_summarizer(index: FileIndex) -> LogseqFileSummarizer:
     """Setup the Logseq file summarizer."""
-    lfs = LogseqFileSummarizer(index)
-    lfs.generate_summary()
+    lfs = LogseqFileSummarizer()
+    lfs.generate_summary(index)
     logger.debug("run_app: setup_logseq_file_summarizer")
     return lfs
 
 
 def setup_logseq_content_summarizer(index: FileIndex) -> LogseqContentSummarizer:
     """Setup the Logseq content summarizer."""
-    lcs = LogseqContentSummarizer(index)
-    lcs.generate_summary()
+    lcs = LogseqContentSummarizer()
+    lcs.generate_summary(index)
     logger.debug("run_app: setup_logseq_content_summarizer")
     return lcs
 
 
 def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
-    ln = LogseqNamespaces(index)
-    ln.init_ns_parts()
-    ln.analyze_ns_queries()
-    ln.detect_non_ns_conflicts(graph.dangling_links)
+    ln = LogseqNamespaces()
+    ln.init_ns_parts(index)
+    ln.analyze_ns_queries(index)
+    ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
     logger.debug("run_app: setup_logseq_namespaces")
     return ln
