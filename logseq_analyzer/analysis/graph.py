@@ -4,7 +4,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import TYPE_CHECKING, Any
 
-from ..config.builtin_properties import get_user_properties
+from ..config.builtin_properties import remove_builtin_properties
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value
@@ -146,7 +146,7 @@ class LogseqGraph:
         linked_refs_ns = self.unique_linked_references_ns
         all_refs = linked_refs.union(linked_refs_ns)
         all_refs.difference_update(all_file_names, unique_aliases)
-        return sorted(get_user_properties(all_refs))
+        return sorted(remove_builtin_properties(all_refs))
 
     @property
     def report(self) -> dict[str, Any]:
