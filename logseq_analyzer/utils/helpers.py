@@ -185,15 +185,15 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
             break
 
         if count == 0:
-            yield count, text[: match.start()].strip()
+            yield count, text[: match.start()].strip(" \t")
             count += 1
 
         start_of_content = match.end()
         next_match = next(pattern.finditer(text, start_of_content), None)
         end_of_content = next_match.start() if next_match else len(text)
 
-        yield count, text[start_of_content:end_of_content].strip()
+        yield count, text[start_of_content:end_of_content].strip(" \t")
         count += 1
 
     if count == 0:
-        yield count, text.strip()
+        yield count, text.strip(" \t")

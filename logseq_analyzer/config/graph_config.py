@@ -9,20 +9,24 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Generator
 
-from ..utils.enums import Core, Output
-from ..utils.helpers import singleton
+from ..utils.enums import Core
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "TOKEN_REGEX",
     "NUMBER_REGEX",
-    "DEFAULT_LOGSEQ_CONFIG_EDN",
     "LogseqConfigEDN",
-    "LogseqGraphConfig",
     "EDNToken",
     "loads",
     "tokenize",
+    "init_config_edn_from_file",
+    "get_default_logseq_config",
+    "get_target_dirs",
+    "get_ns_sep",
+    "get_page_title_format",
+    "get_file_name_format",
+    "EDN",
 ]
 
 
@@ -39,140 +43,6 @@ TOKEN_REGEX: re.Pattern = re.compile(
 )
 COMMENT_REGEX: re.Pattern = re.compile(r";.*")
 NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
-
-
-DEFAULT_LOGSEQ_CONFIG_EDN: dict[str, Any] = {
-    ":meta/version": 1,
-    ":preferred-format": "Markdown",
-    ":preferred-workflow": ":now",
-    ":hidden": [],
-    ":default-templates": {":journals": ""},
-    ":journal/page-title-format": "MMM do, yyyy",
-    ":journal/file-name-format": "yyyy_MM_dd",
-    ":ui/enable-tooltip?": True,
-    ":ui/show-brackets?": True,
-    ":ui/show-full-blocks?": False,
-    ":ui/auto-expand-block-refs?": True,
-    ":feature/enable-block-timestamps?": False,
-    ":feature/enable-search-remove-accents?": True,
-    ":feature/enable-journals?": True,
-    ":feature/enable-flashcards?": True,
-    ":feature/enable-whiteboards?": True,
-    ":feature/disable-scheduled-and-deadline-query?": False,
-    ":scheduled/future-days": 7,
-    ":start-of-week": 6,
-    ":export/bullet-indentation": ":tab",
-    ":publishing/all-pages-public?": False,
-    ":pages-directory": "pages",
-    ":journals-directory": "journals",
-    ":whiteboards-directory": "whiteboards",
-    ":shortcuts": {},
-    ":shortcut/doc-mode-enter-for-new-block?": False,
-    ":block/content-max-length": 10000,
-    ":ui/show-command-doc?": True,
-    ":ui/show-empty-bullets?": False,
-    ":query/views": {":pprint": ["fn", ["r"], [":pre.code", ["pprint", "r"]]]},
-    ":query/result-transforms": {
-        ":sort-by-priority": [
-            "fn",
-            ["result"],
-            ["sort-by", ["fn", ["h"], ["get", "h", ":block/priority", "Z"]], "result"],
-        ]
-    },
-    ":default-queries": {
-        ":journals": [
-            {
-                ":title": "🔨 NOW",
-                ":query": [
-                    ":find",
-                    ["pull", "?h", ["*"]],
-                    ":in",
-                    "$",
-                    "?start",
-                    "?today",
-                    ":where",
-                    ["?h", ":block/marker", "?marker"],
-                    [["contains?", {"NOW", "DOING"}, "?marker"]],
-                    ["?h", ":block/page", "?p"],
-                    ["?p", ":block/journal?", True],
-                    ["?p", ":block/journal-day", "?d"],
-                    [[">=", "?d", "?start"]],
-                    [["<=", "?d", "?today"]],
-                ],
-                ":inputs": [":14d", ":today"],
-                ":result-transform": [
-                    "fn",
-                    ["result"],
-                    [
-                        "sort-by",
-                        ["fn", ["h"], ["get", "h", ":block/priority", "Z"]],
-                        "result",
-                    ],
-                ],
-                ":group-by-page?": False,
-                ":collapsed?": False,
-            },
-            {
-                ":title": "📅 NEXT",
-                ":query": [
-                    ":find",
-                    ["pull", "?h", ["*"]],
-                    ":in",
-                    "$",
-                    "?start",
-                    "?next",
-                    ":where",
-                    ["?h", ":block/marker", "?marker"],
-                    [["contains?", {"NOW", "LATER", "TODO"}, "?marker"]],
-                    ["?h", ":block/page", "?p"],
-                    ["?p", ":block/journal?", True],
-                    ["?p", ":block/journal-day", "?d"],
-                    [[">", "?d", "?start"]],
-                    [["<", "?d", "?next"]],
-                ],
-                ":inputs": [":today", ":7d-after"],
-                ":group-by-page?": False,
-                ":collapsed?": False,
-            },
-        ]
-    },
-    ":commands": [],
-    ":outliner/block-title-collapse-enabled?": False,
-    ":macros": {},
-    ":ref/default-open-blocks-level": 2,
-    ":ref/linked-references-collapsed-threshold": 100,
-    ":graph/settings": {
-        ":orphan-pages?": True,
-        ":builtin-pages?": False,
-        ":excluded-pages?": False,
-        ":journal?": False,
-    },
-    ":graph/forcesettings": {
-        ":link-dist": 180,
-        ":charge-strength": -600,
-        ":charge-range": 600,
-    },
-    ":favorites": [],
-    ":srs/learning-fraction": 0.5,
-    ":srs/initial-interval": 4,
-    ":property-pages/enabled?": True,
-    ":editor/extra-codemirror-options": {
-        ":lineWrapping": False,
-        ":lineNumbers": True,
-        ":readOnly": False,
-    },
-    ":editor/logical-outdenting?": False,
-    ":editor/preferred-pasting-file?": False,
-    ":dwim/settings": {
-        ":admonition&src?": True,
-        ":markup?": False,
-        ":block-ref?": True,
-        ":page-ref?": True,
-        ":properties?": True,
-        ":list?": False,
-    },
-    ":file/name-format": ":triple-lowbar",
-}
 
 
 class LogseqConfigEDN:
@@ -364,60 +234,145 @@ def init_config_edn_from_file(path: Path) -> None:
     return loads(edn_data)
 
 
-@singleton
-class LogseqGraphConfig:
+def get_default_logseq_config() -> dict[str, Any]:
     """
-    A class to LogseqGraphConfig.
+    Get the default Logseq configuration.
+
+    Returns:
+        dict[str, Any]: The default Logseq configuration.
     """
-
-    __slots__ = ("config", "_user_edn", "_global_edn")
-
-    def __init__(self) -> None:
-        """Initialize the LogseqGraphConfig class."""
-        self.config: dict[str, Any] = {}
-        self.user_edn = {}
-        self.global_edn = {}
-
-    @property
-    def user_edn(self) -> dict[str, Any]:
-        """Return the user configuration."""
-        return self._user_edn
-
-    @user_edn.setter
-    def user_edn(self, value: Any) -> None:
-        """Set the user configuration."""
-        if not isinstance(value, dict):
-            raise ValueError("User config must be a dictionary.")
-        self._user_edn = value
-
-    @property
-    def global_edn(self) -> dict[str, Any]:
-        """Return the global configuration."""
-        return self._global_edn
-
-    @global_edn.setter
-    def global_edn(self, value: Any) -> None:
-        """Set the global configuration."""
-        if not isinstance(value, dict):
-            raise ValueError("Global config must be a dictionary.")
-        self._global_edn = value
-
-    def merge(self) -> None:
-        """Merge default, user, and global config."""
-        config = DEFAULT_LOGSEQ_CONFIG_EDN
-        config.update(self.user_edn)
-        config.update(self.global_edn)
-        self.config = config
-        logger.debug("Merged config: length - %s", len(config))
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the merged configuration."""
-        return {
-            Output.CONFIG_MERGED.value: self.config,
-            Output.CONFIG_USER.value: self.user_edn,
-            Output.CONFIG_GLOBAL.value: self.global_edn,
-        }
+    return {
+        ":meta/version": 1,
+        ":preferred-format": "Markdown",
+        ":preferred-workflow": ":now",
+        ":hidden": [],
+        ":default-templates": {":journals": ""},
+        ":journal/page-title-format": "MMM do, yyyy",
+        ":journal/file-name-format": "yyyy_MM_dd",
+        ":ui/enable-tooltip?": True,
+        ":ui/show-brackets?": True,
+        ":ui/show-full-blocks?": False,
+        ":ui/auto-expand-block-refs?": True,
+        ":feature/enable-block-timestamps?": False,
+        ":feature/enable-search-remove-accents?": True,
+        ":feature/enable-journals?": True,
+        ":feature/enable-flashcards?": True,
+        ":feature/enable-whiteboards?": True,
+        ":feature/disable-scheduled-and-deadline-query?": False,
+        ":scheduled/future-days": 7,
+        ":start-of-week": 6,
+        ":export/bullet-indentation": ":tab",
+        ":publishing/all-pages-public?": False,
+        ":pages-directory": "pages",
+        ":journals-directory": "journals",
+        ":whiteboards-directory": "whiteboards",
+        ":shortcuts": {},
+        ":shortcut/doc-mode-enter-for-new-block?": False,
+        ":block/content-max-length": 10000,
+        ":ui/show-command-doc?": True,
+        ":ui/show-empty-bullets?": False,
+        ":query/views": {":pprint": ["fn", ["r"], [":pre.code", ["pprint", "r"]]]},
+        ":query/result-transforms": {
+            ":sort-by-priority": [
+                "fn",
+                ["result"],
+                ["sort-by", ["fn", ["h"], ["get", "h", ":block/priority", "Z"]], "result"],
+            ]
+        },
+        ":default-queries": {
+            ":journals": [
+                {
+                    ":title": "🔨 NOW",
+                    ":query": [
+                        ":find",
+                        ["pull", "?h", ["*"]],
+                        ":in",
+                        "$",
+                        "?start",
+                        "?today",
+                        ":where",
+                        ["?h", ":block/marker", "?marker"],
+                        [["contains?", {"NOW", "DOING"}, "?marker"]],
+                        ["?h", ":block/page", "?p"],
+                        ["?p", ":block/journal?", True],
+                        ["?p", ":block/journal-day", "?d"],
+                        [[">=", "?d", "?start"]],
+                        [["<=", "?d", "?today"]],
+                    ],
+                    ":inputs": [":14d", ":today"],
+                    ":result-transform": [
+                        "fn",
+                        ["result"],
+                        [
+                            "sort-by",
+                            ["fn", ["h"], ["get", "h", ":block/priority", "Z"]],
+                            "result",
+                        ],
+                    ],
+                    ":group-by-page?": False,
+                    ":collapsed?": False,
+                },
+                {
+                    ":title": "📅 NEXT",
+                    ":query": [
+                        ":find",
+                        ["pull", "?h", ["*"]],
+                        ":in",
+                        "$",
+                        "?start",
+                        "?next",
+                        ":where",
+                        ["?h", ":block/marker", "?marker"],
+                        [["contains?", {"NOW", "LATER", "TODO"}, "?marker"]],
+                        ["?h", ":block/page", "?p"],
+                        ["?p", ":block/journal?", True],
+                        ["?p", ":block/journal-day", "?d"],
+                        [[">", "?d", "?start"]],
+                        [["<", "?d", "?next"]],
+                    ],
+                    ":inputs": [":today", ":7d-after"],
+                    ":group-by-page?": False,
+                    ":collapsed?": False,
+                },
+            ]
+        },
+        ":commands": [],
+        ":outliner/block-title-collapse-enabled?": False,
+        ":macros": {},
+        ":ref/default-open-blocks-level": 2,
+        ":ref/linked-references-collapsed-threshold": 100,
+        ":graph/settings": {
+            ":orphan-pages?": True,
+            ":builtin-pages?": False,
+            ":excluded-pages?": False,
+            ":journal?": False,
+        },
+        ":graph/forcesettings": {
+            ":link-dist": 180,
+            ":charge-strength": -600,
+            ":charge-range": 600,
+        },
+        ":favorites": [],
+        ":srs/learning-fraction": 0.5,
+        ":srs/initial-interval": 4,
+        ":property-pages/enabled?": True,
+        ":editor/extra-codemirror-options": {
+            ":lineWrapping": False,
+            ":lineNumbers": True,
+            ":readOnly": False,
+        },
+        ":editor/logical-outdenting?": False,
+        ":editor/preferred-pasting-file?": False,
+        ":dwim/settings": {
+            ":admonition&src?": True,
+            ":markup?": False,
+            ":block-ref?": True,
+            ":page-ref?": True,
+            ":properties?": True,
+            ":list?": False,
+        },
+        ":file/name-format": ":triple-lowbar",
+    }
 
 
 def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:

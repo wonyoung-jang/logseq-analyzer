@@ -246,6 +246,8 @@ class Output(Enum):
 class OutputDir(Enum):
     """Output directories for the Logseq Analyzer."""
 
+    GRAPH = "graph"
+    INDEX = "index"
     JOURNALS = "journals"
     META = "_meta"
     MOVED_FILES = "moved_files"

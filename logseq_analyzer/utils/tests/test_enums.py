@@ -321,6 +321,8 @@ def test_output_member_count():
 # OutputDir
 def test_output_dir_values():
     expected = {
+        "GRAPH": "graph",
+        "INDEX": "index",
         "JOURNALS": "journals",
         "META": "_meta",
         "MOVED_FILES": "moved_files",
@@ -334,7 +336,7 @@ def test_output_dir_values():
 
 
 def test_output_dir_member_count():
-    assert len(OutputDir) == 7
+    assert len(OutputDir) == 9
 
 
 # SummaryFiles

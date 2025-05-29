@@ -3,7 +3,7 @@ This module contains the main application logic for the Logseq analyzer.
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -15,9 +15,13 @@ from .analysis.namespaces import LogseqNamespaces
 from .analysis.summary_content import LogseqContentSummarizer
 from .analysis.summary_files import LogseqFileSummarizer
 from .config.arguments import Args
-from .config.datetime_tokens import LogseqDateTimeTokens, LogseqJournalFormats
+from .config.datetime_tokens import (
+    compile_token_pattern,
+    convert_cljs_date_to_py,
+    get_token_map,
+)
 from .config.graph_config import (
-    LogseqGraphConfig,
+    get_default_logseq_config,
     get_file_name_format,
     get_ns_sep,
     get_page_title_format,
@@ -80,8 +84,11 @@ class GUIInstanceDummy:
 class Configurations:
     """Class to hold configurations for the Logseq analyzer."""
 
-    graph: LogseqGraphConfig
-    journal: LogseqJournalFormats
+    graph: dict[str, Any] = field(default_factory=dict)
+    user_edn: dict[str, Any] = field(default_factory=dict)
+    global_edn: dict[str, Any] = field(default_factory=dict)
+    journal_file_fmt: str = ""
+    journal_page_fmt: str = ""
 
 
 def init_logseq_paths() -> None:
@@ -103,12 +110,10 @@ def init_logseq_paths() -> None:
 def init_configs(args: Args) -> Configurations:
     """Initialize configurations for the Logseq analyzer."""
     setup_logseq_paths(args)
-
-    gc = setup_logseq_graph_config(args)
+    gc, user_edn, global_edn = setup_logseq_graph_config(args)
     setup_target_dirs(gc)
-
-    jf = setup_datetime_tokens(gc)
-    return Configurations(graph=gc, journal=jf)
+    journal_file_fmt, journal_page_fmt = setup_journal_formats(gc)
+    return Configurations(gc, user_edn, global_edn, journal_file_fmt, journal_page_fmt)
 
 
 def setup_logseq_paths(args: Args) -> None:
@@ -123,8 +128,6 @@ def setup_logseq_paths(args: Args) -> None:
     BakDirectory(bak_dir)
     RecycleDirectory(recycle_dir)
     ConfigFile(user_config_file)
-    if args.global_config:
-        GlobalConfigFile(Path(args.global_config))
     delete_dir = Constants.TO_DELETE_DIR.value
     delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
     delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
@@ -136,21 +139,26 @@ def setup_logseq_paths(args: Args) -> None:
     logger.debug("run_app: setup_logseq_paths")
 
 
-def setup_logseq_graph_config(args: Args) -> LogseqGraphConfig:
+def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
     """Setup Logseq graph configuration based on arguments."""
-    lgc = LogseqGraphConfig()
-    lgc.user_edn = init_config_edn_from_file(ConfigFile().path)
+    config = get_default_logseq_config()
+    user_edn = init_config_edn_from_file(ConfigFile().path)
+    global_edn = {}
     if args.global_config:
-        lgc.global_edn = init_config_edn_from_file(GlobalConfigFile().path)
-    lgc.merge()
+        global_config_path = Path(args.global_config)
+        global_config_file = GlobalConfigFile(global_config_path)
+        gc_file_path = global_config_file.path
+        global_edn = init_config_edn_from_file(gc_file_path)
+    config.update(user_edn)
+    config.update(global_edn)
     logger.debug("run_app: setup_logseq_graph_config")
-    return lgc
+    return config, user_edn, global_edn
 
 
-def setup_target_dirs(gc: LogseqGraphConfig) -> None:
+def setup_target_dirs(gc: dict[str, Any]) -> None:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     graph_path = GraphDirectory().path
-    target_dirs = get_target_dirs(gc.config)
+    target_dirs = get_target_dirs(gc)
     dir_assets = graph_path / target_dirs["assets"]
     dir_draws = graph_path / target_dirs["draws"]
     dir_journals = graph_path / target_dirs["journals"]
@@ -164,18 +172,19 @@ def setup_target_dirs(gc: LogseqGraphConfig) -> None:
     logger.debug("run_app: setup_target_dirs")
 
 
-def setup_datetime_tokens(gc: LogseqGraphConfig) -> LogseqJournalFormats:
-    """Setup datetime tokens."""
-    ldtt = LogseqDateTimeTokens()
-    journal_file_format = get_file_name_format(gc.config)
-    journal_page_format = get_page_title_format(gc.config)
+def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
+    """Setup journal formats."""
+    token_map = get_token_map()
+    token_pattern = compile_token_pattern(token_map)
 
-    ljf = LogseqJournalFormats()
-    ljf.file = ldtt.convert_cljs_date_to_py(journal_file_format)
-    ljf.page = ldtt.convert_cljs_date_to_py(journal_page_format)
-    del ldtt
-    logger.debug("run_app: setup_datetime_tokens")
-    return ljf
+    journal_file_fmt = get_file_name_format(gc)
+    journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, token_map, token_pattern)
+
+    journal_page_fmt = get_page_title_format(gc)
+    journal_page_fmt = convert_cljs_date_to_py(journal_page_fmt, token_map, token_pattern)
+
+    logger.debug("run_app: setup_journal_formats")
+    return journal_file_fmt, journal_page_fmt
 
 
 def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
@@ -207,10 +216,10 @@ def perform_core_analysis(
     moved_files = setup_logseq_file_mover(args, ls_assets)
     data_reports = (
         (OutputDir.META.value, args.report),
-        (OutputDir.META.value, graph.report),
-        (OutputDir.META.value, configs.graph.report),
-        (OutputDir.META.value, index.report),
-        (OutputDir.META.value, index.get_graph_content(args.write_graph)),
+        # (OutputDir.META.value, configs.graph),
+        (OutputDir.GRAPH.value, graph.report),
+        (OutputDir.INDEX.value, index.report),
+        (OutputDir.INDEX.value, index.get_graph_content(args.write_graph)),
         (OutputDir.JOURNALS.value, journals.report),
         (OutputDir.NAMESPACES.value, namespaces.report),
         (OutputDir.MOVED_FILES.value, moved_files),
@@ -224,12 +233,13 @@ def perform_core_analysis(
 
 def setup_logseq_filename_class(c: Configurations) -> LogseqFile:
     """Setup the Logseq file class."""
+    graph_config = c.graph
     LogseqFilename.graph_path = GraphDirectory().path
-    LogseqFilename.journal_file_format = c.journal.file
-    LogseqFilename.journal_page_format = c.journal.page
-    LogseqFilename.journal_page_title_format = get_page_title_format(c.graph.config)
-    LogseqFilename.target_dirs = get_target_dirs(c.graph.config)
-    LogseqFilename.ns_file_sep = get_ns_sep(c.graph.config)
+    LogseqFilename.journal_file_format = c.journal_file_fmt
+    LogseqFilename.journal_page_format = c.journal_page_fmt
+    LogseqFilename.journal_page_title_format = get_page_title_format(graph_config)
+    LogseqFilename.target_dirs = get_target_dirs(graph_config)
+    LogseqFilename.ns_file_sep = get_ns_sep(graph_config)
     logger.debug("run_app: setup_logseq_filename_class")
 
 
@@ -245,7 +255,7 @@ def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
 def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
     graph_dir = GraphDirectory().path
-    target_dirs = get_target_dirs(c.graph.config)
+    target_dirs = get_target_dirs(c.graph)
     target_dirs = set(target_dirs.values())
     for file_path in cache.iter_modified_files(graph_dir, target_dirs):
         file = LogseqFile(file_path)
@@ -286,7 +296,7 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
 def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, c: Configurations) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process_journals_timelines(index, graph.dangling_links, c.journal.page)
+    lj.process_journals_timelines(index, graph.dangling_links, c.journal_page_fmt)
     logger.debug("run_app: setup_logseq_journals")
     return lj
 
