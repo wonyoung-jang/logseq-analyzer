@@ -2,10 +2,12 @@
 Test the LogseqAnalyzerArguments class.
 """
 
-from pathlib import Path
-import pytest
 import sys
+from pathlib import Path
 
+import pytest
+
+from ...utils.enums import Output
 from ..arguments import Args
 
 
@@ -164,3 +166,10 @@ def test_set_cli_args_missing_required(monkeypatch, args_instance):
     # argparse.parse_args() calls sys.exit() upon error
     with pytest.raises(SystemExit):
         args_instance.setup_args()
+
+
+def test_report(args_instance):
+    """Test the report generation."""
+    report = args_instance.report[Output.ARGUMENTS.value]
+    assert isinstance(report, dict)
+    assert "graph_folder" in report

@@ -13,6 +13,7 @@ from ...utils.enums import Constants
 def cache():
     """Fixture to create a Cache object."""
     cache = Cache(Path(Constants.CACHE_FILE.value))
+    cache.open()
     yield cache
     cache.close()
 
