@@ -117,16 +117,16 @@ class LogseqGraph:
 
     def process_summary_data(self, index: "FileIndex") -> None:
         """Process summary data for each file based on metadata and content analysis."""
-        unique_linked_references = self.unique_linked_references
-        unique_linked_references_ns = self.unique_linked_references_ns
+        linked_refs = self.unique_linked_references
+        linked_refs_ns = self.unique_linked_references_ns
         for file in index:
             fn = file.node
-            if not fn.is_backlinked:
-                fn.is_backlinked = file.check_is_backlinked(unique_linked_references)
-            if not fn.is_backlinked_by_ns_only:
-                fn.is_backlinked_by_ns_only = file.check_is_backlinked(unique_linked_references_ns)
-                if fn.is_backlinked and fn.is_backlinked_by_ns_only:
-                    fn.is_backlinked = False
+            if not fn.backlinked:
+                fn.backlinked = file.check_is_backlinked(linked_refs)
+            if not fn.backlinked_ns_only:
+                fn.backlinked_ns_only = file.check_is_backlinked(linked_refs_ns)
+            if fn.backlinked and fn.backlinked_ns_only:
+                fn.backlinked = False
             if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 
@@ -135,8 +135,7 @@ class LogseqGraph:
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
         all_refs = linked_refs.union(linked_refs_ns)
-        all_refs.difference_update(all_file_names)
-        all_refs.difference_update(unique_aliases)
+        all_refs.difference_update(all_file_names, unique_aliases)
         return sorted(get_user_properties(all_refs))
 
     @property

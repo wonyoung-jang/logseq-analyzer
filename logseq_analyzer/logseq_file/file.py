@@ -36,8 +36,8 @@ class NodeType:
     """Class to hold node type data."""
 
     has_backlinks: bool = False
-    is_backlinked: bool = False
-    is_backlinked_by_ns_only: bool = False
+    backlinked: bool = False
+    backlinked_ns_only: bool = False
     type: str = Nodes.OTHER.value
 
 
@@ -104,12 +104,12 @@ class LogseqFile:
     @property
     def is_backlinked(self) -> bool:
         """Return whether the file is backlinked."""
-        return self.node.is_backlinked
+        return self.node.backlinked
 
     @property
     def is_backlinked_by_ns_only(self) -> bool:
         """Return whether the file is backlinked by namespace only."""
-        return self.node.is_backlinked_by_ns_only
+        return self.node.backlinked_ns_only
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
@@ -289,7 +289,7 @@ class LogseqFile:
         """
         Helper function to check node type based on content.
         """
-        match (self.node.has_backlinks, self.node.is_backlinked, self.node.is_backlinked_by_ns_only):
+        match (self.node.has_backlinks, self.node.backlinked, self.node.backlinked_ns_only):
             case (True, True, True):
                 node_type = Nodes.BRANCH.value
             case (True, True, False):
@@ -312,7 +312,7 @@ class LogseqFile:
         """
         Helper function to check node type based on no content.
         """
-        match (self.node.is_backlinked, self.node.is_backlinked_by_ns_only):
+        match (self.node.backlinked, self.node.backlinked_ns_only):
             case (True, True):
                 node_type = Nodes.LEAF.value
             case (True, False):
@@ -369,5 +369,5 @@ class LogseqFile:
         nameset = (self.path.name, parent)
         for asset_mention in asset_mentions:
             if any(name in asset_mention for name in nameset):
-                self.node.is_backlinked = True
+                self.node.backlinked = True
                 return
