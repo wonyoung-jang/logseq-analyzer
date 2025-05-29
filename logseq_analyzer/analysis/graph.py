@@ -84,14 +84,17 @@ class LogseqGraph:
 
             linked_refs.update(linked_references)
 
-        for _, values in all_linked_references.items():
-            values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
-        all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
-
-        all_file_names = (file.path.name for file in index)
-        dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
+        all_linked_references = LogseqGraph.sort_all_linked_references(all_linked_references)
+        dangling_links = self.process_dangling_links(index, unique_aliases)
         self.dangling_links.extend(dangling_links)
         self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
+
+    @staticmethod
+    def sort_all_linked_references(all_linked_references: dict) -> dict:
+        """Sort all linked references by count and found_in."""
+        for _, values in all_linked_references.items():
+            values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
+        return sort_dict_by_value(all_linked_references, value="count", reverse=True)
 
     def post_process_namespace(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
@@ -105,8 +108,7 @@ class LogseqGraph:
 
         for ns_root_file in index[ns_root]:
             ns_root_file: LogseqFile
-            if not ns_root_file.path.is_namespace:
-                ns_root_file.path.is_namespace = True
+            ns_root_file.path.is_namespace = True
             ns_root_file.path.ns_info.children.add(file.path.name)
             ns_root_file.path.ns_info.size = len(ns_root_file.path.ns_info.children)
             ns_root_file.set_ns_data()
@@ -137,8 +139,9 @@ class LogseqGraph:
             if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
                 file.determine_node_type()
 
-    def process_dangling_links(self, all_file_names: set[str], unique_aliases: set[str]) -> list[str]:
+    def process_dangling_links(self, index: "FileIndex", unique_aliases: set[str]) -> list[str]:
         """Process dangling links in the graph."""
+        all_file_names = (file.path.name for file in index)
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
         all_refs = linked_refs.union(linked_refs_ns)

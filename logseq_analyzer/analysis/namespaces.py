@@ -118,12 +118,11 @@ class LogseqNamespaces:
 
     def analyze_ns_queries(self, index: "FileIndex") -> None:
         """Analyze namespace queries."""
-        page_ref_pattern = ContentPatterns.PAGE_REFERENCE
+        ns_data = self.structure.data
         ns_queries = {}
-        namespace_data = self.structure.data
         for file in index:
             for query in file.data.get("namespace_queries", []):
-                page_refs = page_ref_pattern.findall(query)
+                page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
@@ -132,7 +131,7 @@ class LogseqNamespaces:
                 ns_queries.setdefault(query, {})
                 ns_queries[query].setdefault("found_in", []).append(file.path.name)
                 ns_queries[query]["namespace"] = page_ref
-                ns_queries[query]["size"] = namespace_data.get(page_ref, {}).get("size", 0)
+                ns_queries[query]["size"] = ns_data.get(page_ref, {}).get("size", 0)
                 ns_queries[query]["uri"] = file.path.uri
                 ns_queries[query]["logseq_url"] = file.path.logseq_url
         self.queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
@@ -170,10 +169,9 @@ class LogseqNamespaces:
 
             details = part_entries[part]
             for level in levels:
-                key = f"{part} {level}"
-                entries = [i["entry"] for i in details if i["level"] == level]
+                key = (part, level)
+                entries = [d["entry"] for d in details if d["level"] == level]
                 conflicts_parent_depth[key] = entries
-                level = int(key.rsplit(" ", maxsplit=1)[-1])
                 for page in entries:
                     parts = page.split(Core.NS_SEP.value)
                     up_to_level = parts[:level]
