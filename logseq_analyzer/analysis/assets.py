@@ -105,7 +105,6 @@ class LogseqAssetsHls:
 
     def convert_names_to_data(self, index: "FileIndex") -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        property_value_pattern = ContentPatterns.PROPERTY_VALUE
         formatted_bullets = self.formatted_bullets
         for file in index.filter_files(is_hls=True):
             for bullet in file.bullets.content_bullets:
@@ -114,7 +113,7 @@ class LogseqAssetsHls:
                     continue
 
                 hl_page, id_bullet, hl_stamp = "", "", ""
-                for prop_value in property_value_pattern.finditer(bullet):
+                for prop_value in ContentPatterns.PROPERTY_VALUE.finditer(bullet):
                     propkey = prop_value.group(1)
                     value = prop_value.group(2).strip()
                     match propkey:
@@ -134,18 +133,14 @@ class LogseqAssetsHls:
         """Check for backlinks in the HLS assets."""
         backlinked = self.asset_names.intersection(self.formatted_bullets)
         not_backlinked = self.asset_names.difference(self.formatted_bullets)
-        self.update_sub_asset_files(backlinked, not_backlinked)
-        self.backlinked.update(backlinked)
-        self.not_backlinked.update(not_backlinked)
-
-    def update_sub_asset_files(self, backlinked: set[str], not_backlinked: set[str]) -> None:
-        """Update the asset files with backlink status and file type."""
         asset_mapping = self.asset_mapping
         for name in backlinked:
             asset_mapping[name].node.backlinked = True
             asset_mapping[name].path.file_type = "asset"
         for name in not_backlinked:
             asset_mapping[name].path.file_type = "asset"
+        self.backlinked.update(backlinked)
+        self.not_backlinked.update(not_backlinked)
 
     @property
     def report(self) -> str:

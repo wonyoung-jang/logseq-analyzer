@@ -50,26 +50,30 @@ class LogseqGraph:
         """Post-process the content data for all files."""
         all_linked_references = self.all_linked_references
         unique_aliases = set()
-        unique_linked_references = self.unique_linked_references
-        unique_linked_references_ns = self.unique_linked_references_ns
+        linked_refs = self.unique_linked_references
+        linked_refs_ns = self.unique_linked_references_ns
         for file in index:
             if (curr_ns_info := file.path.ns_info) and file.path.is_namespace:
-                ns_refs = self.post_processing_content_namespaces(file, index)
-                unique_linked_references_ns.update(ns_refs)
-            found_aliases = file.data.get(Criteria.ALIASES.value, [])
+                linked_refs_ns.update(self.post_process_namespace(file, index))
+
+            if not (f_data := file.data):
+                continue
+
+            found_aliases = f_data.get(Criteria.ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
                 found_aliases,
-                file.data.get(Criteria.DRAWS.value, []),
-                file.data.get(Criteria.PAGE_REFERENCES.value, []),
-                file.data.get(Criteria.TAGS.value, []),
-                file.data.get(Criteria.TAGGED_BACKLINKS.value, []),
-                file.data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
-                file.data.get(Criteria.PROP_PAGE_USER.value, []),
-                file.data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
-                file.data.get(Criteria.PROP_BLOCK_USER.value, []),
+                f_data.get(Criteria.DRAWS.value, []),
+                f_data.get(Criteria.PAGE_REFERENCES.value, []),
+                f_data.get(Criteria.TAGS.value, []),
+                f_data.get(Criteria.TAGGED_BACKLINKS.value, []),
+                f_data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
+                f_data.get(Criteria.PROP_PAGE_USER.value, []),
+                f_data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
+                f_data.get(Criteria.PROP_BLOCK_USER.value, []),
             ]
             linked_references: list[str] = [item for sublist in linked_references for item in sublist if item]
+
             if curr_ns_info:
                 linked_references.append(curr_ns_info.parent)
 
@@ -77,16 +81,19 @@ class LogseqGraph:
 
             if curr_ns_info and curr_ns_info.parent:
                 linked_references.remove(curr_ns_info.parent)
-            unique_linked_references.update(linked_references)
+
+            linked_refs.update(linked_references)
+
         for _, values in all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         all_linked_references = sort_dict_by_value(all_linked_references, value="count", reverse=True)
+
         all_file_names = (file.path.name for file in index)
         dangling_links = self.process_dangling_links(all_file_names, unique_aliases)
-        self.dangling_links = dangling_links
+        self.dangling_links.extend(dangling_links)
         self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
 
-    def post_processing_content_namespaces(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
+    def post_process_namespace(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
         if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
             return ("", file.path.name)

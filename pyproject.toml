@@ -41,3 +41,11 @@ Home = "https://github.com/wonyoung-jang/logseq-analyzer"
 
 [project.scripts]
 logseq-analyzer = "logseq_analyzer.__main__:main"
+
+[tool.ruff]
+line-length = 120
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.12",
+]
