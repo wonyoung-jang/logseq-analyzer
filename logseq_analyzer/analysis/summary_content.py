@@ -3,7 +3,7 @@ Logseq Content Summarizer Module
 """
 
 from collections import Counter
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..utils.enums import Criteria
 from ..utils.helpers import singleton, sort_dict_by_value

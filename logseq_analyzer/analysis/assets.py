@@ -5,6 +5,7 @@ Logseq Assets Analysis Module.
 from typing import TYPE_CHECKING
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
+
 from ..utils.enums import Criteria, Output
 from ..utils.helpers import singleton
 

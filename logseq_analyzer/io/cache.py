@@ -5,7 +5,7 @@ This module handles caching mechanisms for the application.
 import logging
 import shelve
 from pathlib import Path
-from typing import Any, Generator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generator
 
 from ..utils.enums import CacheKeys
 from ..utils.helpers import iter_files, singleton

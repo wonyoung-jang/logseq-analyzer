@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
+
 from ..utils.helpers import iter_pattern_split
 
 logger = logging.getLogger(__name__)

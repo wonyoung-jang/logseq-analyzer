@@ -9,14 +9,15 @@ from typing import Any
 
 import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
 import logseq_analyzer.utils.patterns_code as CodePatterns
+import logseq_analyzer.utils.patterns_content as ContentPatterns
 import logseq_analyzer.utils.patterns_double_curly as DoubleCurlyBracketsPatterns
 import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
-import logseq_analyzer.utils.patterns_content as ContentPatterns
+
 from ..config.builtin_properties import get_builtin_properties, get_user_properties
 from ..utils.enums import Criteria, Nodes
-from ..utils.helpers import process_aliases, yield_attrs, process_pattern_hierarchy
+from ..utils.helpers import process_aliases, process_pattern_hierarchy, yield_attrs
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats

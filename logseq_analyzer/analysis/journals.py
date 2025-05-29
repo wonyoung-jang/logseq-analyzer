@@ -4,7 +4,7 @@ Process logseq journals.
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..analysis.index import get_attribute_list
 from ..utils.date_utilities import DateUtilities

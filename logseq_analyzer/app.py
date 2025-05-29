@@ -25,7 +25,7 @@ from .config.graph_config import (
     init_config_edn_from_file,
 )
 from .io.cache import Cache
-from .io.file_mover import handle_move_directory, handle_move_assets
+from .io.file_mover import handle_move_assets, handle_move_directory
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,

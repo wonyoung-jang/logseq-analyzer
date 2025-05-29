@@ -3,9 +3,9 @@ Logseq Graph Class
 """
 
 import ast
-from enum import Enum
 import logging
 import re
+from enum import Enum
 from pathlib import Path
 from typing import Any, Generator
 
