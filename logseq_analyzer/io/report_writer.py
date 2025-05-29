@@ -33,13 +33,13 @@ class TextWriter:
         Write the top-level dictionary to a file.
         """
         for key, values in data.items():
-            TextWriter.write_toplevel_dict_key(f, key, indent)
+            f.write(f"{indent}KEY: {key}\n")
             if isinstance(values, dict):
                 TextWriter.write_values_is_dict(f, values, indent, indent_level)
             elif isinstance(values, (list, set)):
                 TextWriter.write_values_is_collection(f, values, indent)
             else:
-                TextWriter.write_values_is_other(f, values, indent)
+                f.write(f"{indent}VAL: {values}\n\n")
 
     @staticmethod
     def write_values_is_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
@@ -65,20 +65,6 @@ class TextWriter:
         f.write("\n")
 
     @staticmethod
-    def write_values_is_other(f: TextIO, values: Any, indent: str) -> None:
-        """
-        Write values to a file with indentation.
-        """
-        f.write(f"{indent}VAL: {values}\n\n")
-
-    @staticmethod
-    def write_toplevel_dict_key(f: TextIO, key: str, indent: str) -> None:
-        """
-        Write the top-level dictionary key to a file.
-        """
-        f.write(f"{indent}KEY: {key}\n")
-
-    @staticmethod
     def write_not_toplevel_dict(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
         """
         Write the non-top-level dictionary to a file.
@@ -88,7 +74,7 @@ class TextWriter:
         elif isinstance(data, (list, set)):
             TextWriter.write_nested_collection(f, data, indent, indent_level)
         else:
-            TextWriter.write_nested_other(f, data, indent)
+            f.write(f"{indent}{data}\n")
 
     @staticmethod
     def write_nested_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
@@ -113,13 +99,6 @@ class TextWriter:
                 TextWriter.write_recursive(f, item, indent_level + 1)
             else:
                 f.write(f"{indent}{index}\t|\t{item}\n")
-
-    @staticmethod
-    def write_nested_other(f: TextIO, data: Any, indent: str) -> None:
-        """
-        Write other types of data to a file with indentation.
-        """
-        f.write(f"{indent}{data}\n")
 
 
 class HTMLWriter:

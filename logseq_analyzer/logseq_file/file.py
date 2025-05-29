@@ -129,6 +129,8 @@ class LogseqFile:
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
+        if not self.stat.has_content:
+            return
         self.mask_blocks()
         primary_data = self.extract_primary_data()
         primary_data.update(self.extract_aliases_and_propvalues())

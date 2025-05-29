@@ -258,8 +258,7 @@ def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> No
     for file_path in cache.iter_modified_files(graph_dir, target_dirs):
         file = LogseqFile(file_path)
         file.init_file_data()
-        if file.stat.has_content:
-            file.process_content_data()
+        file.process_content_data()
         index.add(file)
     logger.debug("run_app: process_graph_files")
 
