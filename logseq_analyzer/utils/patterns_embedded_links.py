@@ -39,11 +39,9 @@ ASSET = re.compile(
     \!\[.*?\]               # ![...]
     \(                      # Opening parenthesis
     .*?                     # Any characters (non-greedy)
-        assets/             # Literal "assets/" 
-        |
-        \.\.assets/         # or "..assets/"
-    .*?                     # Any characters (non-greedy)
-    \)                      # Closing parenthesis
+    assets/                 # Literal "assets/"
+    .*?                     # Any characters (greedy)
+    \)
     """,
     re.IGNORECASE | re.VERBOSE,
 )

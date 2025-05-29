@@ -54,8 +54,8 @@ class LogseqAssets:
                     asset_file.update_asset_backlink(mentions, file.path.name)
         backlinked_criteria = {"is_backlinked": True, "file_type": "asset"}
         not_backlinked_criteria = {"is_backlinked": False, "file_type": "asset"}
-        self.backlinked = sorted(index.filter_files(**backlinked_criteria))
-        self.not_backlinked = sorted(index.filter_files(**not_backlinked_criteria))
+        self.backlinked.extend(sorted(index.filter_files(**backlinked_criteria)))
+        self.not_backlinked.extend(sorted(index.filter_files(**not_backlinked_criteria)))
 
     @property
     def report(self) -> str:

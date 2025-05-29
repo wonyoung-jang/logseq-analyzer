@@ -205,7 +205,7 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
 def get_count_and_foundin_data(result: dict, collection: list[str], file: "LogseqFile") -> None:
     """
     Update the result dictionary with counts and file occurrences.
-    
+
     Args:
         result (dict): The dictionary to update with counts and file occurrences.
         collection (list[str]): The collection of items to count.

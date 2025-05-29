@@ -29,7 +29,7 @@ def test_logseq_filestats(logseq_filestats, temp_file):
     """Test the LogseqFilestats functionality."""
     assert logseq_filestats.file_path == Path(temp_file)
     assert logseq_filestats.size == 0
-    assert logseq_filestats.has_content == False
+    assert logseq_filestats.has_content is False
     assert logseq_filestats.timestamps.time_existed == 0.0
     assert logseq_filestats.timestamps.time_unmodified == 0.0
     assert logseq_filestats.timestamps.date_created is not None

@@ -179,7 +179,7 @@ class LogseqFile:
         return {
             Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
             Criteria.ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
-            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(masked_content),
+            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
             Criteria.BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
             Criteria.DRAWS.value: ContentPatterns.DRAW.findall(masked_content),
             Criteria.FLASHCARDS.value: ContentPatterns.FLASHCARD.findall(masked_content),

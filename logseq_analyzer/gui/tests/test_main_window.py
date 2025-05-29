@@ -41,9 +41,9 @@ def test_main_window_title(main_window):
 def test_main_window_initialization(main_window):
     """Test if the main window initializes correctly."""
     assert main_window is not None
-    assert main_window.isVisible() == True
-    assert main_window.isEnabled() == True
-    assert main_window.isActiveWindow() == True
+    assert main_window.isVisible() is True
+    assert main_window.isEnabled() is True
+    assert main_window.isActiveWindow() is True
 
 
 def test_main_window_layout(main_window):
