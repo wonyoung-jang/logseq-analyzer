@@ -27,8 +27,8 @@ class LogseqAssets:
 
     def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
-        self.backlinked: list[str] = []
-        self.not_backlinked: list[str] = []
+        self.backlinked: list[LogseqFile] = []
+        self.not_backlinked: list[LogseqFile] = []
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqAssets instance."""
@@ -132,9 +132,11 @@ class LogseqAssetsHls:
 
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
-        self.backlinked = self.asset_names.intersection(self.formatted_bullets)
-        self.not_backlinked = self.asset_names.difference(self.formatted_bullets)
-        self.update_sub_asset_files(self.backlinked, self.not_backlinked)
+        backlinked = self.asset_names.intersection(self.formatted_bullets)
+        not_backlinked = self.asset_names.difference(self.formatted_bullets)
+        self.update_sub_asset_files(backlinked, not_backlinked)
+        self.backlinked.update(backlinked)
+        self.not_backlinked.update(not_backlinked)
 
     def update_sub_asset_files(self, backlinked: set[str], not_backlinked: set[str]) -> None:
         """Update the asset files with backlink status and file type."""

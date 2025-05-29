@@ -21,25 +21,11 @@ class TextWriter:
         """
         Recursive function to write nested data structures to plain text files.
         """
-        indent = TextWriter.get_indent(indent_level)
-        if TextWriter.check_is_toplevel_dict(data, indent_level):
+        indent = "\t" * indent_level
+        if isinstance(data, dict) and indent_level == 0:
             TextWriter.write_toplevel_dict(f, data, indent, indent_level)
         else:
             TextWriter.write_not_toplevel_dict(f, data, indent, indent_level)
-
-    @staticmethod
-    def get_indent(indent_level: int) -> str:
-        """
-        Get the indentation string for a given level.
-        """
-        return "\t" * indent_level
-
-    @staticmethod
-    def check_is_toplevel_dict(data: Any, indent_level: int) -> bool:
-        """
-        Check if the data is a top-level dictionary.
-        """
-        return isinstance(data, dict) and indent_level == 0
 
     @staticmethod
     def write_toplevel_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:

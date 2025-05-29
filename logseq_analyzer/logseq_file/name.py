@@ -118,7 +118,7 @@ class LogseqFilename:
         ns_file_sep = LogseqFilename.ns_file_sep
         target_dirs = LogseqFilename.target_dirs
         name = self.name.strip(ns_file_sep)
-        if self.parent == target_dirs.get("journals"):
+        if self.parent == target_dirs["journals"]:
             self.name = self.process_logseq_journal_key(name)
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
