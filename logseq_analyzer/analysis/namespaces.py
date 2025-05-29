@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 class NamespaceConflicts:
     """Class to hold namespace conflict data."""
 
-    non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     parent_depth: dict[str, list[str]] = field(default_factory=dict)
     parent_unique: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
 
@@ -47,11 +47,11 @@ class NamespaceStructure:
     """
 
     data: dict[str, Any] = field(default_factory=dict)
-    parts: dict[str, Any] = field(default_factory=dict)
-    unique_parts: set[str] = field(default_factory=set)
     details: dict[str, Any] = field(default_factory=dict)
-    unique_ns_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    parts: dict[str, Any] = field(default_factory=dict)
     tree: dict[str, Any] = field(default_factory=dict)
+    unique_ns_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    unique_parts: set[str] = field(default_factory=set)
 
 
 @singleton
@@ -74,8 +74,8 @@ class LogseqNamespaces:
         """
         self._part_levels: defaultdict[str, set[int]] = defaultdict(set)
         self._part_entries: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
-        self.queries: dict[str, dict[str, Any]] = {}
         self.conflicts: NamespaceConflicts = NamespaceConflicts()
+        self.queries: dict[str, dict[str, Any]] = {}
         self.structure: NamespaceStructure = NamespaceStructure()
 
     def __repr__(self) -> str:
