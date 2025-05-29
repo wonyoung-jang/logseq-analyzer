@@ -54,8 +54,8 @@ class LogseqBullets:
     def process_bullets(self) -> None:
         """Process the content to extract bullet information."""
         self.get_content()
+        self.get_char_count()
         if self.content:
-            self.get_char_count()
             self.get_primary_bullet()
             self.get_bullet_density()
             self.is_primary_bullet_page_properties()
@@ -75,8 +75,8 @@ class LogseqBullets:
         """Get the Logseq primary bullet if available"""
         content_bullets = self.content_bullets
         bullet_count, bullet_count_empty = 0, 0
-        bullet_pattern, content = ContentPatterns.BULLET, self.content
-        for count, bullet in iter_pattern_split(bullet_pattern, content):
+        content = self.content
+        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
             if bullet:
                 if count == 0:
                     self.primary_bullet = bullet

@@ -2,13 +2,12 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
-from collections import Counter
 from typing import TYPE_CHECKING, Any
 
 from ..config.builtin_properties import get_user_properties
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import singleton, sort_dict_by_value
+from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -70,13 +69,12 @@ class LogseqGraph:
                 file.data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
                 file.data.get(Criteria.PROP_BLOCK_USER.value, []),
             ]
-            linked_references = [item for sublist in linked_references for item in sublist if item]
+            linked_references: list[str] = [item for sublist in linked_references for item in sublist if item]
             if curr_ns_info:
                 linked_references.append(curr_ns_info.parent)
-            for item in linked_references:
-                all_linked_references.setdefault(item, {"count": 0, "found_in": Counter()})
-                all_linked_references[item]["count"] = all_linked_references[item].get("count", 0) + 1
-                all_linked_references[item]["found_in"][file.path.name] += 1
+
+            get_count_and_foundin_data(all_linked_references, linked_references, file)
+
             if curr_ns_info and curr_ns_info.parent:
                 linked_references.remove(curr_ns_info.parent)
             unique_linked_references.update(linked_references)

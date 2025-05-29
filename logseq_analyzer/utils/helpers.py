@@ -6,12 +6,15 @@ import functools
 import logging
 import re
 import threading
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Generator, Type, TypeVar
+from typing import Any, Generator, Type, TypeVar, TYPE_CHECKING
 
 from ..utils.enums import Format
+
+if TYPE_CHECKING:
+    from ..logseq_file.file import LogseqFile
 
 logger = logging.getLogger(__name__)
 
@@ -197,3 +200,18 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
 
     if count == 0:
         yield count, text.strip(" \t\n")
+
+
+def get_count_and_foundin_data(result: dict, collection: list[str], file: "LogseqFile") -> None:
+    """
+    Update the result dictionary with counts and file occurrences.
+    
+    Args:
+        result (dict): The dictionary to update with counts and file occurrences.
+        collection (list[str]): The collection of items to count.
+        file (LogseqFile): The file object containing the path information.
+    """
+    for item in collection:
+        result.setdefault(item, {"count": 0, "found_in": Counter()})
+        result[item]["count"] = result[item].get("count", 0) + 1
+        result[item]["found_in"][file.path.name] += 1

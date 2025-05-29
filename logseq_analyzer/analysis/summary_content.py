@@ -2,11 +2,10 @@
 Logseq Content Summarizer Module
 """
 
-from collections import Counter
 from typing import TYPE_CHECKING, Any
 
 from ..utils.enums import Criteria
-from ..utils.helpers import singleton, sort_dict_by_value
+from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -42,8 +41,7 @@ class LogseqContentSummarizer:
         """
         subset_counter = {}
         for file in index:
-            for value in file.data.get(criteria, []):
-                subset_counter.setdefault(value, {"count": 0, "found_in": Counter()})
-                subset_counter[value]["count"] = subset_counter[value].get("count", 0) + 1
-                subset_counter[value]["found_in"][file.path.name] += 1
+            if not (file_criteria := file.data.get(criteria, [])):
+                continue
+            get_count_and_foundin_data(subset_counter, file_criteria, file)
         return sort_dict_by_value(subset_counter, value="count", reverse=True)
