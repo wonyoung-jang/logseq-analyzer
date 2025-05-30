@@ -143,7 +143,6 @@ class LogseqNamespaces:
             if not file.path.ns_info or file.path.is_namespace:
                 continue
             non_ns_names.append(file.path.name)
-        non_ns_names.sort()
         unique_namespace_parts = self.structure.unique_parts
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)

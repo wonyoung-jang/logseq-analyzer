@@ -14,6 +14,12 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "yield_asset_paths",
+    "yield_bak_rec_paths",
+    "process_moves",
+]
+
 
 def yield_asset_paths(unlinked_assets: list["LogseqFile"]) -> Generator[Path, None, None]:
     """Yield the file paths of unlinked assets."""
@@ -55,35 +61,3 @@ def process_moves(move: bool, target_dir: Path, paths: list[Path]) -> list[str]:
         except (shutil.Error, OSError) as e:
             logger.error("Failed to move file: %s to %s: %s", src, dest, e)
     return names
-
-
-def handle_move_assets(move: bool, target_dir: Path, unlinked_assets: list["LogseqFile"]) -> list[str]:
-    """
-    Handle the moving of unlinked assets to a specified directory.
-
-    Args:
-        move (bool): If True, move the files. If False, simulate the move.
-        target_dir (Path): The directory to delete assets to.
-        unlinked_assets (list[LogseqFile]): A list of unlinked assets.
-
-    Returns:
-        list[str]: A list of names of the moved files/folders.
-    """
-    paths = list(yield_asset_paths(unlinked_assets))
-    return process_moves(move, target_dir, paths)
-
-
-def handle_move_directory(move: bool, target_dir: Path, source_dir: Path) -> list[str]:
-    """
-    Move bak and recycle files to a specified directory.
-
-    Args:
-        move (bool): If True, move the files. If False, simulate the move.
-        target_dir (Path): The directory to move files to.
-        source_dir (Path): The directory to move files from.
-
-    Returns:
-        list[str]: A list of names of the moved files/folders.
-    """
-    paths = list(yield_bak_rec_paths(source_dir))
-    return process_moves(move, target_dir, paths)

@@ -58,7 +58,7 @@ class LogseqFileSummarizer:
         report = self.report
         for output_name, file_criteria in summary_categories.items():
             files = index.filter_files(**file_criteria)
-            report[output_name.value] = sorted((file.path.name for file in files))
+            report[output_name.value] = list((file.path.name for file in files))
         self.process_file_extensions(index)
 
     def process_file_extensions(self, index: "FileIndex") -> None:

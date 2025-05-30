@@ -24,7 +24,7 @@ from .config.graph_config import (
     init_config_edn_from_file,
 )
 from .io.cache import Cache
-from .io.file_mover import handle_move_assets, handle_move_directory
+from .io.file_mover import process_moves, yield_asset_paths, yield_bak_rec_paths
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,
@@ -288,18 +288,24 @@ def setup_logseq_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls
 
 def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    dbd = DeleteBakDirectory().path
-    bd = BakDirectory().path
-    drd = DeleteRecycleDirectory().path
-    rd = RecycleDirectory().path
-    dad = DeleteAssetsDirectory().path
-    moved_files = {
-        Moved.ASSETS.value: handle_move_assets(args.move_unlinked_assets, dad, lsa.not_backlinked),
-        Moved.BAK.value: handle_move_directory(args.move_bak, dbd, bd),
-        Moved.RECYCLE.value: handle_move_directory(args.move_recycle, drd, rd),
+    target_asset = DeleteAssetsDirectory()
+    target_bak = DeleteBakDirectory()
+    target_rec = DeleteRecycleDirectory()
+    bak_dir = BakDirectory()
+    rec_dir = RecycleDirectory()
+    asset_paths = yield_asset_paths(lsa.not_backlinked)
+    bak_paths = yield_bak_rec_paths(bak_dir.path)
+    rec_paths = yield_bak_rec_paths(rec_dir.path)
+    moved_assets = process_moves(args.move_unlinked_assets, target_asset.path, asset_paths)
+    moved_bak = process_moves(args.move_bak, target_bak.path, bak_paths)
+    moved_rec = process_moves(args.move_recycle, target_rec.path, rec_paths)
+    moved_files_report = {
+        Moved.ASSETS.value: moved_assets,
+        Moved.BAK.value: moved_bak,
+        Moved.RECYCLE.value: moved_rec,
     }
     logger.debug("setup_logseq_file_mover")
-    return {Output.MOVED_FILES.value: moved_files}
+    return {Output.MOVED_FILES.value: moved_files_report}
 
 
 def perform_core_analysis(

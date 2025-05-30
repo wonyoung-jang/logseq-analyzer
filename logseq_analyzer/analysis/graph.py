@@ -143,7 +143,7 @@ class LogseqGraph:
         linked_refs_ns = self.unique_linked_references_ns
         all_refs = linked_refs.union(linked_refs_ns)
         all_refs.difference_update(all_file_names, unique_aliases)
-        return sorted(remove_builtin_properties(all_refs))
+        return remove_builtin_properties(all_refs)
 
     @property
     def report(self) -> dict[str, Any]:

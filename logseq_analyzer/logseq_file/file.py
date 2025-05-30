@@ -213,7 +213,7 @@ class LogseqFile:
         content = self.bullets.content
         properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
         if aliases := properties_values.get("alias"):
-            aliases = sorted(process_aliases(aliases))
+            aliases = list(process_aliases(aliases))
         return {
             Criteria.ALIASES.value: aliases,
             Criteria.PROP_VALUES.value: properties_values,
@@ -234,10 +234,10 @@ class LogseqFile:
             content = "\n".join(self.bullets.content_bullets)
         block_props.update(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
-        page_props_builtins = sorted(extract_builtin_properties(page_props))
-        page_props_user = sorted(remove_builtin_properties(page_props))
-        block_props_builtins = sorted(extract_builtin_properties(block_props))
-        block_props_user = sorted(remove_builtin_properties(block_props))
+        page_props_builtins = extract_builtin_properties(page_props)
+        page_props_user = remove_builtin_properties(page_props)
+        block_props_builtins = extract_builtin_properties(block_props)
+        block_props_user = remove_builtin_properties(block_props)
         return {
             Criteria.PROP_BLOCK_BUILTIN.value: block_props_builtins,
             Criteria.PROP_BLOCK_USER.value: block_props_user,
