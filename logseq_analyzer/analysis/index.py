@@ -76,26 +76,6 @@ class FileIndex:
             return key in self._path_to_file
         raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
 
-    @property
-    def files(self) -> set[LogseqFile]:
-        """Return the set of files in the index."""
-        return self._files
-
-    @property
-    def hash_to_file(self) -> dict[int, LogseqFile]:
-        """Return the mapping of hashes to LogseqFile objects."""
-        return self._hash_to_file
-
-    @property
-    def name_to_files(self) -> dict[str, list[LogseqFile]]:
-        """Return the mapping of file names to lists of LogseqFile objects."""
-        return self._name_to_files
-
-    @property
-    def path_to_file(self) -> dict[Path, LogseqFile]:
-        """Return the mapping of file paths to LogseqFile objects."""
-        return self._path_to_file
-
     def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
         h = hash(file)
@@ -181,8 +161,8 @@ class FileIndex:
         """Generate a report of the indexed files."""
         return {
             Output.GRAPH_DATA.value: self.get_graph_data(),
-            Output.IDX_FILES.value: self.files,
-            Output.IDX_HASH_TO_FILE.value: self.hash_to_file,
-            Output.IDX_NAME_TO_FILES.value: self.name_to_files,
-            Output.IDX_PATH_TO_FILE.value: self.path_to_file,
+            Output.IDX_FILES.value: self._files,
+            Output.IDX_HASH_TO_FILE.value: self._hash_to_file,
+            Output.IDX_NAME_TO_FILES.value: self._name_to_files,
+            Output.IDX_PATH_TO_FILE.value: self._path_to_file,
         }

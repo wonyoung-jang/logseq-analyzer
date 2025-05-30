@@ -95,16 +95,6 @@ class LogseqFile:
         return NotImplemented
 
     @property
-    def name(self) -> str:
-        """Return the name of the file."""
-        return self.path.name
-
-    @property
-    def file_type(self) -> str:
-        """Return the type of the file."""
-        return self.path.file_type
-
-    @property
     def is_hls(self) -> bool:
         """Return whether the file is a hierarchical logseq file."""
         return self.path.is_hls
@@ -120,11 +110,6 @@ class LogseqFile:
         return self.node.has_backlinks
 
     @property
-    def node_type(self) -> str:
-        """Return the node type."""
-        return self.node.type
-
-    @property
     def backlinked(self) -> bool:
         """Return whether the file is backlinked."""
         return self.node.backlinked
@@ -133,6 +118,16 @@ class LogseqFile:
     def backlinked_ns_only(self) -> bool:
         """Return whether the file is backlinked by namespace only."""
         return self.node.backlinked_ns_only
+
+    @property
+    def node_type(self) -> str:
+        """Return the node type."""
+        return self.node.type
+
+    @property
+    def file_type(self) -> str:
+        """Return the type of the file."""
+        return self.path.file_type
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
@@ -275,21 +270,19 @@ class LogseqFile:
         Args:
             primary_data (dict[str, str]): Dictionary containing primary data.
         """
-        data = self.data
-        has_backlinks = self.node.has_backlinks
-        backlinks = (
+        backlinks: set[str] = {
+            Criteria.PROP_VALUES.value,
+            Criteria.PROP_BLOCK_BUILTIN.value,
+            Criteria.PROP_BLOCK_USER.value,
+            Criteria.PROP_PAGE_BUILTIN.value,
+            Criteria.PROP_PAGE_USER.value,
             Criteria.PAGE_REFERENCES.value,
             Criteria.TAGGED_BACKLINKS.value,
             Criteria.TAGS.value,
-        )
-        for key, value in primary_data.items():
-            if value:
-                data[key] = value
-                if has_backlinks:
-                    continue
-                if key in backlinks or "properties" in key:
-                    has_backlinks = True
-        self.node.has_backlinks = has_backlinks
+        }
+        self.data.update({k: v for k, v in primary_data.items() if v})
+        if backlinks.intersection(self.data.keys()):
+            self.node.has_backlinks = True
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""

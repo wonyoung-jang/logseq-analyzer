@@ -79,6 +79,24 @@ class LogseqFilename:
         return self.file_path.parts
 
     @property
+    def is_hls(self) -> bool:
+        """Check if the filename is a HLS."""
+        return self.name.startswith(Core.HLS_PREFIX.value)
+
+    @property
+    def is_namespace(self) -> bool:
+        """Check if the filename is a namespace."""
+        self._is_namespace = Core.NS_SEP.value in self.name
+        return self._is_namespace
+
+    @is_namespace.setter
+    def is_namespace(self, value: Any) -> None:
+        """Set the is_namespace property."""
+        if not isinstance(value, bool):
+            raise ValueError("is_namespace must be a boolean value.")
+        self._is_namespace = value
+
+    @property
     def uri(self) -> str:
         """Return the file URI."""
         return self.file_path.as_uri()
@@ -121,24 +139,6 @@ class LogseqFilename:
             self.name = self.process_logseq_journal_key(name)
         else:
             self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
-
-    @property
-    def is_hls(self) -> bool:
-        """Check if the filename is a HLS."""
-        return self.name.startswith(Core.HLS_PREFIX.value)
-
-    @property
-    def is_namespace(self) -> bool:
-        """Check if the filename is a namespace."""
-        self._is_namespace = Core.NS_SEP.value in self.name
-        return self._is_namespace
-
-    @is_namespace.setter
-    def is_namespace(self, value: Any) -> None:
-        """Set the is_namespace property."""
-        if not isinstance(value, bool):
-            raise ValueError("is_namespace must be a boolean value.")
-        self._is_namespace = value
 
     def get_namespace_name_data(self) -> None:
         """Get the namespace name data."""
