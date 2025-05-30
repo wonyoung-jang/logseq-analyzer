@@ -7,7 +7,6 @@ from enum import Enum
 __all__ = [
     "Arguments",
     "CacheKeys",
-    "Config",
     "Constants",
     "Core",
     "Criteria",
@@ -41,16 +40,6 @@ class CacheKeys(Enum):
 
     INDEX = "index"
     MOD_TRACKER = "mod_tracker"
-
-
-class Config(Enum):
-    """Configuration settings for the Logseq Analyzer."""
-
-    DIR_ASSETS = "DIR_ASSETS"
-    DIR_DRAWS = "DIR_DRAWS"
-    DIR_JOURNALS = "DIR_JOURNALS"
-    DIR_PAGES = "DIR_PAGES"
-    DIR_WHITEBOARDS = "DIR_WHITEBOARDS"
 
 
 class Constants(Enum):

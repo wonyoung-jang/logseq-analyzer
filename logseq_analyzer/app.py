@@ -195,6 +195,7 @@ def init_configs(args: Args) -> Configurations:
     gc, user_edn, global_edn = setup_logseq_graph_config(args)
     setup_target_dirs(gc)
     journal_file_fmt, journal_page_fmt = setup_journal_formats(gc)
+    logger.debug("init_configs")
     return Configurations(gc, user_edn, global_edn, journal_file_fmt, journal_page_fmt)
 
 
