@@ -32,7 +32,6 @@ __all__ = [
     "get_token_map",
     "compile_token_pattern",
     "convert_cljs_date_to_py",
-    "get_attribute_list",
     "BUILT_IN_PROPS",
     "extract_builtin_properties",
     "remove_builtin_properties",
@@ -284,20 +283,6 @@ def convert_cljs_date_to_py(cljs_format: str, token_map: dict[str, str], token_p
         return token_map.get(token, token)
 
     return token_pattern.sub(replace_token, cljs_format)
-
-
-def get_attribute_list(file_list: Generator["LogseqFile", None, None], attribute: str) -> list[Any]:
-    """
-    Get a list of attribute values from a list of LogseqFile objects.
-
-    Args:
-        file_list (Generator[LogseqFile, None, None]): generator of LogseqFile objects.
-        attribute (str): The attribute to extract from each LogseqFile object.
-
-    Returns:
-        list[Union[str, int]]: list of attribute values.
-    """
-    return sorted(getattr(file, attribute) for file in file_list)
 
 
 BUILT_IN_PROPS: frozenset[str] = frozenset(

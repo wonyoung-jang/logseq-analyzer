@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from ..utils.enums import SummaryFiles
-from ..utils.helpers import get_attribute_list, singleton
+from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -58,7 +58,7 @@ class LogseqFileSummarizer:
         report = self.report
         for output_name, file_criteria in summary_categories.items():
             files = index.filter_files(**file_criteria)
-            report[output_name.value] = get_attribute_list(files, "name")
+            report[output_name.value] = sorted((file.path.name for file in files))
         self.process_file_extensions(index)
 
     def process_file_extensions(self, index: "FileIndex") -> None:
