@@ -30,7 +30,8 @@ class LogseqContentSummarizer:
             for key, values in file.data.items():
                 report.setdefault(key, {})
                 report[key] = get_count_and_foundin_data(report[key], values, file)
-                report[key] = sort_dict_by_value(report[key], value="count", reverse=True)
+        for key in report:
+            report[key] = sort_dict_by_value(report[key], value="count", reverse=True)
         self.check_criteria()
 
     def check_criteria(self) -> None:
