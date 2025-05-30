@@ -54,8 +54,8 @@ class LogseqAssets:
                     continue
                 for mentions in (emb_link_asset, asset_captured):
                     asset_file.update_asset_backlink(mentions, file.path.name)
-        backlinked_criteria = {"is_backlinked": True, "file_type": "asset"}
-        not_backlinked_criteria = {"is_backlinked": False, "file_type": "asset"}
+        backlinked_criteria = {"backlinked": True, "file_type": "asset"}
+        not_backlinked_criteria = {"backlinked": False, "file_type": "asset"}
         self.backlinked.extend(sorted(index.filter_files(**backlinked_criteria)))
         self.not_backlinked.extend(sorted(index.filter_files(**not_backlinked_criteria)))
 

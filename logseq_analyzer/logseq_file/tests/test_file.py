@@ -36,8 +36,8 @@ def test_logseq_file(logseq_file, temp_file):
     assert isinstance(logseq_file.bullets, LogseqBullets)
     assert logseq_file.data == {}
     assert logseq_file.has_backlinks is False
-    assert logseq_file.is_backlinked is False
-    assert logseq_file.is_backlinked_by_ns_only is False
+    assert logseq_file.backlinked is False
+    assert logseq_file.backlinked_ns_only is False
     assert logseq_file.node_type == "other"
     assert logseq_file.path.file_type == ""
     assert logseq_file.masked.content == ""

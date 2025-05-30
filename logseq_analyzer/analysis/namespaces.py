@@ -181,15 +181,15 @@ class LogseqNamespaces:
     def report(self) -> dict[str, Any]:
         """Generate a report of the namespace analysis."""
         return {
-            Output.CONFLICTS_DANGLING.value: self.conflicts.dangling,
-            Output.CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
-            Output.CONFLICTS_PARENT_DEPTH.value: self.conflicts.parent_depth,
-            Output.CONFLICTS_PARENT_UNIQUE.value: self.conflicts.parent_unique,
-            Output.NAMESPACE_DATA.value: self.structure.data,
-            Output.NAMESPACE_DETAILS.value: self.structure.details,
-            Output.NAMESPACE_HIERARCHY.value: self.structure.tree,
-            Output.NAMESPACE_PARTS.value: self.structure.parts,
-            Output.NAMESPACE_QUERIES.value: self.queries,
-            Output.UNIQUE_NAMESPACE_PARTS.value: self.structure.unique_parts,
-            Output.UNIQUE_NAMESPACES_PER_LEVEL.value: self.structure.unique_ns_per_level,
+            Output.NS_CONFLICTS_DANGLING.value: self.conflicts.dangling,
+            Output.NS_CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
+            Output.NS_CONFLICTS_PARENT_DEPTH.value: self.conflicts.parent_depth,
+            Output.NS_CONFLICTS_PARENT_UNIQUE.value: self.conflicts.parent_unique,
+            Output.NS_DATA.value: self.structure.data,
+            Output.NS_DETAILS.value: self.structure.details,
+            Output.NS_HIERARCHY.value: self.structure.tree,
+            Output.NS_PARTS.value: self.structure.parts,
+            Output.NS_QUERIES.value: self.queries,
+            Output.NS_UNIQUE_PARTS.value: self.structure.unique_parts,
+            Output.NS_UNIQUE_PER_LEVEL.value: self.structure.unique_ns_per_level,
         }

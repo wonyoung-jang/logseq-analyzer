@@ -102,12 +102,12 @@ class LogseqFile:
         return self.node.type
 
     @property
-    def is_backlinked(self) -> bool:
+    def backlinked(self) -> bool:
         """Return whether the file is backlinked."""
         return self.node.backlinked
 
     @property
-    def is_backlinked_by_ns_only(self) -> bool:
+    def backlinked_ns_only(self) -> bool:
         """Return whether the file is backlinked by namespace only."""
         return self.node.backlinked_ns_only
 
@@ -348,6 +348,7 @@ class LogseqFile:
         """
         try:
             lookup.remove(self.path.name)
+            print(f"Removed {self.path.name} from lookup set: {len(lookup)}")
             return True
         except KeyError:
             return False

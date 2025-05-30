@@ -49,9 +49,10 @@ class LogseqGraph:
     def post_processing_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
         all_linked_references = self.all_linked_references
-        unique_aliases = set()
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
+        unique_aliases = set()
+
         for file in index:
             if (curr_ns_info := file.path.ns_info) and file.path.is_namespace:
                 linked_refs_ns.update(self.post_process_namespace(file, index))
@@ -86,6 +87,7 @@ class LogseqGraph:
 
         all_linked_references = LogseqGraph.sort_all_linked_references(all_linked_references)
         dangling_links = self.process_dangling_links(index, unique_aliases)
+        del unique_aliases
         self.dangling_links.extend(dangling_links)
         self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
 
@@ -128,16 +130,13 @@ class LogseqGraph:
         """Process summary data for each file based on metadata and content analysis."""
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
-        for file in index:
-            fn = file.node
-            if not fn.backlinked:
-                fn.backlinked = file.check_is_backlinked(linked_refs)
-            if not fn.backlinked_ns_only:
-                fn.backlinked_ns_only = file.check_is_backlinked(linked_refs_ns)
-            if fn.backlinked and fn.backlinked_ns_only:
-                fn.backlinked = False
-            if file.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
-                file.determine_node_type()
+        for f in index:
+            f.node.backlinked = f.check_is_backlinked(linked_refs)
+            f.node.backlinked_ns_only = f.check_is_backlinked(linked_refs_ns)
+            if f.node.backlinked and f.node.backlinked_ns_only:
+                f.node.backlinked = False
+            if f.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
+                f.determine_node_type()
 
     def process_dangling_links(self, index: "FileIndex", unique_aliases: set[str]) -> list[str]:
         """Process dangling links in the graph."""

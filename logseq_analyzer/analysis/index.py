@@ -196,8 +196,8 @@ class FileIndex:
         """Generate a report of the indexed files."""
         return {
             Output.GRAPH_DATA.value: self.get_graph_data(),
-            Output.FILES.value: self.files,
-            Output.HASH_TO_FILE.value: self.hash_to_file,
-            Output.NAME_TO_FILES.value: self.name_to_files,
-            Output.PATH_TO_FILE.value: self.path_to_file,
+            Output.IDX_FILES.value: self.files,
+            Output.IDX_HASH_TO_FILE.value: self.hash_to_file,
+            Output.IDX_NAME_TO_FILES.value: self.name_to_files,
+            Output.IDX_PATH_TO_FILE.value: self.path_to_file,
         }

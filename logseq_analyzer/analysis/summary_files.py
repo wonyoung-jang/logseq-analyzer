@@ -21,8 +21,8 @@ class LogseqFileSummarizer:
 
     summary_categories = {
         # Process general categories
-        SummaryFiles.IS_BACKLINKED: {"is_backlinked": True},
-        SummaryFiles.IS_BACKLINKED_BY_NS_ONLY: {"is_backlinked_by_ns_only": True},
+        SummaryFiles.BACKLINKED: {"backlinked": True},
+        SummaryFiles.BACKLINKED_NS_ONLY: {"backlinked_ns_only": True},
         SummaryFiles.IS_HLS: {"is_hls": True},
         SummaryFiles.HAS_CONTENT: {"has_content": True},
         SummaryFiles.HAS_BACKLINKS: {"has_backlinks": True},
