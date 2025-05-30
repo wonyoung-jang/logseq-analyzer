@@ -29,6 +29,8 @@ class LogseqGraph:
         "unique_linked_references_ns",
     )
 
+    _TO_NODE_TYPE = (FileTypes.JOURNAL.value, FileTypes.PAGE.value)
+
     def __init__(self) -> None:
         """Initialize the LogseqGraph instance."""
         self.all_linked_references: dict[str, dict[str, dict]] = {}
@@ -127,13 +129,13 @@ class LogseqGraph:
         """Process summary data for each file based on metadata and content analysis."""
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
-        text_files = (FileTypes.JOURNAL.value, FileTypes.PAGE.value)
+        to_node_type = self._TO_NODE_TYPE
         for f in index:
             f.node.backlinked = f.check_is_backlinked(linked_refs)
             f.node.backlinked_ns_only = f.check_is_backlinked(linked_refs_ns)
             if f.node.backlinked and f.node.backlinked_ns_only:
                 f.node.backlinked = False
-            if f.path.file_type in text_files:
+            if f.path.file_type in to_node_type:
                 f.determine_node_type()
 
     def process_dangling_links(self, index: "FileIndex", unique_aliases: set[str]) -> list[str]:

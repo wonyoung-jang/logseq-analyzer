@@ -322,7 +322,8 @@ def perform_core_analysis(
     ls_assets, hls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets)
     summary_files, summary_content = setup_logseq_summarizers(index)
-    data_reports = (
+    logger.debug("perform_core_analysis")
+    return (
         (OutputDir.META.value, args.report),
         (OutputDir.META.value, configs.report),
         (OutputDir.GRAPH.value, graph.report),
@@ -336,8 +337,6 @@ def perform_core_analysis(
         (OutputDir.SUMMARY_FILES.value, summary_files.report),
         (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )
-    logger.debug("perform_core_analysis")
-    return data_reports
 
 
 def write_reports(data_reports: tuple[Any]) -> None:

@@ -18,7 +18,7 @@ class LogseqFileSummarizer:
 
     __slots__ = ("report",)
 
-    summary_categories = {
+    _SUMMARY_CATEGORIES = {
         # Process general categories
         SummaryFiles.BACKLINKED: {"backlinked": True},
         SummaryFiles.BACKLINKED_NS_ONLY: {"backlinked_ns_only": True},
@@ -54,7 +54,7 @@ class LogseqFileSummarizer:
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
-        summary_categories = LogseqFileSummarizer.summary_categories
+        summary_categories = self._SUMMARY_CATEGORIES
         report = self.report
         for output_name, file_criteria in summary_categories.items():
             files = index.filter_files(**file_criteria)

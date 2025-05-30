@@ -27,7 +27,7 @@ def test_file_index_representation(file_index):
 
 def test_file_index_initialization(file_index):
     """Test the initialization of FileIndex."""
-    assert file_index.files == set()
-    assert file_index.hash_to_file == {}
-    assert file_index.name_to_files == {}
-    assert file_index.path_to_file == {}
+    assert file_index._files == set()
+    assert file_index._hash_to_file == {}
+    assert file_index._name_to_files == {}
+    assert file_index._path_to_file == {}

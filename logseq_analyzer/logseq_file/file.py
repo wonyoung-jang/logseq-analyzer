@@ -58,6 +58,39 @@ class LogseqFile:
         "node",
     )
 
+    _BACKLINK_CRITERIA: frozenset[str] = frozenset(
+        {
+            Criteria.PROP_VALUES.value,
+            Criteria.PROP_BLOCK_BUILTIN.value,
+            Criteria.PROP_BLOCK_USER.value,
+            Criteria.PROP_PAGE_BUILTIN.value,
+            Criteria.PROP_PAGE_USER.value,
+            Criteria.PAGE_REFERENCES.value,
+            Criteria.TAGGED_BACKLINKS.value,
+            Criteria.TAGS.value,
+        }
+    )
+
+    _PATTERN_MODULES = (
+        AdvancedCommandPatterns,
+        CodePatterns,
+        DoubleCurlyBracketsPatterns,
+        DoubleParenthesesPatterns,
+        EmbeddedLinksPatterns,
+        ExternalLinksPatterns,
+    )
+
+    _PATTERN_MASKING = (
+        (CodePatterns.ALL, f"__{Criteria.COD_INLINE.name}_"),
+        (CodePatterns.INLINE_CODE_BLOCK, f"__{Criteria.COD_INLINE.name}_"),
+        (AdvancedCommandPatterns.ALL, f"__{Criteria.ADV_CMD.name}_"),
+        (DoubleCurlyBracketsPatterns.ALL, f"__{Criteria.DBC_ALL.name}_"),
+        (EmbeddedLinksPatterns.ALL, f"__{Criteria.EMB_LINK_OTHER.name}_"),
+        (ExternalLinksPatterns.ALL, f"__{Criteria.EXT_LINK_OTHER.name}_"),
+        (DoubleParenthesesPatterns.ALL, f"__{Criteria.DBP_ALL_REFS.name}_"),
+        (ContentPatterns.ANY_LINK, f"__{Criteria.ANY_LINKS.name}_"),
+    )
+
     def __init__(self, file_path: Path) -> None:
         """
         Initialize the LogseqFile object.
@@ -150,21 +183,10 @@ class LogseqFile:
         """
         Mask code blocks and other patterns in the content.
         """
-        patterns = (
-            (CodePatterns.ALL, f"__{Criteria.COD_INLINE.name}_"),
-            (CodePatterns.INLINE_CODE_BLOCK, f"__{Criteria.COD_INLINE.name}_"),
-            (AdvancedCommandPatterns.ALL, f"__{Criteria.ADV_CMD.name}_"),
-            (DoubleCurlyBracketsPatterns.ALL, f"__{Criteria.DBC_ALL.name}_"),
-            (EmbeddedLinksPatterns.ALL, f"__{Criteria.EMB_LINK_OTHER.name}_"),
-            (ExternalLinksPatterns.ALL, f"__{Criteria.EXT_LINK_OTHER.name}_"),
-            (DoubleParenthesesPatterns.ALL, f"__{Criteria.DBP_ALL_REFS.name}_"),
-            (ContentPatterns.ANY_LINK, f"__{Criteria.ANY_LINKS.name}_"),
-        )
-
         masked_blocks: dict[str, str] = self.masked.blocks
         masked_content = self.bullets.content
 
-        for regex, prefix in patterns:
+        for regex, prefix in self._PATTERN_MASKING:
 
             def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{uuid.uuid4()}__"
@@ -223,21 +245,16 @@ class LogseqFile:
         """
         content = self.bullets.content
         page_props = set()
-        block_props = set()
         if self.bullets.stats.has_page_properties:
             page_props.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
-        block_props.update(ContentPatterns.PROPERTY.findall(content))
+        block_props = set(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
-        page_props_builtins = extract_builtin_properties(page_props)
-        page_props_user = remove_builtin_properties(page_props)
-        block_props_builtins = extract_builtin_properties(block_props)
-        block_props_user = remove_builtin_properties(block_props)
         return {
-            Criteria.PROP_BLOCK_BUILTIN.value: block_props_builtins,
-            Criteria.PROP_BLOCK_USER.value: block_props_user,
-            Criteria.PROP_PAGE_BUILTIN.value: page_props_builtins,
-            Criteria.PROP_PAGE_USER.value: page_props_user,
+            Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
+            Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
+            Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
+            Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
         }
 
     def extract_patterns(self) -> dict[str, Any]:
@@ -247,17 +264,9 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the processed patterns.
         """
-        patterns = (
-            AdvancedCommandPatterns,
-            CodePatterns,
-            DoubleCurlyBracketsPatterns,
-            DoubleParenthesesPatterns,
-            EmbeddedLinksPatterns,
-            ExternalLinksPatterns,
-        )
         result = {}
         content = self.bullets.content
-        for pattern in patterns:
+        for pattern in self._PATTERN_MODULES:
             processed_patterns = process_pattern_hierarchy(content, pattern)
             result.update(processed_patterns)
 
@@ -270,18 +279,8 @@ class LogseqFile:
         Args:
             primary_data (dict[str, str]): Dictionary containing primary data.
         """
-        backlinks: set[str] = {
-            Criteria.PROP_VALUES.value,
-            Criteria.PROP_BLOCK_BUILTIN.value,
-            Criteria.PROP_BLOCK_USER.value,
-            Criteria.PROP_PAGE_BUILTIN.value,
-            Criteria.PROP_PAGE_USER.value,
-            Criteria.PAGE_REFERENCES.value,
-            Criteria.TAGGED_BACKLINKS.value,
-            Criteria.TAGS.value,
-        }
         self.data.update({k: v for k, v in primary_data.items() if v})
-        if backlinks.intersection(self.data.keys()):
+        if self._BACKLINK_CRITERIA.intersection(self.data.keys()):
             self.node.has_backlinks = True
 
     def determine_node_type(self) -> None:
