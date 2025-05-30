@@ -157,7 +157,7 @@ class FileIndex:
             for key, expected in criteria.items():
                 if not hasattr(file, key):
                     break
-                if not getattr(file, key, None) == expected:
+                if not getattr(file, key) == expected:
                     break
             else:
                 yield file

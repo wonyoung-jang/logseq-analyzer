@@ -24,24 +24,18 @@ class LogseqContentSummarizer:
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""
         report = self.report
-        for criteria in list(Criteria):
-            criteria_value = criteria.value
-            report[criteria_value] = self.extract_content(index, criteria_value)
-
-    def extract_content(self, index: "FileIndex", criteria: str) -> dict[str, Any]:
-        """
-        Extract a subset of data based on a specific criteria.
-        Asks: What content matches the criteria? And where is it found? How many times?
-
-        Args:
-            criteria (str): The criteria for extraction.
-
-        Returns:
-            dict[str, Any]: A dictionary containing the count and locations of the extracted values.
-        """
-        subset_counter = {}
         for file in index:
-            if not (file_criteria := file.data.get(criteria, [])):
+            if not file.data:
                 continue
-            subset_counter = get_count_and_foundin_data(subset_counter, file_criteria, file)
-        return sort_dict_by_value(subset_counter, value="count", reverse=True)
+            for key, values in file.data.items():
+                report.setdefault(key, {})
+                report[key] = get_count_and_foundin_data(report[key], values, file)
+                report[key] = sort_dict_by_value(report[key], value="count", reverse=True)
+        self.check_criteria()
+
+    def check_criteria(self) -> None:
+        """Check if all criteria are present in the report."""
+        report = self.report
+        for criteria in list(Criteria):
+            if criteria.value not in report:
+                report[criteria.value] = {}
