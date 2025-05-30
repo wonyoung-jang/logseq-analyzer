@@ -288,30 +288,30 @@ class LogseqFile:
         """Helper function to determine node type based on summary data."""
         match (self.has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True, True):
-                node_type = Nodes.BRANCH.value
+                nt = Nodes.BRANCH.value
             case (True, True, True, False):
-                node_type = Nodes.BRANCH.value
+                nt = Nodes.BRANCH.value
             case (True, True, False, True):
-                node_type = Nodes.BRANCH.value
+                nt = Nodes.BRANCH.value
             case (True, True, False, False):
-                node_type = Nodes.ROOT.value
+                nt = Nodes.ROOT.value
             case (True, False, True, True):
-                node_type = Nodes.LEAF.value
+                nt = Nodes.LEAF.value
             case (True, False, True, False):
-                node_type = Nodes.LEAF.value
+                nt = Nodes.LEAF.value
             case (True, False, False, True):
-                node_type = Nodes.ORPHAN_NAMESPACE.value
+                nt = Nodes.ORPHAN_NAMESPACE.value
             case (True, False, False, False):
-                node_type = Nodes.ORPHAN_GRAPH.value
+                nt = Nodes.ORPHAN_GRAPH.value
             case (False, False, True, True):
-                node_type = Nodes.LEAF.value
+                nt = Nodes.LEAF.value
             case (False, False, True, False):
-                node_type = Nodes.LEAF.value
+                nt = Nodes.LEAF.value
             case (False, False, False, True):
-                node_type = Nodes.ORPHAN_NAMESPACE_TRUE.value
+                nt = Nodes.ORPHAN_NAMESPACE_TRUE.value
             case (False, False, False, False):
-                node_type = Nodes.ORPHAN_TRUE.value
-        self.node.type = node_type
+                nt = Nodes.ORPHAN_TRUE.value
+        self.node.type = nt
 
     def unmask_blocks(self) -> str:
         """
