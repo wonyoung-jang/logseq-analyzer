@@ -248,6 +248,7 @@ class OutputDir(Enum):
     SUMMARY_FILES_FILE = "summary_files/file_types"
     SUMMARY_FILES_GENERAL = "summary_files/general"
     SUMMARY_FILES_NODE = "summary_files/node_types"
+    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
     TEST = "test"
 
 

@@ -334,6 +334,7 @@ def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex)
         (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general),
         (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes),
         (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes),
+        (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions),
         (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )
 
