@@ -4,10 +4,9 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import TYPE_CHECKING, Any
 
-from ..config.builtin_properties import remove_builtin_properties
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value
+from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value, remove_builtin_properties
 
 if TYPE_CHECKING:
     from .index import FileIndex

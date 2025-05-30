@@ -15,9 +15,13 @@ import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPat
 import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 
-from ..config.builtin_properties import extract_builtin_properties, remove_builtin_properties
 from ..utils.enums import Criteria, Nodes
-from ..utils.helpers import process_aliases, process_pattern_hierarchy
+from ..utils.helpers import (
+    process_aliases,
+    process_pattern_hierarchy,
+    extract_builtin_properties,
+    remove_builtin_properties,
+)
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
