@@ -79,8 +79,7 @@ class Cache:
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
-            last_date_mod = mod_tracker.get(str_path)
-            if last_date_mod == curr_date_mod:
+            if curr_date_mod == mod_tracker.get(str_path):
                 continue
             mod_tracker[str_path] = curr_date_mod
             logger.debug("File modified: %s", path)
