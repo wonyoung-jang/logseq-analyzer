@@ -49,7 +49,7 @@ class LogseqGraph:
 
     def post_processing_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
-        all_linked_references = self.all_linked_references
+        all_linked_refs = self.all_linked_references
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
         unique_aliases = set()
@@ -79,49 +79,52 @@ class LogseqGraph:
             if curr_ns_info:
                 linked_references.append(curr_ns_info.parent)
 
-            all_linked_references = get_count_and_foundin_data(all_linked_references, linked_references, file)
+            all_linked_refs = get_count_and_foundin_data(all_linked_refs, linked_references, file)
 
             if curr_ns_info and curr_ns_info.parent:
                 linked_references.remove(curr_ns_info.parent)
 
             linked_refs.update(linked_references)
 
-        all_linked_references = LogseqGraph.sort_all_linked_references(all_linked_references)
+        all_linked_refs = LogseqGraph.sort_all_linked_references(all_linked_refs)
         dangling_links = self.process_dangling_links(index, unique_aliases)
         del unique_aliases
         self.dangling_links.extend(dangling_links)
-        self.all_dangling_links = {k: v for k, v in all_linked_references.items() if k in dangling_links}
+        self.all_dangling_links = {k: v for k, v in all_linked_refs.items() if k in dangling_links}
 
     @staticmethod
-    def sort_all_linked_references(all_linked_references: dict) -> dict:
+    def sort_all_linked_references(all_linked_refs: dict) -> dict:
         """Sort all linked references by count and found_in."""
-        for _, values in all_linked_references.items():
+        for _, values in all_linked_refs.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
-        return sort_dict_by_value(all_linked_references, value="count", reverse=True)
+        return sort_dict_by_value(all_linked_refs, value="count", reverse=True)
 
     def post_process_namespace(self, file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
         """Post-process namespaces in the content data."""
-        if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
-            return ("", file.path.name)
+        file_path = file.path
+        if not (curr_ns_info := file_path.ns_info) or not file_path.is_namespace:
+            return ("", file_path.name)
 
         ns_level = len(curr_ns_info.parts)
         ns_root = curr_ns_info.root
         ns_parent_full = curr_ns_info.parent_full
-        ns_refs = (ns_root, file.path.name)
+        ns_refs = (ns_root, file_path.name)
 
         for ns_root_file in index[ns_root]:
             ns_root_file: LogseqFile
-            ns_root_file.path.is_namespace = True
-            ns_root_file.path.ns_info.children.add(file.path.name)
-            ns_root_file.path.ns_info.size = len(ns_root_file.path.ns_info.children)
+            root_path = ns_root_file.path
+            root_path.is_namespace = True
+            root_path.ns_info.children.add(file_path.name)
+            root_path.ns_info.size = len(root_path.ns_info.children)
 
         if ns_level <= 2:
             return ns_refs
 
         for ns_parent_file in index[ns_parent_full]:
             ns_parent_file: LogseqFile
-            ns_parent_file.path.ns_info.children.add(file.path.name)
-            ns_parent_file.path.ns_info.size = len(ns_parent_file.path.ns_info.children)
+            parent_path = ns_parent_file.path
+            parent_path.ns_info.children.add(file_path.name)
+            parent_path.ns_info.size = len(parent_path.ns_info.children)
 
         return ns_refs
 
@@ -131,10 +134,11 @@ class LogseqGraph:
         linked_refs_ns = self.unique_linked_references_ns
         to_node_type = self._TO_NODE_TYPE
         for f in index:
-            f.node.backlinked = f.check_is_backlinked(linked_refs)
-            f.node.backlinked_ns_only = f.check_is_backlinked(linked_refs_ns)
-            if f.node.backlinked and f.node.backlinked_ns_only:
-                f.node.backlinked = False
+            fnode = f.node
+            fnode.backlinked = f.check_is_backlinked(linked_refs)
+            fnode.backlinked_ns_only = f.check_is_backlinked(linked_refs_ns)
+            if fnode.backlinked and fnode.backlinked_ns_only:
+                fnode.backlinked = False
             if f.path.file_type in to_node_type:
                 f.determine_node_type()
 

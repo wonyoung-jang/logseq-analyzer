@@ -113,7 +113,6 @@ class LogseqNamespaces:
                 current_level = current_level[part]
                 _part_levels[part].add(level)
                 _part_entries[part].append({"entry": file.path.name, "level": level})
-        self.structure.details["max_depth"] = max(level_distribution) if level_distribution else 0
         self.structure.details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(self, index: "FileIndex") -> None:

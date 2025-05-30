@@ -126,60 +126,49 @@ class LogseqFilename:
 
     def process_filename(self) -> None:
         """Process the filename based on its parent directory."""
-        self.determine_file_type()
-        self.process_logseq_filename()
+        self.file_type = self.determine_file_type()
+        self.name = self.process_logseq_filename()
         self.get_namespace_name_data()
 
-    def process_logseq_filename(self) -> None:
-        """Process the Logseq filename based on its parent directory."""
-        ns_file_sep = LogseqFilename.ns_file_sep
-        target_dirs = LogseqFilename.target_dirs
-        name = self.name.strip(ns_file_sep)
-        if self.parent == target_dirs["journals"]:
-            self.name = self.process_logseq_journal_key(name)
-        else:
-            self.name = unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
-
-    def get_namespace_name_data(self) -> None:
-        """Get the namespace name data."""
-        if not self.is_namespace:
-            return
-        ns_parts_list = self.name.split(Core.NS_SEP.value)
-        ns_root = ns_parts_list[0]
-        self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-        self.ns_info.root = ns_root
-        self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
-        self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
-        self.ns_info.stem = ns_parts_list[-1]
-
-    def determine_file_type(self) -> None:
+    def determine_file_type(self) -> str:
         """
         Helper function to determine the file type based on the directory structure.
         """
         target_dirs = LogseqFilename.target_dirs
+        parent = self.parent
         result = {
             target_dirs["assets"]: FileTypes.ASSET.value,
             target_dirs["draws"]: FileTypes.DRAW.value,
             target_dirs["journals"]: FileTypes.JOURNAL.value,
             target_dirs["pages"]: FileTypes.PAGE.value,
             target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
-        }.get(self.parent, FileTypes.OTHER.value)
+        }.get(parent, FileTypes.OTHER.value)
 
         if result != FileTypes.OTHER.value:
-            self.file_type = result
-        else:
-            parts = self.parts
-            result_map = {
-                target_dirs["assets"]: FileTypes.SUB_ASSET.value,
-                target_dirs["draws"]: FileTypes.SUB_DRAW.value,
-                target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
-                target_dirs["pages"]: FileTypes.SUB_PAGE.value,
-                target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
-            }
-            for key, result in result_map.items():
-                if key in parts:
-                    self.file_type = result
-                    break
+            return result
+
+        parts = self.parts
+        result_map = {
+            target_dirs["assets"]: FileTypes.SUB_ASSET.value,
+            target_dirs["draws"]: FileTypes.SUB_DRAW.value,
+            target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
+            target_dirs["pages"]: FileTypes.SUB_PAGE.value,
+            target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
+        }
+        for key, value in result_map.items():
+            if key in parts:
+                result = value
+                break
+        return result
+
+    def process_logseq_filename(self) -> str:
+        """Process the Logseq filename based on its parent directory."""
+        ns_file_sep = LogseqFilename.ns_file_sep
+        target_dirs = LogseqFilename.target_dirs
+        name = self.name.strip(ns_file_sep)
+        if self.parent == target_dirs["journals"]:
+            return self.process_logseq_journal_key(name)
+        return unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
     def process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
@@ -198,3 +187,16 @@ class LogseqFilename:
         except ValueError as e:
             logger.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
             return ""
+
+    def get_namespace_name_data(self) -> None:
+        """Get the namespace name data."""
+        if not self.is_namespace:
+            return
+        ns_parts_list = self.name.split(Core.NS_SEP.value)
+        ns_root = ns_parts_list[0]
+        ns_info = self.ns_info
+        ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
+        ns_info.root = ns_root
+        ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
+        ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
+        ns_info.stem = ns_parts_list[-1]

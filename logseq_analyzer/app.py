@@ -202,8 +202,8 @@ def init_configs(args: Args) -> Configurations:
 def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
     index = FileIndex()
-    cache_path = CacheFile(Constants.CACHE_FILE.value).path
-    cache = Cache(cache_path)
+    cf = CacheFile(Constants.CACHE_FILE.value)
+    cache = Cache(cf.path)
     cache.open(protocol=5)
     cache.initialize(args.graph_cache, index)
     logger.debug("setup_cache")
@@ -212,14 +212,16 @@ def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
 
 def setup_analyzer_class_attributes(args: Args, c: Configurations) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
-    LogseqFilename.graph_path = GraphDirectory().path
+    graph_dir = GraphDirectory()
+    output_dir = OutputDirectory()
+    LogseqFilename.graph_path = graph_dir.path
     LogseqFilename.journal_file_format = c.journal_file_fmt
     LogseqFilename.journal_page_format = c.journal_page_fmt
     LogseqFilename.journal_page_title_format = get_page_title_format(c.config)
     LogseqFilename.target_dirs = get_target_dirs(c.config)
     LogseqFilename.ns_file_sep = get_ns_sep(c.config)
     ReportWriter.ext = args.report_format
-    ReportWriter.output_dir = OutputDirectory().path
+    ReportWriter.output_dir = output_dir.path
     logger.debug("setup_analyzer_class_attributes")
 
 
@@ -234,11 +236,11 @@ def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
 
 def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
-    graph_dir = GraphDirectory().path
+    graph_dir = GraphDirectory()
     target_dirs = get_target_dirs(c.config)
     target_dirs = set(target_dirs.values())
-    for file_path in cache.iter_modified_files(graph_dir, target_dirs):
-        file = LogseqFile(file_path)
+    for path in cache.iter_modified_files(graph_dir.path, target_dirs):
+        file = LogseqFile(path)
         file.init_file_data()
         file.process_content_data()
         index.add(file)
