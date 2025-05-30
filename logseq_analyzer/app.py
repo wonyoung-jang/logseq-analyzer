@@ -137,7 +137,7 @@ def setup_logseq_paths(args: Args) -> None:
     DeleteBakDirectory(delete_bak_dir)
     DeleteRecycleDirectory(delete_recycle_dir)
     DeleteAssetsDirectory(delete_assets_dir)
-    logger.debug("run_app: setup_logseq_paths")
+    logger.debug("setup_logseq_paths")
 
 
 def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
@@ -153,7 +153,7 @@ def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
         global_edn = init_config_edn_from_file(gc_file_path)
     config.update(user_edn)
     config.update(global_edn)
-    logger.debug("run_app: setup_logseq_graph_config")
+    logger.debug("setup_logseq_graph_config")
     return config, user_edn, global_edn
 
 
@@ -171,7 +171,7 @@ def setup_target_dirs(gc: dict[str, Any]) -> None:
     JournalsDirectory(dir_journals)
     PagesDirectory(dir_pages)
     WhiteboardsDirectory(dir_whiteboards)
-    logger.debug("run_app: setup_target_dirs")
+    logger.debug("setup_target_dirs")
 
 
 def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
@@ -185,7 +185,7 @@ def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     journal_page_fmt = get_page_title_format(gc)
     journal_page_fmt = convert_cljs_date_to_py(journal_page_fmt, token_map, token_pattern)
 
-    logger.debug("run_app: setup_journal_formats")
+    logger.debug("setup_journal_formats")
     return journal_file_fmt, journal_page_fmt
 
 
@@ -205,7 +205,7 @@ def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     cache = Cache(cache_path)
     cache.open(protocol=5)
     cache.initialize(args.graph_cache, index)
-    logger.debug("run_app: setup_cache")
+    logger.debug("setup_cache")
     return cache, index
 
 
@@ -219,7 +219,7 @@ def setup_analyzer_class_attributes(args: Args, c: Configurations) -> None:
     LogseqFilename.ns_file_sep = get_ns_sep(c.config)
     ReportWriter.ext = args.report_format
     ReportWriter.output_dir = OutputDirectory().path
-    logger.debug("run_app: setup_analyzer_class_attributes")
+    logger.debug("setup_analyzer_class_attributes")
 
 
 def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
@@ -227,7 +227,7 @@ def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
     lg = LogseqGraph()
     lg.post_processing_content(index)
     lg.process_summary_data(index)
-    logger.debug("run_app: setup_logseq_graph")
+    logger.debug("setup_logseq_graph")
     return lg
 
 
@@ -241,7 +241,7 @@ def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> No
         file.init_file_data()
         file.process_content_data()
         index.add(file)
-    logger.debug("run_app: process_graph_files")
+    logger.debug("process_graph_files")
 
 
 def setup_logseq_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
@@ -250,7 +250,7 @@ def setup_logseq_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, Lo
     lfs.generate_summary(index)
     lcs = LogseqContentSummarizer()
     lcs.generate_summary(index)
-    logger.debug("run_app: setup_logseq_summarizers")
+    logger.debug("setup_logseq_summarizers")
     return lfs, lcs
 
 
@@ -261,7 +261,7 @@ def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNames
     ln.analyze_ns_queries(index)
     ln.detect_non_ns_conflicts(index, graph.dangling_links)
     ln.detect_parent_depth_conflicts()
-    logger.debug("run_app: setup_logseq_namespaces")
+    logger.debug("setup_logseq_namespaces")
     return ln
 
 
@@ -269,7 +269,7 @@ def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, c: Configuration
     """Setup LogseqJournals."""
     lj = LogseqJournals()
     lj.process_journals_timelines(index, graph.dangling_links, c.journal_page_fmt)
-    logger.debug("run_app: setup_logseq_journals")
+    logger.debug("setup_logseq_journals")
     return lj
 
 
@@ -281,7 +281,7 @@ def setup_logseq_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls
     lah.check_backlinks()
     lsa = LogseqAssets()
     lsa.handle_assets(index)
-    logger.debug("run_app: setup_logseq_assets")
+    logger.debug("setup_logseq_assets")
     return lsa, lah
 
 
@@ -297,7 +297,7 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
         Moved.BAK.value: handle_move_directory(args.move_bak, dbd, bd),
         Moved.RECYCLE.value: handle_move_directory(args.move_recycle, drd, rd),
     }
-    logger.debug("run_app: setup_logseq_file_mover")
+    logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES.value: moved_files}
 
 
@@ -329,6 +329,7 @@ def perform_core_analysis(
         (OutputDir.SUMMARY_FILES.value, summary_files.report),
         (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )
+    logger.debug("perform_core_analysis")
     return data_reports
 
 
@@ -337,14 +338,14 @@ def write_reports(data_reports: tuple[Any]) -> None:
     for subdir, reports in data_reports:
         for prefix, data in reports.items():
             ReportWriter(prefix, data, subdir).write()
-    logger.debug("run_app: write_reports")
+    logger.debug("write_reports")
 
 
 def close_cache(cache: Cache, index: FileIndex) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
     cache.cache[CacheKeys.INDEX.value] = index
     cache.close()
-    logger.debug("run_app: close_cache")
+    logger.debug("close_cache")
 
 
 def run_app(**kwargs) -> None:

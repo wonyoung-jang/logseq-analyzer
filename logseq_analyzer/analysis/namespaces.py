@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 
-from ..utils.enums import Core, Output
+from ..utils.enums import Core, Output, Criteria
 from ..utils.helpers import singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -121,7 +121,7 @@ class LogseqNamespaces:
         ns_data = self.structure.data
         ns_queries = {}
         for file in index:
-            for query in file.data.get("namespace_queries", []):
+            for query in file.data.get(Criteria.DBC_NAMESPACE_QUERIES.value, []):
                 page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)

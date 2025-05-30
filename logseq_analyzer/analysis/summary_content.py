@@ -36,6 +36,6 @@ class LogseqContentSummarizer:
     def check_criteria(self) -> None:
         """Check if all criteria are present in the report."""
         report = self.report
-        for criteria in list(Criteria):
-            if criteria.value not in report:
-                report[criteria.value] = {}
+        criteria = (c for c in list(Criteria) if c.value not in report)
+        for c in criteria:
+            report[c.value] = {}

@@ -41,21 +41,23 @@ class LogseqAssets:
 
     def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
-        is_assets = list(index.filter_files(file_type="asset"))
+        file_type_is_asset = list(index.filter_files(file_type="asset"))
         for file in index:
             if not (f_data := file.data):
                 continue
             emb_link_asset = f_data.get(Criteria.EMB_LINK_ASSET.value, [])
-            asset_captured = f_data.get(Criteria.ASSETS.value, [])
-            if not (emb_link_asset or asset_captured):
+            assets = f_data.get(Criteria.ASSETS.value, [])
+            if not (emb_link_asset or assets):
                 continue
-            for asset_file in is_assets:
+            for asset_file in file_type_is_asset:
                 if asset_file.node.backlinked:
                     continue
-                for mentions in (emb_link_asset, asset_captured):
-                    asset_file.update_asset_backlink(mentions, file.path.name)
+                for asset_mentions in (emb_link_asset, assets):
+                    asset_file.update_asset_backlink(asset_mentions, file.path.name)
+
         backlinked_criteria = {"backlinked": True, "file_type": "asset"}
         not_backlinked_criteria = {"backlinked": False, "file_type": "asset"}
+
         self.backlinked.extend(sorted(index.filter_files(**backlinked_criteria)))
         self.not_backlinked.extend(sorted(index.filter_files(**not_backlinked_criteria)))
 
