@@ -9,7 +9,7 @@ import threading
 from collections import Counter, defaultdict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Generator, Type, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generator, Type, TypeVar
 
 from ..utils.enums import Format
 
@@ -283,7 +283,7 @@ def convert_cljs_date_to_py(cljs_format: str, token_map: dict[str, str], token_p
     return token_pattern.sub(replace_token, cljs_format)
 
 
-def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
+def get_attribute_list(file_list: Generator["LogseqFile", None, None], attribute: str) -> list[Any]:
     """
     Get a list of attribute values from a list of LogseqFile objects.
 
