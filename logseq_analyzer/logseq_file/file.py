@@ -17,7 +17,7 @@ import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 
 from ..config.builtin_properties import extract_builtin_properties, remove_builtin_properties
 from ..utils.enums import Criteria, Nodes
-from ..utils.helpers import process_aliases, process_pattern_hierarchy, yield_attrs
+from ..utils.helpers import process_aliases, process_pattern_hierarchy
 from .bullets import LogseqBullets
 from .name import LogseqFilename
 from .stats import LogseqFilestats
@@ -52,7 +52,6 @@ class LogseqFile:
         "bullets",
         "masked",
         "node",
-        "__dict__",
     )
 
     def __init__(self, file_path: Path) -> None:
@@ -62,13 +61,13 @@ class LogseqFile:
         Args:
             file_path (Path): The path to the Logseq file.
         """
-        self.bullets: LogseqBullets = LogseqBullets(file_path)
-        self.data: dict[str, Any] = {}
         self.file_path: Path = file_path
-        self.masked: MaskedBlocks = MaskedBlocks()
+        self.stat: LogseqFilestats = LogseqFilestats(file_path)
         self.node: NodeType = NodeType()
         self.path: LogseqFilename = LogseqFilename(file_path)
-        self.stat: LogseqFilestats = LogseqFilestats(file_path)
+        self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.masked: MaskedBlocks = MaskedBlocks()
+        self.data: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
@@ -90,6 +89,26 @@ class LogseqFile:
         if isinstance(other, str):
             return self.path.name < other
         return NotImplemented
+
+    @property
+    def name(self) -> str:
+        """Return the name of the file."""
+        return self.path.name
+
+    @property
+    def file_type(self) -> str:
+        """Return the type of the file."""
+        return self.path.file_type
+
+    @property
+    def is_hls(self) -> bool:
+        """Return whether the file is a hierarchical logseq file."""
+        return self.path.is_hls
+
+    @property
+    def has_content(self) -> bool:
+        """Return whether the file has content."""
+        return self.stat.has_content
 
     @property
     def has_backlinks(self) -> bool:
@@ -116,16 +135,6 @@ class LogseqFile:
         self.path.process_filename()
         self.stat.process_stats()
         self.bullets.process_bullets()
-        self.set_file_data_attributes()
-
-    def set_file_data_attributes(self) -> None:
-        """Set file data attributes."""
-        largeattrs = ("content_bullets", "content")
-        for subdata in (self.stat, self.path, self.bullets):
-            for attr, value in yield_attrs(subdata):
-                if subdata is self.bullets and attr in largeattrs:
-                    continue
-                setattr(self, attr, value)
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
@@ -214,17 +223,17 @@ class LogseqFile:
             dict: A dictionary containing the extracted aliases and properties.
         """
         content = self.bullets.content
-        page_properties = set()
-        block_properties = set()
+        page_props = set()
+        block_props = set()
         if self.bullets.stats.has_page_properties:
-            page_properties.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
+            page_props.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             content = "\n".join(self.bullets.content_bullets)
-        block_properties.update(ContentPatterns.PROPERTY.findall(content))
+        block_props.update(ContentPatterns.PROPERTY.findall(content))
         self.bullets.content = content
-        page_props_builtins = sorted(extract_builtin_properties(page_properties))
-        page_props_user = sorted(remove_builtin_properties(page_properties))
-        block_props_builtins = sorted(extract_builtin_properties(block_properties))
-        block_props_user = sorted(remove_builtin_properties(block_properties))
+        page_props_builtins = sorted(extract_builtin_properties(page_props))
+        page_props_user = sorted(remove_builtin_properties(page_props))
+        block_props_builtins = sorted(extract_builtin_properties(block_props))
+        block_props_user = sorted(remove_builtin_properties(block_props))
         return {
             Criteria.PROP_BLOCK_BUILTIN.value: block_props_builtins,
             Criteria.PROP_BLOCK_USER.value: block_props_user,
@@ -280,48 +289,32 @@ class LogseqFile:
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
-        if self.stat.has_content:
-            self.node.type = self.check_node_type_has_content()
-        else:
-            self.node.type = self.check_node_type_has_no_content()
-
-    def check_node_type_has_content(self) -> str:
-        """
-        Helper function to check node type based on content.
-        """
-        match (self.node.has_backlinks, self.node.backlinked, self.node.backlinked_ns_only):
-            case (True, True, True):
+        match (self.has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+            case (True, True, True, True):
                 node_type = Nodes.BRANCH.value
-            case (True, True, False):
+            case (True, True, True, False):
                 node_type = Nodes.BRANCH.value
-            case (True, False, True):
+            case (True, True, False, True):
                 node_type = Nodes.BRANCH.value
-            case (True, False, False):
+            case (True, True, False, False):
                 node_type = Nodes.ROOT.value
-            case (False, True, True):
+            case (True, False, True, True):
                 node_type = Nodes.LEAF.value
-            case (False, True, False):
+            case (True, False, True, False):
                 node_type = Nodes.LEAF.value
-            case (False, False, True):
+            case (True, False, False, True):
                 node_type = Nodes.ORPHAN_NAMESPACE.value
-            case (False, False, False):
+            case (True, False, False, False):
                 node_type = Nodes.ORPHAN_GRAPH.value
-        return node_type
-
-    def check_node_type_has_no_content(self) -> str:
-        """
-        Helper function to check node type based on no content.
-        """
-        match (self.node.backlinked, self.node.backlinked_ns_only):
-            case (True, True):
+            case (False, False, True, True):
                 node_type = Nodes.LEAF.value
-            case (True, False):
+            case (False, False, True, False):
                 node_type = Nodes.LEAF.value
-            case (False, True):
+            case (False, False, False, True):
                 node_type = Nodes.ORPHAN_NAMESPACE_TRUE.value
-            case (False, False):
+            case (False, False, False, False):
                 node_type = Nodes.ORPHAN_TRUE.value
-        return node_type
+        self.node.type = node_type
 
     def unmask_blocks(self) -> str:
         """
@@ -348,16 +341,9 @@ class LogseqFile:
         """
         try:
             lookup.remove(self.path.name)
-            print(f"Removed {self.path.name} from lookup set: {len(lookup)}")
             return True
         except KeyError:
             return False
-
-    def set_ns_data(self) -> None:
-        """Set namespace data for a file."""
-        for attr, value in yield_attrs(self.path):
-            if attr.startswith("ns_") or attr == "is_namespace":
-                setattr(self, attr, value)
 
     def update_asset_backlink(self, asset_mentions: list[str], parent: str) -> None:
         """

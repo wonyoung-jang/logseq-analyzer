@@ -32,6 +32,7 @@ __all__ = [
     "get_token_map",
     "compile_token_pattern",
     "convert_cljs_date_to_py",
+    "get_attribute_list",
 ]
 
 
@@ -219,6 +220,7 @@ def get_count_and_foundin_data(result: dict, collection: list[str], file: "Logse
         result.setdefault(item, {"count": 0, "found_in": Counter()})
         result[item]["count"] = result[item].get("count", 0) + 1
         result[item]["found_in"][file.path.name] += 1
+    return result
 
 
 def get_token_map() -> dict[str, str]:
@@ -279,3 +281,17 @@ def convert_cljs_date_to_py(cljs_format: str, token_map: dict[str, str], token_p
         return token_map.get(token, token)
 
     return token_pattern.sub(replace_token, cljs_format)
+
+
+def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
+    """
+    Get a list of attribute values from a list of LogseqFile objects.
+
+    Args:
+        file_list (Generator[LogseqFile, None, None]): generator of LogseqFile objects.
+        attribute (str): The attribute to extract from each LogseqFile object.
+
+    Returns:
+        list[Union[str, int]]: list of attribute values.
+    """
+    return sorted(getattr(file, attribute) for file in file_list)

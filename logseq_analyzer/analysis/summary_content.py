@@ -43,5 +43,5 @@ class LogseqContentSummarizer:
         for file in index:
             if not (file_criteria := file.data.get(criteria, [])):
                 continue
-            get_count_and_foundin_data(subset_counter, file_criteria, file)
+            subset_counter = get_count_and_foundin_data(subset_counter, file_criteria, file)
         return sort_dict_by_value(subset_counter, value="count", reverse=True)

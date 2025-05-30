@@ -78,7 +78,7 @@ class LogseqGraph:
             if curr_ns_info:
                 linked_references.append(curr_ns_info.parent)
 
-            get_count_and_foundin_data(all_linked_references, linked_references, file)
+            all_linked_references = get_count_and_foundin_data(all_linked_references, linked_references, file)
 
             if curr_ns_info and curr_ns_info.parent:
                 linked_references.remove(curr_ns_info.parent)
@@ -113,7 +113,6 @@ class LogseqGraph:
             ns_root_file.path.is_namespace = True
             ns_root_file.path.ns_info.children.add(file.path.name)
             ns_root_file.path.ns_info.size = len(ns_root_file.path.ns_info.children)
-            ns_root_file.set_ns_data()
 
         if ns_level <= 2:
             return ns_refs
@@ -122,7 +121,6 @@ class LogseqGraph:
             ns_parent_file: LogseqFile
             ns_parent_file.path.ns_info.children.add(file.path.name)
             ns_parent_file.path.ns_info.size = len(ns_parent_file.path.ns_info.children)
-            ns_parent_file.set_ns_data()
 
         return ns_refs
 
@@ -130,12 +128,13 @@ class LogseqGraph:
         """Process summary data for each file based on metadata and content analysis."""
         linked_refs = self.unique_linked_references
         linked_refs_ns = self.unique_linked_references_ns
+        text_files = (FileTypes.JOURNAL.value, FileTypes.PAGE.value)
         for f in index:
             f.node.backlinked = f.check_is_backlinked(linked_refs)
             f.node.backlinked_ns_only = f.check_is_backlinked(linked_refs_ns)
             if f.node.backlinked and f.node.backlinked_ns_only:
                 f.node.backlinked = False
-            if f.path.file_type in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
+            if f.path.file_type in text_files:
                 f.determine_node_type()
 
     def process_dangling_links(self, index: "FileIndex", unique_aliases: set[str]) -> list[str]:

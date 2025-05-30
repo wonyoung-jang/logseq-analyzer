@@ -6,8 +6,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from ..utils.enums import SummaryFiles
-from ..utils.helpers import singleton
-from .index import get_attribute_list
+from ..utils.helpers import get_attribute_list, singleton
 
 if TYPE_CHECKING:
     from .index import FileIndex

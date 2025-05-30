@@ -6,10 +6,9 @@ from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from ..analysis.index import get_attribute_list
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Output
-from ..utils.helpers import singleton
+from ..utils.helpers import singleton, get_attribute_list
 
 if TYPE_CHECKING:
     from ..analysis.index import FileIndex

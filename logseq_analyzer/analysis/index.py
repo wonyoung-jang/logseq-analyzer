@@ -16,22 +16,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "FileIndex",
-    "get_attribute_list",
 ]
-
-
-def get_attribute_list(file_list: Generator[LogseqFile, None, None], attribute: str) -> list[Any]:
-    """
-    Get a list of attribute values from a list of LogseqFile objects.
-
-    Args:
-        file_list (Generator[LogseqFile, None, None]): generator of LogseqFile objects.
-        attribute (str): The attribute to extract from each LogseqFile object.
-
-    Returns:
-        list[Union[str, int]]: list of attribute values.
-    """
-    return sorted(getattr(file, attribute) for file in file_list)
 
 
 @singleton
