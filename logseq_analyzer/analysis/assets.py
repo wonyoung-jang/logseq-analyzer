@@ -41,25 +41,23 @@ class LogseqAssets:
 
     def handle_assets(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
-        file_type_is_asset = list(index.filter_files(file_type="asset"))
+        asset_mentions = set()
         for file in index:
-            if not (f_data := file.data):
+            if not file.data:
                 continue
-            emb_link_asset = f_data.get(Criteria.EMB_LINK_ASSET.value, [])
-            assets = f_data.get(Criteria.CON_ASSETS.value, [])
-            if not (emb_link_asset or assets):
+
+            asset_mentions.update(file.data.get(Criteria.EMB_LINK_ASSET.value, []))
+            asset_mentions.update(file.data.get(Criteria.CON_ASSETS.value, []))
+            if not asset_mentions:
                 continue
-            for asset_file in file_type_is_asset:
-                if asset_file.node.backlinked:
-                    continue
-                for asset_mentions in (emb_link_asset, assets):
-                    asset_file.update_asset_backlink(asset_mentions, file.path.name)
 
-        backlinked_criteria = {"backlinked": True, "file_type": "asset"}
-        not_backlinked_criteria = {"backlinked": False, "file_type": "asset"}
+            for asset_file in index.filter_files(file_type="asset", backlinked=False):
+                asset_file.update_asset_backlink(asset_mentions, file.path.name)
 
-        self.backlinked.extend(sorted(index.filter_files(**backlinked_criteria)))
-        self.not_backlinked.extend(sorted(index.filter_files(**not_backlinked_criteria)))
+            asset_mentions.clear()
+
+        self.backlinked.extend(sorted(index.filter_files(file_type="asset", backlinked=True)))
+        self.not_backlinked.extend(sorted(index.filter_files(file_type="asset", backlinked=False)))
 
     @property
     def report(self) -> str:

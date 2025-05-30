@@ -257,7 +257,6 @@ class SummaryFiles(Enum):
 
     BACKLINKED = "backlinked"
     BACKLINKED_NS_ONLY = "backlinked_ns_only"
-    FILE_EXTS = "file_extensions"
     HAS_BACKLINKS = "has_backlinks"
     HAS_CONTENT = "has_content"
     IS_HLS = "is_hls"

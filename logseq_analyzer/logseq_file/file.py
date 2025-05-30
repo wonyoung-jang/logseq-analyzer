@@ -351,6 +351,7 @@ class LogseqFile:
         """
         nameset = (self.path.name, parent)
         for asset_mention in asset_mentions:
-            if any(name in asset_mention for name in nameset):
-                self.node.backlinked = True
-                return
+            for name in nameset:
+                if name in asset_mention:
+                    self.node.backlinked = True
+                    return
