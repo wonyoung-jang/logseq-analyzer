@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
-from ..utils.enums import Moved
+from ..utils.enums import MovedFiles
 
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
@@ -51,7 +51,7 @@ def process_moves(move: bool, target_dir: Path, paths: list[Path]) -> list[str]:
         return []
 
     if not move:
-        return [Moved.SIMULATED_PREFIX.value] + names
+        return [MovedFiles.SIMULATED_PREFIX.value] + names
 
     for src in paths:
         dest = target_dir / src.name

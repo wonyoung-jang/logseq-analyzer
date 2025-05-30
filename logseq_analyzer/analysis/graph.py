@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value, remove_builtin_properties
+from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -61,14 +61,14 @@ class LogseqGraph:
             if not (f_data := file.data):
                 continue
 
-            found_aliases = f_data.get(Criteria.ALIASES.value, [])
+            found_aliases = f_data.get(Criteria.CON_ALIASES.value, [])
             unique_aliases.update(found_aliases)
             linked_references = [
                 found_aliases,
-                f_data.get(Criteria.DRAWS.value, []),
-                f_data.get(Criteria.PAGE_REFERENCES.value, []),
-                f_data.get(Criteria.TAGS.value, []),
-                f_data.get(Criteria.TAGGED_BACKLINKS.value, []),
+                f_data.get(Criteria.CON_DRAW.value, []),
+                f_data.get(Criteria.CON_PAGE_REF.value, []),
+                f_data.get(Criteria.CON_TAG.value, []),
+                f_data.get(Criteria.CON_TAGGED_BACKLINK.value, []),
                 f_data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
                 f_data.get(Criteria.PROP_PAGE_USER.value, []),
                 f_data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
@@ -155,9 +155,9 @@ class LogseqGraph:
     def report(self) -> dict[str, Any]:
         """Generate a report of the graph analysis."""
         return {
-            Output.ALL_LINKED_REFERENCES.value: self.all_linked_references,
-            Output.ALL_DANGLING_LINKS.value: self.all_dangling_links,
-            Output.DANGLING_LINKS.value: self.dangling_links,
-            Output.UNIQUE_LINKED_REFERENCES_NS.value: self.unique_linked_references_ns,
-            Output.UNIQUE_LINKED_REFERENCES.value: self.unique_linked_references,
+            Output.GRAPH_ALL_LINKED_REFERENCES.value: self.all_linked_references,
+            Output.GRAPH_ALL_DANGLING_LINKS.value: self.all_dangling_links,
+            Output.GRAPH_DANGLING_LINKS.value: self.dangling_links,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS.value: self.unique_linked_references_ns,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES.value: self.unique_linked_references,
         }

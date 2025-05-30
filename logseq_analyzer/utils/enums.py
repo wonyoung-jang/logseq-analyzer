@@ -12,8 +12,8 @@ __all__ = [
     "Criteria",
     "FileTypes",
     "Format",
-    "Moved",
-    "Nodes",
+    "MovedFiles",
+    "NodeTypes",
     "Output",
     "OutputDir",
     "SummaryFiles",
@@ -71,6 +71,7 @@ class Core(Enum):
 class Criteria(Enum):
     """Criteria for filtering files."""
 
+    # CON_BOLD = "bold"
     ADV_CMD = "adv_cmd"
     ADV_CMD_CAUTION = "adv_cmd_caution"
     ADV_CMD_CENTER = "adv_cmd_center"
@@ -87,47 +88,46 @@ class Criteria(Enum):
     ADV_CMD_TIP = "adv_cmd_tip"
     ADV_CMD_VERSE = "adv_cmd_verse"
     ADV_CMD_WARNING = "adv_cmd_warning"
-    ALIASES = "aliases"
-    ANY_LINKS = "any_links"
-    ASSETS = "assets"
-    BLOCKQUOTES = "blockquotes"
-    BOLD = "bold"
     COD_INLINE = "code_inline"
     COD_ML_ALL = "code_multiline"
     COD_ML_CALC = "code_multiline_calc"
     COD_ML_LANG = "code_multiline_lang"
-    DBC_ALL = "macros"
-    DBC_BLOCK_EMBEDS = "block_embeds"
-    DBC_CARDS = "cards"
-    DBC_CLOZES = "clozes"
-    DBC_EMBEDS = "embeds"
-    DBC_NAMESPACE_QUERIES = "namespace_queries"
-    DBC_PAGE_EMBEDS = "page_embeds"
-    DBC_QUERY_FUNCTIONS = "query_functions"
-    DBC_RENDERERS = "renderers"
-    DBC_SIMPLE_QUERIES = "simple_queries"
-    DBC_TWITTER_TWEETS = "embed_twitter_tweets"
-    DBC_VIDEO_URLS = "embed_video_urls"
-    DBC_YOUTUBE_TIMESTAMPS = "embed_youtube_timestamps"
-    DBP_ALL_REFS = "references_general"
-    DBP_BLOCK_REFS = "block_references"
-    DRAWS = "draws"
-    DYNAMIC_VARIABLES = "dynamic_variables"
+    CON_ALIASES = "content_aliases"
+    CON_ANY_LINKS = "content_any_links"
+    CON_ASSETS = "content_assets"
+    CON_BLOCKQUOTES = "content_blockquotes"
+    CON_DRAW = "content_draws"
+    CON_DYNAMIC_VAR = "content_dynamic_variables"
+    CON_FLASHCARD = "content_flashcards"
+    CON_PAGE_REF = "content_page_references"
+    CON_TAG = "content_tags"
+    CON_TAGGED_BACKLINK = "content_tagged_backlinks"
+    DBC_ALL = "double_curly_all_or_macros"
+    DBC_BLOCK_EMBEDS = "double_curly_block_embeds"
+    DBC_CARDS = "double_curly_cards"
+    DBC_CLOZES = "double_curly_clozes"
+    DBC_EMBEDS = "double_curly_embeds"
+    DBC_NAMESPACE_QUERIES = "double_curly_namespace_queries"
+    DBC_PAGE_EMBEDS = "double_curly_page_embeds"
+    DBC_QUERY_FUNCTIONS = "double_curly_query_functions"
+    DBC_RENDERERS = "double_curly_renderers"
+    DBC_SIMPLE_QUERIES = "double_curly_simple_queries"
+    DBC_TWITTER_TWEETS = "double_curly_twitter_tweets"
+    DBC_VIDEO_URLS = "double_curly_video_urls"
+    DBC_YOUTUBE_TIMESTAMPS = "double_curly_youtube_timesteps"
+    DBP_ALL_REFS = "double_parentheses_all_refs"
+    DBP_BLOCK_REFS = "double_parentheses_block_refs"
     EMB_LINK_ASSET = "embedded_links_asset"
     EMB_LINK_INTERNET = "embedded_links_internet"
     EMB_LINK_OTHER = "embedded_links_other"
     EXT_LINK_ALIAS = "external_links_alias"
     EXT_LINK_INTERNET = "external_links_internet"
     EXT_LINK_OTHER = "external_links_other"
-    FLASHCARDS = "flashcards"
-    PAGE_REFERENCES = "page_references"
-    PROP_BLOCK_BUILTIN = "properties_block_builtin"
-    PROP_BLOCK_USER = "properties_block_user"
-    PROP_PAGE_BUILTIN = "properties_page_builtin"
-    PROP_PAGE_USER = "properties_page_user"
-    PROP_VALUES = "properties_values"
-    TAGGED_BACKLINKS = "tagged_backlinks"
-    TAGS = "tags"
+    PROP_BLOCK_BUILTIN = "property_block_builtin"
+    PROP_BLOCK_USER = "property_block_user"
+    PROP_PAGE_BUILTIN = "property_page_builtin"
+    PROP_PAGE_USER = "property_page_user"
+    PROP_VALUES = "property_values"
 
 
 class FileTypes(Enum):
@@ -163,7 +163,7 @@ class Format(Enum):
     TXT = ".txt"
 
 
-class Moved(Enum):
+class MovedFiles(Enum):
     """Moved files and directories in the Logseq Analyzer."""
 
     ASSETS = "moved_assets"
@@ -172,7 +172,7 @@ class Moved(Enum):
     SIMULATED_PREFIX = "======== Simulated only ========"
 
 
-class Nodes(Enum):
+class NodeTypes(Enum):
     """Node types for the Logseq Analyzer."""
 
     BRANCH = "branch"
@@ -188,8 +188,6 @@ class Nodes(Enum):
 class Output(Enum):
     """Output types for the Logseq Analyzer."""
 
-    ALL_DANGLING_LINKS = "all_dangling_links"
-    ALL_LINKED_REFERENCES = "all_linked_references"
     ARGUMENTS = "arguments"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
@@ -199,18 +197,23 @@ class Output(Enum):
     CONFIG_JOURNAL_FMT_FILE = "file"
     CONFIG_JOURNAL_FMT_PAGE = "page"
     CONFIG_JOURNAL_FORMATS = "journal_formats"
-    DANGLING_LINKS = "dangling_links"
-    GRAPH_CONTENT = "content_bullets"
-    GRAPH_DATA = "data"
+    GRAPH_ALL_DANGLING_LINKS = "graph_all_dangling_links"
+    GRAPH_ALL_LINKED_REFERENCES = "graph_all_linked_references"
+    GRAPH_BULLETS = "graph_content_bullets"
+    GRAPH_CONTENT = "graph_content"
+    GRAPH_DANGLING_LINKS = "graph_dangling_links"
+    GRAPH_DATA = "graph_data"
+    GRAPH_UNIQUE_LINKED_REFERENCES = "graph_unique_linked_references"
+    GRAPH_UNIQUE_LINKED_REFERENCES_NS = "graph_unique_linked_references_ns"
     HLS_ASSET_MAPPING = "hls_asset_mapping"
     HLS_ASSET_NAMES = "hls_asset_names"
     HLS_BACKLINKED = "hls_backlinked"
     HLS_FORMATTED_BULLETS = "hls_formatted_bullets"
     HLS_NOT_BACKLINKED = "hls_not_backlinked"
-    IDX_FILES = "files"
-    IDX_HASH_TO_FILE = "hash_to_file"
-    IDX_NAME_TO_FILES = "name_to_files"
-    IDX_PATH_TO_FILE = "path_to_file"
+    IDX_FILES = "index_files"
+    IDX_HASH_TO_FILE = "index_hash_to_file"
+    IDX_NAME_TO_FILES = "index_name_to_files"
+    IDX_PATH_TO_FILE = "index_path_to_file"
     JOURNALS_DANGLING = "journals_dangling"
     JOURNALS_EXISTING = "journals_existing"
     JOURNALS_MISSING = "journals_missing"
@@ -228,8 +231,6 @@ class Output(Enum):
     NS_QUERIES = "ns_queries"
     NS_UNIQUE_PARTS = "ns_unique_parts"
     NS_UNIQUE_PER_LEVEL = "ns_unique_per_level"
-    UNIQUE_LINKED_REFERENCES = "unique_linked_references"
-    UNIQUE_LINKED_REFERENCES_NS = "unique_linked_references_ns"
 
 
 class OutputDir(Enum):
@@ -244,7 +245,9 @@ class OutputDir(Enum):
     MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
     NAMESPACES = "namespaces"
     SUMMARY_CONTENT = "summary_content"
-    SUMMARY_FILES = "summary_files"
+    SUMMARY_FILES_FILE = "summary_files/file_types"
+    SUMMARY_FILES_GENERAL = "summary_files/general"
+    SUMMARY_FILES_NODE = "summary_files/node_types"
     TEST = "test"
 
 
@@ -253,26 +256,7 @@ class SummaryFiles(Enum):
 
     BACKLINKED = "backlinked"
     BACKLINKED_NS_ONLY = "backlinked_ns_only"
-    FILE_EXTS = "file_extensions_dict"
-    FILETYPE_ASSET = "filetype_asset"
-    FILETYPE_DRAW = "filetype_draw"
-    FILETYPE_JOURNAL = "filetype_journal"
-    FILETYPE_OTHER = "filetype_other"
-    FILETYPE_PAGE = "filetype_page"
-    FILETYPE_SUB_ASSET = "filetype_sub_asset"
-    FILETYPE_SUB_DRAW = "filetype_sub_draw"
-    FILETYPE_SUB_JOURNAL = "filetype_sub_journal"
-    FILETYPE_SUB_PAGE = "filetype_sub_page"
-    FILETYPE_SUB_WHITEBOARD = "filetype_sub_whiteboard"
-    FILETYPE_WHITEBOARD = "filetype_whiteboard"
+    FILE_EXTS = "file_extensions"
     HAS_BACKLINKS = "has_backlinks"
     HAS_CONTENT = "has_content"
     IS_HLS = "is_hls"
-    NODE_BRANCH = "node_branch"
-    NODE_LEAF = "node_leaf"
-    NODE_ORPHAN_GRAPH = "node_orphan_graph"
-    NODE_ORPHAN_NAMESPACE = "node_orphan_namespace"
-    NODE_ORPHAN_NAMESPACE_TRUE = "node_orphan_namespace_true"
-    NODE_ORPHAN_TRUE = "node_orphan_true"
-    NODE_OTHER = "node_other"
-    NODE_ROOT = "node_root"

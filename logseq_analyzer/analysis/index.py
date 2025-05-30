@@ -154,7 +154,10 @@ class FileIndex:
         """Get content data from the graph."""
         if not write_graph:
             return {}
-        return {Output.GRAPH_CONTENT.value: {file: file.bullets.content_bullets for file in self}}
+        return {
+            Output.GRAPH_BULLETS.value: {file: file.bullets.content_bullets for file in self},
+            Output.GRAPH_CONTENT.value: {file: file.bullets.content for file in self},
+        }
 
     @property
     def report(self) -> dict[str, Any]:

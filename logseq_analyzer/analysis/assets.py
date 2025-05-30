@@ -46,7 +46,7 @@ class LogseqAssets:
             if not (f_data := file.data):
                 continue
             emb_link_asset = f_data.get(Criteria.EMB_LINK_ASSET.value, [])
-            assets = f_data.get(Criteria.ASSETS.value, [])
+            assets = f_data.get(Criteria.CON_ASSETS.value, [])
             if not (emb_link_asset or assets):
                 continue
             for asset_file in file_type_is_asset:

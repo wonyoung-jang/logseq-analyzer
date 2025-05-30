@@ -15,11 +15,11 @@ import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPat
 import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 
-from ..utils.enums import Criteria, Nodes
+from ..utils.enums import Criteria, NodeTypes
 from ..utils.helpers import (
+    extract_builtin_properties,
     process_aliases,
     process_pattern_hierarchy,
-    extract_builtin_properties,
     remove_builtin_properties,
 )
 from .bullets import LogseqBullets
@@ -42,7 +42,7 @@ class NodeType:
     has_backlinks: bool = False
     backlinked: bool = False
     backlinked_ns_only: bool = False
-    type: str = Nodes.OTHER.value
+    type: str = NodeTypes.OTHER.value
 
 
 class LogseqFile:
@@ -65,9 +65,9 @@ class LogseqFile:
             Criteria.PROP_BLOCK_USER.value,
             Criteria.PROP_PAGE_BUILTIN.value,
             Criteria.PROP_PAGE_USER.value,
-            Criteria.PAGE_REFERENCES.value,
-            Criteria.TAGGED_BACKLINKS.value,
-            Criteria.TAGS.value,
+            Criteria.CON_PAGE_REF.value,
+            Criteria.CON_TAGGED_BACKLINK.value,
+            Criteria.CON_TAG.value,
         }
     )
 
@@ -88,7 +88,7 @@ class LogseqFile:
         (EmbeddedLinksPatterns.ALL, f"__{Criteria.EMB_LINK_OTHER.name}_"),
         (ExternalLinksPatterns.ALL, f"__{Criteria.EXT_LINK_OTHER.name}_"),
         (DoubleParenthesesPatterns.ALL, f"__{Criteria.DBP_ALL_REFS.name}_"),
-        (ContentPatterns.ANY_LINK, f"__{Criteria.ANY_LINKS.name}_"),
+        (ContentPatterns.ANY_LINK, f"__{Criteria.CON_ANY_LINKS.name}_"),
     )
 
     def __init__(self, file_path: Path) -> None:
@@ -208,16 +208,16 @@ class LogseqFile:
         masked_content = self.masked.content
         return {
             Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
-            Criteria.ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
-            Criteria.ASSETS.value: ContentPatterns.ASSET.findall(content),
-            Criteria.BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
-            Criteria.DRAWS.value: ContentPatterns.DRAW.findall(masked_content),
-            Criteria.FLASHCARDS.value: ContentPatterns.FLASHCARD.findall(masked_content),
-            Criteria.PAGE_REFERENCES.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
-            Criteria.TAGGED_BACKLINKS.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
-            Criteria.TAGS.value: ContentPatterns.TAG.findall(masked_content),
-            Criteria.DYNAMIC_VARIABLES.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
-            Criteria.BOLD.value: ContentPatterns.BOLD.findall(masked_content),
+            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
+            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(content),
+            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
+            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(masked_content),
+            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(masked_content),
+            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
+            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
+            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(masked_content),
+            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
+            # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
         }
 
     def extract_aliases_and_propvalues(self) -> dict[str, Any]:
@@ -232,7 +232,7 @@ class LogseqFile:
         if aliases := properties_values.get("alias"):
             aliases = list(process_aliases(aliases))
         return {
-            Criteria.ALIASES.value: aliases,
+            Criteria.CON_ALIASES.value: aliases,
             Criteria.PROP_VALUES.value: properties_values,
         }
 
@@ -287,29 +287,29 @@ class LogseqFile:
         """Helper function to determine node type based on summary data."""
         match (self.has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True, True):
-                nt = Nodes.BRANCH.value
+                nt = NodeTypes.BRANCH.value
             case (True, True, True, False):
-                nt = Nodes.BRANCH.value
+                nt = NodeTypes.BRANCH.value
             case (True, True, False, True):
-                nt = Nodes.BRANCH.value
+                nt = NodeTypes.BRANCH.value
             case (True, True, False, False):
-                nt = Nodes.ROOT.value
+                nt = NodeTypes.ROOT.value
             case (True, False, True, True):
-                nt = Nodes.LEAF.value
+                nt = NodeTypes.LEAF.value
             case (True, False, True, False):
-                nt = Nodes.LEAF.value
+                nt = NodeTypes.LEAF.value
             case (True, False, False, True):
-                nt = Nodes.ORPHAN_NAMESPACE.value
+                nt = NodeTypes.ORPHAN_NAMESPACE.value
             case (True, False, False, False):
-                nt = Nodes.ORPHAN_GRAPH.value
+                nt = NodeTypes.ORPHAN_GRAPH.value
             case (False, False, True, True):
-                nt = Nodes.LEAF.value
+                nt = NodeTypes.LEAF.value
             case (False, False, True, False):
-                nt = Nodes.LEAF.value
+                nt = NodeTypes.LEAF.value
             case (False, False, False, True):
-                nt = Nodes.ORPHAN_NAMESPACE_TRUE.value
+                nt = NodeTypes.ORPHAN_NAMESPACE_TRUE.value
             case (False, False, False, False):
-                nt = Nodes.ORPHAN_TRUE.value
+                nt = NodeTypes.ORPHAN_TRUE.value
         self.node.type = nt
 
     def unmask_blocks(self) -> str:

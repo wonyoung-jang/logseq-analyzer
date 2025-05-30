@@ -48,7 +48,7 @@ from .io.filesystem import (
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
-from .utils.enums import CacheKeys, Constants, Moved, Output, OutputDir
+from .utils.enums import CacheKeys, Constants, MovedFiles, Output, OutputDir
 from .utils.helpers import compile_token_pattern, convert_cljs_date_to_py, get_token_map
 
 logger = logging.getLogger(__name__)
@@ -302,9 +302,9 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     moved_bak = process_moves(args.move_bak, target_bak.path, bak_paths)
     moved_rec = process_moves(args.move_recycle, target_rec.path, rec_paths)
     moved_files_report = {
-        Moved.ASSETS.value: moved_assets,
-        Moved.BAK.value: moved_bak,
-        Moved.RECYCLE.value: moved_rec,
+        MovedFiles.ASSETS.value: moved_assets,
+        MovedFiles.BAK.value: moved_bak,
+        MovedFiles.RECYCLE.value: moved_rec,
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES.value: moved_files_report}
@@ -336,7 +336,9 @@ def perform_core_analysis(
         (OutputDir.MOVED_FILES.value, moved_files),
         (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report),
         (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report),
-        (OutputDir.SUMMARY_FILES.value, summary_files.report),
+        (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general),
+        (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes),
+        (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes),
         (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
     )
 
