@@ -310,12 +310,7 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     return {Output.MOVED_FILES.value: moved_files_report}
 
 
-def perform_core_analysis(
-    args: Args,
-    configs: Configurations,
-    cache: Cache,
-    index: FileIndex,
-) -> tuple[tuple[str, Any], ...]:
+def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex) -> tuple:
     """Perform core analysis on the Logseq graph."""
     process_graph_files(index, cache, configs)
     graph = setup_logseq_graph(index)
@@ -324,7 +319,7 @@ def perform_core_analysis(
     ls_assets, hls_assets = setup_logseq_assets(index)
     moved_files = setup_logseq_file_mover(args, ls_assets)
     summary_files, summary_content = setup_logseq_summarizers(index)
-    logger.debug("perform_core_analysis")
+    logger.debug("analyze")
     return (
         (OutputDir.META.value, args.report),
         (OutputDir.META.value, configs.report),
@@ -380,7 +375,7 @@ def run_app(**kwargs) -> None:
     setup_analyzer_class_attributes(args, configs)
 
     progress(60, "Running core analysis on Logseq graph...")
-    data_reports = perform_core_analysis(args, configs, cache, index)
+    data_reports = analyze(args, configs, cache, index)
 
     progress(70, "Writing reports...")
     write_reports(data_reports)

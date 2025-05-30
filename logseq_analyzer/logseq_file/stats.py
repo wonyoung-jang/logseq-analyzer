@@ -8,6 +8,8 @@ from datetime import datetime
 from os import stat_result
 from pathlib import Path
 
+from ..utils.helpers import format_bytes
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +29,7 @@ class LogseqFilestats:
     __slots__ = (
         "file_path",
         "size",
+        "size_human_readable",
         "has_content",
         "timestamps",
     )
@@ -37,6 +40,7 @@ class LogseqFilestats:
         """Initialize the LogseqFilestats object."""
         self.file_path: Path = file_path
         self.size: int = 0
+        self.size_human_readable: str = ""
         self.has_content: bool = False
         self.timestamps: FileTimestampInfo = FileTimestampInfo()
 
@@ -58,6 +62,7 @@ class LogseqFilestats:
         """Set the size and content attributes."""
         _size = stat.st_size
         self.size = _size
+        self.size_human_readable = format_bytes(_size)
         self.has_content = bool(_size)
 
     def set_timestamps(self, stat: stat_result) -> None:

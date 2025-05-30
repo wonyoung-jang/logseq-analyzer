@@ -16,9 +16,6 @@ from ..utils.enums import Format
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
 
-logger = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 __all__ = [
     "iter_files",
@@ -32,10 +29,75 @@ __all__ = [
     "get_token_map",
     "compile_token_pattern",
     "convert_cljs_date_to_py",
-    "BUILT_IN_PROPS",
+    "BUILT_IN_PROPERTIES",
     "extract_builtin_properties",
     "remove_builtin_properties",
+    "format_bytes",
+    "SI_UNITS",
+    "IEC_UNITS",
 ]
+
+BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
+    [
+        "alias",
+        "aliases",
+        "background_color",
+        "background-color",
+        "collapsed",
+        "created_at",
+        "created-at",
+        "custom-id",
+        "doing",
+        "done",
+        "exclude-from-graph-view",
+        "filetags",
+        "filters",
+        "heading",
+        "hl-color",
+        "hl-page",
+        "hl-stamp",
+        "hl-type",
+        "icon",
+        "id",
+        "last_modified_at",
+        "last-modified-at",
+        "later",
+        "logseq.color",
+        "logseq.macro-arguments",
+        "logseq.macro-name",
+        "logseq.order-list-type",
+        "logseq.query/nlp-date",
+        "logseq.table.borders",
+        "logseq.table.compact",
+        "logseq.table.headers",
+        "logseq.table.hover",
+        "logseq.table.max-width",
+        "logseq.table.stripes",
+        "logseq.table.version",
+        "logseq.tldraw.page",
+        "logseq.tldraw.shape",
+        "logseq.tldraw.shape",
+        "ls-type",
+        "macro",
+        "now",
+        "public",
+        "query-properties",
+        "query-sort-by",
+        "query-sort-desc",
+        "query-table",
+        "tags",
+        "template-including-parent",
+        "template",
+        "title",
+        "todo",
+        "updated-at",
+    ]
+)
+_T = TypeVar("_T")
+SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+
+logger = logging.getLogger(__name__)
 
 
 def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, None]:
@@ -285,69 +347,40 @@ def convert_cljs_date_to_py(cljs_format: str, token_map: dict[str, str], token_p
     return token_pattern.sub(replace_token, cljs_format)
 
 
-BUILT_IN_PROPS: frozenset[str] = frozenset(
-    [
-        "alias",
-        "aliases",
-        "background_color",
-        "background-color",
-        "collapsed",
-        "created_at",
-        "created-at",
-        "custom-id",
-        "doing",
-        "done",
-        "exclude-from-graph-view",
-        "filetags",
-        "filters",
-        "heading",
-        "hl-color",
-        "hl-page",
-        "hl-stamp",
-        "hl-type",
-        "icon",
-        "id",
-        "last_modified_at",
-        "last-modified-at",
-        "later",
-        "logseq.color",
-        "logseq.macro-arguments",
-        "logseq.macro-name",
-        "logseq.order-list-type",
-        "logseq.query/nlp-date",
-        "logseq.table.borders",
-        "logseq.table.compact",
-        "logseq.table.headers",
-        "logseq.table.hover",
-        "logseq.table.max-width",
-        "logseq.table.stripes",
-        "logseq.table.version",
-        "logseq.tldraw.page",
-        "logseq.tldraw.shape",
-        "logseq.tldraw.shape",
-        "ls-type",
-        "macro",
-        "now",
-        "public",
-        "query-properties",
-        "query-sort-by",
-        "query-sort-desc",
-        "query-table",
-        "tags",
-        "template-including-parent",
-        "template",
-        "title",
-        "todo",
-        "updated-at",
-    ]
-)
-
-
 def extract_builtin_properties(properties: set[str]) -> set[str]:
     """Helper function to get built-in properties."""
-    return properties.intersection(BUILT_IN_PROPS)
+    return properties.intersection(BUILT_IN_PROPERTIES)
 
 
 def remove_builtin_properties(properties: set[str]) -> set[str]:
     """Helper function to get properties that are not built-in."""
-    return properties.difference(BUILT_IN_PROPS)
+    return properties.difference(BUILT_IN_PROPERTIES)
+
+
+def format_bytes(size_bytes: int, system: str = "si", precision: int = 2) -> str:
+    """
+    Convert a byte value into a human-readable string using SI or IEC units.
+
+    Args:
+        size_bytes (int): Number of bytes.
+        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
+        precision (int): Number of decimal places.
+    Returns:
+        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
+    """
+    if size_bytes < 0:
+        raise ValueError("size_bytes must be non-negative")
+
+    units = SI_UNITS if system == "si" else IEC_UNITS
+    base = 1000 if system == "si" else 1024
+
+    if size_bytes < base:
+        return f"{size_bytes} {units[0]}"
+
+    idx = 0
+    size = float(size_bytes)
+    while size >= base and idx < len(units) - 1:
+        size /= base
+        idx += 1
+
+    return f"{size:.{precision}f} {units[idx]}"
