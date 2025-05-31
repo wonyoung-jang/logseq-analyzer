@@ -119,11 +119,11 @@ class LogseqFilename:
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
-    def process_filename(self) -> None:
+    def process(self, ns_sep: str = Core.NS_SEP.value, ordinal_suffix: str = Core.DATE_ORDINAL_SUFFIX.value) -> None:
         """Process the filename based on its parent directory."""
         self.file_type = self.determine_file_type()
-        self.name = self.process_logseq_filename()
-        self.get_namespace_name_data()
+        self.name = self.process_logseq_filename(ns_sep, ordinal_suffix)
+        self.get_namespace_name_data(ns_sep)
 
     def determine_file_type(self) -> str:
         """
@@ -154,36 +154,42 @@ class LogseqFilename:
                 break
         return result
 
-    def process_logseq_filename(self) -> str:
+    def process_logseq_filename(
+        self, ns_sep: str = Core.NS_SEP.value, ordinal_suffix: str = Core.DATE_ORDINAL_SUFFIX.value
+    ) -> str:
         """Process the Logseq filename based on its parent directory."""
         name = self.name.strip(self.ns_file_sep)
         if self.parent == self.target_dirs["journals"]:
-            return self.process_logseq_journal_key(name)
-        return unquote(name).replace(self.ns_file_sep, Core.NS_SEP.value)
+            return self.process_logseq_journal_key(name, ordinal_suffix)
+        return unquote(name).replace(self.ns_file_sep, ns_sep)
 
-    def process_logseq_journal_key(self, name: str) -> str:
+    def process_logseq_journal_key(self, name: str, ordinal_suffix: str = Core.DATE_ORDINAL_SUFFIX.value) -> str:
         """Process the journal key to create a page title."""
         try:
             date_object = datetime.strptime(name, self.journal_file_format)
             page_title = date_object.strftime(self.journal_page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in self.journal_page_title_format:
-                day_number = str(date_object.day)
-                day_with_ordinal = self.date.append_ordinal_to_day(day_number)
-                page_title = page_title.replace(day_number, day_with_ordinal, 1)
+            if ordinal_suffix in self.journal_page_title_format:
+                page_title = self.get_ordinal_day(date_object, page_title)
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
             logger.warning("Failed to parse date from key '%s', format `%s`: %s", name, self.journal_page_format, e)
             return ""
 
-    def get_namespace_name_data(self) -> None:
+    def get_ordinal_day(self, date_object: datetime, page_title: str) -> str:
+        """Get the ordinal day from the date object and page title."""
+        day_number = str(date_object.day)
+        day_with_ordinal = self.date.append_ordinal_to_day(day_number)
+        return page_title.replace(day_number, day_with_ordinal, 1)
+
+    def get_namespace_name_data(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Get the namespace name data."""
         if not self.is_namespace:
             return
-        ns_parts_list = self.name.split(Core.NS_SEP.value)
+        ns_parts_list = self.name.split(ns_sep)
         ns_root = ns_parts_list[0]
         self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
         self.ns_info.root = ns_root
         self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
-        self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
+        self.ns_info.parent_full = ns_sep.join(ns_parts_list[:-1])
         self.ns_info.stem = ns_parts_list[-1]

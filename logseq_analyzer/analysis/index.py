@@ -141,8 +141,7 @@ class FileIndex:
         """Get metadata file data from the graph."""
         graph_data = {}
         for file in self:
-            data = {k: v for k, v in yield_attrs(file) if k not in ("content", "content_bullets", "primary_bullet")}
-            graph_data[file] = data
+            graph_data[file] = {k: v for k, v in yield_attrs(file) if v}
         return graph_data
 
     def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:

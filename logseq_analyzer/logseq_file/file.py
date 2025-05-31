@@ -129,9 +129,9 @@ class LogseqFile:
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
-        self.filename.process_filename()
-        self.stat.process_stats()
-        self.bullets.process_bullets()
+        self.filename.process()
+        self.stat.process()
+        self.bullets.process()
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""

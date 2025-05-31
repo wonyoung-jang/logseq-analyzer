@@ -52,7 +52,7 @@ class LogseqFilestats:
         """Return a user-friendly string representation of the LogseqFilestats object."""
         return f"{self.__class__.__qualname__}: {self.path}"
 
-    def process_stats(self) -> None:
+    def process(self) -> None:
         """Process the file statistics."""
         _stat = self.path.stat()
         self.set_size_and_content(_stat)

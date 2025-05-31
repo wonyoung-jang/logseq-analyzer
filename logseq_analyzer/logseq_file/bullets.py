@@ -51,7 +51,7 @@ class LogseqBullets:
         """Return a user-friendly string representation of the LogseqBullets object."""
         return f"{self.__class__.__qualname__}: {self.path}"
 
-    def process_bullets(self) -> None:
+    def process(self) -> None:
         """Process the content to extract bullet information."""
         self.get_content()
         self.get_char_count()
@@ -84,10 +84,10 @@ class LogseqBullets:
 
     def get_bullet_density(self) -> None:
         """Get the bullet density of the content."""
-        if self.stats.bullet_count:
-            self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
+        count = self.stats.bullet_count
+        self.stats.bullet_density = round(self.stats.char_count / count, 2) if count else 0.0
 
     def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""
-        if self.primary_bullet and not self.primary_bullet.startswith("#"):
-            self.stats.has_page_properties = True
+        prim = self.primary_bullet
+        self.stats.has_page_properties = True if prim and not prim.startswith("#") else False
