@@ -16,7 +16,12 @@ if TYPE_CHECKING:
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    __slots__ = ("general", "filetypes", "nodetypes", "extensions")
+    __slots__ = (
+        "general",
+        "filetypes",
+        "nodetypes",
+        "extensions",
+    )
 
     _SUMMARY_GENERAL = {
         SummaryFiles.BACKLINKED: {"backlinked": True},
@@ -33,7 +38,7 @@ class LogseqFileSummarizer:
         self.nodetypes: dict[str, list[str]] = defaultdict(list)
         self.extensions: dict[str, list[str]] = defaultdict(list)
 
-    def generate_summary(self, index: "FileIndex") -> None:
+    def process(self, index: "FileIndex") -> None:
         """Generate summary subsets for the Logseq Analyzer."""
         self.get_general_subset(index)
         self.get_filetype_subset(index)

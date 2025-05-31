@@ -225,70 +225,63 @@ def setup_analyzer_class_attributes(args: Args, c: Configurations) -> None:
     logger.debug("setup_analyzer_class_attributes")
 
 
-def setup_logseq_graph(index: FileIndex) -> LogseqGraph:
-    """Setup the Logseq graph."""
-    lg = LogseqGraph()
-    lg.post_processing_content(index)
-    lg.process_summary_data(index)
-    logger.debug("setup_logseq_graph")
-    return lg
-
-
-def process_graph_files(index: FileIndex, cache: Cache, c: Configurations) -> None:
+def process_graph(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
     graph_dir = GraphDirectory()
     target_dirs = get_target_dirs(c.config)
     target_dirs = set(target_dirs.values())
     for path in cache.iter_modified_files(graph_dir.path, target_dirs):
         file = LogseqFile(path)
-        file.init_file_data()
-        file.process_content_data()
+        file.process()
         index.add(file)
-    logger.debug("process_graph_files")
+    logger.debug("process_graph")
 
 
-def setup_logseq_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
+def setup_graph(index: FileIndex) -> LogseqGraph:
+    """Setup the Logseq graph."""
+    lg = LogseqGraph()
+    lg.process(index)
+    logger.debug("setup_graph")
+    return lg
+
+
+def setup_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
     """Setup the Logseq summarizers."""
     lfs = LogseqFileSummarizer()
-    lfs.generate_summary(index)
+    lfs.process(index)
     lcs = LogseqContentSummarizer()
-    lcs.generate_summary(index)
-    logger.debug("setup_logseq_summarizers")
+    lcs.process(index)
+    logger.debug("setup_summarizers")
     return lfs, lcs
 
 
-def setup_logseq_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
+def setup_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
-    ln.init_ns_parts(index)
-    ln.analyze_ns_queries(index)
-    ln.detect_non_ns_conflicts(index, graph.dangling_links)
-    ln.detect_parent_depth_conflicts()
-    logger.debug("setup_logseq_namespaces")
+    ln.process(index, graph.dangling_links)
+    logger.debug("setup_namespaces")
     return ln
 
 
-def setup_logseq_journals(graph: LogseqGraph, index: FileIndex, c: Configurations) -> LogseqJournals:
+def setup_journals(graph: LogseqGraph, index: FileIndex, c: Configurations) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process_journals_timelines(index, graph.dangling_links, c.journal_page_fmt)
-    logger.debug("setup_logseq_journals")
+    lj.process(index, graph.dangling_links, c.journal_page_fmt)
+    logger.debug("setup_journals")
     return lj
 
 
-def setup_logseq_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
+def setup_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
-    lah.get_asset_files(index)
-    lah.convert_names_to_data(index)
-    lah.check_backlinks()
+    lah.process(index)
     lsa = LogseqAssets()
-    lsa.handle_assets(index)
-    logger.debug("setup_logseq_assets")
+    lsa.process(index)
+    logger.debug("setup_assets")
     return lsa, lah
 
 
-def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
+def setup_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
     target_asset = DeleteAssetsDirectory()
     target_bak = DeleteBakDirectory()
@@ -312,13 +305,13 @@ def setup_logseq_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
 
 def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex) -> tuple:
     """Perform core analysis on the Logseq graph."""
-    process_graph_files(index, cache, configs)
-    graph = setup_logseq_graph(index)
-    namespaces = setup_logseq_namespaces(graph, index)
-    journals = setup_logseq_journals(graph, index, configs)
-    ls_assets, hls_assets = setup_logseq_assets(index)
-    moved_files = setup_logseq_file_mover(args, ls_assets)
-    summary_files, summary_content = setup_logseq_summarizers(index)
+    process_graph(index, cache, configs)
+    graph = setup_graph(index)
+    namespaces = setup_namespaces(graph, index)
+    journals = setup_journals(graph, index, configs)
+    ls_assets, hls_assets = setup_assets(index)
+    moved_files = setup_file_mover(args, ls_assets)
+    summary_files, summary_content = setup_summarizers(index)
     logger.debug("analyze")
     return (
         (OutputDir.META.value, args.report),

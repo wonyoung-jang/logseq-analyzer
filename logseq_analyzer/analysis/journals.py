@@ -55,9 +55,7 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.timeline)
 
-    def process_journals_timelines(
-        self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str
-    ) -> None:
+    def process(self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         dangling = self.date.journals_to_datetime(dangling_links, py_page_base_format)
         dangling_journals = sorted(dangling)

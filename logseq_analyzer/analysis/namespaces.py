@@ -87,6 +87,15 @@ class LogseqNamespaces:
         """Return a string representation of the LogseqNamespaces instance."""
         return f"{self.__class__.__name__}"
 
+    def process(self, index: "FileIndex", dangling_links: set[str]) -> None:
+        """
+        Process the namespace data from the index.
+        """
+        self.init_ns_parts(index)
+        self.analyze_ns_queries(index)
+        self.detect_non_ns_conflicts(index, dangling_links)
+        self.detect_parent_depth_conflicts(ns_sep=Core.NS_SEP.value)
+
     def init_ns_parts(self, index: "FileIndex") -> None:
         """
         Create namespace parts from the data.

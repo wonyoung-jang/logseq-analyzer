@@ -157,6 +157,11 @@ class LogseqFile:
         """Return the type of the file."""
         return self.filename.file_type
 
+    def process(self) -> None:
+        """Process the Logseq file to extract metadata and content."""
+        self.init_file_data()
+        self.process_content_data()
+
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
         self.filename.process_filename()

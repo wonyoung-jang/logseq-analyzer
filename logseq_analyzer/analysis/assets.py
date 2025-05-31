@@ -40,7 +40,7 @@ class LogseqAssets:
         """Return a string representation of the LogseqAssets instance."""
         return f"{self.__class__.__qualname__}"
 
-    def handle_assets(self, index: "FileIndex") -> None:
+    def process(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
         asset_mentions = set()
         for file in index:
@@ -97,6 +97,12 @@ class LogseqAssetsHls:
     def __str__(self) -> str:
         """Return a string representation of the LogseqAssetsHls instance."""
         return f"{self.__class__.__qualname__}"
+
+    def process(self, index: "FileIndex") -> None:
+        """Process HLS assets to analyze backlinks and bullet content."""
+        self.get_asset_files(index)
+        self.convert_names_to_data(index)
+        self.check_backlinks()
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
