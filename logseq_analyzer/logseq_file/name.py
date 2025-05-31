@@ -41,42 +41,42 @@ class LogseqFilename:
     __slots__ = (
         "_is_namespace",
         "date",
-        "file_path",
+        "path",
         "file_type",
         "name",
         "ns_info",
     )
 
-    def __init__(self, file_path: Path, date_utilities: DateUtilities = DateUtilities) -> None:
+    def __init__(self, path: Path, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqFilename class."""
         self.date: DateUtilities = date_utilities
-        self.file_path: Path = file_path
+        self.path: Path = path
         self.file_type: str = ""
-        self.name: str = file_path.stem
+        self.name: str = path.stem
         self.ns_info: NamespaceInfo = NamespaceInfo()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""
-        return f"{self.__class__.__qualname__}({self.file_path})"
+        return f"{self.__class__.__qualname__}({self.path})"
 
     def __str__(self) -> str:
         """Return a user-friendly string representation of the LogseqFilename object."""
-        return f"{self.__class__.__qualname__}: {self.file_path}"
+        return f"{self.__class__.__qualname__}: {self.path}"
 
     @property
     def parent(self) -> str:
         """Return the parent directory of the file."""
-        return self.file_path.parent.name
+        return self.path.parent.name
 
     @property
     def suffix(self) -> str:
         """Return the file extension."""
-        return self.file_path.suffix if self.file_path.suffix else ""
+        return self.path.suffix if self.path.suffix else ""
 
     @property
     def parts(self) -> tuple[str, ...]:
         """Return the parts of the file path."""
-        return self.file_path.parts
+        return self.path.parts
 
     @property
     def is_hls(self) -> bool:
@@ -99,7 +99,7 @@ class LogseqFilename:
     @property
     def uri(self) -> str:
         """Return the file URI."""
-        return self.file_path.as_uri()
+        return self.path.as_uri()
 
     @property
     def logseq_url(self) -> str:

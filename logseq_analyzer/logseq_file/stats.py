@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class FileTimestampInfo:
+class TimestampInfo:
     """File timestamp information class."""
 
     time_existed: float = 0.0
@@ -27,34 +27,34 @@ class LogseqFilestats:
     """LogseqFilestats class."""
 
     __slots__ = (
-        "file_path",
+        "path",
         "size",
         "size_human_readable",
         "has_content",
-        "timestamps",
+        "ts_info",
     )
 
     _now_ts = datetime.now().timestamp()
 
-    def __init__(self, file_path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         """Initialize the LogseqFilestats object."""
-        self.file_path: Path = file_path
+        self.path: Path = path
         self.size: int = 0
         self.size_human_readable: str = ""
         self.has_content: bool = False
-        self.timestamps: FileTimestampInfo = FileTimestampInfo()
+        self.ts_info: TimestampInfo = TimestampInfo()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilestats object."""
-        return f"{self.__class__.__qualname__}({self.file_path})"
+        return f"{self.__class__.__qualname__}({self.path})"
 
     def __str__(self) -> str:
         """Return a user-friendly string representation of the LogseqFilestats object."""
-        return f"{self.__class__.__qualname__}: {self.file_path}"
+        return f"{self.__class__.__qualname__}: {self.path}"
 
     def process_stats(self) -> None:
         """Process the file statistics."""
-        _stat = self.file_path.stat()
+        _stat = self.path.stat()
         self.set_size_and_content(_stat)
         self.set_timestamps(_stat)
 
@@ -69,15 +69,15 @@ class LogseqFilestats:
         """Set the timestamps attributes."""
         _created_ts = self.get_created_timestamp(stat)
         _modified_ts = stat.st_mtime
-        self.timestamps.time_existed = self._now_ts - _created_ts
-        self.timestamps.time_unmodified = self._now_ts - _modified_ts
-        self.timestamps.date_created = datetime.fromtimestamp(_created_ts).isoformat()
-        self.timestamps.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
+        self.ts_info.time_existed = self._now_ts - _created_ts
+        self.ts_info.time_unmodified = self._now_ts - _modified_ts
+        self.ts_info.date_created = datetime.fromtimestamp(_created_ts).isoformat()
+        self.ts_info.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
 
     def get_created_timestamp(self, stat: stat_result) -> float:
         """Get the created timestamp of the file."""
         try:
             return stat.st_birthtime
         except AttributeError:
-            logger.warning("st_birthtime not available for %s. Using st_ctime.", self.file_path)
+            logger.warning("st_birthtime not available for %s. Using st_ctime.", self.path)
             return stat.st_ctime

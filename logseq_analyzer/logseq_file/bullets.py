@@ -28,16 +28,16 @@ class LogseqBullets:
     """LogseqBullets class."""
 
     __slots__ = (
-        "file_path",
+        "path",
         "content",
         "primary_bullet",
         "content_bullets",
         "stats",
     )
 
-    def __init__(self, file_path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         """Post-initialization method to set bullet attributes."""
-        self.file_path: Path = file_path
+        self.path: Path = path
         self.stats: BulletStats = BulletStats()
         self.content: str = ""
         self.primary_bullet: str = ""
@@ -45,11 +45,11 @@ class LogseqBullets:
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqBullets object."""
-        return f"{self.__class__.__qualname__}({self.file_path})"
+        return f"{self.__class__.__qualname__}({self.path})"
 
     def __str__(self) -> str:
         """Return a user-friendly string representation of the LogseqBullets object."""
-        return f"{self.__class__.__qualname__}: {self.file_path}"
+        return f"{self.__class__.__qualname__}: {self.path}"
 
     def process_bullets(self) -> None:
         """Process the content to extract bullet information."""
@@ -63,9 +63,9 @@ class LogseqBullets:
     def get_content(self) -> None:
         """Read the text content of a file."""
         try:
-            self.content = self.file_path.read_text(encoding="utf-8")
+            self.content = self.path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.warning("Failed to decode file %s with utf-8 encoding.", self.file_path)
+            logger.warning("Failed to decode file %s with utf-8 encoding.", self.path)
 
     def get_char_count(self) -> None:
         """Get the character count of the content."""

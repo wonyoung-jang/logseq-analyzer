@@ -79,8 +79,8 @@ class FileIndex:
     def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
         h = hash(file)
-        name = file.path.name
-        path = file.file_path
+        name = file.filename.name
+        path = file.path
         self._files.add(file)
         self._hash_to_file[h] = file
         self._name_to_files[name].append(file)
@@ -111,7 +111,7 @@ class FileIndex:
         """Helper method to remove a file from the index."""
         self._files.discard(file)
         self._hash_to_file.pop(hash(file), None)
-        name = file.path.name
+        name = file.filename.name
         if files := self._name_to_files.get(name):
             try:
                 files.remove(file)
@@ -119,11 +119,11 @@ class FileIndex:
                 logger.warning("File %s not found in name_to_files list for name %s.", file, name)
         else:
             del self._name_to_files[name]
-        self._path_to_file.pop(file.file_path, None)
+        self._path_to_file.pop(file.path, None)
 
     def remove_deleted_files(self):
         """Remove deleted files from the cache."""
-        for file in {f for f in self if not f.file_path.exists()}:
+        for file in {f for f in self if not f.path.exists()}:
             self.remove(file)
 
     def filter_files(self, **criteria) -> Generator[LogseqFile, None, None]:

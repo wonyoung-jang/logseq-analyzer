@@ -27,7 +27,7 @@ def logseq_filename(temp_file):
 
 def test_logseq_filename(logseq_filename, temp_file):
     """Test the LogseqFilename functionality."""
-    assert logseq_filename.file_path == Path(temp_file)
+    assert logseq_filename.path == Path(temp_file)
     assert logseq_filename.name == Path(temp_file).stem
     assert logseq_filename.parent == Path(temp_file).parent.name
     assert logseq_filename.suffix == Path(temp_file).suffix

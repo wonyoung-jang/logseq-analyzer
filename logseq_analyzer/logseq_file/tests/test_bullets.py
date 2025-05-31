@@ -27,7 +27,7 @@ def logseq_bullets(temp_file):
 
 def test_logseq_bullets(logseq_bullets, temp_file):
     """Test the LogseqBullets functionality."""
-    assert logseq_bullets.file_path == Path(temp_file)
+    assert logseq_bullets.path == Path(temp_file)
     assert logseq_bullets.content == ""
     assert logseq_bullets.primary_bullet == ""
     assert logseq_bullets.stats.char_count == 0

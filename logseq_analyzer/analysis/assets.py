@@ -53,7 +53,7 @@ class LogseqAssets:
                 continue
 
             for asset_file in index.filter_files(file_type="asset", backlinked=False):
-                asset_file.update_asset_backlink(asset_mentions, file.path.name)
+                asset_file.update_asset_backlink(asset_mentions, file.filename.name)
 
             asset_mentions.clear()
         del asset_mentions
@@ -101,7 +101,7 @@ class LogseqAssetsHls:
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
         asset_files = index.filter_files(file_type="sub_asset")
-        self.asset_mapping = {f.path.name: f for f in asset_files}
+        self.asset_mapping = {f.filename.name: f for f in asset_files}
         self.asset_names.update(self.asset_mapping.keys())
 
     def convert_names_to_data(
@@ -135,9 +135,9 @@ class LogseqAssetsHls:
         self.not_backlinked = self.asset_names.difference(self.hls_bullets)
         for name in self.backlinked:
             self.asset_mapping[name].node.backlinked = True
-            self.asset_mapping[name].path.file_type = "asset"
+            self.asset_mapping[name].filename.file_type = "asset"
         for name in self.not_backlinked:
-            self.asset_mapping[name].path.file_type = "asset"
+            self.asset_mapping[name].filename.file_type = "asset"
 
     @property
     def report(self) -> str:

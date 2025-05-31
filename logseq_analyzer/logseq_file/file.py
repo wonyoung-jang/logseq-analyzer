@@ -49,9 +49,9 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     __slots__ = (
-        "file_path",
-        "data",
         "path",
+        "data",
+        "filename",
         "stat",
         "bullets",
         "masked",
@@ -91,46 +91,41 @@ class LogseqFile:
         (ContentPatterns.ANY_LINK, f"__{Criteria.CON_ANY_LINKS.name}_"),
     )
 
-    def __init__(self, file_path: Path) -> None:
-        """
-        Initialize the LogseqFile object.
-
-        Args:
-            file_path (Path): The path to the Logseq file.
-        """
-        self.file_path: Path = file_path
-        self.stat: LogseqFilestats = LogseqFilestats(file_path)
+    def __init__(self, path: Path) -> None:
+        """Initialize the LogseqFile object."""
+        self.path: Path = path
+        self.stat: LogseqFilestats = LogseqFilestats(path)
         self.node: NodeType = NodeType()
-        self.path: LogseqFilename = LogseqFilename(file_path)
-        self.bullets: LogseqBullets = LogseqBullets(file_path)
+        self.filename: LogseqFilename = LogseqFilename(path)
+        self.bullets: LogseqBullets = LogseqBullets(path)
         self.masked: MaskedBlocks = MaskedBlocks()
         self.data: dict[str, Any] = {}
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__qualname__}(file_path="{self.file_path}")'
+        return f'{self.__class__.__qualname__}(path="{self.path}")'
 
     def __str__(self) -> str:
-        return f"{self.__class__.__qualname__}: {self.file_path}"
+        return f"{self.__class__.__qualname__}: {self.path}"
 
     def __hash__(self) -> int:
-        return hash(self.path.parts)
+        return hash(self.filename.parts)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.path.parts == other.path.parts
+            return self.filename.parts == other.filename.parts
         return NotImplemented
 
     def __lt__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.path.name < other.path.name
+            return self.filename.name < other.filename.name
         if isinstance(other, str):
-            return self.path.name < other
+            return self.filename.name < other
         return NotImplemented
 
     @property
     def is_hls(self) -> bool:
         """Return whether the file is a hierarchical logseq file."""
-        return self.path.is_hls
+        return self.filename.is_hls
 
     @property
     def has_content(self) -> bool:
@@ -160,11 +155,11 @@ class LogseqFile:
     @property
     def file_type(self) -> str:
         """Return the type of the file."""
-        return self.path.file_type
+        return self.filename.file_type
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
-        self.path.process_filename()
+        self.filename.process_filename()
         self.stat.process_stats()
         self.bullets.process_bullets()
 
@@ -323,7 +318,7 @@ class LogseqFile:
             bool: True if the file is backlinked, False otherwise.
         """
         try:
-            lookup.remove(self.path.name)
+            lookup.remove(self.filename.name)
             return True
         except KeyError:
             return False
@@ -336,7 +331,7 @@ class LogseqFile:
             asset_mentions (list[str]): List of asset mentions.
             parent (str): Parent file name.
         """
-        nameset = (self.path.name, parent)
+        nameset = (self.filename.name, parent)
         for asset_mention in asset_mentions:
             for name in nameset:
                 if name in asset_mention:

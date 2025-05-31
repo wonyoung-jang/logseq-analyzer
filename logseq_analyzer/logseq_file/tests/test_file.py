@@ -30,8 +30,8 @@ def logseq_file(temp_file):
 
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
-    assert logseq_file.file_path == Path(temp_file)
-    assert isinstance(logseq_file.path, LogseqFilename)
+    assert logseq_file.path == Path(temp_file)
+    assert isinstance(logseq_file.filename, LogseqFilename)
     assert isinstance(logseq_file.stat, LogseqFilestats)
     assert isinstance(logseq_file.bullets, LogseqBullets)
     assert logseq_file.data == {}
@@ -39,15 +39,15 @@ def test_logseq_file(logseq_file, temp_file):
     assert logseq_file.backlinked is False
     assert logseq_file.backlinked_ns_only is False
     assert logseq_file.node_type == "other"
-    assert logseq_file.path.file_type == ""
+    assert logseq_file.filename.file_type == ""
     assert logseq_file.masked.content == ""
     assert logseq_file.masked.blocks == {}
 
 
 def test_representation(logseq_file):
     """Test the string representation of LogseqFile."""
-    assert repr(logseq_file) == f'LogseqFile(file_path="{logseq_file.file_path}")'
-    assert str(logseq_file) == f"LogseqFile: {logseq_file.file_path}"
+    assert repr(logseq_file) == f'LogseqFile(path="{logseq_file.path}")'
+    assert str(logseq_file) == f"LogseqFile: {logseq_file.path}"
 
 
 def test_hash(logseq_file):

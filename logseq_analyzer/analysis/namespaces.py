@@ -93,13 +93,13 @@ class LogseqNamespaces:
         """
         level_distribution = Counter()
         for file in index:
-            if not (curr_ns_info := file.path.ns_info) or not file.path.is_namespace:
+            if not (curr_ns_info := file.filename.ns_info) or not file.filename.is_namespace:
                 continue
             current_level = self.structure.tree
-            self.structure.data[file.path.name] = {k: v for k, v in curr_ns_info.__dict__.items() if v}
-            if not (parts := self.structure.data[file.path.name].get("parts")):
+            self.structure.data[file.filename.name] = {k: v for k, v in curr_ns_info.__dict__.items() if v}
+            if not (parts := self.structure.data[file.filename.name].get("parts")):
                 continue
-            self.structure.parts[file.path.name] = parts
+            self.structure.parts[file.filename.name] = parts
             for part, level in parts.items():
                 self.structure.unique_parts.add(part)
                 self.structure.unique_ns_per_level[level].add(part)
@@ -107,7 +107,7 @@ class LogseqNamespaces:
                 current_level.setdefault(part, {})
                 current_level = current_level[part]
                 self._part_levels[part].add(level)
-                self._part_entries[part].append({"entry": file.path.name, "level": level})
+                self._part_entries[part].append({"entry": file.filename.name, "level": level})
         self.structure.details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(
@@ -127,16 +127,16 @@ class LogseqNamespaces:
 
                 page_ref = page_refs[0]
                 ns_queries.setdefault(query, {})
-                ns_queries[query].setdefault("found_in", []).append(file.path.name)
+                ns_queries[query].setdefault("found_in", []).append(file.filename.name)
                 ns_queries[query]["namespace"] = page_ref
                 ns_queries[query]["size"] = self.structure.data.get(page_ref, {}).get("size", 0)
-                ns_queries[query]["uri"] = file.path.uri
-                ns_queries[query]["logseq_url"] = file.path.logseq_url
+                ns_queries[query]["uri"] = file.filename.uri
+                ns_queries[query]["logseq_url"] = file.filename.logseq_url
         self.queries.update(sort_dict_by_value(ns_queries, value="size", reverse=True))
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        non_ns_names = (file.path.name for file in index if not file.path.is_namespace)
+        non_ns_names = (file.filename.name for file in index if not file.filename.is_namespace)
         potential_non_ns_names = self.structure.unique_parts.intersection(non_ns_names)
         potential_dangling = self.structure.unique_parts.intersection(dangling_links)
         for entry, parts in self.structure.parts.items():
