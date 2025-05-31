@@ -47,8 +47,9 @@ class LogseqAssets:
             if not file.data:
                 continue
 
-            asset_mentions.update(file.data.get(Criteria.EMB_LINK_ASSET.value, []))
-            asset_mentions.update(file.data.get(Criteria.CON_ASSETS.value, []))
+            for criteria in (Criteria.EMB_LINK_ASSET, Criteria.CON_ASSETS):
+                asset_mentions.update(file.data.get(criteria.value, []))
+
             if not asset_mentions:
                 continue
 

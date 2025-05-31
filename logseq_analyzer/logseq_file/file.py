@@ -122,41 +122,6 @@ class LogseqFile:
             return self.filename.name < other
         return NotImplemented
 
-    @property
-    def is_hls(self) -> bool:
-        """Return whether the file is a hierarchical logseq file."""
-        return self.filename.is_hls
-
-    @property
-    def has_content(self) -> bool:
-        """Return whether the file has content."""
-        return self.stat.has_content
-
-    @property
-    def has_backlinks(self) -> bool:
-        """Return whether the file has backlinks."""
-        return self.node.has_backlinks
-
-    @property
-    def backlinked(self) -> bool:
-        """Return whether the file is backlinked."""
-        return self.node.backlinked
-
-    @property
-    def backlinked_ns_only(self) -> bool:
-        """Return whether the file is backlinked by namespace only."""
-        return self.node.backlinked_ns_only
-
-    @property
-    def node_type(self) -> str:
-        """Return the node type."""
-        return self.node.type
-
-    @property
-    def file_type(self) -> str:
-        """Return the type of the file."""
-        return self.filename.file_type
-
     def process(self) -> None:
         """Process the Logseq file to extract metadata and content."""
         self.init_file_data()
@@ -177,7 +142,8 @@ class LogseqFile:
         primary_data.update(self.extract_aliases_and_propvalues())
         primary_data.update(self.extract_properties())
         primary_data.update(self.extract_patterns())
-        self.check_has_backlinks(primary_data)
+        self.data.update({k: v for k, v in primary_data.items() if v})
+        self.check_has_backlinks()
 
     def mask_blocks(self) -> None:
         """
@@ -262,20 +228,20 @@ class LogseqFile:
             result.update(processed_patterns)
         return result
 
-    def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
+    def check_has_backlinks(self) -> None:
         """
         Check has backlinks in the content.
-
-        Args:
-            primary_data (dict[str, str]): Dictionary containing primary data.
         """
-        self.data.update({k: v for k, v in primary_data.items() if v})
         if self._BACKLINK_CRITERIA.intersection(self.data.keys()):
             self.node.has_backlinks = True
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
-        match (self.has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+        has_content = self.stat.has_content
+        has_backlinks = self.node.has_backlinks
+        backlinked = self.node.backlinked
+        backlinked_ns_only = self.node.backlinked_ns_only
+        match (has_content, has_backlinks, backlinked, backlinked_ns_only):
             case (True, True, True, True):
                 self.node.type = NodeTypes.BRANCH.value
             case (True, True, True, False):

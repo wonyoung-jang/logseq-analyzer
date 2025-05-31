@@ -23,14 +23,6 @@ class LogseqFileSummarizer:
         "extensions",
     )
 
-    _SUMMARY_GENERAL = {
-        SummaryFiles.BACKLINKED: {"backlinked": True},
-        SummaryFiles.BACKLINKED_NS_ONLY: {"backlinked_ns_only": True},
-        SummaryFiles.IS_HLS: {"is_hls": True},
-        SummaryFiles.HAS_CONTENT: {"has_content": True},
-        SummaryFiles.HAS_BACKLINKS: {"has_backlinks": True},
-    }
-
     def __init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.general: dict[str, list[str]] = defaultdict(list)
@@ -47,19 +39,29 @@ class LogseqFileSummarizer:
 
     def get_general_subset(self, index: "FileIndex") -> None:
         """Generate general subsets for the Logseq Analyzer."""
-        for output_name, file_criteria in self._SUMMARY_GENERAL.items():
-            files = index.filter_files(**file_criteria)
-            self.general[output_name.value].extend((file.filename.name for file in files))
+        self.general[SummaryFiles.BACKLINKED.value] = sorted(
+            file.filename.name for file in index if file.node.backlinked
+        )
+        self.general[SummaryFiles.BACKLINKED_NS_ONLY.value] = sorted(
+            file.filename.name for file in index if file.node.backlinked_ns_only
+        )
+        self.general[SummaryFiles.IS_HLS.value] = sorted(file.filename.name for file in index if file.filename.is_hls)
+        self.general[SummaryFiles.HAS_CONTENT.value] = sorted(
+            file.filename.name for file in index if file.stat.has_content
+        )
+        self.general[SummaryFiles.HAS_BACKLINKS.value] = sorted(
+            file.filename.name for file in index if file.node.has_backlinks
+        )
 
     def get_filetype_subset(self, index: "FileIndex"):
         """Generate filetype subsets for the Logseq Analyzer."""
         for file in index:
-            self.filetypes[file.file_type].append(file.filename.name)
+            self.filetypes[file.filename.file_type].append(file.filename.name)
 
     def get_nodetype_subset(self, index: "FileIndex"):
         """Generate nodetype subsets for the Logseq Analyzer."""
         for file in index:
-            self.nodetypes[file.node_type].append(file.filename.name)
+            self.nodetypes[file.node.type].append(file.filename.name)
 
     def get_extensions_subset(self, index: "FileIndex") -> None:
         """Process file extensions and create subsets for each."""
