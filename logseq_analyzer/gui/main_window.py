@@ -7,8 +7,6 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import QSettings, QThread, Signal
 from PySide6.QtWidgets import (
@@ -178,10 +176,10 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Handle completion of analysis"""
         if success:
             success_dialog = QMessageBox(self)
-            success_dialog.setIcon(QMessageBox.Information)
+            success_dialog.setIcon(QMessageBox.Icon.Information)
             success_dialog.setWindowTitle("Analysis Complete")
             success_dialog.setText(f"Analysis completed successfully in {elapsed_time:.2f} seconds.")
-            success_dialog.addButton("Close", QMessageBox.AcceptRole)
+            success_dialog.addButton("Close", QMessageBox.ButtonRole.AcceptRole)
             success_dialog.exec()
         else:
             self.show_error(f"Analysis failed: {error_message}")
@@ -365,7 +363,7 @@ class LogseqAnalyzerGUI(QMainWindow):
     def show_error(self, message: str) -> None:
         """Show an error message in a dialog."""
         error_dialog = QMessageBox(self)
-        error_dialog.setIcon(QMessageBox.Critical)
+        error_dialog.setIcon(QMessageBox.Icon.Critical)
         error_dialog.setWindowTitle("Error")
         error_dialog.setText(message)
         error_dialog.exec()
@@ -408,10 +406,3 @@ class LogseqAnalyzerGUI(QMainWindow):
         self.checkboxes.graph_cache.setChecked(self.settings.value(Arguments.GRAPH_CACHE.value, False, type=bool))
         self.inputs.report_format.setCurrentText(self.settings.value(Arguments.REPORT_FORMAT.value, Format.TXT.value))
         self.restoreGeometry(self.settings.value(Arguments.GEOMETRY.value, b""))
-
-
-def resource_path(relative_path) -> Any:
-    """Get the absolute path to the resource."""
-    if hasattr(sys, "_MEIPASS"):
-        return Path(getattr(sys, "_MEIPASS")) / relative_path
-    return Path(os.path.abspath(".")) / relative_path

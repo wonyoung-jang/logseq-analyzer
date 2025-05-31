@@ -106,7 +106,7 @@ class LogseqFilename:
         """Return the Logseq URL."""
         uri = self.uri
         uri_path = Path(uri)
-        graph_path = LogseqFilename.graph_path
+        graph_path = self.graph_path
         uri_path_parts = uri_path.parts
         graph_path_parts = graph_path.parts
         target_index = len(uri_path_parts) - len(graph_path_parts)
@@ -134,7 +134,7 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        target_dirs = LogseqFilename.target_dirs
+        target_dirs = self.target_dirs
         parent = self.parent
         result = {
             target_dirs["assets"]: FileTypes.ASSET.value,
@@ -163,8 +163,8 @@ class LogseqFilename:
 
     def process_logseq_filename(self) -> str:
         """Process the Logseq filename based on its parent directory."""
-        ns_file_sep = LogseqFilename.ns_file_sep
-        target_dirs = LogseqFilename.target_dirs
+        ns_file_sep = self.ns_file_sep
+        target_dirs = self.target_dirs
         name = self.name.strip(ns_file_sep)
         if self.parent == target_dirs["journals"]:
             return self.process_logseq_journal_key(name)
@@ -173,9 +173,9 @@ class LogseqFilename:
     def process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
-            file_format = LogseqFilename.journal_file_format
-            page_format = LogseqFilename.journal_page_format
-            journal_page_title_format = LogseqFilename.journal_page_title_format
+            file_format = self.journal_file_format
+            page_format = self.journal_page_format
+            journal_page_title_format = self.journal_page_title_format
             date_object = datetime.strptime(name, file_format)
             page_title = date_object.strftime(page_format)
             if Core.DATE_ORDINAL_SUFFIX.value in journal_page_title_format:

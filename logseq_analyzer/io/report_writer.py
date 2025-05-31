@@ -17,6 +17,18 @@ class TextWriter:
     """A class to handle recursive writing of nested data structures to text files."""
 
     @staticmethod
+    def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
+        """
+        Write the data to a plain text file with the given prefix and count.
+        """
+        with outputpath.open("w", encoding="utf-8") as f:
+            if count is not None:
+                f.write(f"{prefix} | {filename}\n")
+                f.write(f"COUNT: {count}\n")
+                f.write(f"TYPE: {data.__class__.__qualname__}\n\n")
+            TextWriter.write_recursive(f, data)
+
+    @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
         """
         Recursive function to write nested data structures to plain text files.
@@ -105,6 +117,28 @@ class HTMLWriter:
     """A class to handle writing HTML content."""
 
     @staticmethod
+    def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
+        with outputpath.open("w", encoding="utf-8") as f:
+            f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
+            f.write(f'<meta charset="utf-8">\n<title>{prefix}</title>\n')
+            f.write(
+                """<style> 
+                body { font-family: sans-serif; margin: 2em; } 
+                dl { margin-left: 1em; }
+                ol { margin-left: 1em; } 
+                span { display: inline-block; } 
+                </style>\n"""
+            )
+            f.write("</head>\n<body>\n")
+            f.write(f"<h1>{prefix}</h1>\n")
+            if count is not None:
+                f.write(f"<p>{filename}</p>\n")
+                f.write(f"<p>COUNT: {count}</p>\n")
+                f.write(f"<p>TYPE: {data.__class__.__qualname__}</p>\n")
+            HTMLWriter.write_html_recursive(f, data)
+            f.write("</body>\n</html>\n")
+
+    @staticmethod
     def write_html_recursive(f: TextIO, data: Any) -> None:
         """
         Recursive helper to write nested data structures into HTML format.
@@ -155,12 +189,29 @@ class HTMLWriter:
         f.write("</dl>\n")
 
 
+class JSONWriter:
+    """A class to handle writing JSON content."""
+
+    @staticmethod
+    def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
+        """
+        Write the data to a JSON file.
+        """
+        try:
+            with outputpath.open("w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+            logger.info("Successfully wrote JSON for %s items in filename: %s", count, filename)
+        except TypeError:
+            logger.error("Failed to write JSON for %s, falling back to TXT.", prefix)
+
+
 @dataclass
 class Writers:
     """A dataclass to hold different types of writers for reporting."""
 
     text: TextWriter = TextWriter
     html: HTMLWriter = HTMLWriter
+    json: JSONWriter = JSONWriter
 
 
 class ReportWriter:
@@ -205,48 +256,13 @@ class ReportWriter:
         filename = f"{prefix}{ext}" if count else f"(EMPTY) {prefix}{ext}"
         outputpath = self.get_output_path(filename)
         logger.info("Writing %s as %s", prefix, ext)
-
-        # JSON format
-        if ext == Format.JSON.value:
-            try:
-                with outputpath.open("w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=4)
-            except TypeError:
-                logger.error("Failed to write JSON for %s, falling back to TXT.", prefix)
-
-        # HTML format
-        if ext == Format.HTML.value:
-            with outputpath.open("w", encoding="utf-8") as f:
-                f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
-                f.write(f'<meta charset="utf-8">\n<title>{prefix}</title>\n')
-                f.write(
-                    """<style> 
-                    body { font-family: sans-serif; margin: 2em; } 
-                    dl { margin-left: 1em; }
-                    ol { margin-left: 1em; } 
-                    span { display: inline-block; } 
-                    </style>\n"""
-                )
-                f.write("</head>\n<body>\n")
-                f.write(f"<h1>{prefix}</h1>\n")
-                if count is not None:
-                    f.write(f"<p>{filename}</p>\n")
-                    f.write(f"<p>COUNT: {count}</p>\n")
-                    f.write(f"<p>TYPE: {data.__class__.__qualname__}</p>\n")
-                self.writer.html.write_html_recursive(f, data)
-                f.write("</body>\n</html>\n")
-
-        # TXT and MD format and fallback
-        if ext in (Format.TXT.value, Format.MD.value):
-            with outputpath.open("w", encoding="utf-8") as f:
-                if count is not None:
-                    f.write(f"{filename}\n")
-                    f.write(f"COUNT: {count}\n")
-                    f.write(f"TYPE: {data.__class__.__qualname__}\n\n")
-                self.writer.text.write_recursive(f, data)
-
-        if ext not in (Format.TXT.value, Format.MD.value, Format.JSON.value, Format.HTML.value):
-            logger.error("Unsupported output format: %s. Defaulted to text.", ext)
+        write_method = {
+            Format.TXT.value: self.writer.text,
+            Format.MD.value: self.writer.text,
+            Format.JSON.value: self.writer.json,
+            Format.HTML.value: self.writer.html,
+        }.get(ext, self.writer.text)
+        write_method.write(outputpath, prefix, count, filename, data)
 
     def get_output_path(self, filename: str) -> Path:
         """
