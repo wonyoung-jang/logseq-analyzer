@@ -183,19 +183,16 @@ class LogseqFile:
         """
         Mask code blocks and other patterns in the content.
         """
-        masked_blocks: dict[str, str] = self.masked.blocks
-        masked_content = self.bullets.content
+        self.masked.content = self.bullets.content
 
         for regex, prefix in self._PATTERN_MASKING:
 
             def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{uuid.uuid4()}__"
-                masked_blocks[placeholder] = match.group(0)
+                self.masked.blocks[placeholder] = match.group(0)
                 return placeholder
 
-            masked_content = regex.sub(_repl, masked_content)
-
-        self.masked.content = masked_content
+            self.masked.content = regex.sub(_repl, self.masked.content)
 
     def extract_primary_data(self) -> dict[str, str]:
         """
@@ -204,20 +201,18 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted data.
         """
-        content = self.bullets.content
-        masked_content = self.masked.content
         return {
-            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
-            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
-            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(content),
-            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
-            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(masked_content),
-            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(masked_content),
-            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
-            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
-            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(masked_content),
-            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
-            # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
+            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(self.bullets.content),
+            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(self.bullets.content),
+            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(self.bullets.content),
+            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(self.masked.content),
+            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(self.masked.content),
+            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(self.masked.content),
+            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(self.masked.content),
+            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(self.masked.content),
+            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(self.masked.content),
+            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(self.masked.content),
+            # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(self.masked.content),
         }
 
     def extract_aliases_and_propvalues(self) -> dict[str, Any]:
@@ -227,8 +222,7 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.bullets.content
-        properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
+        properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(self.bullets.content))
         if aliases := properties_values.get("alias"):
             aliases = list(process_aliases(aliases))
         return {
@@ -243,13 +237,11 @@ class LogseqFile:
         Returns:
             dict: A dictionary containing the extracted aliases and properties.
         """
-        content = self.bullets.content
         page_props = set()
         if self.bullets.stats.has_page_properties:
             page_props.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
-            content = "\n".join(self.bullets.content_bullets)
-        block_props = set(ContentPatterns.PROPERTY.findall(content))
-        self.bullets.content = content
+            self.bullets.content = "\n".join(self.bullets.content_bullets)
+        block_props = set(ContentPatterns.PROPERTY.findall(self.bullets.content))
         return {
             Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
@@ -265,11 +257,9 @@ class LogseqFile:
             dict: A dictionary containing the processed patterns.
         """
         result = {}
-        content = self.bullets.content
         for pattern in self._PATTERN_MODULES:
-            processed_patterns = process_pattern_hierarchy(content, pattern)
+            processed_patterns = process_pattern_hierarchy(self.bullets.content, pattern)
             result.update(processed_patterns)
-
         return result
 
     def check_has_backlinks(self, primary_data: dict[str, str]) -> None:
@@ -287,30 +277,29 @@ class LogseqFile:
         """Helper function to determine node type based on summary data."""
         match (self.has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True, True):
-                nt = NodeTypes.BRANCH.value
+                self.node.type = NodeTypes.BRANCH.value
             case (True, True, True, False):
-                nt = NodeTypes.BRANCH.value
+                self.node.type = NodeTypes.BRANCH.value
             case (True, True, False, True):
-                nt = NodeTypes.BRANCH.value
+                self.node.type = NodeTypes.BRANCH.value
             case (True, True, False, False):
-                nt = NodeTypes.ROOT.value
+                self.node.type = NodeTypes.ROOT.value
             case (True, False, True, True):
-                nt = NodeTypes.LEAF.value
+                self.node.type = NodeTypes.LEAF.value
             case (True, False, True, False):
-                nt = NodeTypes.LEAF.value
+                self.node.type = NodeTypes.LEAF.value
             case (True, False, False, True):
-                nt = NodeTypes.ORPHAN_NAMESPACE.value
+                self.node.type = NodeTypes.ORPHAN_NAMESPACE.value
             case (True, False, False, False):
-                nt = NodeTypes.ORPHAN_GRAPH.value
+                self.node.type = NodeTypes.ORPHAN_GRAPH.value
             case (False, False, True, True):
-                nt = NodeTypes.LEAF.value
+                self.node.type = NodeTypes.LEAF.value
             case (False, False, True, False):
-                nt = NodeTypes.LEAF.value
+                self.node.type = NodeTypes.LEAF.value
             case (False, False, False, True):
-                nt = NodeTypes.ORPHAN_NAMESPACE_TRUE.value
+                self.node.type = NodeTypes.ORPHAN_NAMESPACE_TRUE.value
             case (False, False, False, False):
-                nt = NodeTypes.ORPHAN_TRUE.value
-        self.node.type = nt
+                self.node.type = NodeTypes.ORPHAN_TRUE.value
 
     def unmask_blocks(self) -> str:
         """
@@ -319,11 +308,9 @@ class LogseqFile:
         Returns:
             str: Original content with code blocks restored.
         """
-        content = self.masked.content
-        masked_blocks = self.masked.blocks
-        for placeholder, block in masked_blocks.items():
-            content = content.replace(placeholder, block)
-        return content
+        for placeholder, block in self.masked.blocks.items():
+            self.masked.content = self.masked.content.replace(placeholder, block)
+        return self.masked.content
 
     def check_is_backlinked(self, lookup: set[str]) -> bool:
         """

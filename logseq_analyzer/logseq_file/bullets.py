@@ -73,24 +73,19 @@ class LogseqBullets:
 
     def get_primary_bullet(self) -> None:
         """Get the Logseq primary bullet if available"""
-        content_bullets = self.content_bullets
-        bullet_count, bullet_count_empty = 0, 0
-        content = self.content
-        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
+        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, self.content):
             if bullet:
                 if count == 0:
                     self.primary_bullet = bullet
-                content_bullets.append(bullet)
-                bullet_count += 1
+                self.content_bullets.append(bullet)
+                self.stats.bullet_count += 1
             else:
-                bullet_count_empty += 1
-        self.stats.bullet_count = bullet_count
-        self.stats.bullet_count_empty = bullet_count_empty
+                self.stats.bullet_count_empty += 1
 
     def get_bullet_density(self) -> None:
         """Get the bullet density of the content."""
-        if bullet_count := self.stats.bullet_count:
-            self.stats.bullet_density = round(self.stats.char_count / bullet_count, 2)
+        if self.stats.bullet_count:
+            self.stats.bullet_density = round(self.stats.char_count / self.stats.bullet_count, 2)
 
     def is_primary_bullet_page_properties(self) -> None:
         """Process primary bullet data."""

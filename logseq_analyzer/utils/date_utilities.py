@@ -15,7 +15,7 @@ __all__ = [
     "DATE_ORDINAL_SUFFIXES",
 ]
 
-DATE_ORDINAL_SUFFIXES: tuple[str] = ("st", "nd", "rd", "th")
+DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset(("st", "nd", "rd", "th"))
 
 
 @singleton

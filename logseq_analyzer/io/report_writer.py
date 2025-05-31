@@ -249,20 +249,17 @@ class ReportWriter:
         """
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
-        ext = ReportWriter.ext
-        prefix = self.prefix
-        data = self.data
-        count = len(data) if hasattr(data, "__len__") else None
-        filename = f"{prefix}{ext}" if count else f"(EMPTY) {prefix}{ext}"
+        count = len(self.data) if hasattr(self.data, "__len__") else None
+        filename = f"{self.prefix}{self.ext}" if count else f"(EMPTY) {self.prefix}{self.ext}"
         outputpath = self.get_output_path(filename)
-        logger.info("Writing %s as %s", prefix, ext)
+        logger.info("Writing %s as %s", self.prefix, self.ext)
         write_method = {
             Format.TXT.value: self.writer.text,
             Format.MD.value: self.writer.text,
             Format.JSON.value: self.writer.json,
             Format.HTML.value: self.writer.html,
-        }.get(ext, self.writer.text)
-        write_method.write(outputpath, prefix, count, filename, data)
+        }.get(self.ext, self.writer.text)
+        write_method.write(outputpath, self.prefix, count, filename, self.data)
 
     def get_output_path(self, filename: str) -> Path:
         """
@@ -274,7 +271,7 @@ class ReportWriter:
         Returns:
             Path: The output path for the report file.
         """
-        output_dir = ReportWriter.output_dir / self.subdir if self.subdir else ReportWriter.output_dir
+        output_dir = self.output_dir / self.subdir if self.subdir else self.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / filename
         output_path.touch(exist_ok=True)

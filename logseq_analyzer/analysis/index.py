@@ -112,9 +112,9 @@ class FileIndex:
         self._files.discard(file)
         self._hash_to_file.pop(hash(file), None)
         name = file.path.name
-        if lst := self._name_to_files.get(name):
+        if files := self._name_to_files.get(name):
             try:
-                lst.remove(file)
+                files.remove(file)
             except ValueError:
                 logger.warning("File %s not found in name_to_files list for name %s.", file, name)
         else:
@@ -122,13 +122,8 @@ class FileIndex:
         self._path_to_file.pop(file.file_path, None)
 
     def remove_deleted_files(self):
-        """Remove deleted files from the cache.
-        don't cause size errors"""
-        to_delete = set()
-        for file in self:
-            if not file.file_path.exists():
-                to_delete.add(file)
-        for file in to_delete:
+        """Remove deleted files from the cache."""
+        for file in {f for f in self if not f.file_path.exists()}:
             self.remove(file)
 
     def filter_files(self, **criteria) -> Generator[LogseqFile, None, None]:

@@ -42,25 +42,21 @@ class LogseqFileSummarizer:
 
     def get_general_subset(self, index: "FileIndex") -> None:
         """Generate general subsets for the Logseq Analyzer."""
-        result = self.general
         for output_name, file_criteria in self._SUMMARY_GENERAL.items():
             files = index.filter_files(**file_criteria)
-            result[output_name.value].extend((file.path.name for file in files))
+            self.general[output_name.value].extend((file.path.name for file in files))
 
     def get_filetype_subset(self, index: "FileIndex"):
         """Generate filetype subsets for the Logseq Analyzer."""
-        result = self.filetypes
         for file in index:
-            result[file.file_type].append(file.path.name)
+            self.filetypes[file.file_type].append(file.path.name)
 
     def get_nodetype_subset(self, index: "FileIndex"):
         """Generate nodetype subsets for the Logseq Analyzer."""
-        result = self.nodetypes
         for file in index:
-            result[file.node_type].append(file.path.name)
+            self.nodetypes[file.node_type].append(file.path.name)
 
     def get_extensions_subset(self, index: "FileIndex") -> None:
         """Process file extensions and create subsets for each."""
-        result = self.extensions
         for file in index:
-            result[file.path.suffix].append(file.path.name)
+            self.extensions[file.path.suffix].append(file.path.name)

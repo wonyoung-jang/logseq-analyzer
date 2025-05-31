@@ -4,7 +4,6 @@ Logseq Content Summarizer Module
 
 from typing import TYPE_CHECKING, Any
 
-from ..utils.enums import Criteria
 from ..utils.helpers import get_count_and_foundin_data, singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -23,20 +22,11 @@ class LogseqContentSummarizer:
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""
-        report = self.report
         for file in index:
             if not file.data:
                 continue
             for key, values in file.data.items():
-                report.setdefault(key, {})
-                report[key] = get_count_and_foundin_data(report[key], values, file)
-        for key in report:
-            report[key] = sort_dict_by_value(report[key], value="count", reverse=True)
-        self.check_criteria()
-
-    def check_criteria(self) -> None:
-        """Check if all criteria are present in the report."""
-        report = self.report
-        criteria = (c for c in list(Criteria) if c.value not in report)
-        for c in criteria:
-            report[c.value] = {}
+                self.report.setdefault(key, {})
+                self.report[key] = get_count_and_foundin_data(self.report[key], values, file)
+        for key in self.report:
+            self.report[key] = sort_dict_by_value(self.report[key], value="count", reverse=True)

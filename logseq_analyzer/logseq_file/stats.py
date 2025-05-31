@@ -67,11 +67,10 @@ class LogseqFilestats:
 
     def set_timestamps(self, stat: stat_result) -> None:
         """Set the timestamps attributes."""
-        _now_ts = LogseqFilestats._now_ts
         _created_ts = self.get_created_timestamp(stat)
         _modified_ts = stat.st_mtime
-        self.timestamps.time_existed = _now_ts - _created_ts
-        self.timestamps.time_unmodified = _now_ts - _modified_ts
+        self.timestamps.time_existed = self._now_ts - _created_ts
+        self.timestamps.time_unmodified = self._now_ts - _modified_ts
         self.timestamps.date_created = datetime.fromtimestamp(_created_ts).isoformat()
         self.timestamps.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
 

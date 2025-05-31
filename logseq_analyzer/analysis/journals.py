@@ -70,35 +70,29 @@ class LogseqJournals:
 
     def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
-        existing = self.existing
-        missing = self.missing
-        timeline = self.timeline
-        timeline_stats = self.timeline_stats
-        for i, date in enumerate(existing):
-            timeline.append(date)
+        for i, date in enumerate(self.existing):
+            self.timeline.append(date)
             next_expected = self.date.next(date)
-            next_existing = existing[i + 1] if i + 1 < len(existing) else None
+            next_existing = self.existing[i + 1] if i + 1 < len(self.existing) else None
             while next_existing and next_expected < next_existing:
-                timeline.append(next_expected)
+                self.timeline.append(next_expected)
                 if next_expected not in dangling_journals:
-                    missing.append(next_expected)
+                    self.missing.append(next_expected)
                 next_expected = self.date.next(next_expected)
-        total_timeline = sorted(timeline + dangling_journals)
-        timeline_stats["timeline"] = self.date.stats(timeline)
-        timeline_stats["dangling"] = self.date.stats(dangling_journals)
-        timeline_stats["total"] = self.date.stats(total_timeline)
+        total_timeline = sorted(self.timeline + dangling_journals)
+        self.timeline_stats["timeline"] = self.date.stats(self.timeline)
+        self.timeline_stats["dangling"] = self.date.stats(dangling_journals)
+        self.timeline_stats["total"] = self.date.stats(total_timeline)
 
     def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
         """Check for dangling journals that are outside the range of the complete timeline."""
-        timeline_stats = self.timeline_stats["timeline"]
-        dangling = self.dangling
         for link in dangling_journals:
-            if link < timeline_stats["first"]:
-                dangling["past"].append(link)
-            elif link > timeline_stats["last"]:
-                dangling["future"].append(link)
+            if link < self.timeline_stats["timeline"]["first"]:
+                self.dangling["past"].append(link)
+            elif link > self.timeline_stats["timeline"]["last"]:
+                self.dangling["future"].append(link)
             else:
-                dangling["inside"].append(link)
+                self.dangling["inside"].append(link)
 
     @property
     def report(self) -> dict[str, Any]:

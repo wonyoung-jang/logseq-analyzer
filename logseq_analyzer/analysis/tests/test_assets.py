@@ -44,5 +44,5 @@ def test_logseq_assets_hls_initialization(logseq_assets_hls):
     assert logseq_assets_hls.asset_mapping == {}
     assert logseq_assets_hls.asset_names == set()
     assert logseq_assets_hls.backlinked == set()
-    assert logseq_assets_hls.formatted_bullets == set()
+    assert logseq_assets_hls.hls_bullets == set()
     assert logseq_assets_hls.not_backlinked == set()

@@ -104,23 +104,18 @@ class LogseqFilename:
     @property
     def logseq_url(self) -> str:
         """Return the Logseq URL."""
-        uri = self.uri
-        uri_path = Path(uri)
-        graph_path = self.graph_path
+        uri_path = Path(self.uri)
         uri_path_parts = uri_path.parts
-        graph_path_parts = graph_path.parts
-        target_index = len(uri_path_parts) - len(graph_path_parts)
+        target_index = len(uri_path_parts) - len(self.graph_path.parts)
         target_segment = uri_path_parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             return ""
-
-        prefix = f"file:///{str(graph_path)}/{target_segment}/"
-        if not uri.startswith(prefix):
+        prefix = f"file:///{str(self.graph_path)}/{target_segment}/"
+        if not self.uri.startswith(prefix):
             return ""
-
         suffix = uri_path.suffix
-        encoded_path = uri[len(prefix) : -(len(suffix))]
+        encoded_path = self.uri[len(prefix) : -(len(suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
@@ -134,26 +129,24 @@ class LogseqFilename:
         """
         Helper function to determine the file type based on the directory structure.
         """
-        target_dirs = self.target_dirs
-        parent = self.parent
         result = {
-            target_dirs["assets"]: FileTypes.ASSET.value,
-            target_dirs["draws"]: FileTypes.DRAW.value,
-            target_dirs["journals"]: FileTypes.JOURNAL.value,
-            target_dirs["pages"]: FileTypes.PAGE.value,
-            target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
-        }.get(parent, FileTypes.OTHER.value)
+            self.target_dirs["assets"]: FileTypes.ASSET.value,
+            self.target_dirs["draws"]: FileTypes.DRAW.value,
+            self.target_dirs["journals"]: FileTypes.JOURNAL.value,
+            self.target_dirs["pages"]: FileTypes.PAGE.value,
+            self.target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
+        }.get(self.parent, FileTypes.OTHER.value)
 
         if result != FileTypes.OTHER.value:
             return result
 
         parts = self.parts
         result_map = {
-            target_dirs["assets"]: FileTypes.SUB_ASSET.value,
-            target_dirs["draws"]: FileTypes.SUB_DRAW.value,
-            target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
-            target_dirs["pages"]: FileTypes.SUB_PAGE.value,
-            target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
+            self.target_dirs["assets"]: FileTypes.SUB_ASSET.value,
+            self.target_dirs["draws"]: FileTypes.SUB_DRAW.value,
+            self.target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
+            self.target_dirs["pages"]: FileTypes.SUB_PAGE.value,
+            self.target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
         }
         for key, value in result_map.items():
             if key in parts:
@@ -163,29 +156,24 @@ class LogseqFilename:
 
     def process_logseq_filename(self) -> str:
         """Process the Logseq filename based on its parent directory."""
-        ns_file_sep = self.ns_file_sep
-        target_dirs = self.target_dirs
-        name = self.name.strip(ns_file_sep)
-        if self.parent == target_dirs["journals"]:
+        name = self.name.strip(self.ns_file_sep)
+        if self.parent == self.target_dirs["journals"]:
             return self.process_logseq_journal_key(name)
-        return unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
+        return unquote(name).replace(self.ns_file_sep, Core.NS_SEP.value)
 
     def process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
         try:
-            file_format = self.journal_file_format
-            page_format = self.journal_page_format
-            journal_page_title_format = self.journal_page_title_format
-            date_object = datetime.strptime(name, file_format)
-            page_title = date_object.strftime(page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in journal_page_title_format:
+            date_object = datetime.strptime(name, self.journal_file_format)
+            page_title = date_object.strftime(self.journal_page_format)
+            if Core.DATE_ORDINAL_SUFFIX.value in self.journal_page_title_format:
                 day_number = str(date_object.day)
                 day_with_ordinal = self.date.append_ordinal_to_day(day_number)
                 page_title = page_title.replace(day_number, day_with_ordinal, 1)
             page_title = page_title.replace("'", "")
             return page_title
         except ValueError as e:
-            logger.warning("Failed to parse date from key '%s', format `%s`: %s", name, page_format, e)
+            logger.warning("Failed to parse date from key '%s', format `%s`: %s", name, self.journal_page_format, e)
             return ""
 
     def get_namespace_name_data(self) -> None:
@@ -194,9 +182,8 @@ class LogseqFilename:
             return
         ns_parts_list = self.name.split(Core.NS_SEP.value)
         ns_root = ns_parts_list[0]
-        ns_info = self.ns_info
-        ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-        ns_info.root = ns_root
-        ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
-        ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
-        ns_info.stem = ns_parts_list[-1]
+        self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
+        self.ns_info.root = ns_root
+        self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
+        self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
+        self.ns_info.stem = ns_parts_list[-1]
