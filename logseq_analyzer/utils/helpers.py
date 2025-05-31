@@ -271,7 +271,7 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
         yield count, text.strip(" \t\n")
 
 
-def get_count_and_foundin_data(result: dict, collection: list[str], file: "LogseqFile") -> None:
+def get_count_and_foundin_data(result: dict, collection: list[str], file: "LogseqFile") -> dict:
     """
     Update the result dictionary with counts and file occurrences.
 
@@ -279,6 +279,8 @@ def get_count_and_foundin_data(result: dict, collection: list[str], file: "Logse
         result (dict): The dictionary to update with counts and file occurrences.
         collection (list[str]): The collection of items to count.
         file (LogseqFile): The file object containing the path information.
+    Returns:
+        dict: The updated result dictionary with counts and file occurrences.
     """
     for item in collection:
         result.setdefault(item, {"count": 0, "found_in": Counter()})

@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 
-from ..utils.enums import Core, Output, Criteria
+from ..utils.enums import Core, Criteria, Output
 from ..utils.helpers import singleton, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -137,12 +137,8 @@ class LogseqNamespaces:
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        non_ns_names = []
-        for file in index:
-            if not file.path.ns_info or file.path.is_namespace:
-                continue
-            non_ns_names.append(file.path.name)
         unique_namespace_parts = self.structure.unique_parts
+        non_ns_names = (file.path.name for file in index if not file.path.is_namespace)
         potential_non_ns_names = unique_namespace_parts.intersection(non_ns_names)
         potential_dangling = unique_namespace_parts.intersection(dangling_links)
         conflicts_non_namespace = self.conflicts.non_namespace
@@ -150,9 +146,9 @@ class LogseqNamespaces:
         namespace_parts = self.structure.parts
 
         for entry, parts in namespace_parts.items():
-            for part in (part for part in parts if part in potential_non_ns_names):
+            for part in potential_non_ns_names.intersection(parts):
                 conflicts_non_namespace[part].append(entry)
-            for part in (part for part in parts if part in potential_dangling):
+            for part in potential_dangling.intersection(parts):
                 conflicts_dangling[part].append(entry)
 
     def detect_parent_depth_conflicts(self) -> None:
