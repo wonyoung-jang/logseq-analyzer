@@ -36,8 +36,8 @@ def test_logseq_assets_hls_representation(logseq_assets_hls):
 
 
 def test_logseq_assets_initialization(logseq_assets):
-    assert logseq_assets.backlinked == []
-    assert logseq_assets.not_backlinked == []
+    assert logseq_assets.backlinked == set()
+    assert logseq_assets.not_backlinked == set()
 
 
 def test_logseq_assets_hls_initialization(logseq_assets_hls):

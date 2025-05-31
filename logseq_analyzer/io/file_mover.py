@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-def yield_asset_paths(unlinked_assets: list["LogseqFile"]) -> Generator[Path, None, None]:
+def yield_asset_paths(unlinked_assets: set["LogseqFile"]) -> Generator[Path, None, None]:
     """Yield the file paths of unlinked assets."""
     for asset in unlinked_assets:
         yield asset.path

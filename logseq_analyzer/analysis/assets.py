@@ -29,8 +29,8 @@ class LogseqAssets:
 
     def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
-        self.backlinked: list[LogseqFile] = []
-        self.not_backlinked: list[LogseqFile] = []
+        self.backlinked: set[LogseqFile] = set()
+        self.not_backlinked: set[LogseqFile] = set()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqAssets instance."""
@@ -59,8 +59,8 @@ class LogseqAssets:
             asset_mentions.clear()
         del asset_mentions
 
-        self.backlinked.extend(sorted(index.filter_files(file_type="asset", backlinked=True)))
-        self.not_backlinked.extend(sorted(index.filter_files(file_type="asset", backlinked=False)))
+        self.backlinked.update(sorted(index.filter_files(file_type="asset", backlinked=True)))
+        self.not_backlinked.update(sorted(index.filter_files(file_type="asset", backlinked=False)))
 
     @property
     def report(self) -> str:
