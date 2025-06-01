@@ -302,9 +302,8 @@ class LogseqFile:
             asset_mentions (list[str]): List of asset mentions.
             parent (str): Parent file name.
         """
-        nameset = (self.filename.name, parent)
         for asset_mention in asset_mentions:
-            for name in nameset:
+            for name in (self.filename.name, parent):
                 if name in asset_mention:
                     self.node.backlinked = True
                     return
