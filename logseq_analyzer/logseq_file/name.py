@@ -64,21 +64,6 @@ class LogseqFilename:
         return f"{self.__class__.__qualname__}: {self.path}"
 
     @property
-    def parent(self) -> str:
-        """Return the parent directory of the file."""
-        return self.path.parent.name
-
-    @property
-    def suffix(self) -> str:
-        """Return the file extension."""
-        return self.path.suffix if self.path.suffix else ""
-
-    @property
-    def parts(self) -> tuple[str, ...]:
-        """Return the parts of the file path."""
-        return self.path.parts
-
-    @property
     def is_hls(self) -> bool:
         """Check if the filename is a HLS."""
         return self.name.startswith(Core.HLS_PREFIX.value)
@@ -105,17 +90,15 @@ class LogseqFilename:
     def logseq_url(self) -> str:
         """Return the Logseq URL."""
         uri_path = Path(self.uri)
-        uri_path_parts = uri_path.parts
-        target_index = len(uri_path_parts) - len(self.graph_path.parts)
-        target_segment = uri_path_parts[target_index]
+        target_index = len(uri_path.parts) - len(self.graph_path.parts)
+        target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             return ""
         prefix = f"file:///{str(self.graph_path)}/{target_segment}/"
         if not self.uri.startswith(prefix):
             return ""
-        suffix = uri_path.suffix
-        encoded_path = self.uri[len(prefix) : -(len(suffix))]
+        encoded_path = self.uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
@@ -135,12 +118,11 @@ class LogseqFilename:
             self.target_dirs["journals"]: FileTypes.JOURNAL.value,
             self.target_dirs["pages"]: FileTypes.PAGE.value,
             self.target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
-        }.get(self.parent, FileTypes.OTHER.value)
+        }.get(self.path.parent.name, FileTypes.OTHER.value)
 
         if result != FileTypes.OTHER.value:
             return result
 
-        parts = self.parts
         result_map = {
             self.target_dirs["assets"]: FileTypes.SUB_ASSET.value,
             self.target_dirs["draws"]: FileTypes.SUB_DRAW.value,
@@ -149,7 +131,7 @@ class LogseqFilename:
             self.target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
         }
         for key, value in result_map.items():
-            if key in parts:
+            if key in self.path.parts:
                 result = value
                 break
         return result
@@ -159,7 +141,7 @@ class LogseqFilename:
     ) -> str:
         """Process the Logseq filename based on its parent directory."""
         name = self.name.strip(self.ns_file_sep)
-        if self.parent == self.target_dirs["journals"]:
+        if self.path.parent.name == self.target_dirs["journals"]:
             return self.process_logseq_journal_key(name, ordinal_suffix)
         return unquote(name).replace(self.ns_file_sep, ns_sep)
 

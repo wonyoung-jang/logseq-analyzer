@@ -42,6 +42,7 @@ class LogseqAssets:
 
     def process(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
+        assets = list(f for f in index if f.filename.file_type == "asset")
         asset_mentions = set()
         for file in index:
             if not file.data:
@@ -53,14 +54,13 @@ class LogseqAssets:
             if not asset_mentions:
                 continue
 
-            for asset_file in index.filter_files(file_type="asset", backlinked=False):
+            for asset_file in (f for f in assets if not f.node.backlinked):
                 asset_file.update_asset_backlink(asset_mentions, file.filename.name)
 
             asset_mentions.clear()
         del asset_mentions
-
-        self.backlinked.update(sorted(index.filter_files(file_type="asset", backlinked=True)))
-        self.not_backlinked.update(sorted(index.filter_files(file_type="asset", backlinked=False)))
+        self.backlinked.update(sorted((f for f in assets if f.node.backlinked)))
+        self.not_backlinked.update(sorted((f for f in assets if not f.node.backlinked)))
 
     @property
     def report(self) -> str:
@@ -107,7 +107,7 @@ class LogseqAssetsHls:
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
-        asset_files = index.filter_files(file_type="sub_asset")
+        asset_files = (f for f in index if f.filename.file_type == "sub_asset")
         self.asset_mapping = {f.filename.name: f for f in asset_files}
         self.asset_names.update(self.asset_mapping.keys())
 
@@ -115,7 +115,7 @@ class LogseqAssetsHls:
         self, index: "FileIndex", prop_value_pattern: re.Pattern = ContentPatterns.PROPERTY_VALUE
     ) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        for file in index.filter_files(is_hls=True):
+        for file in (f for f in index if f.filename.is_hls):
             for bullet in file.bullets.content_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):

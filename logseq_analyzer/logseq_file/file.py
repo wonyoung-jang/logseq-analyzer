@@ -108,11 +108,11 @@ class LogseqFile:
         return f"{self.__class__.__qualname__}: {self.path}"
 
     def __hash__(self) -> int:
-        return hash(self.filename.parts)
+        return hash(self.path.parts)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.filename.parts == other.filename.parts
+            return self.path.parts == other.path.parts
         return NotImplemented
 
     def __lt__(self, other) -> bool:

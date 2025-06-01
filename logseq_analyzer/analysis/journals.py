@@ -57,14 +57,12 @@ class LogseqJournals:
 
     def process(self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        dangling = self.date.journals_to_datetime(dangling_links, py_page_base_format)
-        dangling_journals = sorted(dangling)
-        journal_keys = index.filter_files(file_type="journal")
-        journal_keys = sorted((file.filename.name for file in journal_keys))
-        existing = self.date.journals_to_datetime(journal_keys, py_page_base_format)
-        self.existing.extend(sorted(existing))
-        self.build_complete_timeline(dangling_journals)
-        self.get_dangling_journals_outside_range(dangling_journals)
+        dangling = sorted(self.date.journals_to_datetime(dangling_links, py_page_base_format))
+        journal_keys = (f.filename.name for f in index if f.filename.file_type == "journal")
+        journals = sorted(journal_keys)
+        self.existing.extend(sorted(self.date.journals_to_datetime(journals, py_page_base_format)))
+        self.build_complete_timeline(dangling)
+        self.get_dangling_journals_outside_range(dangling)
 
     def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""

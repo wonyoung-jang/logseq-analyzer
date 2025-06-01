@@ -66,4 +66,4 @@ class LogseqFileSummarizer:
     def get_extensions_subset(self, index: "FileIndex") -> None:
         """Process file extensions and create subsets for each."""
         for file in index:
-            self.extensions[file.filename.suffix].append(file.filename.name)
+            self.extensions[file.path.suffix].append(file.filename.name)

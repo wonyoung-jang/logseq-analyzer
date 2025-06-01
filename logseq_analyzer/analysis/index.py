@@ -5,7 +5,7 @@ FileIndex class.
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Generator, Iterator
+from typing import Any, Iterator
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
@@ -23,7 +23,12 @@ __all__ = [
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    __slots__ = ("_files", "_hash_to_file", "_name_to_files", "_path_to_file")
+    __slots__ = (
+        "_files",
+        "_hash_to_file",
+        "_name_to_files",
+        "_path_to_file",
+    )
 
     def __init__(self) -> None:
         """
@@ -126,24 +131,6 @@ class FileIndex:
         for file in {f for f in self if not f.path.exists()}:
             self.remove(file)
 
-    def filter_files(self, **criteria) -> Generator[LogseqFile, None, None]:
-        """Extract a subset of the summary data based on multiple criteria (key-value pairs)."""
-        for file in self:
-            for key, expected in criteria.items():
-                if not hasattr(file, key):
-                    break
-                if not getattr(file, key) == expected:
-                    break
-            else:
-                yield file
-
-    def get_graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
-        """Get metadata file data from the graph."""
-        graph_data = {}
-        for file in self:
-            graph_data[file] = {k: v for k, v in yield_attrs(file) if v}
-        return graph_data
-
     def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:
         """Get content data from the graph."""
         if not write_graph:
@@ -154,10 +141,18 @@ class FileIndex:
         }
 
     @property
+    def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
+        """Get metadata file data from the graph."""
+        graph_data = {}
+        for file in self:
+            graph_data[file] = {k: v for k, v in yield_attrs(file) if v and k not in ("masked")}
+        return graph_data
+
+    @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the indexed files."""
         return {
-            Output.GRAPH_DATA.value: self.get_graph_data(),
+            Output.GRAPH_DATA.value: self.graph_data,
             Output.IDX_FILES.value: self._files,
             Output.IDX_HASH_TO_FILE.value: self._hash_to_file,
             Output.IDX_NAME_TO_FILES.value: self._name_to_files,
