@@ -67,17 +67,9 @@ class LogseqFilestats:
 
     def set_timestamps(self, stat: stat_result) -> None:
         """Set the timestamps attributes."""
-        _created_ts = self.get_created_timestamp(stat)
+        _created_ts = stat.st_birthtime
         _modified_ts = stat.st_mtime
         self.ts_info.time_existed = self._now_ts - _created_ts
         self.ts_info.time_unmodified = self._now_ts - _modified_ts
         self.ts_info.date_created = datetime.fromtimestamp(_created_ts).isoformat()
         self.ts_info.date_modified = datetime.fromtimestamp(_modified_ts).isoformat()
-
-    def get_created_timestamp(self, stat: stat_result) -> float:
-        """Get the created timestamp of the file."""
-        try:
-            return stat.st_birthtime
-        except AttributeError:
-            logger.warning("st_birthtime not available for %s. Using st_ctime.", self.path)
-            return stat.st_ctime

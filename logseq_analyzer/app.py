@@ -174,13 +174,10 @@ def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     """Setup journal formats."""
     token_map = get_token_map()
     token_pattern = compile_token_pattern(token_map)
-
     journal_file_fmt = get_file_name_format(gc)
     journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, token_map, token_pattern)
-
     journal_page_fmt = get_page_title_format(gc)
     journal_page_fmt = convert_cljs_date_to_py(journal_page_fmt, token_map, token_pattern)
-
     logger.debug("setup_journal_formats")
     return journal_file_fmt, journal_page_fmt
 

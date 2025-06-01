@@ -45,14 +45,8 @@ class LogseqAssets:
         assets = list(f for f in index if f.fname.file_type == "asset")
         asset_mentions = set()
         for file in index:
-            if not file.data:
-                continue
-
             for criteria in (Criteria.EMB_LINK_ASSET, Criteria.CON_ASSETS):
                 asset_mentions.update(file.data.get(criteria.value, []))
-
-            if not asset_mentions:
-                continue
 
             for asset_file in (f for f in assets if not f.node.backlinked):
                 asset_file.update_asset_backlink(asset_mentions, file.fname.name)
