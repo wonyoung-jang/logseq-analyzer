@@ -31,13 +31,6 @@ class NamespaceInfo:
 class LogseqFilename:
     """LogseqFilename class."""
 
-    graph_path: Path = None
-    journal_file_format: str = ""
-    journal_page_format: str = ""
-    journal_page_title_format: str = ""
-    ns_file_sep: str = ""
-    target_dirs: dict = {}
-
     __slots__ = (
         "_is_namespace",
         "date",
@@ -46,6 +39,13 @@ class LogseqFilename:
         "name",
         "ns_info",
     )
+
+    graph_path: Path = None
+    journal_file_format: str = ""
+    journal_page_format: str = ""
+    journal_page_title_format: str = ""
+    ns_file_sep: str = ""
+    target_dirs: dict = {}
 
     def __init__(self, path: Path, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqFilename class."""
