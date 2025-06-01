@@ -55,97 +55,108 @@ class FileIndex:
         """Iterate over the files in the index."""
         return iter(self._files)
 
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, f: Any) -> Any:
         """Get a file by its key."""
-        if isinstance(key, LogseqFile):
-            if key in self:
-                return key
-            raise KeyError(f"File {key} not found in index.")
-        if isinstance(key, int):
-            return self._hash_to_file.get(key)
-        if isinstance(key, str):
-            return self._name_to_files.get(key, [])
-        if isinstance(key, Path):
-            return self._path_to_file.get(key)
-        raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
+        if isinstance(f, LogseqFile):
+            if f in self:
+                return f
+            raise KeyError(f"File {f} not found in index.")
+        if isinstance(f, int):
+            return self._hash_to_file.get(f)
+        if isinstance(f, str):
+            return self._name_to_files.get(f, [])
+        if isinstance(f, Path):
+            return self._path_to_file.get(f)
+        raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
 
-    def __contains__(self, key: Any) -> bool:
+    def __contains__(self, f: Any) -> bool:
         """Check if a file is in the index."""
-        if isinstance(key, LogseqFile):
-            return key in self._files
-        if isinstance(key, int):
-            return key in self._hash_to_file
-        if isinstance(key, str):
-            return key in self._name_to_files
-        if isinstance(key, Path):
-            return key in self._path_to_file
-        raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
+        if isinstance(f, LogseqFile):
+            return f in self._files
+        if isinstance(f, int):
+            return f in self._hash_to_file
+        if isinstance(f, str):
+            return f in self._name_to_files
+        if isinstance(f, Path):
+            return f in self._path_to_file
+        raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
 
-    def add(self, file: LogseqFile) -> None:
+    def add(self, f: LogseqFile) -> None:
         """Add a file to the index."""
-        h = hash(file)
-        name = file.fname.name
-        path = file.path
-        self._files.add(file)
-        self._hash_to_file[h] = file
-        self._name_to_files[name].append(file)
-        self._path_to_file[path] = file
+        name = f.fname.name
+        path = f.path
+        self._files.add(f)
+        self._hash_to_file[hash(f)] = f
+        self._name_to_files[name].append(f)
+        self._path_to_file[path] = f
 
-    def remove(self, key: Any) -> None:
+    def remove(self, f: Any) -> None:
         """Strategy to remove a file from the index."""
-        if isinstance(key, LogseqFile):
-            target = key
-        elif isinstance(key, int):
-            target = self._hash_to_file.get(key)
-        elif isinstance(key, str):
-            for target in self._name_to_files.pop(key, []):
+        if isinstance(f, LogseqFile):
+            target = f
+        elif isinstance(f, int):
+            target = self._hash_to_file.get(f)
+        elif isinstance(f, str):
+            for target in self._name_to_files.pop(f, []):
                 self._remove_file(target)
             return
-        elif isinstance(key, Path):
-            target = self._path_to_file.get(key)
+        elif isinstance(f, Path):
+            target = self._path_to_file.get(f)
         else:
-            raise TypeError(f"Invalid key type: {type(key).__name__}. Expected LogseqFile, int, str, or Path.")
+            raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
 
         if target is None:
-            logging.warning("Key %s not found in index.", key)
+            logging.warning("Key %s not found in index.", f)
             return
         self._remove_file(target)
-        logger.debug("Key %s removed from index.", key)
+        logger.debug("Key %s removed from index.", f)
 
-    def _remove_file(self, file: LogseqFile) -> None:
+    def _remove_file(self, f: LogseqFile) -> None:
         """Helper method to remove a file from the index."""
-        self._files.discard(file)
-        self._hash_to_file.pop(hash(file), None)
-        name = file.fname.name
+        self._files.discard(f)
+        self._hash_to_file.pop(hash(f), None)
+        name = f.fname.name
         if files := self._name_to_files.get(name):
             try:
-                files.remove(file)
+                files.remove(f)
             except ValueError:
-                logger.warning("File %s not found in name_to_files list for name %s.", file, name)
+                logger.warning("File %s not found in name_to_files list for name %s.", f, name)
         else:
             del self._name_to_files[name]
-        self._path_to_file.pop(file.path, None)
+        self._path_to_file.pop(f.path, None)
 
     def remove_deleted_files(self):
         """Remove deleted files from the cache."""
         for file in {f for f in self if not f.path.exists()}:
             self.remove(file)
 
+    def process_namespaces(self, f: LogseqFile) -> None:
+        """Post-process namespaces in the content data."""
+        for ns_root_file in self[f.fname.ns_info.root]:
+            r: LogseqFile = ns_root_file
+            r.fname.is_namespace = True
+            r.fname.ns_info.children.add(f.fname.name)
+            r.fname.ns_info.size = len(r.fname.ns_info.children)
+        for ns_parent_file in self[f.fname.ns_info.parent_full]:
+            p: LogseqFile = ns_parent_file
+            p.fname.ns_info.children.add(f.fname.name)
+            p.fname.ns_info.size = len(p.fname.ns_info.children)
+
     def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:
         """Get content data from the graph."""
         if not write_graph:
             return {}
         return {
-            Output.GRAPH_BULLETS.value: {file: file.bullets.content_bullets for file in self},
-            Output.GRAPH_CONTENT.value: {file: file.bullets.content for file in self},
+            Output.GRAPH_BULLETS.value: {f: f.bullets.content_bullets for f in self},
+            Output.GRAPH_CONTENT.value: {f: f.bullets.content for f in self},
         }
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
         graph_data = {}
-        for file in self:
-            graph_data[file] = {k: v for k, v in yield_attrs(file) if v and k not in ("masked")}
+        for f in self:
+            graph_data[f] = {k: v for k, v in yield_attrs(f) if v and k not in ("masked")}
         return graph_data
 
     @property

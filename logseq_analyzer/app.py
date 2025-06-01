@@ -24,7 +24,6 @@ from .config.graph_config import (
     init_config_edn_from_file,
 )
 from .io.cache import Cache
-from .io.file_mover import process_moves, yield_asset_paths, yield_bak_rec_paths
 from .io.filesystem import (
     AssetsDirectory,
     BakDirectory,
@@ -49,9 +48,15 @@ from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile
 from .logseq_file.name import LogseqFilename
 from .utils.enums import CacheKeys, Constants, MovedFiles, Output, OutputDir
-from .utils.helpers import compile_token_pattern, convert_cljs_date_to_py, get_token_map
+from .utils.helpers import (
+    compile_token_pattern,
+    convert_cljs_date_to_py,
+    get_token_map,
+    process_moves,
+    yield_asset_paths,
+    yield_bak_rec_paths,
+)
 
-logger = logging.getLogger(__name__)
 log_file = LogFile(Constants.LOG_FILE.value)
 logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -62,6 +67,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
     level=logging.DEBUG,
 )
+logger = logging.getLogger(__name__)
 logger.info("Logseq Analyzer started.")
 logger.debug("Logging initialized to %s", log_file.path)
 
@@ -97,6 +103,8 @@ class Configurations:
     global_edn: dict[str, Any] = field(default_factory=dict)
     journal_file_fmt: str = ""
     journal_page_fmt: str = ""
+    journal_page_title_fmt: str = ""
+    target_dirs: dict[str, str] = field(default_factory=dict)
 
     @property
     def report(self) -> dict[str, Any]:
@@ -104,11 +112,13 @@ class Configurations:
         journal_formats = {
             Output.CONFIG_JOURNAL_FMT_FILE.value: self.journal_file_fmt,
             Output.CONFIG_JOURNAL_FMT_PAGE.value: self.journal_page_fmt,
+            Output.CONFIG_JOURNAL_FMT_PAGE_TITLE.value: self.journal_page_title_fmt,
         }
         return {
             Output.CONFIG_EDN.value: self.config,
             Output.CONFIG_EDN_USER.value: self.user_edn,
             Output.CONFIG_EDN_GLOBAL.value: self.global_edn,
+            Output.CONFIG_TARGET_DIRS.value: self.target_dirs,
             Output.CONFIG_JOURNAL_FORMATS.value: journal_formats,
         }
 
@@ -153,7 +163,7 @@ def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
     return config, user_edn, global_edn
 
 
-def setup_target_dirs(gc: dict[str, Any]) -> None:
+def setup_target_dirs(gc: dict[str, Any]) -> dict[str, str]:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
     graph_path = GraphDirectory().path
     target_dirs = get_target_dirs(gc)
@@ -168,6 +178,7 @@ def setup_target_dirs(gc: dict[str, Any]) -> None:
     PagesDirectory(dir_pages)
     WhiteboardsDirectory(dir_whiteboards)
     logger.debug("setup_target_dirs")
+    return target_dirs
 
 
 def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
@@ -176,20 +187,22 @@ def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     token_pattern = compile_token_pattern(token_map)
     journal_file_fmt = get_file_name_format(gc)
     journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, token_map, token_pattern)
-    journal_page_fmt = get_page_title_format(gc)
-    journal_page_fmt = convert_cljs_date_to_py(journal_page_fmt, token_map, token_pattern)
+    journal_page_title_fmt = get_page_title_format(gc)
+    journal_page_fmt = convert_cljs_date_to_py(journal_page_title_fmt, token_map, token_pattern)
     logger.debug("setup_journal_formats")
-    return journal_file_fmt, journal_page_fmt
+    return journal_file_fmt, journal_page_fmt, journal_page_title_fmt
 
 
 def init_configs(args: Args) -> Configurations:
     """Initialize configurations for the Logseq analyzer."""
     setup_logseq_paths(args)
     gc, user_edn, global_edn = setup_logseq_graph_config(args)
-    setup_target_dirs(gc)
-    journal_file_fmt, journal_page_fmt = setup_journal_formats(gc)
+    target_dirs = setup_target_dirs(gc)
+    journal_file_fmt, journal_page_fmt, journal_page_title_fmt = setup_journal_formats(gc)
     logger.debug("init_configs")
-    return Configurations(gc, user_edn, global_edn, journal_file_fmt, journal_page_fmt)
+    return Configurations(
+        gc, user_edn, global_edn, journal_file_fmt, journal_page_fmt, journal_page_title_fmt, target_dirs
+    )
 
 
 def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
@@ -203,27 +216,25 @@ def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     return cache, index
 
 
-def setup_analyzer_class_attributes(args: Args, c: Configurations) -> None:
+def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
     graph_dir = GraphDirectory()
     output_dir = OutputDirectory()
     LogseqFilename.graph_path = graph_dir.path
     LogseqFilename.journal_file_format = c.journal_file_fmt
     LogseqFilename.journal_page_format = c.journal_page_fmt
-    LogseqFilename.journal_page_title_format = get_page_title_format(c.config)
-    LogseqFilename.target_dirs = get_target_dirs(c.config)
+    LogseqFilename.journal_page_title_format = c.journal_page_title_fmt
+    LogseqFilename.target_dirs = c.target_dirs
     LogseqFilename.ns_file_sep = get_ns_sep(c.config)
     ReportWriter.ext = args.report_format
     ReportWriter.output_dir = output_dir.path
-    logger.debug("setup_analyzer_class_attributes")
+    logger.debug("configure_analyzer_settings")
 
 
 def process_graph(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
-    graph_dir = GraphDirectory()
-    target_dirs = get_target_dirs(c.config)
-    target_dirs = set(target_dirs.values())
-    for path in cache.iter_modified_files(graph_dir.path, target_dirs):
+    target_dirs = set(c.target_dirs.values())
+    for path in cache.iter_modified_files(LogseqFilename.graph_path, target_dirs):
         file = LogseqFile(path)
         file.process()
         index.add(file)
@@ -359,7 +370,7 @@ def run_app(**kwargs) -> None:
     cache, index = setup_cache(args)
 
     progress(50, "Setup class attributes...")
-    setup_analyzer_class_attributes(args, configs)
+    configure_analyzer_settings(args, configs)
 
     progress(60, "Running core analysis on Logseq graph...")
     data_reports = analyze(args, configs, cache, index)

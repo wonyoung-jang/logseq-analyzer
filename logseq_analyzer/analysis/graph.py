@@ -4,7 +4,6 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from typing import TYPE_CHECKING, Any
 
-from ..logseq_file.file import LogseqFile
 from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, singleton, sort_dict_by_value
 
@@ -62,21 +61,22 @@ class LogseqGraph:
         for f in index:
             curr_ns_info = f.fname.ns_info
             if f.fname.is_namespace:
-                self.unique_linked_references_ns.update(self.post_process_namespace(f, index))
-            if not (f_data := f.data):
+                self.unique_linked_references_ns.update((curr_ns_info.root, f.fname.name))
+                index.process_namespaces(f)
+            if not f.data:
                 continue
-            found_aliases = f_data.get(Criteria.CON_ALIASES.value, [])
+            found_aliases = f.data.get(Criteria.CON_ALIASES.value, [])
             self.unique_aliases.update(found_aliases)
             dataset = (
                 found_aliases,
-                f_data.get(Criteria.CON_DRAW.value, []),
-                f_data.get(Criteria.CON_PAGE_REF.value, []),
-                f_data.get(Criteria.CON_TAG.value, []),
-                f_data.get(Criteria.CON_TAGGED_BACKLINK.value, []),
-                f_data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
-                f_data.get(Criteria.PROP_PAGE_USER.value, []),
-                f_data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
-                f_data.get(Criteria.PROP_BLOCK_USER.value, []),
+                f.data.get(Criteria.CON_DRAW.value, []),
+                f.data.get(Criteria.CON_PAGE_REF.value, []),
+                f.data.get(Criteria.CON_TAG.value, []),
+                f.data.get(Criteria.CON_TAGGED_BACKLINK.value, []),
+                f.data.get(Criteria.PROP_PAGE_BUILTIN.value, []),
+                f.data.get(Criteria.PROP_PAGE_USER.value, []),
+                f.data.get(Criteria.PROP_BLOCK_BUILTIN.value, []),
+                f.data.get(Criteria.PROP_BLOCK_USER.value, []),
             )
             linked_references = []
             for data in dataset:
@@ -99,29 +99,6 @@ class LogseqGraph:
         for _, values in self.all_linked_references.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
         self.all_linked_references = sort_dict_by_value(self.all_linked_references, value="count", reverse=True)
-
-    @staticmethod
-    def post_process_namespace(file: LogseqFile, index: "FileIndex") -> tuple[str, str]:
-        """Post-process namespaces in the content data."""
-        curr_ns_info = file.fname.ns_info
-        ns_level = len(curr_ns_info.parts)
-        ns_refs = (curr_ns_info.root, file.fname.name)
-
-        for ns_root_f in index[curr_ns_info.root]:
-            ns_root_f: LogseqFile
-            ns_root_f.fname.is_namespace = True
-            ns_root_f.fname.ns_info.children.add(file.fname.name)
-            ns_root_f.fname.ns_info.size = len(ns_root_f.fname.ns_info.children)
-
-        if ns_level <= 2:
-            return ns_refs
-
-        for ns_parent_f in index[curr_ns_info.parent_full]:
-            ns_parent_f: LogseqFile
-            ns_parent_f.fname.ns_info.children.add(file.fname.name)
-            ns_parent_f.fname.ns_info.size = len(ns_parent_f.fname.ns_info.children)
-
-        return ns_refs
 
     def post_process_summary(self, index: "FileIndex") -> None:
         """Process summary data for each file based on metadata and content analysis."""

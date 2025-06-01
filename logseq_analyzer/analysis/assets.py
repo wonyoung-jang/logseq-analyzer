@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 
-from ..utils.enums import Criteria, Output
+from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
@@ -52,6 +52,7 @@ class LogseqAssets:
                 asset_file.update_asset_backlink(asset_mentions, file.fname.name)
 
             asset_mentions.clear()
+
         del asset_mentions
         self.backlinked.update(sorted((f for f in assets if f.node.backlinked)))
         self.not_backlinked.update(sorted((f for f in assets if not f.node.backlinked)))
@@ -71,7 +72,6 @@ class LogseqAssetsHls:
 
     __slots__ = (
         "asset_mapping",
-        "asset_names",
         "backlinked",
         "hls_bullets",
         "not_backlinked",
@@ -80,7 +80,6 @@ class LogseqAssetsHls:
     def __init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
         self.asset_mapping: dict[str, "LogseqFile"] = {}
-        self.asset_names: set[str] = set()
         self.backlinked: set[str] = set()
         self.hls_bullets: set[str] = set()
         self.not_backlinked: set[str] = set()
@@ -101,9 +100,8 @@ class LogseqAssetsHls:
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
-        asset_files = (f for f in index if f.fname.file_type == "sub_asset")
+        asset_files = (f for f in index if f.fname.file_type == FileTypes.SUB_ASSET.value)
         self.asset_mapping = {f.fname.name: f for f in asset_files}
-        self.asset_names.update(self.asset_mapping.keys())
 
     def convert_names_to_data(
         self, index: "FileIndex", prop_value_pattern: re.Pattern = ContentPatterns.PROPERTY_VALUE
@@ -114,7 +112,7 @@ class LogseqAssetsHls:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):
                     continue
-                hl_page, id_bullet, hl_stamp = "", "", ""
+                hl_page, id_, hl_stamp = "", "", ""
                 for prop_value in prop_value_pattern.finditer(bullet):
                     propkey = prop_value.group(1)
                     value = prop_value.group(2).strip()
@@ -122,18 +120,20 @@ class LogseqAssetsHls:
                         case "hl-page":
                             hl_page = value
                         case "id":
-                            id_bullet = value
+                            id_ = value
                         case "hl-stamp":
                             hl_stamp = value
                         case _:
                             continue
-                if all((hl_page, id_bullet, hl_stamp)):
-                    self.hls_bullets.add(f"{hl_page}_{id_bullet}_{hl_stamp}")
+                if all((hl_page, id_, hl_stamp)):
+                    hls_bullet = f"{hl_page}_{id_}_{hl_stamp}"
+                    self.hls_bullets.add(hls_bullet)
 
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
-        self.backlinked = self.asset_names.intersection(self.hls_bullets)
-        self.not_backlinked = self.asset_names.difference(self.hls_bullets)
+        asset_names = set(self.asset_mapping.keys())
+        self.backlinked = asset_names.intersection(self.hls_bullets)
+        self.not_backlinked = asset_names.difference(self.hls_bullets)
         for name in self.backlinked:
             self.asset_mapping[name].node.backlinked = True
             self.asset_mapping[name].fname.file_type = "asset"
@@ -145,7 +145,6 @@ class LogseqAssetsHls:
         """Generate a report of the asset analysis."""
         return {
             Output.HLS_ASSET_MAPPING.value: self.asset_mapping,
-            Output.HLS_ASSET_NAMES.value: self.asset_names,
             Output.HLS_FORMATTED_BULLETS.value: self.hls_bullets,
             Output.HLS_NOT_BACKLINKED.value: self.not_backlinked,
             Output.HLS_BACKLINKED.value: self.backlinked,
