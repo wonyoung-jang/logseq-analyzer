@@ -138,11 +138,11 @@ class LogseqFile:
         if not self.stats.has_content:
             return
         self.mask_blocks()
-        primary_data = self.extract_primary_data()
-        primary_data.update(self.extract_aliases_and_propvalues())
-        primary_data.update(self.extract_properties())
-        primary_data.update(self.extract_patterns())
-        self.data.update({k: v for k, v in primary_data.items() if v})
+        data = self.extract_primary_data()
+        data.update(self.extract_aliases_and_propvalues())
+        data.update(self.extract_properties())
+        data.update(self.extract_patterns())
+        self.data.update({k: v for k, v in data.items() if v})
         self.check_has_backlinks()
 
     def mask_blocks(self) -> None:

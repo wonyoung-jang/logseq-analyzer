@@ -52,6 +52,18 @@ from .utils.enums import CacheKeys, Constants, MovedFiles, Output, OutputDir
 from .utils.helpers import compile_token_pattern, convert_cljs_date_to_py, get_token_map
 
 logger = logging.getLogger(__name__)
+log_file = LogFile(Constants.LOG_FILE.value)
+logging.basicConfig(
+    datefmt="%Y-%m-%d %H:%M:%S",
+    encoding="utf-8",
+    filemode="w",
+    filename=log_file.path,
+    force=True,
+    format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
+    level=logging.DEBUG,
+)
+logger.info("Logseq Analyzer started.")
+logger.debug("Logging initialized to %s", log_file.path)
 
 
 class GUIInstanceDummy:
@@ -99,22 +111,6 @@ class Configurations:
             Output.CONFIG_EDN_GLOBAL.value: self.global_edn,
             Output.CONFIG_JOURNAL_FORMATS.value: journal_formats,
         }
-
-
-def init_logseq_paths() -> None:
-    """Setup Logseq paths for the analyzer."""
-    OutputDirectory(Constants.OUTPUT_DIR.value)
-    lf = LogFile(Constants.LOG_FILE.value)
-    logging.basicConfig(
-        filename=lf.path,
-        level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
-        encoding="utf-8",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        force=True,
-    )
-    logger.info("Logseq Analyzer started.")
-    logger.debug("Logging initialized to %s", lf.path)
 
 
 def setup_logseq_paths(args: Args) -> None:
@@ -357,7 +353,7 @@ def run_app(**kwargs) -> None:
     args = Args(**kwargs)
 
     progress(20, "Initializing Logseq Analyzer paths and configurations...")
-    init_logseq_paths()
+    OutputDirectory(Constants.OUTPUT_DIR.value)
 
     progress(30, "Setting up Logseq Analyzer configurations...")
     configs = init_configs(args)

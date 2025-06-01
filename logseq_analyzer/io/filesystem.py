@@ -115,8 +115,6 @@ class OutputDirectory(File):
 class LogFile(File):
     """Class to handle the log file for the Logseq Analyzer."""
 
-    clean_on_init = True
-
     def __init__(self, path: str | Path = None) -> None:
         """Initialize the LogseqAnalyzerLogFile class."""
         super().__init__(path)

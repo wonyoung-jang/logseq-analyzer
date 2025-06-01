@@ -38,6 +38,7 @@ class LogseqFilename:
         "file_type",
         "name",
         "ns_info",
+        "uri",
     )
 
     graph_path: Path = None
@@ -54,6 +55,7 @@ class LogseqFilename:
         self.file_type: str = ""
         self.name: str = path.stem
         self.ns_info: NamespaceInfo = NamespaceInfo()
+        self.uri: str = path.as_uri()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqFilename object."""
@@ -82,11 +84,6 @@ class LogseqFilename:
         self._is_namespace = value
 
     @property
-    def uri(self) -> str:
-        """Return the file URI."""
-        return self.path.as_uri()
-
-    @property
     def logseq_url(self) -> str:
         """Return the Logseq URL."""
         uri_path = Path(self.uri)
@@ -94,9 +91,12 @@ class LogseqFilename:
         target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
+            logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
             return ""
-        prefix = f"file:///{str(self.graph_path)}/{target_segment}/"
+        graph_path = str(self.graph_path).replace("\\", "/")
+        prefix = f"file:///{graph_path}/{target_segment}/"
         if not self.uri.startswith(prefix):
+            logger.warning("URI does not start with the expected prefix: %s", prefix)
             return ""
         encoded_path = self.uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
@@ -132,9 +132,7 @@ class LogseqFilename:
         }
         for key, value in result_map.items():
             if key in self.path.parts:
-                result = value
-                break
-        return result
+                return value
 
     def process_logseq_filename(
         self, ns_sep: str = Core.NS_SEP.value, ordinal_suffix: str = Core.DATE_ORDINAL_SUFFIX.value

@@ -48,7 +48,7 @@ class Constants(Enum):
     CACHE_FILE = "logseq-analyzer-cache"
     CONFIG_INI_FILE = "logseq_analyzer/config/configuration/config.ini"
     CONFIG_USER_INI_FILE = "logseq_analyzer/config/configuration/user_config.ini"
-    LOG_FILE = "logseq-analyzer-output/logseq_analyzer.log"
+    LOG_FILE = "logseq_analyzer.log"
     OUTPUT_DIR = "logseq-analyzer-output"
     TO_DELETE_ASSETS_DIR = "to-delete/assets"
     TO_DELETE_BAK_DIR = "to-delete/bak"
