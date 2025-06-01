@@ -27,12 +27,10 @@ class LogseqContentSummarizer:
 
     def generate_summary(self, index: "FileIndex") -> None:
         """Generate summary subsets for content data in the Logseq graph."""
-        for file in index:
-            if not file.data:
-                continue
-            for key, values in file.data.items():
+        for f in index:
+            for key, values in f.data.items():
                 self.report.setdefault(key, {})
-                self.report[key] = get_count_and_foundin_data(self.report[key], values, file)
+                self.report[key] = get_count_and_foundin_data(self.report[key], values, f)
 
     def sort_report(self) -> None:
         """Sort the report dictionary by count in descending order."""

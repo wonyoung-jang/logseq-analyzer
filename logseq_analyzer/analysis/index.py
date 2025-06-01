@@ -84,7 +84,7 @@ class FileIndex:
     def add(self, file: LogseqFile) -> None:
         """Add a file to the index."""
         h = hash(file)
-        name = file.filename.name
+        name = file.fname.name
         path = file.path
         self._files.add(file)
         self._hash_to_file[h] = file
@@ -116,7 +116,7 @@ class FileIndex:
         """Helper method to remove a file from the index."""
         self._files.discard(file)
         self._hash_to_file.pop(hash(file), None)
-        name = file.filename.name
+        name = file.fname.name
         if files := self._name_to_files.get(name):
             try:
                 files.remove(file)

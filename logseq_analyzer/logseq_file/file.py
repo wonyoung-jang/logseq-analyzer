@@ -51,8 +51,8 @@ class LogseqFile:
     __slots__ = (
         "path",
         "data",
-        "filename",
-        "stat",
+        "fname",
+        "stats",
         "bullets",
         "masked",
         "node",
@@ -94,9 +94,9 @@ class LogseqFile:
     def __init__(self, path: Path) -> None:
         """Initialize the LogseqFile object."""
         self.path: Path = path
-        self.stat: LogseqFilestats = LogseqFilestats(path)
+        self.stats: LogseqFilestats = LogseqFilestats(path)
         self.node: NodeType = NodeType()
-        self.filename: LogseqFilename = LogseqFilename(path)
+        self.fname: LogseqFilename = LogseqFilename(path)
         self.bullets: LogseqBullets = LogseqBullets(path)
         self.masked: MaskedBlocks = MaskedBlocks()
         self.data: dict[str, Any] = {}
@@ -117,9 +117,9 @@ class LogseqFile:
 
     def __lt__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.filename.name < other.filename.name
+            return self.fname.name < other.fname.name
         if isinstance(other, str):
-            return self.filename.name < other
+            return self.fname.name < other
         return NotImplemented
 
     def process(self) -> None:
@@ -129,13 +129,13 @@ class LogseqFile:
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
-        self.filename.process()
-        self.stat.process()
+        self.fname.process()
+        self.stats.process()
         self.bullets.process()
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
-        if not self.stat.has_content:
+        if not self.stats.has_content:
             return
         self.mask_blocks()
         primary_data = self.extract_primary_data()
@@ -237,7 +237,7 @@ class LogseqFile:
 
     def determine_node_type(self) -> None:
         """Helper function to determine node type based on summary data."""
-        has_content = self.stat.has_content
+        has_content = self.stats.has_content
         has_backlinks = self.node.has_backlinks
         backlinked = self.node.backlinked
         backlinked_ns_only = self.node.backlinked_ns_only
@@ -289,7 +289,7 @@ class LogseqFile:
             bool: True if the file is backlinked, False otherwise.
         """
         try:
-            lookup.remove(self.filename.name)
+            lookup.remove(self.fname.name)
             return True
         except KeyError:
             return False
@@ -303,7 +303,7 @@ class LogseqFile:
             parent (str): Parent file name.
         """
         for asset_mention in asset_mentions:
-            for name in (self.filename.name, parent):
+            for name in (self.fname.name, parent):
                 if name in asset_mention:
                     self.node.backlinked = True
                     return
