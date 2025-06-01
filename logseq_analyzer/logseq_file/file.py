@@ -5,7 +5,7 @@ LogseqFile class to process Logseq files.
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
 import logseq_analyzer.utils.patterns_code as CodePatterns
@@ -138,12 +138,19 @@ class LogseqFile:
         if not self.stats.has_content:
             return
         self.mask_blocks()
-        data = self.extract_primary_data()
-        data.update(self.extract_aliases_and_propvalues())
-        data.update(self.extract_properties())
-        data.update(self.extract_patterns())
-        self.data.update({k: v for k, v in data.items() if v})
+        self.extract_data()
         self.check_has_backlinks()
+
+    def extract_data(self) -> None:
+        """
+        Extract data from the Logseq file.
+        """
+        self.data.update(
+            **dict(self.extract_primary_data()),
+            **dict(self.extract_aliases_and_propvalues()),
+            **dict(self.extract_properties()),
+            **dict(self.extract_patterns()),
+        )
 
     def mask_blocks(self) -> None:
         """
@@ -160,14 +167,11 @@ class LogseqFile:
 
             self.masked.content = regex.sub(_repl, self.masked.content)
 
-    def extract_primary_data(self) -> dict[str, str]:
+    def extract_primary_data(self) -> Generator[tuple[str, Any]]:
         """
         Extract primary data from the content.
-
-        Returns:
-            dict: A dictionary containing the extracted data.
         """
-        return {
+        result = {
             Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(self.bullets.content),
             Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(self.bullets.content),
             Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(self.bullets.content),
@@ -180,53 +184,55 @@ class LogseqFile:
             Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(self.masked.content),
             # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(self.masked.content),
         }
+        for k, v in result.items():
+            if v:
+                yield (k, v)
 
-    def extract_aliases_and_propvalues(self) -> dict[str, Any]:
+    def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
         """
         Extract aliases and properties from the content.
-
-        Returns:
-            dict: A dictionary containing the extracted aliases and properties.
         """
         properties_values = dict(ContentPatterns.PROPERTY_VALUE.findall(self.bullets.content))
         if aliases := properties_values.get("alias"):
             aliases = list(process_aliases(aliases))
-        return {
+        result = {
             Criteria.CON_ALIASES.value: aliases,
             Criteria.PROP_VALUES.value: properties_values,
         }
+        for k, v in result.items():
+            if v:
+                yield (k, v)
 
-    def extract_properties(self) -> dict[str, Any]:
+    def extract_properties(self) -> Generator[tuple[str, Any]]:
         """
         Extract aliases and properties from the content.
-
-        Returns:
-            dict: A dictionary containing the extracted aliases and properties.
         """
         page_props = set()
         if self.bullets.stats.has_page_properties:
             page_props.update(ContentPatterns.PROPERTY.findall(self.bullets.primary_bullet))
             self.bullets.content = "\n".join(self.bullets.content_bullets)
         block_props = set(ContentPatterns.PROPERTY.findall(self.bullets.content))
-        return {
+        result = {
             Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
             Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
             Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
         }
+        for k, v in result.items():
+            if v:
+                yield (k, v)
 
-    def extract_patterns(self) -> dict[str, Any]:
+    def extract_patterns(self) -> Generator[tuple[str, Any]]:
         """
         Process patterns in the content.
-
-        Returns:
-            dict: A dictionary containing the processed patterns.
         """
         result = {}
         for pattern in self._PATTERN_MODULES:
             processed_patterns = process_pattern_hierarchy(self.bullets.content, pattern)
             result.update(processed_patterns)
-        return result
+        for k, v in result.items():
+            if v:
+                yield (k, v)
 
     def check_has_backlinks(self) -> None:
         """
@@ -294,12 +300,12 @@ class LogseqFile:
         except KeyError:
             return False
 
-    def update_asset_backlink(self, asset_mentions: list[str], parent: str) -> None:
+    def update_asset_backlink(self, asset_mentions: set[str], parent: str) -> None:
         """
         Update asset backlink status based on mentions and parent.
 
         Args:
-            asset_mentions (list[str]): List of asset mentions.
+            asset_mentions (set[str]): Set of asset mentions.
             parent (str): Parent file name.
         """
         for asset_mention in asset_mentions:
