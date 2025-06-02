@@ -26,7 +26,7 @@ class Args:
         "write_graph",
     )
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **gui_args) -> None:
         """Initialize the Args class with default values."""
         self.global_config: str = ""
         self.graph_cache: bool = False
@@ -37,19 +37,19 @@ class Args:
         self.move_unlinked_assets: bool = False
         self.report_format: str = ".txt"
         self.write_graph: bool = False
-        self.setup_args(**kwargs)
+        self.setup_args(**gui_args)
 
-    def setup_args(self, **kwargs) -> None:
+    def setup_args(self, **gui_args) -> None:
         """Set up command line arguments and GUI arguments."""
-        if kwargs:
-            self.set_gui_args(**kwargs)
+        if gui_args:
+            self.set_gui_args(**gui_args)
         else:
             self.set_cli_args()
 
-    def set_gui_args(self, **kwargs) -> None:
+    def set_gui_args(self, **gui_args) -> None:
         """Set arguments if provided as keyword arguments from GUI."""
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+        for arg, value in gui_args.items():
+            setattr(self, arg, value)
 
     def set_cli_args(self) -> None:
         """Parse command line arguments and set them as attributes."""

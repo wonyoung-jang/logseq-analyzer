@@ -3,7 +3,7 @@ Logseq Assets Analysis Module.
 """
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 import logseq_analyzer.utils.patterns_content as ContentPatterns
 
@@ -27,6 +27,8 @@ class LogseqAssets:
 
     __slots__ = ("backlinked", "not_backlinked")
 
+    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({Criteria.EMB_LINK_ASSET, Criteria.CON_ASSETS})
+
     def __init__(self) -> None:
         """Initialize the LogseqAssets instance."""
         self.backlinked: set[LogseqFile] = set()
@@ -42,20 +44,34 @@ class LogseqAssets:
 
     def process(self, index: "FileIndex") -> None:
         """Handle assets for the Logseq Analyzer."""
-        assets = list(f for f in index if f.fname.file_type == "asset")
         asset_mentions = set()
-        for file in index:
-            for criteria in (Criteria.EMB_LINK_ASSET, Criteria.CON_ASSETS):
-                asset_mentions.update(file.data.get(criteria.value, []))
 
-            for asset_file in (f for f in assets if not f.node.backlinked):
-                asset_file.update_asset_backlink(asset_mentions, file.fname.name)
+        for f in index:
+            for criteria in LogseqAssets._ASSET_CRITERIA:
+                asset_mentions.update(f.data.get(criteria.value, []))
+
+            if not asset_mentions:
+                continue
+
+            for asset_file in LogseqAssets.yield_assets(index, backlinked=False):
+                asset_file.update_asset_backlink(asset_mentions, f.name)
 
             asset_mentions.clear()
 
         del asset_mentions
-        self.backlinked.update(sorted((f for f in assets if f.node.backlinked)))
-        self.not_backlinked.update(sorted((f for f in assets if not f.node.backlinked)))
+
+        self.backlinked.update(LogseqAssets.yield_assets(index, backlinked=True))
+        self.not_backlinked.update(LogseqAssets.yield_assets(index, backlinked=False))
+
+    @staticmethod
+    def yield_assets(index: "FileIndex", backlinked: bool | None = None) -> Generator["LogseqFile", None]:
+        """Yield all asset files from the index."""
+        for f in index:
+            if f.file_type == FileTypes.ASSET.value:
+                if backlinked is None:
+                    yield f
+                elif f.backlinked == backlinked:
+                    yield f
 
     @property
     def report(self) -> str:
@@ -95,20 +111,21 @@ class LogseqAssetsHls:
     def process(self, index: "FileIndex") -> None:
         """Process HLS assets to analyze backlinks and bullet content."""
         self.get_asset_files(index)
-        self.convert_names_to_data(index)
-        self.check_backlinks()
+        if self.asset_mapping:
+            self.convert_names_to_data(index)
+            self.check_backlinks()
 
     def get_asset_files(self, index: "FileIndex") -> None:
         """Retrieve asset files based on specific criteria."""
-        asset_files = (f for f in index if f.fname.file_type == FileTypes.SUB_ASSET.value)
-        self.asset_mapping = {f.fname.name: f for f in asset_files}
+        asset_files = (f for f in index if f.file_type == FileTypes.SUB_ASSET.value)
+        self.asset_mapping = {f.name: f for f in asset_files}
 
     def convert_names_to_data(
         self, index: "FileIndex", prop_value_pattern: re.Pattern = ContentPatterns.PROPERTY_VALUE
     ) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        for file in (f for f in index if f.fname.is_hls):
-            for bullet in file.bullets.content_bullets:
+        for f in (fh for fh in index if fh.is_hls):
+            for bullet in f.bullets.all:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):
                     continue
@@ -136,9 +153,9 @@ class LogseqAssetsHls:
         self.not_backlinked = asset_names.difference(self.hls_bullets)
         for name in self.backlinked:
             self.asset_mapping[name].node.backlinked = True
-            self.asset_mapping[name].fname.file_type = "asset"
+            self.asset_mapping[name].path.file_type = "asset"
         for name in self.not_backlinked:
-            self.asset_mapping[name].fname.file_type = "asset"
+            self.asset_mapping[name].path.file_type = "asset"
 
     @property
     def report(self) -> str:

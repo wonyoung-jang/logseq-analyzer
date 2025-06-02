@@ -29,7 +29,7 @@ class LogseqGraph:
         "unique_aliases",
     )
 
-    _TO_NODE_TYPE = (FileTypes.JOURNAL.value, FileTypes.PAGE.value)
+    _TO_NODE_TYPE: frozenset[str] = frozenset({FileTypes.JOURNAL.value, FileTypes.PAGE.value})
 
     def __init__(self) -> None:
         """Initialize the LogseqGraph instance."""
@@ -59,9 +59,8 @@ class LogseqGraph:
     def post_process_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
         for f in index:
-            curr_ns_info = f.fname.ns_info
-            if f.fname.is_namespace:
-                self.unique_linked_references_ns.update((curr_ns_info.root, f.fname.name))
+            if f.is_namespace:
+                self.unique_linked_references_ns.update((f.ns_info.root, f.name))
                 index.process_namespaces(f)
             if not f.data:
                 continue
@@ -83,8 +82,8 @@ class LogseqGraph:
                 if not data:
                     continue
                 linked_references.extend(data)
-            if curr_ns_info.parent:
-                lr_with_ns_parent = linked_references.copy() + [curr_ns_info.parent]
+            if f.ns_info.parent:
+                lr_with_ns_parent = linked_references.copy() + [f.ns_info.parent]
                 self.all_linked_references = get_count_and_foundin_data(
                     self.all_linked_references, lr_with_ns_parent, f
                 )
@@ -103,16 +102,14 @@ class LogseqGraph:
     def post_process_summary(self, index: "FileIndex") -> None:
         """Process summary data for each file based on metadata and content analysis."""
         for f in index:
-            f.node.backlinked = f.check_is_backlinked(self.unique_linked_references)
-            f.node.backlinked_ns_only = f.check_is_backlinked(self.unique_linked_references_ns)
-            if f.node.backlinked and f.node.backlinked_ns_only:
-                f.node.backlinked = False
-            if f.fname.file_type in self._TO_NODE_TYPE:
-                f.determine_node_type()
+            f.node.check_backlinked(f.name, self.unique_linked_references)
+            f.node.check_backlinked_ns_only(f.name, self.unique_linked_references_ns)
+            if f.file_type in self._TO_NODE_TYPE:
+                f.node.determine_node_type(f.has_content)
 
     def post_process_dangling(self, index: "FileIndex") -> list[str]:
         """Process dangling links in the graph."""
-        all_file_names = (f.fname.name for f in index)
+        all_file_names = (f.name for f in index)
         all_refs = self.unique_linked_references.union(self.unique_linked_references_ns)
         all_refs.difference_update(all_file_names, self.unique_aliases)
         self.dangling_links = remove_builtin_properties(all_refs)

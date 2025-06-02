@@ -66,18 +66,17 @@ class Cache:
         self.cache_path.unlink(missing_ok=True)
         self.open()
 
-    def clear_deleted_files(self, index: "FileIndex", index_key: str = CacheKeys.INDEX.value) -> None:
+    def clear_deleted_files(self, index: "FileIndex") -> None:
         """Clear the deleted files from the cache."""
-        if index_key in self.cache:
+        if CacheKeys.INDEX.value in self.cache:
             del index
-            index = self.cache[index_key]
+            index = self.cache[CacheKeys.INDEX.value]
         index.remove_deleted_files()
 
-    def iter_modified_files(
-        self, graph_dir: Path, target_dirs: set[str], mod_tracker_key: str = CacheKeys.MOD_TRACKER.value
-    ) -> Generator[Path, Any, None]:
+    def iter_modified_files(self, graph_dir: Path, target_dirs: dict[str, str]) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
-        mod_tracker = self.cache.setdefault(mod_tracker_key, {})
+        target_dirs = set(target_dirs.values())
+        mod_tracker = self.cache.setdefault(CacheKeys.MOD_TRACKER.value, {})
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
@@ -86,4 +85,4 @@ class Cache:
             mod_tracker[str_path] = curr_date_mod
             logger.debug("File modified: %s", path)
             yield path
-        self.cache[mod_tracker_key] = mod_tracker
+        self.cache[CacheKeys.MOD_TRACKER.value] = mod_tracker

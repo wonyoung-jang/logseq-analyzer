@@ -9,6 +9,7 @@ __pycache__
 *.spec
 *.txt
 *.lock
+*.prof
 
 # Pyinstaller
 build/

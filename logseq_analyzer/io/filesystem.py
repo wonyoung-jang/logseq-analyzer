@@ -84,6 +84,7 @@ class File:
             logger.error("Error deleting path: %s", e)
 
     def make_if_missing(self) -> None:
+        """Create the file or directory if it does not exist."""
         try:
             if not self.path.exists():
                 if self.is_dir:

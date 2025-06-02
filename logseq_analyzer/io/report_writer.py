@@ -118,6 +118,16 @@ class HTMLWriter:
 
     @staticmethod
     def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
+        """
+        Write the data to an HTML file with the given prefix and count.
+
+        Args:
+            outputpath (Path): The path where the HTML file will be written.
+            prefix (str): The prefix for the HTML title and header.
+            count (int | None): The count of items, if applicable.
+            filename (str): The name of the file being processed.
+            data (Any): The data to be written to the HTML file.
+        """
         with outputpath.open("w", encoding="utf-8") as f:
             f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
             f.write(f'<meta charset="utf-8">\n<title>{prefix}</title>\n')

@@ -12,15 +12,14 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "DateUtilities",
-    "DATE_ORDINAL_SUFFIXES",
 ]
-
-DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset(("st", "nd", "rd", "th"))
 
 
 @singleton
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
+
+    _DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
 
     @staticmethod
     def next(date_obj: datetime) -> datetime:
@@ -77,7 +76,7 @@ class DateUtilities:
         """Convert journal keys from strings to datetime objects."""
         for key in keys:
             try:
-                for ordinal in DATE_ORDINAL_SUFFIXES:
+                for ordinal in DateUtilities._DATE_ORDINAL_SUFFIXES:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError as e:

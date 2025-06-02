@@ -83,12 +83,10 @@ class FileIndex:
 
     def add(self, f: LogseqFile) -> None:
         """Add a file to the index."""
-        name = f.fname.name
-        path = f.path
         self._files.add(f)
         self._hash_to_file[hash(f)] = f
-        self._name_to_files[name].append(f)
-        self._path_to_file[path] = f
+        self._name_to_files[f.name].append(f)
+        self._path_to_file[f.path.file] = f
 
     def remove(self, f: Any) -> None:
         """Strategy to remove a file from the index."""
@@ -115,39 +113,38 @@ class FileIndex:
         """Helper method to remove a file from the index."""
         self._files.discard(f)
         self._hash_to_file.pop(hash(f), None)
-        name = f.fname.name
-        if files := self._name_to_files.get(name):
+        if files := self._name_to_files.get(f.name):
             try:
                 files.remove(f)
             except ValueError:
-                logger.warning("File %s not found in name_to_files list for name %s.", f, name)
+                logger.warning("File %s not found in name_to_files list for name %s.", f, f.name)
         else:
-            del self._name_to_files[name]
-        self._path_to_file.pop(f.path, None)
+            del self._name_to_files[f.name]
+        self._path_to_file.pop(f.path.file, None)
 
     def remove_deleted_files(self):
         """Remove deleted files from the cache."""
-        for file in {f for f in self if not f.path.exists()}:
+        for file in {f for f in self if not f.path.file.exists()}:
             self.remove(file)
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
-        for ns_root_file in self[f.fname.ns_info.root]:
+        for ns_root_file in self[f.ns_info.root]:
             r: LogseqFile = ns_root_file
-            r.fname.is_namespace = True
-            r.fname.ns_info.children.add(f.fname.name)
-            r.fname.ns_info.size = len(r.fname.ns_info.children)
-        for ns_parent_file in self[f.fname.ns_info.parent_full]:
+            r.is_namespace = True
+            r.ns_info.children.add(f.name)
+            r.ns_info.size = len(r.ns_info.children)
+        for ns_parent_file in self[f.ns_info.parent_full]:
             p: LogseqFile = ns_parent_file
-            p.fname.ns_info.children.add(f.fname.name)
-            p.fname.ns_info.size = len(p.fname.ns_info.children)
+            p.ns_info.children.add(f.name)
+            p.ns_info.size = len(p.ns_info.children)
 
     def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:
         """Get content data from the graph."""
         if not write_graph:
             return {}
         return {
-            Output.GRAPH_BULLETS.value: {f: f.bullets.content_bullets for f in self},
+            Output.GRAPH_BULLETS.value: {f: f.bullets.all for f in self},
             Output.GRAPH_CONTENT.value: {f: f.bullets.content for f in self},
         }
 
@@ -160,9 +157,18 @@ class FileIndex:
         return graph_data
 
     @property
+    def graph_content_data(self) -> dict[LogseqFile, Any]:
+        """Get content data from the graph."""
+        graph_content_data = {}
+        for f in self:
+            graph_content_data[f] = {k: v for k, v in f.data.items() if v}
+        return graph_content_data
+
+    @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the indexed files."""
         return {
+            Output.GRAPH_CONTENT_DATA.value: self.graph_content_data,
             Output.GRAPH_DATA.value: self.graph_data,
             Output.IDX_FILES.value: self._files,
             Output.IDX_HASH_TO_FILE.value: self._hash_to_file,

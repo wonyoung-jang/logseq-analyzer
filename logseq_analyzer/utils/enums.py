@@ -71,7 +71,6 @@ class Core(Enum):
 class Criteria(Enum):
     """Criteria for filtering files."""
 
-    # CON_BOLD = "bold"
     ADV_CMD = "adv_cmd"
     ADV_CMD_CAUTION = "adv_cmd_caution"
     ADV_CMD_CENTER = "adv_cmd_center"
@@ -96,6 +95,7 @@ class Criteria(Enum):
     CON_ANY_LINKS = "content_any_links"
     CON_ASSETS = "content_assets"
     CON_BLOCKQUOTES = "content_blockquotes"
+    CON_BOLD = "content_bold"
     CON_DRAW = "content_draws"
     CON_DYNAMIC_VAR = "content_dynamic_variables"
     CON_FLASHCARD = "content_flashcards"
@@ -203,6 +203,7 @@ class Output(Enum):
     GRAPH_ALL_LINKED_REFERENCES = "graph_all_linked_references"
     GRAPH_BULLETS = "graph_content_bullets"
     GRAPH_CONTENT = "graph_content"
+    GRAPH_CONTENT_DATA = "graph_content_data"
     GRAPH_DANGLING_LINKS = "graph_dangling_links"
     GRAPH_DATA = "graph_data"
     GRAPH_UNIQUE_ALIASES = "graph_unique_aliases"

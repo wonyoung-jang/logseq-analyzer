@@ -45,8 +45,7 @@ from .io.filesystem import (
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
-from .logseq_file.file import LogseqFile
-from .logseq_file.name import LogseqFilename
+from .logseq_file.file import LogseqFile, LogseqPath
 from .utils.enums import CacheKeys, Constants, MovedFiles, Output, OutputDir
 from .utils.helpers import (
     compile_token_pattern,
@@ -220,12 +219,12 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
     graph_dir = GraphDirectory()
     output_dir = OutputDirectory()
-    LogseqFilename.graph_path = graph_dir.path
-    LogseqFilename.journal_file_format = c.journal_file_fmt
-    LogseqFilename.journal_page_format = c.journal_page_fmt
-    LogseqFilename.journal_page_title_format = c.journal_page_title_fmt
-    LogseqFilename.target_dirs = c.target_dirs
-    LogseqFilename.ns_file_sep = get_ns_sep(c.config)
+    LogseqPath.graph_path = graph_dir.path
+    LogseqPath.journal_file_format = c.journal_file_fmt
+    LogseqPath.journal_page_format = c.journal_page_fmt
+    LogseqPath.journal_page_title_format = c.journal_page_title_fmt
+    LogseqPath.target_dirs = c.target_dirs
+    LogseqPath.ns_file_sep = get_ns_sep(c.config)
     ReportWriter.ext = args.report_format
     ReportWriter.output_dir = output_dir.path
     logger.debug("configure_analyzer_settings")
@@ -233,8 +232,7 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
 
 def process_graph(index: FileIndex, cache: Cache, c: Configurations) -> None:
     """Process all files in the Logseq graph folder."""
-    target_dirs = set(c.target_dirs.values())
-    for path in cache.iter_modified_files(LogseqFilename.graph_path, target_dirs):
+    for path in cache.iter_modified_files(LogseqPath.graph_path, c.target_dirs):
         file = LogseqFile(path)
         file.process()
         index.add(file)
