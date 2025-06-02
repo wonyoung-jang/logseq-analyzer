@@ -100,18 +100,18 @@ class Configurations:
     config: dict[str, Any] = field(default_factory=dict)
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
-    journal_file_fmt: str = ""
-    journal_page_fmt: str = ""
-    journal_page_title_fmt: str = ""
+    journal_file_format: str = ""
+    journal_page_format: str = ""
+    journal_page_title_format: str = ""
     target_dirs: dict[str, str] = field(default_factory=dict)
 
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the configurations."""
         journal_formats = {
-            Output.CONFIG_JOURNAL_FMT_FILE.value: self.journal_file_fmt,
-            Output.CONFIG_JOURNAL_FMT_PAGE.value: self.journal_page_fmt,
-            Output.CONFIG_JOURNAL_FMT_PAGE_TITLE.value: self.journal_page_title_fmt,
+            Output.CONFIG_JOURNAL_FMT_FILE.value: self.journal_file_format,
+            Output.CONFIG_JOURNAL_FMT_PAGE.value: self.journal_page_format,
+            Output.CONFIG_JOURNAL_FMT_PAGE_TITLE.value: self.journal_page_title_format,
         }
         return {
             Output.CONFIG_EDN.value: self.config,
@@ -219,10 +219,13 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
     graph_dir = GraphDirectory()
     output_dir = OutputDirectory()
+    LogseqJournals.journal_page_format = c.journal_page_format
+    Cache.graph_dir = graph_dir.path
+    Cache.target_dirs = set(c.target_dirs.values())
     LogseqPath.graph_path = graph_dir.path
-    LogseqPath.journal_file_format = c.journal_file_fmt
-    LogseqPath.journal_page_format = c.journal_page_fmt
-    LogseqPath.journal_page_title_format = c.journal_page_title_fmt
+    LogseqPath.journal_file_format = c.journal_file_format
+    LogseqPath.journal_page_format = c.journal_page_format
+    LogseqPath.journal_page_title_format = c.journal_page_title_format
     LogseqPath.target_dirs = c.target_dirs
     LogseqPath.ns_file_sep = get_ns_sep(c.config)
     LogseqPath.set_result_map()
@@ -231,9 +234,9 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     logger.debug("configure_analyzer_settings")
 
 
-def process_graph(index: FileIndex, cache: Cache, c: Configurations) -> None:
+def process_graph(index: FileIndex, cache: Cache) -> None:
     """Process all files in the Logseq graph folder."""
-    for path in cache.iter_modified_files(LogseqPath.graph_path, c.target_dirs):
+    for path in cache.iter_modified_files():
         file = LogseqFile(path)
         file.process()
         index.add(file)
@@ -266,10 +269,10 @@ def setup_namespaces(graph: LogseqGraph, index: FileIndex) -> LogseqNamespaces:
     return ln
 
 
-def setup_journals(graph: LogseqGraph, index: FileIndex, c: Configurations) -> LogseqJournals:
+def setup_journals(graph: LogseqGraph, index: FileIndex) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process(index, graph.dangling_links, c.journal_page_fmt)
+    lj.process(index, graph.dangling_links)
     logger.debug("setup_journals")
     return lj
 
@@ -308,10 +311,10 @@ def setup_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
 
 def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex) -> tuple:
     """Perform core analysis on the Logseq graph."""
-    process_graph(index, cache, configs)
+    process_graph(index, cache)
     graph = setup_graph(index)
     namespaces = setup_namespaces(graph, index)
-    journals = setup_journals(graph, index, configs)
+    journals = setup_journals(graph, index)
     ls_assets, hls_assets = setup_assets(index)
     moved_files = setup_file_mover(args, ls_assets)
     summary_files, summary_content = setup_summarizers(index)

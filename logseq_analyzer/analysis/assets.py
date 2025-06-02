@@ -54,7 +54,7 @@ class LogseqAssets:
                 continue
 
             for asset_file in LogseqAssets.yield_assets(index, backlinked=False):
-                asset_file.update_asset_backlink(asset_mentions, f.name)
+                asset_file.node.update_asset_backlink(asset_mentions, (asset_file.name, f.name))
 
             asset_mentions.clear()
 

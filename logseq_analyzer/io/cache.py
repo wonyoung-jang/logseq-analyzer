@@ -24,6 +24,9 @@ class Cache:
 
     __slots__ = ("cache_path", "cache")
 
+    graph_dir: Path = None
+    target_dirs: set[str] = set()
+
     def __init__(self, cache_path: Path = None) -> None:
         """Initialize the class."""
         self.cache_path: Path = cache_path
@@ -73,9 +76,10 @@ class Cache:
             index = self.cache[CacheKeys.INDEX.value]
         index.remove_deleted_files()
 
-    def iter_modified_files(self, graph_dir: Path, target_dirs: dict[str, str]) -> Generator[Path, Any, None]:
+    def iter_modified_files(self) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
-        target_dirs = set(target_dirs.values())
+        graph_dir = Cache.graph_dir
+        target_dirs = Cache.target_dirs
         mod_tracker = self.cache.setdefault(CacheKeys.MOD_TRACKER.value, {})
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)

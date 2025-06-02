@@ -91,6 +91,20 @@ class NodeType:
                 n = NodeTypes.ORPHAN_TRUE.value
         self.type = n
 
+    def update_asset_backlink(self, asset_mentions: set[str], names: tuple[str, ...]) -> None:
+        """
+        Update asset backlink status based on mentions and parent.
+
+        Args:
+            asset_mentions (set[str]): Set of asset mentions.
+            names (tuple[str, ...]): Names of the files.
+        """
+        for mention in asset_mentions:
+            for n in names:
+                if n in mention:
+                    self.backlinked = True
+                    return
+
 
 class LogseqFile:
     """A class to represent a Logseq file."""
@@ -271,7 +285,7 @@ class LogseqFile:
         """
         Mask code blocks and other patterns in the content.
         """
-        masked_content = self.bullets.content
+        content = self.bullets.content
         blocks = self.masked.blocks
         pattern_masking = LogseqFile._PATTERN_MASKING
 
@@ -282,9 +296,9 @@ class LogseqFile:
                 blocks[placeholder] = match.group(0)
                 return placeholder
 
-            masked_content = regex.sub(_repl, masked_content)
+            content = regex.sub(_repl, content)
 
-        self.masked.content = masked_content
+        self.masked.content = content
 
     def extract_primary_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
@@ -318,17 +332,3 @@ class LogseqFile:
         for placeholder, block in blocks.items():
             content = content.replace(placeholder, block)
         self.masked.content = content
-
-    def update_asset_backlink(self, asset_mentions: set[str], parent: str) -> None:
-        """
-        Update asset backlink status based on mentions and parent.
-
-        Args:
-            asset_mentions (set[str]): Set of asset mentions.
-            parent (str): Parent file name.
-        """
-        for asset_mention in asset_mentions:
-            for name in (self.name, parent):
-                if name in asset_mention:
-                    self.node.backlinked = True
-                    return

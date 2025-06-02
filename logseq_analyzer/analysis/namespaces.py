@@ -94,13 +94,15 @@ class LogseqNamespaces:
         self.init_ns_parts(index)
         self.analyze_ns_queries(index)
         self.detect_non_ns_conflicts(index, dangling_links)
-        self.detect_parent_depth_conflicts(ns_sep=Core.NS_SEP.value)
+        self.detect_parent_depth_conflicts()
 
     def init_ns_parts(self, index: "FileIndex") -> None:
         """
         Create namespace parts from the data.
         """
         structure = self.structure
+        part_levels = self._part_levels
+        part_entries = self._part_entries
         level_distribution = Counter()
         for f in index:
             if not f.is_namespace:
@@ -116,17 +118,15 @@ class LogseqNamespaces:
                 level_distribution[level] += 1
                 current_level.setdefault(part, {})
                 current_level = current_level[part]
-                self._part_levels[part].add(level)
-                self._part_entries[part].append({"entry": f.name, "level": level})
+                part_levels[part].add(level)
+                part_entries[part].append({"entry": f.name, "level": level})
         structure.details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(
-        self,
-        index: "FileIndex",
-        ns_query_crit: str = Criteria.DBC_NAMESPACE_QUERIES.value,
-        page_ref_pattern: re.Pattern = ContentPatterns.PAGE_REFERENCE,
-    ) -> None:
+    def analyze_ns_queries(self, index: "FileIndex") -> None:
         """Analyze namespace queries."""
+        structure = self.structure
+        ns_query_crit: str = Criteria.DBC_NAMESPACE_QUERIES.value
+        page_ref_pattern: re.Pattern = ContentPatterns.PAGE_REFERENCE
         ns_queries = {}
         for f in index:
             for query in f.data.get(ns_query_crit, []):
@@ -134,41 +134,45 @@ class LogseqNamespaces:
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
-
-                page_ref = page_refs[0]
                 ns_queries.setdefault(query, {})
                 ns_queries[query].setdefault("found_in", []).append(f.name)
-                ns_queries[query]["namespace"] = page_ref
-                ns_queries[query]["size"] = self.structure.data.get(page_ref, {}).get("size", 0)
+                ns_queries[query]["namespace"] = page_refs[0]
+                ns_queries[query]["size"] = structure.data.get(page_refs[0], {}).get("size", 0)
                 ns_queries[query]["uri"] = f.uri
                 ns_queries[query]["logseq_url"] = f.logseq_url
         self.queries.update(sort_dict_by_value(ns_queries, value="size", reverse=True))
 
     def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
+        structure = self.structure
+        conflicts = self.conflicts
         non_ns_names = (f.name for f in index if not f.is_namespace)
-        potential_non_ns_names = self.structure.unique_parts.intersection(non_ns_names)
-        potential_dangling = self.structure.unique_parts.intersection(dangling_links)
-        for entry, parts in self.structure.parts.items():
+        potential_non_ns_names = structure.unique_parts.intersection(non_ns_names)
+        potential_dangling = structure.unique_parts.intersection(dangling_links)
+        for entry, parts in structure.parts.items():
             for part in potential_non_ns_names.intersection(parts):
-                self.conflicts.non_namespace[part].append(entry)
+                conflicts.non_namespace[part].append(entry)
             for part in potential_dangling.intersection(parts):
-                self.conflicts.dangling[part].append(entry)
+                conflicts.dangling[part].append(entry)
 
-    def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP.value) -> None:
+    def detect_parent_depth_conflicts(self) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
-        for part, levels in self._part_levels.items():
+        ns_sep: str = Core.NS_SEP.value
+        part_levels = self._part_levels
+        part_entries = self._part_entries
+        conflicts = self.conflicts
+        for part, levels in part_levels.items():
             if len(levels) < 2:
                 continue
-            details = self._part_entries[part]
+            details = part_entries[part]
             for level in levels:
                 key = (part, level)
                 entries = [d["entry"] for d in details if d["level"] == level]
-                self.conflicts.parent_depth[key] = entries
+                conflicts.parent_depth[key] = entries
                 for page in entries:
                     parts = page.split(ns_sep)
                     up_to_level = parts[:level]
-                    self.conflicts.parent_unique[key].add(ns_sep.join(up_to_level))
+                    conflicts.parent_unique[key].add(ns_sep.join(up_to_level))
 
     @property
     def report(self) -> dict[str, Any]:

@@ -199,8 +199,7 @@ def loads(edn_str: str) -> EDNToken:
     Returns:
         dict | list | set | Any | None | bool | float | int: The parsed Python data structure.
     """
-    tokens = tokenize(edn_str)
-    parser = LogseqConfigEDN(tokens)
+    parser = LogseqConfigEDN(tokenize(edn_str))
     return parser.parse()
 
 
@@ -215,10 +214,9 @@ def tokenize(edn_str: str) -> Generator[str, Any, None]:
     Yields:
         str: The next token in the EDN string.
     """
-    edn_str = COMMENT_REGEX.sub("", edn_str)
-    for match in TOKEN_REGEX.finditer(edn_str):
-        tok = match.group().strip()
-        yield tok
+    edn = COMMENT_REGEX.sub("", edn_str)
+    for match in TOKEN_REGEX.finditer(edn):
+        yield match.group().strip()
 
 
 def init_config_edn_from_file(path: Path) -> None:
@@ -228,10 +226,10 @@ def init_config_edn_from_file(path: Path) -> None:
     Args:
         path (Path): The path to the config file.
     """
-    with path.open("r", encoding="utf-8") as file:
-        edn_data = file.read()
+    with path.open("r", encoding="utf-8") as f:
+        edn_data = loads(f.read())
         logger.debug("Initializing config from file: %s", path)
-    return loads(edn_data)
+    return edn_data
 
 
 def get_default_logseq_config() -> dict[str, Any]:
@@ -385,28 +383,22 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
     Returns:
         dict[str, str]: A dictionary containing the target directories.
     """
-    assets: str = "assets"
-    draws: str = "draws"
-    pages: str = config.get(EDN.PAGES_DIR.value, "pages")
-    journals: str = config.get(EDN.JOURNALS_DIR.value, "journals")
-    whiteboards: str = config.get(EDN.WHITEBOARDS_DIR.value, "whiteboards")
     return {
-        "assets": assets,
-        "draws": draws,
-        "pages": pages,
-        "journals": journals,
-        "whiteboards": whiteboards,
+        "assets": "assets",
+        "draws": "draws",
+        "pages": config.get(EDN.PAGES_DIR.value, "pages"),
+        "journals": config.get(EDN.JOURNALS_DIR.value, "journals"),
+        "whiteboards": config.get(EDN.WHITEBOARDS_DIR.value, "whiteboards"),
     }
 
 
 def get_ns_sep(config: dict[str, Any]) -> str:
     """Get the namespace separator based on the configuration."""
     ns_format = config.get(EDN.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
-    ns_file_sep = {
+    return {
         Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
         Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
     }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
-    return ns_file_sep
 
 
 def get_page_title_format(config: dict[str, Any]) -> str:

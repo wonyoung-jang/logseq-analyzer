@@ -58,14 +58,19 @@ class LogseqGraph:
 
     def post_process_content(self, index: "FileIndex") -> None:
         """Post-process the content data for all files."""
+        all_linked_refs = self.all_linked_refs
+        unique_linked_refs = self.unique_linked_refs
+        unique_linked_refs_ns = self.unique_linked_refs_ns
+        unique_aliases = self.unique_aliases
+
         for f in index:
             if f.is_namespace:
-                self.unique_linked_refs_ns.update((f.ns_info.root, f.name))
+                unique_linked_refs_ns.update((f.ns_info.root, f.name))
                 index.process_namespaces(f)
             if not f.data:
                 continue
             found_aliases = f.data.get(Criteria.CON_ALIASES.value, [])
-            self.unique_aliases.update(found_aliases)
+            unique_aliases.update(found_aliases)
             dataset = (
                 found_aliases,
                 f.data.get(Criteria.CON_DRAW.value, []),
@@ -84,35 +89,44 @@ class LogseqGraph:
                 linked_references.extend(data)
             if f.ns_info.parent:
                 lr_with_ns_parent = linked_references.copy() + [f.ns_info.parent]
-                self.all_linked_refs = get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f)
+                all_linked_refs = get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f)
             else:
-                self.all_linked_refs = get_count_and_foundin_data(self.all_linked_refs, linked_references, f)
-            self.unique_linked_refs.update(linked_references)
+                all_linked_refs = get_count_and_foundin_data(all_linked_refs, linked_references, f)
+            unique_linked_refs.update(linked_references)
 
     def sort_all_linked_references(self) -> dict:
         """Sort all linked references by count and found_in."""
-        for _, values in self.all_linked_refs.items():
+        all_linked_refs = self.all_linked_refs
+        for _, values in all_linked_refs.items():
             values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
-        self.all_linked_refs = sort_dict_by_value(self.all_linked_refs, value="count", reverse=True)
+        all_linked_refs = sort_dict_by_value(all_linked_refs, value="count", reverse=True)
 
     def post_process_summary(self, index: "FileIndex") -> None:
         """Process summary data for each file based on metadata and content analysis."""
+        unique_linked_refs = self.unique_linked_refs
+        unique_linked_refs_ns = self.unique_linked_refs_ns
+        check_for_nodes = LogseqGraph._TO_NODE_TYPE
         for f in index:
-            f.node.check_backlinked(f.name, self.unique_linked_refs)
-            f.node.check_backlinked_ns_only(f.name, self.unique_linked_refs_ns)
-            if f.file_type in self._TO_NODE_TYPE:
+            f.node.check_backlinked(f.name, unique_linked_refs)
+            f.node.check_backlinked_ns_only(f.name, unique_linked_refs_ns)
+            if f.file_type in check_for_nodes:
                 f.node.determine_node_type(f.has_content)
 
     def post_process_dangling(self, index: "FileIndex") -> list[str]:
         """Process dangling links in the graph."""
+        unique_linked_refs = self.unique_linked_refs
+        unique_linked_refs_ns = self.unique_linked_refs_ns
+        unique_aliases = self.unique_aliases
         all_file_names = (f.name for f in index)
-        all_refs = self.unique_linked_refs.union(self.unique_linked_refs_ns)
-        all_refs.difference_update(all_file_names, self.unique_aliases)
-        self.dangling_links = remove_builtin_properties(all_refs)
+        all_refs = unique_linked_refs.union(unique_linked_refs_ns)
+        all_refs.difference_update(all_file_names, unique_aliases)
+        self.dangling_links.extend(remove_builtin_properties(all_refs))
 
     def post_process_all_dangling(self) -> None:
         """Process all dangling links to create a mapping of linked references."""
-        self.all_dangling_links = {k: v for k, v in self.all_linked_refs.items() if k in self.dangling_links}
+        all_linked_refs = self.all_linked_refs
+        dangling_links = self.dangling_links
+        self.all_dangling_links.update({k: v for k, v in all_linked_refs.items() if k in dangling_links})
 
     @property
     def report(self) -> dict[str, Any]:

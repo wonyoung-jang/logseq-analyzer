@@ -69,7 +69,7 @@ class LogseqPath:
     journal_page_title_format: str = ""
     ns_file_sep: str = ""
     target_dirs: dict = {}
-    result_map: dict = {}
+    result_map: dict = None
 
     _now_ts = datetime.now().timestamp()
 
@@ -88,12 +88,13 @@ class LogseqPath:
     @classmethod
     def set_result_map(cls) -> None:
         """Set the result map for file type determination."""
+        target_dirs = cls.target_dirs
         cls.result_map = {
-            cls.target_dirs["assets"]: [FileTypes.ASSET.value, FileTypes.SUB_ASSET.value],
-            cls.target_dirs["draws"]: [FileTypes.DRAW.value, FileTypes.SUB_DRAW.value],
-            cls.target_dirs["journals"]: [FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value],
-            cls.target_dirs["pages"]: [FileTypes.PAGE.value, FileTypes.SUB_PAGE.value],
-            cls.target_dirs["whiteboards"]: [FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value],
+            target_dirs["assets"]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
+            target_dirs["draws"]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
+            target_dirs["journals"]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
+            target_dirs["pages"]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
+            target_dirs["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
         }
 
     @property
@@ -160,8 +161,7 @@ class LogseqPath:
         result_map = LogseqPath.result_map
         parent = self.parent
         parts = self.parts
-
-        result = result_map.get(parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
+        result = result_map.get(parent, (FileTypes.OTHER.value, FileTypes.OTHER.value))
         if result[0] != FileTypes.OTHER.value:
             self.file_type = result[0]
             return
