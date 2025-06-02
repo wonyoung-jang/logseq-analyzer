@@ -4,10 +4,24 @@ Module for LogseqBullets class
 
 import logging
 from dataclasses import dataclass
+from typing import Any, Generator
 
+import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
+import logseq_analyzer.utils.patterns_code as CodePatterns
 import logseq_analyzer.utils.patterns_content as ContentPatterns
+import logseq_analyzer.utils.patterns_double_curly as DoubleCurlyBracketsPatterns
+import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPatterns
+import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
+import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 
-from ..utils.helpers import iter_pattern_split
+from ..utils.enums import Criteria
+from ..utils.helpers import (
+    extract_builtin_properties,
+    iter_pattern_split,
+    process_aliases,
+    process_pattern_hierarchy,
+    remove_builtin_properties,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +43,15 @@ class LogseqBullets:
         "primary",
         "all",
         "stats",
+    )
+
+    _PATTERN_MODULES = (
+        AdvancedCommandPatterns,
+        CodePatterns,
+        DoubleCurlyBracketsPatterns,
+        DoubleParenthesesPatterns,
+        EmbeddedLinksPatterns,
+        ExternalLinksPatterns,
     )
 
     def __init__(self, content: str = "") -> None:
@@ -70,3 +93,53 @@ class LogseqBullets:
                     self.primary = bullet
             else:
                 self.stats.bullet_count_empty += 1
+
+    def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
+        """Extract primary data from the content."""
+        content = self.content
+        result = {
+            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
+            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
+            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(content),
+        }
+        for key, value in {k: v for k, v in result.items() if v}.items():
+            yield (key, value)
+
+    def extract_properties(self) -> Generator[tuple[str, Any]]:
+        """Extract page and block properties from the content."""
+        page_props = set()
+        if self.has_page_properties:
+            page_props.update(ContentPatterns.PROPERTY.findall(self.primary))
+            self.content = "\n".join(self.all)
+        block_props = set(ContentPatterns.PROPERTY.findall(self.content))
+        result = {
+            Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
+            Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
+            Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
+            Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
+        }
+        for key, value in {k: v for k, v in result.items() if v}.items():
+            yield (key, value)
+
+    def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
+        """Extract aliases and properties from the content."""
+        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
+        if aliases := propvalues.get("alias"):
+            aliases = list(process_aliases(aliases))
+        result = {
+            Criteria.CON_ALIASES.value: aliases,
+            Criteria.PROP_VALUES.value: propvalues,
+        }
+        for key, value in {k: v for k, v in result.items() if v}.items():
+            yield (key, value)
+
+    def extract_patterns(self) -> Generator[tuple[str, Any]]:
+        """
+        Process patterns in the content.
+        """
+        result = {}
+        for pattern in LogseqBullets._PATTERN_MODULES:
+            processed_patterns = process_pattern_hierarchy(self.content, pattern)
+            result.update(processed_patterns)
+        for key, value in {k: v for k, v in result.items() if v}.items():
+            yield (key, value)

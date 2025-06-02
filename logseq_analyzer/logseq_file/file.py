@@ -16,12 +16,6 @@ import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, NodeTypes
-from ..utils.helpers import (
-    extract_builtin_properties,
-    process_aliases,
-    process_pattern_hierarchy,
-    remove_builtin_properties,
-)
 from .bullets import LogseqBullets
 from .stats import LogseqPath
 
@@ -48,15 +42,16 @@ class NodeType:
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
-        self.backlinked = self._check_for_backlinks(name, lookup)
+        self.backlinked = NodeType._check_for_backlinks(name, lookup)
 
     def check_backlinked_ns_only(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked only in its namespace and update the node state."""
-        self.backlinked_ns_only = self._check_for_backlinks(name, lookup)
+        self.backlinked_ns_only = NodeType._check_for_backlinks(name, lookup)
         if self.backlinked_ns_only:
             self.backlinked = False
 
-    def _check_for_backlinks(self, name: str, lookup: set[str]) -> bool:
+    @staticmethod
+    def _check_for_backlinks(name: str, lookup: set[str]) -> bool:
         """Helper function to check if a file is backlinked."""
         try:
             lookup.remove(name)
@@ -66,7 +61,10 @@ class NodeType:
 
     def determine_node_type(self, has_content: bool) -> None:
         """Helper function to determine node type based on summary data."""
-        match (has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+        has_backlinks = self.has_backlinks
+        backlinked = self.backlinked
+        backlinked_ns_only = self.backlinked_ns_only
+        match (has_content, has_backlinks, backlinked, backlinked_ns_only):
             case (True, True, True, True):
                 n = NodeTypes.BRANCH.value
             case (True, True, True, False):
@@ -117,15 +115,6 @@ class LogseqFile:
             Criteria.CON_TAGGED_BACKLINK.value,
             Criteria.CON_TAG.value,
         }
-    )
-
-    _PATTERN_MODULES = (
-        AdvancedCommandPatterns,
-        CodePatterns,
-        DoubleCurlyBracketsPatterns,
-        DoubleParenthesesPatterns,
-        EmbeddedLinksPatterns,
-        ExternalLinksPatterns,
     )
 
     _PATTERN_MASKING = (
@@ -271,18 +260,19 @@ class LogseqFile:
         """
         self.data.update(
             **dict(self.extract_primary_data()),
-            **dict(self.extract_aliases_and_propvalues()),
-            **dict(self.extract_properties()),
-            **dict(self.extract_patterns()),
+            **dict(self.bullets.extract_primary_raw_data()),
+            **dict(self.bullets.extract_aliases_and_propvalues()),
+            **dict(self.bullets.extract_properties()),
+            **dict(self.bullets.extract_patterns()),
         )
 
-    def mask_blocks(self) -> None:
+    def mask_blocks(self) -> str:
         """
         Mask code blocks and other patterns in the content.
         """
         masked_content = self.bullets.content
 
-        for regex, prefix in self._PATTERN_MASKING:
+        for regex, prefix in LogseqFile._PATTERN_MASKING:
 
             def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{uuid.uuid4()}__"
@@ -294,84 +284,36 @@ class LogseqFile:
         self.masked.content = masked_content
 
     def extract_primary_data(self) -> Generator[tuple[str, Any]]:
-        """
-        Extract primary data from the content.
-        """
+        """Extract primary data from the content."""
+        masked_content = self.masked.content
         result = {
-            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(self.bullets.content),
-            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(self.bullets.content),
-            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(self.bullets.content),
-            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(self.masked.content),
-            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(self.masked.content),
-            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(self.masked.content),
-            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(self.masked.content),
-            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(self.masked.content),
-            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(self.masked.content),
-            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(self.masked.content),
-            Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(self.masked.content),
+            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
+            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(masked_content),
+            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(masked_content),
+            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
+            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
+            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(masked_content),
+            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
+            Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
         }
-        for k, v in result.items():
-            if v:
-                yield (k, v)
-
-    def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
-        """Extract aliases and properties from the content."""
-        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.bullets.content))
-        if aliases := propvalues.get("alias"):
-            aliases = list(process_aliases(aliases))
-        result = {
-            Criteria.CON_ALIASES.value: aliases,
-            Criteria.PROP_VALUES.value: propvalues,
-        }
-        for k, v in result.items():
-            if v:
-                yield (k, v)
-
-    def extract_properties(self) -> Generator[tuple[str, Any]]:
-        """Extract page and block properties from the content."""
-        page_props = set()
-        if self.has_page_properties:
-            page_props.update(ContentPatterns.PROPERTY.findall(self.bullets.primary))
-            self.bullets.content = "\n".join(self.bullets.all)
-        block_props = set(ContentPatterns.PROPERTY.findall(self.bullets.content))
-        result = {
-            Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
-            Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
-            Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
-            Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
-        }
-        for k, v in result.items():
-            if v:
-                yield (k, v)
-
-    def extract_patterns(self) -> Generator[tuple[str, Any]]:
-        """
-        Process patterns in the content.
-        """
-        result = {}
-        for pattern in self._PATTERN_MODULES:
-            processed_patterns = process_pattern_hierarchy(self.bullets.content, pattern)
-            result.update(processed_patterns)
-        for k, v in {k: v for k, v in result.items() if v}.items():
-            yield (k, v)
+        for key, value in {k: v for k, v in result.items() if v}.items():
+            yield (key, value)
 
     def check_has_backlinks(self) -> None:
         """
         Check has backlinks in the content.
         """
-        if self._BACKLINK_CRITERIA.intersection(self.data.keys()):
+        if LogseqFile._BACKLINK_CRITERIA.intersection(self.data.keys()):
             self.node.has_backlinks = True
 
-    def unmask_blocks(self) -> str:
+    def unmask_blocks(self):
         """
         Restore the original content by replacing placeholders with their blocks.
-
-        Returns:
-            str: Original content with code blocks restored.
         """
+        content = self.masked.content
         for placeholder, block in self.masked.blocks.items():
-            self.masked.content = self.masked.content.replace(placeholder, block)
-        return self.masked.content
+            content = content.replace(placeholder, block)
+        self.masked.content = content
 
     def update_asset_backlink(self, asset_mentions: set[str], parent: str) -> None:
         """
