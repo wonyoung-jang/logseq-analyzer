@@ -157,15 +157,19 @@ class LogseqPath:
 
     def determine_file_type(self) -> None:
         """Helper function to determine the file type based on the directory structure."""
-        result = LogseqPath.result_map.get(self.parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
+        result_map = LogseqPath.result_map
+        parent = self.parent
+        parts = self.parts
+
+        result = result_map.get(parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
         if result[0] != FileTypes.OTHER.value:
             self.file_type = result[0]
             return
 
-        for key, result in LogseqPath.result_map.items():
-            if key in self.parts:
+        for key, result in result_map.items():
+            if key in parts:
                 self.file_type = result[1]
-                break
+                return
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
@@ -208,26 +212,33 @@ class LogseqPath:
 
     def set_timestamp_info(self) -> None:
         """Set the timestamps for the file."""
-        self.ts_info = TimestampInfo()
-        self.ts_info.time_existed = self._now_ts - self.stat.st_birthtime
-        self.ts_info.time_unmodified = self._now_ts - self.stat.st_mtime
-        self.ts_info.date_created = datetime.fromtimestamp(self.stat.st_birthtime).isoformat()
-        self.ts_info.date_modified = datetime.fromtimestamp(self.stat.st_mtime).isoformat()
+        _now = self._now_ts
+        _created_time = self.stat.st_birthtime
+        _modified_time = self.stat.st_mtime
+        ts_info = TimestampInfo()
+        ts_info.time_existed = _now - _created_time
+        ts_info.time_unmodified = _now - _modified_time
+        ts_info.date_created = datetime.fromtimestamp(_created_time).isoformat()
+        ts_info.date_modified = datetime.fromtimestamp(_modified_time).isoformat()
+        self.ts_info = ts_info
 
     def set_size_info(self) -> None:
         """Set the size information for the file."""
-        self.size_info = SizeInfo()
-        self.size_info.size = self.stat.st_size
-        self.size_info.human_readable_size = format_bytes(self.size_info.size)
-        self.size_info.has_content = bool(self.size_info.size)
+        _size = self.stat.st_size
+        size_info = SizeInfo()
+        size_info.size = _size
+        size_info.human_readable_size = format_bytes(_size)
+        size_info.has_content = bool(_size)
+        self.size_info = size_info
 
     def set_namespace_info(self) -> None:
         """Get the namespace name data."""
         _ns_parts_list = self.name.split(Core.NS_SEP.value)
         _ns_root = _ns_parts_list[0]
-        self.ns_info = NamespaceInfo()
-        self.ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
-        self.ns_info.root = _ns_root
-        self.ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
-        self.ns_info.parent_full = Core.NS_SEP.value.join(_ns_parts_list[:-1])
-        self.ns_info.stem = _ns_parts_list[-1]
+        ns_info = NamespaceInfo()
+        ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
+        ns_info.root = _ns_root
+        ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
+        ns_info.parent_full = Core.NS_SEP.value.join(_ns_parts_list[:-1])
+        ns_info.stem = _ns_parts_list[-1]
+        self.ns_info = ns_info

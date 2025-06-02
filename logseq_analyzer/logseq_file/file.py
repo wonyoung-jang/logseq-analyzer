@@ -258,12 +258,13 @@ class LogseqFile:
         """
         Extract data from the Logseq file.
         """
+        bullets = self.bullets
         self.data.update(
             **dict(self.extract_primary_data()),
-            **dict(self.bullets.extract_primary_raw_data()),
-            **dict(self.bullets.extract_aliases_and_propvalues()),
-            **dict(self.bullets.extract_properties()),
-            **dict(self.bullets.extract_patterns()),
+            **dict(bullets.extract_primary_raw_data()),
+            **dict(bullets.extract_aliases_and_propvalues()),
+            **dict(bullets.extract_properties()),
+            **dict(bullets.extract_patterns()),
         )
 
     def mask_blocks(self) -> str:
@@ -271,12 +272,14 @@ class LogseqFile:
         Mask code blocks and other patterns in the content.
         """
         masked_content = self.bullets.content
+        blocks = self.masked.blocks
+        pattern_masking = LogseqFile._PATTERN_MASKING
 
-        for regex, prefix in LogseqFile._PATTERN_MASKING:
+        for regex, prefix in pattern_masking:
 
             def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{uuid.uuid4()}__"
-                self.masked.blocks[placeholder] = match.group(0)
+                blocks[placeholder] = match.group(0)
                 return placeholder
 
             masked_content = regex.sub(_repl, masked_content)
@@ -303,7 +306,7 @@ class LogseqFile:
         """
         Check has backlinks in the content.
         """
-        if LogseqFile._BACKLINK_CRITERIA.intersection(self.data.keys()):
+        if not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys()):
             self.node.has_backlinks = True
 
     def unmask_blocks(self):
@@ -311,7 +314,8 @@ class LogseqFile:
         Restore the original content by replacing placeholders with their blocks.
         """
         content = self.masked.content
-        for placeholder, block in self.masked.blocks.items():
+        blocks = self.masked.blocks
+        for placeholder, block in blocks.items():
             content = content.replace(placeholder, block)
         self.masked.content = content
 

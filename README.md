@@ -27,15 +27,17 @@ Simple utility to analyze a Logseq graph for basic information to assist with th
 
 - For help: `py -m logseq_analyzer -h`
 
-- For a simple GUI (WIP): `py -m logseq_analyzer --gui`
+- To run from CLI: `py -m logseq_analyzer --cli`
 
 ### Useful flags
 
-- `-ma` or `--move-unlinked-assets` will move unlinked assets out of your graph to this projects folder for review.
+- `--move-unlinked-assets` will move unlinked assets out of your graph to this projects folder for review
 
-- `-mb` or `--move-bak` will move the contents of Logseq's `logseq/bak` folder similar to above
+- `--move-bak` will move the contents of Logseq's `logseq/bak` folder similar to above
 
-- `-mr` or `--move-recycle` same thing as the above but with `logseq/.recycle`
+- `--move-recycle` same thing as the above but with `logseq/.recycle`
+
+- `--move-all` will move all of the above
 
 ## About
 

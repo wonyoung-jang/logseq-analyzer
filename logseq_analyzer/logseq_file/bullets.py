@@ -77,22 +77,35 @@ class LogseqBullets:
     @property
     def bullet_density(self) -> float:
         """Get the bullet density of the content."""
-        if self.stats.bullet_count:
-            return round(self.stats.char_count / self.stats.bullet_count, 2)
+        bullet_count = self.stats.bullet_count
+        char_count = self.stats.char_count
+        if bullet_count:
+            return round(char_count / bullet_count, 2)
         return 0.0
 
     def process(self) -> None:
         """Process the content to extract bullet information."""
-        if not self.content:
+        content = self.content
+        if not content:
             return
-        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, self.content):
+
+        all_bullets = self.all
+        bullet_count = 0
+        bullet_count_empty = 0
+        primary_bullet = ""
+
+        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
             if bullet:
-                self.all.append(bullet)
-                self.stats.bullet_count += 1
+                all_bullets.append(bullet)
+                bullet_count += 1
                 if count == 0:
-                    self.primary = bullet
+                    primary_bullet = bullet
             else:
-                self.stats.bullet_count_empty += 1
+                bullet_count_empty += 1
+
+        self.stats.bullet_count = bullet_count
+        self.stats.bullet_count_empty = bullet_count_empty
+        self.primary = primary_bullet
 
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
@@ -108,10 +121,12 @@ class LogseqBullets:
     def extract_properties(self) -> Generator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
         page_props = set()
+        content = self.content
         if self.has_page_properties:
             page_props.update(ContentPatterns.PROPERTY.findall(self.primary))
-            self.content = "\n".join(self.all)
-        block_props = set(ContentPatterns.PROPERTY.findall(self.content))
+            content = "\n".join(self.all)
+            self.content = content
+        block_props = set(ContentPatterns.PROPERTY.findall(content))
         result = {
             Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),

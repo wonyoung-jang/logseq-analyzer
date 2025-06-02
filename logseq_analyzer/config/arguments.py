@@ -81,21 +81,18 @@ class Args:
             default=False,
         )
         parser.add_argument(
-            "-ma",
             "--move-unlinked-assets",
             action="store_true",
             help='move unlinked assets to "to-delete/assets" folder',
             default=False,
         )
         parser.add_argument(
-            "-mb",
             "--move-bak",
             action="store_true",
             help="move bak files to 'to-delete/bak' folder",
             default=False,
         )
         parser.add_argument(
-            "-mr",
             "--move-recycle",
             action="store_true",
             help="move recycle files to 'to-delete/recycle' folder",
@@ -110,7 +107,7 @@ class Args:
         parser.add_argument(
             "--report-format",
             action="store",
-            help="report format (.txt, .json, .md)",
+            help="report format (.txt, .json, .md, .html)",
             default=".txt",
         )
         args = parser.parse_args()
