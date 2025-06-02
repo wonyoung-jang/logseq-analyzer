@@ -72,17 +72,17 @@ class LogseqPath:
 
     _now_ts = datetime.now().timestamp()
 
-    def __init__(self, file: Path, dateutils: DateUtilities = DateUtilities()) -> None:
+    def __init__(self, file: Path, dateutils: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqPath object."""
         self.file: Path = file
-        self.date: DateUtilities = dateutils
+        self.stat: stat_result = file.stat()
+        self.uri: str = file.as_uri()
         self.file_type: str = ""
         self.name: str = ""
+        self.date: DateUtilities = dateutils
         self.ns_info: NamespaceInfo = None
         self.size_info: SizeInfo = None
-        self.stat: stat_result = file.stat()
         self.ts_info: TimestampInfo = None
-        self.uri: str = file.as_uri()
 
     @property
     def file(self) -> Path:
@@ -145,27 +145,23 @@ class LogseqPath:
 
     def determine_file_type(self) -> None:
         """Helper function to determine the file type based on the directory structure."""
-        result = {
-            LogseqPath.target_dirs["assets"]: FileTypes.ASSET.value,
-            LogseqPath.target_dirs["draws"]: FileTypes.DRAW.value,
-            LogseqPath.target_dirs["journals"]: FileTypes.JOURNAL.value,
-            LogseqPath.target_dirs["pages"]: FileTypes.PAGE.value,
-            LogseqPath.target_dirs["whiteboards"]: FileTypes.WHITEBOARD.value,
-        }.get(self.parent, FileTypes.OTHER.value)
-        if result != FileTypes.OTHER.value:
-            self.file_type = result
-        else:
-            result_map = {
-                LogseqPath.target_dirs["assets"]: FileTypes.SUB_ASSET.value,
-                LogseqPath.target_dirs["draws"]: FileTypes.SUB_DRAW.value,
-                LogseqPath.target_dirs["journals"]: FileTypes.SUB_JOURNAL.value,
-                LogseqPath.target_dirs["pages"]: FileTypes.SUB_PAGE.value,
-                LogseqPath.target_dirs["whiteboards"]: FileTypes.SUB_WHITEBOARD.value,
-            }
-            for key, value in result_map.items():
-                if key in self.parts:
-                    self.file_type = value
-                    break
+        result_map = {
+            LogseqPath.target_dirs["assets"]: [FileTypes.ASSET.value, FileTypes.SUB_ASSET.value],
+            LogseqPath.target_dirs["draws"]: [FileTypes.DRAW.value, FileTypes.SUB_DRAW.value],
+            LogseqPath.target_dirs["journals"]: [FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value],
+            LogseqPath.target_dirs["pages"]: [FileTypes.PAGE.value, FileTypes.SUB_PAGE.value],
+            LogseqPath.target_dirs["whiteboards"]: [FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value],
+        }
+
+        result = result_map.get(self.parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
+        if result[0] != FileTypes.OTHER.value:
+            self.file_type = result[0]
+            return
+
+        for key, result in result_map.items():
+            if key in self.parts:
+                self.file_type = result[1]
+                break
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
@@ -223,11 +219,11 @@ class LogseqPath:
 
     def set_namespace_info(self) -> None:
         """Get the namespace name data."""
-        ns_parts_list = self.name.split(Core.NS_SEP.value)
-        ns_root = ns_parts_list[0]
+        _ns_parts_list = self.name.split(Core.NS_SEP.value)
+        _ns_root = _ns_parts_list[0]
         self.ns_info = NamespaceInfo()
-        self.ns_info.parts = {part: level for level, part in enumerate(ns_parts_list, start=1)}
-        self.ns_info.root = ns_root
-        self.ns_info.parent = ns_parts_list[-2] if len(ns_parts_list) > 2 else ns_root
-        self.ns_info.parent_full = Core.NS_SEP.value.join(ns_parts_list[:-1])
-        self.ns_info.stem = ns_parts_list[-1]
+        self.ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
+        self.ns_info.root = _ns_root
+        self.ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
+        self.ns_info.parent_full = Core.NS_SEP.value.join(_ns_parts_list[:-1])
+        self.ns_info.stem = _ns_parts_list[-1]

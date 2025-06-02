@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Output
+from ..utils.enums import Output, FileTypes
 from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class LogseqJournals:
     def process(self, index: "FileIndex", dangling_links: list[str], py_page_base_format: str) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         dangling = sorted(self.date.journals_to_datetime(dangling_links, py_page_base_format))
-        journal_keys = (f.name for f in index if f.file_type == "journal")
+        journal_keys = (f.name for f in index if f.file_type == FileTypes.JOURNAL.value)
         journals = sorted(journal_keys)
         self.existing.extend(sorted(self.date.journals_to_datetime(journals, py_page_base_format)))
         self.build_complete_timeline(dangling)

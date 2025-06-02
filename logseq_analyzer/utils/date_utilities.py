@@ -6,8 +6,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Generator
 
-from ..utils.helpers import singleton
-
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -15,7 +13,6 @@ __all__ = [
 ]
 
 
-@singleton
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
 
