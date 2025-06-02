@@ -225,6 +225,7 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     LogseqPath.journal_page_title_format = c.journal_page_title_fmt
     LogseqPath.target_dirs = c.target_dirs
     LogseqPath.ns_file_sep = get_ns_sep(c.config)
+    LogseqPath.set_result_map()
     ReportWriter.ext = args.report_format
     ReportWriter.output_dir = output_dir.path
     logger.debug("configure_analyzer_settings")

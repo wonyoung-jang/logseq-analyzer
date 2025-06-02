@@ -69,6 +69,7 @@ class LogseqPath:
     journal_page_title_format: str = ""
     ns_file_sep: str = ""
     target_dirs: dict = {}
+    result_map: dict = {}
 
     _now_ts = datetime.now().timestamp()
 
@@ -83,6 +84,17 @@ class LogseqPath:
         self.ns_info: NamespaceInfo = None
         self.size_info: SizeInfo = None
         self.ts_info: TimestampInfo = None
+
+    @classmethod
+    def set_result_map(cls) -> None:
+        """Set the result map for file type determination."""
+        cls.result_map = {
+            cls.target_dirs["assets"]: [FileTypes.ASSET.value, FileTypes.SUB_ASSET.value],
+            cls.target_dirs["draws"]: [FileTypes.DRAW.value, FileTypes.SUB_DRAW.value],
+            cls.target_dirs["journals"]: [FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value],
+            cls.target_dirs["pages"]: [FileTypes.PAGE.value, FileTypes.SUB_PAGE.value],
+            cls.target_dirs["whiteboards"]: [FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value],
+        }
 
     @property
     def file(self) -> Path:
@@ -145,20 +157,12 @@ class LogseqPath:
 
     def determine_file_type(self) -> None:
         """Helper function to determine the file type based on the directory structure."""
-        result_map = {
-            LogseqPath.target_dirs["assets"]: [FileTypes.ASSET.value, FileTypes.SUB_ASSET.value],
-            LogseqPath.target_dirs["draws"]: [FileTypes.DRAW.value, FileTypes.SUB_DRAW.value],
-            LogseqPath.target_dirs["journals"]: [FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value],
-            LogseqPath.target_dirs["pages"]: [FileTypes.PAGE.value, FileTypes.SUB_PAGE.value],
-            LogseqPath.target_dirs["whiteboards"]: [FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value],
-        }
-
-        result = result_map.get(self.parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
+        result = LogseqPath.result_map.get(self.parent, [FileTypes.OTHER.value, FileTypes.OTHER.value])
         if result[0] != FileTypes.OTHER.value:
             self.file_type = result[0]
             return
 
-        for key, result in result_map.items():
+        for key, result in LogseqPath.result_map.items():
             if key in self.parts:
                 self.file_type = result[1]
                 break
