@@ -339,7 +339,7 @@ def format_bytes(size_bytes: int, system: str = "si", precision: int = 2) -> str
 def yield_asset_paths(unlinked_assets: set["LogseqFile"]) -> Generator[Path, None, None]:
     """Yield the file paths of unlinked assets."""
     for asset in unlinked_assets:
-        yield asset.path
+        yield asset.path.file
 
 
 def yield_bak_rec_paths(source_dir: Path) -> Generator[Path, None, None]:
@@ -349,14 +349,14 @@ def yield_bak_rec_paths(source_dir: Path) -> Generator[Path, None, None]:
             yield root / name
 
 
-def process_moves(move: bool, target_dir: Path, paths: list[Path]) -> list[str]:
+def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, None]) -> list[str]:
     """
     Process the moving of files to a specified directory.
 
     Args:
         move (bool): If True, move the files. If False, simulate the move.
         target_dir (Path): The directory to move files to.
-        paths (list[Path]): A list of file paths to move.
+        paths (Generator[Path, None, None]): A generator yielding file paths to move.
 
     Returns:
         list[str]: A list of names of the moved files/folders.

@@ -45,7 +45,10 @@ class LogseqAssets:
         yield_assets = LogseqAssets.yield_assets
 
         for f in index:
-            get_data = f.data.get
+            if not (f_data := f.data):
+                continue
+
+            get_data = f_data.get
             for criteria in asset_criteria:
                 update_mentions(get_data(criteria, []))
 
@@ -67,12 +70,11 @@ class LogseqAssets:
     def yield_assets(index: FileIndex, backlinked: bool | None = None) -> Generator[LogseqFile, None]:
         """Yield all asset files from the index."""
         asset_file_type = FileTypes.ASSET.value
-        for f in index:
-            if f.file_type == asset_file_type:
-                if backlinked is None:
-                    yield f
-                elif f.node.backlinked == backlinked:
-                    yield f
+        for f in (f for f in index if f.path.file_type == asset_file_type):
+            if backlinked is None:
+                yield f
+            if f.node.backlinked is backlinked:
+                yield f
 
     @property
     def report(self) -> str:
@@ -118,7 +120,7 @@ class LogseqAssetsHls:
     def get_asset_files(self, index: FileIndex) -> None:
         """Retrieve asset files based on specific criteria."""
         sub_asset_file_type = FileTypes.SUB_ASSET.value
-        asset_files = (f for f in index if f.file_type == sub_asset_file_type)
+        asset_files = (f for f in index if f.path.file_type == sub_asset_file_type)
         self.asset_mapping = {f.name: f for f in asset_files}
 
     def convert_names_to_data(self, index: FileIndex) -> None:
@@ -147,28 +149,22 @@ class LogseqAssetsHls:
     def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
         asset_names = set(self.asset_mapping.keys())
-        self.backlinked = asset_names.intersection(self.hls_bullets)
-        self.not_backlinked = asset_names.difference(self.hls_bullets)
+        self.backlinked.update(asset_names.intersection(self.hls_bullets))
+        self.not_backlinked.update(asset_names.difference(self.hls_bullets))
         asset_file_type = FileTypes.ASSET.value
         for name in self.backlinked:
-            self.asset_mapping[name].node.backlinked = True
-            self.asset_mapping[name].path.file_type = asset_file_type
+            lf: LogseqFile = self.asset_mapping[name]
+            lf.node.backlinked = True
+            lf.path.file_type = asset_file_type
         for name in self.not_backlinked:
-            self.asset_mapping[name].path.file_type = asset_file_type
-
-    def get_asset_mapping_report(self):
-        """Generate a report of the asset mapping."""
-        result = {}
-        for name, asset_file in self.asset_mapping.items():
-            result[name] = {"file": asset_file}
-            result[name]["filetype"] = asset_file.path.file_type
-        return result
+            lf: LogseqFile = self.asset_mapping[name]
+            lf.node.backlinked = False
 
     @property
     def report(self) -> str:
         """Generate a report of the asset analysis."""
         return {
-            Output.HLS_ASSET_MAPPING.value: self.get_asset_mapping_report(),
+            Output.HLS_ASSET_MAPPING.value: self.asset_mapping,
             Output.HLS_FORMATTED_BULLETS.value: self.hls_bullets,
             Output.HLS_NOT_BACKLINKED.value: self.not_backlinked,
             Output.HLS_BACKLINKED.value: self.backlinked,

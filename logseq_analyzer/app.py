@@ -45,7 +45,7 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile, LogseqPath
-from .utils.enums import CacheKeys, Constants, MovedFiles, Output, OutputDir
+from .utils.enums import Constants, MovedFiles, Output, OutputDir
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
@@ -390,9 +390,7 @@ def write_reports(data_reports: tuple[Any]) -> None:
 
 def close_cache(cache: Cache, index: FileIndex) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
-    cache.cache[CacheKeys.INDEX.value] = index
-    cache.cache.sync()
-    cache.close()
+    cache.close(index)
     logger.debug("close_cache")
 
 

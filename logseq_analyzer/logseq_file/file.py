@@ -49,11 +49,13 @@ class NodeType:
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
-        self.backlinked = NodeType._check_for_backlinks(name, lookup)
+        if not self.backlinked:
+            self.backlinked = NodeType._check_for_backlinks(name, lookup)
 
     def check_backlinked_ns_only(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked only in its namespace and update the node state."""
-        self.backlinked_ns_only = NodeType._check_for_backlinks(name, lookup)
+        if not self.backlinked_ns_only:
+            self.backlinked_ns_only = NodeType._check_for_backlinks(name, lookup)
         if self.backlinked_ns_only:
             self.backlinked = False
 
@@ -106,9 +108,9 @@ class NodeType:
             asset_mentions (set[str]): Set of asset mentions.
             names (tuple[str, ...]): Names of the files.
         """
-        for mention in asset_mentions:
-            for n in names:
-                if n in mention:
+        for asset_mention in asset_mentions:
+            for name in names:
+                if name in asset_mention:
                     self.backlinked = True
                     return
 

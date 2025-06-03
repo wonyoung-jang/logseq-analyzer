@@ -32,13 +32,12 @@ class FileIndex:
     write_graph: bool = False
 
     def __init__(self) -> None:
-        """
-        Initialize the FileIndex instance.
-        """
+        """Initialize the FileIndex instance."""
         self._files: set[LogseqFile] = set()
         self._hash_to_file: dict[int, LogseqFile] = {}
         self._name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
         self._path_to_file: dict[Path, LogseqFile] = {}
+        logger.debug("init FileIndex")
 
     def __repr__(self) -> str:
         """Return a string representation of the FileIndex."""
@@ -140,6 +139,12 @@ class FileIndex:
             ns_parent_file: LogseqFile
             ns_parent_file.ns_info.children.add(f.name)
             ns_parent_file.ns_info.size = len(ns_parent_file.ns_info.children)
+
+    def yield_unlinked_assets(self):
+        """Yield all unlinked asset files from the index."""
+        for f in self:
+            if f.path.file_type == "asset" and not f.node.backlinked:
+                yield f
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:

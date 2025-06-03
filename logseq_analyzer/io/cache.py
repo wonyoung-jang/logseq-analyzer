@@ -40,8 +40,10 @@ class Cache:
         """Open the cache file."""
         self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=True)
 
-    def close(self) -> None:
+    def close(self, index: FileIndex) -> None:
         """Close the cache file."""
+        self.cache[CacheKeys.INDEX.value] = index
+        self.cache.sync()
         self.cache.close()
 
     def update(self, data: Any) -> None:
@@ -65,7 +67,7 @@ class Cache:
 
     def clear(self) -> None:
         """Clear the cache."""
-        self.close()
+        self.cache.close()
         self.cache_path.unlink(missing_ok=True)
         self.open()
 
