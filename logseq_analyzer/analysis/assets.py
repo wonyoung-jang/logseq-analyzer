@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Generator
 import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import singleton
 
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
@@ -21,7 +20,6 @@ __all__ = [
 ]
 
 
-@singleton
 class LogseqAssets:
     """Class to handle assets in Logseq."""
 
@@ -70,7 +68,7 @@ class LogseqAssets:
             if f.file_type == FileTypes.ASSET.value:
                 if backlinked is None:
                     yield f
-                elif f.backlinked == backlinked:
+                elif f.node.backlinked == backlinked:
                     yield f
 
     @property
@@ -82,7 +80,6 @@ class LogseqAssets:
         }
 
 
-@singleton
 class LogseqAssetsHls:
     """Class to handle HLS assets in Logseq."""
 
@@ -125,7 +122,7 @@ class LogseqAssetsHls:
     ) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         for f in (fh for fh in index if fh.is_hls):
-            for bullet in f.bullets.all:
+            for bullet in f.bullets.all_bullets:
                 bullet = bullet.strip()
                 if not bullet.startswith("[:span]"):
                     continue

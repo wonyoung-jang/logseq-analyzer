@@ -41,7 +41,7 @@ class LogseqBullets:
     __slots__ = (
         "content",
         "primary",
-        "all",
+        "all_bullets",
         "stats",
     )
 
@@ -58,7 +58,7 @@ class LogseqBullets:
         """Post-initialization method to set bullet attributes."""
         self.content: str = content
         self.primary: str = ""
-        self.all: list[str | None] = []
+        self.all_bullets: list[str | None] = []
         self.stats: BulletStats = BulletStats()
 
     def __repr__(self) -> str:
@@ -90,7 +90,7 @@ class LogseqBullets:
         if not _content:
             return
 
-        _all_bullets = self.all
+        _all_bullets = self.all_bullets
         bullet_count = 0
         bullet_count_empty = 0
         primary_bullet = ""
@@ -125,7 +125,7 @@ class LogseqBullets:
         page_props = set()
         _content = self.content
         _primary_bullet = self.primary
-        _all_bullets = self.all
+        _all_bullets = self.all_bullets
         _find_all_properties = ContentPatterns.PROPERTY.findall
 
         if self.has_page_properties:

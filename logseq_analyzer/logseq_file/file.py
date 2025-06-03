@@ -48,7 +48,7 @@ class NodeType:
     has_backlinks: bool = False
     backlinked: bool = False
     backlinked_ns_only: bool = False
-    type: str = NodeTypes.OTHER.value
+    node_type: str = NodeTypes.OTHER.value
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
@@ -99,7 +99,7 @@ class NodeType:
                 n = NodeTypes.ORPHAN_NAMESPACE_TRUE.value
             case (False, False, False, False):
                 n = NodeTypes.ORPHAN_TRUE.value
-        self.type = n
+        self.node_type = n
 
     def update_asset_backlink(self, asset_mentions: set[str], names: tuple[str, ...]) -> None:
         """
@@ -204,22 +204,7 @@ class LogseqFile:
     @property
     def node_type(self) -> str:
         """Return the type of the Logseq file node."""
-        return self.node.type
-
-    @property
-    def backlinked(self) -> bool:
-        """Check if the Logseq file is backlinked."""
-        return self.node.backlinked
-
-    @property
-    def backlinked_ns_only(self) -> bool:
-        """Check if the Logseq file is backlinked only in its namespace."""
-        return self.node.backlinked_ns_only
-
-    @property
-    def has_backlinks(self) -> bool:
-        """Check if the Logseq file has backlinks."""
-        return self.node.has_backlinks
+        return self.node.node_type
 
     @property
     def has_page_properties(self) -> bool:

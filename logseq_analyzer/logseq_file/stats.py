@@ -52,7 +52,7 @@ class LogseqPath:
     """LogseqPath class."""
 
     __slots__ = (
-        "_file",
+        "file",
         "date",
         "file_type",
         "name",
@@ -72,8 +72,10 @@ class LogseqPath:
     result_map: dict = None
     now_ts = datetime.now().timestamp()
 
-    def __init__(self, file: Path, dateutils: DateUtilities = DateUtilities) -> None:
+    def __init__(self, file, dateutils: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqPath object."""
+        if not isinstance(file, Path):
+            raise TypeError("file must be a pathlib.Path object.")
         self.file: Path = file
         self.stat: stat_result = file.stat()
         self.uri: str = file.as_uri()
@@ -95,18 +97,6 @@ class LogseqPath:
             _target_dirs["pages"]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
             _target_dirs["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
         }
-
-    @property
-    def file(self) -> Path:
-        """Return the path of the file."""
-        return self._file
-
-    @file.setter
-    def file(self, value) -> None:
-        """Set the path of the file."""
-        if not isinstance(value, Path):
-            raise TypeError("Path must be a pathlib.Path object.")
-        self._file = value
 
     @property
     def stem(self) -> str:
@@ -253,8 +243,7 @@ class LogseqPath:
     def set_namespace_info(self) -> None:
         """Get the namespace name data."""
         _ns_sep = Core.NS_SEP.value
-        _name = self.name
-        _ns_parts_list = _name.split(_ns_sep)
+        _ns_parts_list = self.name.split(_ns_sep)
         _ns_root = _ns_parts_list[0]
 
         _ns_info = NamespaceInfo()

@@ -5,7 +5,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 from typing import TYPE_CHECKING, Any
 
 from ..utils.enums import Criteria, FileTypes, Output
-from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, singleton, sort_dict_by_value
+from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -16,7 +16,6 @@ __all__ = [
 ]
 
 
-@singleton
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
 

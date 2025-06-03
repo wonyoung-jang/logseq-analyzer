@@ -7,8 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Output, FileTypes
-from ..utils.helpers import singleton
+from ..utils.enums import FileTypes, Output
 
 if TYPE_CHECKING:
     from ..analysis.index import FileIndex
@@ -19,7 +18,6 @@ __all__ = [
 ]
 
 
-@singleton
 class LogseqJournals:
     """
     LogseqJournals class to handle journal files and their processing.

@@ -9,7 +9,7 @@ from typing import Any, Iterator
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
-from ..utils.helpers import singleton, yield_attrs
+from ..utils.helpers import yield_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,6 @@ __all__ = [
 ]
 
 
-@singleton
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
@@ -30,7 +29,17 @@ class FileIndex:
         "_path_to_file",
     )
 
+    _instance = None
     write_graph: bool = False
+
+    def __new__(cls) -> "FileIndex":
+        """
+        Create a new instance of FileIndex.
+        This ensures that only one instance is created.
+        """
+        if cls._instance is None:
+            cls._instance = super(FileIndex, cls).__new__(cls)
+        return cls._instance
 
     def __init__(self) -> None:
         """
@@ -165,5 +174,5 @@ class FileIndex:
         }
         if FileIndex.write_graph:
             report[Output.GRAPH_CONTENT.value] = {f: f.bullets.content for f in self}
-            report[Output.GRAPH_BULLETS.value] = {f: f.bullets.all for f in self}
+            report[Output.GRAPH_BULLETS.value] = {f: f.bullets.all_bullets for f in self}
         return report

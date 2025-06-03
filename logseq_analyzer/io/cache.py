@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator
 
 from ..utils.enums import CacheKeys
-from ..utils.helpers import iter_files, singleton
+from ..utils.helpers import iter_files
 
 if TYPE_CHECKING:
     from ..analysis.index import FileIndex
@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@singleton
 class Cache:
     """
     Cache class to manage caching of modified files and directories.

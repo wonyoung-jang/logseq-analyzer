@@ -6,10 +6,8 @@ import argparse
 from typing import Any
 
 from ..utils.enums import Output
-from ..utils.helpers import singleton
 
 
-@singleton
 class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 

@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..utils.enums import Core, Criteria, Output
-from ..utils.helpers import singleton, sort_dict_by_value
+from ..utils.helpers import sort_dict_by_value
 
 if TYPE_CHECKING:
     from .index import FileIndex
@@ -55,7 +55,6 @@ class NamespaceStructure:
     unique_parts: set[str] = field(default_factory=set)
 
 
-@singleton
 class LogseqNamespaces:
     """
     Class for analyzing namespace data in Logseq.

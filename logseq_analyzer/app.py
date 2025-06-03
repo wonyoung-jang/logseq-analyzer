@@ -12,7 +12,7 @@ from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
 from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
-from .analysis.summarizers import LogseqFileSummarizer, LogseqContentSummarizer
+from .analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
 from .config.arguments import Args
 from .config.graph_config import (
     get_default_logseq_config,
@@ -99,6 +99,7 @@ class Configurations:
     config: dict[str, Any] = field(default_factory=dict)
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
+    graph_path: Path = None
     journal_file_format: str = ""
     journal_page_format: str = ""
     journal_page_title_format: str = ""
@@ -121,60 +122,87 @@ class Configurations:
         }
 
 
-def setup_logseq_paths(args: Args) -> None:
+@dataclass
+class LogseqGraphDirs:
+    graph_dir: GraphDirectory = None
+    logseq_dir: LogseqDirectory = None
+    bak_dir: BakDirectory = None
+    recycle_dir: RecycleDirectory = None
+    user_config: ConfigFile = None
+    global_config: GlobalConfigFile = None
+    assets_dir: AssetsDirectory = None
+    draws_dir: DrawsDirectory = None
+    journals_dir: JournalsDirectory = None
+    pages_dir: PagesDirectory = None
+    whiteboards_dir: WhiteboardsDirectory = None
+
+
+@dataclass
+class AnalyzerDeleteDirs:
+    delete_dir: DeleteDirectory = None
+    delete_bak_dir: DeleteBakDirectory = None
+    delete_recycle_dir: DeleteRecycleDirectory = None
+    delete_assets_dir: DeleteAssetsDirectory = None
+
+
+def setup_logseq_paths(args: Args) -> tuple[LogseqGraphDirs, AnalyzerDeleteDirs]:
     """Setup Logseq analyzer configuration based on arguments."""
     graph_folder_path = Path(args.graph_folder)
     logseq_dir = graph_folder_path / "logseq"
     bak_dir = logseq_dir / "bak"
     recycle_dir = logseq_dir / ".recycle"
     user_config_file = logseq_dir / "config.edn"
-    GraphDirectory(graph_folder_path)
-    LogseqDirectory(logseq_dir)
-    BakDirectory(bak_dir)
-    RecycleDirectory(recycle_dir)
-    ConfigFile(user_config_file)
+    graph_dirs = LogseqGraphDirs(
+        graph_dir=GraphDirectory(graph_folder_path),
+        logseq_dir=LogseqDirectory(logseq_dir),
+        bak_dir=BakDirectory(bak_dir),
+        recycle_dir=RecycleDirectory(recycle_dir),
+        user_config=ConfigFile(user_config_file),
+    )
+
     delete_dir = Constants.TO_DELETE_DIR.value
     delete_bak_dir = Constants.TO_DELETE_BAK_DIR.value
     delete_recycle_dir = Constants.TO_DELETE_RECYCLE_DIR.value
     delete_assets_dir = Constants.TO_DELETE_ASSETS_DIR.value
-    DeleteDirectory(delete_dir)
-    DeleteBakDirectory(delete_bak_dir)
-    DeleteRecycleDirectory(delete_recycle_dir)
-    DeleteAssetsDirectory(delete_assets_dir)
+    delete_dirs = AnalyzerDeleteDirs(
+        delete_dir=DeleteDirectory(delete_dir),
+        delete_bak_dir=DeleteBakDirectory(delete_bak_dir),
+        delete_recycle_dir=DeleteRecycleDirectory(delete_recycle_dir),
+        delete_assets_dir=DeleteAssetsDirectory(delete_assets_dir),
+    )
     logger.debug("setup_logseq_paths")
+    return graph_dirs, delete_dirs
 
 
-def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
+def setup_logseq_graph_config(args: Args, graph_dirs: LogseqGraphDirs) -> tuple[dict, dict, dict]:
     """Setup Logseq graph configuration based on arguments."""
     config = get_default_logseq_config()
-    cf = ConfigFile()
-    user_edn = init_config_edn_from_file(cf.path)
+    user_edn = init_config_edn_from_file(graph_dirs.user_config.path)
     global_edn = {}
     if args.global_config:
         global_config_path = Path(args.global_config)
-        global_config_file = GlobalConfigFile(global_config_path)
-        gc_file_path = global_config_file.path
-        global_edn.update(init_config_edn_from_file(gc_file_path))
+        graph_dirs.global_config = GlobalConfigFile(global_config_path)
+        global_edn.update(init_config_edn_from_file(graph_dirs.global_config.path))
     config.update(user_edn)
     config.update(global_edn)
     logger.debug("setup_logseq_graph_config")
     return config, user_edn, global_edn
 
 
-def setup_target_dirs(gc: dict[str, Any]) -> dict[str, str]:
+def setup_target_dirs(gc: dict[str, Any], graph_dirs: LogseqGraphDirs) -> dict[str, str]:
     """Setup the target directories for the Logseq analyzer by configuring and validating the necessary paths."""
-    graph_path = GraphDirectory().path
+    graph_path = graph_dirs.graph_dir.path
     target_dirs = get_target_dirs(gc)
     dir_assets = graph_path / target_dirs["assets"]
     dir_draws = graph_path / target_dirs["draws"]
     dir_journals = graph_path / target_dirs["journals"]
     dir_pages = graph_path / target_dirs["pages"]
     dir_whiteboards = graph_path / target_dirs["whiteboards"]
-    AssetsDirectory(dir_assets)
-    DrawsDirectory(dir_draws)
-    JournalsDirectory(dir_journals)
-    PagesDirectory(dir_pages)
-    WhiteboardsDirectory(dir_whiteboards)
+    graph_dirs.assets_dir = AssetsDirectory(dir_assets)
+    graph_dirs.draws_dir = DrawsDirectory(dir_draws)
+    graph_dirs.journals_dir = JournalsDirectory(dir_journals)
+    graph_dirs.pages_dir = PagesDirectory(dir_pages)
+    graph_dirs.whiteboards_dir = WhiteboardsDirectory(dir_whiteboards)
     logger.debug("setup_target_dirs")
     return target_dirs
 
@@ -183,7 +211,6 @@ def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     """Setup journal formats."""
     _token_map = get_token_map()
     _token_pattern = compile_token_pattern(_token_map)
-
     journal_file_fmt = get_file_name_format(gc)
     journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern)
     journal_page_title_fmt = get_page_title_format(gc)
@@ -192,26 +219,32 @@ def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     return journal_file_fmt, journal_page_fmt, journal_page_title_fmt
 
 
-def init_configs(args: Args) -> Configurations:
+def init_configs(args: Args) -> tuple[LogseqGraphDirs, AnalyzerDeleteDirs, Configurations]:
     """Initialize configurations for the Logseq analyzer."""
-    setup_logseq_paths(args)
-    gc, user_edn, global_edn = setup_logseq_graph_config(args)
-    target_dirs = setup_target_dirs(gc)
+    graph_dirs, delete_dirs = setup_logseq_paths(args)
+    gc, user_edn, global_edn = setup_logseq_graph_config(args, graph_dirs)
+    target_dirs = setup_target_dirs(gc, graph_dirs)
     journal_file_fmt, journal_page_fmt, journal_page_title_fmt = setup_journal_formats(gc)
-    logger.debug("init_configs")
-    return Configurations(
-        gc, user_edn, global_edn, journal_file_fmt, journal_page_fmt, journal_page_title_fmt, target_dirs
-    )
-
-
-def setup_cache(args: Args, c: Configurations) -> tuple[Cache, FileIndex]:
-    """Setup cache for the Logseq Analyzer."""
-    graph_dir = GraphDirectory()
-    Cache.graph_dir = graph_dir.path
+    Cache.target_dirs = set(target_dirs.values())
+    Cache.graph_dir = graph_dirs.graph_dir.path
     Cache.graph_cache = args.graph_cache
-    Cache.target_dirs = set(c.target_dirs.values())
     FileIndex.write_graph = args.write_graph
+    logger.debug("init_configs")
+    configs = Configurations(
+        config=gc,
+        user_edn=user_edn,
+        global_edn=global_edn,
+        graph_path=graph_dirs.graph_dir.path,
+        journal_file_format=journal_file_fmt,
+        journal_page_format=journal_page_fmt,
+        journal_page_title_format=journal_page_title_fmt,
+        target_dirs=target_dirs,
+    )
+    return graph_dirs, delete_dirs, configs
 
+
+def setup_cache() -> tuple[Cache, FileIndex]:
+    """Setup cache for the Logseq Analyzer."""
     index = FileIndex()
     cache_file = CacheFile(Constants.CACHE_FILE.value)
     cache = Cache(cache_file.path)
@@ -221,12 +254,10 @@ def setup_cache(args: Args, c: Configurations) -> tuple[Cache, FileIndex]:
     return cache, index
 
 
-def configure_analyzer_settings(args: Args, c: Configurations) -> None:
+def configure_analyzer_settings(args: Args, c: Configurations, output_dir: OutputDirectory) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
-    graph_dir = GraphDirectory()
-    output_dir = OutputDirectory()
     LogseqJournals.journal_page_format = c.journal_page_format
-    LogseqPath.graph_path = graph_dir.path
+    LogseqPath.graph_path = c.graph_path
     LogseqPath.journal_file_format = c.journal_file_format
     LogseqPath.journal_page_format = c.journal_page_format
     LogseqPath.journal_page_title_format = c.journal_page_title_format
@@ -291,19 +322,21 @@ def setup_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
     return lsa, lah
 
 
-def setup_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
+def setup_file_mover(
+    args: Args, lsa: LogseqAssets, graph_dirs: LogseqGraphDirs, delete_dirs: AnalyzerDeleteDirs
+) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    target_asset = DeleteAssetsDirectory()
-    target_bak = DeleteBakDirectory()
-    target_rec = DeleteRecycleDirectory()
-    bak_dir = BakDirectory()
-    rec_dir = RecycleDirectory()
+    target_asset = delete_dirs.delete_assets_dir.path
+    target_bak = delete_dirs.delete_bak_dir.path
+    target_rec = delete_dirs.delete_recycle_dir.path
+    bak_dir = graph_dirs.bak_dir.path
+    rec_dir = graph_dirs.recycle_dir.path
     asset_paths = yield_asset_paths(lsa.not_backlinked)
-    bak_paths = yield_bak_rec_paths(bak_dir.path)
-    rec_paths = yield_bak_rec_paths(rec_dir.path)
-    moved_assets = process_moves(args.move_unlinked_assets, target_asset.path, asset_paths)
-    moved_bak = process_moves(args.move_bak, target_bak.path, bak_paths)
-    moved_rec = process_moves(args.move_recycle, target_rec.path, rec_paths)
+    bak_paths = yield_bak_rec_paths(bak_dir)
+    rec_paths = yield_bak_rec_paths(rec_dir)
+    moved_assets = process_moves(args.move_unlinked_assets, target_asset, asset_paths)
+    moved_bak = process_moves(args.move_bak, target_bak, bak_paths)
+    moved_rec = process_moves(args.move_recycle, target_rec, rec_paths)
     moved_files_report = {
         MovedFiles.ASSETS.value: moved_assets,
         MovedFiles.BAK.value: moved_bak,
@@ -313,14 +346,21 @@ def setup_file_mover(args: Args, lsa: LogseqAssets) -> dict[str, Any]:
     return {Output.MOVED_FILES.value: moved_files_report}
 
 
-def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex) -> tuple:
+def analyze(
+    args: Args,
+    configs: Configurations,
+    cache: Cache,
+    index: FileIndex,
+    graph_dirs: LogseqGraphDirs,
+    delete_dirs: AnalyzerDeleteDirs,
+) -> tuple:
     """Perform core analysis on the Logseq graph."""
     process_graph(index, cache)
     graph = setup_graph(index)
     namespaces = setup_namespaces(graph, index)
     journals = setup_journals(graph, index)
     ls_assets, hls_assets = setup_assets(index)
-    moved_files = setup_file_mover(args, ls_assets)
+    moved_files = setup_file_mover(args, ls_assets, graph_dirs, delete_dirs)
     summary_files, summary_content = setup_summarizers(index)
     logger.debug("analyze")
     return (
@@ -364,19 +404,19 @@ def run_app(**kwargs) -> None:
     args = Args(**kwargs)
 
     progress(20, "Initializing Logseq Analyzer paths and configurations...")
-    OutputDirectory(Constants.OUTPUT_DIR.value)
+    output_dir = OutputDirectory(Constants.OUTPUT_DIR.value)
 
     progress(30, "Setting up Logseq Analyzer configurations...")
-    configs = init_configs(args)
+    graph_dirs, delete_dirs, configs = init_configs(args)
 
     progress(40, "Setting up Logseq cache...")
-    cache, index = setup_cache(args, configs)
+    cache, index = setup_cache()
 
     progress(50, "Setup class attributes...")
-    configure_analyzer_settings(args, configs)
+    configure_analyzer_settings(args, configs, output_dir)
 
     progress(60, "Running core analysis on Logseq graph...")
-    data_reports = analyze(args, configs, cache, index)
+    data_reports = analyze(args, configs, cache, index, graph_dirs, delete_dirs)
 
     progress(70, "Writing reports...")
     write_reports(data_reports)

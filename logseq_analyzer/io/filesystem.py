@@ -6,8 +6,6 @@ import logging
 import shutil
 from pathlib import Path
 
-from ..utils.helpers import singleton
-
 logger = logging.getLogger(__name__)
 
 
@@ -100,7 +98,6 @@ class File:
             logger.error("Error creating path: %s", e)
 
 
-@singleton
 class OutputDirectory(File):
     """Class to handle the output directory for the Logseq Analyzer."""
 
@@ -108,11 +105,10 @@ class OutputDirectory(File):
     is_dir = True
 
     def __init__(self, path: str | Path = None) -> None:
-        """Initialize the LogseqAnalyzerOutputDir class."""
+        """Initialize the LogseqAnaly zerOutputDir class."""
         super().__init__(path)
 
 
-@singleton
 class LogFile(File):
     """Class to handle the log file for the Logseq Analyzer."""
 
@@ -121,7 +117,6 @@ class LogFile(File):
         super().__init__(path)
 
 
-@singleton
 class GraphDirectory(File):
     """Class to handle the graph directory for the Logseq Analyzer."""
 
@@ -133,7 +128,6 @@ class GraphDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class LogseqDirectory(File):
     """Class to handle the Logseq directory for the Logseq Analyzer."""
 
@@ -145,7 +139,6 @@ class LogseqDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class ConfigFile(File):
     """Class to handle the config file for the Logseq Analyzer."""
 
@@ -156,7 +149,6 @@ class ConfigFile(File):
         super().__init__(path)
 
 
-@singleton
 class DeleteDirectory(File):
     """Class to handle the delete directory for the Logseq Analyzer."""
 
@@ -167,7 +159,6 @@ class DeleteDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class DeleteBakDirectory(File):
     """Class to handle the delete bak directory for the Logseq Analyzer."""
 
@@ -178,7 +169,6 @@ class DeleteBakDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class DeleteRecycleDirectory(File):
     """Class to handle the delete recycle directory for the Logseq Analyzer."""
 
@@ -189,7 +179,6 @@ class DeleteRecycleDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class DeleteAssetsDirectory(File):
     """Class to handle the delete assets directory for the Logseq Analyzer."""
 
@@ -200,7 +189,6 @@ class DeleteAssetsDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class CacheFile(File):
     """Class to handle the cache file for the Logseq Analyzer."""
 
@@ -209,7 +197,6 @@ class CacheFile(File):
         super().__init__(path)
 
 
-@singleton
 class BakDirectory(File):
     """Class to handle the bak directory for the Logseq Analyzer."""
 
@@ -220,7 +207,6 @@ class BakDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class RecycleDirectory(File):
     """Class to handle the recycle directory for the Logseq Analyzer."""
 
@@ -231,7 +217,6 @@ class RecycleDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class GlobalConfigFile(File):
     """Class to handle the global config file for the Logseq Analyzer."""
 
@@ -240,7 +225,6 @@ class GlobalConfigFile(File):
         super().__init__(path)
 
 
-@singleton
 class AssetsDirectory(File):
     """Class to handle the assets directory for the Logseq Analyzer."""
 
@@ -251,7 +235,6 @@ class AssetsDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class DrawsDirectory(File):
     """Class to handle the draws directory for the Logseq Analyzer."""
 
@@ -262,7 +245,6 @@ class DrawsDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class JournalsDirectory(File):
     """Class to handle the journals directory for the Logseq Analyzer."""
 
@@ -273,7 +255,6 @@ class JournalsDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class PagesDirectory(File):
     """Class to handle the pages directory for the Logseq Analyzer."""
 
@@ -284,7 +265,6 @@ class PagesDirectory(File):
         super().__init__(path)
 
 
-@singleton
 class WhiteboardsDirectory(File):
     """Class to handle the whiteboards directory for the Logseq Analyzer."""
 

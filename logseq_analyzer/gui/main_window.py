@@ -2,9 +2,6 @@
 Logseq Analyzer GUI using PySide6.
 """
 
-import os
-import subprocess
-import sys
 import time
 from dataclasses import dataclass
 
@@ -28,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 
 from ..app import run_app
-from ..io.filesystem import DeleteDirectory, LogFile, OutputDirectory
 from ..utils.enums import Arguments, Format
 
 
@@ -294,27 +290,14 @@ class LogseqAnalyzerGUI(QMainWindow):
 
         self.buttons.run.clicked.connect(self.run_analysis)
         self.buttons.run.setShortcut("Ctrl+R")
-        self.buttons.run.setToolTip("Ctrl+R to run analysis")
-        buttons_layout.addWidget(self.buttons.run, 0, 0, 1, 2)
+        self.buttons.run.setToolTip("Ctrl + R to run analysis")
+        buttons_layout.addWidget(self.buttons.run, 0, 0)
 
         exit_button = QPushButton("Exit")
         exit_button.clicked.connect(self.close_analyzer)
         exit_button.setShortcut("Ctrl+W")
-        exit_button.setToolTip("Ctrl+W to exit")
-        buttons_layout.addWidget(exit_button, 0, 2, 1, 1)
-
-        # --- Secondary Buttons ---
-        self.buttons.output.clicked.connect(self._open_output_dir)
-        self.buttons.output.setEnabled(False)
-        buttons_layout.addWidget(self.buttons.output, 1, 0)
-
-        self.buttons.delete.clicked.connect(self._open_delete_dir)
-        self.buttons.delete.setEnabled(False)
-        buttons_layout.addWidget(self.buttons.delete, 1, 1)
-
-        self.buttons.log.clicked.connect(self._open_log_file)
-        self.buttons.log.setEnabled(False)
-        buttons_layout.addWidget(self.buttons.log, 1, 2)
+        exit_button.setToolTip("Ctrl + W to exit")
+        buttons_layout.addWidget(exit_button, 0, 2)
 
         return buttons_layout
 
@@ -322,31 +305,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Close the application."""
         self.save_settings()
         self.close()
-
-    def _open_output_dir(self) -> None:
-        """Open the output directory in the file explorer."""
-        self._open_path(OutputDirectory().path)
-
-    def _open_delete_dir(self) -> None:
-        """Open the delete directory in the file explorer."""
-        self._open_path(DeleteDirectory().path)
-
-    def _open_log_file(self) -> None:
-        """Open the log file in the default text editor."""
-        self._open_path(LogFile().path)
-
-    def _open_path(self, path) -> None:
-        """Open a path in the file explorer."""
-        if path.exists():
-            path = path.resolve()
-            if sys.platform.startswith("win"):
-                os.startfile(path)
-            elif sys.platform.startswith("darwin"):
-                subprocess.call(["open", path])
-            else:
-                subprocess.call(["xdg-open", path])
-        else:
-            self.show_error(f"Path not found: {path}")
 
     def update_progress(self, progress_value: int = 0) -> None:
         """Updates the progress bar for a given phase."""
