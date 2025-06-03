@@ -20,7 +20,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.utils.patterns_content as ContentPatterns
+import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..utils.enums import Core, Criteria, Output
 from ..utils.helpers import singleton, sort_dict_by_value

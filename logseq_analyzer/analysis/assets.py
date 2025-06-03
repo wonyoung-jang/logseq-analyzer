@@ -5,7 +5,7 @@ Logseq Assets Analysis Module.
 import re
 from typing import TYPE_CHECKING, Generator
 
-import logseq_analyzer.utils.patterns_content as ContentPatterns
+import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..utils.enums import Criteria, FileTypes, Output
 from ..utils.helpers import singleton

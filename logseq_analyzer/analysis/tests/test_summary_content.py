@@ -4,7 +4,7 @@ Tests for LogseqContentSummarizer
 
 import pytest
 
-from ..summary_content import LogseqContentSummarizer
+from ..summarizers import LogseqContentSummarizer
 
 
 @pytest.fixture

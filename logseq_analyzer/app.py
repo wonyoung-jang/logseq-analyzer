@@ -12,8 +12,7 @@ from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
 from .analysis.journals import LogseqJournals
 from .analysis.namespaces import LogseqNamespaces
-from .analysis.summary_content import LogseqContentSummarizer
-from .analysis.summary_files import LogseqFileSummarizer
+from .analysis.summarizers import LogseqFileSummarizer, LogseqContentSummarizer
 from .config.arguments import Args
 from .config.graph_config import (
     get_default_logseq_config,
@@ -182,12 +181,13 @@ def setup_target_dirs(gc: dict[str, Any]) -> dict[str, str]:
 
 def setup_journal_formats(gc: dict[str, Any]) -> tuple[str, str]:
     """Setup journal formats."""
-    token_map = get_token_map()
-    token_pattern = compile_token_pattern(token_map)
+    _token_map = get_token_map()
+    _token_pattern = compile_token_pattern(_token_map)
+
     journal_file_fmt = get_file_name_format(gc)
-    journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, token_map, token_pattern)
+    journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern)
     journal_page_title_fmt = get_page_title_format(gc)
-    journal_page_fmt = convert_cljs_date_to_py(journal_page_title_fmt, token_map, token_pattern)
+    journal_page_fmt = convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern)
     logger.debug("setup_journal_formats")
     return journal_file_fmt, journal_page_fmt, journal_page_title_fmt
 

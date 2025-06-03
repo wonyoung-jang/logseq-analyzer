@@ -1,12 +1,13 @@
-"""Embedded link patterns for Logseq."""
+"""External link patterns for Logseq."""
 
 import re
 
-from .enums import Criteria
+from ..utils.enums import Criteria
 
 ALL = re.compile(
     r"""
-    \!\[.*?\]           # ![...]
+    (?<!\!)             # Negative lookbehind: not preceded by !
+    \[.*?\]             # [...]
     \(.*?\)             # (...)
     """,
     re.IGNORECASE | re.VERBOSE,
@@ -14,7 +15,8 @@ ALL = re.compile(
 
 INTERNET = re.compile(
     r"""
-    \!\[.*?\]           # ![...]
+    (?<!\!)             # Negative lookbehind: not preceded by !
+    \[.*?\]             # [...]
     \(                  # Opening parenthesis
     (                        
         (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
@@ -34,21 +36,23 @@ INTERNET = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-ASSET = re.compile(
+ALIAS = re.compile(
     r"""
-    \!\[.*?\]               # ![...]
-    \(                      # Opening parenthesis
-    .*?                     # Any characters (non-greedy)
-    assets/                 # Literal "assets/"
-    .*?                     # Any characters (greedy)
-    \)
+    (?<!\!)             # Negative lookbehind: not preceded by !
+    \[.*?\]             # [...]
+    \(                  # Opening parenthesis
+        [\[\[|\(\(]         # Either [[ or ((
+        .*?                 # Any characters (non-greedy)
+        [\]\]|\)\)]         # Either ]] or ))
+        .*?                 # Any characters (non-greedy)
+    \)                  # Closing parenthesis
     """,
     re.IGNORECASE | re.VERBOSE,
 )
 
 PATTERN_MAP = {
-    INTERNET: Criteria.EMB_LINK_INTERNET.value,
-    ASSET: Criteria.EMB_LINK_ASSET.value,
+    INTERNET: Criteria.EXT_LINK_INTERNET.value,
+    ALIAS: Criteria.EXT_LINK_ALIAS.value,
 }
 
-FALLBACK = Criteria.EMB_LINK_OTHER.value
+FALLBACK = Criteria.EXT_LINK_OTHER.value

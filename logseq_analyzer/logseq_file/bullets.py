@@ -6,13 +6,13 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Generator
 
-import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
-import logseq_analyzer.utils.patterns_code as CodePatterns
-import logseq_analyzer.utils.patterns_content as ContentPatterns
-import logseq_analyzer.utils.patterns_double_curly as DoubleCurlyBracketsPatterns
-import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPatterns
-import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
-import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
+import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
+import logseq_analyzer.patterns.code as CodePatterns
+import logseq_analyzer.patterns.content as ContentPatterns
+import logseq_analyzer.patterns.double_curly as DoubleCurlyBracketsPatterns
+import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
+import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
+import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Criteria
 from ..utils.helpers import (
@@ -77,43 +77,45 @@ class LogseqBullets:
     @property
     def bullet_density(self) -> float:
         """Get the bullet density of the content."""
-        bullet_count = self.stats.bullet_count
-        char_count = self.stats.char_count
-        if bullet_count:
-            return round(char_count / bullet_count, 2)
+        _bullet_count = self.stats.bullet_count
+        _char_count = self.stats.char_count
+
+        if _bullet_count:
+            return round(_char_count / _bullet_count, 2)
         return 0.0
 
     def process(self) -> None:
         """Process the content to extract bullet information."""
-        content = self.content
-        if not content:
+        _content = self.content
+        if not _content:
             return
 
-        all_bullets = self.all
+        _all_bullets = self.all
         bullet_count = 0
         bullet_count_empty = 0
         primary_bullet = ""
 
-        for count, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
+        for bullet_index, bullet in iter_pattern_split(ContentPatterns.BULLET, _content):
             if bullet:
-                all_bullets.append(bullet)
+                _all_bullets.append(bullet)
                 bullet_count += 1
-                if count == 0:
+                if bullet_index == 0:
                     primary_bullet = bullet
             else:
                 bullet_count_empty += 1
 
+        self.stats.char_count = len(_content)
         self.stats.bullet_count = bullet_count
         self.stats.bullet_count_empty = bullet_count_empty
         self.primary = primary_bullet
 
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
-        content = self.content
+        _content = self.content
         result = {
-            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(content),
-            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(content),
-            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(content),
+            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(_content),
+            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(_content),
+            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(_content),
         }
         for key, value in {k: v for k, v in result.items() if v}.items():
             yield (key, value)
@@ -121,14 +123,16 @@ class LogseqBullets:
     def extract_properties(self) -> Generator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
         page_props = set()
-        content = self.content
-        primary_bullet = self.primary
-        all_bullets = self.all
+        _content = self.content
+        _primary_bullet = self.primary
+        _all_bullets = self.all
+        _find_all_properties = ContentPatterns.PROPERTY.findall
+
         if self.has_page_properties:
-            page_props.update(ContentPatterns.PROPERTY.findall(primary_bullet))
-            content = "\n".join(all_bullets)
-            self.content = content
-        block_props = set(ContentPatterns.PROPERTY.findall(content))
+            page_props.update(_find_all_properties(_primary_bullet))
+            _content = "\n".join(_all_bullets)
+            self.content = _content
+        block_props = set(_find_all_properties(_content))
         result = {
             Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
@@ -140,7 +144,8 @@ class LogseqBullets:
 
     def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
-        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
+        _content = self.content
+        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(_content))
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         result = {
@@ -154,9 +159,12 @@ class LogseqBullets:
         """
         Process patterns in the content.
         """
+        _content = self.content
+        _pattern_modules = LogseqBullets._PATTERN_MODULES
+
         result = {}
-        for pattern in LogseqBullets._PATTERN_MODULES:
-            processed_patterns = process_pattern_hierarchy(self.content, pattern)
+        for pattern in _pattern_modules:
+            processed_patterns = process_pattern_hierarchy(_content, pattern)
             result.update(processed_patterns)
         for key, value in {k: v for k, v in result.items() if v}.items():
             yield (key, value)

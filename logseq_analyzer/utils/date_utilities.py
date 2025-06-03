@@ -26,54 +26,40 @@ class DateUtilities:
     @staticmethod
     def range(date_stats: dict[str, datetime | None]) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
-        date_range = {
-            "days": None,
-            "weeks": None,
-            "months": None,
-            "years": None,
-        }
-        if not (delta := date_stats["last"] - date_stats["first"]):
-            return date_range
+        delta = date_stats["last"] - date_stats["first"]
         days = delta.days + 1
-        date_range["days"] = days
-        date_range["weeks"] = round(days / 7, 2)
-        date_range["months"] = round(days / 30, 2)
-        date_range["years"] = round(days / 365, 2)
+        date_range = {}
+        date_range["days"] = days if delta else 0.0
+        date_range["weeks"] = round(days / 7, 2) if delta else 0.0
+        date_range["months"] = round(days / 30, 2) if delta else 0.0
+        date_range["years"] = round(days / 365, 2) if delta else 0.0
         return date_range
 
     @staticmethod
     def stats(timeline: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
         date_stats = {
-            "first": datetime.min,
-            "last": datetime.min,
-            "days": 0,
-            "weeks": 0,
-            "months": 0,
-            "years": 0,
+            "first": min(timeline) if timeline else datetime.min,
+            "last": max(timeline) if timeline else datetime.min,
         }
-        if not timeline:
-            return date_stats
-
-        date_stats["first"] = min(timeline)
-        date_stats["last"] = max(timeline)
         date_stats.update(DateUtilities.range(date_stats))
         return date_stats
 
     @staticmethod
     def append_ordinal_to_day(day: str) -> str:
         """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-        day_number = int(day)
-        if 11 <= day_number <= 13:
+        day_as_int = int(day)
+        if 11 <= day_as_int <= 13:
             return day + "th"
-        return day + {1: "st", 2: "nd", 3: "rd"}.get(day_number % 10, "th")
+        return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
     @staticmethod
     def journals_to_datetime(keys: list[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
         """Convert journal keys from strings to datetime objects."""
+        _ordinal_suffixes = DateUtilities._DATE_ORDINAL_SUFFIXES
         for key in keys:
             try:
-                for ordinal in DateUtilities._DATE_ORDINAL_SUFFIXES:
+                for ordinal in _ordinal_suffixes:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError as e:

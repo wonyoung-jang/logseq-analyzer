@@ -7,13 +7,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator
 
-import logseq_analyzer.utils.patterns_adv_cmd as AdvancedCommandPatterns
-import logseq_analyzer.utils.patterns_code as CodePatterns
-import logseq_analyzer.utils.patterns_content as ContentPatterns
-import logseq_analyzer.utils.patterns_double_curly as DoubleCurlyBracketsPatterns
-import logseq_analyzer.utils.patterns_double_parentheses as DoubleParenthesesPatterns
-import logseq_analyzer.utils.patterns_embedded_links as EmbeddedLinksPatterns
-import logseq_analyzer.utils.patterns_external_links as ExternalLinksPatterns
+import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
+import logseq_analyzer.patterns.code as CodePatterns
+import logseq_analyzer.patterns.content as ContentPatterns
+import logseq_analyzer.patterns.double_curly as DoubleCurlyBracketsPatterns
+import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
+import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
+import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, NodeTypes
 from .bullets import LogseqBullets

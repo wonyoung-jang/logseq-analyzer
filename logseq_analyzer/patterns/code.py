@@ -2,7 +2,7 @@
 
 import re
 
-from .enums import Criteria
+from ..utils.enums import Criteria
 
 ALL = re.compile(
     r"""
