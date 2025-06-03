@@ -207,12 +207,10 @@ class LogseqPath:
 
     def read_text(self) -> str:
         """Read the text content of a file."""
-        _file = self.file
-
         try:
-            return _file.read_text(encoding="utf-8")
+            return self.file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.warning("Failed to decode file %s with utf-8 encoding.", _file)
+            logger.warning("Failed to decode file %s with utf-8 encoding.", self.file)
         return ""
 
     def set_timestamp_info(self) -> None:

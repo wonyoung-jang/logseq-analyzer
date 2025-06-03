@@ -15,7 +15,6 @@ from ..utils.enums import Format, MovedFiles
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
 
-
 __all__ = [
     "iter_files",
     "process_aliases",

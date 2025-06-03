@@ -18,15 +18,13 @@ import logging
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..utils.enums import Core, Criteria, Output
 from ..utils.helpers import sort_dict_by_value
-
-if TYPE_CHECKING:
-    from .index import FileIndex
+from .index import FileIndex
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +84,7 @@ class LogseqNamespaces:
         """Return a string representation of the LogseqNamespaces instance."""
         return f"{self.__class__.__name__}"
 
-    def process(self, index: "FileIndex", dangling_links: set[str]) -> None:
+    def process(self, index: FileIndex, dangling_links: set[str]) -> None:
         """
         Process the namespace data from the index.
         """
@@ -95,7 +93,7 @@ class LogseqNamespaces:
         self.detect_non_ns_conflicts(index, dangling_links)
         self.detect_parent_depth_conflicts()
 
-    def init_ns_parts(self, index: "FileIndex") -> None:
+    def init_ns_parts(self, index: FileIndex) -> None:
         """
         Create namespace parts from the data.
         """
@@ -121,7 +119,7 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f.name, "level": level})
         structure.details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, index: "FileIndex") -> None:
+    def analyze_ns_queries(self, index: FileIndex) -> None:
         """Analyze namespace queries."""
         structure = self.structure
         ns_query_crit: str = Criteria.DBC_NAMESPACE_QUERIES.value
@@ -141,7 +139,7 @@ class LogseqNamespaces:
                 ns_queries[query]["logseq_url"] = f.logseq_url
         self.queries.update(sort_dict_by_value(ns_queries, value="size", reverse=True))
 
-    def detect_non_ns_conflicts(self, index: "FileIndex", dangling_links: set[str]) -> None:
+    def detect_non_ns_conflicts(self, index: FileIndex, dangling_links: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         structure = self.structure
         conflicts = self.conflicts

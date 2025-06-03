@@ -5,7 +5,7 @@ LogseqFile class to process Logseq files.
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator
+from typing import Any, Generator
 
 import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
 import logseq_analyzer.patterns.code as CodePatterns
@@ -17,10 +17,7 @@ import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, NodeTypes
 from .bullets import LogseqBullets
-from .stats import LogseqPath
-
-if TYPE_CHECKING:
-    from .stats import NamespaceInfo
+from .stats import LogseqPath, NamespaceInfo
 
 
 @dataclass
@@ -45,10 +42,10 @@ class MaskedBlocks:
 class NodeType:
     """Class to hold node type data."""
 
-    has_backlinks: bool = False
-    backlinked: bool = False
-    backlinked_ns_only: bool = False
-    node_type: str = NodeTypes.OTHER.value
+    has_backlinks: bool = field(default=False, init=False)
+    backlinked: bool = field(default=False, init=False)
+    backlinked_ns_only: bool = field(default=False, init=False)
+    node_type: str = field(default=NodeTypes.OTHER.value, init=False)
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
@@ -227,7 +224,7 @@ class LogseqFile:
         return self.path.suffix
 
     @property
-    def ns_info(self) -> "NamespaceInfo":
+    def ns_info(self) -> NamespaceInfo:
         """Return the namespace information of the Logseq file."""
         return self.path.ns_info
 

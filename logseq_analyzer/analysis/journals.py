@@ -4,14 +4,11 @@ Process logseq journals.
 
 from collections import defaultdict
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from ..analysis.index import FileIndex
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import FileTypes, Output
-
-if TYPE_CHECKING:
-    from ..analysis.index import FileIndex
-
 
 __all__ = [
     "LogseqJournals",
@@ -57,7 +54,7 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.timeline)
 
-    def process(self, index: "FileIndex", dangling_links: list[str]) -> None:
+    def process(self, index: FileIndex, dangling_links: list[str]) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         journal_page_format = LogseqJournals.journal_page_format
         dangling = sorted(self.date.journals_to_datetime(dangling_links, journal_page_format))

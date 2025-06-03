@@ -29,17 +29,7 @@ class FileIndex:
         "_path_to_file",
     )
 
-    _instance = None
     write_graph: bool = False
-
-    def __new__(cls) -> "FileIndex":
-        """
-        Create a new instance of FileIndex.
-        This ensures that only one instance is created.
-        """
-        if cls._instance is None:
-            cls._instance = super(FileIndex, cls).__new__(cls)
-        return cls._instance
 
     def __init__(self) -> None:
         """

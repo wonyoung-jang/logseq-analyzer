@@ -5,13 +5,11 @@ This module handles caching mechanisms for the application.
 import logging
 import shelve
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator
+from typing import Any, Generator
 
+from ..analysis.index import FileIndex
 from ..utils.enums import CacheKeys
 from ..utils.helpers import iter_files
-
-if TYPE_CHECKING:
-    from ..analysis.index import FileIndex
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,7 @@ class Cache:
 
     def open(self, protocol: int = 5) -> None:
         """Open the cache file."""
-        self.cache = shelve.open(self.cache_path, protocol=protocol)
+        self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=True)
 
     def close(self) -> None:
         """Close the cache file."""
@@ -54,14 +52,16 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
-    def initialize(self, index: "FileIndex") -> None:
+    def initialize(self) -> FileIndex:
         """Clear the cache if needed."""
         if Cache.graph_cache:
             self.clear()
             logger.info("Cache cleared.")
+            return FileIndex()
         else:
-            self.clear_deleted_files(index)
+            index = self.clear_deleted_files()
             logger.info("Cache not cleared.")
+            return index
 
     def clear(self) -> None:
         """Clear the cache."""
@@ -69,18 +69,25 @@ class Cache:
         self.cache_path.unlink(missing_ok=True)
         self.open()
 
-    def clear_deleted_files(self, index: "FileIndex") -> None:
+    def clear_deleted_files(self) -> FileIndex:
         """Clear the deleted files from the cache."""
         if CacheKeys.INDEX.value in self.cache:
-            del index
             index = self.cache[CacheKeys.INDEX.value]
+            del self.cache[CacheKeys.INDEX.value]
+        else:
+            index = FileIndex()
         index.remove_deleted_files()
+        return index
 
     def iter_modified_files(self) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
         graph_dir = Cache.graph_dir
         target_dirs = Cache.target_dirs
-        mod_tracker = self.cache.setdefault(CacheKeys.MOD_TRACKER.value, {})
+        if CacheKeys.MOD_TRACKER.value not in self.cache:
+            mod_tracker = {}
+        else:
+            mod_tracker = self.cache[CacheKeys.MOD_TRACKER.value]
+            del self.cache[CacheKeys.MOD_TRACKER.value]
         for path in iter_files(graph_dir, target_dirs):
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime

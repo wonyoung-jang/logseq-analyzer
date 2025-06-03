@@ -245,11 +245,10 @@ def init_configs(args: Args) -> tuple[LogseqGraphDirs, AnalyzerDeleteDirs, Confi
 
 def setup_cache() -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
-    index = FileIndex()
     cache_file = CacheFile(Constants.CACHE_FILE.value)
     cache = Cache(cache_file.path)
     cache.open(protocol=5)
-    cache.initialize(index)
+    index = cache.initialize()
     logger.debug("setup_cache")
     return cache, index
 
@@ -392,6 +391,7 @@ def write_reports(data_reports: tuple[Any]) -> None:
 def close_cache(cache: Cache, index: FileIndex) -> None:
     """Finish the analysis by closing the cache and writing the user configuration."""
     cache.cache[CacheKeys.INDEX.value] = index
+    cache.cache.sync()
     cache.close()
     logger.debug("close_cache")
 
