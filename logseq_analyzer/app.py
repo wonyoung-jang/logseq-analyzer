@@ -155,7 +155,7 @@ def setup_logseq_graph_config(args: Args) -> tuple[dict, dict, dict]:
         global_config_path = Path(args.global_config)
         global_config_file = GlobalConfigFile(global_config_path)
         gc_file_path = global_config_file.path
-        global_edn = init_config_edn_from_file(gc_file_path)
+        global_edn.update(init_config_edn_from_file(gc_file_path))
     config.update(user_edn)
     config.update(global_edn)
     logger.debug("setup_logseq_graph_config")
@@ -204,13 +204,19 @@ def init_configs(args: Args) -> Configurations:
     )
 
 
-def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
+def setup_cache(args: Args, c: Configurations) -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
+    graph_dir = GraphDirectory()
+    Cache.graph_dir = graph_dir.path
+    Cache.graph_cache = args.graph_cache
+    Cache.target_dirs = set(c.target_dirs.values())
+    FileIndex.write_graph = args.write_graph
+
     index = FileIndex()
-    cf = CacheFile(Constants.CACHE_FILE.value)
-    cache = Cache(cf.path)
+    cache_file = CacheFile(Constants.CACHE_FILE.value)
+    cache = Cache(cache_file.path)
     cache.open(protocol=5)
-    cache.initialize(args.graph_cache, index)
+    cache.initialize(index)
     logger.debug("setup_cache")
     return cache, index
 
@@ -220,8 +226,6 @@ def configure_analyzer_settings(args: Args, c: Configurations) -> None:
     graph_dir = GraphDirectory()
     output_dir = OutputDirectory()
     LogseqJournals.journal_page_format = c.journal_page_format
-    Cache.graph_dir = graph_dir.path
-    Cache.target_dirs = set(c.target_dirs.values())
     LogseqPath.graph_path = graph_dir.path
     LogseqPath.journal_file_format = c.journal_file_format
     LogseqPath.journal_page_format = c.journal_page_format
@@ -324,7 +328,6 @@ def analyze(args: Args, configs: Configurations, cache: Cache, index: FileIndex)
         (OutputDir.META.value, configs.report),
         (OutputDir.GRAPH.value, graph.report),
         (OutputDir.INDEX.value, index.report),
-        (OutputDir.INDEX.value, index.get_graph_content(args.write_graph)),
         (OutputDir.JOURNALS.value, journals.report),
         (OutputDir.NAMESPACES.value, namespaces.report),
         (OutputDir.MOVED_FILES.value, moved_files),
@@ -355,9 +358,7 @@ def close_cache(cache: Cache, index: FileIndex) -> None:
 
 def run_app(**kwargs) -> None:
     """Main function to run the Logseq analyzer."""
-    progress = kwargs.pop("progress_callback", GUIInstanceDummy())
-    if isinstance(progress, GUIInstanceDummy):
-        progress = progress.update_progress
+    progress = kwargs.pop("progress_callback", GUIInstanceDummy().update_progress)
 
     progress(10, "Starting Logseq Analyzer...")
     args = Args(**kwargs)
@@ -369,7 +370,7 @@ def run_app(**kwargs) -> None:
     configs = init_configs(args)
 
     progress(40, "Setting up Logseq cache...")
-    cache, index = setup_cache(args)
+    cache, index = setup_cache(args, configs)
 
     progress(50, "Setup class attributes...")
     configure_analyzer_settings(args, configs)

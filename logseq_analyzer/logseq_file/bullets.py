@@ -122,9 +122,11 @@ class LogseqBullets:
         """Extract page and block properties from the content."""
         page_props = set()
         content = self.content
+        primary_bullet = self.primary
+        all_bullets = self.all
         if self.has_page_properties:
-            page_props.update(ContentPatterns.PROPERTY.findall(self.primary))
-            content = "\n".join(self.all)
+            page_props.update(ContentPatterns.PROPERTY.findall(primary_bullet))
+            content = "\n".join(all_bullets)
             self.content = content
         block_props = set(ContentPatterns.PROPERTY.findall(content))
         result = {

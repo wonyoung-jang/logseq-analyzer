@@ -30,6 +30,8 @@ class FileIndex:
         "_path_to_file",
     )
 
+    write_graph: bool = False
+
     def __init__(self) -> None:
         """
         Initialize the FileIndex instance.
@@ -130,44 +132,30 @@ class FileIndex:
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
         for ns_root_file in self[f.ns_info.root]:
-            r: LogseqFile = ns_root_file
-            r.is_namespace = True
-            r.ns_info.children.add(f.name)
-            r.ns_info.size = len(r.ns_info.children)
-        for ns_parent_file in self[f.ns_info.parent_full]:
-            p: LogseqFile = ns_parent_file
-            p.ns_info.children.add(f.name)
-            p.ns_info.size = len(p.ns_info.children)
+            ns_root_file: LogseqFile
+            ns_root_file.is_namespace = True
+            ns_root_file.ns_info.children.add(f.name)
+            ns_root_file.ns_info.size = len(ns_root_file.ns_info.children)
 
-    def get_graph_content(self, write_graph: bool) -> dict[LogseqFile, Any]:
-        """Get content data from the graph."""
-        if not write_graph:
-            return {}
-        return {
-            Output.GRAPH_BULLETS.value: {f: f.bullets.all for f in self},
-            Output.GRAPH_CONTENT.value: {f: f.bullets.content for f in self},
-        }
+        for ns_parent_file in self[f.ns_info.parent_full]:
+            ns_parent_file: LogseqFile
+            ns_parent_file.ns_info.children.add(f.name)
+            ns_parent_file.ns_info.size = len(ns_parent_file.ns_info.children)
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
-        graph_data = {}
-        for f in self:
-            graph_data[f] = {k: v for k, v in yield_attrs(f) if v and k not in ("masked")}
-        return graph_data
+        return {file: {k: v for k, v in yield_attrs(file) if v} for file in self}
 
     @property
     def graph_content_data(self) -> dict[LogseqFile, Any]:
         """Get content data from the graph."""
-        graph_content_data = {}
-        for f in self:
-            graph_content_data[f] = {k: v for k, v in f.data.items() if v}
-        return graph_content_data
+        return {file: {k: v for k, v in file.data.items() if v} for file in self}
 
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the indexed files."""
-        return {
+        report = {
             Output.GRAPH_CONTENT_DATA.value: self.graph_content_data,
             Output.GRAPH_DATA.value: self.graph_data,
             Output.IDX_FILES.value: self._files,
@@ -175,3 +163,7 @@ class FileIndex:
             Output.IDX_NAME_TO_FILES.value: self._name_to_files,
             Output.IDX_PATH_TO_FILE.value: self._path_to_file,
         }
+        if FileIndex.write_graph:
+            report[Output.GRAPH_CONTENT.value] = {f: f.bullets.content for f in self}
+            report[Output.GRAPH_BULLETS.value] = {f: f.bullets.all for f in self}
+        return report

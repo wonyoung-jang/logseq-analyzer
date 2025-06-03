@@ -30,6 +30,16 @@ class MaskedBlocks:
     content: str = ""
     blocks: dict[str, str] = field(default_factory=dict)
 
+    def unmask_blocks(self):
+        """
+        Restore the original content by replacing placeholders with their blocks.
+        """
+        content = self.content
+        blocks = self.blocks
+        for placeholder, block in blocks.items():
+            content = content.replace(placeholder, block)
+        self.content = content
+
 
 @dataclass
 class NodeType:
@@ -322,13 +332,3 @@ class LogseqFile:
         """
         if not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys()):
             self.node.has_backlinks = True
-
-    def unmask_blocks(self):
-        """
-        Restore the original content by replacing placeholders with their blocks.
-        """
-        content = self.masked.content
-        blocks = self.masked.blocks
-        for placeholder, block in blocks.items():
-            content = content.replace(placeholder, block)
-        self.masked.content = content

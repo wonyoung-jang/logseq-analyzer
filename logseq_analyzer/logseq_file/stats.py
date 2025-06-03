@@ -70,8 +70,7 @@ class LogseqPath:
     ns_file_sep: str = ""
     target_dirs: dict = {}
     result_map: dict = None
-
-    _now_ts = datetime.now().timestamp()
+    now_ts = datetime.now().timestamp()
 
     def __init__(self, file: Path, dateutils: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqPath object."""
@@ -88,13 +87,13 @@ class LogseqPath:
     @classmethod
     def set_result_map(cls) -> None:
         """Set the result map for file type determination."""
-        target_dirs = cls.target_dirs
+        _target_dirs = cls.target_dirs
         cls.result_map = {
-            target_dirs["assets"]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
-            target_dirs["draws"]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
-            target_dirs["journals"]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
-            target_dirs["pages"]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
-            target_dirs["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
+            _target_dirs["assets"]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
+            _target_dirs["draws"]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
+            _target_dirs["journals"]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
+            _target_dirs["pages"]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
+            _target_dirs["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
         }
 
     @property
@@ -132,19 +131,24 @@ class LogseqPath:
     @property
     def logseq_url(self) -> str:
         """Return the Logseq URL."""
-        uri_path = Path(self.uri)
-        target_index = len(uri_path.parts) - len(self.graph_path.parts)
+        _graph_path = LogseqPath.graph_path
+        _uri = self.uri
+
+        uri_path = Path(_uri)
+        target_index = len(uri_path.parts) - len(_graph_path.parts)
         target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
             return ""
-        graph_path = str(self.graph_path).replace("\\", "/")
+
+        graph_path = str(_graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
-        if not self.uri.startswith(prefix):
+        if not _uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
             return ""
-        encoded_path = self.uri[len(prefix) : -(len(uri_path.suffix))]
+
+        encoded_path = _uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
@@ -158,87 +162,106 @@ class LogseqPath:
 
     def determine_file_type(self) -> None:
         """Helper function to determine the file type based on the directory structure."""
-        result_map = LogseqPath.result_map
-        parent = self.parent
-        parts = self.parts
-        result = result_map.get(parent, (FileTypes.OTHER.value, FileTypes.OTHER.value))
+        _result_map = LogseqPath.result_map
+        _parent = self.parent
+        _parts = self.parts
+
+        result = _result_map.get(_parent, (FileTypes.OTHER.value, FileTypes.OTHER.value))
+
         if result[0] != FileTypes.OTHER.value:
             self.file_type = result[0]
             return
 
-        for key, result in result_map.items():
-            if key in parts:
+        for key, result in _result_map.items():
+            if key in _parts:
                 self.file_type = result[1]
                 return
 
     def process_logseq_filename(self) -> None:
         """Process the Logseq filename based on its parent directory."""
-        name = self.stem.strip(LogseqPath.ns_file_sep)
+        _ns_file_sep = LogseqPath.ns_file_sep
+        _target_dir_journal = LogseqPath.target_dirs["journals"]
+        _parent = self.parent
+        _stem = self.stem
 
-        if self.parent == LogseqPath.target_dirs["journals"]:
-            self.name = self._process_logseq_journal_key(name)
+        if _parent == _target_dir_journal:
+            self.name = self._process_logseq_journal_key(_stem.strip(_ns_file_sep))
         else:
-            self.name = self._process_logseq_non_journal_key(name)
+            self.name = self._process_logseq_non_journal_key(_stem.strip(_ns_file_sep), _ns_file_sep)
 
-    def _process_logseq_non_journal_key(self, name: str) -> str:
+    def _process_logseq_non_journal_key(self, name: str, ns_file_sep: str) -> str:
         """Process non-journal keys to create a page title."""
-        return unquote(name).replace(LogseqPath.ns_file_sep, Core.NS_SEP.value)
+        return unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
 
     def _process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
+        _journal_file_format = LogseqPath.journal_file_format
+        _journal_page_format = LogseqPath.journal_page_format
+        _journal_page_title_format = LogseqPath.journal_page_title_format
+
         try:
-            name = datetime.strptime(name, LogseqPath.journal_file_format)
-            page_title = name.strftime(LogseqPath.journal_page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in LogseqPath.journal_page_title_format:
-                page_title = self._get_ordinal_day(name, page_title)
+            date_obj = datetime.strptime(name, _journal_file_format)
+            page_title = date_obj.strftime(_journal_page_format)
+            if Core.DATE_ORDINAL_SUFFIX.value in _journal_page_title_format:
+                page_title = self._get_ordinal_day(date_obj, page_title)
             return page_title.replace("'", "")
         except ValueError as e:
-            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, LogseqPath.journal_page_format, e)
+            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, _journal_page_format, e)
             return name
 
-    def _get_ordinal_day(self, date_object: datetime, page_title: str) -> str:
+    def _get_ordinal_day(self, date_obj: datetime, page_title: str) -> str:
         """Get the ordinal day from the date object and page title."""
-        day_number = str(date_object.day)
+        day_number = str(date_obj.day)
         day_with_ordinal = self.date.append_ordinal_to_day(day_number)
         return page_title.replace(day_number, day_with_ordinal, 1)
 
     def read_text(self) -> str:
         """Read the text content of a file."""
+        _file = self.file
+
         try:
-            return self.file.read_text(encoding="utf-8")
+            return _file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.warning("Failed to decode file %s with utf-8 encoding.", self.file)
+            logger.warning("Failed to decode file %s with utf-8 encoding.", _file)
         return ""
 
     def set_timestamp_info(self) -> None:
         """Set the timestamps for the file."""
-        _now = self._now_ts
+        _now = LogseqPath.now_ts
         _created_time = self.stat.st_birthtime
         _modified_time = self.stat.st_mtime
-        ts_info = TimestampInfo()
-        ts_info.time_existed = _now - _created_time
-        ts_info.time_unmodified = _now - _modified_time
-        ts_info.date_created = datetime.fromtimestamp(_created_time).isoformat()
-        ts_info.date_modified = datetime.fromtimestamp(_modified_time).isoformat()
-        self.ts_info = ts_info
+
+        _ts_info = TimestampInfo()
+        _ts_info.time_existed = _now - _created_time
+        _ts_info.time_unmodified = _now - _modified_time
+        _ts_info.date_created = datetime.fromtimestamp(_created_time).isoformat()
+        _ts_info.date_modified = datetime.fromtimestamp(_modified_time).isoformat()
+
+        self.ts_info = _ts_info
 
     def set_size_info(self) -> None:
         """Set the size information for the file."""
         _size = self.stat.st_size
-        size_info = SizeInfo()
-        size_info.size = _size
-        size_info.human_readable_size = format_bytes(_size)
-        size_info.has_content = bool(_size)
-        self.size_info = size_info
+
+        _size_info = SizeInfo()
+        _size_info.size = _size
+        _size_info.human_readable_size = format_bytes(_size)
+        _size_info.has_content = bool(_size)
+
+        self.size_info = _size_info
 
     def set_namespace_info(self) -> None:
         """Get the namespace name data."""
-        _ns_parts_list = self.name.split(Core.NS_SEP.value)
+        _ns_sep = Core.NS_SEP.value
+        _name = self.name
+        _ns_parts_list = _name.split(_ns_sep)
         _ns_root = _ns_parts_list[0]
-        ns_info = NamespaceInfo()
-        ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
-        ns_info.root = _ns_root
-        ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
-        ns_info.parent_full = Core.NS_SEP.value.join(_ns_parts_list[:-1])
-        ns_info.stem = _ns_parts_list[-1]
-        self.ns_info = ns_info
+
+        _ns_info = NamespaceInfo()
+        _ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
+        _ns_info.root = _ns_root
+        _ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
+        _ns_info.parent_full = _ns_sep.join(_ns_parts_list[:-1])
+        _ns_info.stem = _ns_parts_list[-1]
+
+        self.ns_info = _ns_info

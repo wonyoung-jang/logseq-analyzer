@@ -25,6 +25,7 @@ class Cache:
     __slots__ = ("cache_path", "cache")
 
     graph_dir: Path = None
+    graph_cache: bool = False
     target_dirs: set[str] = set()
 
     def __init__(self, cache_path: Path = None) -> None:
@@ -54,9 +55,9 @@ class Cache:
         """Get a value from the cache."""
         return self.cache.get(key, default)
 
-    def initialize(self, clear: bool, index: "FileIndex") -> None:
+    def initialize(self, index: "FileIndex") -> None:
         """Clear the cache if needed."""
-        if clear:
+        if Cache.graph_cache:
             self.clear()
             logger.info("Cache cleared.")
         else:
