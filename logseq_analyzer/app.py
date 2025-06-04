@@ -23,6 +23,7 @@ from .config.graph_config import (
 )
 from .io.cache import Cache
 from .io.filesystem import (
+    AnalyzerDeleteDirs,
     AssetsDirectory,
     BakDirectory,
     CacheFile,
@@ -36,7 +37,9 @@ from .io.filesystem import (
     GraphDirectory,
     JournalsDirectory,
     LogFile,
+    LogseqAnalyzerDirs,
     LogseqDirectory,
+    LogseqGraphDirs,
     OutputDirectory,
     PagesDirectory,
     RecycleDirectory,
@@ -92,50 +95,6 @@ class GUIInstanceDummy:
 
 
 @dataclass
-class LogseqGraphDirs:
-    """Directories related to the Logseq graph."""
-
-    graph_dir: GraphDirectory = None
-    logseq_dir: LogseqDirectory = None
-    bak_dir: BakDirectory = None
-    recycle_dir: RecycleDirectory = None
-    user_config: ConfigFile = None
-    global_config: GlobalConfigFile = None
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the Logseq graph directories."""
-        return {
-            "graph_dir": self.graph_dir,
-            "logseq_dir": self.logseq_dir,
-            "bak_dir": self.bak_dir,
-            "recycle_dir": self.recycle_dir,
-            "user_config": self.user_config,
-            "global_config": self.global_config,
-        }
-
-
-@dataclass
-class AnalyzerDeleteDirs:
-    """Directories for deletion operations in the Logseq analyzer."""
-
-    delete_dir: DeleteDirectory = None
-    delete_bak_dir: DeleteBakDirectory = None
-    delete_recycle_dir: DeleteRecycleDirectory = None
-    delete_assets_dir: DeleteAssetsDirectory = None
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the analyzer delete directories."""
-        return {
-            "delete_dir": self.delete_dir,
-            "delete_bak_dir": self.delete_bak_dir,
-            "delete_recycle_dir": self.delete_recycle_dir,
-            "delete_assets_dir": self.delete_assets_dir,
-        }
-
-
-@dataclass
 class ConfigEdns:
     """Configuration EDN files for the Logseq analyzer."""
 
@@ -148,30 +107,12 @@ class ConfigEdns:
     def report(self) -> dict[str, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            "edn_default": self.default_edn,
-            "edn_user": self.user_edn,
-            "edn_global": self.global_edn,
-            "edn_config": self.config,
-        }
-
-
-@dataclass
-class LogseqAnalyzerDirs:
-    """Directories used by the Logseq analyzer."""
-
-    graph_dirs: LogseqGraphDirs = None
-    delete_dirs: AnalyzerDeleteDirs = None
-    target_dirs: dict[str, str] = field(default_factory=dict)
-    output_dir: OutputDirectory = None
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the Logseq analyzer directories."""
-        return {
-            "graph_dirs": self.graph_dirs.report,
-            "delete_dirs": self.delete_dirs.report,
-            "target_dirs": self.target_dirs,
-            "output_dir": self.output_dir,
+            "config_edns": {
+                "edn_default": self.default_edn,
+                "edn_user": self.user_edn,
+                "edn_global": self.global_edn,
+                "edn_config": self.config,
+            }
         }
 
 

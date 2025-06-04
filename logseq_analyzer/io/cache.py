@@ -5,15 +5,13 @@ This module handles caching mechanisms for the application.
 import logging
 import shelve
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator
+from typing import Any, Generator
 
 from ..analysis.index import FileIndex
 from ..config.arguments import Args
 from ..utils.enums import CacheKeys
 from ..utils.helpers import iter_files
-
-if TYPE_CHECKING:
-    from ..app import LogseqAnalyzerDirs
+from ..io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +39,7 @@ class Cache:
         return f"{self.__class__.__qualname__}: {self.cache_path}"
 
     @classmethod
-    def configure(cls, args: Args, analyzer_dirs: "LogseqAnalyzerDirs") -> None:
+    def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:
         """
         Configure the Cache class with necessary settings.
 
