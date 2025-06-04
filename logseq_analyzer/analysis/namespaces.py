@@ -105,10 +105,10 @@ class LogseqNamespaces:
             if not f.path.is_namespace:
                 continue
             current_level = structure.tree
-            structure.data[f.name] = {k: v for k, v in f.ns_info.__dict__.items() if v}
-            if not (parts := structure.data[f.name].get("parts")):
+            structure.data[f.path.name] = {k: v for k, v in f.info.namespace.__dict__.items() if v}
+            if not (parts := structure.data[f.path.name].get("parts")):
                 continue
-            structure.parts[f.name] = parts
+            structure.parts[f.path.name] = parts
             for part, level in parts.items():
                 structure.unique_parts.add(part)
                 structure.unique_ns_per_level[level].add(part)
@@ -116,7 +116,7 @@ class LogseqNamespaces:
                 current_level.setdefault(part, {})
                 current_level = current_level[part]
                 part_levels[part].add(level)
-                part_entries[part].append({"entry": f.name, "level": level})
+                part_entries[part].append({"entry": f.path.name, "level": level})
         structure.details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(self, index: FileIndex, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
@@ -131,7 +131,7 @@ class LogseqNamespaces:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
                 ns_queries.setdefault(query, {})
-                ns_queries[query].setdefault("found_in", []).append(f.name)
+                ns_queries[query].setdefault("found_in", []).append(f.path.name)
                 ns_queries[query]["namespace"] = page_refs[0]
                 ns_queries[query]["size"] = structure.data.get(page_refs[0], {}).get("size", 0)
                 ns_queries[query]["uri"] = f.path.uri
@@ -142,7 +142,7 @@ class LogseqNamespaces:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         structure = self.structure
         conflicts = self.conflicts
-        non_ns_names = (f.name for f in index if not f.path.is_namespace)
+        non_ns_names = (f.path.name for f in index if not f.path.is_namespace)
         potential_non_ns_names = structure.unique_parts.intersection(non_ns_names)
         potential_dangling = structure.unique_parts.intersection(dangling_links)
         for entry, parts in structure.parts.items():

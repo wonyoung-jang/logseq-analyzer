@@ -231,7 +231,7 @@ def get_count_and_foundin_data(result: dict, collection: list[str], file: "Logse
     for item in collection:
         result.setdefault(item, {"count": 0, "found_in": Counter()})
         result[item]["count"] = result[item].get("count", 0) + 1
-        result[item]["found_in"][file.name] += 1
+        result[item]["found_in"][file.path.name] += 1
     return result
 
 

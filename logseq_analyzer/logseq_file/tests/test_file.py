@@ -8,7 +8,6 @@ import pytest
 
 from ..bullets import LogseqBullets
 from ..file import LogseqFile
-from ..name import LogseqFilename
 
 
 @pytest.fixture
@@ -30,7 +29,6 @@ def logseq_file(temp_file):
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
     assert logseq_file.path == Path(temp_file)
-    assert isinstance(logseq_file.fname, LogseqFilename)
     assert isinstance(logseq_file.bullets, LogseqBullets)
     assert logseq_file.data == {}
     assert logseq_file.node.has_backlinks is False

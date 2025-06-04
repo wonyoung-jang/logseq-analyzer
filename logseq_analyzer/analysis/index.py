@@ -85,7 +85,7 @@ class FileIndex:
         """Add a file to the index."""
         self._files.add(f)
         self._hash_to_file[hash(f)] = f
-        self._name_to_files[f.name].append(f)
+        self._name_to_files[f.path.name].append(f)
         self._path_to_file[f.path.file] = f
 
     def remove(self, f: Any) -> None:
@@ -113,13 +113,13 @@ class FileIndex:
         """Helper method to remove a file from the index."""
         self._files.discard(f)
         self._hash_to_file.pop(hash(f), None)
-        if files := self._name_to_files.get(f.name):
+        if files := self._name_to_files.get(f.path.name):
             try:
                 files.remove(f)
             except ValueError:
-                logger.warning("File %s not found in name_to_files list for name %s.", f, f.name)
+                logger.warning("File %s not found in name_to_files list for name %s.", f, f.path.name)
         else:
-            del self._name_to_files[f.name]
+            del self._name_to_files[f.path.name]
         self._path_to_file.pop(f.path.file, None)
 
     def remove_deleted_files(self):
@@ -129,16 +129,16 @@ class FileIndex:
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
-        for ns_root_file in self[f.ns_info.root]:
+        for ns_root_file in self[f.info.namespace.root]:
             ns_root_file: LogseqFile
             ns_root_file.path.is_namespace = True
-            ns_root_file.ns_info.children.add(f.name)
-            ns_root_file.ns_info.size = len(ns_root_file.ns_info.children)
+            ns_root_file.info.namespace.children.add(f.path.name)
+            ns_root_file.info.namespace.size = len(ns_root_file.info.namespace.children)
 
-        for ns_parent_file in self[f.ns_info.parent_full]:
+        for ns_parent_file in self[f.info.namespace.parent_full]:
             ns_parent_file: LogseqFile
-            ns_parent_file.ns_info.children.add(f.name)
-            ns_parent_file.ns_info.size = len(ns_parent_file.ns_info.children)
+            ns_parent_file.info.namespace.children.add(f.path.name)
+            ns_parent_file.info.namespace.size = len(ns_parent_file.info.namespace.children)
 
     def yield_unlinked_assets(self):
         """Yield all unlinked asset files from the index."""

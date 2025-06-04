@@ -42,29 +42,29 @@ class LogseqFileSummarizer:
     def get_general_subset(self, index: FileIndex) -> None:
         """Generate general subsets for the Logseq Analyzer."""
         g = self.general
-        g[SummaryFiles.BACKLINKED.value] = sorted(f.name for f in index if f.node.backlinked)
-        g[SummaryFiles.BACKLINKED_NS_ONLY.value] = sorted(f.name for f in index if f.node.backlinked_ns_only)
-        g[SummaryFiles.IS_HLS.value] = sorted(f.name for f in index if f.is_hls)
-        g[SummaryFiles.HAS_CONTENT.value] = sorted(f.name for f in index if f.has_content)
-        g[SummaryFiles.HAS_BACKLINKS.value] = sorted(f.name for f in index if f.node.has_backlinks)
+        g[SummaryFiles.BACKLINKED.value] = sorted(f.path.name for f in index if f.node.backlinked)
+        g[SummaryFiles.BACKLINKED_NS_ONLY.value] = sorted(f.path.name for f in index if f.node.backlinked_ns_only)
+        g[SummaryFiles.IS_HLS.value] = sorted(f.path.name for f in index if f.is_hls)
+        g[SummaryFiles.HAS_CONTENT.value] = sorted(f.path.name for f in index if f.info.size.has_content)
+        g[SummaryFiles.HAS_BACKLINKS.value] = sorted(f.path.name for f in index if f.node.has_backlinks)
 
     def get_filetype_subset(self, index: FileIndex):
         """Generate filetype subsets for the Logseq Analyzer."""
         filetypes = self.filetypes
         for f in index:
-            filetypes[f.file_type].append(f.name)
+            filetypes[f.path.file_type].append(f.path.name)
 
     def get_nodetype_subset(self, index: FileIndex):
         """Generate nodetype subsets for the Logseq Analyzer."""
         nodetypes = self.nodetypes
         for f in index:
-            nodetypes[f.node.node_type].append(f.name)
+            nodetypes[f.node.node_type].append(f.path.name)
 
     def get_extensions_subset(self, index: FileIndex) -> None:
         """Process file extensions and create subsets for each."""
         extensions = self.extensions
         for f in index:
-            extensions[f.path.file.suffix].append(f.name)
+            extensions[f.path.file.suffix].append(f.path.name)
 
 
 class LogseqContentSummarizer:

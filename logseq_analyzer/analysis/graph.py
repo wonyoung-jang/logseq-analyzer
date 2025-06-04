@@ -60,9 +60,9 @@ class LogseqGraph:
         unique_aliases = self.unique_aliases
 
         for f in index:
-            ns_info = f.ns_info
+            ns_info = f.info.namespace
             if f.path.is_namespace:
-                unique_linked_refs_ns.update((ns_info.root, f.name))
+                unique_linked_refs_ns.update((ns_info.root, f.path.name))
                 index.process_namespaces(f)
             if not f.data:
                 continue
@@ -101,19 +101,16 @@ class LogseqGraph:
         unique_linked_refs_ns = self.unique_linked_refs_ns
         check_for_nodes = LogseqGraph._TO_NODE_TYPE
         for f in index:
-            f.node.check_backlinked(f.name, unique_linked_refs)
-            f.node.check_backlinked_ns_only(f.name, unique_linked_refs_ns)
-            if f.file_type in check_for_nodes:
-                f.node.determine_node_type(f.has_content)
+            f.node.check_backlinked(f.path.name, unique_linked_refs)
+            f.node.check_backlinked_ns_only(f.path.name, unique_linked_refs_ns)
+            if f.path.file_type in check_for_nodes:
+                f.node.determine_node_type(f.info.size.has_content)
 
     def post_process_dangling(self, index: FileIndex) -> list[str]:
         """Process dangling links in the graph."""
-        unique_linked_refs = self.unique_linked_refs
-        unique_linked_refs_ns = self.unique_linked_refs_ns
-        unique_aliases = self.unique_aliases
-        all_file_names = (f.name for f in index)
-        all_refs = unique_linked_refs.union(unique_linked_refs_ns)
-        all_refs.difference_update(all_file_names, unique_aliases)
+        all_file_names = (f.path.name for f in index)
+        all_refs = self.unique_linked_refs.union(self.unique_linked_refs_ns)
+        all_refs.difference_update(all_file_names, self.unique_aliases)
         self.dangling_links.extend(remove_builtin_properties(all_refs))
 
     def post_process_all_dangling(self) -> None:

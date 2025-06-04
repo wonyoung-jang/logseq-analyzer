@@ -134,6 +134,7 @@ class LogseqFile:
         "masked",
         "node",
         "info",
+        "is_hls",
     )
 
     _BACKLINK_CRITERIA: frozenset[str] = frozenset(
@@ -168,12 +169,13 @@ class LogseqFile:
         self.masked: MaskedBlocks = MaskedBlocks()
         self.data: dict[str, Any] = {}
         self.info: LogseqFileInfo = None
+        self.is_hls: bool = False
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__qualname__}({self.name})"
+        return f"{self.__class__.__qualname__}({self.path.name})"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__qualname__}: {self.name}"
+        return f"{self.__class__.__qualname__}: {self.path.name}"
 
     def __hash__(self) -> int:
         return hash(self.path.file.parts)
@@ -185,45 +187,16 @@ class LogseqFile:
 
     def __lt__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.name < other.name
+            return self.path.name < other.path.name
         if isinstance(other, str):
-            return self.name < other
+            return self.path.name < other
         return NotImplemented
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Logseq file."""
-        return self.path.name
-
-    @property
-    def file_type(self) -> str:
-        """Return the type of the Logseq file."""
-        return self.path.file_type
-
-    @property
-    def is_hls(self) -> bool:
-        """Check if the Logseq file is a HLS (Hierarchical Link Structure)."""
-        return self.name.startswith(Core.HLS_PREFIX.value)
-
-    @property
-    def has_content(self) -> bool:
-        """Check if the Logseq file has content."""
-        return self.info.size.has_content
-
-    @property
-    def has_page_properties(self) -> bool:
-        """Check if the Logseq file has page properties."""
-        return self.bullets.has_page_properties
-
-    @property
-    def ns_info(self) -> NamespaceInfo:
-        """Return the namespace information of the Logseq file."""
-        return self.info.namespace
 
     def process(self) -> None:
         """Process the Logseq file to extract metadata and content."""
         self.init_file_data()
         self.process_content_data()
+        self.is_hls = self.path.name.startswith(Core.HLS_PREFIX.value)
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
@@ -238,7 +211,7 @@ class LogseqFile:
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
-        if not self.has_content:
+        if not self.info.size.has_content:
             return
         self.mask_blocks()
         self.extract_data()

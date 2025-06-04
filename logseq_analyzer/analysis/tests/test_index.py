@@ -13,12 +13,6 @@ def file_index():
     return FileIndex()
 
 
-def test_file_index_singleton(file_index):
-    """Test the singleton behavior of FileIndex."""
-    another_index = FileIndex()
-    assert file_index is another_index, "FileIndex should be a singleton."
-
-
 def test_file_index_representation(file_index):
     """Test the string representation of FileIndex."""
     assert repr(file_index) == "FileIndex()"

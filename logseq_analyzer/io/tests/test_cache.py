@@ -24,12 +24,6 @@ def test_cache_initialization(cache):
     assert cache.cache is not None
 
 
-def test_cache_singleton(cache):
-    """Test the singleton behavior of the Cache class."""
-    another_cache = Cache()
-    assert cache is another_cache, "Cache should be a singleton."
-
-
 def test_representation(cache):
     """Test the string representation of Cache."""
     assert repr(cache) == f'Cache(cache_path="{cache.cache_path}")'

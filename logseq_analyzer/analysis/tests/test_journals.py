@@ -12,11 +12,6 @@ def logseq_journals():
     return LogseqJournals()
 
 
-def test_singleton(logseq_journals):
-    another_instance = LogseqJournals()
-    assert logseq_journals is another_instance
-
-
 def test_representation(logseq_journals):
     assert repr(logseq_journals) == "LogseqJournals()"
     assert str(logseq_journals) == "LogseqJournals"

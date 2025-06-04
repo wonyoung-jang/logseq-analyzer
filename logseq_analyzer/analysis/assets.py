@@ -55,9 +55,9 @@ class LogseqAssets:
             if not asset_mentions:
                 continue
 
-            f_name = f.name
+            f_name = f.path.name
             for asset_file in yield_assets(index, backlinked=False):
-                asset_file.node.update_asset_backlink(asset_mentions, (asset_file.name, f_name))
+                asset_file.node.update_asset_backlink(asset_mentions, (asset_file.path.name, f_name))
 
             clear_mentions()
 
@@ -121,7 +121,7 @@ class LogseqAssetsHls:
         """Retrieve asset files based on specific criteria."""
         sub_asset_file_type = FileTypes.SUB_ASSET.value
         asset_files = (f for f in index if f.path.file_type == sub_asset_file_type)
-        self.asset_mapping = {f.name: f for f in asset_files}
+        self.asset_mapping = {f.path.name: f for f in asset_files}
 
     def convert_names_to_data(self, index: FileIndex) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""

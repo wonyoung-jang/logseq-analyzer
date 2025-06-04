@@ -58,7 +58,7 @@ class LogseqJournals:
         """Process journal keys to build the complete timeline and detect missing entries."""
         page_format = LogseqJournals.journal_page_format
         dangling = sorted(self.date.journals_to_datetime(dangling_links, page_format))
-        journal_keys = (f.name for f in index if f.file_type == FileTypes.JOURNAL.value)
+        journal_keys = (f.path.name for f in index if f.path.file_type == FileTypes.JOURNAL.value)
         journals = sorted(journal_keys)
         self.existing.extend(sorted(self.date.journals_to_datetime(journals, page_format)))
         self.build_complete_timeline(dangling)
