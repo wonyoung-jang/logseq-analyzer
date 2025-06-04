@@ -147,9 +147,9 @@ class FileIndex:
                 yield f
 
     @property
-    def graph_data(self, exclude: tuple[str, ...] = ("data", "masked")) -> dict[LogseqFile, dict[str, Any]]:
+    def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
-        return {file: {k: v for k, v in yield_attrs(file) if v and k not in exclude} for file in self}
+        return {file: {k: v for k, v in yield_attrs(file) if v and k not in ("data", "masked")} for file in self}
 
     @property
     def graph_content_data(self) -> dict[LogseqFile, Any]:

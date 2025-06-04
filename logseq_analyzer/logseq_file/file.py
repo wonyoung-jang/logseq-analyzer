@@ -17,7 +17,7 @@ import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, NodeTypes
 from .bullets import LogseqBullets
-from .stats import LogseqPath, NamespaceInfo
+from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
 
 
 @dataclass
@@ -115,6 +115,15 @@ class NodeType:
                     return
 
 
+@dataclass
+class LogseqFileInfo:
+    """LogseqFileInfo class."""
+
+    timestamp: TimestampInfo
+    size: SizeInfo
+    namespace: NamespaceInfo
+
+
 class LogseqFile:
     """A class to represent a Logseq file."""
 
@@ -124,6 +133,7 @@ class LogseqFile:
         "bullets",
         "masked",
         "node",
+        "info",
     )
 
     _BACKLINK_CRITERIA: frozenset[str] = frozenset(
@@ -157,6 +167,7 @@ class LogseqFile:
         self.bullets: LogseqBullets = None
         self.masked: MaskedBlocks = MaskedBlocks()
         self.data: dict[str, Any] = {}
+        self.info: LogseqFileInfo = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__qualname__}({self.name})"
@@ -165,11 +176,11 @@ class LogseqFile:
         return f"{self.__class__.__qualname__}: {self.name}"
 
     def __hash__(self) -> int:
-        return hash(self.path.parts)
+        return hash(self.path.file.parts)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, LogseqFile):
-            return self.path.parts == other.path.parts
+            return self.path.file.parts == other.path.file.parts
         return NotImplemented
 
     def __lt__(self, other) -> bool:
@@ -197,12 +208,7 @@ class LogseqFile:
     @property
     def has_content(self) -> bool:
         """Check if the Logseq file has content."""
-        return self.path.size_info.has_content
-
-    @property
-    def node_type(self) -> str:
-        """Return the type of the Logseq file node."""
-        return self.node.node_type
+        return self.info.size.has_content
 
     @property
     def has_page_properties(self) -> bool:
@@ -210,24 +216,9 @@ class LogseqFile:
         return self.bullets.has_page_properties
 
     @property
-    def uri(self) -> str:
-        """Return the URI of the Logseq file."""
-        return self.path.uri
-
-    @property
-    def logseq_url(self) -> str:
-        """Return the Logseq URL of the file."""
-        return self.path.logseq_url
-
-    @property
-    def suffix(self) -> str:
-        """Return the file extension."""
-        return self.path.suffix
-
-    @property
     def ns_info(self) -> NamespaceInfo:
         """Return the namespace information of the Logseq file."""
-        return self.path.ns_info
+        return self.info.namespace
 
     def process(self) -> None:
         """Process the Logseq file to extract metadata and content."""
@@ -237,6 +228,11 @@ class LogseqFile:
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
         self.path.process()
+        self.info = LogseqFileInfo(
+            timestamp=self.path.get_timestamp_info(),
+            size=self.path.get_size_info(),
+            namespace=self.path.get_namespace_info(),
+        )
         self.bullets = LogseqBullets(self.path.read_text())
         self.bullets.process()
 

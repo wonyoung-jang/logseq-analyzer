@@ -58,13 +58,13 @@ class LogseqFileSummarizer:
         """Generate nodetype subsets for the Logseq Analyzer."""
         nodetypes = self.nodetypes
         for f in index:
-            nodetypes[f.node_type].append(f.name)
+            nodetypes[f.node.node_type].append(f.name)
 
     def get_extensions_subset(self, index: FileIndex) -> None:
         """Process file extensions and create subsets for each."""
         extensions = self.extensions
         for f in index:
-            extensions[f.suffix].append(f.name)
+            extensions[f.path.file.suffix].append(f.name)
 
 
 class LogseqContentSummarizer:

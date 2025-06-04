@@ -119,14 +119,13 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f.name, "level": level})
         structure.details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, index: FileIndex) -> None:
+    def analyze_ns_queries(self, index: FileIndex, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
         """Analyze namespace queries."""
         structure = self.structure
-        ns_query_crit: str = Criteria.DBC_NAMESPACE_QUERIES.value
         page_ref_pattern: re.Pattern = ContentPatterns.PAGE_REFERENCE
         ns_queries = {}
         for f in index:
-            for query in f.data.get(ns_query_crit, []):
+            for query in f.data.get(query_criteria, []):
                 page_refs = page_ref_pattern.findall(query)
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
@@ -135,8 +134,8 @@ class LogseqNamespaces:
                 ns_queries[query].setdefault("found_in", []).append(f.name)
                 ns_queries[query]["namespace"] = page_refs[0]
                 ns_queries[query]["size"] = structure.data.get(page_refs[0], {}).get("size", 0)
-                ns_queries[query]["uri"] = f.uri
-                ns_queries[query]["logseq_url"] = f.logseq_url
+                ns_queries[query]["uri"] = f.path.uri
+                ns_queries[query]["logseq_url"] = f.path.logseq_url
         self.queries.update(sort_dict_by_value(ns_queries, value="size", reverse=True))
 
     def detect_non_ns_conflicts(self, index: FileIndex, dangling_links: set[str]) -> None:
@@ -152,9 +151,8 @@ class LogseqNamespaces:
             for part in potential_dangling.intersection(parts):
                 conflicts.dangling[part].append(entry)
 
-    def detect_parent_depth_conflicts(self) -> None:
+    def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
-        ns_sep: str = Core.NS_SEP.value
         part_levels = self._part_levels
         part_entries = self._part_entries
         conflicts = self.conflicts
