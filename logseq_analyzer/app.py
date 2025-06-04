@@ -5,7 +5,7 @@ This module contains the main application logic for the Logseq analyzer.
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
@@ -352,35 +352,40 @@ def analyze(
     index: FileIndex,
     graph_dirs: LogseqGraphDirs,
     delete_dirs: AnalyzerDeleteDirs,
-) -> tuple:
+) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
+    yield (OutputDir.META.value, args.report)
+    yield (OutputDir.META.value, configs.report)
+
     process_graph(index, cache)
+
     graph = setup_graph(index)
+    yield (OutputDir.GRAPH.value, graph.report)
+    yield (OutputDir.INDEX.value, index.report)
+
     namespaces = setup_namespaces(graph, index)
+    yield (OutputDir.NAMESPACES.value, namespaces.report)
+
     journals = setup_journals(graph, index)
+    yield (OutputDir.JOURNALS.value, journals.report)
+
     ls_assets, hls_assets = setup_assets(index)
+    yield (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report)
+    yield (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report)
+
     moved_files = setup_file_mover(args, ls_assets, graph_dirs, delete_dirs)
+    yield (OutputDir.MOVED_FILES.value, moved_files)
+
     summary_files, summary_content = setup_summarizers(index)
+    yield (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general)
+    yield (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes)
+    yield (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes)
+    yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions)
+    yield (OutputDir.SUMMARY_CONTENT.value, summary_content.report)
     logger.debug("analyze")
-    return (
-        (OutputDir.META.value, args.report),
-        (OutputDir.META.value, configs.report),
-        (OutputDir.GRAPH.value, graph.report),
-        (OutputDir.INDEX.value, index.report),
-        (OutputDir.JOURNALS.value, journals.report),
-        (OutputDir.NAMESPACES.value, namespaces.report),
-        (OutputDir.MOVED_FILES.value, moved_files),
-        (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report),
-        (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report),
-        (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general),
-        (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes),
-        (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes),
-        (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions),
-        (OutputDir.SUMMARY_CONTENT.value, summary_content.report),
-    )
 
 
-def write_reports(data_reports: tuple[Any]) -> None:
+def write_reports(data_reports: Generator[tuple[str, Any], None, None]) -> None:
     """Write reports to the specified output directories."""
     for subdir, reports in data_reports:
         for prefix, data in reports.items():

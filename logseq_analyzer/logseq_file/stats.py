@@ -155,10 +155,11 @@ class LogseqPath:
         _result_map = LogseqPath.result_map
         _parent = self.parent
         _parts = self.parts
+        _filetype_other = FileTypes.OTHER.value
 
-        result = _result_map.get(_parent, (FileTypes.OTHER.value, FileTypes.OTHER.value))
+        result = _result_map.get(_parent, (_filetype_other, _filetype_other))
 
-        if result[0] != FileTypes.OTHER.value:
+        if result[0] != _filetype_other:
             self.file_type = result[0]
             return
 
@@ -185,18 +186,18 @@ class LogseqPath:
 
     def _process_logseq_journal_key(self, name: str) -> str:
         """Process the journal key to create a page title."""
-        _journal_file_format = LogseqPath.journal_file_format
-        _journal_page_format = LogseqPath.journal_page_format
-        _journal_page_title_format = LogseqPath.journal_page_title_format
+        _file_format = LogseqPath.journal_file_format
+        _page_format = LogseqPath.journal_page_format
+        _page_title_format = LogseqPath.journal_page_title_format
 
         try:
-            date_obj = datetime.strptime(name, _journal_file_format)
-            page_title = date_obj.strftime(_journal_page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in _journal_page_title_format:
+            date_obj = datetime.strptime(name, _file_format)
+            page_title = date_obj.strftime(_page_format)
+            if Core.DATE_ORDINAL_SUFFIX.value in _page_title_format:
                 page_title = self._get_ordinal_day(date_obj, page_title)
             return page_title.replace("'", "")
         except ValueError as e:
-            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, _journal_page_format, e)
+            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, _page_format, e)
             return name
 
     def _get_ordinal_day(self, date_obj: datetime, page_title: str) -> str:
@@ -218,37 +219,31 @@ class LogseqPath:
         _now = LogseqPath.now_ts
         _created_time = self.stat.st_birthtime
         _modified_time = self.stat.st_mtime
-
-        _ts_info = TimestampInfo()
-        _ts_info.time_existed = _now - _created_time
-        _ts_info.time_unmodified = _now - _modified_time
-        _ts_info.date_created = datetime.fromtimestamp(_created_time).isoformat()
-        _ts_info.date_modified = datetime.fromtimestamp(_modified_time).isoformat()
-
-        self.ts_info = _ts_info
+        self.ts_info = TimestampInfo(
+            time_existed=_now - _created_time,
+            time_unmodified=_now - _modified_time,
+            date_created=datetime.fromtimestamp(_created_time).isoformat(),
+            date_modified=datetime.fromtimestamp(_modified_time).isoformat(),
+        )
 
     def set_size_info(self) -> None:
         """Set the size information for the file."""
         _size = self.stat.st_size
-
-        _size_info = SizeInfo()
-        _size_info.size = _size
-        _size_info.human_readable_size = format_bytes(_size)
-        _size_info.has_content = bool(_size)
-
-        self.size_info = _size_info
+        self.size_info = SizeInfo(
+            size=_size,
+            human_readable_size=format_bytes(_size),
+            has_content=bool(_size),
+        )
 
     def set_namespace_info(self) -> None:
         """Get the namespace name data."""
         _ns_sep = Core.NS_SEP.value
         _ns_parts_list = self.name.split(_ns_sep)
         _ns_root = _ns_parts_list[0]
-
-        _ns_info = NamespaceInfo()
-        _ns_info.parts = {part: level for level, part in enumerate(_ns_parts_list, start=1)}
-        _ns_info.root = _ns_root
-        _ns_info.parent = _ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root
-        _ns_info.parent_full = _ns_sep.join(_ns_parts_list[:-1])
-        _ns_info.stem = _ns_parts_list[-1]
-
-        self.ns_info = _ns_info
+        self.ns_info = NamespaceInfo(
+            parts={part: level for level, part in enumerate(_ns_parts_list, start=1)},
+            root=_ns_root,
+            parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root,
+            parent_full=_ns_sep.join(_ns_parts_list[:-1]),
+            stem=_ns_parts_list[-1],
+        )

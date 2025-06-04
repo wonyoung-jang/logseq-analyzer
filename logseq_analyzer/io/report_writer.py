@@ -284,5 +284,4 @@ class ReportWriter:
         output_dir = self.output_dir / self.subdir if self.subdir else self.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / filename
-        output_path.touch(exist_ok=True)
         return output_path

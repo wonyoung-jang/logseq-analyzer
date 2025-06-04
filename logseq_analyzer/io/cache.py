@@ -36,23 +36,15 @@ class Cache:
     def __str__(self) -> str:
         return f"{self.__class__.__qualname__}: {self.cache_path}"
 
-    def open(self, protocol: int = 5) -> None:
+    def open(self, protocol: int = 5, writeback: bool = True) -> None:
         """Open the cache file."""
-        self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=True)
+        self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=writeback)
 
     def close(self, index: FileIndex) -> None:
         """Close the cache file."""
         self.cache[CacheKeys.INDEX.value] = index
         self.cache.sync()
         self.cache.close()
-
-    def update(self, data: Any) -> None:
-        """Update the cache with new data."""
-        self.cache.update(data)
-
-    def get(self, key, default=None) -> Any | None:
-        """Get a value from the cache."""
-        return self.cache.get(key, default)
 
     def initialize(self) -> FileIndex:
         """Clear the cache if needed."""
@@ -69,13 +61,14 @@ class Cache:
         """Clear the cache."""
         self.cache.close()
         self.cache_path.unlink(missing_ok=True)
-        self.open()
+        self.open(protocol=5, writeback=True)
 
     def clear_deleted_files(self) -> FileIndex:
         """Clear the deleted files from the cache."""
-        if CacheKeys.INDEX.value in self.cache:
-            index = self.cache[CacheKeys.INDEX.value]
-            del self.cache[CacheKeys.INDEX.value]
+        index_key = CacheKeys.INDEX.value
+        if index_key in self.cache:
+            index = self.cache[index_key]
+            del self.cache[index_key]
         else:
             index = FileIndex()
         index.remove_deleted_files()
@@ -83,14 +76,14 @@ class Cache:
 
     def iter_modified_files(self) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
-        graph_dir = Cache.graph_dir
-        target_dirs = Cache.target_dirs
-        if CacheKeys.MOD_TRACKER.value not in self.cache:
-            mod_tracker = {}
-        else:
-            mod_tracker = self.cache[CacheKeys.MOD_TRACKER.value]
-            del self.cache[CacheKeys.MOD_TRACKER.value]
-        for path in iter_files(graph_dir, target_dirs):
+        mod_tracker_key = CacheKeys.MOD_TRACKER.value
+        mod_tracker = {}
+        if mod_tracker_key in self.cache:
+            mod_tracker = self.cache[mod_tracker_key]
+            del self.cache[mod_tracker_key]
+
+        file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
+        for path in file_iter:
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime
             if curr_date_mod == mod_tracker.get(str_path):
@@ -98,4 +91,5 @@ class Cache:
             mod_tracker[str_path] = curr_date_mod
             logger.debug("File modified: %s", path)
             yield path
-        self.cache[CacheKeys.MOD_TRACKER.value] = mod_tracker
+
+        self.cache[mod_tracker_key] = mod_tracker

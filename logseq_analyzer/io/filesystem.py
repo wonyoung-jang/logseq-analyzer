@@ -65,7 +65,7 @@ class File:
         if not self.is_dir and not self.path.is_file():
             logger.error("Path is not a file: %s", self.path)
             raise FileNotFoundError(f"Path is not a file: {self.path}")
-        logger.info("File exists: %s", self.path)
+        logger.info("%s exists", self.path)
 
     def clean(self) -> None:
         """Clean up the file or directory."""

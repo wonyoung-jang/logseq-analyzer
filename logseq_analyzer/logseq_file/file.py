@@ -282,11 +282,12 @@ class LogseqFile:
         content = self.bullets.content
         blocks = self.masked.blocks
         pattern_masking = LogseqFile._PATTERN_MASKING
+        _uuid4 = uuid.uuid4
 
         for regex, prefix in pattern_masking:
 
             def _repl(match, prefix=prefix) -> str:
-                placeholder = f"{prefix}{uuid.uuid4()}__"
+                placeholder = f"{prefix}{_uuid4()}__"
                 blocks[placeholder] = match.group(0)
                 return placeholder
 
@@ -311,8 +312,6 @@ class LogseqFile:
             yield (key, value)
 
     def check_has_backlinks(self) -> None:
-        """
-        Check has backlinks in the content.
-        """
+        """Check has backlinks in the content."""
         if not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys()):
             self.node.has_backlinks = True

@@ -62,5 +62,5 @@ class DateUtilities:
                 for ordinal in _ordinal_suffixes:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
-            except ValueError as e:
-                logger.warning("Invalid date format for key: %s. Error: %s", key, e)
+            except ValueError:
+                pass
