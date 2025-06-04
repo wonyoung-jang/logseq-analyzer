@@ -361,17 +361,18 @@ def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, Non
     Returns:
         list[str]: A list of names of the moved files/folders.
     """
-    names = [path.name for path in paths]
+    listpaths = list(paths)
+    names = [path.name for path in listpaths]
     if not names:
         return []
 
     if not move:
         return [MovedFiles.SIMULATED_PREFIX.value] + names
 
-    for src in paths:
+    for src in listpaths:
         dest = target_dir / src.name
         try:
-            shutil.move(str(src), str(dest))
+            shutil.move(src, dest)
             logger.warning("Moved file: %s to %s", src, dest)
         except (shutil.Error, OSError) as e:
             logger.error("Failed to move file: %s to %s: %s", src, dest, e)

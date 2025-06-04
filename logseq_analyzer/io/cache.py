@@ -40,9 +40,9 @@ class Cache:
         """Open the cache file."""
         self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=writeback)
 
-    def close(self, index: FileIndex) -> None:
+    def close(self, index: FileIndex, index_key: str = CacheKeys.INDEX.value) -> None:
         """Close the cache file."""
-        self.cache[CacheKeys.INDEX.value] = index
+        self.cache[index_key] = index
         self.cache.sync()
         self.cache.close()
 
@@ -61,11 +61,10 @@ class Cache:
         """Clear the cache."""
         self.cache.close()
         self.cache_path.unlink(missing_ok=True)
-        self.open(protocol=5, writeback=True)
+        self.open()
 
-    def clear_deleted_files(self) -> FileIndex:
+    def clear_deleted_files(self, index_key: str = CacheKeys.INDEX.value) -> FileIndex:
         """Clear the deleted files from the cache."""
-        index_key = CacheKeys.INDEX.value
         if index_key in self.cache:
             index = self.cache[index_key]
             del self.cache[index_key]
@@ -74,9 +73,8 @@ class Cache:
         index.remove_deleted_files()
         return index
 
-    def iter_modified_files(self) -> Generator[Path, Any, None]:
+    def iter_modified_files(self, mod_tracker_key: str = CacheKeys.MOD_TRACKER.value) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
-        mod_tracker_key = CacheKeys.MOD_TRACKER.value
         mod_tracker = {}
         if mod_tracker_key in self.cache:
             mod_tracker = self.cache[mod_tracker_key]
