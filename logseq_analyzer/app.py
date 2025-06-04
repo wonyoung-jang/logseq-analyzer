@@ -17,7 +17,6 @@ from .config.arguments import Args
 from .config.graph_config import (
     get_default_logseq_config,
     get_file_name_format,
-    get_ns_sep,
     get_page_title_format,
     get_target_dirs,
     init_config_edn_from_file,
@@ -103,6 +102,18 @@ class LogseqGraphDirs:
     user_config: ConfigFile = None
     global_config: GlobalConfigFile = None
 
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the Logseq graph directories."""
+        return {
+            "graph_dir": self.graph_dir,
+            "logseq_dir": self.logseq_dir,
+            "bak_dir": self.bak_dir,
+            "recycle_dir": self.recycle_dir,
+            "user_config": self.user_config,
+            "global_config": self.global_config,
+        }
+
 
 @dataclass
 class AnalyzerDeleteDirs:
@@ -112,6 +123,16 @@ class AnalyzerDeleteDirs:
     delete_bak_dir: DeleteBakDirectory = None
     delete_recycle_dir: DeleteRecycleDirectory = None
     delete_assets_dir: DeleteAssetsDirectory = None
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the analyzer delete directories."""
+        return {
+            "delete_dir": self.delete_dir,
+            "delete_bak_dir": self.delete_bak_dir,
+            "delete_recycle_dir": self.delete_recycle_dir,
+            "delete_assets_dir": self.delete_assets_dir,
+        }
 
 
 @dataclass
@@ -123,6 +144,16 @@ class ConfigEdns:
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the configuration EDN files."""
+        return {
+            "edn_default": self.default_edn,
+            "edn_user": self.user_edn,
+            "edn_global": self.global_edn,
+            "edn_config": self.config,
+        }
+
 
 @dataclass
 class LogseqAnalyzerDirs:
@@ -133,14 +164,24 @@ class LogseqAnalyzerDirs:
     target_dirs: dict[str, str] = field(default_factory=dict)
     output_dir: OutputDirectory = None
 
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the Logseq analyzer directories."""
+        return {
+            "graph_dirs": self.graph_dirs.report,
+            "delete_dirs": self.delete_dirs.report,
+            "target_dirs": self.target_dirs,
+            "output_dir": self.output_dir,
+        }
+
 
 @dataclass
 class JournalFormats:
     """Formats for Logseq journal files and pages."""
 
-    file_format: str = ""
-    page_format: str = ""
-    page_title_format: str = ""
+    file: str = ""
+    page: str = ""
+    page_title: str = ""
 
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
@@ -219,9 +260,9 @@ def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     journal_page_title_fmt = get_page_title_format(config_edns.config)
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file_format=convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern),
-        page_format=convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern),
-        page_title_format=journal_page_title_fmt,
+        file=convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern),
+        page=convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern),
+        page_title=journal_page_title_fmt,
     )
 
 
@@ -246,28 +287,15 @@ def setup_cache() -> tuple[Cache, FileIndex]:
 def configure_analyzer_settings(
     args: Args,
     analyzer_dirs: LogseqAnalyzerDirs,
-    journal_formats: JournalFormats,
     config_edns: ConfigEdns,
+    journal_formats: JournalFormats,
 ) -> None:
     """Setup the attributes for the LogseqAnalyzer."""
-    Cache.target_dirs = set(analyzer_dirs.target_dirs.values())
-    Cache.graph_dir = analyzer_dirs.graph_dirs.graph_dir.path
-    Cache.graph_cache = args.graph_cache
-
+    Cache.configure(args, analyzer_dirs)
     FileIndex.write_graph = args.write_graph
-
-    LogseqJournals.journal_page_format = journal_formats.page_format
-
-    LogseqPath.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
-    LogseqPath.journal_file_format = journal_formats.file_format
-    LogseqPath.journal_page_format = journal_formats.page_format
-    LogseqPath.journal_page_title_format = journal_formats.page_title_format
-    LogseqPath.target_dirs = analyzer_dirs.target_dirs
-    LogseqPath.ns_file_sep = get_ns_sep(config_edns.config)
-    LogseqPath.set_result_map()
-
-    ReportWriter.ext = args.report_format
-    ReportWriter.output_dir = analyzer_dirs.output_dir.path
+    LogseqJournals.journal_page_format = journal_formats.page
+    LogseqPath.configure(analyzer_dirs, journal_formats, config_edns)
+    ReportWriter.configure(args, analyzer_dirs)
     logger.debug("configure_analyzer_settings")
 
 
@@ -288,28 +316,18 @@ def setup_graph(index: FileIndex) -> LogseqGraph:
     return lg
 
 
-def setup_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
-    """Setup the Logseq summarizers."""
-    lfs = LogseqFileSummarizer()
-    lfs.process(index)
-    lcs = LogseqContentSummarizer()
-    lcs.process(index)
-    logger.debug("setup_summarizers")
-    return lfs, lcs
-
-
-def setup_namespaces(index: FileIndex, graph: LogseqGraph) -> LogseqNamespaces:
+def setup_namespaces(index: FileIndex, dangling_links: list[str]) -> LogseqNamespaces:
     """Setup LogseqNamespaces."""
     ln = LogseqNamespaces()
-    ln.process(index, graph.dangling_links)
+    ln.process(index, dangling_links)
     logger.debug("setup_namespaces")
     return ln
 
 
-def setup_journals(index: FileIndex, graph: LogseqGraph) -> LogseqJournals:
+def setup_journals(index: FileIndex, dangling_links: list[str]) -> LogseqJournals:
     """Setup LogseqJournals."""
     lj = LogseqJournals()
-    lj.process(index, graph.dangling_links)
+    lj.process(index, dangling_links)
     logger.debug("setup_journals")
     return lj
 
@@ -318,22 +336,24 @@ def setup_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
     """Setup LogseqAssetsHls for HLS assets."""
     lah = LogseqAssetsHls()
     lah.process(index)
+
     lsa = LogseqAssets()
     lsa.process(index)
+
     logger.debug("setup_assets")
     return lsa, lah
 
 
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    target_asset = analyzer_dirs.delete_dirs.delete_assets_dir.path
-    target_bak = analyzer_dirs.delete_dirs.delete_bak_dir.path
-    target_rec = analyzer_dirs.delete_dirs.delete_recycle_dir.path
-    bak_dir = analyzer_dirs.graph_dirs.bak_dir.path
-    rec_dir = analyzer_dirs.graph_dirs.recycle_dir.path
+    delete_dirs = analyzer_dirs.delete_dirs
+    graph_dirs = analyzer_dirs.graph_dirs
+    target_asset = delete_dirs.delete_assets_dir.path
+    target_bak = delete_dirs.delete_bak_dir.path
+    target_rec = delete_dirs.delete_recycle_dir.path
     asset_paths = yield_asset_paths(lsa.not_backlinked)
-    bak_paths = yield_bak_rec_paths(bak_dir)
-    rec_paths = yield_bak_rec_paths(rec_dir)
+    bak_paths = yield_bak_rec_paths(graph_dirs.bak_dir.path)
+    rec_paths = yield_bak_rec_paths(graph_dirs.recycle_dir.path)
     moved_assets = process_moves(args.move_unlinked_assets, target_asset, asset_paths)
     moved_bak = process_moves(args.move_bak, target_bak, bak_paths)
     moved_rec = process_moves(args.move_recycle, target_rec, rec_paths)
@@ -346,25 +366,42 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     return {Output.MOVED_FILES.value: moved_files_report}
 
 
+def setup_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
+    """Setup the Logseq summarizers."""
+    lfs = LogseqFileSummarizer()
+    lfs.process(index)
+
+    lcs = LogseqContentSummarizer()
+    lcs.process(index)
+
+    logger.debug("setup_summarizers")
+    return lfs, lcs
+
+
+def yield_config_data_reports(
+    args: Args,
+    analyzer_dirs: LogseqAnalyzerDirs,
+    config_edns: ConfigEdns,
+) -> Generator[tuple[str, Any], None, None]:
+    """Yield configuration data reports."""
+    yield (OutputDir.META.value, args.report)
+    yield (OutputDir.META.value, config_edns.report)
+    yield (OutputDir.META.value, analyzer_dirs.report)
+
+
 def analyze(
     args: Args,
-    cache: Cache,
     index: FileIndex,
     analyzer_dirs: LogseqAnalyzerDirs,
 ) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
-    yield (OutputDir.META.value, args.report)
-
-    process_graph(index, cache)
-
     graph = setup_graph(index)
     yield (OutputDir.GRAPH.value, graph.report)
-    yield (OutputDir.INDEX.value, index.report)
 
-    namespaces = setup_namespaces(index, graph)
+    dangling_links = graph.dangling_links
+    namespaces = setup_namespaces(index, dangling_links)
+    journals = setup_journals(index, dangling_links)
     yield (OutputDir.NAMESPACES.value, namespaces.report)
-
-    journals = setup_journals(index, graph)
     yield (OutputDir.JOURNALS.value, journals.report)
 
     ls_assets, hls_assets = setup_assets(index)
@@ -380,6 +417,8 @@ def analyze(
     yield (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes)
     yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions)
     yield (OutputDir.SUMMARY_CONTENT.value, summary_content.report)
+
+    yield (OutputDir.INDEX.value, index.report)
     logger.debug("analyze")
 
 
@@ -389,12 +428,6 @@ def write_reports(data_reports: Generator[tuple[str, Any], None, None]) -> None:
         for prefix, data in reports.items():
             ReportWriter(prefix, data, subdir).write()
     logger.debug("write_reports")
-
-
-def close_cache(cache: Cache, index: FileIndex) -> None:
-    """Finish the analysis by closing the cache and writing the user configuration."""
-    cache.close(index)
-    logger.debug("close_cache")
 
 
 def run_app(**gui_args) -> None:
@@ -408,18 +441,21 @@ def run_app(**gui_args) -> None:
     analyzer_dirs, config_edns, journal_formats = init_configs(args)
 
     progress(40, "Configure Logseq Analyzer settings...")
-    configure_analyzer_settings(args, analyzer_dirs, journal_formats, config_edns)
+    configure_analyzer_settings(args, analyzer_dirs, config_edns, journal_formats)
 
     progress(50, "Setup cache...")
     cache, index = setup_cache()
 
-    progress(60, "Running core analysis on Logseq graph...")
-    data_reports = analyze(args, cache, index, analyzer_dirs)
+    progress(60, "Process Logseq graph...")
+    process_graph(index, cache)
 
-    progress(70, "Writing reports...")
-    write_reports(data_reports)
+    progress(70, "Write meta reports...")
+    write_reports(yield_config_data_reports(args, analyzer_dirs, config_edns))
 
-    progress(80, "Finalizing analysis...")
-    close_cache(cache, index)
+    progress(80, "Running core analysis on Logseq graph...")
+    write_reports(analyze(args, index, analyzer_dirs))
+
+    progress(90, "Finalizing analysis...")
+    cache.close(index)
 
     progress(100, "Logseq Analyzer completed successfully.")

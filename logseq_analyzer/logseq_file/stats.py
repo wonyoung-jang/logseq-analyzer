@@ -8,10 +8,15 @@ from datetime import datetime
 from os import stat_result
 from pathlib import Path
 from urllib.parse import unquote
+from typing import TYPE_CHECKING
 
+from ..config.graph_config import get_ns_sep
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileTypes
 from ..utils.helpers import format_bytes
+
+if TYPE_CHECKING:
+    from ..app import ConfigEdns, JournalFormats, LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +94,19 @@ class LogseqPath:
     def __str__(self) -> str:
         """Return a string representation of the LogseqPath instance."""
         return f"{self.__class__.__qualname__}({self.file})"
+
+    @classmethod
+    def configure(
+        cls, analyzer_dirs: "LogseqAnalyzerDirs", journal_formats: "JournalFormats", config_edns: "ConfigEdns"
+    ) -> None:
+        """Configure the LogseqPath class with necessary settings."""
+        cls.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
+        cls.journal_file_format = journal_formats.file
+        cls.journal_page_format = journal_formats.page
+        cls.journal_page_title_format = journal_formats.page_title
+        cls.target_dirs = analyzer_dirs.target_dirs
+        cls.ns_file_sep = get_ns_sep(config_edns.config)
+        cls.set_result_map()
 
     @classmethod
     def set_result_map(cls) -> None:

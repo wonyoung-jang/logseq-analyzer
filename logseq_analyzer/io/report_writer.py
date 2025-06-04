@@ -6,9 +6,13 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
+from ..config.arguments import Args
 from ..utils.enums import Format
+
+if TYPE_CHECKING:
+    from ..app import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -254,6 +258,18 @@ class ReportWriter:
     def __str__(self) -> str:
         """String representation of the ReportWriter object."""
         return f"{self.__class__.__qualname__}: {self.prefix}, Items: data, Output Subdir: {self.subdir}"
+
+    @classmethod
+    def configure(cls, args: Args, analyzer_dirs: "LogseqAnalyzerDirs") -> None:
+        """
+        Configure the ReportWriter class with necessary settings.
+
+        Args:
+            args (Args): The command-line arguments.
+            analyzer_dirs (LogseqAnalyzerDirs): The directories used by the Logseq Analyzer.
+        """
+        cls.output_dir = analyzer_dirs.output_dir.path
+        cls.ext = args.report_format
 
     def write(self) -> None:
         """

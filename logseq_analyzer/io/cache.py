@@ -5,11 +5,15 @@ This module handles caching mechanisms for the application.
 import logging
 import shelve
 from pathlib import Path
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any, Generator
 
 from ..analysis.index import FileIndex
+from ..config.arguments import Args
 from ..utils.enums import CacheKeys
 from ..utils.helpers import iter_files
+
+if TYPE_CHECKING:
+    from ..app import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,19 @@ class Cache:
 
     def __str__(self) -> str:
         return f"{self.__class__.__qualname__}: {self.cache_path}"
+
+    @classmethod
+    def configure(cls, args: Args, analyzer_dirs: "LogseqAnalyzerDirs") -> None:
+        """
+        Configure the Cache class with necessary settings.
+
+        Args:
+            args (Args): Command line arguments.
+            analyzer_dirs (LogseqAnalyzerDirs): Directory paths for the Logseq analyzer.
+        """
+        cls.target_dirs = set(analyzer_dirs.target_dirs.values())
+        cls.graph_dir = analyzer_dirs.graph_dirs.graph_dir.path
+        cls.graph_cache = args.graph_cache
 
     def open(self, protocol: int = 5, writeback: bool = True) -> None:
         """Open the cache file."""
@@ -72,12 +89,12 @@ class Cache:
         index.remove_deleted_files()
         return index
 
-    def iter_modified_files(self, mod_tracker_key: str = CacheKeys.MOD_TRACKER.value) -> Generator[Path, Any, None]:
+    def iter_modified_files(self, mod_key: str = CacheKeys.MOD_TRACKER.value) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
         mod_tracker = {}
-        if mod_tracker_key in self.cache:
-            mod_tracker = self.cache[mod_tracker_key]
-            del self.cache[mod_tracker_key]
+        if mod_key in self.cache:
+            mod_tracker = self.cache[mod_key]
+            del self.cache[mod_key]
 
         file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
         for path in file_iter:
@@ -86,7 +103,6 @@ class Cache:
             if curr_date_mod == mod_tracker.get(str_path):
                 continue
             mod_tracker[str_path] = curr_date_mod
-            logger.debug("File modified: %s", path)
             yield path
 
-        self.cache[mod_tracker_key] = mod_tracker
+        self.cache[mod_key] = mod_tracker
