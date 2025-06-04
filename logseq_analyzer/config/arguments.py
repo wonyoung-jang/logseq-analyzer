@@ -11,8 +11,9 @@ from ..utils.enums import Output
 class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
+    # pylint: disable=too-many-instance-attributes
+
     __slots__ = (
-        "__dict__",
         "global_config",
         "graph_cache",
         "graph_folder",
@@ -35,10 +36,7 @@ class Args:
         self.move_unlinked_assets: bool = False
         self.report_format: str = ".txt"
         self.write_graph: bool = False
-        self.setup_args(**gui_args)
 
-    def setup_args(self, **gui_args) -> None:
-        """Set up command line arguments and GUI arguments."""
         if gui_args:
             self.set_gui_args(**gui_args)
         else:
@@ -115,7 +113,7 @@ class Args:
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the arguments."""
-        report = {}
+        report = []
         for key in self.__slots__:
-            report[key] = getattr(self, key)
+            report.append((key, getattr(self, key)))
         return {Output.ARGUMENTS.value: report}

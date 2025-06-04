@@ -61,6 +61,7 @@ class LogseqPath:
         "stat",
         "ts_info",
         "uri",
+        "is_namespace",
     )
 
     graph_path: Path = None
@@ -85,6 +86,15 @@ class LogseqPath:
         self.ns_info: NamespaceInfo = None
         self.size_info: SizeInfo = None
         self.ts_info: TimestampInfo = None
+        self.is_namespace: bool = False
+
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqPath instance."""
+        return f"{self.__class__.__qualname__}(file={self.file}, file_type={self.file_type})"
+
+    def __str__(self) -> str:
+        """Return a string representation of the LogseqPath instance."""
+        return f"{self.__class__.__qualname__}({self.file})"
 
     @classmethod
     def set_result_map(cls) -> None:
@@ -150,16 +160,15 @@ class LogseqPath:
         self.set_size_info()
         self.set_namespace_info()
 
-    def determine_file_type(self) -> None:
+    def determine_file_type(self, other: str = FileTypes.OTHER.value) -> None:
         """Helper function to determine the file type based on the directory structure."""
         _result_map = LogseqPath.result_map
         _parent = self.parent
         _parts = self.parts
-        _filetype_other = FileTypes.OTHER.value
 
-        result = _result_map.get(_parent, (_filetype_other, _filetype_other))
+        result = _result_map.get(_parent, (other, other))
 
-        if result[0] != _filetype_other:
+        if result[0] != other:
             self.file_type = result[0]
             return
 
@@ -168,7 +177,7 @@ class LogseqPath:
                 self.file_type = result[1]
                 return
 
-    def process_logseq_filename(self) -> None:
+    def process_logseq_filename(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Process the Logseq filename based on its parent directory."""
         _ns_file_sep = LogseqPath.ns_file_sep
         _target_dir_journal = LogseqPath.target_dirs["journals"]
@@ -180,11 +189,13 @@ class LogseqPath:
         else:
             self.name = self._process_logseq_non_journal_key(_stem.strip(_ns_file_sep), _ns_file_sep)
 
-    def _process_logseq_non_journal_key(self, name: str, ns_file_sep: str) -> str:
-        """Process non-journal keys to create a page title."""
-        return unquote(name).replace(ns_file_sep, Core.NS_SEP.value)
+        self.is_namespace = ns_sep in self.name
 
-    def _process_logseq_journal_key(self, name: str) -> str:
+    def _process_logseq_non_journal_key(self, name: str, ns_file_sep: str, ns_sep: str = Core.NS_SEP.value) -> str:
+        """Process non-journal keys to create a page title."""
+        return unquote(name).replace(ns_file_sep, ns_sep)
+
+    def _process_logseq_journal_key(self, name: str, ordinal: str = Core.DATE_ORDINAL_SUFFIX.value) -> str:
         """Process the journal key to create a page title."""
         _file_format = LogseqPath.journal_file_format
         _page_format = LogseqPath.journal_page_format
@@ -193,7 +204,7 @@ class LogseqPath:
         try:
             date_obj = datetime.strptime(name, _file_format)
             page_title = date_obj.strftime(_page_format)
-            if Core.DATE_ORDINAL_SUFFIX.value in _page_title_format:
+            if ordinal in _page_title_format:
                 page_title = self._get_ordinal_day(date_obj, page_title)
             return page_title.replace("'", "")
         except ValueError as e:
@@ -235,15 +246,14 @@ class LogseqPath:
             has_content=bool(_size),
         )
 
-    def set_namespace_info(self) -> None:
+    def set_namespace_info(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Get the namespace name data."""
-        _ns_sep = Core.NS_SEP.value
-        _ns_parts_list = self.name.split(_ns_sep)
+        _ns_parts_list = self.name.split(ns_sep)
         _ns_root = _ns_parts_list[0]
         self.ns_info = NamespaceInfo(
             parts={part: level for level, part in enumerate(_ns_parts_list, start=1)},
             root=_ns_root,
             parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root,
-            parent_full=_ns_sep.join(_ns_parts_list[:-1]),
+            parent_full=ns_sep.join(_ns_parts_list[:-1]),
             stem=_ns_parts_list[-1],
         )

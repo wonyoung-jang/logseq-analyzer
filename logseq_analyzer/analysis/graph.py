@@ -61,7 +61,7 @@ class LogseqGraph:
 
         for f in index:
             ns_info = f.ns_info
-            if f.is_namespace:
+            if f.path.is_namespace:
                 unique_linked_refs_ns.update((ns_info.root, f.name))
                 index.process_namespaces(f)
             if not f.data:

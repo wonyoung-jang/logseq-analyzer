@@ -102,7 +102,7 @@ class LogseqNamespaces:
         part_entries = self._part_entries
         level_distribution = Counter()
         for f in index:
-            if not f.is_namespace:
+            if not f.path.is_namespace:
                 continue
             current_level = structure.tree
             structure.data[f.name] = {k: v for k, v in f.ns_info.__dict__.items() if v}
@@ -143,7 +143,7 @@ class LogseqNamespaces:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         structure = self.structure
         conflicts = self.conflicts
-        non_ns_names = (f.name for f in index if not f.is_namespace)
+        non_ns_names = (f.name for f in index if not f.path.is_namespace)
         potential_non_ns_names = structure.unique_parts.intersection(non_ns_names)
         potential_dangling = structure.unique_parts.intersection(dangling_links)
         for entry, parts in structure.parts.items():

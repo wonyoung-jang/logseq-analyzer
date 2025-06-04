@@ -119,7 +119,6 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     __slots__ = (
-        "_is_namespace",
         "path",
         "data",
         "bullets",
@@ -229,19 +228,6 @@ class LogseqFile:
     def ns_info(self) -> NamespaceInfo:
         """Return the namespace information of the Logseq file."""
         return self.path.ns_info
-
-    @property
-    def is_namespace(self) -> bool:
-        """Check if the filename is a namespace."""
-        self._is_namespace = Core.NS_SEP.value in self.name
-        return self._is_namespace
-
-    @is_namespace.setter
-    def is_namespace(self, value: Any) -> None:
-        """Set the is_namespace property."""
-        if not isinstance(value, bool):
-            raise ValueError("is_namespace must be a boolean value.")
-        self._is_namespace = value
 
     def process(self) -> None:
         """Process the Logseq file to extract metadata and content."""

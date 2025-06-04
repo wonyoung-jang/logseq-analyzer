@@ -21,7 +21,7 @@ class LogseqJournals:
     """
 
     __slots__ = (
-        "all",
+        "all_journals",
         "dangling",
         "date",
         "existing",
@@ -34,7 +34,7 @@ class LogseqJournals:
 
     def __init__(self, date_utilities: DateUtilities = DateUtilities) -> None:
         """Initialize the LogseqJournals class."""
-        self.all: list[datetime] = []
+        self.all_journals: list[datetime] = []
         self.dangling: dict[str, list[datetime]] = defaultdict(list)
         self.date: DateUtilities = date_utilities
         self.existing: list[datetime] = []
@@ -56,11 +56,11 @@ class LogseqJournals:
 
     def process(self, index: FileIndex, dangling_links: list[str]) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        journal_page_format = LogseqJournals.journal_page_format
-        dangling = sorted(self.date.journals_to_datetime(dangling_links, journal_page_format))
+        page_format = LogseqJournals.journal_page_format
+        dangling = sorted(self.date.journals_to_datetime(dangling_links, page_format))
         journal_keys = (f.name for f in index if f.file_type == FileTypes.JOURNAL.value)
         journals = sorted(journal_keys)
-        self.existing.extend(sorted(self.date.journals_to_datetime(journals, journal_page_format)))
+        self.existing.extend(sorted(self.date.journals_to_datetime(journals, page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 
@@ -78,12 +78,12 @@ class LogseqJournals:
                 if next_expected not in dangling_journals:
                     missing.append(next_expected)
                 next_expected = self.date.next(next_expected)
-        all = sorted(timeline + dangling_journals)
+        all_journals = sorted(timeline + dangling_journals)
         stats = self.timeline_stats
         stats["timeline"] = self.date.stats(timeline)
         stats["dangling"] = self.date.stats(dangling_journals)
-        stats["total"] = self.date.stats(all)
-        self.all.extend(all)
+        stats["total"] = self.date.stats(all_journals)
+        self.all_journals.extend(all_journals)
 
     def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
         """Check for dangling journals that are outside the range of the complete timeline."""
@@ -101,7 +101,7 @@ class LogseqJournals:
     def report(self) -> dict[str, Any]:
         """Get a report of the journal processing results."""
         return {
-            Output.JOURNALS_ALL.value: self.all,
+            Output.JOURNALS_ALL.value: self.all_journals,
             Output.JOURNALS_DANGLING.value: self.dangling,
             Output.JOURNALS_EXISTING.value: self.existing,
             Output.JOURNALS_TIMELINE.value: self.timeline,

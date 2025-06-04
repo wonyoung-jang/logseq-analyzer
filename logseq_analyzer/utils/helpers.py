@@ -156,8 +156,6 @@ def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
     """Collect slotted attributes from an object."""
     for slot in getattr(type(obj), "__slots__", ()):
         yield slot, getattr(obj, slot)
-    for attr, value in getattr(obj, "__dict__", {}).items():
-        yield attr, value
 
 
 def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:

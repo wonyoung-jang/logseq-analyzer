@@ -50,12 +50,11 @@ class Cache:
         """Clear the cache if needed."""
         if Cache.graph_cache:
             self.clear()
-            logger.info("Cache cleared.")
+            logger.info("Cache cleared and reset index.")
             return FileIndex()
-        else:
-            index = self.clear_deleted_files()
-            logger.info("Cache not cleared.")
-            return index
+        index = self.clear_deleted_files()
+        logger.info("Cache not cleared, checking for deleted files.")
+        return index
 
     def clear(self) -> None:
         """Clear the cache."""

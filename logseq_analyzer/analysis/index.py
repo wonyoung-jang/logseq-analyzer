@@ -131,7 +131,7 @@ class FileIndex:
         """Post-process namespaces in the content data."""
         for ns_root_file in self[f.ns_info.root]:
             ns_root_file: LogseqFile
-            ns_root_file.is_namespace = True
+            ns_root_file.path.is_namespace = True
             ns_root_file.ns_info.children.add(f.name)
             ns_root_file.ns_info.size = len(ns_root_file.ns_info.children)
 
@@ -147,9 +147,9 @@ class FileIndex:
                 yield f
 
     @property
-    def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
+    def graph_data(self, exclude: tuple[str, ...] = ("data", "masked")) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
-        return {file: {k: v for k, v in yield_attrs(file) if v} for file in self}
+        return {file: {k: v for k, v in yield_attrs(file) if v and k not in exclude} for file in self}
 
     @property
     def graph_content_data(self) -> dict[LogseqFile, Any]:

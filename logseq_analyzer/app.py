@@ -94,21 +94,20 @@ class GUIInstanceDummy:
 
 @dataclass
 class LogseqGraphDirs:
+    """Directories related to the Logseq graph."""
+
     graph_dir: GraphDirectory = None
     logseq_dir: LogseqDirectory = None
     bak_dir: BakDirectory = None
     recycle_dir: RecycleDirectory = None
     user_config: ConfigFile = None
     global_config: GlobalConfigFile = None
-    assets_dir: AssetsDirectory = None
-    draws_dir: DrawsDirectory = None
-    journals_dir: JournalsDirectory = None
-    pages_dir: PagesDirectory = None
-    whiteboards_dir: WhiteboardsDirectory = None
 
 
 @dataclass
 class AnalyzerDeleteDirs:
+    """Directories for deletion operations in the Logseq analyzer."""
+
     delete_dir: DeleteDirectory = None
     delete_bak_dir: DeleteBakDirectory = None
     delete_recycle_dir: DeleteRecycleDirectory = None
@@ -117,6 +116,8 @@ class AnalyzerDeleteDirs:
 
 @dataclass
 class ConfigEdns:
+    """Configuration EDN files for the Logseq analyzer."""
+
     config: dict[str, Any] = field(default_factory=dict)
     default_edn: dict[str, Any] = field(default_factory=dict)
     user_edn: dict[str, Any] = field(default_factory=dict)
@@ -125,6 +126,8 @@ class ConfigEdns:
 
 @dataclass
 class LogseqAnalyzerDirs:
+    """Directories used by the Logseq analyzer."""
+
     graph_dirs: LogseqGraphDirs = None
     delete_dirs: AnalyzerDeleteDirs = None
     target_dirs: dict[str, str] = field(default_factory=dict)
@@ -133,6 +136,8 @@ class LogseqAnalyzerDirs:
 
 @dataclass
 class JournalFormats:
+    """Formats for Logseq journal files and pages."""
+
     file_format: str = ""
     page_format: str = ""
     page_title_format: str = ""
@@ -140,48 +145,16 @@ class JournalFormats:
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     """Setup Logseq analyzer configuration based on arguments."""
-    graph_folder_path = Path(args.graph_folder)
-    logseq_dir = graph_folder_path / "logseq"
-    bak_dir = logseq_dir / "bak"
-    recycle_dir = logseq_dir / ".recycle"
-    user_config_file = logseq_dir / "config.edn"
-    graph_dirs = LogseqGraphDirs(
-        graph_dir=GraphDirectory(graph_folder_path),
-        logseq_dir=LogseqDirectory(logseq_dir),
-        bak_dir=BakDirectory(bak_dir),
-        recycle_dir=RecycleDirectory(recycle_dir),
-        user_config=ConfigFile(user_config_file),
-    )
-
-    default_edn = get_default_logseq_config()
-    user_edn = init_config_edn_from_file(graph_dirs.user_config.path)
-    if global_config_path := args.global_config:
-        graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
-        global_edn = init_config_edn_from_file(graph_dirs.global_config.path)
-    else:
-        global_edn = {}
-    config_edns = ConfigEdns(
-        config=default_edn | user_edn | global_edn,
-        default_edn=default_edn,
-        user_edn=user_edn,
-        global_edn=global_edn,
-    )
-
+    graph_dirs = setup_graph_dirs(args)
+    config_edns = setup_config_edns(args, graph_dirs)
     targets_dirs = get_target_dirs(config_edns.config)
-    graph_dir_path = graph_dirs.graph_dir.path
-    graph_dirs.assets_dir = AssetsDirectory(graph_dir_path / targets_dirs["assets"])
-    graph_dirs.draws_dir = DrawsDirectory(graph_dir_path / targets_dirs["draws"])
-    graph_dirs.journals_dir = JournalsDirectory(graph_dir_path / targets_dirs["journals"])
-    graph_dirs.pages_dir = PagesDirectory(graph_dir_path / targets_dirs["pages"])
-    graph_dirs.whiteboards_dir = WhiteboardsDirectory(graph_dir_path / targets_dirs["whiteboards"])
-
-    delete_dirs = AnalyzerDeleteDirs(
-        delete_dir=DeleteDirectory(Constants.TO_DELETE_DIR.value),
-        delete_bak_dir=DeleteBakDirectory(Constants.TO_DELETE_BAK_DIR.value),
-        delete_recycle_dir=DeleteRecycleDirectory(Constants.TO_DELETE_RECYCLE_DIR.value),
-        delete_assets_dir=DeleteAssetsDirectory(Constants.TO_DELETE_ASSETS_DIR.value),
-    )
-
+    graph_folder_path = graph_dirs.graph_dir.path
+    AssetsDirectory(graph_folder_path / targets_dirs["assets"])
+    DrawsDirectory(graph_folder_path / targets_dirs["draws"])
+    JournalsDirectory(graph_folder_path / targets_dirs["journals"])
+    PagesDirectory(graph_folder_path / targets_dirs["pages"])
+    WhiteboardsDirectory(graph_folder_path / targets_dirs["whiteboards"])
+    delete_dirs = setup_delete_dirs()
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
         delete_dirs=delete_dirs,
@@ -193,18 +166,61 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     return analyzer_dirs, config_edns
 
 
+def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
+    """Setup the Logseq graph directories."""
+    graph_folder_path = Path(args.graph_folder)
+    logseq_dir = graph_folder_path / "logseq"
+    bak_dir = logseq_dir / "bak"
+    recycle_dir = logseq_dir / ".recycle"
+    user_config_file = logseq_dir / "config.edn"
+    logger.debug("setup_graph_dirs")
+    return LogseqGraphDirs(
+        graph_dir=GraphDirectory(graph_folder_path),
+        logseq_dir=LogseqDirectory(logseq_dir),
+        bak_dir=BakDirectory(bak_dir),
+        recycle_dir=RecycleDirectory(recycle_dir),
+        user_config=ConfigFile(user_config_file),
+    )
+
+
+def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
+    """Setup the configuration EDN files."""
+    default_edn = get_default_logseq_config()
+    user_edn = init_config_edn_from_file(graph_dirs.user_config.path)
+    global_edn = {}
+    if global_config_path := args.global_config:
+        graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
+        global_edn.update(init_config_edn_from_file(graph_dirs.global_config.path))
+    logger.debug("setup_config_edns")
+    return ConfigEdns(
+        config=default_edn | user_edn | global_edn,
+        default_edn=default_edn,
+        user_edn=user_edn,
+        global_edn=global_edn,
+    )
+
+
+def setup_delete_dirs() -> AnalyzerDeleteDirs:
+    """Setup the directories for deletion operations."""
+    logger.debug("setup_delete_dirs")
+    return AnalyzerDeleteDirs(
+        delete_dir=DeleteDirectory(Constants.TO_DELETE_DIR.value),
+        delete_bak_dir=DeleteBakDirectory(Constants.TO_DELETE_BAK_DIR.value),
+        delete_recycle_dir=DeleteRecycleDirectory(Constants.TO_DELETE_RECYCLE_DIR.value),
+        delete_assets_dir=DeleteAssetsDirectory(Constants.TO_DELETE_ASSETS_DIR.value),
+    )
+
+
 def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     """Setup journal formats."""
     _token_map = get_token_map()
     _token_pattern = compile_token_pattern(_token_map)
     journal_file_fmt = get_file_name_format(config_edns.config)
-    journal_file_fmt = convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern)
     journal_page_title_fmt = get_page_title_format(config_edns.config)
-    journal_page_fmt = convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern)
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file_format=journal_file_fmt,
-        page_format=journal_page_fmt,
+        file_format=convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern),
+        page_format=convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern),
         page_title_format=journal_page_title_fmt,
     )
 
