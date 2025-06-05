@@ -30,6 +30,13 @@ class FileIndex:
     )
 
     write_graph: bool = False
+    _instance = None
+
+    def __new__(cls):
+        """Ensure only one instance of FileIndex is created."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self) -> None:
         """Initialize the FileIndex instance."""
