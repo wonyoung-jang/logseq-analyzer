@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..app import run_app
-from ..utils.enums import Arguments, Format
+from ..utils.enums import Argument, Format
 
 
 class AnalysisWorker(QThread):
@@ -145,17 +145,17 @@ class LogseqAnalyzerGUI(QMainWindow):
     def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
         args_gui = {
-            Arguments.GRAPH_FOLDER.value: self.inputs.graph_folder.text(),
-            Arguments.GLOBAL_CONFIG.value: self.inputs.global_config.text(),
-            Arguments.MOVE_UNLINKED_ASSETS.value: self.checkboxes.move_assets.isChecked(),
-            Arguments.MOVE_ALL.value: self.checkboxes.move_all.isChecked(),
-            Arguments.MOVE_BAK.value: self.checkboxes.move_bak.isChecked(),
-            Arguments.MOVE_RECYCLE.value: self.checkboxes.move_recycle.isChecked(),
-            Arguments.WRITE_GRAPH.value: self.checkboxes.write_graph.isChecked(),
-            Arguments.GRAPH_CACHE.value: self.checkboxes.graph_cache.isChecked(),
-            Arguments.REPORT_FORMAT.value: self.inputs.report_format.currentText(),
+            Argument.GRAPH_FOLDER.value: self.inputs.graph_folder.text(),
+            Argument.GLOBAL_CONFIG.value: self.inputs.global_config.text(),
+            Argument.MOVE_UNLINKED_ASSETS.value: self.checkboxes.move_assets.isChecked(),
+            Argument.MOVE_ALL.value: self.checkboxes.move_all.isChecked(),
+            Argument.MOVE_BAK.value: self.checkboxes.move_bak.isChecked(),
+            Argument.MOVE_RECYCLE.value: self.checkboxes.move_recycle.isChecked(),
+            Argument.WRITE_GRAPH.value: self.checkboxes.write_graph.isChecked(),
+            Argument.GRAPH_CACHE.value: self.checkboxes.graph_cache.isChecked(),
+            Argument.REPORT_FORMAT.value: self.inputs.report_format.currentText(),
         }
-        if not args_gui[Arguments.GRAPH_FOLDER.value]:
+        if not args_gui[Argument.GRAPH_FOLDER.value]:
             self.show_error("Graph folder is required.")
             return
 
@@ -339,28 +339,28 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def save_settings(self) -> None:
         """Save current settings using QSettings."""
-        self.settings.setValue(Arguments.GRAPH_FOLDER.value, self.inputs.graph_folder.text())
-        self.settings.setValue(Arguments.GLOBAL_CONFIG.value, self.inputs.global_config.text())
-        self.settings.setValue(Arguments.MOVE_ALL.value, self.checkboxes.move_all.isChecked())
-        self.settings.setValue(Arguments.MOVE_UNLINKED_ASSETS.value, self.checkboxes.move_assets.isChecked())
-        self.settings.setValue(Arguments.MOVE_BAK.value, self.checkboxes.move_bak.isChecked())
-        self.settings.setValue(Arguments.MOVE_RECYCLE.value, self.checkboxes.move_recycle.isChecked())
-        self.settings.setValue(Arguments.WRITE_GRAPH.value, self.checkboxes.write_graph.isChecked())
-        self.settings.setValue(Arguments.GRAPH_CACHE.value, self.checkboxes.graph_cache.isChecked())
-        self.settings.setValue(Arguments.REPORT_FORMAT.value, self.inputs.report_format.currentText())
-        self.settings.setValue(Arguments.GEOMETRY.value, self.saveGeometry())
+        self.settings.setValue(Argument.GRAPH_FOLDER.value, self.inputs.graph_folder.text())
+        self.settings.setValue(Argument.GLOBAL_CONFIG.value, self.inputs.global_config.text())
+        self.settings.setValue(Argument.MOVE_ALL.value, self.checkboxes.move_all.isChecked())
+        self.settings.setValue(Argument.MOVE_UNLINKED_ASSETS.value, self.checkboxes.move_assets.isChecked())
+        self.settings.setValue(Argument.MOVE_BAK.value, self.checkboxes.move_bak.isChecked())
+        self.settings.setValue(Argument.MOVE_RECYCLE.value, self.checkboxes.move_recycle.isChecked())
+        self.settings.setValue(Argument.WRITE_GRAPH.value, self.checkboxes.write_graph.isChecked())
+        self.settings.setValue(Argument.GRAPH_CACHE.value, self.checkboxes.graph_cache.isChecked())
+        self.settings.setValue(Argument.REPORT_FORMAT.value, self.inputs.report_format.currentText())
+        self.settings.setValue(Argument.GEOMETRY.value, self.saveGeometry())
 
     def load_settings(self) -> None:
         """Load settings using QSettings."""
-        self.inputs.graph_folder.setText(self.settings.value(Arguments.GRAPH_FOLDER.value, ""))
-        self.inputs.global_config.setText(self.settings.value(Arguments.GLOBAL_CONFIG.value, ""))
-        self.checkboxes.move_all.setChecked(self.settings.value(Arguments.MOVE_ALL.value, False, type=bool))
+        self.inputs.graph_folder.setText(self.settings.value(Argument.GRAPH_FOLDER.value, ""))
+        self.inputs.global_config.setText(self.settings.value(Argument.GLOBAL_CONFIG.value, ""))
+        self.checkboxes.move_all.setChecked(self.settings.value(Argument.MOVE_ALL.value, False, type=bool))
         self.checkboxes.move_assets.setChecked(
-            self.settings.value(Arguments.MOVE_UNLINKED_ASSETS.value, False, type=bool)
+            self.settings.value(Argument.MOVE_UNLINKED_ASSETS.value, False, type=bool)
         )
-        self.checkboxes.move_bak.setChecked(self.settings.value(Arguments.MOVE_BAK.value, False, type=bool))
-        self.checkboxes.move_recycle.setChecked(self.settings.value(Arguments.MOVE_RECYCLE.value, False, type=bool))
-        self.checkboxes.write_graph.setChecked(self.settings.value(Arguments.WRITE_GRAPH.value, False, type=bool))
-        self.checkboxes.graph_cache.setChecked(self.settings.value(Arguments.GRAPH_CACHE.value, False, type=bool))
-        self.inputs.report_format.setCurrentText(self.settings.value(Arguments.REPORT_FORMAT.value, Format.TXT.value))
-        self.restoreGeometry(self.settings.value(Arguments.GEOMETRY.value, b""))
+        self.checkboxes.move_bak.setChecked(self.settings.value(Argument.MOVE_BAK.value, False, type=bool))
+        self.checkboxes.move_recycle.setChecked(self.settings.value(Argument.MOVE_RECYCLE.value, False, type=bool))
+        self.checkboxes.write_graph.setChecked(self.settings.value(Argument.WRITE_GRAPH.value, False, type=bool))
+        self.checkboxes.graph_cache.setChecked(self.settings.value(Argument.GRAPH_CACHE.value, False, type=bool))
+        self.inputs.report_format.setCurrentText(self.settings.value(Argument.REPORT_FORMAT.value, Format.TXT.value))
+        self.restoreGeometry(self.settings.value(Argument.GEOMETRY.value, b""))

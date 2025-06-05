@@ -5,7 +5,7 @@ Logseq Content Summarizer Module
 from collections import defaultdict
 from typing import Any
 
-from ..utils.enums import SummaryFiles
+from ..utils.enums import SummaryFile
 from ..utils.helpers import get_count_and_foundin_data, sort_dict_by_value
 from .index import FileIndex
 
@@ -46,11 +46,11 @@ class LogseqFileSummarizer:
         """Generate general subsets for the Logseq Analyzer."""
         index = self.index
         g = self.general
-        g[SummaryFiles.BACKLINKED.value] = sorted(f.path.name for f in index if f.node.backlinked)
-        g[SummaryFiles.BACKLINKED_NS_ONLY.value] = sorted(f.path.name for f in index if f.node.backlinked_ns_only)
-        g[SummaryFiles.IS_HLS.value] = sorted(f.path.name for f in index if f.is_hls)
-        g[SummaryFiles.HAS_CONTENT.value] = sorted(f.path.name for f in index if f.info.size.has_content)
-        g[SummaryFiles.HAS_BACKLINKS.value] = sorted(f.path.name for f in index if f.node.has_backlinks)
+        g[SummaryFile.BACKLINKED.value] = sorted(f.path.name for f in index if f.node.backlinked)
+        g[SummaryFile.BACKLINKED_NS_ONLY.value] = sorted(f.path.name for f in index if f.node.backlinked_ns_only)
+        g[SummaryFile.IS_HLS.value] = sorted(f.path.name for f in index if f.is_hls)
+        g[SummaryFile.HAS_CONTENT.value] = sorted(f.path.name for f in index if f.info.size.has_content)
+        g[SummaryFile.HAS_BACKLINKS.value] = sorted(f.path.name for f in index if f.node.has_backlinks)
 
     def get_filetype_subset(self) -> None:
         """Generate filetype subsets for the Logseq Analyzer."""

@@ -15,7 +15,7 @@ import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
-from ..utils.enums import Core, Criteria, FileTypes, NodeTypes
+from ..utils.enums import Core, Criteria, FileType, Node
 from .bullets import LogseqBullets
 from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
 
@@ -46,7 +46,7 @@ class NodeType:
     has_backlinks: bool = field(default=False, init=False)
     backlinked: bool = field(default=False, init=False)
     backlinked_ns_only: bool = field(default=False, init=False)
-    node_type: str = field(default=NodeTypes.OTHER.value, init=False)
+    node_type: str = field(default=Node.OTHER.value, init=False)
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
@@ -76,43 +76,30 @@ class NodeType:
         backlinked_ns_only = self.backlinked_ns_only
         match (has_content, has_backlinks, backlinked, backlinked_ns_only):
             case (True, True, True, True):
-                n = NodeTypes.BRANCH.value
+                n = Node.BRANCH.value
             case (True, True, True, False):
-                n = NodeTypes.BRANCH.value
+                n = Node.BRANCH.value
             case (True, True, False, True):
-                n = NodeTypes.BRANCH.value
+                n = Node.BRANCH.value
             case (True, True, False, False):
-                n = NodeTypes.ROOT.value
+                n = Node.ROOT.value
             case (True, False, True, True):
-                n = NodeTypes.LEAF.value
+                n = Node.LEAF.value
             case (True, False, True, False):
-                n = NodeTypes.LEAF.value
+                n = Node.LEAF.value
             case (True, False, False, True):
-                n = NodeTypes.ORPHAN_NAMESPACE.value
+                n = Node.ORPHAN_NAMESPACE.value
             case (True, False, False, False):
-                n = NodeTypes.ORPHAN_GRAPH.value
+                n = Node.ORPHAN_GRAPH.value
             case (False, False, True, True):
-                n = NodeTypes.LEAF.value
+                n = Node.LEAF.value
             case (False, False, True, False):
-                n = NodeTypes.LEAF.value
+                n = Node.LEAF.value
             case (False, False, False, True):
-                n = NodeTypes.ORPHAN_NAMESPACE_TRUE.value
+                n = Node.ORPHAN_NAMESPACE_TRUE.value
             case (False, False, False, False):
-                n = NodeTypes.ORPHAN_TRUE.value
+                n = Node.ORPHAN_TRUE.value
         self.node_type = n
-
-    def update_asset_backlink(self, asset_mentions: set[str], names: tuple[str, ...]) -> None:
-        """
-        Update asset backlink status based on mentions and parent.
-
-        Args:
-            asset_mentions (set[str]): Set of asset mentions.
-            names (tuple[str, ...]): Names of the files.
-        """
-        for asset_mention in asset_mentions:
-            if any(name in asset_mention for name in names):
-                self.backlinked = True
-                return
 
 
 @dataclass
@@ -217,7 +204,7 @@ class LogseqFile:
         """Process content data to extract various elements like backlinks, tags, and properties."""
         if not self.info.size.has_content:
             return
-        if self.path.file_type not in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
+        if self.path.file_type not in (FileType.JOURNAL.value, FileType.PAGE.value):
             return
         self.mask_blocks()
         self.extract_data()

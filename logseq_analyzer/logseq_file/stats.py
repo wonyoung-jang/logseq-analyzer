@@ -12,7 +12,7 @@ from urllib.parse import unquote
 from ..config.graph_config import get_ns_sep
 from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Core, FileTypes, TargetDirs
+from ..utils.enums import Core, FileType, TargetDir
 from ..utils.helpers import format_bytes
 
 if TYPE_CHECKING:
@@ -104,20 +104,19 @@ class LogseqPath:
         cls.journal_file_format = journal_formats.file
         cls.journal_page_format = journal_formats.page
         cls.journal_page_title_format = journal_formats.page_title
-        cls.target_dirs = analyzer_dirs.target_dirs
         cls.ns_file_sep = get_ns_sep(config_edns.config)
+        cls.target_dirs = analyzer_dirs.target_dirs
         cls.set_result_map()
 
     @classmethod
     def set_result_map(cls) -> None:
         """Set the result map for file type determination."""
-        _td = cls.target_dirs
         cls.result_map = {
-            _td[TargetDirs.ASSETS.value]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
-            _td[TargetDirs.DRAWS.value]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
-            _td[TargetDirs.JOURNALS.value]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
-            _td[TargetDirs.PAGES.value]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
-            _td[TargetDirs.WHITEBOARDS.value]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
+            cls.target_dirs[TargetDir.ASSET.value]: (FileType.ASSET.value, FileType.SUB_ASSET.value),
+            cls.target_dirs[TargetDir.DRAW.value]: (FileType.DRAW.value, FileType.SUB_DRAW.value),
+            cls.target_dirs[TargetDir.JOURNAL.value]: (FileType.JOURNAL.value, FileType.SUB_JOURNAL.value),
+            cls.target_dirs[TargetDir.PAGE.value]: (FileType.PAGE.value, FileType.SUB_PAGE.value),
+            cls.target_dirs[TargetDir.WHITEBOARD.value]: (FileType.WHITEBOARD.value, FileType.SUB_WHITEBOARD.value),
         }
 
     def process(self) -> None:
@@ -151,7 +150,7 @@ class LogseqPath:
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         self.logseq_url = f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
-    def determine_file_type(self, other: str = FileTypes.OTHER.value) -> None:
+    def determine_file_type(self, other: str = FileType.OTHER.value) -> None:
         """Helper function to determine the file type based on the directory structure."""
         _result_map = LogseqPath.result_map
         _parent = self.file.parent.name
@@ -171,7 +170,7 @@ class LogseqPath:
     def process_logseq_filename(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Process the Logseq filename based on its parent directory."""
         _ns_file_sep = LogseqPath.ns_file_sep
-        _target_dir_journal = LogseqPath.target_dirs[TargetDirs.JOURNALS.value]
+        _target_dir_journal = LogseqPath.target_dirs[TargetDir.JOURNAL.value]
         _parent = self.file.parent.name
         _stem = self.file.stem
 

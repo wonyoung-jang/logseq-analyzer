@@ -6,7 +6,8 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import Any
 
-from ..utils.enums import Criteria, FileTypes, Output
+from ..logseq_file.file import LogseqFile
+from ..utils.enums import Criteria, FileType, Output
 from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
 from .index import FileIndex
 
@@ -35,7 +36,7 @@ class LogseqGraph:
         "unique",
     )
 
-    _TO_NODE_TYPE: frozenset[str] = frozenset({FileTypes.JOURNAL.value, FileTypes.PAGE.value})
+    _TO_NODE_TYPE: frozenset[str] = frozenset({FileType.JOURNAL.value, FileType.PAGE.value})
 
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqGraph instance."""
@@ -68,7 +69,7 @@ class LogseqGraph:
         update_unique_linked_refs = self.unique.linked_refs.update
         update_unique_linked_refs_ns = self.unique.linked_refs_ns.update
         update_unique_aliases = self.unique.aliases.update
-        process_namespaces = self.index.process_namespaces
+        process_namespaces = self.process_namespaces
 
         for f in self.index:
             ns_info = f.info.namespace
@@ -104,6 +105,19 @@ class LogseqGraph:
                 all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, linked_references, f.path.name))
 
             update_unique_linked_refs(linked_references)
+
+    def process_namespaces(self, f: LogseqFile) -> None:
+        """Post-process namespaces in the content data."""
+        for ns_root_file in self.index[f.info.namespace.root]:
+            ns_root_file: LogseqFile
+            ns_root_file.path.is_namespace = True
+            ns_root_file.info.namespace.children.add(f.path.name)
+            ns_root_file.info.namespace.size = len(ns_root_file.info.namespace.children)
+
+        for ns_parent_file in self.index[f.info.namespace.parent_full]:
+            ns_parent_file: LogseqFile
+            ns_parent_file.info.namespace.children.add(f.path.name)
+            ns_parent_file.info.namespace.size = len(ns_parent_file.info.namespace.children)
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""

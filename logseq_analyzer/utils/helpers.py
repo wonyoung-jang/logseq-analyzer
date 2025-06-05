@@ -10,7 +10,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Generator, TypeVar
 
-from ..utils.enums import Format, MovedFiles
+from ..utils.enums import Format, MovedFile
 
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
@@ -120,7 +120,9 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
 
 def process_aliases(aliases: str) -> Generator[str, None, None]:
     """Process aliases to extract individual aliases."""
-    aliases = aliases.strip()
+    if not (aliases := aliases.strip()):
+        return
+
     current = []
     append_current = current.append
     clear_current = current.clear
@@ -370,7 +372,7 @@ def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, Non
         return []
 
     if not move:
-        return [MovedFiles.SIMULATED_PREFIX.value] + names
+        return [MovedFile.SIMULATED_PREFIX.value] + names
 
     for src in listpaths:
         dest = target_dir / src.name

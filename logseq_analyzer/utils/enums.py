@@ -5,26 +5,26 @@ Enums for the Logseq Analyzer.
 from enum import Enum
 
 __all__ = [
-    "Arguments",
-    "CacheKeys",
-    "ConfigEdnReports",
-    "Constants",
+    "Argument",
+    "CacheKey",
+    "ConfigEdnReport",
+    "Constant",
     "Core",
     "Criteria",
     "Edn",
-    "FileTypes",
+    "FileType",
     "Format",
     "LogseqGraphStructure",
-    "MovedFiles",
-    "NodeTypes",
+    "MovedFile",
+    "Node",
     "Output",
     "OutputDir",
-    "SummaryFiles",
-    "TargetDirs",
+    "SummaryFile",
+    "TargetDir",
 ]
 
 
-class Arguments(Enum):
+class Argument(Enum):
     """Arguments for the Logseq Analyzer."""
 
     GEOMETRY = "geometry"
@@ -39,14 +39,14 @@ class Arguments(Enum):
     WRITE_GRAPH = "write_graph"
 
 
-class CacheKeys(Enum):
+class CacheKey(Enum):
     """Cache keys for the Logseq Analyzer."""
 
     INDEX = "index"
     MOD_TRACKER = "mod_tracker"
 
 
-class ConfigEdnReports(Enum):
+class ConfigEdnReport(Enum):
     """Configuration EDN reports for the Logseq Analyzer."""
 
     CONFIG_EDN = "config_edns"
@@ -56,7 +56,7 @@ class ConfigEdnReports(Enum):
     EDN_CONFIG = "edn_config"
 
 
-class Constants(Enum):
+class Constant(Enum):
     """Constants used in the Logseq Analyzer."""
 
     CACHE_FILE = "logseq-analyzer-cache"
@@ -159,7 +159,7 @@ class Edn(Enum):
     WHITEBOARDS_DIR = ":whiteboards-directory"
 
 
-class FileTypes(Enum):
+class FileType(Enum):
     """File types for the Logseq Analyzer."""
 
     ASSET = "asset"
@@ -194,7 +194,7 @@ class LogseqGraphStructure(Enum):
     RECYCLE = ".recycle"
 
 
-class MovedFiles(Enum):
+class MovedFile(Enum):
     """Moved files and directories in the Logseq Analyzer."""
 
     ASSETS = "moved_assets"
@@ -203,7 +203,7 @@ class MovedFiles(Enum):
     SIMULATED_PREFIX = "======== Simulated only ========"
 
 
-class NodeTypes(Enum):
+class Node(Enum):
     """Node types for the Logseq Analyzer."""
 
     BRANCH = "branch"
@@ -277,7 +277,7 @@ class OutputDir(Enum):
     SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
 
 
-class SummaryFiles(Enum):
+class SummaryFile(Enum):
     """Summary files for the Logseq Analyzer."""
 
     BACKLINKED = "backlinked"
@@ -287,11 +287,11 @@ class SummaryFiles(Enum):
     IS_HLS = "is_hls"
 
 
-class TargetDirs(Enum):
+class TargetDir(Enum):
     """Target directories for the Logseq Analyzer."""
 
-    ASSETS = "assets"
-    DRAWS = "draws"
-    JOURNALS = "journals"
-    PAGES = "pages"
-    WHITEBOARDS = "whiteboards"
+    ASSET = "assets"
+    DRAW = "draws"
+    JOURNAL = "journals"
+    PAGE = "pages"
+    WHITEBOARD = "whiteboards"

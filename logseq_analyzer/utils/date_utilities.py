@@ -10,7 +10,14 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "DateUtilities",
+    "DAYS_IN_WEEK",
+    "DAYS_IN_MONTH",
+    "DAYS_IN_YEAR",
 ]
+
+DAYS_IN_WEEK = 7
+DAYS_IN_MONTH = 30
+DAYS_IN_YEAR = 365
 
 
 class DateUtilities:
@@ -30,9 +37,9 @@ class DateUtilities:
         days = delta.days + 1
         return {
             "days": days if delta else 0.0,
-            "weeks": round(days / 7, 2) if delta else 0.0,
-            "months": round(days / 30, 2) if delta else 0.0,
-            "years": round(days / 365, 2) if delta else 0.0,
+            "weeks": round(days / DAYS_IN_WEEK, 2) if delta else 0.0,
+            "months": round(days / DAYS_IN_MONTH, 2) if delta else 0.0,
+            "years": round(days / DAYS_IN_YEAR, 2) if delta else 0.0,
         }
 
     @staticmethod

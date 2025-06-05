@@ -7,14 +7,14 @@ from pathlib import Path
 import pytest
 
 from ...analysis.index import FileIndex
-from ...utils.enums import Constants
+from ...utils.enums import Constant
 from ..cache import Cache
 
 
 @pytest.fixture
 def cache():
     """Fixture to create a Cache object."""
-    cache = Cache(Path(Constants.CACHE_FILE.value))
+    cache = Cache(Path(Constant.CACHE_FILE.value))
     cache.open()
     yield cache
     cache.close(FileIndex())

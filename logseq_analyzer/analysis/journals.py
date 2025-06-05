@@ -9,7 +9,7 @@ from typing import Any
 
 from ..analysis.index import FileIndex
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import FileTypes, Output
+from ..utils.enums import FileType, Output
 
 __all__ = [
     "LogseqJournals",
@@ -66,7 +66,7 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.sets.timeline)
 
-    def process(self, journal_file: str = FileTypes.JOURNAL.value) -> None:
+    def process(self, journal_file: str = FileType.JOURNAL.value) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         index = self.index
         page_format = LogseqJournals.journal_page_format

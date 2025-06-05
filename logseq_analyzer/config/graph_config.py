@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any, Generator
 
-from ..utils.enums import Core, Edn, TargetDirs
+from ..utils.enums import Core, Edn, TargetDir
 
 logger = logging.getLogger(__name__)
 
@@ -383,11 +383,11 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
         dict[str, str]: A dictionary containing the target directories.
     """
     return {
-        TargetDirs.ASSETS.value: TargetDirs.ASSETS.value,
-        TargetDirs.DRAWS.value: TargetDirs.DRAWS.value,
-        TargetDirs.PAGES.value: config.get(Edn.PAGES_DIR.value, TargetDirs.PAGES.value),
-        TargetDirs.JOURNALS.value: config.get(Edn.JOURNALS_DIR.value, TargetDirs.JOURNALS.value),
-        TargetDirs.WHITEBOARDS.value: config.get(Edn.WHITEBOARDS_DIR.value, TargetDirs.WHITEBOARDS.value),
+        TargetDir.ASSET.value: TargetDir.ASSET.value,
+        TargetDir.DRAW.value: TargetDir.DRAW.value,
+        TargetDir.PAGE.value: config.get(Edn.PAGES_DIR.value, TargetDir.PAGE.value),
+        TargetDir.JOURNAL.value: config.get(Edn.JOURNALS_DIR.value, TargetDir.JOURNAL.value),
+        TargetDir.WHITEBOARD.value: config.get(Edn.WHITEBOARDS_DIR.value, TargetDir.WHITEBOARD.value),
     }
 
 

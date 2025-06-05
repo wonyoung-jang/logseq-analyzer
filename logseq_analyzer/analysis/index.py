@@ -124,19 +124,6 @@ class FileIndex:
         for file in {f for f in self if not f.path.file.exists()}:
             self.remove(file)
 
-    def process_namespaces(self, f: LogseqFile) -> None:
-        """Post-process namespaces in the content data."""
-        for ns_root_file in self[f.info.namespace.root]:
-            ns_root_file: LogseqFile
-            ns_root_file.path.is_namespace = True
-            ns_root_file.info.namespace.children.add(f.path.name)
-            ns_root_file.info.namespace.size = len(ns_root_file.info.namespace.children)
-
-        for ns_parent_file in self[f.info.namespace.parent_full]:
-            ns_parent_file: LogseqFile
-            ns_parent_file.info.namespace.children.add(f.path.name)
-            ns_parent_file.info.namespace.size = len(ns_parent_file.info.namespace.children)
-
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
