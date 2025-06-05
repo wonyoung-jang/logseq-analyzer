@@ -15,7 +15,7 @@ import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
-from ..utils.enums import Core, Criteria, NodeTypes
+from ..utils.enums import Core, Criteria, FileTypes, NodeTypes
 from .bullets import LogseqBullets
 from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
 
@@ -32,9 +32,10 @@ class MaskedBlocks:
         Restore the original content by replacing placeholders with their blocks.
         """
         content = self.content
+        replace_content = content.replace
         blocks = self.blocks
         for placeholder, block in blocks.items():
-            content = content.replace(placeholder, block)
+            content = replace_content(placeholder, block)
         self.content = content
 
 
@@ -109,10 +110,9 @@ class NodeType:
             names (tuple[str, ...]): Names of the files.
         """
         for asset_mention in asset_mentions:
-            for name in names:
-                if name in asset_mention:
-                    self.backlinked = True
-                    return
+            if any(name in asset_mention for name in names):
+                self.backlinked = True
+                return
 
 
 @dataclass
@@ -196,7 +196,11 @@ class LogseqFile:
         """Process the Logseq file to extract metadata and content."""
         self.init_file_data()
         self.process_content_data()
-        self.is_hls = self.path.name.startswith(Core.HLS_PREFIX.value)
+        self.set_is_hls()
+
+    def set_is_hls(self, hls_prefix: str = Core.HLS_PREFIX.value) -> None:
+        """Check if the file is an HLS file."""
+        self.is_hls = self.path.name.startswith(hls_prefix)
 
     def init_file_data(self) -> None:
         """Extract metadata from a file."""
@@ -212,6 +216,8 @@ class LogseqFile:
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
         if not self.info.size.has_content:
+            return
+        if self.path.file_type not in (FileTypes.JOURNAL.value, FileTypes.PAGE.value):
             return
         self.mask_blocks()
         self.extract_data()

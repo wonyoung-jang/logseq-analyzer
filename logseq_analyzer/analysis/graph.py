@@ -55,20 +55,21 @@ class LogseqGraph:
     def post_process_content(self, index: FileIndex) -> None:
         """Post-process the content data for all files."""
         all_linked_refs = self.all_linked_refs
-        unique_linked_refs = self.unique_linked_refs
-        unique_linked_refs_ns = self.unique_linked_refs_ns
-        unique_aliases = self.unique_aliases
+        update_unique_linked_refs = self.unique_linked_refs.update
+        update_unique_linked_refs_ns = self.unique_linked_refs_ns.update
+        update_unique_aliases = self.unique_aliases.update
+        process_namespaces = index.process_namespaces
 
         for f in index:
             ns_info = f.info.namespace
             if f.path.is_namespace:
-                unique_linked_refs_ns.update((ns_info.root, f.path.name))
-                index.process_namespaces(f)
+                update_unique_linked_refs_ns((ns_info.root, f.path.name))
+                process_namespaces(f)
             if not f.data:
                 continue
             get_data = f.data.get
             found_aliases = get_data(Criteria.CON_ALIASES.value, [])
-            unique_aliases.update(found_aliases)
+            update_unique_aliases(found_aliases)
             dataset = (
                 found_aliases,
                 get_data(Criteria.CON_DRAW.value, []),
@@ -86,7 +87,7 @@ class LogseqGraph:
                 all_linked_refs = get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f)
             else:
                 all_linked_refs = get_count_and_foundin_data(all_linked_refs, linked_references, f)
-            unique_linked_refs.update(linked_references)
+            update_unique_linked_refs(linked_references)
 
     def sort_all_linked_references(self) -> dict:
         """Sort all linked references by count and found_in."""
@@ -101,10 +102,12 @@ class LogseqGraph:
         unique_linked_refs_ns = self.unique_linked_refs_ns
         check_for_nodes = LogseqGraph._TO_NODE_TYPE
         for f in index:
-            f.node.check_backlinked(f.path.name, unique_linked_refs)
-            f.node.check_backlinked_ns_only(f.path.name, unique_linked_refs_ns)
+            filename = f.path.name
+            node = f.node
+            node.check_backlinked(filename, unique_linked_refs)
+            node.check_backlinked_ns_only(filename, unique_linked_refs_ns)
             if f.path.file_type in check_for_nodes:
-                f.node.determine_node_type(f.info.size.has_content)
+                node.determine_node_type(f.info.size.has_content)
 
     def post_process_dangling(self, index: FileIndex) -> list[str]:
         """Process dangling links in the graph."""

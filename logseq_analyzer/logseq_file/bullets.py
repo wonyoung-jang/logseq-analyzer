@@ -72,20 +72,20 @@ class LogseqBullets:
         """Return a user-friendly string representation of the LogseqBullets object."""
         return f"{self.__class__.__qualname__}"
 
-    def process(self) -> None:
+    def process(self, bullet_pattern=ContentPatterns.BULLET) -> None:
         """Process the content to extract bullet information."""
         _content = self.content
         if not _content:
             return
 
-        _all_bullets = self.all_bullets
+        append_all_bullets = self.all_bullets.append
         bullet_count = 0
         bullet_count_empty = 0
         primary_bullet = ""
 
-        for bullet_index, bullet in iter_pattern_split(ContentPatterns.BULLET, _content):
+        for bullet_index, bullet in iter_pattern_split(bullet_pattern, _content):
             if bullet:
-                _all_bullets.append(bullet)
+                append_all_bullets(bullet)
                 bullet_count += 1
                 if bullet_index == 0:
                     primary_bullet = bullet

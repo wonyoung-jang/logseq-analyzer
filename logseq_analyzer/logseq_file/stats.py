@@ -7,14 +7,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from os import stat_result
 from pathlib import Path
-from urllib.parse import unquote
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
 from ..config.graph_config import get_ns_sep
+from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileTypes
 from ..utils.helpers import format_bytes
-from ..io.filesystem import LogseqAnalyzerDirs
 
 if TYPE_CHECKING:
     from ..app import ConfigEdns, JournalFormats
@@ -65,6 +65,7 @@ class LogseqPath:
         "name",
         "stat",
         "uri",
+        "logseq_url",
     )
 
     graph_path: Path = None
@@ -73,7 +74,7 @@ class LogseqPath:
     journal_page_title_format: str = ""
     now_ts = datetime.now().timestamp()
     ns_file_sep: str = ""
-    result_map: dict = None
+    result_map: dict = {}
     target_dirs: dict = {}
 
     def __init__(self, file, dateutils: DateUtilities = DateUtilities) -> None:
@@ -87,6 +88,7 @@ class LogseqPath:
         self.name: str = ""
         self.stat: stat_result = file.stat()
         self.uri: str = file.as_uri()
+        self.logseq_url: str = ""
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqPath instance."""
@@ -121,9 +123,14 @@ class LogseqPath:
             _td["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
         }
 
-    @property
-    def logseq_url(self) -> str:
-        """Return the Logseq URL."""
+    def process(self) -> None:
+        """Process the Logseq file path to gather statistics."""
+        self.process_logseq_filename()
+        self.determine_file_type()
+        self.set_logseq_url()
+
+    def set_logseq_url(self) -> None:
+        """Set the Logseq URL."""
         _graph_path = LogseqPath.graph_path
         _uri = self.uri
 
@@ -133,22 +140,19 @@ class LogseqPath:
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
-            return ""
+            self.logseq_url = ""
+            return
 
         graph_path = str(_graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
         if not _uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
-            return ""
+            self.logseq_url = ""
+            return
 
         encoded_path = _uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
-        return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
-
-    def process(self) -> None:
-        """Process the Logseq file path to gather statistics."""
-        self.process_logseq_filename()
-        self.determine_file_type()
+        self.logseq_url = f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
     def determine_file_type(self, other: str = FileTypes.OTHER.value) -> None:
         """Helper function to determine the file type based on the directory structure."""
