@@ -24,13 +24,12 @@ class FileIndex:
 
     __slots__ = (
         "_files",
-        "_hash_to_file",
         "_name_to_files",
         "_path_to_file",
     )
 
-    write_graph: bool = False
     _instance = None
+    write_graph: bool = False
 
     def __new__(cls):
         """Ensure only one instance of FileIndex is created."""
@@ -41,7 +40,6 @@ class FileIndex:
     def __init__(self) -> None:
         """Initialize the FileIndex instance."""
         self._files: set[LogseqFile] = set()
-        self._hash_to_file: dict[int, LogseqFile] = {}
         self._name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
         self._path_to_file: dict[Path, LogseqFile] = {}
         logger.debug("init FileIndex")
@@ -68,8 +66,6 @@ class FileIndex:
             if f in self:
                 return f
             raise KeyError(f"File {f} not found in index.")
-        if isinstance(f, int):
-            return self._hash_to_file.get(f)
         if isinstance(f, str):
             return self._name_to_files.get(f, [])
         if isinstance(f, Path):
@@ -80,8 +76,6 @@ class FileIndex:
         """Check if a file is in the index."""
         if isinstance(f, LogseqFile):
             return f in self._files
-        if isinstance(f, int):
-            return f in self._hash_to_file
         if isinstance(f, str):
             return f in self._name_to_files
         if isinstance(f, Path):
@@ -91,7 +85,6 @@ class FileIndex:
     def add(self, f: LogseqFile) -> None:
         """Add a file to the index."""
         self._files.add(f)
-        self._hash_to_file[hash(f)] = f
         self._name_to_files[f.path.name].append(f)
         self._path_to_file[f.path.file] = f
 
@@ -99,8 +92,6 @@ class FileIndex:
         """Strategy to remove a file from the index."""
         if isinstance(f, LogseqFile):
             target = f
-        elif isinstance(f, int):
-            target = self._hash_to_file.get(f)
         elif isinstance(f, str):
             for target in self._name_to_files.pop(f, []):
                 self._remove_file(target)
@@ -119,7 +110,6 @@ class FileIndex:
     def _remove_file(self, f: LogseqFile) -> None:
         """Helper method to remove a file from the index."""
         self._files.discard(f)
-        self._hash_to_file.pop(hash(f), None)
         if files := self._name_to_files.get(f.path.name):
             try:
                 files.remove(f)
@@ -147,12 +137,6 @@ class FileIndex:
             ns_parent_file.info.namespace.children.add(f.path.name)
             ns_parent_file.info.namespace.size = len(ns_parent_file.info.namespace.children)
 
-    def yield_unlinked_assets(self):
-        """Yield all unlinked asset files from the index."""
-        for f in self:
-            if f.path.file_type == "asset" and not f.node.backlinked:
-                yield f
-
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
@@ -170,7 +154,6 @@ class FileIndex:
             Output.GRAPH_CONTENT_DATA.value: self.graph_content_data,
             Output.GRAPH_DATA.value: self.graph_data,
             Output.IDX_FILES.value: self._files,
-            Output.IDX_HASH_TO_FILE.value: self._hash_to_file,
             Output.IDX_NAME_TO_FILES.value: self._name_to_files,
             Output.IDX_PATH_TO_FILE.value: self._path_to_file,
         }

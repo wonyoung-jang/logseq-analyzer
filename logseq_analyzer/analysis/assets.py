@@ -16,92 +16,25 @@ __all__ = [
 ]
 
 
-class LogseqAssets:
-    """Class to handle assets in Logseq."""
-
-    __slots__ = ("backlinked", "not_backlinked")
-
-    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({Criteria.EMB_LINK_ASSET.value, Criteria.CON_ASSETS.value})
-
-    def __init__(self) -> None:
-        """Initialize the LogseqAssets instance."""
-        self.backlinked: set[LogseqFile] = set()
-        self.not_backlinked: set[LogseqFile] = set()
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqAssets instance."""
-        return f"{self.__class__.__qualname__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the LogseqAssets instance."""
-        return f"{self.__class__.__qualname__}"
-
-    def process(self, index: FileIndex) -> None:
-        """Handle assets for the Logseq Analyzer."""
-        asset_mentions = set()
-        update_mentions = asset_mentions.update
-        clear_mentions = asset_mentions.clear
-        asset_criteria = LogseqAssets._ASSET_CRITERIA
-        yield_assets = LogseqAssets.yield_assets
-
-        for f in index:
-            if not (f_data := f.data):
-                continue
-
-            get_data = f_data.get
-            for criteria in asset_criteria:
-                update_mentions(get_data(criteria, []))
-
-            if not asset_mentions:
-                continue
-
-            f_name = f.path.name
-            for asset_file in yield_assets(index, backlinked=False):
-                asset_file.node.update_asset_backlink(asset_mentions, (asset_file.path.name, f_name))
-
-            clear_mentions()
-
-        del asset_mentions
-
-        self.backlinked.update(yield_assets(index, backlinked=True))
-        self.not_backlinked.update(yield_assets(index, backlinked=False))
-
-    @staticmethod
-    def yield_assets(
-        index: FileIndex, backlinked: bool | None = None, asset_file_type: str = FileTypes.ASSET.value
-    ) -> Generator[LogseqFile, None]:
-        """Yield all asset files from the index."""
-        for file in (f for f in index if f.path.file_type == asset_file_type):
-            if backlinked is None:
-                yield file
-            if file.node.backlinked is backlinked:
-                yield file
-
-    @property
-    def report(self) -> str:
-        """Generate a report of the asset analysis."""
-        return {
-            Output.ASSETS_BACKLINKED.value: self.backlinked,
-            Output.ASSETS_NOT_BACKLINKED.value: self.not_backlinked,
-        }
-
-
 class LogseqAssetsHls:
     """Class to handle HLS assets in Logseq."""
 
     __slots__ = (
+        "index",
         "asset_mapping",
         "backlinked",
         "hls_bullets",
         "not_backlinked",
     )
 
-    def __init__(self) -> None:
+    def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqAssetsHls instance."""
+        self.index: FileIndex = index
         self.asset_mapping: dict[str, LogseqFile] = {}
         self.backlinked: set[str] = set()
         self.hls_bullets: set[str] = set()
         self.not_backlinked: set[str] = set()
+        self.process()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqAssetsHls instance."""
@@ -111,20 +44,22 @@ class LogseqAssetsHls:
         """Return a string representation of the LogseqAssetsHls instance."""
         return f"{self.__class__.__qualname__}"
 
-    def process(self, index: FileIndex) -> None:
+    def process(self) -> None:
         """Process HLS assets to analyze backlinks and bullet content."""
-        self.get_asset_files(index)
+        self.get_asset_files()
         if self.asset_mapping:
-            self.convert_names_to_data(index)
+            self.convert_names_to_data()
             self.check_backlinks()
 
-    def get_asset_files(self, index: FileIndex, sub_asset: str = FileTypes.SUB_ASSET.value) -> None:
+    def get_asset_files(self, sub_asset: str = FileTypes.SUB_ASSET.value) -> None:
         """Retrieve asset files based on specific criteria."""
+        index = self.index
         asset_files = (f for f in index if f.path.file_type == sub_asset)
         self.asset_mapping = {f.path.name: f for f in asset_files}
 
-    def convert_names_to_data(self, index: FileIndex) -> None:
+    def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
+        index = self.index
         find_prop_value_pattern = ContentPatterns.PROPERTY_VALUE.finditer
         add_hls_bullet = self.hls_bullets.add
         for f in (fh for fh in index if fh.is_hls):
@@ -168,4 +103,80 @@ class LogseqAssetsHls:
             Output.HLS_FORMATTED_BULLETS.value: self.hls_bullets,
             Output.HLS_NOT_BACKLINKED.value: self.not_backlinked,
             Output.HLS_BACKLINKED.value: self.backlinked,
+        }
+
+
+class LogseqAssets:
+    """Class to handle assets in Logseq."""
+
+    __slots__ = ("index", "backlinked", "not_backlinked")
+
+    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({Criteria.EMB_LINK_ASSET.value, Criteria.CON_ASSETS.value})
+
+    def __init__(self, index: FileIndex) -> None:
+        """Initialize the LogseqAssets instance."""
+        self.index: FileIndex = index
+        self.backlinked: set[LogseqFile] = set()
+        self.not_backlinked: set[LogseqFile] = set()
+        self.process()
+
+    def __repr__(self) -> str:
+        """Return a string representation of the LogseqAssets instance."""
+        return f"{self.__class__.__qualname__}()"
+
+    def __str__(self) -> str:
+        """Return a string representation of the LogseqAssets instance."""
+        return f"{self.__class__.__qualname__}"
+
+    def process(self) -> None:
+        """Handle assets for the Logseq Analyzer."""
+        asset_mentions = set()
+        update_mentions = asset_mentions.update
+        clear_mentions = asset_mentions.clear
+        asset_criteria = LogseqAssets._ASSET_CRITERIA
+        yield_assets = self.yield_assets
+        index = self.index
+
+        for f in index:
+            asset_file_processed = False
+            if not (f_data := f.data):
+                continue
+
+            get_data = f_data.get
+            for criteria in asset_criteria:
+                update_mentions(get_data(criteria, []))
+
+            if not asset_mentions:
+                continue
+
+            f_name = f.path.name
+            for asset_file in yield_assets(backlinked=False):
+                asset_file.node.update_asset_backlink(asset_mentions, (asset_file.path.name, f_name))
+                asset_file_processed = True
+
+            if not asset_file_processed:
+                break
+
+            clear_mentions()
+
+        del asset_mentions
+
+        self.backlinked.update(yield_assets(backlinked=True))
+        self.not_backlinked.update(yield_assets(backlinked=False))
+
+    def yield_assets(self, backlinked=None, asset: str = FileTypes.ASSET.value) -> Generator[LogseqFile, None]:
+        """Yield all asset files from the index."""
+        index = self.index
+        for file in (f for f in index if f.path.file_type == asset):
+            if backlinked is None:
+                yield file
+            if file.node.backlinked is backlinked:
+                yield file
+
+    @property
+    def report(self) -> str:
+        """Generate a report of the asset analysis."""
+        return {
+            Output.ASSETS_BACKLINKED.value: self.backlinked,
+            Output.ASSETS_NOT_BACKLINKED.value: self.not_backlinked,
         }

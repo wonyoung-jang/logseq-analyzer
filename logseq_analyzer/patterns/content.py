@@ -139,6 +139,7 @@ ANY_LINK = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+# Not used
 BOLD = re.compile(
     r"""
     \*{2}               # Opening double asterisks

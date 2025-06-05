@@ -1,16 +1,23 @@
 import pytest
 
 from ..assets import LogseqAssets, LogseqAssetsHls
+from ...analysis.index import FileIndex
 
 
 @pytest.fixture
-def logseq_assets():
-    return LogseqAssets()
+def file_index():
+    """Fixture to create a FileIndex object."""
+    return FileIndex()
 
 
 @pytest.fixture
-def logseq_assets_hls():
-    return LogseqAssetsHls()
+def logseq_assets(file_index):
+    return LogseqAssets(file_index)
+
+
+@pytest.fixture
+def logseq_assets_hls(file_index):
+    return LogseqAssetsHls(file_index)
 
 
 def test_logseq_assets_representation(logseq_assets):

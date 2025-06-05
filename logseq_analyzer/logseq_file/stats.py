@@ -13,7 +13,7 @@ from urllib.parse import unquote
 from ..config.graph_config import get_ns_sep
 from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Core, FileTypes
+from ..utils.enums import Core, FileTypes, TargetDirs
 from ..utils.helpers import format_bytes
 
 if TYPE_CHECKING:
@@ -116,11 +116,11 @@ class LogseqPath:
         """Set the result map for file type determination."""
         _td = cls.target_dirs
         cls.result_map = {
-            _td["assets"]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
-            _td["draws"]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
-            _td["journals"]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
-            _td["pages"]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
-            _td["whiteboards"]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
+            _td[TargetDirs.ASSETS.value]: (FileTypes.ASSET.value, FileTypes.SUB_ASSET.value),
+            _td[TargetDirs.DRAWS.value]: (FileTypes.DRAW.value, FileTypes.SUB_DRAW.value),
+            _td[TargetDirs.JOURNALS.value]: (FileTypes.JOURNAL.value, FileTypes.SUB_JOURNAL.value),
+            _td[TargetDirs.PAGES.value]: (FileTypes.PAGE.value, FileTypes.SUB_PAGE.value),
+            _td[TargetDirs.WHITEBOARDS.value]: (FileTypes.WHITEBOARD.value, FileTypes.SUB_WHITEBOARD.value),
         }
 
     def process(self) -> None:
@@ -174,7 +174,7 @@ class LogseqPath:
     def process_logseq_filename(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Process the Logseq filename based on its parent directory."""
         _ns_file_sep = LogseqPath.ns_file_sep
-        _target_dir_journal = LogseqPath.target_dirs["journals"]
+        _target_dir_journal = LogseqPath.target_dirs[TargetDirs.JOURNALS.value]
         _parent = self.file.parent.name
         _stem = self.file.stem
 
@@ -217,7 +217,7 @@ class LogseqPath:
             return self.file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             logger.warning("Failed to decode file %s with utf-8 encoding.", self.file)
-        return ""
+            return ""
 
     def get_timestamp_info(self) -> TimestampInfo:
         """Get the timestamps for the file."""

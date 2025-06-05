@@ -58,7 +58,6 @@ class Cache:
     def close(self, index: FileIndex, index_key: str = CacheKeys.INDEX.value) -> None:
         """Close the cache file."""
         self.cache[index_key] = index
-        self.cache.sync()
         self.cache.close()
 
     def initialize(self) -> FileIndex:

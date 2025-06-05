@@ -16,10 +16,10 @@ from .analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
 from .config.arguments import Args
 from .config.graph_config import (
     get_default_logseq_config,
+    get_edn_from_file,
     get_file_name_format,
     get_page_title_format,
     get_target_dirs,
-    init_config_edn_from_file,
 )
 from .io.cache import Cache
 from .io.filesystem import (
@@ -47,7 +47,7 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile, LogseqPath
-from .utils.enums import Constants, MovedFiles, Output, OutputDir
+from .utils.enums import Constants, MovedFiles, Output, OutputDir, TargetDirs
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
@@ -129,23 +129,28 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     """Setup Logseq analyzer configuration based on arguments."""
     graph_dirs = setup_graph_dirs(args)
     config_edns = setup_config_edns(args, graph_dirs)
-    targets_dirs = get_target_dirs(config_edns.config)
-    graph_folder_path = graph_dirs.graph_dir.path
-    AssetsDirectory(graph_folder_path / targets_dirs["assets"])
-    DrawsDirectory(graph_folder_path / targets_dirs["draws"])
-    JournalsDirectory(graph_folder_path / targets_dirs["journals"])
-    PagesDirectory(graph_folder_path / targets_dirs["pages"])
-    WhiteboardsDirectory(graph_folder_path / targets_dirs["whiteboards"])
+    target_dirs = get_target_dirs(config_edns.config)
+    ensure_target_dirs(graph_dirs, target_dirs)
     delete_dirs = setup_delete_dirs()
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
         delete_dirs=delete_dirs,
-        target_dirs=targets_dirs,
+        target_dirs=target_dirs,
         output_dir=OutputDirectory(Constants.OUTPUT_DIR.value),
     )
 
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
+
+
+def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
+    """Ensure that the target directories exist."""
+    graph_folder_path = graph_dirs.graph_dir.path
+    AssetsDirectory(graph_folder_path / target_dirs[TargetDirs.ASSETS.value])
+    DrawsDirectory(graph_folder_path / target_dirs[TargetDirs.DRAWS.value])
+    JournalsDirectory(graph_folder_path / target_dirs[TargetDirs.JOURNALS.value])
+    PagesDirectory(graph_folder_path / target_dirs[TargetDirs.PAGES.value])
+    WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDirs.WHITEBOARDS.value])
 
 
 def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
@@ -168,11 +173,11 @@ def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
 def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     """Setup the configuration EDN files."""
     default_edn = get_default_logseq_config()
-    user_edn = init_config_edn_from_file(graph_dirs.user_config.path)
+    user_edn = get_edn_from_file(graph_dirs.user_config.path)
     global_edn = {}
     if global_config_path := args.global_config:
         graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
-        global_edn.update(init_config_edn_from_file(graph_dirs.global_config.path))
+        global_edn.update(get_edn_from_file(graph_dirs.global_config.path))
     logger.debug("setup_config_edns")
     return ConfigEdns(
         config=default_edn | user_edn | global_edn,
@@ -249,74 +254,23 @@ def process_graph(index: FileIndex, cache: Cache) -> None:
     logger.debug("process_graph")
 
 
-def setup_graph(index: FileIndex) -> LogseqGraph:
-    """Setup the Logseq graph."""
-    lg = LogseqGraph()
-    lg.process(index)
-    logger.debug("setup_graph")
-    return lg
-
-
-def setup_namespaces(index: FileIndex, dangling_links: list[str]) -> LogseqNamespaces:
-    """Setup LogseqNamespaces."""
-    ln = LogseqNamespaces()
-    ln.process(index, dangling_links)
-    logger.debug("setup_namespaces")
-    return ln
-
-
-def setup_journals(index: FileIndex, dangling_links: list[str]) -> LogseqJournals:
-    """Setup LogseqJournals."""
-    lj = LogseqJournals()
-    lj.process(index, dangling_links)
-    logger.debug("setup_journals")
-    return lj
-
-
-def setup_assets(index: FileIndex) -> tuple[LogseqAssets, LogseqAssetsHls]:
-    """Setup LogseqAssetsHls for HLS assets."""
-    lah = LogseqAssetsHls()
-    lah.process(index)
-
-    lsa = LogseqAssets()
-    lsa.process(index)
-
-    logger.debug("setup_assets")
-    return lsa, lah
-
-
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
     """Setup LogseqFileMover for moving files and directories."""
-    delete_dirs = analyzer_dirs.delete_dirs
-    graph_dirs = analyzer_dirs.graph_dirs
-    target_asset = delete_dirs.delete_assets_dir.path
-    target_bak = delete_dirs.delete_bak_dir.path
-    target_rec = delete_dirs.delete_recycle_dir.path
+    dd = analyzer_dirs.delete_dirs
+    gd = analyzer_dirs.graph_dirs
+    target_asset = dd.delete_assets_dir.path
+    target_bak = dd.delete_bak_dir.path
+    target_rec = dd.delete_recycle_dir.path
     asset_paths = yield_asset_paths(lsa.not_backlinked)
-    bak_paths = yield_bak_rec_paths(graph_dirs.bak_dir.path)
-    rec_paths = yield_bak_rec_paths(graph_dirs.recycle_dir.path)
-    moved_assets = process_moves(args.move_unlinked_assets, target_asset, asset_paths)
-    moved_bak = process_moves(args.move_bak, target_bak, bak_paths)
-    moved_rec = process_moves(args.move_recycle, target_rec, rec_paths)
+    bak_paths = yield_bak_rec_paths(gd.bak_dir.path)
+    rec_paths = yield_bak_rec_paths(gd.recycle_dir.path)
     moved_files_report = {
-        MovedFiles.ASSETS.value: moved_assets,
-        MovedFiles.BAK.value: moved_bak,
-        MovedFiles.RECYCLE.value: moved_rec,
+        MovedFiles.ASSETS.value: process_moves(args.move_unlinked_assets, target_asset, asset_paths),
+        MovedFiles.BAK.value: process_moves(args.move_bak, target_bak, bak_paths),
+        MovedFiles.RECYCLE.value: process_moves(args.move_recycle, target_rec, rec_paths),
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES.value: moved_files_report}
-
-
-def setup_summarizers(index: FileIndex) -> tuple[LogseqFileSummarizer, LogseqContentSummarizer]:
-    """Setup the Logseq summarizers."""
-    lfs = LogseqFileSummarizer()
-    lfs.process(index)
-
-    lcs = LogseqContentSummarizer()
-    lcs.process(index)
-
-    logger.debug("setup_summarizers")
-    return lfs, lcs
 
 
 def yield_config_data_reports(
@@ -336,27 +290,33 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
 ) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
-    graph = setup_graph(index)
+    graph = LogseqGraph(index)
     yield (OutputDir.GRAPH.value, graph.report)
 
     dangling_links = graph.dangling_links
-    namespaces = setup_namespaces(index, dangling_links)
-    journals = setup_journals(index, dangling_links)
+
+    namespaces = LogseqNamespaces(index, dangling_links)
     yield (OutputDir.NAMESPACES.value, namespaces.report)
+
+    journals = LogseqJournals(index, dangling_links)
     yield (OutputDir.JOURNALS.value, journals.report)
 
-    ls_assets, hls_assets = setup_assets(index)
-    yield (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report)
+    hls_assets = LogseqAssetsHls(index)
     yield (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report)
+
+    ls_assets = LogseqAssets(index)
+    yield (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report)
 
     moved_files = setup_file_mover(args, ls_assets, analyzer_dirs)
     yield (OutputDir.MOVED_FILES.value, moved_files)
 
-    summary_files, summary_content = setup_summarizers(index)
+    summary_files = LogseqFileSummarizer(index)
     yield (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general)
     yield (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes)
     yield (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes)
     yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions)
+
+    summary_content = LogseqContentSummarizer(index)
     yield (OutputDir.SUMMARY_CONTENT.value, summary_content.report)
 
     yield (OutputDir.INDEX.value, index.report)

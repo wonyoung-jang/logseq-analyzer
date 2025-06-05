@@ -2,6 +2,8 @@
 This module contains functions for processing and analyzing Logseq graph data.
 """
 
+from dataclasses import dataclass, field
+from itertools import chain
 from typing import Any
 
 from ..utils.enums import Criteria, FileTypes, Output
@@ -13,28 +15,36 @@ __all__ = [
 ]
 
 
+@dataclass
+class UniqueSets:
+    """Dataclass to hold unique sets for linked references and aliases."""
+
+    linked_refs: set[str] = field(default_factory=set)
+    linked_refs_ns: set[str] = field(default_factory=set)
+    aliases: set[str] = field(default_factory=set)
+
+
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
 
     __slots__ = (
+        "index",
         "all_linked_refs",
         "all_dangling_links",
         "dangling_links",
-        "unique_linked_refs",
-        "unique_linked_refs_ns",
-        "unique_aliases",
+        "unique",
     )
 
     _TO_NODE_TYPE: frozenset[str] = frozenset({FileTypes.JOURNAL.value, FileTypes.PAGE.value})
 
-    def __init__(self) -> None:
+    def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqGraph instance."""
+        self.index: FileIndex = index
         self.all_linked_refs: dict[str, dict[str, dict]] = {}
         self.all_dangling_links: dict[str, dict[str, dict]] = {}
         self.dangling_links: list[str] = []
-        self.unique_linked_refs: set[str] = set()
-        self.unique_linked_refs_ns: set[str] = set()
-        self.unique_aliases: set[str] = set()
+        self.unique: UniqueSets = UniqueSets()
+        self.process()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqGraph instance."""
@@ -44,32 +54,35 @@ class LogseqGraph:
         """Return a string representation of the LogseqGraph instance."""
         return f"{self.__class__.__qualname__}"
 
-    def process(self, index: FileIndex) -> None:
+    def process(self) -> None:
         """Process the Logseq graph data."""
-        self.post_process_content(index)
-        self.post_process_summary(index)
+        self.post_process_content()
+        self.process_nodes()
         self.sort_all_linked_references()
-        self.post_process_dangling(index)
-        self.post_process_all_dangling()
+        self.find_dangling_links()
+        self.extract_all_dangling_link_data()
 
-    def post_process_content(self, index: FileIndex) -> None:
+    def post_process_content(self) -> None:
         """Post-process the content data for all files."""
         all_linked_refs = self.all_linked_refs
-        update_unique_linked_refs = self.unique_linked_refs.update
-        update_unique_linked_refs_ns = self.unique_linked_refs_ns.update
-        update_unique_aliases = self.unique_aliases.update
-        process_namespaces = index.process_namespaces
+        update_unique_linked_refs = self.unique.linked_refs.update
+        update_unique_linked_refs_ns = self.unique.linked_refs_ns.update
+        update_unique_aliases = self.unique.aliases.update
+        process_namespaces = self.index.process_namespaces
 
-        for f in index:
+        for f in self.index:
             ns_info = f.info.namespace
             if f.path.is_namespace:
                 update_unique_linked_refs_ns((ns_info.root, f.path.name))
                 process_namespaces(f)
-            if not f.data:
+
+            if not (f_data := f.data):
                 continue
-            get_data = f.data.get
-            found_aliases = get_data(Criteria.CON_ALIASES.value, [])
-            update_unique_aliases(found_aliases)
+
+            get_data = f_data.get
+            if found_aliases := get_data(Criteria.CON_ALIASES.value, []):
+                update_unique_aliases(found_aliases)
+
             dataset = (
                 found_aliases,
                 get_data(Criteria.CON_DRAW.value, []),
@@ -81,46 +94,52 @@ class LogseqGraph:
                 get_data(Criteria.PROP_BLOCK_BUILTIN.value, []),
                 get_data(Criteria.PROP_BLOCK_USER.value, []),
             )
-            linked_references = [d for data in dataset for d in data if data]
+            if not (linked_references := [ref for ref in chain.from_iterable(dataset)]):
+                continue
+
             if ns_info.parent:
                 lr_with_ns_parent = linked_references.copy() + [ns_info.parent]
-                all_linked_refs = get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f)
+                all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f.path.name))
             else:
-                all_linked_refs = get_count_and_foundin_data(all_linked_refs, linked_references, f)
+                all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, linked_references, f.path.name))
+
             update_unique_linked_refs(linked_references)
 
-    def sort_all_linked_references(self) -> dict:
+    def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""
-        all_linked_refs = self.all_linked_refs
-        for _, values in all_linked_refs.items():
-            values["found_in"] = sort_dict_by_value(values["found_in"], reverse=True)
-        all_linked_refs = sort_dict_by_value(all_linked_refs, value="count", reverse=True)
+        for _, values in self.all_linked_refs.items():
+            found_in_map = values.get("found_in", {})
+            values["found_in"] = sort_dict_by_value(found_in_map, reverse=True)
 
-    def post_process_summary(self, index: FileIndex) -> None:
+        self.all_linked_refs = sort_dict_by_value(self.all_linked_refs, value="count", reverse=True)
+
+    def process_nodes(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
-        unique_linked_refs = self.unique_linked_refs
-        unique_linked_refs_ns = self.unique_linked_refs_ns
+        unique_refs = self.unique.linked_refs
+        unique_refs_ns = self.unique.linked_refs_ns
         check_for_nodes = LogseqGraph._TO_NODE_TYPE
-        for f in index:
+
+        for f in self.index:
             filename = f.path.name
             node = f.node
-            node.check_backlinked(filename, unique_linked_refs)
-            node.check_backlinked_ns_only(filename, unique_linked_refs_ns)
+            node.check_backlinked(filename, unique_refs)
+            node.check_backlinked_ns_only(filename, unique_refs_ns)
             if f.path.file_type in check_for_nodes:
                 node.determine_node_type(f.info.size.has_content)
 
-    def post_process_dangling(self, index: FileIndex) -> list[str]:
+    def find_dangling_links(self) -> None:
         """Process dangling links in the graph."""
-        all_file_names = (f.path.name for f in index)
-        all_refs = self.unique_linked_refs.union(self.unique_linked_refs_ns)
-        all_refs.difference_update(all_file_names, self.unique_aliases)
-        self.dangling_links.extend(remove_builtin_properties(all_refs))
+        all_file_names = (f.path.name for f in self.index)
 
-    def post_process_all_dangling(self) -> None:
+        all_refs = self.unique.linked_refs.union(self.unique.linked_refs_ns)
+        all_refs.difference_update(all_file_names)
+        all_refs.difference_update(self.unique.aliases)
+
+        self.dangling_links = remove_builtin_properties(all_refs)
+
+    def extract_all_dangling_link_data(self) -> None:
         """Process all dangling links to create a mapping of linked references."""
-        all_linked_refs = self.all_linked_refs
-        dangling_links = self.dangling_links
-        self.all_dangling_links.update({k: v for k, v in all_linked_refs.items() if k in dangling_links})
+        self.all_dangling_links = {k: v for k, v in self.all_linked_refs.items() if k in self.dangling_links}
 
     @property
     def report(self) -> dict[str, Any]:
@@ -129,7 +148,7 @@ class LogseqGraph:
             Output.GRAPH_ALL_LINKED_REFERENCES.value: self.all_linked_refs,
             Output.GRAPH_ALL_DANGLING_LINKS.value: self.all_dangling_links,
             Output.GRAPH_DANGLING_LINKS.value: self.dangling_links,
-            Output.GRAPH_UNIQUE_ALIASES.value: self.unique_aliases,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS.value: self.unique_linked_refs_ns,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES.value: self.unique_linked_refs,
+            Output.GRAPH_UNIQUE_ALIASES.value: self.unique.aliases,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS.value: self.unique.linked_refs_ns,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES.value: self.unique.linked_refs,
         }

@@ -10,6 +10,7 @@ __all__ = [
     "Constants",
     "Core",
     "Criteria",
+    "Edn",
     "FileTypes",
     "Format",
     "MovedFiles",
@@ -17,6 +18,7 @@ __all__ = [
     "Output",
     "OutputDir",
     "SummaryFiles",
+    "TargetDirs",
 ]
 
 
@@ -95,7 +97,7 @@ class Criteria(Enum):
     CON_ANY_LINKS = "content_any_links"
     CON_ASSETS = "content_assets"
     CON_BLOCKQUOTES = "content_blockquotes"
-    CON_BOLD = "content_bold"
+    # CON_BOLD = "content_bold"
     CON_DRAW = "content_draws"
     CON_DYNAMIC_VAR = "content_dynamic_variables"
     CON_FLASHCARD = "content_flashcards"
@@ -128,6 +130,23 @@ class Criteria(Enum):
     PROP_PAGE_BUILTIN = "property_page_builtin"
     PROP_PAGE_USER = "property_page_user"
     PROP_VALUES = "property_values"
+
+
+class Edn(Enum):
+    """
+    Enum for EDN data types.
+    """
+
+    FILE_NAME_FORMAT = ":journal/file-name-format"
+    FILE_NAME_FORMAT_DEFAULT = "yyyy_MM_dd"
+    JOURNALS_DIR = ":journals-directory"
+    NS_FILE = ":file/name-format"
+    PAGE_TITLE_FORMAT = ":journal/page-title-format"
+    PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
+    PAGES_DIR = ":pages-directory"
+    PROP_PAGES = ":property-pages/enabled?"
+    PROP_PAGES_DEFAULT = True
+    WHITEBOARDS_DIR = ":whiteboards-directory"
 
 
 class FileTypes(Enum):
@@ -214,7 +233,6 @@ class Output(Enum):
     HLS_FORMATTED_BULLETS = "hls_formatted_bullets"
     HLS_NOT_BACKLINKED = "hls_not_backlinked"
     IDX_FILES = "index_files"
-    IDX_HASH_TO_FILE = "index_hash_to_file"
     IDX_NAME_TO_FILES = "index_name_to_files"
     IDX_PATH_TO_FILE = "index_path_to_file"
     JOURNALS_ALL = "journals_all"
@@ -264,3 +282,13 @@ class SummaryFiles(Enum):
     HAS_BACKLINKS = "has_backlinks"
     HAS_CONTENT = "has_content"
     IS_HLS = "is_hls"
+
+
+class TargetDirs(Enum):
+    """Target directories for the Logseq Analyzer."""
+
+    ASSETS = "assets"
+    DRAWS = "draws"
+    JOURNALS = "journals"
+    PAGES = "pages"
+    WHITEBOARDS = "whiteboards"

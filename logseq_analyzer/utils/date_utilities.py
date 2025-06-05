@@ -28,12 +28,12 @@ class DateUtilities:
         """Compute the range between two dates in days, weeks, months, and years."""
         delta = date_stats["last"] - date_stats["first"]
         days = delta.days + 1
-        date_range = {}
-        date_range["days"] = days if delta else 0.0
-        date_range["weeks"] = round(days / 7, 2) if delta else 0.0
-        date_range["months"] = round(days / 30, 2) if delta else 0.0
-        date_range["years"] = round(days / 365, 2) if delta else 0.0
-        return date_range
+        return {
+            "days": days if delta else 0.0,
+            "weeks": round(days / 7, 2) if delta else 0.0,
+            "months": round(days / 30, 2) if delta else 0.0,
+            "years": round(days / 365, 2) if delta else 0.0,
+        }
 
     @staticmethod
     def stats(timeline: list[datetime]) -> dict[str, Any]:

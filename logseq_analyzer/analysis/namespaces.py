@@ -34,7 +34,7 @@ class NamespaceConflicts:
 
     dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    parent_depth: dict[str, list[str]] = field(default_factory=dict)
+    parent_depth: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     parent_unique: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
 
 
@@ -63,9 +63,11 @@ class LogseqNamespaces:
         "conflicts",
         "queries",
         "structure",
+        "index",
+        "dangling_links",
     )
 
-    def __init__(self) -> None:
+    def __init__(self, index: FileIndex, dangling_links: set[str]) -> None:
         """
         Initialize the LogseqNamespaces instance.
         """
@@ -74,6 +76,9 @@ class LogseqNamespaces:
         self.conflicts: NamespaceConflicts = NamespaceConflicts()
         self.queries: dict[str, dict[str, Any]] = {}
         self.structure: NamespaceStructure = NamespaceStructure()
+        self.index: FileIndex = index
+        self.dangling_links: set[str] = dangling_links
+        self.process()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqNamespaces instance."""
@@ -83,29 +88,30 @@ class LogseqNamespaces:
         """Return a string representation of the LogseqNamespaces instance."""
         return f"{self.__class__.__name__}"
 
-    def process(self, index: FileIndex, dangling_links: set[str]) -> None:
+    def process(self) -> None:
         """
         Process the namespace data from the index.
         """
-        self.init_ns_parts(index)
-        self.analyze_ns_queries(index)
-        self.detect_non_ns_conflicts(index, dangling_links)
+        self.init_ns_parts()
+        self.analyze_ns_queries()
+        self.detect_non_ns_conflicts()
         self.detect_parent_depth_conflicts()
 
-    def init_ns_parts(self, index: FileIndex) -> None:
+    def init_ns_parts(self) -> None:
         """
         Create namespace parts from the data.
         """
-        details = self.structure.details
-        unique_parts_add = self.structure.unique_parts.add
-        unique_ns_per_level = self.structure.unique_ns_per_level
-        structure_parts = self.structure.parts
-        tree = self.structure.tree
-        data = self.structure.data
+        _structure = self.structure
+        details = _structure.details
+        unique_parts_add = _structure.unique_parts.add
+        unique_ns_per_level = _structure.unique_ns_per_level
+        structure_parts = _structure.parts
+        tree = _structure.tree
+        data = _structure.data
         part_levels = self._part_levels
         part_entries = self._part_entries
         level_distribution = Counter()
-        for f in index:
+        for f in self.index:
             if not f.path.is_namespace:
                 continue
             current_level = tree
@@ -123,12 +129,12 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f.path.name, "level": level})
         details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, index: FileIndex, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
+    def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
         find_all_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.findall
-        ns_queries = {}
-        for f in index:
+        ns_queries = self.queries
+        for f in self.index:
             if not (f_data := f.data):
                 continue
 
@@ -144,17 +150,20 @@ class LogseqNamespaces:
                 ns_queries[query]["size"] = get_structure(page_ref, {}).get("size", 0)
                 ns_queries[query]["uri"] = f.path.uri
                 ns_queries[query]["logseq_url"] = f.path.logseq_url
-        self.queries.update(sort_dict_by_value(ns_queries, value="size", reverse=True))
+        ns_queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
 
-    def detect_non_ns_conflicts(self, index: FileIndex, dangling_links: set[str]) -> None:
+    def detect_non_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        parts_items = self.structure.parts.items
-        intersect_unique_parts = self.structure.unique_parts.intersection
-        non_ns_conflicts = self.conflicts.non_namespace
-        dangling_conflicts = self.conflicts.dangling
+        index = self.index
+        _structure = self.structure
+        parts_items = _structure.parts.items
+        unique_parts = _structure.unique_parts
+        _conflicts = self.conflicts
+        non_ns_conflicts = _conflicts.non_namespace
+        dangling_conflicts = _conflicts.dangling
         non_ns_names = (f.path.name for f in index if not f.path.is_namespace)
-        potential_non_ns_names = intersect_unique_parts(non_ns_names)
-        potential_dangling = intersect_unique_parts(dangling_links)
+        potential_non_ns_names = unique_parts.intersection(non_ns_names)
+        potential_dangling = unique_parts.intersection(self.dangling_links)
         intersect_non_ns = potential_non_ns_names.intersection
         intersect_dangling = potential_dangling.intersection
         for entry, parts in parts_items():
@@ -176,11 +185,11 @@ class LogseqNamespaces:
             details = part_entries[part]
             for level in levels:
                 key = (part, level)
-                entries = [d["entry"] for d in details if d["level"] == level]
-                parent_depth_conflicts[key] = entries
-                for page in entries:
-                    up_to_level = page.split(ns_sep)[:level]
+                entries = (d["entry"] for d in details if d["level"] == level)
+                for entry in entries:
+                    up_to_level = entry.split(ns_sep)[:level]
                     parent_unique_conflicts[key].add(join_to_ns_sep(up_to_level))
+                    parent_depth_conflicts[key].append(entry)
 
     @property
     def report(self) -> dict[str, Any]:

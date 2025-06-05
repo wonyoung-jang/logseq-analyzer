@@ -5,11 +5,10 @@ Logseq Graph Class
 import ast
 import logging
 import re
-from enum import Enum
 from pathlib import Path
 from typing import Any, Generator
 
-from ..utils.enums import Core
+from ..utils.enums import Core, Edn, TargetDirs
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +19,13 @@ __all__ = [
     "EDNToken",
     "loads",
     "tokenize",
-    "init_config_edn_from_file",
+    "get_edn_from_file",
     "get_default_logseq_config",
     "get_target_dirs",
     "get_ns_sep",
     "get_page_title_format",
     "get_file_name_format",
-    "EDN",
+    "Edn",
 ]
 
 
@@ -50,13 +49,13 @@ class LogseqConfigEDN:
     A simple EDN parser that converts EDN data into Python data structures.
     """
 
-    __slots__ = ("tokens", "pos", "_tok_map")
+    __slots__ = ("tokens", "pos", "tok_map")
 
     def __init__(self, tokens: Generator[str, Any, None]) -> None:
         """Initialize the parser with a list of tokens."""
         self.tokens: list[str] = list(tokens)
         self.pos: int = 0
-        self._tok_map: dict[str, Any] = {
+        self.tok_map: dict[str, Any] = {
             "{": self.parse_map,
             "[": self.parse_vector,
             "(": self.parse_list,
@@ -85,7 +84,7 @@ class LogseqConfigEDN:
         tok = self.peek()
         if tok is None:
             raise ValueError("Unexpected end of EDN input")
-        tok_map = self._tok_map
+        tok_map = self.tok_map
         if tok in tok_map:
             return tok_map[tok]()
         if tok.startswith('"'):
@@ -219,7 +218,7 @@ def tokenize(edn_str: str) -> Generator[str, Any, None]:
         yield match.group().strip()
 
 
-def init_config_edn_from_file(path: Path) -> None:
+def get_edn_from_file(path: Path) -> None:
     """
     Initialize the LogseqGraphConfig from a file.
 
@@ -384,17 +383,17 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
         dict[str, str]: A dictionary containing the target directories.
     """
     return {
-        "assets": "assets",
-        "draws": "draws",
-        "pages": config.get(EDN.PAGES_DIR.value, "pages"),
-        "journals": config.get(EDN.JOURNALS_DIR.value, "journals"),
-        "whiteboards": config.get(EDN.WHITEBOARDS_DIR.value, "whiteboards"),
+        TargetDirs.ASSETS.value: TargetDirs.ASSETS.value,
+        TargetDirs.DRAWS.value: TargetDirs.DRAWS.value,
+        TargetDirs.PAGES.value: config.get(Edn.PAGES_DIR.value, TargetDirs.PAGES.value),
+        TargetDirs.JOURNALS.value: config.get(Edn.JOURNALS_DIR.value, TargetDirs.JOURNALS.value),
+        TargetDirs.WHITEBOARDS.value: config.get(Edn.WHITEBOARDS_DIR.value, TargetDirs.WHITEBOARDS.value),
     }
 
 
 def get_ns_sep(config: dict[str, Any]) -> str:
     """Get the namespace separator based on the configuration."""
-    ns_format = config.get(EDN.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
+    ns_format = config.get(Edn.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
     return {
         Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
         Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
@@ -403,28 +402,14 @@ def get_ns_sep(config: dict[str, Any]) -> str:
 
 def get_page_title_format(config: dict[str, Any]) -> str:
     """Get the page title format from the configuration."""
-    return config.get(EDN.PAGE_TITLE_FORMAT.value, "MMM do, yyyy")
+    return config.get(Edn.PAGE_TITLE_FORMAT.value, Edn.PAGE_TITLE_FORMAT_DEFAULT.value)
 
 
 def get_file_name_format(config: dict[str, Any]) -> str:
     """Get the file name format from the configuration."""
-    return config.get(EDN.FILE_NAME_FORMAT.value, "yyyy_MM_dd")
+    return config.get(Edn.FILE_NAME_FORMAT.value, Edn.FILE_NAME_FORMAT_DEFAULT.value)
 
 
 def get_prop_pages_enabled(config: dict[str, Any]) -> bool:
     """Check if property pages are enabled in the configuration."""
-    return config.get(EDN.PROP_PAGES.value, True)
-
-
-class EDN(Enum):
-    """
-    Enum for EDN data types.
-    """
-
-    FILE_NAME_FORMAT = ":journal/file-name-format"
-    JOURNALS_DIR = ":journals-directory"
-    NS_FILE = ":file/name-format"
-    PAGE_TITLE_FORMAT = ":journal/page-title-format"
-    PAGES_DIR = ":pages-directory"
-    PROP_PAGES = ":property-pages/enabled?"
-    WHITEBOARDS_DIR = ":whiteboards-directory"
+    return config.get(Edn.PROP_PAGES.value, Edn.PROP_PAGES_DEFAULT.value)

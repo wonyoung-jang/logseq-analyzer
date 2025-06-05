@@ -107,8 +107,7 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
     for root, dirs, files in Path.walk(root_dir):
         if root == root_dir:
             continue
-
-        if root.name in target_dirs or root.parent.name in target_dirs:
+        if any(name in target_dirs for name in (root.name, root.parent.name)):
             for file in files:
                 if Path(file).suffix == Format.ORG.value:
                     logger.info("Skipping org-mode file %s in %s", file, root)
@@ -123,33 +122,37 @@ def process_aliases(aliases: str) -> Generator[str, None, None]:
     """Process aliases to extract individual aliases."""
     aliases = aliases.strip()
     current = []
+    append_current = current.append
+    clear_current = current.clear
     inside_brackets = False
-    i = 0
-    while i < len(aliases):
-        if aliases[i : i + 2] == "[[":
+    pos = 0
+    while pos < len(aliases):
+        if aliases[pos : pos + 2] == "[[":
             inside_brackets = True
-            i += 2
-        elif aliases[i : i + 2] == "]]":
+            pos += 2
+        elif aliases[pos : pos + 2] == "]]":
             inside_brackets = False
-            i += 2
-        elif aliases[i] == "," and not inside_brackets:
+            pos += 2
+        elif aliases[pos] == "," and not inside_brackets:
             if part := "".join(current).strip().lower():
                 yield part
-            current.clear()
-            i += 1
+            clear_current()
+            pos += 1
         else:
-            current.append(aliases[i])
-            i += 1
+            append_current(aliases[pos])
+            pos += 1
 
     if part := "".join(current).strip().lower():
         yield part
 
 
-def sort_dict_by_value(d: dict, value: str = "", reverse: bool = True) -> dict:
+def sort_dict_by_value(dictionary: dict, value: str = "", reverse: bool = True) -> dict:
     """Sort a dictionary by its values."""
-    if not value:
-        return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
-    return dict(sorted(d.items(), key=lambda item: item[1][value], reverse=reverse))
+    if value:
+        dictionary = dict(sorted(dictionary.items(), key=lambda item: item[1][value], reverse=reverse))
+        return dictionary
+    dictionary = dict(sorted(dictionary.items(), key=lambda item: item[1], reverse=reverse))
+    return dictionary
 
 
 def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
@@ -170,15 +173,18 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
         dict: A dictionary mapping patterns to their respective values.
     """
     output = defaultdict(list)
+    finditer_all = pattern_mod.ALL.finditer(content)
+    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP
+    fallback: str = pattern_mod.FALLBACK
 
-    for match in pattern_mod.ALL.finditer(content):
+    for match in finditer_all:
         text = match.group(0)
-        for pattern, criteria in pattern_mod.PATTERN_MAP.items():
-            if re.search(pattern, text):
+        for pattern, criteria in pattern_map.items():
+            if pattern.search(text):
                 output[criteria].append(text)
                 break
         else:
-            output[pattern_mod.FALLBACK].append(text)
+            output[fallback].append(text)
 
     return output
 
@@ -217,21 +223,21 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
         yield count, text.strip(" \t\n")
 
 
-def get_count_and_foundin_data(result: dict, collection: list[str], file: "LogseqFile") -> dict:
+def get_count_and_foundin_data(result: dict, collection: list[str], filename: str) -> dict:
     """
     Update the result dictionary with counts and file occurrences.
 
     Args:
         result (dict): The dictionary to update with counts and file occurrences.
         collection (list[str]): The collection of items to count.
-        file (LogseqFile): The file object containing the path information.
+        filename (str): The name of the file containing the path information.
     Returns:
         dict: The updated result dictionary with counts and file occurrences.
     """
     for item in collection:
         result.setdefault(item, {"count": 0, "found_in": Counter()})
         result[item]["count"] = result[item].get("count", 0) + 1
-        result[item]["found_in"][file.path.name] += 1
+        result[item]["found_in"][filename] += 1
     return result
 
 
@@ -276,8 +282,7 @@ def compile_token_pattern(token_map: dict[str, str]) -> re.Pattern:
     """
     Set the regex pattern for date tokens.
     """
-    tokenkeys = token_map.keys()
-    pattern = "|".join(re.escape(k) for k in sorted(tokenkeys, key=len, reverse=True))
+    pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
     return re.compile(pattern)
 
 

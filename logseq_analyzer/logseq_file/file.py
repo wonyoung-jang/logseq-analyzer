@@ -267,7 +267,7 @@ class LogseqFile:
             Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
             Criteria.CON_TAG.value: ContentPatterns.TAG.findall(masked_content),
             Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
-            Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
+            # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
         }
         for key, value in {k: v for k, v in result.items() if v}.items():
             yield (key, value)

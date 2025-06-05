@@ -36,7 +36,6 @@ class Args:
         self.move_unlinked_assets: bool = False
         self.report_format: str = ".txt"
         self.write_graph: bool = False
-
         if gui_args:
             self.set_gui_args(**gui_args)
         else:
@@ -113,7 +112,5 @@ class Args:
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the arguments."""
-        report = []
-        for key in self.__slots__:
-            report.append((key, getattr(self, key)))
-        return {Output.ARGUMENTS.value: report}
+        report = ((key, getattr(self, key)) for key in self.__slots__)
+        return {Output.ARGUMENTS.value: list(report)}
