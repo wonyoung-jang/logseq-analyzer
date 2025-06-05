@@ -47,7 +47,7 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile, LogseqPath
-from .utils.enums import Constants, MovedFiles, Output, OutputDir, TargetDirs
+from .utils.enums import ConfigEdnReports, Constants, LogseqGraphStructure, MovedFiles, Output, OutputDir, TargetDirs
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
@@ -107,11 +107,11 @@ class ConfigEdns:
     def report(self) -> dict[str, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            "config_edns": {
-                "edn_default": self.default_edn,
-                "edn_user": self.user_edn,
-                "edn_global": self.global_edn,
-                "edn_config": self.config,
+            ConfigEdnReports.CONFIG_EDN.value: {
+                ConfigEdnReports.EDN_DEFAULT.value: self.default_edn,
+                ConfigEdnReports.EDN_USER.value: self.user_edn,
+                ConfigEdnReports.EDN_GLOBAL.value: self.global_edn,
+                ConfigEdnReports.EDN_CONFIG.value: self.config,
             }
         }
 
@@ -156,10 +156,10 @@ def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str])
 def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
     """Setup the Logseq graph directories."""
     graph_folder_path = Path(args.graph_folder)
-    logseq_dir = graph_folder_path / "logseq"
-    bak_dir = logseq_dir / "bak"
-    recycle_dir = logseq_dir / ".recycle"
-    user_config_file = logseq_dir / "config.edn"
+    logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ.value
+    bak_dir = logseq_dir / LogseqGraphStructure.BAK.value
+    recycle_dir = logseq_dir / LogseqGraphStructure.RECYCLE.value
+    user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN.value
     logger.debug("setup_graph_dirs")
     return LogseqGraphDirs(
         graph_dir=GraphDirectory(graph_folder_path),
@@ -290,34 +290,34 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
 ) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
-    graph = LogseqGraph(index)
-    yield (OutputDir.GRAPH.value, graph.report)
+    logseq_graph = LogseqGraph(index)
+    yield (OutputDir.GRAPH.value, logseq_graph.report)
 
-    dangling_links = graph.dangling_links
+    dangling_links = logseq_graph.dangling_links
 
-    namespaces = LogseqNamespaces(index, dangling_links)
-    yield (OutputDir.NAMESPACES.value, namespaces.report)
+    logseq_namespaces = LogseqNamespaces(index, dangling_links)
+    yield (OutputDir.NAMESPACES.value, logseq_namespaces.report)
 
-    journals = LogseqJournals(index, dangling_links)
-    yield (OutputDir.JOURNALS.value, journals.report)
+    logseq_journals = LogseqJournals(index, dangling_links)
+    yield (OutputDir.JOURNALS.value, logseq_journals.report)
 
-    hls_assets = LogseqAssetsHls(index)
-    yield (OutputDir.MOVED_FILES_HLS_ASSETS.value, hls_assets.report)
+    logseq_assets_hls = LogseqAssetsHls(index)
+    yield (OutputDir.MOVED_FILES_HLS_ASSETS.value, logseq_assets_hls.report)
 
-    ls_assets = LogseqAssets(index)
-    yield (OutputDir.MOVED_FILES_ASSETS.value, ls_assets.report)
+    logseq_assets = LogseqAssets(index)
+    yield (OutputDir.MOVED_FILES_ASSETS.value, logseq_assets.report)
 
-    moved_files = setup_file_mover(args, ls_assets, analyzer_dirs)
+    moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
     yield (OutputDir.MOVED_FILES.value, moved_files)
 
-    summary_files = LogseqFileSummarizer(index)
-    yield (OutputDir.SUMMARY_FILES_GENERAL.value, summary_files.general)
-    yield (OutputDir.SUMMARY_FILES_FILE.value, summary_files.filetypes)
-    yield (OutputDir.SUMMARY_FILES_NODE.value, summary_files.nodetypes)
-    yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, summary_files.extensions)
+    logseq_file_summarizer = LogseqFileSummarizer(index)
+    yield (OutputDir.SUMMARY_FILES_GENERAL.value, logseq_file_summarizer.general)
+    yield (OutputDir.SUMMARY_FILES_FILE.value, logseq_file_summarizer.filetypes)
+    yield (OutputDir.SUMMARY_FILES_NODE.value, logseq_file_summarizer.nodetypes)
+    yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, logseq_file_summarizer.extensions)
 
-    summary_content = LogseqContentSummarizer(index)
-    yield (OutputDir.SUMMARY_CONTENT.value, summary_content.report)
+    logseq_content_summarizer = LogseqContentSummarizer(index)
+    yield (OutputDir.SUMMARY_CONTENT.value, logseq_content_summarizer.report)
 
     yield (OutputDir.INDEX.value, index.report)
     logger.debug("analyze")

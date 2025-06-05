@@ -7,12 +7,14 @@ from enum import Enum
 __all__ = [
     "Arguments",
     "CacheKeys",
+    "ConfigEdnReports",
     "Constants",
     "Core",
     "Criteria",
     "Edn",
     "FileTypes",
     "Format",
+    "LogseqGraphStructure",
     "MovedFiles",
     "NodeTypes",
     "Output",
@@ -42,6 +44,16 @@ class CacheKeys(Enum):
 
     INDEX = "index"
     MOD_TRACKER = "mod_tracker"
+
+
+class ConfigEdnReports(Enum):
+    """Configuration EDN reports for the Logseq Analyzer."""
+
+    CONFIG_EDN = "config_edns"
+    EDN_DEFAULT = "edn_default"
+    EDN_USER = "edn_user"
+    EDN_GLOBAL = "edn_global"
+    EDN_CONFIG = "edn_config"
 
 
 class Constants(Enum):
@@ -180,6 +192,15 @@ class Format(Enum):
     SVG = ".svg"
     TSV = ".tsv"
     TXT = ".txt"
+
+
+class LogseqGraphStructure(Enum):
+    """Logseq graph structure components."""
+
+    BAK = "bak"
+    CONFIG_EDN = "config.edn"
+    LOGSEQ = "logseq"
+    RECYCLE = ".recycle"
 
 
 class MovedFiles(Enum):
