@@ -293,12 +293,10 @@ def analyze(
     logseq_graph = LogseqGraph(index)
     yield (OutputDir.GRAPH.value, logseq_graph.report)
 
-    dangling_links = logseq_graph.dangling_links
-
-    logseq_namespaces = LogseqNamespaces(index, dangling_links)
+    logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
     yield (OutputDir.NAMESPACES.value, logseq_namespaces.report)
 
-    logseq_journals = LogseqJournals(index, dangling_links)
+    logseq_journals = LogseqJournals(index, logseq_graph.dangling_links)
     yield (OutputDir.JOURNALS.value, logseq_journals.report)
 
     logseq_assets_hls = LogseqAssetsHls(index)
