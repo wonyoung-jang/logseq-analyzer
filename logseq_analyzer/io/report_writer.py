@@ -274,14 +274,14 @@ class ReportWriter:
         Write the report to a file in the configured format (TXT, JSON, or HTML).
         """
         count = len(self.data) if hasattr(self.data, "__len__") else None
-        filename = f"{self.prefix}{self.ext}" if count else f"(EMPTY) {self.prefix}{self.ext}"
+        filename = f"{self.prefix}.{self.ext}" if count else f"(EMPTY) {self.prefix}.{self.ext}"
         outputpath = self.get_output_path(filename)
         logger.info("Writing %s as %s", self.prefix, self.ext)
         write_method = {
-            Format.TXT.value: self.writer.text,
-            Format.MD.value: self.writer.text,
-            Format.JSON.value: self.writer.json,
-            Format.HTML.value: self.writer.html,
+            Format.TXT: self.writer.text,
+            Format.MD: self.writer.text,
+            Format.JSON: self.writer.json,
+            Format.HTML: self.writer.html,
         }.get(self.ext, self.writer.text)
         write_method.write(outputpath, self.prefix, count, filename, self.data)
 

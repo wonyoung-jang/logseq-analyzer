@@ -10,7 +10,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Generator, TypeVar
 
-from ..utils.enums import Format, MovedFile
+from ..utils.enums import Format, Moved
 
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
@@ -109,7 +109,7 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
             continue
         if any(name in target_dirs for name in (root.name, root.parent.name)):
             for file in files:
-                if Path(file).suffix == Format.ORG.value:
+                if Path(file).suffix == Format.ORG:
                     logger.info("Skipping org-mode file %s in %s", file, root)
                     continue
                 yield root / file
@@ -372,7 +372,7 @@ def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, Non
         return []
 
     if not move:
-        return [MovedFile.SIMULATED_PREFIX.value] + names
+        return [Moved.SIMULATED_PREFIX] + names
 
     for src in listpaths:
         dest = target_dir / src.name

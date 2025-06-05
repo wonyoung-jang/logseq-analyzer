@@ -42,8 +42,8 @@ CALC_BLOCK = re.compile(
 )
 
 PATTERN_MAP = {
-    CALC_BLOCK: Criteria.COD_ML_CALC.value,
-    MULTILINE_CODE_LANG: Criteria.COD_ML_LANG.value,
+    CALC_BLOCK: Criteria.COD_ML_CALC,
+    MULTILINE_CODE_LANG: Criteria.COD_ML_LANG,
 }
 
-FALLBACK = Criteria.COD_ML_ALL.value
+FALLBACK = Criteria.COD_ML_ALL

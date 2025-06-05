@@ -108,11 +108,11 @@ class LogseqPath:
     def set_result_map(cls) -> None:
         """Set the result map for file type determination."""
         cls.result_map = {
-            cls.target_dirs[TargetDir.ASSET.value]: (FileType.ASSET.value, FileType.SUB_ASSET.value),
-            cls.target_dirs[TargetDir.DRAW.value]: (FileType.DRAW.value, FileType.SUB_DRAW.value),
-            cls.target_dirs[TargetDir.JOURNAL.value]: (FileType.JOURNAL.value, FileType.SUB_JOURNAL.value),
-            cls.target_dirs[TargetDir.PAGE.value]: (FileType.PAGE.value, FileType.SUB_PAGE.value),
-            cls.target_dirs[TargetDir.WHITEBOARD.value]: (FileType.WHITEBOARD.value, FileType.SUB_WHITEBOARD.value),
+            cls.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
+            cls.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
+            cls.target_dirs[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
+            cls.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
+            cls.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         }
 
     def process(self) -> None:
@@ -146,7 +146,7 @@ class LogseqPath:
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         self.logseq_url = f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
-    def determine_file_type(self, other: str = FileType.OTHER.value) -> None:
+    def determine_file_type(self, other: str = FileType.OTHER) -> None:
         """Helper function to determine the file type based on the directory structure."""
         _result_map = LogseqPath.result_map
         _parent = self.file.parent.name
@@ -163,23 +163,23 @@ class LogseqPath:
                 self.file_type = result[1]
                 return
 
-    def process_logseq_filename(self, ns_sep: str = Core.NS_SEP.value) -> None:
+    def process_logseq_filename(self, ns_sep: str = Core.NS_SEP) -> None:
         """Process the Logseq filename based on its parent directory."""
         _ns_file_sep = LogseqPath.ns_file_sep
         _name = self.file.stem.strip(_ns_file_sep)
 
-        if self.file.parent.name == LogseqPath.target_dirs[TargetDir.JOURNAL.value]:
+        if self.file.parent.name == LogseqPath.target_dirs[TargetDir.JOURNAL]:
             self.name = self._process_logseq_journal_key(_name)
         else:
             self.name = self._process_logseq_non_journal_key(_name, _ns_file_sep)
 
         self.is_namespace = ns_sep in self.name
 
-    def _process_logseq_non_journal_key(self, name: str, ns_file_sep: str, ns_sep: str = Core.NS_SEP.value) -> str:
+    def _process_logseq_non_journal_key(self, name: str, ns_file_sep: str, ns_sep: str = Core.NS_SEP) -> str:
         """Process non-journal keys to create a page title."""
         return unquote(name).replace(ns_file_sep, ns_sep)
 
-    def _process_logseq_journal_key(self, name: str, ordinal: str = Core.DATE_ORDINAL_SUFFIX.value) -> str:
+    def _process_logseq_journal_key(self, name: str, ordinal: str = Core.DATE_ORDINAL_SUFFIX) -> str:
         """Process the journal key to create a page title."""
         _file_format = LogseqPath.journal_format.file
         _page_format = LogseqPath.journal_format.page
@@ -232,7 +232,7 @@ class LogseqPath:
             has_content=bool(_size),
         )
 
-    def get_namespace_info(self, ns_sep: str = Core.NS_SEP.value) -> NamespaceInfo:
+    def get_namespace_info(self, ns_sep: str = Core.NS_SEP) -> NamespaceInfo:
         """Get the namespace name data."""
         _ns_parts_list = self.name.split(ns_sep)
         _ns_root = _ns_parts_list[0]

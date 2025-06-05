@@ -129,7 +129,7 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f_name, "level": level})
         details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
+    def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
         find_all_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.findall
@@ -174,7 +174,7 @@ class LogseqNamespaces:
             for part in intersect_dangling(parts):
                 dangling_conflicts[part].append(entry)
 
-    def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP.value) -> None:
+    def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels.items
         part_entries = self._part_entries
@@ -197,15 +197,15 @@ class LogseqNamespaces:
     def report(self) -> dict[str, Any]:
         """Generate a report of the namespace analysis."""
         return {
-            Output.NS_CONFLICTS_DANGLING.value: self.conflicts.dangling,
-            Output.NS_CONFLICTS_NON_NAMESPACE.value: self.conflicts.non_namespace,
-            Output.NS_CONFLICTS_PARENT_DEPTH.value: self.conflicts.parent_depth,
-            Output.NS_CONFLICTS_PARENT_UNIQUE.value: self.conflicts.parent_unique,
-            Output.NS_DATA.value: self.structure.data,
-            Output.NS_DETAILS.value: self.structure.details,
-            Output.NS_HIERARCHY.value: self.structure.tree,
-            Output.NS_PARTS.value: self.structure.parts,
-            Output.NS_QUERIES.value: self.queries,
-            Output.NS_UNIQUE_PARTS.value: self.structure.unique_parts,
-            Output.NS_UNIQUE_PER_LEVEL.value: self.structure.unique_ns_per_level,
+            Output.NS_CONFLICTS_DANGLING: self.conflicts.dangling,
+            Output.NS_CONFLICTS_NON_NAMESPACE: self.conflicts.non_namespace,
+            Output.NS_CONFLICTS_PARENT_DEPTH: self.conflicts.parent_depth,
+            Output.NS_CONFLICTS_PARENT_UNIQUE: self.conflicts.parent_unique,
+            Output.NS_DATA: self.structure.data,
+            Output.NS_DETAILS: self.structure.details,
+            Output.NS_HIERARCHY: self.structure.tree,
+            Output.NS_PARTS: self.structure.parts,
+            Output.NS_QUERIES: self.queries,
+            Output.NS_UNIQUE_PARTS: self.structure.unique_parts,
+            Output.NS_UNIQUE_PER_LEVEL: self.structure.unique_ns_per_level,
         }

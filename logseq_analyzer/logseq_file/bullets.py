@@ -107,9 +107,9 @@ class LogseqBullets:
         """Extract primary data from the content."""
         _content = self.content
         result = {
-            Criteria.COD_INLINE.value: CodePatterns.INLINE_CODE_BLOCK.findall(_content),
-            Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(_content),
-            Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(_content),
+            Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK.findall(_content),
+            Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK.findall(_content),
+            Criteria.CON_ASSETS: ContentPatterns.ASSET.findall(_content),
         }
 
         for key, value in result.items():
@@ -129,10 +129,10 @@ class LogseqBullets:
             self.content = _content
         block_props = set(_find_all_properties(_content))
         result = {
-            Criteria.PROP_BLOCK_BUILTIN.value: extract_builtin_properties(block_props),
-            Criteria.PROP_BLOCK_USER.value: remove_builtin_properties(block_props),
-            Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
-            Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
+            Criteria.PROP_BLOCK_BUILTIN: extract_builtin_properties(block_props),
+            Criteria.PROP_BLOCK_USER: remove_builtin_properties(block_props),
+            Criteria.PROP_PAGE_BUILTIN: extract_builtin_properties(page_props),
+            Criteria.PROP_PAGE_USER: remove_builtin_properties(page_props),
         }
 
         for key, value in result.items():
@@ -146,8 +146,8 @@ class LogseqBullets:
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         result = {
-            Criteria.CON_ALIASES.value: aliases,
-            Criteria.PROP_VALUES.value: propvalues,
+            Criteria.CON_ALIASES: aliases,
+            Criteria.PROP_VALUES: propvalues,
         }
 
         for key, value in result.items():

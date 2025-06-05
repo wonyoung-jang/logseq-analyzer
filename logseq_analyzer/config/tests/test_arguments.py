@@ -153,6 +153,6 @@ def test_set_cli_args_missing_required(monkeypatch, args_instance):
 
 def test_report(args_instance):
     """Test the report generation."""
-    report = args_instance.report[Output.ARGUMENTS.value]
+    report = args_instance.report[Output.ARGUMENTS]
     assert isinstance(report, list)
     assert ("graph_folder", "") in report

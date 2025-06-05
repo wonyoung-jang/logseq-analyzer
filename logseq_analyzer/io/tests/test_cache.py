@@ -14,7 +14,7 @@ from ..cache import Cache
 @pytest.fixture
 def cache():
     """Fixture to create a Cache object."""
-    cache = Cache(Path(Constant.CACHE_FILE.value))
+    cache = Cache(Path(Constant.CACHE_FILE))
     cache.open()
     yield cache
     cache.close(FileIndex())

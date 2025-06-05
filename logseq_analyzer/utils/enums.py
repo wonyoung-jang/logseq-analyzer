@@ -2,11 +2,9 @@
 Enums for the Logseq Analyzer.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 __all__ = [
-    "Argument",
-    "CacheKey",
     "ConfigEdnReport",
     "Constant",
     "Core",
@@ -15,38 +13,15 @@ __all__ = [
     "FileType",
     "Format",
     "LogseqGraphStructure",
-    "MovedFile",
+    "Moved",
     "Node",
     "Output",
     "OutputDir",
-    "SummaryFile",
     "TargetDir",
 ]
 
 
-class Argument(Enum):
-    """Arguments for the Logseq Analyzer."""
-
-    GEOMETRY = "geometry"
-    GLOBAL_CONFIG = "global_config"
-    GRAPH_CACHE = "graph_cache"
-    GRAPH_FOLDER = "graph_folder"
-    MOVE_ALL = "move_all"
-    MOVE_BAK = "move_bak"
-    MOVE_RECYCLE = "move_recycle"
-    MOVE_UNLINKED_ASSETS = "move_unlinked_assets"
-    REPORT_FORMAT = "report_format"
-    WRITE_GRAPH = "write_graph"
-
-
-class CacheKey(Enum):
-    """Cache keys for the Logseq Analyzer."""
-
-    INDEX = "index"
-    MOD_TRACKER = "mod_tracker"
-
-
-class ConfigEdnReport(Enum):
+class ConfigEdnReport(StrEnum):
     """Configuration EDN reports for the Logseq Analyzer."""
 
     CONFIG_EDN = "config_edns"
@@ -56,7 +31,7 @@ class ConfigEdnReport(Enum):
     EDN_CONFIG = "edn_config"
 
 
-class Constant(Enum):
+class Constant(StrEnum):
     """Constants used in the Logseq Analyzer."""
 
     CACHE_FILE = "logseq-analyzer-cache"
@@ -68,7 +43,7 @@ class Constant(Enum):
     TO_DELETE_RECYCLE_DIR = "to-delete/.recycle"
 
 
-class Core(Enum):
+class Core(StrEnum):
     """Core components of the Logseq Analyzer."""
 
     DATE_ORDINAL_SUFFIX = "o"
@@ -80,7 +55,7 @@ class Core(Enum):
     NS_SEP = "/"
 
 
-class Criteria(Enum):
+class Criteria(StrEnum):
     """Criteria for filtering files."""
 
     ADV_CMD = "adv_cmd"
@@ -142,7 +117,7 @@ class Criteria(Enum):
     PROP_VALUES = "property_values"
 
 
-class Edn(Enum):
+class Edn(StrEnum):
     """
     Enum for EDN data types.
     """
@@ -155,11 +130,10 @@ class Edn(Enum):
     PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
     PAGES_DIR = ":pages-directory"
     PROP_PAGES = ":property-pages/enabled?"
-    PROP_PAGES_DEFAULT = True
     WHITEBOARDS_DIR = ":whiteboards-directory"
 
 
-class FileType(Enum):
+class FileType(StrEnum):
     """File types for the Logseq Analyzer."""
 
     ASSET = "asset"
@@ -175,17 +149,17 @@ class FileType(Enum):
     WHITEBOARD = "whiteboard"
 
 
-class Format(Enum):
+class Format(StrEnum):
     """File formats used in the Logseq Analyzer."""
 
-    HTML = ".html"
-    JSON = ".json"
-    MD = ".md"
-    ORG = ".org"
-    TXT = ".txt"
+    HTML = "html"
+    JSON = "json"
+    MD = "md"
+    ORG = "org"
+    TXT = "txt"
 
 
-class LogseqGraphStructure(Enum):
+class LogseqGraphStructure(StrEnum):
     """Logseq graph structure components."""
 
     BAK = "bak"
@@ -194,16 +168,16 @@ class LogseqGraphStructure(Enum):
     RECYCLE = ".recycle"
 
 
-class MovedFile(Enum):
+class Moved(StrEnum):
     """Moved files and directories in the Logseq Analyzer."""
 
-    ASSETS = "moved_assets"
-    BAK = "moved_bak"
-    RECYCLE = "moved_recycle"
+    ASSETS = "assets"
+    BAK = "bak"
+    RECYCLE = "recycle"
     SIMULATED_PREFIX = "======== Simulated only ========"
 
 
-class Node(Enum):
+class Node(StrEnum):
     """Node types for the Logseq Analyzer."""
 
     BRANCH = "branch"
@@ -216,7 +190,7 @@ class Node(Enum):
     ROOT = "root"
 
 
-class Output(Enum):
+class Output(StrEnum):
     """Output types for the Logseq Analyzer."""
 
     ARGUMENTS = "arguments"
@@ -259,7 +233,7 @@ class Output(Enum):
     NS_UNIQUE_PER_LEVEL = "ns_unique_per_level"
 
 
-class OutputDir(Enum):
+class OutputDir(StrEnum):
     """Output directories for the Logseq Analyzer."""
 
     GRAPH = "graph"
@@ -277,17 +251,7 @@ class OutputDir(Enum):
     SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
 
 
-class SummaryFile(Enum):
-    """Summary files for the Logseq Analyzer."""
-
-    BACKLINKED = "backlinked"
-    BACKLINKED_NS_ONLY = "backlinked_ns_only"
-    HAS_BACKLINKS = "has_backlinks"
-    HAS_CONTENT = "has_content"
-    IS_HLS = "is_hls"
-
-
-class TargetDir(Enum):
+class TargetDir(StrEnum):
     """Target directories for the Logseq Analyzer."""
 
     ASSET = "assets"

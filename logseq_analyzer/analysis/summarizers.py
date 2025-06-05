@@ -3,16 +3,27 @@ Logseq Content Summarizer Module
 """
 
 from collections import defaultdict
+from enum import StrEnum
 from typing import Any
 
-from ..utils.enums import SummaryFile
 from ..utils.helpers import get_count_and_foundin_data, sort_dict_by_value
 from .index import FileIndex
 
 __all__ = [
     "LogseqFileSummarizer",
     "LogseqContentSummarizer",
+    "SummaryFile",
 ]
+
+
+class SummaryFile(StrEnum):
+    """Summary files for the Logseq Analyzer."""
+
+    BACKLINKED = "backlinked"
+    BACKLINKED_NS_ONLY = "backlinked_ns_only"
+    HAS_BACKLINKS = "has_backlinks"
+    HAS_CONTENT = "has_content"
+    IS_HLS = "is_hls"
 
 
 class LogseqFileSummarizer:
@@ -41,7 +52,6 @@ class LogseqFileSummarizer:
 
     def generate_summary(self) -> None:
         """Generate general subsets for the Logseq Analyzer."""
-        SF = SummaryFile
         gen = self.general
         for f in self.index:
             name = f.path.name
@@ -50,19 +60,19 @@ class LogseqFileSummarizer:
             self.extensions[f.path.file.suffix].append(name)
 
             if f.node.backlinked:
-                gen[SF.BACKLINKED.value].append(name)
+                gen[SummaryFile.BACKLINKED].append(name)
 
             if f.node.backlinked_ns_only:
-                gen[SF.BACKLINKED_NS_ONLY.value].append(name)
+                gen[SummaryFile.BACKLINKED_NS_ONLY].append(name)
 
             if f.is_hls:
-                gen[SF.IS_HLS.value].append(name)
+                gen[SummaryFile.IS_HLS].append(name)
 
             if f.info.size.has_content:
-                gen[SF.HAS_CONTENT.value].append(name)
+                gen[SummaryFile.HAS_CONTENT].append(name)
 
             if f.node.has_backlinks:
-                gen[SF.HAS_BACKLINKS.value].append(name)
+                gen[SummaryFile.HAS_BACKLINKS].append(name)
 
         for k, v in gen.items():
             gen[k] = sorted(v)

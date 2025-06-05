@@ -185,21 +185,21 @@ WARNING = re.compile(
 )
 
 PATTERN_MAP = {
-    EXPORT_ASCII: Criteria.ADV_CMD_EXPORT_ASCII.value,
-    EXPORT_LATEX: Criteria.ADV_CMD_EXPORT_LATEX.value,
-    EXPORT: Criteria.ADV_CMD_EXPORT.value,
-    CAUTION: Criteria.ADV_CMD_CAUTION.value,
-    CENTER: Criteria.ADV_CMD_CENTER.value,
-    COMMENT: Criteria.ADV_CMD_COMMENT.value,
-    EXAMPLE: Criteria.ADV_CMD_EXAMPLE.value,
-    IMPORTANT: Criteria.ADV_CMD_IMPORTANT.value,
-    NOTE: Criteria.ADV_CMD_NOTE.value,
-    PINNED: Criteria.ADV_CMD_PINNED.value,
-    QUERY: Criteria.ADV_CMD_QUERY.value,
-    QUOTE: Criteria.ADV_CMD_QUOTE.value,
-    TIP: Criteria.ADV_CMD_TIP.value,
-    VERSE: Criteria.ADV_CMD_VERSE.value,
-    WARNING: Criteria.ADV_CMD_WARNING.value,
+    EXPORT_ASCII: Criteria.ADV_CMD_EXPORT_ASCII,
+    EXPORT_LATEX: Criteria.ADV_CMD_EXPORT_LATEX,
+    EXPORT: Criteria.ADV_CMD_EXPORT,
+    CAUTION: Criteria.ADV_CMD_CAUTION,
+    CENTER: Criteria.ADV_CMD_CENTER,
+    COMMENT: Criteria.ADV_CMD_COMMENT,
+    EXAMPLE: Criteria.ADV_CMD_EXAMPLE,
+    IMPORTANT: Criteria.ADV_CMD_IMPORTANT,
+    NOTE: Criteria.ADV_CMD_NOTE,
+    PINNED: Criteria.ADV_CMD_PINNED,
+    QUERY: Criteria.ADV_CMD_QUERY,
+    QUOTE: Criteria.ADV_CMD_QUOTE,
+    TIP: Criteria.ADV_CMD_TIP,
+    VERSE: Criteria.ADV_CMD_VERSE,
+    WARNING: Criteria.ADV_CMD_WARNING,
 }
 
-FALLBACK = Criteria.ADV_CMD.value
+FALLBACK = Criteria.ADV_CMD

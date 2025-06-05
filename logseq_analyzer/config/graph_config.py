@@ -382,35 +382,34 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
     Returns:
         dict[str, str]: A dictionary containing the target directories.
     """
-    td = TargetDir
     return {
-        td.ASSET.value: td.ASSET.value,
-        td.DRAW.value: td.DRAW.value,
-        td.PAGE.value: config.get(Edn.PAGES_DIR.value, td.PAGE.value),
-        td.JOURNAL.value: config.get(Edn.JOURNALS_DIR.value, td.JOURNAL.value),
-        td.WHITEBOARD.value: config.get(Edn.WHITEBOARDS_DIR.value, td.WHITEBOARD.value),
+        TargetDir.ASSET: TargetDir.ASSET,
+        TargetDir.DRAW: TargetDir.DRAW,
+        TargetDir.PAGE: config.get(Edn.PAGES_DIR, TargetDir.PAGE),
+        TargetDir.JOURNAL: config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL),
+        TargetDir.WHITEBOARD: config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD),
     }
 
 
 def get_ns_sep(config: dict[str, Any]) -> str:
     """Get the namespace separator based on the configuration."""
-    ns_format = config.get(Edn.NS_FILE.value, Core.NS_CONFIG_TRIPLE_LOWBAR.value)
+    ns_format = config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR)
     return {
-        Core.NS_CONFIG_LEGACY.value: Core.NS_FILE_SEP_LEGACY.value,
-        Core.NS_CONFIG_TRIPLE_LOWBAR.value: Core.NS_FILE_SEP_TRIPLE_LOWBAR.value,
-    }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR.value)
+        Core.NS_CONFIG_LEGACY: Core.NS_FILE_SEP_LEGACY,
+        Core.NS_CONFIG_TRIPLE_LOWBAR: Core.NS_FILE_SEP_TRIPLE_LOWBAR,
+    }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR)
 
 
 def get_page_title_format(config: dict[str, Any]) -> str:
     """Get the page title format from the configuration."""
-    return config.get(Edn.PAGE_TITLE_FORMAT.value, Edn.PAGE_TITLE_FORMAT_DEFAULT.value)
+    return config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT)
 
 
 def get_file_name_format(config: dict[str, Any]) -> str:
     """Get the file name format from the configuration."""
-    return config.get(Edn.FILE_NAME_FORMAT.value, Edn.FILE_NAME_FORMAT_DEFAULT.value)
+    return config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT)
 
 
 def get_prop_pages_enabled(config: dict[str, Any]) -> bool:
     """Check if property pages are enabled in the configuration."""
-    return config.get(Edn.PROP_PAGES.value, Edn.PROP_PAGES_DEFAULT.value)
+    return config.get(Edn.PROP_PAGES, True)

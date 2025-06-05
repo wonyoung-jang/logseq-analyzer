@@ -66,7 +66,7 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.sets.timeline)
 
-    def process(self, journal_file: str = FileType.JOURNAL.value) -> None:
+    def process(self, journal_file: str = FileType.JOURNAL) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         index = self.index
         page_format = LogseqJournals.journal_page_format
@@ -119,10 +119,10 @@ class LogseqJournals:
     def report(self) -> dict[str, Any]:
         """Get a report of the journal processing results."""
         return {
-            Output.JOURNALS_ALL.value: self.sets.all_journals,
-            Output.JOURNALS_DANGLING.value: self.dangling,
-            Output.JOURNALS_EXISTING.value: self.sets.existing,
-            Output.JOURNALS_TIMELINE.value: self.sets.timeline,
-            Output.JOURNALS_MISSING.value: self.sets.missing,
-            Output.JOURNALS_TIMELINE_STATS.value: self.timeline_stats,
+            Output.JOURNALS_ALL: self.sets.all_journals,
+            Output.JOURNALS_DANGLING: self.dangling,
+            Output.JOURNALS_EXISTING: self.sets.existing,
+            Output.JOURNALS_TIMELINE: self.sets.timeline,
+            Output.JOURNALS_MISSING: self.sets.missing,
+            Output.JOURNALS_TIMELINE_STATS: self.timeline_stats,
         }

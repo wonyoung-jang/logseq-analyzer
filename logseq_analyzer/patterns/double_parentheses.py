@@ -29,7 +29,7 @@ BLOCK_REFERENCE = re.compile(
 )
 
 PATTERN_MAP = {
-    BLOCK_REFERENCE: Criteria.DBP_BLOCK_REFS.value,
+    BLOCK_REFERENCE: Criteria.DBP_BLOCK_REFS,
 }
 
-FALLBACK = Criteria.DBP_ALL_REFS.value
+FALLBACK = Criteria.DBP_ALL_REFS

@@ -4,16 +4,23 @@ This module handles caching mechanisms for the application.
 
 import logging
 import shelve
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Generator
 
 from ..analysis.index import FileIndex
 from ..config.arguments import Args
 from ..io.filesystem import LogseqAnalyzerDirs
-from ..utils.enums import CacheKey
 from ..utils.helpers import iter_files
 
 logger = logging.getLogger(__name__)
+
+
+class CacheKey(StrEnum):
+    """Cache keys for the Logseq Analyzer."""
+
+    INDEX = "index"
+    MOD_TRACKER = "mod_tracker"
 
 
 class Cache:
@@ -55,7 +62,7 @@ class Cache:
         """Open the cache file."""
         self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=writeback)
 
-    def close(self, index: FileIndex, index_key: str = CacheKey.INDEX.value) -> None:
+    def close(self, index: FileIndex, index_key: str = CacheKey.INDEX) -> None:
         """Close the cache file."""
         self.cache[index_key] = index
         self.cache.close()
@@ -76,7 +83,7 @@ class Cache:
         self.cache_path.unlink(missing_ok=True)
         self.open()
 
-    def clear_deleted_files(self, index_key: str = CacheKey.INDEX.value) -> FileIndex:
+    def clear_deleted_files(self, index_key: str = CacheKey.INDEX) -> FileIndex:
         """Clear the deleted files from the cache."""
         if index_key in self.cache:
             index = self.cache[index_key]
@@ -86,7 +93,7 @@ class Cache:
         index.remove_deleted_files()
         return index
 
-    def iter_modified_files(self, mod_key: str = CacheKey.MOD_TRACKER.value) -> Generator[Path, Any, None]:
+    def iter_modified_files(self, mod_key: str = CacheKey.MOD_TRACKER) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
         mod_tracker = {}
         if mod_key in self.cache:

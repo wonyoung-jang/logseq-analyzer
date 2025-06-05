@@ -113,4 +113,4 @@ class Args:
     def report(self) -> dict[str, Any]:
         """Generate a report of the arguments."""
         report = ((key, getattr(self, key)) for key in self.__slots__)
-        return {Output.ARGUMENTS.value: list(report)}
+        return {Output.ARGUMENTS: list(report)}

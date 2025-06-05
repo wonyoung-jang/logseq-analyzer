@@ -36,7 +36,7 @@ class LogseqGraph:
         "unique",
     )
 
-    _TO_NODE_TYPE: frozenset[str] = frozenset({FileType.JOURNAL.value, FileType.PAGE.value})
+    _TO_NODE_TYPE: frozenset[str] = frozenset({FileType.JOURNAL, FileType.PAGE})
 
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqGraph instance."""
@@ -81,19 +81,19 @@ class LogseqGraph:
                 continue
 
             get_data = f_data.get
-            if found_aliases := get_data(Criteria.CON_ALIASES.value, []):
+            if found_aliases := get_data(Criteria.CON_ALIASES, []):
                 update_unique_aliases(found_aliases)
 
             dataset = (
                 found_aliases,
-                get_data(Criteria.CON_DRAW.value, []),
-                get_data(Criteria.CON_PAGE_REF.value, []),
-                get_data(Criteria.CON_TAG.value, []),
-                get_data(Criteria.CON_TAGGED_BACKLINK.value, []),
-                get_data(Criteria.PROP_PAGE_BUILTIN.value, []),
-                get_data(Criteria.PROP_PAGE_USER.value, []),
-                get_data(Criteria.PROP_BLOCK_BUILTIN.value, []),
-                get_data(Criteria.PROP_BLOCK_USER.value, []),
+                get_data(Criteria.CON_DRAW, []),
+                get_data(Criteria.CON_PAGE_REF, []),
+                get_data(Criteria.CON_TAG, []),
+                get_data(Criteria.CON_TAGGED_BACKLINK, []),
+                get_data(Criteria.PROP_PAGE_BUILTIN, []),
+                get_data(Criteria.PROP_PAGE_USER, []),
+                get_data(Criteria.PROP_BLOCK_BUILTIN, []),
+                get_data(Criteria.PROP_BLOCK_USER, []),
             )
             if not (linked_references := list(chain.from_iterable(dataset))):
                 continue
@@ -159,10 +159,10 @@ class LogseqGraph:
     def report(self) -> dict[str, Any]:
         """Generate a report of the graph analysis."""
         return {
-            Output.GRAPH_ALL_LINKED_REFERENCES.value: self.all_linked_refs,
-            Output.GRAPH_ALL_DANGLING_LINKS.value: self.all_dangling_links,
-            Output.GRAPH_DANGLING_LINKS.value: self.dangling_links,
-            Output.GRAPH_UNIQUE_ALIASES.value: self.unique.aliases,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS.value: self.unique.linked_refs_ns,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES.value: self.unique.linked_refs,
+            Output.GRAPH_ALL_LINKED_REFERENCES: self.all_linked_refs,
+            Output.GRAPH_ALL_DANGLING_LINKS: self.all_dangling_links,
+            Output.GRAPH_DANGLING_LINKS: self.dangling_links,
+            Output.GRAPH_UNIQUE_ALIASES: self.unique.aliases,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS: self.unique.linked_refs_ns,
+            Output.GRAPH_UNIQUE_LINKED_REFERENCES: self.unique.linked_refs,
         }

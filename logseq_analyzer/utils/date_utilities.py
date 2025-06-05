@@ -4,7 +4,7 @@ DateUtilities class to handle date-related operations.
 
 import logging
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import StrEnum, IntEnum
 from typing import Any, Generator
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-class Day(Enum):
+class Day(IntEnum):
     """Enum for days of the week."""
 
     IN_WEEK = 7
@@ -25,7 +25,7 @@ class Day(Enum):
     IN_YEAR = 365
 
 
-class DateStat(Enum):
+class DateStat(StrEnum):
     """Enum for date statistics."""
 
     FIRST = "first"
@@ -53,21 +53,21 @@ class DateUtilities:
     @staticmethod
     def range(stats: dict[str, datetime | None]) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
-        delta = stats[DS.LAST.value] - stats[DS.FIRST.value]
+        delta = stats[DS.LAST] - stats[DS.FIRST]
         days = delta.days + 1
         return {
-            DS.DAYS.value: days if delta else 0.0,
-            DS.WEEKS.value: round(days / DY.IN_WEEK.value, 2) if delta else 0.0,
-            DS.MONTHS.value: round(days / DY.IN_MONTH.value, 2) if delta else 0.0,
-            DS.YEARS.value: round(days / DY.IN_YEAR.value, 2) if delta else 0.0,
+            DS.DAYS: days if delta else 0.0,
+            DS.WEEKS: round(days / DY.IN_WEEK, 2) if delta else 0.0,
+            DS.MONTHS: round(days / DY.IN_MONTH, 2) if delta else 0.0,
+            DS.YEARS: round(days / DY.IN_YEAR, 2) if delta else 0.0,
         }
 
     @staticmethod
     def stats(dates: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
         stats = {
-            DS.FIRST.value: min(dates) if dates else datetime.min,
-            DS.LAST.value: max(dates) if dates else datetime.min,
+            DS.FIRST: min(dates) if dates else datetime.min,
+            DS.LAST: max(dates) if dates else datetime.min,
         }
         stats.update(DateUtilities.range(stats))
         return stats

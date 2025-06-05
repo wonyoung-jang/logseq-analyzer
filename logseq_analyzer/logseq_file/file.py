@@ -46,7 +46,7 @@ class NodeType:
     has_backlinks: bool = field(default=False, init=False)
     backlinked: bool = field(default=False, init=False)
     backlinked_ns_only: bool = field(default=False, init=False)
-    node_type: str = field(default=Node.OTHER.value, init=False)
+    node_type: str = field(default=Node.OTHER, init=False)
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
@@ -76,29 +76,29 @@ class NodeType:
         backlinked_ns_only = self.backlinked_ns_only
         match (has_content, has_backlinks, backlinked, backlinked_ns_only):
             case (True, True, True, True):
-                n = Node.BRANCH.value
+                n = Node.BRANCH
             case (True, True, True, False):
-                n = Node.BRANCH.value
+                n = Node.BRANCH
             case (True, True, False, True):
-                n = Node.BRANCH.value
+                n = Node.BRANCH
             case (True, True, False, False):
-                n = Node.ROOT.value
+                n = Node.ROOT
             case (True, False, True, True):
-                n = Node.LEAF.value
+                n = Node.LEAF
             case (True, False, True, False):
-                n = Node.LEAF.value
+                n = Node.LEAF
             case (True, False, False, True):
-                n = Node.ORPHAN_NAMESPACE.value
+                n = Node.ORPHAN_NAMESPACE
             case (True, False, False, False):
-                n = Node.ORPHAN_GRAPH.value
+                n = Node.ORPHAN_GRAPH
             case (False, False, True, True):
-                n = Node.LEAF.value
+                n = Node.LEAF
             case (False, False, True, False):
-                n = Node.LEAF.value
+                n = Node.LEAF
             case (False, False, False, True):
-                n = Node.ORPHAN_NAMESPACE_TRUE.value
+                n = Node.ORPHAN_NAMESPACE_TRUE
             case (False, False, False, False):
-                n = Node.ORPHAN_TRUE.value
+                n = Node.ORPHAN_TRUE
         self.node_type = n
 
 
@@ -126,14 +126,14 @@ class LogseqFile:
 
     _BACKLINK_CRITERIA: frozenset[str] = frozenset(
         {
-            Criteria.PROP_VALUES.value,
-            Criteria.PROP_BLOCK_BUILTIN.value,
-            Criteria.PROP_BLOCK_USER.value,
-            Criteria.PROP_PAGE_BUILTIN.value,
-            Criteria.PROP_PAGE_USER.value,
-            Criteria.CON_PAGE_REF.value,
-            Criteria.CON_TAGGED_BACKLINK.value,
-            Criteria.CON_TAG.value,
+            Criteria.PROP_VALUES,
+            Criteria.PROP_BLOCK_BUILTIN,
+            Criteria.PROP_BLOCK_USER,
+            Criteria.PROP_PAGE_BUILTIN,
+            Criteria.PROP_PAGE_USER,
+            Criteria.CON_PAGE_REF,
+            Criteria.CON_TAGGED_BACKLINK,
+            Criteria.CON_TAG,
         }
     )
 
@@ -185,7 +185,7 @@ class LogseqFile:
         self.process_content_data()
         self.set_is_hls()
 
-    def set_is_hls(self, hls_prefix: str = Core.HLS_PREFIX.value) -> None:
+    def set_is_hls(self, hls_prefix: str = Core.HLS_PREFIX) -> None:
         """Check if the file is an HLS file."""
         self.is_hls = self.path.name.startswith(hls_prefix)
 
@@ -204,7 +204,7 @@ class LogseqFile:
         """Process content data to extract various elements like backlinks, tags, and properties."""
         if not self.info.size.has_content:
             return
-        if self.path.file_type not in (FileType.JOURNAL.value, FileType.PAGE.value):
+        if self.path.file_type not in (FileType.JOURNAL, FileType.PAGE):
             return
         self.mask_blocks()
         self.extract_data()
@@ -247,14 +247,14 @@ class LogseqFile:
         """Extract primary data from the content."""
         masked_content = self.masked.content
         result = {
-            Criteria.CON_BLOCKQUOTES.value: ContentPatterns.BLOCKQUOTE.findall(masked_content),
-            Criteria.CON_DRAW.value: ContentPatterns.DRAW.findall(masked_content),
-            Criteria.CON_FLASHCARD.value: ContentPatterns.FLASHCARD.findall(masked_content),
-            Criteria.CON_PAGE_REF.value: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
-            Criteria.CON_TAGGED_BACKLINK.value: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
-            Criteria.CON_TAG.value: ContentPatterns.TAG.findall(masked_content),
-            Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
-            # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
+            Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE.findall(masked_content),
+            Criteria.CON_DRAW: ContentPatterns.DRAW.findall(masked_content),
+            Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD.findall(masked_content),
+            Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
+            Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
+            Criteria.CON_TAG: ContentPatterns.TAG.findall(masked_content),
+            Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
+            # Criteria.CON_BOLD: ContentPatterns.BOLD.findall(masked_content),
         }
 
         for key, value in result.items():

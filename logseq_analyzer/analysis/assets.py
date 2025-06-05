@@ -51,7 +51,7 @@ class LogseqAssetsHls:
             self.convert_names_to_data()
             self.check_backlinks()
 
-    def get_asset_files(self, sub_asset: str = FileType.SUB_ASSET.value) -> None:
+    def get_asset_files(self, sub_asset: str = FileType.SUB_ASSET) -> None:
         """Retrieve asset files based on specific criteria."""
         asset_files = (f for f in self.index if f.path.file_type == sub_asset)
         self.asset_mapping = {f.path.name: f for f in asset_files}
@@ -80,7 +80,7 @@ class LogseqAssetsHls:
                     hls_bullet = f"{hl_page}_{id_}_{hl_stamp}"
                     add_hls_bullet(hls_bullet)
 
-    def check_backlinks(self, asset_file_type: str = FileType.ASSET.value) -> None:
+    def check_backlinks(self, asset_file_type: str = FileType.ASSET) -> None:
         """Check for backlinks in the HLS assets."""
         asset_mapping = self.asset_mapping
         asset_names = set(asset_mapping.keys())
@@ -100,10 +100,10 @@ class LogseqAssetsHls:
     def report(self) -> str:
         """Generate a report of the asset analysis."""
         return {
-            Output.HLS_ASSET_MAPPING.value: self.asset_mapping,
-            Output.HLS_FORMATTED_BULLETS.value: self.hls_bullets,
-            Output.HLS_NOT_BACKLINKED.value: self.not_backlinked,
-            Output.HLS_BACKLINKED.value: self.backlinked,
+            Output.HLS_ASSET_MAPPING: self.asset_mapping,
+            Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
+            Output.HLS_NOT_BACKLINKED: self.not_backlinked,
+            Output.HLS_BACKLINKED: self.backlinked,
         }
 
 
@@ -112,7 +112,7 @@ class LogseqAssets:
 
     __slots__ = ("index", "backlinked", "not_backlinked")
 
-    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({Criteria.EMB_LINK_ASSET.value, Criteria.CON_ASSETS.value})
+    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({Criteria.EMB_LINK_ASSET, Criteria.CON_ASSETS})
 
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqAssets instance."""
@@ -175,7 +175,7 @@ class LogseqAssets:
                 asset_file.node.backlinked = True
                 return
 
-    def yield_assets(self, backlinked=None, asset: str = FileType.ASSET.value) -> Generator[LogseqFile, None]:
+    def yield_assets(self, backlinked=None, asset: str = FileType.ASSET) -> Generator[LogseqFile, None]:
         """Yield all asset files from the index."""
         for file in (f for f in self.index if f.path.file_type == asset):
             if backlinked is None:
@@ -187,6 +187,6 @@ class LogseqAssets:
     def report(self) -> str:
         """Generate a report of the asset analysis."""
         return {
-            Output.ASSETS_BACKLINKED.value: self.backlinked,
-            Output.ASSETS_NOT_BACKLINKED.value: self.not_backlinked,
+            Output.ASSETS_BACKLINKED: self.backlinked,
+            Output.ASSETS_NOT_BACKLINKED: self.not_backlinked,
         }

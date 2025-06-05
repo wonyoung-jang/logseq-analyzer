@@ -47,7 +47,7 @@ from .io.filesystem import (
 )
 from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile, LogseqPath
-from .utils.enums import ConfigEdnReport, Constant, LogseqGraphStructure, MovedFile, Output, OutputDir, TargetDir
+from .utils.enums import ConfigEdnReport, Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
@@ -57,7 +57,7 @@ from .utils.helpers import (
     yield_bak_rec_paths,
 )
 
-log_file = LogFile(Constant.LOG_FILE.value)
+log_file = LogFile(Constant.LOG_FILE)
 logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     encoding="utf-8",
@@ -107,11 +107,11 @@ class ConfigEdns:
     def report(self) -> dict[str, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            ConfigEdnReport.CONFIG_EDN.value: {
-                ConfigEdnReport.EDN_DEFAULT.value: self.default_edn,
-                ConfigEdnReport.EDN_USER.value: self.user_edn,
-                ConfigEdnReport.EDN_GLOBAL.value: self.global_edn,
-                ConfigEdnReport.EDN_CONFIG.value: self.config,
+            ConfigEdnReport.CONFIG_EDN: {
+                ConfigEdnReport.EDN_DEFAULT: self.default_edn,
+                ConfigEdnReport.EDN_USER: self.user_edn,
+                ConfigEdnReport.EDN_GLOBAL: self.global_edn,
+                ConfigEdnReport.EDN_CONFIG: self.config,
             }
         }
 
@@ -120,9 +120,9 @@ class ConfigEdns:
 class JournalFormats:
     """Formats for Logseq journal files and pages."""
 
-    file: str = ""
-    page: str = ""
-    page_title: str = ""
+    file: str
+    page: str
+    page_title: str
 
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
@@ -136,7 +136,7 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
         graph_dirs=graph_dirs,
         delete_dirs=delete_dirs,
         target_dirs=target_dirs,
-        output_dir=OutputDirectory(Constant.OUTPUT_DIR.value),
+        output_dir=OutputDirectory(Constant.OUTPUT_DIR),
     )
 
     logger.debug("setup_logseq_paths")
@@ -146,20 +146,20 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
 def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
     """Ensure that the target directories exist."""
     graph_folder_path = graph_dirs.graph_dir.path
-    AssetsDirectory(graph_folder_path / target_dirs[TargetDir.ASSET.value])
-    DrawsDirectory(graph_folder_path / target_dirs[TargetDir.DRAW.value])
-    JournalsDirectory(graph_folder_path / target_dirs[TargetDir.JOURNAL.value])
-    PagesDirectory(graph_folder_path / target_dirs[TargetDir.PAGE.value])
-    WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDir.WHITEBOARD.value])
+    AssetsDirectory(graph_folder_path / target_dirs[TargetDir.ASSET])
+    DrawsDirectory(graph_folder_path / target_dirs[TargetDir.DRAW])
+    JournalsDirectory(graph_folder_path / target_dirs[TargetDir.JOURNAL])
+    PagesDirectory(graph_folder_path / target_dirs[TargetDir.PAGE])
+    WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDir.WHITEBOARD])
 
 
 def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
     """Setup the Logseq graph directories."""
     graph_folder_path = Path(args.graph_folder)
-    logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ.value
-    bak_dir = logseq_dir / LogseqGraphStructure.BAK.value
-    recycle_dir = logseq_dir / LogseqGraphStructure.RECYCLE.value
-    user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN.value
+    logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ
+    bak_dir = logseq_dir / LogseqGraphStructure.BAK
+    recycle_dir = logseq_dir / LogseqGraphStructure.RECYCLE
+    user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN
     logger.debug("setup_graph_dirs")
     return LogseqGraphDirs(
         graph_dir=GraphDirectory(graph_folder_path),
@@ -191,10 +191,10 @@ def setup_delete_dirs() -> AnalyzerDeleteDirs:
     """Setup the directories for deletion operations."""
     logger.debug("setup_delete_dirs")
     return AnalyzerDeleteDirs(
-        delete_dir=DeleteDirectory(Constant.TO_DELETE_DIR.value),
-        delete_bak_dir=DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR.value),
-        delete_recycle_dir=DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR.value),
-        delete_assets_dir=DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR.value),
+        delete_dir=DeleteDirectory(Constant.TO_DELETE_DIR),
+        delete_bak_dir=DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR),
+        delete_recycle_dir=DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR),
+        delete_assets_dir=DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR),
     )
 
 
@@ -222,7 +222,7 @@ def init_configs(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns, JournalFor
 
 def setup_cache() -> tuple[Cache, FileIndex]:
     """Setup cache for the Logseq Analyzer."""
-    cache_file = CacheFile(Constant.CACHE_FILE.value)
+    cache_file = CacheFile(Constant.CACHE_FILE)
     cache = Cache(cache_file.path)
     cache.open()
     index = cache.initialize()
@@ -265,12 +265,12 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     bak_paths = yield_bak_rec_paths(gd.bak_dir.path)
     rec_paths = yield_bak_rec_paths(gd.recycle_dir.path)
     moved_files_report = {
-        MovedFile.ASSETS.value: process_moves(args.move_unlinked_assets, target_asset, asset_paths),
-        MovedFile.BAK.value: process_moves(args.move_bak, target_bak, bak_paths),
-        MovedFile.RECYCLE.value: process_moves(args.move_recycle, target_rec, rec_paths),
+        Moved.ASSETS: process_moves(args.move_unlinked_assets, target_asset, asset_paths),
+        Moved.BAK: process_moves(args.move_bak, target_bak, bak_paths),
+        Moved.RECYCLE: process_moves(args.move_recycle, target_rec, rec_paths),
     }
     logger.debug("setup_logseq_file_mover")
-    return {Output.MOVED_FILES.value: moved_files_report}
+    return {Output.MOVED_FILES: moved_files_report}
 
 
 def yield_config_data_reports(
@@ -279,9 +279,9 @@ def yield_config_data_reports(
     config_edns: ConfigEdns,
 ) -> Generator[tuple[str, Any], None, None]:
     """Yield configuration data reports."""
-    yield (OutputDir.META.value, args.report)
-    yield (OutputDir.META.value, config_edns.report)
-    yield (OutputDir.META.value, analyzer_dirs.report)
+    yield (OutputDir.META, args.report)
+    yield (OutputDir.META, config_edns.report)
+    yield (OutputDir.META, analyzer_dirs.report)
 
 
 def analyze(
@@ -291,33 +291,33 @@ def analyze(
 ) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
-    yield (OutputDir.GRAPH.value, logseq_graph.report)
+    yield (OutputDir.GRAPH, logseq_graph.report)
 
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
-    yield (OutputDir.NAMESPACES.value, logseq_namespaces.report)
+    yield (OutputDir.NAMESPACES, logseq_namespaces.report)
 
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links)
-    yield (OutputDir.JOURNALS.value, logseq_journals.report)
+    yield (OutputDir.JOURNALS, logseq_journals.report)
 
     logseq_assets_hls = LogseqAssetsHls(index)
-    yield (OutputDir.MOVED_FILES_HLS_ASSETS.value, logseq_assets_hls.report)
+    yield (OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report)
 
     logseq_assets = LogseqAssets(index)
-    yield (OutputDir.MOVED_FILES_ASSETS.value, logseq_assets.report)
+    yield (OutputDir.MOVED_FILES_ASSETS, logseq_assets.report)
 
     moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
-    yield (OutputDir.MOVED_FILES.value, moved_files)
+    yield (OutputDir.MOVED_FILES, moved_files)
 
     logseq_file_summarizer = LogseqFileSummarizer(index)
-    yield (OutputDir.SUMMARY_FILES_GENERAL.value, logseq_file_summarizer.general)
-    yield (OutputDir.SUMMARY_FILES_FILE.value, logseq_file_summarizer.filetypes)
-    yield (OutputDir.SUMMARY_FILES_NODE.value, logseq_file_summarizer.nodetypes)
-    yield (OutputDir.SUMMARY_FILES_EXTENSIONS.value, logseq_file_summarizer.extensions)
+    yield (OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general)
+    yield (OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes)
+    yield (OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes)
+    yield (OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions)
 
     logseq_content_summarizer = LogseqContentSummarizer(index)
-    yield (OutputDir.SUMMARY_CONTENT.value, logseq_content_summarizer.report)
+    yield (OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report)
 
-    yield (OutputDir.INDEX.value, index.report)
+    yield (OutputDir.INDEX, index.report)
     logger.debug("analyze")
 
 
