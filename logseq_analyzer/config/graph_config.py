@@ -382,12 +382,13 @@ def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
     Returns:
         dict[str, str]: A dictionary containing the target directories.
     """
+    td = TargetDir
     return {
-        TargetDir.ASSET.value: TargetDir.ASSET.value,
-        TargetDir.DRAW.value: TargetDir.DRAW.value,
-        TargetDir.PAGE.value: config.get(Edn.PAGES_DIR.value, TargetDir.PAGE.value),
-        TargetDir.JOURNAL.value: config.get(Edn.JOURNALS_DIR.value, TargetDir.JOURNAL.value),
-        TargetDir.WHITEBOARD.value: config.get(Edn.WHITEBOARDS_DIR.value, TargetDir.WHITEBOARD.value),
+        td.ASSET.value: td.ASSET.value,
+        td.DRAW.value: td.DRAW.value,
+        td.PAGE.value: config.get(Edn.PAGES_DIR.value, td.PAGE.value),
+        td.JOURNAL.value: config.get(Edn.JOURNALS_DIR.value, td.JOURNAL.value),
+        td.WHITEBOARD.value: config.get(Edn.WHITEBOARDS_DIR.value, td.WHITEBOARD.value),
     }
 
 

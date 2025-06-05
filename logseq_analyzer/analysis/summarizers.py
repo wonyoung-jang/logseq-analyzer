@@ -29,7 +29,7 @@ class LogseqFileSummarizer:
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         self.index: FileIndex = index
-        self.general: dict[str, list[str]] = {}
+        self.general: dict[str, list[str]] = defaultdict(list)
         self.filetypes: dict[str, list[str]] = defaultdict(list)
         self.nodetypes: dict[str, list[str]] = defaultdict(list)
         self.extensions: dict[str, list[str]] = defaultdict(list)
@@ -37,38 +37,35 @@ class LogseqFileSummarizer:
 
     def process(self) -> None:
         """Generate summary subsets for the Logseq Analyzer."""
-        self.get_general_subset()
-        self.get_filetype_subset()
-        self.get_nodetype_subset()
-        self.get_extensions_subset()
+        self.generate_summary()
 
-    def get_general_subset(self) -> None:
+    def generate_summary(self) -> None:
         """Generate general subsets for the Logseq Analyzer."""
-        index = self.index
-        g = self.general
-        g[SummaryFile.BACKLINKED.value] = sorted(f.path.name for f in index if f.node.backlinked)
-        g[SummaryFile.BACKLINKED_NS_ONLY.value] = sorted(f.path.name for f in index if f.node.backlinked_ns_only)
-        g[SummaryFile.IS_HLS.value] = sorted(f.path.name for f in index if f.is_hls)
-        g[SummaryFile.HAS_CONTENT.value] = sorted(f.path.name for f in index if f.info.size.has_content)
-        g[SummaryFile.HAS_BACKLINKS.value] = sorted(f.path.name for f in index if f.node.has_backlinks)
-
-    def get_filetype_subset(self) -> None:
-        """Generate filetype subsets for the Logseq Analyzer."""
-        filetypes = self.filetypes
+        SF = SummaryFile
+        gen = self.general
         for f in self.index:
-            filetypes[f.path.file_type].append(f.path.name)
+            name = f.path.name
+            self.filetypes[f.path.file_type].append(name)
+            self.nodetypes[f.node.node_type].append(name)
+            self.extensions[f.path.file.suffix].append(name)
 
-    def get_nodetype_subset(self):
-        """Generate nodetype subsets for the Logseq Analyzer."""
-        nodetypes = self.nodetypes
-        for f in self.index:
-            nodetypes[f.node.node_type].append(f.path.name)
+            if f.node.backlinked:
+                gen[SF.BACKLINKED.value].append(name)
 
-    def get_extensions_subset(self) -> None:
-        """Process file extensions and create subsets for each."""
-        extensions = self.extensions
-        for f in self.index:
-            extensions[f.path.file.suffix].append(f.path.name)
+            if f.node.backlinked_ns_only:
+                gen[SF.BACKLINKED_NS_ONLY.value].append(name)
+
+            if f.is_hls:
+                gen[SF.IS_HLS.value].append(name)
+
+            if f.info.size.has_content:
+                gen[SF.HAS_CONTENT.value].append(name)
+
+            if f.node.has_backlinks:
+                gen[SF.HAS_BACKLINKS.value].append(name)
+
+        for k, v in gen.items():
+            gen[k] = sorted(v)
 
 
 class LogseqContentSummarizer:

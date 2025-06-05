@@ -93,13 +93,12 @@ class LogseqJournals:
                 if next_expected not in dangling_journals:
                     append_missing(next_expected)
                 next_expected = next_date(next_expected)
-        all_journals = sorted(timeline + dangling_journals)
+        self.sets.all_journals = sorted(timeline + dangling_journals)
         self.timeline_stats = {
             "timeline": get_stats(timeline),
             "dangling": get_stats(dangling_journals),
-            "total": get_stats(all_journals),
+            "total": get_stats(self.sets.all_journals),
         }
-        self.sets.all_journals.extend(all_journals)
 
     def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
         """Check for dangling journals that are outside the range of the complete timeline."""

@@ -114,10 +114,11 @@ class LogseqNamespaces:
             if not f.path.is_namespace:
                 continue
             current_level = tree
-            data[f.path.name] = {k: v for k, v in f.info.namespace.__dict__.items() if v}
-            if not (parts := data[f.path.name].get("parts")):
+            f_name = f.path.name
+            data[f_name] = {k: v for k, v in f.info.namespace.__dict__.items() if v}
+            if not (parts := data[f_name].get("parts")):
                 continue
-            structure_parts[f.path.name] = parts
+            structure_parts[f_name] = parts
             for part, level in parts.items():
                 unique_parts_add(part)
                 unique_ns_per_level[level].add(part)
@@ -125,7 +126,7 @@ class LogseqNamespaces:
                 current_level.setdefault(part, {})
                 current_level = current_level[part]
                 part_levels[part].add(level)
-                part_entries[part].append({"entry": f.path.name, "level": level})
+                part_entries[part].append({"entry": f_name, "level": level})
         details["level_distribution"] = dict(level_distribution)
 
     def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES.value) -> None:
@@ -137,28 +138,31 @@ class LogseqNamespaces:
             if not (f_data := f.data):
                 continue
 
-            for query in f_data.get(query_criteria, []):
+            if not (queries := f_data.get(query_criteria)):
+                continue
+
+            f_path = f.path
+            for query in queries:
                 page_refs = find_all_page_ref_pattern(query)
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
                 page_ref = page_refs[0]
                 ns_queries.setdefault(query, {})
-                ns_queries[query].setdefault("found_in", []).append(f.path.name)
+                ns_queries[query].setdefault("found_in", []).append(f_path.name)
                 ns_queries[query]["namespace"] = page_ref
                 ns_queries[query]["size"] = get_structure(page_ref, {}).get("size", 0)
-                ns_queries[query]["uri"] = f.path.uri
-                ns_queries[query]["logseq_url"] = f.path.logseq_url
-        ns_queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
+                ns_queries[query]["uri"] = f_path.uri
+                ns_queries[query]["logseq_url"] = f_path.logseq_url
+        self.queries = sort_dict_by_value(ns_queries, value="size", reverse=True)
 
     def detect_non_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         index = self.index
         parts_items = self.structure.parts.items
         unique_parts = self.structure.unique_parts
-        _conflicts = self.conflicts
-        non_ns_conflicts = _conflicts.non_namespace
-        dangling_conflicts = _conflicts.dangling
+        non_ns_conflicts = self.conflicts.non_namespace
+        dangling_conflicts = self.conflicts.dangling
         non_ns_names = (f.path.name for f in index if not f.path.is_namespace)
         potential_non_ns_names = unique_parts.intersection(non_ns_names)
         potential_dangling = unique_parts.intersection(self.dangling_links)

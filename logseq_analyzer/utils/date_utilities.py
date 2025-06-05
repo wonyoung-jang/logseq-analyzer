@@ -4,26 +4,46 @@ DateUtilities class to handle date-related operations.
 
 import logging
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Any, Generator
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "DateUtilities",
-    "DAYS_IN_WEEK",
-    "DAYS_IN_MONTH",
-    "DAYS_IN_YEAR",
+    "Day",
+    "DateStat",
+    "DATE_ORDINAL_SUFFIXES",
 ]
 
-DAYS_IN_WEEK = 7
-DAYS_IN_MONTH = 30
-DAYS_IN_YEAR = 365
+
+class Day(Enum):
+    """Enum for days of the week."""
+
+    IN_WEEK = 7
+    IN_MONTH = 30
+    IN_YEAR = 365
+
+
+class DateStat(Enum):
+    """Enum for date statistics."""
+
+    FIRST = "first"
+    LAST = "last"
+    DAYS = "days"
+    WEEKS = "weeks"
+    MONTHS = "months"
+    YEARS = "years"
+
+
+DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
+
+DY = Day
+DS = DateStat
 
 
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
-
-    _DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
 
     @staticmethod
     def next(date_obj: datetime) -> datetime:
@@ -31,26 +51,26 @@ class DateUtilities:
         return date_obj + timedelta(days=1)
 
     @staticmethod
-    def range(date_stats: dict[str, datetime | None]) -> dict[str, float | None]:
+    def range(stats: dict[str, datetime | None]) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
-        delta = date_stats["last"] - date_stats["first"]
+        delta = stats[DS.LAST.value] - stats[DS.FIRST.value]
         days = delta.days + 1
         return {
-            "days": days if delta else 0.0,
-            "weeks": round(days / DAYS_IN_WEEK, 2) if delta else 0.0,
-            "months": round(days / DAYS_IN_MONTH, 2) if delta else 0.0,
-            "years": round(days / DAYS_IN_YEAR, 2) if delta else 0.0,
+            DS.DAYS.value: days if delta else 0.0,
+            DS.WEEKS.value: round(days / DY.IN_WEEK.value, 2) if delta else 0.0,
+            DS.MONTHS.value: round(days / DY.IN_MONTH.value, 2) if delta else 0.0,
+            DS.YEARS.value: round(days / DY.IN_YEAR.value, 2) if delta else 0.0,
         }
 
     @staticmethod
-    def stats(timeline: list[datetime]) -> dict[str, Any]:
+    def stats(dates: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
-        date_stats = {
-            "first": min(timeline) if timeline else datetime.min,
-            "last": max(timeline) if timeline else datetime.min,
+        stats = {
+            DS.FIRST.value: min(dates) if dates else datetime.min,
+            DS.LAST.value: max(dates) if dates else datetime.min,
         }
-        date_stats.update(DateUtilities.range(date_stats))
-        return date_stats
+        stats.update(DateUtilities.range(stats))
+        return stats
 
     @staticmethod
     def append_ordinal_to_day(day: str) -> str:
@@ -63,10 +83,9 @@ class DateUtilities:
     @staticmethod
     def journals_to_datetime(keys: list[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
         """Convert journal keys from strings to datetime objects."""
-        _ordinal_suffixes = DateUtilities._DATE_ORDINAL_SUFFIXES
         for key in keys:
             try:
-                for ordinal in _ordinal_suffixes:
+                for ordinal in DATE_ORDINAL_SUFFIXES:
                     key = key.replace(ordinal, "")
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError:

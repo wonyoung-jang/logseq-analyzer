@@ -67,9 +67,7 @@ class LogseqPath:
     )
 
     graph_path: Path = None
-    journal_file_format: str = ""
-    journal_page_format: str = ""
-    journal_page_title_format: str = ""
+    journal_format: "JournalFormats" = None
     now_ts = datetime.now().timestamp()
     ns_file_sep: str = ""
     result_map: dict = {}
@@ -101,9 +99,7 @@ class LogseqPath:
     ) -> None:
         """Configure the LogseqPath class with necessary settings."""
         cls.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
-        cls.journal_file_format = journal_formats.file
-        cls.journal_page_format = journal_formats.page
-        cls.journal_page_title_format = journal_formats.page_title
+        cls.journal_format = journal_formats
         cls.ns_file_sep = get_ns_sep(config_edns.config)
         cls.target_dirs = analyzer_dirs.target_dirs
         cls.set_result_map()
@@ -170,14 +166,12 @@ class LogseqPath:
     def process_logseq_filename(self, ns_sep: str = Core.NS_SEP.value) -> None:
         """Process the Logseq filename based on its parent directory."""
         _ns_file_sep = LogseqPath.ns_file_sep
-        _target_dir_journal = LogseqPath.target_dirs[TargetDir.JOURNAL.value]
-        _parent = self.file.parent.name
-        _stem = self.file.stem
+        _name = self.file.stem.strip(_ns_file_sep)
 
-        if _parent == _target_dir_journal:
-            self.name = self._process_logseq_journal_key(_stem.strip(_ns_file_sep))
+        if self.file.parent.name == LogseqPath.target_dirs[TargetDir.JOURNAL.value]:
+            self.name = self._process_logseq_journal_key(_name)
         else:
-            self.name = self._process_logseq_non_journal_key(_stem.strip(_ns_file_sep), _ns_file_sep)
+            self.name = self._process_logseq_non_journal_key(_name, _ns_file_sep)
 
         self.is_namespace = ns_sep in self.name
 
@@ -187,9 +181,9 @@ class LogseqPath:
 
     def _process_logseq_journal_key(self, name: str, ordinal: str = Core.DATE_ORDINAL_SUFFIX.value) -> str:
         """Process the journal key to create a page title."""
-        _file_format = LogseqPath.journal_file_format
-        _page_format = LogseqPath.journal_page_format
-        _page_title_format = LogseqPath.journal_page_title_format
+        _file_format = LogseqPath.journal_format.file
+        _page_format = LogseqPath.journal_format.page
+        _page_title_format = LogseqPath.journal_format.page_title
 
         try:
             date_obj = datetime.strptime(name, _file_format)
