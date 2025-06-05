@@ -269,8 +269,10 @@ class LogseqFile:
             Criteria.CON_DYNAMIC_VAR.value: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
             # Criteria.CON_BOLD.value: ContentPatterns.BOLD.findall(masked_content),
         }
-        for key, value in {k: v for k, v in result.items() if v}.items():
-            yield (key, value)
+
+        for key, value in result.items():
+            if value:
+                yield (key, value)
 
     def check_has_backlinks(self) -> None:
         """Check has backlinks in the content."""

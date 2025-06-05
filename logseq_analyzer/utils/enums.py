@@ -60,8 +60,6 @@ class Constants(Enum):
     """Constants used in the Logseq Analyzer."""
 
     CACHE_FILE = "logseq-analyzer-cache"
-    CONFIG_INI_FILE = "logseq_analyzer/config/configuration/config.ini"
-    CONFIG_USER_INI_FILE = "logseq_analyzer/config/configuration/user_config.ini"
     LOG_FILE = "logseq_analyzer.log"
     OUTPUT_DIR = "logseq-analyzer-output"
     TO_DELETE_ASSETS_DIR = "to-delete/assets"
@@ -180,17 +178,10 @@ class FileTypes(Enum):
 class Format(Enum):
     """File formats used in the Logseq Analyzer."""
 
-    CSV = ".csv"
-    GIF = ".gif"
     HTML = ".html"
-    JPEG = ".jpeg"
-    JPG = ".jpg"
     JSON = ".json"
     MD = ".md"
     ORG = ".org"
-    PNG = ".png"
-    SVG = ".svg"
-    TSV = ".tsv"
     TXT = ".txt"
 
 
@@ -231,14 +222,6 @@ class Output(Enum):
     ARGUMENTS = "arguments"
     ASSETS_BACKLINKED = "assets_backlinked"
     ASSETS_NOT_BACKLINKED = "assets_not_backlinked"
-    CONFIG_EDN = "config_edn"
-    CONFIG_EDN_GLOBAL = "config_edn_global"
-    CONFIG_EDN_USER = "config_edn_user"
-    CONFIG_JOURNAL_FMT_FILE = "file"
-    CONFIG_JOURNAL_FMT_PAGE = "page"
-    CONFIG_JOURNAL_FMT_PAGE_TITLE = "page_title"
-    CONFIG_JOURNAL_FORMATS = "journal_formats"
-    CONFIG_TARGET_DIRS = "target_dirs"
     GRAPH_ALL_DANGLING_LINKS = "graph_all_dangling_links"
     GRAPH_ALL_LINKED_REFERENCES = "graph_all_linked_references"
     GRAPH_BULLETS = "graph_content_bullets"
@@ -292,7 +275,6 @@ class OutputDir(Enum):
     SUMMARY_FILES_GENERAL = "summary_files/general"
     SUMMARY_FILES_NODE = "summary_files/node_types"
     SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
-    TEST = "test"
 
 
 class SummaryFiles(Enum):

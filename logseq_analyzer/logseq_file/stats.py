@@ -5,7 +5,6 @@ This module defines the LogseqPath class, which is used to gather file statistic
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from os import stat_result
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
@@ -63,7 +62,6 @@ class LogseqPath:
         "file",
         "is_namespace",
         "name",
-        "stat",
         "uri",
         "logseq_url",
     )
@@ -86,7 +84,6 @@ class LogseqPath:
         self.file: Path = file
         self.is_namespace: bool = False
         self.name: str = ""
-        self.stat: stat_result = file.stat()
         self.uri: str = file.as_uri()
         self.logseq_url: str = ""
 
@@ -222,8 +219,9 @@ class LogseqPath:
     def get_timestamp_info(self) -> TimestampInfo:
         """Get the timestamps for the file."""
         _now = LogseqPath.now_ts
-        _created_time = self.stat.st_birthtime
-        _modified_time = self.stat.st_mtime
+        _stat = self.file.stat()
+        _created_time = _stat.st_birthtime
+        _modified_time = _stat.st_mtime
         return TimestampInfo(
             time_existed=_now - _created_time,
             time_unmodified=_now - _modified_time,
@@ -233,7 +231,8 @@ class LogseqPath:
 
     def get_size_info(self) -> SizeInfo:
         """Get the size information for the file."""
-        _size = self.stat.st_size
+        _stat = self.file.stat()
+        _size = _stat.st_size
         return SizeInfo(
             size=_size,
             human_readable_size=format_bytes(_size),

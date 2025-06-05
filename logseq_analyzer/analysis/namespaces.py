@@ -101,13 +101,12 @@ class LogseqNamespaces:
         """
         Create namespace parts from the data.
         """
-        _structure = self.structure
-        details = _structure.details
-        unique_parts_add = _structure.unique_parts.add
-        unique_ns_per_level = _structure.unique_ns_per_level
-        structure_parts = _structure.parts
-        tree = _structure.tree
-        data = _structure.data
+        details = self.structure.details
+        unique_parts_add = self.structure.unique_parts.add
+        unique_ns_per_level = self.structure.unique_ns_per_level
+        structure_parts = self.structure.parts
+        tree = self.structure.tree
+        data = self.structure.data
         part_levels = self._part_levels
         part_entries = self._part_entries
         level_distribution = Counter()
@@ -155,9 +154,8 @@ class LogseqNamespaces:
     def detect_non_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         index = self.index
-        _structure = self.structure
-        parts_items = _structure.parts.items
-        unique_parts = _structure.unique_parts
+        parts_items = self.structure.parts.items
+        unique_parts = self.structure.unique_parts
         _conflicts = self.conflicts
         non_ns_conflicts = _conflicts.non_namespace
         dangling_conflicts = _conflicts.dangling

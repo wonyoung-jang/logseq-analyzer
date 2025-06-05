@@ -57,7 +57,7 @@ class File:
 
     def __str__(self) -> str:
         """Return a string representation of the File object."""
-        return f"{self.__class__.__qualname__}: {str(self.path)}"
+        return f"{self.__class__.__qualname__}: {str(self.path.resolve())}"
 
     @property
     def path(self) -> Path:

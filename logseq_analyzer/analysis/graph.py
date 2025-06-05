@@ -94,7 +94,7 @@ class LogseqGraph:
                 get_data(Criteria.PROP_BLOCK_BUILTIN.value, []),
                 get_data(Criteria.PROP_BLOCK_USER.value, []),
             )
-            if not (linked_references := [ref for ref in chain.from_iterable(dataset)]):
+            if not (linked_references := list(chain.from_iterable(dataset))):
                 continue
 
             if ns_info.parent:

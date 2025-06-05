@@ -11,14 +11,6 @@ from ...utils.enums import Output
 from ..arguments import Args
 
 
-@pytest.fixture(autouse=True)
-def reset_singleton():
-    """Reset the singleton instance before each test."""
-    Args._instance = None
-    yield
-    Args._instance = None
-
-
 @pytest.fixture
 def args_instance():
     """Fixture for LogseqAnalyzerArguments instance."""

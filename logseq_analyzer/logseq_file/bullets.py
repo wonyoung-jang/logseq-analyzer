@@ -111,8 +111,10 @@ class LogseqBullets:
             Criteria.CON_ANY_LINKS.value: ContentPatterns.ANY_LINK.findall(_content),
             Criteria.CON_ASSETS.value: ContentPatterns.ASSET.findall(_content),
         }
-        for key, value in {k: v for k, v in result.items() if v}.items():
-            yield (key, value)
+
+        for key, value in result.items():
+            if value:
+                yield (key, value)
 
     def extract_properties(self) -> Generator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
@@ -132,8 +134,10 @@ class LogseqBullets:
             Criteria.PROP_PAGE_BUILTIN.value: extract_builtin_properties(page_props),
             Criteria.PROP_PAGE_USER.value: remove_builtin_properties(page_props),
         }
-        for key, value in {k: v for k, v in result.items() if v}.items():
-            yield (key, value)
+
+        for key, value in result.items():
+            if value:
+                yield (key, value)
 
     def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
@@ -145,8 +149,10 @@ class LogseqBullets:
             Criteria.CON_ALIASES.value: aliases,
             Criteria.PROP_VALUES.value: propvalues,
         }
-        for key, value in {k: v for k, v in result.items() if v}.items():
-            yield (key, value)
+
+        for key, value in result.items():
+            if value:
+                yield (key, value)
 
     def extract_patterns(self) -> Generator[tuple[str, Any]]:
         """
@@ -159,5 +165,7 @@ class LogseqBullets:
         for pattern in _pattern_modules:
             processed_patterns = process_pattern_hierarchy(_content, pattern)
             result.update(processed_patterns)
-        for key, value in {k: v for k, v in result.items() if v}.items():
-            yield (key, value)
+
+        for key, value in result.items():
+            if value:
+                yield (key, value)
