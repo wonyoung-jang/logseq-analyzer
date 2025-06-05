@@ -33,15 +33,17 @@ class BulletStats:
     char_count: int = 0
     bullet_count: int = 0
     bullet_count_empty: int = 0
+    bullet_density: float = 0.0
 
 
 class LogseqBullets:
     """LogseqBullets class."""
 
     __slots__ = (
-        "content",
-        "primary",
         "all_bullets",
+        "content",
+        "has_page_properties",
+        "primary",
         "stats",
     )
 
@@ -56,9 +58,10 @@ class LogseqBullets:
 
     def __init__(self, content: str = "") -> None:
         """Post-initialization method to set bullet attributes."""
-        self.content: str = content
-        self.primary: str = ""
         self.all_bullets: list[str | None] = []
+        self.content: str = content
+        self.has_page_properties: bool = False
+        self.primary: str = ""
         self.stats: BulletStats = BulletStats()
 
     def __repr__(self) -> str:
@@ -68,21 +71,6 @@ class LogseqBullets:
     def __str__(self) -> str:
         """Return a user-friendly string representation of the LogseqBullets object."""
         return f"{self.__class__.__qualname__}"
-
-    @property
-    def has_page_properties(self) -> bool:
-        """Check if the primary bullet has page properties."""
-        return self.primary and not self.primary.startswith("#")
-
-    @property
-    def bullet_density(self) -> float:
-        """Get the bullet density of the content."""
-        _bullet_count = self.stats.bullet_count
-        _char_count = self.stats.char_count
-
-        if _bullet_count:
-            return round(_char_count / _bullet_count, 2)
-        return 0.0
 
     def process(self) -> None:
         """Process the content to extract bullet information."""
@@ -104,10 +92,16 @@ class LogseqBullets:
             else:
                 bullet_count_empty += 1
 
-        self.stats.char_count = len(_content)
+        self.primary = primary_bullet
+        if primary_bullet and not primary_bullet.startswith("#"):
+            self.has_page_properties = True
+
+        _char_count = len(_content)
+        self.stats.char_count = _char_count
         self.stats.bullet_count = bullet_count
         self.stats.bullet_count_empty = bullet_count_empty
-        self.primary = primary_bullet
+        if bullet_count:
+            self.stats.bullet_density = round(_char_count / bullet_count, 2)
 
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
@@ -127,7 +121,6 @@ class LogseqBullets:
         _primary_bullet = self.primary
         _all_bullets = self.all_bullets
         _find_all_properties = ContentPatterns.PROPERTY.findall
-
         if self.has_page_properties:
             page_props.update(_find_all_properties(_primary_bullet))
             _content = "\n".join(_all_bullets)

@@ -2,11 +2,13 @@
 Test Cache class.
 """
 
-import pytest
 from pathlib import Path
 
-from ..cache import Cache
+import pytest
+
+from ...analysis.index import FileIndex
 from ...utils.enums import Constants
+from ..cache import Cache
 
 
 @pytest.fixture
@@ -15,7 +17,7 @@ def cache():
     cache = Cache(Path(Constants.CACHE_FILE.value))
     cache.open()
     yield cache
-    cache.close()
+    cache.close(FileIndex())
 
 
 def test_cache_initialization(cache):

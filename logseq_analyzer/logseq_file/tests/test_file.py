@@ -4,9 +4,9 @@ Test the LogseqFile class.
 
 from pathlib import Path
 from tempfile import TemporaryFile
+
 import pytest
 
-from ..bullets import LogseqBullets
 from ..file import LogseqFile
 
 
@@ -28,27 +28,26 @@ def logseq_file(temp_file):
 
 def test_logseq_file(logseq_file, temp_file):
     """Test the LogseqFile functionality."""
-    assert logseq_file.path == Path(temp_file)
-    assert isinstance(logseq_file.bullets, LogseqBullets)
+    assert logseq_file.path.file == Path(temp_file)
+    assert logseq_file.bullets is None
     assert logseq_file.data == {}
     assert logseq_file.node.has_backlinks is False
     assert logseq_file.node.backlinked is False
     assert logseq_file.node.backlinked_ns_only is False
-    assert logseq_file.node.type == "other"
-    assert logseq_file.file_type == ""
+    assert logseq_file.node.node_type == "other"
     assert logseq_file.masked.content == ""
     assert logseq_file.masked.blocks == {}
 
 
 def test_representation(logseq_file):
     """Test the string representation of LogseqFile."""
-    assert repr(logseq_file) == f'LogseqFile(path="{logseq_file.path}")'
-    assert str(logseq_file) == f"LogseqFile: {logseq_file.path}"
+    assert repr(logseq_file) == f"LogseqFile({logseq_file.path.name})"
+    assert str(logseq_file) == f"LogseqFile: {logseq_file.path.name}"
 
 
 def test_hash(logseq_file):
     """Test the hash of LogseqFile."""
-    assert hash(logseq_file) == hash(logseq_file.path.parts)
+    assert hash(logseq_file) == hash(logseq_file.path.file.parts)
 
 
 def test_equality(logseq_file, temp_file):

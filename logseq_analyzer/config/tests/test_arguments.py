@@ -49,7 +49,7 @@ def test_set_gui_args(args_instance):
         "graph_cache": True,
         "report_format": ".json",
     }
-    args_instance.setup_args(**gui_args)
+    args_instance.set_gui_args(**gui_args)
 
     assert args_instance.graph_folder == Path("/path/to/graph")
     assert args_instance.global_config == Path("/path/to/config.ini")
@@ -76,8 +76,7 @@ def test_set_cli_args_basic(monkeypatch, args_instance):
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
 
-    # Need to re-initialize or call setup_args to trigger parsing
-    args_instance.setup_args()  # Calls set_cli_args because no kwargs
+    args_instance.set_cli_args()
 
     assert (
         args_instance.graph_folder == test_graph_path
@@ -97,13 +96,13 @@ def test_set_cli_args_all_flags(monkeypatch, args_instance):
     test_config_path = "/path/to/global.ini"
     mock_argv = [
         "script_name",
-        "-g",
+        "--graph-folder",
         test_graph_path,
-        "-wg",
+        "--write-graph",
         "--graph-cache",
-        "-ma",
-        "-mb",
-        "-mr",
+        "--move-unlinked-assets",
+        "--move-bak",
+        "--move-recycle",
         "--global-config",
         test_config_path,
         "--report-format",
@@ -111,7 +110,7 @@ def test_set_cli_args_all_flags(monkeypatch, args_instance):
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
 
-    args_instance.setup_args()
+    args_instance.set_cli_args()
 
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == test_config_path
@@ -134,7 +133,7 @@ def test_set_cli_args_defaults(monkeypatch, args_instance):
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
 
-    args_instance.setup_args()
+    args_instance.set_cli_args()
 
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == ""
@@ -157,11 +156,11 @@ def test_set_cli_args_missing_required(monkeypatch, args_instance):
 
     # argparse.parse_args() calls sys.exit() upon error
     with pytest.raises(SystemExit):
-        args_instance.setup_args()
+        args_instance.set_cli_args()
 
 
 def test_report(args_instance):
     """Test the report generation."""
     report = args_instance.report[Output.ARGUMENTS.value]
-    assert isinstance(report, dict)
-    assert "graph_folder" in report
+    assert isinstance(report, list)
+    assert ("graph_folder", "") in report
