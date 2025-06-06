@@ -112,17 +112,18 @@ class LogseqContentSummarizer:
         report = self.report
         for f in self.index:
             f_name = f.path.name
+            f_info = f.info
             if f_data := f.data:
                 for k, v in f_data.items():
                     report.setdefault(k, {})
                     report[k] = get_count_and_foundin_data(report[k], v, f_name)
-            if f_sz := f.info.size:
+            if f_sz := f_info.size:
                 sz_report[f_name] = f_sz.__dict__
-            if f_ts := f.info.timestamp:
+            if f_ts := f_info.timestamp:
                 ts_report[f_name] = f_ts.__dict__
-            if f_ns := f.info.namespace:
+            if f_ns := f_info.namespace:
                 ns_report[f_name] = f_ns.__dict__
-            if f_bt := f.info.bullet:
+            if f_bt := f_info.bullet:
                 bt_report[f_name] = f_bt.__dict__
         self.size_report = {"report_size": sz_report}
         self.timestamp_report = {"report_timestamp": ts_report}
