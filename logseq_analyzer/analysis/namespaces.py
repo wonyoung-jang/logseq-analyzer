@@ -21,7 +21,7 @@ from typing import Any
 
 import logseq_analyzer.patterns.content as ContentPatterns
 
-from ..utils.enums import Core, Criteria, Output
+from ..utils.enums import Core, CritDblCurly, Output
 from ..utils.helpers import sort_dict_by_value
 from .index import FileIndex
 
@@ -129,7 +129,7 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f_name, "level": level})
         details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES) -> None:
+    def analyze_ns_queries(self, query_criteria: str = CritDblCurly.NAMESPACE_QUERIES) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
         search_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.search

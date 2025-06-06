@@ -8,7 +8,7 @@ __all__ = [
     "ConfigEdnReport",
     "Constant",
     "Core",
-    "Criteria",
+    "CritContent",
     "Edn",
     "FileType",
     "Format",
@@ -55,55 +55,72 @@ class Core(StrEnum):
     NS_SEP = "/"
 
 
-class Criteria(StrEnum):
+class CritContent(StrEnum):
     """Criteria for filtering files."""
 
-    ADV_CMD = "adv_cmd"
-    ADV_CMD_CAUTION = "adv_cmd_caution"
-    ADV_CMD_CENTER = "adv_cmd_center"
-    ADV_CMD_COMMENT = "adv_cmd_comment"
-    ADV_CMD_EXAMPLE = "adv_cmd_example"
-    ADV_CMD_EXPORT = "adv_cmd_export"
-    ADV_CMD_EXPORT_ASCII = "adv_cmd_export_ascii"
-    ADV_CMD_EXPORT_LATEX = "adv_cmd_export_latex"
-    ADV_CMD_IMPORTANT = "adv_cmd_important"
-    ADV_CMD_NOTE = "adv_cmd_note"
-    ADV_CMD_PINNED = "adv_cmd_pinned"
-    ADV_CMD_QUERY = "adv_cmd_query"
-    ADV_CMD_QUOTE = "adv_cmd_quote"
-    ADV_CMD_TIP = "adv_cmd_tip"
-    ADV_CMD_VERSE = "adv_cmd_verse"
-    ADV_CMD_WARNING = "adv_cmd_warning"
-    COD_INLINE = "code_inline"
-    COD_ML_ALL = "code_multiline"
-    COD_ML_CALC = "code_multiline_calc"
-    COD_ML_LANG = "code_multiline_lang"
-    CON_ALIASES = "content_aliases"
-    CON_ANY_LINKS = "content_any_links"
-    CON_ASSETS = "content_assets"
-    CON_BLOCKQUOTES = "content_blockquotes"
-    # CON_BOLD = "content_bold"
-    CON_DRAW = "content_draws"
-    CON_DYNAMIC_VAR = "content_dynamic_variables"
-    CON_FLASHCARD = "content_flashcards"
-    CON_PAGE_REF = "content_page_references"
-    CON_TAG = "content_tags"
-    CON_TAGGED_BACKLINK = "content_tagged_backlinks"
-    DBC_ALL = "double_curly_all_or_macros"
-    DBC_BLOCK_EMBEDS = "double_curly_block_embeds"
-    DBC_CARDS = "double_curly_cards"
-    DBC_CLOZES = "double_curly_clozes"
-    DBC_EMBEDS = "double_curly_embeds"
-    DBC_NAMESPACE_QUERIES = "double_curly_namespace_queries"
-    DBC_PAGE_EMBEDS = "double_curly_page_embeds"
-    DBC_QUERY_FUNCTIONS = "double_curly_query_functions"
-    DBC_RENDERERS = "double_curly_renderers"
-    DBC_SIMPLE_QUERIES = "double_curly_simple_queries"
-    DBC_TWITTER_TWEETS = "double_curly_twitter_tweets"
-    DBC_VIDEO_URLS = "double_curly_video_urls"
-    DBC_YOUTUBE_TIMESTAMPS = "double_curly_youtube_timesteps"
-    DBP_ALL_REFS = "double_parentheses_all_refs"
-    DBP_BLOCK_REFS = "double_parentheses_block_refs"
+    ALIASES = "content_aliase"
+    ANY_LINKS = "content_any_link"
+    ASSETS = "content_asset"
+    BLOCKQUOTES = "content_blockquote"
+    DRAW = "content_draw"
+    DYNAMIC_VAR = "content_dynamic_variable"
+    FLASHCARD = "content_flashcard"
+    PAGE_REF = "content_page_reference"
+    TAG = "content_tag"
+    TAGGED_BACKLINK = "content_tagged_backlink"
+
+
+class CritCode(StrEnum):
+    INLINE = "code_inline"
+    ML_ALL = "code_multiline"
+    ML_CALC = "code_multiline_calc"
+    ML_LANG = "code_multiline_lang"
+
+
+class CritAdvCmd(StrEnum):
+    """Criteria for advanced commands in Logseq."""
+
+    ALL = "adv_cmd"
+    CAUTION = "adv_cmd_caution"
+    CENTER = "adv_cmd_center"
+    COMMENT = "adv_cmd_comment"
+    EXAMPLE = "adv_cmd_example"
+    EXPORT = "adv_cmd_export"
+    EXPORT_ASCII = "adv_cmd_export_ascii"
+    EXPORT_LATEX = "adv_cmd_export_latex"
+    IMPORTANT = "adv_cmd_important"
+    NOTE = "adv_cmd_note"
+    PINNED = "adv_cmd_pinned"
+    QUERY = "adv_cmd_query"
+    QUOTE = "adv_cmd_quote"
+    TIP = "adv_cmd_tip"
+    VERSE = "adv_cmd_verse"
+    WARNING = "adv_cmd_warning"
+
+
+class CritDblCurly(StrEnum):
+    """Criteria for double curly brackets in Logseq."""
+
+    ALL = "double_curly_all_or_macros"
+    BLOCK_EMBEDS = "double_curly_block_embeds"
+    CARDS = "double_curly_cards"
+    CLOZES = "double_curly_clozes"
+    EMBEDS = "double_curly_embeds"
+    NAMESPACE_QUERIES = "double_curly_namespace_queries"
+    PAGE_EMBEDS = "double_curly_page_embeds"
+    QUERY_FUNCTIONS = "double_curly_query_functions"
+    RENDERERS = "double_curly_renderers"
+    SIMPLE_QUERIES = "double_curly_simple_queries"
+    TWITTER_TWEETS = "double_curly_twitter_tweets"
+    VIDEO_URLS = "double_curly_video_urls"
+    YOUTUBE_TIMESTAMPS = "double_curly_youtube_timesteps"
+
+
+class CritDblParen(StrEnum):
+    """Criteria for double parentheses in Logseq."""
+
+    ALL_REFS = "double_parentheses_all_refs"
+    BLOCK_REFS = "double_parentheses_block_refs"
 
 
 class CritEmb(StrEnum):

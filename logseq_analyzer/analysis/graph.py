@@ -7,7 +7,7 @@ from itertools import chain
 from typing import Any
 
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import CritProp, Criteria, FileType, Output
+from ..utils.enums import CritContent, CritProp, FileType, Output
 from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
 from .index import FileIndex
 
@@ -81,15 +81,15 @@ class LogseqGraph:
                 continue
 
             get_data = f_data.get
-            if found_aliases := get_data(Criteria.CON_ALIASES, []):
+            if found_aliases := get_data(CritContent.ALIASES, []):
                 update_unique_aliases(found_aliases)
 
             dataset = (
                 found_aliases,
-                get_data(Criteria.CON_DRAW, []),
-                get_data(Criteria.CON_PAGE_REF, []),
-                get_data(Criteria.CON_TAG, []),
-                get_data(Criteria.CON_TAGGED_BACKLINK, []),
+                get_data(CritContent.DRAW, []),
+                get_data(CritContent.PAGE_REF, []),
+                get_data(CritContent.TAG, []),
+                get_data(CritContent.TAGGED_BACKLINK, []),
                 get_data(CritProp.PAGE_BUILTIN, []),
                 get_data(CritProp.PAGE_USER, []),
                 get_data(CritProp.BLOCK_BUILTIN, []),

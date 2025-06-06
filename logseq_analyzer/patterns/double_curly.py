@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritDblCurly
 
 ALL = re.compile(
     r"""
@@ -130,18 +130,18 @@ RENDERER = re.compile(
 )
 
 PATTERN_MAP = {
-    PAGE_EMBED: Criteria.DBC_PAGE_EMBEDS,
-    BLOCK_EMBED: Criteria.DBC_BLOCK_EMBEDS,
-    EMBED: Criteria.DBC_EMBEDS,
-    NAMESPACE_QUERY: Criteria.DBC_NAMESPACE_QUERIES,
-    CARD: Criteria.DBC_CARDS,
-    CLOZE: Criteria.DBC_CLOZES,
-    SIMPLE_QUERY: Criteria.DBC_SIMPLE_QUERIES,
-    QUERY_FUNCTION: Criteria.DBC_QUERY_FUNCTIONS,
-    EMBED_VIDEO_URL: Criteria.DBC_VIDEO_URLS,
-    EMBED_TWITTER_TWEET: Criteria.DBC_TWITTER_TWEETS,
-    EMBED_YOUTUBE_TIMESTAMP: Criteria.DBC_YOUTUBE_TIMESTAMPS,
-    RENDERER: Criteria.DBC_RENDERERS,
+    PAGE_EMBED: CritDblCurly.PAGE_EMBEDS,
+    BLOCK_EMBED: CritDblCurly.BLOCK_EMBEDS,
+    EMBED: CritDblCurly.EMBEDS,
+    NAMESPACE_QUERY: CritDblCurly.NAMESPACE_QUERIES,
+    CARD: CritDblCurly.CARDS,
+    CLOZE: CritDblCurly.CLOZES,
+    SIMPLE_QUERY: CritDblCurly.SIMPLE_QUERIES,
+    QUERY_FUNCTION: CritDblCurly.QUERY_FUNCTIONS,
+    EMBED_VIDEO_URL: CritDblCurly.VIDEO_URLS,
+    EMBED_TWITTER_TWEET: CritDblCurly.TWITTER_TWEETS,
+    EMBED_YOUTUBE_TIMESTAMP: CritDblCurly.YOUTUBE_TIMESTAMPS,
+    RENDERER: CritDblCurly.RENDERERS,
 }
 
-FALLBACK = Criteria.DBC_ALL
+FALLBACK = CritDblCurly.ALL

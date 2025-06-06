@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritDblParen
 
 ALL = re.compile(
     r"""
@@ -29,7 +29,7 @@ BLOCK_REFERENCE = re.compile(
 )
 
 PATTERN_MAP = {
-    BLOCK_REFERENCE: Criteria.DBP_BLOCK_REFS,
+    BLOCK_REFERENCE: CritDblParen.BLOCK_REFS,
 }
 
-FALLBACK = Criteria.DBP_ALL_REFS
+FALLBACK = CritDblParen.ALL_REFS

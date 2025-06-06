@@ -7,7 +7,7 @@ from typing import Generator
 import logseq_analyzer.patterns.content as ContentPatterns
 
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import CritEmb, Criteria, FileType, Output
+from ..utils.enums import CritContent, CritEmb, FileType, Output
 from .index import FileIndex
 
 __all__ = [
@@ -112,7 +112,7 @@ class LogseqAssets:
 
     __slots__ = ("index", "backlinked", "not_backlinked")
 
-    _ASSET_CRITERIA: frozenset[Criteria] = frozenset({CritEmb.ASSET, Criteria.CON_ASSETS})
+    _ASSET_CRITERIA: frozenset[CritContent] = frozenset({CritEmb.ASSET, CritContent.ASSETS})
 
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqAssets instance."""

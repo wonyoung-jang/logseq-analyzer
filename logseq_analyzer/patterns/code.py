@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritCode
 
 ALL = re.compile(
     r"""
@@ -42,8 +42,8 @@ CALC_BLOCK = re.compile(
 )
 
 PATTERN_MAP = {
-    CALC_BLOCK: Criteria.COD_ML_CALC,
-    MULTILINE_CODE_LANG: Criteria.COD_ML_LANG,
+    CALC_BLOCK: CritCode.ML_CALC,
+    MULTILINE_CODE_LANG: CritCode.ML_LANG,
 }
 
-FALLBACK = Criteria.COD_ML_ALL
+FALLBACK = CritCode.ML_ALL

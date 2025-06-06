@@ -14,7 +14,7 @@ import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
-from ..utils.enums import CritProp, Criteria
+from ..utils.enums import CritCode, CritContent, CritProp
 from ..utils.helpers import (
     extract_builtin_properties,
     iter_pattern_split,
@@ -38,9 +38,9 @@ class LogseqBullets:
     )
 
     _RAW_DATA_MAP: dict[str, Any] = {
-        Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK,
-        Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK,
-        Criteria.CON_ASSETS: ContentPatterns.ASSET,
+        CritCode.INLINE: CodePatterns.INLINE_CODE_BLOCK,
+        CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
+        CritContent.ASSETS: ContentPatterns.ASSET,
     }
 
     _PATTERN_MODULES = (
@@ -129,7 +129,7 @@ class LogseqBullets:
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         for key, value in {
-            Criteria.CON_ALIASES: aliases,
+            CritContent.ALIASES: aliases,
             CritProp.VALUES: propvalues,
         }.items():
             if value:

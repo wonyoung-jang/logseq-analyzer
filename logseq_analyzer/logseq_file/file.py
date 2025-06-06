@@ -16,7 +16,7 @@ import logseq_analyzer.patterns.content as ContentPatterns
 # import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 # import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 # from ..utils.enums import Core, CritEmb, CritExt, Criteria, Node, CritProp
-from ..utils.enums import Core, Criteria, CritProp, Node
+from ..utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp, Node
 from .bullets import LogseqBullets
 from .info import LogseqFileInfo
 from .stats import LogseqPath
@@ -123,31 +123,27 @@ class LogseqFile:
             CritProp.BLOCK_USER,
             CritProp.PAGE_BUILTIN,
             CritProp.PAGE_USER,
-            Criteria.CON_PAGE_REF,
-            Criteria.CON_TAGGED_BACKLINK,
-            Criteria.CON_TAG,
+            CritContent.PAGE_REF,
+            CritContent.TAGGED_BACKLINK,
+            CritContent.TAG,
         }
     )
 
     _PRIMARY_DATA_MAP: dict[str, Any] = {
-        Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
-        Criteria.CON_DRAW: ContentPatterns.DRAW,
-        Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD,
-        Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-        Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-        Criteria.CON_TAG: ContentPatterns.TAG,
-        Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+        CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+        CritContent.DRAW: ContentPatterns.DRAW,
+        CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
+        CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+        CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+        CritContent.TAG: ContentPatterns.TAG,
+        CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
     }
 
     _PATTERN_MASKING = (
-        (CodePatterns.ALL.sub, f"__{Criteria.COD_INLINE}_"),
-        (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{Criteria.COD_INLINE}_"),
-        (AdvancedCommandPatterns.ALL.sub, f"__{Criteria.ADV_CMD}_"),
-        # (DoubleCurlyBracketsPatterns.ALL.sub, f"__{Criteria.DBC_ALL}_"),
-        # (EmbeddedLinksPatterns.ALL.sub, f"__{CritEmb.OTHER}_"),
-        # (ExternalLinksPatterns.ALL.sub, f"__{CritExt.OTHER}_"),
-        # (DoubleParenthesesPatterns.ALL.sub, f"__{Criteria.DBP_ALL_REFS}_"),
-        (ContentPatterns.ANY_LINK.sub, f"__{Criteria.CON_ANY_LINKS}_"),
+        (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
+        (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
+        (AdvancedCommandPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
+        (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
     )
 
     def __init__(self, path: Path) -> None:

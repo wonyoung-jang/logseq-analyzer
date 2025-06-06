@@ -4,7 +4,6 @@ Compile frequently used regex patterns for Logseq content.
 
 import re
 
-
 BULLET = re.compile(
     r"""
     ^           # Beginning of line
@@ -138,13 +137,3 @@ ANY_LINK = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
-# Not used
-# BOLD = re.compile(
-#     r"""
-#     \*{2}               # Opening double asterisks
-#     .+?                 # One or more characters (non-greedy)
-#     \*{2}               # Closing double asterisks
-#     """,
-#     re.IGNORECASE | re.VERBOSE,
-# )

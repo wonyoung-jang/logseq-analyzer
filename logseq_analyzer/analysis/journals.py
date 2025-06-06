@@ -33,22 +33,19 @@ class LogseqJournals:
 
     __slots__ = (
         "dangling",
-        "date",
         "timeline_stats",
         "sets",
         "index",
         "dangling_links",
     )
 
+    date: DateUtilities = DateUtilities
     journal_page_format: str = ""
 
-    def __init__(
-        self, index: FileIndex, dangling_links: set[str], date_utilities: DateUtilities = DateUtilities
-    ) -> None:
+    def __init__(self, index: FileIndex, dangling_links: set[str]) -> None:
         """Initialize the LogseqJournals class."""
         self.sets: JournalSets = JournalSets()
         self.dangling: dict[str, list[datetime]] = defaultdict(list)
-        self.date: DateUtilities = date_utilities
         self.timeline_stats: dict[str, Any] = {}
         self.index: FileIndex = index
         self.dangling_links: set[str] = dangling_links
@@ -70,9 +67,9 @@ class LogseqJournals:
         """Process journal keys to build the complete timeline and detect missing entries."""
         index = self.index
         page_format = LogseqJournals.journal_page_format
-        dangling = sorted(self.date.journals_to_datetime(self.dangling_links, page_format))
+        dangling = sorted(LogseqJournals.date.journals_to_datetime(self.dangling_links, page_format))
         journals = (f.path.name for f in index if f.path.file_type == journal_file)
-        self.sets.existing.extend(sorted(self.date.journals_to_datetime(journals, page_format)))
+        self.sets.existing.extend(sorted(LogseqJournals.date.journals_to_datetime(journals, page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 
@@ -82,8 +79,8 @@ class LogseqJournals:
         timeline = self.sets.timeline
         append_missing = self.sets.missing.append
         append_timeline = timeline.append
-        get_stats = self.date.stats
-        next_date = self.date.next
+        get_stats = LogseqJournals.date.stats
+        next_date = LogseqJournals.date.next
         for i, date in enumerate(existing):
             append_timeline(date)
             next_expected = next_date(date)

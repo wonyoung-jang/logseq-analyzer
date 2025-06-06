@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Generator
 
+from .logseq_file.stats import LogseqFileName
+
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -238,7 +240,8 @@ def configure_analyzer_settings(
     Cache.configure(args, analyzer_dirs)
     FileIndex.write_graph = args.write_graph
     LogseqJournals.journal_page_format = journal_formats.page
-    LogseqPath.configure(analyzer_dirs, journal_formats, config_edns)
+    LogseqPath.configure(analyzer_dirs)
+    LogseqFileName.configure(analyzer_dirs, journal_formats, config_edns)
     ReportWriter.configure(args, analyzer_dirs)
     logger.debug("configure_analyzer_settings")
 

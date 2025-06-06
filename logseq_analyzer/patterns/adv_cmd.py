@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritAdvCmd
 
 ALL = re.compile(
     r"""
@@ -185,21 +185,21 @@ WARNING = re.compile(
 )
 
 PATTERN_MAP = {
-    EXPORT_ASCII: Criteria.ADV_CMD_EXPORT_ASCII,
-    EXPORT_LATEX: Criteria.ADV_CMD_EXPORT_LATEX,
-    EXPORT: Criteria.ADV_CMD_EXPORT,
-    CAUTION: Criteria.ADV_CMD_CAUTION,
-    CENTER: Criteria.ADV_CMD_CENTER,
-    COMMENT: Criteria.ADV_CMD_COMMENT,
-    EXAMPLE: Criteria.ADV_CMD_EXAMPLE,
-    IMPORTANT: Criteria.ADV_CMD_IMPORTANT,
-    NOTE: Criteria.ADV_CMD_NOTE,
-    PINNED: Criteria.ADV_CMD_PINNED,
-    QUERY: Criteria.ADV_CMD_QUERY,
-    QUOTE: Criteria.ADV_CMD_QUOTE,
-    TIP: Criteria.ADV_CMD_TIP,
-    VERSE: Criteria.ADV_CMD_VERSE,
-    WARNING: Criteria.ADV_CMD_WARNING,
+    EXPORT_ASCII: CritAdvCmd.EXPORT_ASCII,
+    EXPORT_LATEX: CritAdvCmd.EXPORT_LATEX,
+    EXPORT: CritAdvCmd.EXPORT,
+    CAUTION: CritAdvCmd.CAUTION,
+    CENTER: CritAdvCmd.CENTER,
+    COMMENT: CritAdvCmd.COMMENT,
+    EXAMPLE: CritAdvCmd.EXAMPLE,
+    IMPORTANT: CritAdvCmd.IMPORTANT,
+    NOTE: CritAdvCmd.NOTE,
+    PINNED: CritAdvCmd.PINNED,
+    QUERY: CritAdvCmd.QUERY,
+    QUOTE: CritAdvCmd.QUOTE,
+    TIP: CritAdvCmd.TIP,
+    VERSE: CritAdvCmd.VERSE,
+    WARNING: CritAdvCmd.WARNING,
 }
 
-FALLBACK = Criteria.ADV_CMD
+FALLBACK = CritAdvCmd.ALL
