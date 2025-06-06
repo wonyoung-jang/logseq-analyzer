@@ -108,16 +108,18 @@ class LogseqGraph:
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
+        filename = f.path.name
         for ns_root_file in self.index[f.info.namespace.root]:
             ns_root_file: LogseqFile
-            ns_root_file.path.is_namespace = True
-            ns_root_file.info.namespace.children.add(f.path.name)
-            ns_root_file.info.namespace.size = len(ns_root_file.info.namespace.children)
+            if not ns_root_file.path.is_namespace:
+                ns_root_file.path.is_namespace = True
+            if filename not in ns_root_file.info.namespace.children:
+                ns_root_file.info.namespace.children.add(filename)
 
         for ns_parent_file in self.index[f.info.namespace.parent_full]:
             ns_parent_file: LogseqFile
-            ns_parent_file.info.namespace.children.add(f.path.name)
-            ns_parent_file.info.namespace.size = len(ns_parent_file.info.namespace.children)
+            if filename not in ns_parent_file.info.namespace.children:
+                ns_parent_file.info.namespace.children.add(filename)
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""

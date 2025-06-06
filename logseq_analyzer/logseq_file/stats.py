@@ -49,7 +49,6 @@ class NamespaceInfo:
     parent: str = ""
     parts: dict[str, int] = field(default_factory=dict)
     root: str = ""
-    size: int = 0
     stem: str = ""
 
 

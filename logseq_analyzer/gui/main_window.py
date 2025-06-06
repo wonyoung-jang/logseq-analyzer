@@ -61,14 +61,14 @@ class AnalysisWorker(QThread):
     def run(self) -> None:
         """Run the Logseq Analyzer application."""
         try:
-            curr_time = time.time()
+            start_time = time.perf_counter()
 
             def update_progress(value, label) -> None:
                 self.progress_signal.emit(value)
                 self.progress_label.emit(label)
 
             run_app(**self.args, progress_callback=update_progress)
-            self.finished_signal.emit(True, "", time.time() - curr_time)
+            self.finished_signal.emit(True, "", time.perf_counter() - start_time)
         except KeyboardInterrupt:
             self.finished_signal.emit(False, "Analysis interrupted by user.", 0)
         except Exception as e:
@@ -86,6 +86,37 @@ class Checkboxes:
     move_recycle: QCheckBox
     write_graph: QCheckBox
     graph_cache: QCheckBox
+
+    def __post_init__(self) -> None:
+        self.move_all.toggled.connect(self.update_move_options)
+        self.graph_cache.setEnabled(True)
+
+    def create_layout(self) -> QVBoxLayout:
+        """Creates and returns the layout for checkboxes."""
+        layout = QVBoxLayout()
+        layout.addWidget(self.move_all)
+        layout.addWidget(self.move_assets)
+        layout.addWidget(self.move_bak)
+        layout.addWidget(self.move_recycle)
+        layout.addWidget(self.write_graph)
+        layout.addWidget(self.graph_cache)
+        return layout
+
+    def update_move_options(self) -> None:
+        """Update the state of move options checkboxes based on the main checkbox."""
+        if self.move_all.isChecked():
+            self.move_assets.setChecked(True)
+            self.move_bak.setChecked(True)
+            self.move_recycle.setChecked(True)
+        else:
+            self.move_assets.setChecked(False)
+            self.move_bak.setChecked(False)
+            self.move_recycle.setChecked(False)
+
+    def force_enable_graph_cache(self) -> None:
+        """Force enable and check the graph cache checkbox when the graph folder changes."""
+        self.graph_cache.setChecked(True)
+        self.graph_cache.setEnabled(False)
 
 
 @dataclass
@@ -105,6 +136,10 @@ class Inputs:
     graph_folder: QLineEdit
     global_config: QLineEdit
     report_format: QComboBox
+
+    def __post_init__(self) -> None:
+        """Post-initialization to set default values for inputs."""
+        self.report_format.addItems({Format.TXT, Format.JSON, Format.MD, Format.HTML})
 
 
 class LogseqAnalyzerGUI(QMainWindow):
@@ -141,13 +176,10 @@ class LogseqAnalyzerGUI(QMainWindow):
             write_graph=QCheckBox("Write Full Graph Content (large)"),
             graph_cache=QCheckBox("Reindex Graph Cache"),
         )
-        self.checkboxes.graph_cache.setEnabled(True)
-        self.progress_bar = self.create_progress_bar()
-        self.progress_text = QLabel("Status: Ready")
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.worker = None
         self.init_ui()
-        self.inputs.graph_folder.textChanged.connect(self.force_enable_graph_cache)
+        self.inputs.graph_folder.textChanged.connect(self.checkboxes.force_enable_graph_cache)
 
     def init_ui(self) -> None:
         """Initialize the user interface."""
@@ -207,8 +239,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         form_layout = self._create_input_fields_layout()
         main_layout.addLayout(form_layout, 0, 0)
 
-        checkboxes_layout = self._create_checkboxes_layout()
-        form_layout.addRow(checkboxes_layout)
+        form_layout.addRow(self.checkboxes.create_layout())
 
         progress_bars_layout = self._create_progress_bars_layout()
         form_layout.addRow(progress_bars_layout)
@@ -218,7 +249,6 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def _create_input_fields_layout(self) -> QFormLayout:
         """Creates and returns the layout for input fields (graph folder, config file, report format)."""
-        form_layout = QFormLayout()
 
         # --- Graph Folder Input ---
         graph_folder_label = QLabel("Logseq Graph Folder (Required):")
@@ -226,11 +256,11 @@ class LogseqAnalyzerGUI(QMainWindow):
         graph_folder_button.clicked.connect(self.select_graph_folder)
         graph_folder_clear_button = QPushButton("Clear")
         graph_folder_clear_button.clicked.connect(self.inputs.graph_folder.clear)
+
         graph_folder_layout = QHBoxLayout()
         graph_folder_layout.addWidget(self.inputs.graph_folder)
         graph_folder_layout.addWidget(graph_folder_button)
         graph_folder_layout.addWidget(graph_folder_clear_button)
-        form_layout.addRow(graph_folder_label, graph_folder_layout)
 
         # --- Global Config File Input ---
         global_config_label = QLabel("Logseq Global Config File (Optional):")
@@ -238,83 +268,47 @@ class LogseqAnalyzerGUI(QMainWindow):
         global_config_button.clicked.connect(self.select_global_config_file)
         global_config_clear_button = QPushButton("Clear")
         global_config_clear_button.clicked.connect(self.inputs.global_config.clear)
+
         global_config_layout = QHBoxLayout()
         global_config_layout.addWidget(self.inputs.global_config)
         global_config_layout.addWidget(global_config_button)
         global_config_layout.addWidget(global_config_clear_button)
-        form_layout.addRow(global_config_label, global_config_layout)
 
         # --- Report Format Dropdown ---
         report_format_label = QLabel("Report Format:")
-        self.inputs.report_format.addItems(
-            (
-                Format.TXT,
-                Format.JSON,
-                Format.MD,
-                Format.HTML,
-            )
-        )
+
+        form_layout = QFormLayout()
+        form_layout.addRow(graph_folder_label, graph_folder_layout)
+        form_layout.addRow(global_config_label, global_config_layout)
         form_layout.addRow(report_format_label, self.inputs.report_format)
-
         return form_layout
-
-    def _create_checkboxes_layout(self) -> QVBoxLayout:
-        """Creates and returns the layout for checkboxes."""
-        checkboxes_layout = QVBoxLayout()
-        checkboxes_layout.addWidget(self.checkboxes.move_all)
-        checkboxes_layout.addWidget(self.checkboxes.move_assets)
-        checkboxes_layout.addWidget(self.checkboxes.move_bak)
-        checkboxes_layout.addWidget(self.checkboxes.move_recycle)
-        checkboxes_layout.addWidget(self.checkboxes.write_graph)
-        checkboxes_layout.addWidget(self.checkboxes.graph_cache)
-        self.checkboxes.move_all.toggled.connect(self.update_move_options)
-        return checkboxes_layout
-
-    def update_move_options(self) -> None:
-        """Update the state of move options checkboxes based on the main checkbox."""
-        if self.checkboxes.move_all.isChecked():
-            self.checkboxes.move_assets.setChecked(True)
-            self.checkboxes.move_bak.setChecked(True)
-            self.checkboxes.move_recycle.setChecked(True)
-        else:
-            self.checkboxes.move_assets.setChecked(False)
-            self.checkboxes.move_bak.setChecked(False)
-            self.checkboxes.move_recycle.setChecked(False)
-
-    def force_enable_graph_cache(self) -> None:
-        """Force enable and check the graph cache checkbox when the graph folder changes."""
-        self.checkboxes.graph_cache.setChecked(True)
-        self.checkboxes.graph_cache.setEnabled(False)
 
     def _create_progress_bars_layout(self) -> QFormLayout:
         """Creates and returns the layout for progress bars."""
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_label = QLabel("Status: Ready")
+
         progress_bars_layout = QFormLayout()
         progress_bars_layout.addRow("Progress:", self.progress_bar)
-        progress_bars_layout.addRow("Status:", self.progress_text)
+        progress_bars_layout.addRow("Status:", self.progress_label)
         return progress_bars_layout
-
-    def create_progress_bar(self) -> QProgressBar:
-        """Create a progress bar."""
-        progress_bar = QProgressBar(self)
-        progress_bar.setRange(0, 100)
-        progress_bar.setValue(0)
-        return progress_bar
 
     def _create_buttons_layout(self) -> QVBoxLayout:
         """Creates and returns the layout for all buttons (Run, Exit, Open Directories, Log)."""
-        buttons_layout = QGridLayout()
-
         self.buttons.run.clicked.connect(self.run_analysis)
         self.buttons.run.setShortcut("Ctrl+R")
         self.buttons.run.setToolTip("Ctrl + R to run analysis")
-        buttons_layout.addWidget(self.buttons.run, 0, 0)
 
         exit_button = QPushButton("Exit")
         exit_button.clicked.connect(self.close_analyzer)
         exit_button.setShortcut("Ctrl+W")
         exit_button.setToolTip("Ctrl + W to exit")
-        buttons_layout.addWidget(exit_button, 0, 2)
 
+        buttons_layout = QGridLayout()
+        buttons_layout.addWidget(self.buttons.run, 0, 0)
+        buttons_layout.addWidget(exit_button, 0, 2)
         return buttons_layout
 
     def close_analyzer(self) -> None:
@@ -330,8 +324,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def update_progress_label(self, label: str) -> None:
         """Updates the progress label with a given message."""
-        if self.progress_text:
-            self.progress_text.setText(f"Status: {label}")
+        if self.progress_label:
+            self.progress_label.setText(f"Status: {label}")
             QApplication.processEvents()
 
     def show_error(self, message: str) -> None:
@@ -355,26 +349,32 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def save_settings(self) -> None:
         """Save current settings using QSettings."""
-        self.settings.setValue(Argument.GRAPH_FOLDER, self.inputs.graph_folder.text())
-        self.settings.setValue(Argument.GLOBAL_CONFIG, self.inputs.global_config.text())
-        self.settings.setValue(Argument.MOVE_ALL, self.checkboxes.move_all.isChecked())
-        self.settings.setValue(Argument.MOVE_UNLINKED_ASSETS, self.checkboxes.move_assets.isChecked())
-        self.settings.setValue(Argument.MOVE_BAK, self.checkboxes.move_bak.isChecked())
-        self.settings.setValue(Argument.MOVE_RECYCLE, self.checkboxes.move_recycle.isChecked())
-        self.settings.setValue(Argument.WRITE_GRAPH, self.checkboxes.write_graph.isChecked())
-        self.settings.setValue(Argument.GRAPH_CACHE, self.checkboxes.graph_cache.isChecked())
-        self.settings.setValue(Argument.REPORT_FORMAT, self.inputs.report_format.currentText())
-        self.settings.setValue(Argument.GEOMETRY, self.saveGeometry())
+        set_settings = self.settings.setValue
+        _inputs = self.inputs
+        _checkboxes = self.checkboxes
+        set_settings(Argument.MOVE_ALL, _checkboxes.move_all.isChecked())
+        set_settings(Argument.MOVE_UNLINKED_ASSETS, _checkboxes.move_assets.isChecked())
+        set_settings(Argument.MOVE_BAK, _checkboxes.move_bak.isChecked())
+        set_settings(Argument.MOVE_RECYCLE, _checkboxes.move_recycle.isChecked())
+        set_settings(Argument.WRITE_GRAPH, _checkboxes.write_graph.isChecked())
+        set_settings(Argument.GRAPH_CACHE, _checkboxes.graph_cache.isChecked())
+        set_settings(Argument.GRAPH_FOLDER, _inputs.graph_folder.text())
+        set_settings(Argument.GLOBAL_CONFIG, _inputs.global_config.text())
+        set_settings(Argument.REPORT_FORMAT, _inputs.report_format.currentText())
+        set_settings(Argument.GEOMETRY, self.saveGeometry())
 
     def load_settings(self) -> None:
         """Load settings using QSettings."""
-        self.inputs.graph_folder.setText(self.settings.value(Argument.GRAPH_FOLDER, ""))
-        self.inputs.global_config.setText(self.settings.value(Argument.GLOBAL_CONFIG, ""))
-        self.checkboxes.move_all.setChecked(self.settings.value(Argument.MOVE_ALL, False, type=bool))
-        self.checkboxes.move_assets.setChecked(self.settings.value(Argument.MOVE_UNLINKED_ASSETS, False, type=bool))
-        self.checkboxes.move_bak.setChecked(self.settings.value(Argument.MOVE_BAK, False, type=bool))
-        self.checkboxes.move_recycle.setChecked(self.settings.value(Argument.MOVE_RECYCLE, False, type=bool))
-        self.checkboxes.write_graph.setChecked(self.settings.value(Argument.WRITE_GRAPH, False, type=bool))
-        self.checkboxes.graph_cache.setChecked(self.settings.value(Argument.GRAPH_CACHE, False, type=bool))
-        self.inputs.report_format.setCurrentText(self.settings.value(Argument.REPORT_FORMAT, Format.TXT))
-        self.restoreGeometry(self.settings.value(Argument.GEOMETRY, b""))
+        get_settings = self.settings.value
+        _inputs = self.inputs
+        _checkboxes = self.checkboxes
+        _checkboxes.move_all.setChecked(get_settings(Argument.MOVE_ALL, False, type=bool))
+        _checkboxes.move_assets.setChecked(get_settings(Argument.MOVE_UNLINKED_ASSETS, False, type=bool))
+        _checkboxes.move_bak.setChecked(get_settings(Argument.MOVE_BAK, False, type=bool))
+        _checkboxes.move_recycle.setChecked(get_settings(Argument.MOVE_RECYCLE, False, type=bool))
+        _checkboxes.write_graph.setChecked(get_settings(Argument.WRITE_GRAPH, False, type=bool))
+        _checkboxes.graph_cache.setChecked(get_settings(Argument.GRAPH_CACHE, False, type=bool))
+        _inputs.graph_folder.setText(get_settings(Argument.GRAPH_FOLDER, ""))
+        _inputs.global_config.setText(get_settings(Argument.GLOBAL_CONFIG, ""))
+        _inputs.report_format.setCurrentText(get_settings(Argument.REPORT_FORMAT, Format.TXT))
+        self.restoreGeometry(get_settings(Argument.GEOMETRY, b""))

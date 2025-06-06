@@ -279,9 +279,9 @@ def yield_config_data_reports(
     config_edns: ConfigEdns,
 ) -> Generator[tuple[str, Any], None, None]:
     """Yield configuration data reports."""
-    yield (OutputDir.META, args.report)
-    yield (OutputDir.META, config_edns.report)
-    yield (OutputDir.META, analyzer_dirs.report)
+    yield OutputDir.META, args.report
+    yield OutputDir.META, config_edns.report
+    yield OutputDir.META, analyzer_dirs.report
 
 
 def analyze(
@@ -291,33 +291,33 @@ def analyze(
 ) -> Generator[tuple[str, Any], None, None]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
-    yield (OutputDir.GRAPH, logseq_graph.report)
+    yield OutputDir.GRAPH, logseq_graph.report
 
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
-    yield (OutputDir.NAMESPACES, logseq_namespaces.report)
+    yield OutputDir.NAMESPACES, logseq_namespaces.report
 
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links)
-    yield (OutputDir.JOURNALS, logseq_journals.report)
+    yield OutputDir.JOURNALS, logseq_journals.report
 
     logseq_assets_hls = LogseqAssetsHls(index)
-    yield (OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report)
+    yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
 
     logseq_assets = LogseqAssets(index)
-    yield (OutputDir.MOVED_FILES_ASSETS, logseq_assets.report)
+    yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
 
     moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
-    yield (OutputDir.MOVED_FILES, moved_files)
+    yield OutputDir.MOVED_FILES, moved_files
 
     logseq_file_summarizer = LogseqFileSummarizer(index)
-    yield (OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general)
-    yield (OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes)
-    yield (OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes)
-    yield (OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions)
+    yield OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general
+    yield OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes
+    yield OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes
+    yield OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions
 
     logseq_content_summarizer = LogseqContentSummarizer(index)
-    yield (OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report)
+    yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report
 
-    yield (OutputDir.INDEX, index.report)
+    yield OutputDir.INDEX, index.report
     logger.debug("analyze")
 
 

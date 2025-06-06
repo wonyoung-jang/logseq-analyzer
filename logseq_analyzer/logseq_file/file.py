@@ -15,7 +15,7 @@ import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
-from ..utils.enums import Core, Criteria, FileType, Node
+from ..utils.enums import Core, Criteria, Node
 from .bullets import LogseqBullets
 from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
 
@@ -55,9 +55,8 @@ class NodeType:
 
     def check_backlinked_ns_only(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked only in its namespace and update the node state."""
-        if not self.backlinked_ns_only:
-            self.backlinked_ns_only = NodeType._check_for_backlinks(name, lookup)
-        if self.backlinked_ns_only:
+        if not self.backlinked_ns_only and NodeType._check_for_backlinks(name, lookup):
+            self.backlinked_ns_only = True
             self.backlinked = False
 
     @staticmethod
@@ -138,14 +137,14 @@ class LogseqFile:
     )
 
     _PATTERN_MASKING = (
-        (CodePatterns.ALL, f"__{Criteria.COD_INLINE.name}_"),
-        (CodePatterns.INLINE_CODE_BLOCK, f"__{Criteria.COD_INLINE.name}_"),
-        (AdvancedCommandPatterns.ALL, f"__{Criteria.ADV_CMD.name}_"),
-        (DoubleCurlyBracketsPatterns.ALL, f"__{Criteria.DBC_ALL.name}_"),
-        (EmbeddedLinksPatterns.ALL, f"__{Criteria.EMB_LINK_OTHER.name}_"),
-        (ExternalLinksPatterns.ALL, f"__{Criteria.EXT_LINK_OTHER.name}_"),
-        (DoubleParenthesesPatterns.ALL, f"__{Criteria.DBP_ALL_REFS.name}_"),
-        (ContentPatterns.ANY_LINK, f"__{Criteria.CON_ANY_LINKS.name}_"),
+        (CodePatterns.ALL.sub, f"__{Criteria.COD_INLINE}_"),
+        (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{Criteria.COD_INLINE}_"),
+        (AdvancedCommandPatterns.ALL.sub, f"__{Criteria.ADV_CMD}_"),
+        (DoubleCurlyBracketsPatterns.ALL.sub, f"__{Criteria.DBC_ALL}_"),
+        (EmbeddedLinksPatterns.ALL.sub, f"__{Criteria.EMB_LINK_OTHER}_"),
+        (ExternalLinksPatterns.ALL.sub, f"__{Criteria.EXT_LINK_OTHER}_"),
+        (DoubleParenthesesPatterns.ALL.sub, f"__{Criteria.DBP_ALL_REFS}_"),
+        (ContentPatterns.ANY_LINK.sub, f"__{Criteria.CON_ANY_LINKS}_"),
     )
 
     def __init__(self, path: Path) -> None:
@@ -183,28 +182,23 @@ class LogseqFile:
         """Process the Logseq file to extract metadata and content."""
         self.init_file_data()
         self.process_content_data()
-        self.set_is_hls()
 
-    def set_is_hls(self, hls_prefix: str = Core.HLS_PREFIX) -> None:
-        """Check if the file is an HLS file."""
-        self.is_hls = self.path.name.startswith(hls_prefix)
-
-    def init_file_data(self) -> None:
+    def init_file_data(self, hls_prefix: str = Core.HLS_PREFIX) -> None:
         """Extract metadata from a file."""
-        self.path.process()
+        path = self.path
+        path.process()
         self.info = LogseqFileInfo(
-            timestamp=self.path.get_timestamp_info(),
-            size=self.path.get_size_info(),
-            namespace=self.path.get_namespace_info(),
+            timestamp=path.get_timestamp_info(),
+            size=path.get_size_info(),
+            namespace=path.get_namespace_info(),
         )
-        self.bullets = LogseqBullets(self.path.read_text())
+        self.bullets = LogseqBullets(path.read_text())
         self.bullets.process()
+        self.is_hls = self.path.name.startswith(hls_prefix)
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""
         if not self.info.size.has_content:
-            return
-        if self.path.file_type not in (FileType.JOURNAL, FileType.PAGE):
             return
         self.mask_blocks()
         self.extract_data()
@@ -232,36 +226,32 @@ class LogseqFile:
         pattern_masking = LogseqFile._PATTERN_MASKING
         _uuid4 = uuid.uuid4
 
-        for regex, prefix in pattern_masking:
+        for sub_regex, prefix in pattern_masking:
 
             def _repl(match, prefix=prefix) -> str:
                 placeholder = f"{prefix}{_uuid4()}__"
                 blocks[placeholder] = match.group(0)
                 return placeholder
 
-            content = regex.sub(_repl, content)
+            content = sub_regex(_repl, content)
 
         self.masked.content = content
 
     def extract_primary_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
-        masked_content = self.masked.content
-        result = {
-            Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE.findall(masked_content),
-            Criteria.CON_DRAW: ContentPatterns.DRAW.findall(masked_content),
-            Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD.findall(masked_content),
-            Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE.findall(masked_content),
-            Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK.findall(masked_content),
-            Criteria.CON_TAG: ContentPatterns.TAG.findall(masked_content),
-            Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE.findall(masked_content),
-            # Criteria.CON_BOLD: ContentPatterns.BOLD.findall(masked_content),
-        }
-
-        for key, value in result.items():
-            if value:
-                yield (key, value)
+        _content = self.masked.content
+        for key, value in {
+            Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+            Criteria.CON_DRAW: ContentPatterns.DRAW,
+            Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD,
+            Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+            Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+            Criteria.CON_TAG: ContentPatterns.TAG,
+            Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+        }.items():
+            if values := value.findall(_content):
+                yield (key, values)
 
     def check_has_backlinks(self) -> None:
         """Check has backlinks in the content."""
-        if not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys()):
-            self.node.has_backlinks = True
+        self.node.has_backlinks = not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys())

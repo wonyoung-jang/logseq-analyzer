@@ -205,8 +205,9 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
         Generator[tuple[int, str], None, None]: Sections of text with their respective indices.
     """
     count = 0
+    finditer_pattern = pattern.finditer
 
-    for match in pattern.finditer(text):
+    for match in finditer_pattern(text):
         if maxsplit and count >= maxsplit:
             break
 
@@ -215,7 +216,7 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
             count += 1
 
         start_of_content = match.end()
-        next_match = next(pattern.finditer(text, start_of_content), None)
+        next_match = next(finditer_pattern(text, start_of_content), None)
         end_of_content = next_match.start() if next_match else len(text)
 
         yield count, text[start_of_content:end_of_content].strip(" \t\n")
@@ -369,7 +370,7 @@ def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, Non
     listpaths = list(paths)
     names = [path.name for path in listpaths]
     if not names:
-        return []
+        return names
 
     if not move:
         return [Moved.SIMULATED_PREFIX] + names

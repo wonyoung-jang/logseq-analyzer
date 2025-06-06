@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 class BulletStats:
     """Bullet statistics class."""
 
-    char_count: int = 0
-    bullet_count: int = 0
-    bullet_count_empty: int = 0
-    bullet_density: float = 0.0
+    char_count: int
+    bullet_count: int
+    bullet_count_empty: int
+    bullet_density: float
 
 
 class LogseqBullets:
@@ -62,7 +62,7 @@ class LogseqBullets:
         self.content: str = content
         self.has_page_properties: bool = False
         self.primary: str = ""
-        self.stats: BulletStats = BulletStats()
+        self.stats: BulletStats = None
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqBullets object."""
@@ -97,24 +97,23 @@ class LogseqBullets:
             self.has_page_properties = True
 
         _char_count = len(_content)
-        self.stats.char_count = _char_count
-        self.stats.bullet_count = bullet_count
-        self.stats.bullet_count_empty = bullet_count_empty
-        if bullet_count:
-            self.stats.bullet_density = round(_char_count / bullet_count, 2)
+        self.stats = BulletStats(
+            char_count=_char_count,
+            bullet_count=bullet_count,
+            bullet_count_empty=bullet_count_empty,
+            bullet_density=round(_char_count / bullet_count, 2) if bullet_count else 0.0,
+        )
 
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.content
-        result = {
-            Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK.findall(_content),
-            Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK.findall(_content),
-            Criteria.CON_ASSETS: ContentPatterns.ASSET.findall(_content),
-        }
-
-        for key, value in result.items():
-            if value:
-                yield (key, value)
+        for key, value in {
+            Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK,
+            Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK,
+            Criteria.CON_ASSETS: ContentPatterns.ASSET,
+        }.items():
+            if values := value.findall(_content):
+                yield (key, values)
 
     def extract_properties(self) -> Generator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
@@ -128,14 +127,12 @@ class LogseqBullets:
             _content = "\n".join(_all_bullets)
             self.content = _content
         block_props = set(_find_all_properties(_content))
-        result = {
+        for key, value in {
             Criteria.PROP_BLOCK_BUILTIN: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER: remove_builtin_properties(block_props),
             Criteria.PROP_PAGE_BUILTIN: extract_builtin_properties(page_props),
             Criteria.PROP_PAGE_USER: remove_builtin_properties(page_props),
-        }
-
-        for key, value in result.items():
+        }.items():
             if value:
                 yield (key, value)
 
@@ -145,12 +142,10 @@ class LogseqBullets:
         propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(_content))
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
-        result = {
+        for key, value in {
             Criteria.CON_ALIASES: aliases,
             Criteria.PROP_VALUES: propvalues,
-        }
-
-        for key, value in result.items():
+        }.items():
             if value:
                 yield (key, value)
 
@@ -159,13 +154,7 @@ class LogseqBullets:
         Process patterns in the content.
         """
         _content = self.content
-        _pattern_modules = LogseqBullets._PATTERN_MODULES
-
-        result = {}
-        for pattern in _pattern_modules:
-            processed_patterns = process_pattern_hierarchy(_content, pattern)
-            result.update(processed_patterns)
-
-        for key, value in result.items():
-            if value:
-                yield (key, value)
+        for pattern in LogseqBullets._PATTERN_MODULES:
+            for key, value in process_pattern_hierarchy(_content, pattern).items():
+                if value:
+                    yield (key, value)
