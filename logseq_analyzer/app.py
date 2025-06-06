@@ -51,7 +51,6 @@ from .utils.enums import ConfigEdnReport, Constant, LogseqGraphStructure, Moved,
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
-    get_token_map,
     process_moves,
     yield_asset_paths,
     yield_bak_rec_paths,
@@ -200,14 +199,13 @@ def setup_delete_dirs() -> AnalyzerDeleteDirs:
 
 def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     """Setup journal formats."""
-    _token_map = get_token_map()
-    _token_pattern = compile_token_pattern(_token_map)
+    _token_pattern = compile_token_pattern()
     journal_file_fmt = get_file_name_format(config_edns.config)
     journal_page_title_fmt = get_page_title_format(config_edns.config)
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file=convert_cljs_date_to_py(journal_file_fmt, _token_map, _token_pattern),
-        page=convert_cljs_date_to_py(journal_page_title_fmt, _token_map, _token_pattern),
+        file=convert_cljs_date_to_py(journal_file_fmt, _token_pattern),
+        page=convert_cljs_date_to_py(journal_page_title_fmt, _token_pattern),
         page_title=journal_page_title_fmt,
     )
 

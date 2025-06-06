@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritEmb
 
 ALL = re.compile(
     r"""
@@ -47,8 +47,8 @@ ASSET = re.compile(
 )
 
 PATTERN_MAP = {
-    INTERNET: Criteria.EMB_LINK_INTERNET,
-    ASSET: Criteria.EMB_LINK_ASSET,
+    INTERNET: CritEmb.INTERNET,
+    ASSET: CritEmb.ASSET,
 }
 
-FALLBACK = Criteria.EMB_LINK_OTHER
+FALLBACK = CritEmb.OTHER

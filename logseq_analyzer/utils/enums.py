@@ -104,17 +104,32 @@ class Criteria(StrEnum):
     DBC_YOUTUBE_TIMESTAMPS = "double_curly_youtube_timesteps"
     DBP_ALL_REFS = "double_parentheses_all_refs"
     DBP_BLOCK_REFS = "double_parentheses_block_refs"
-    EMB_LINK_ASSET = "embedded_links_asset"
-    EMB_LINK_INTERNET = "embedded_links_internet"
-    EMB_LINK_OTHER = "embedded_links_other"
-    EXT_LINK_ALIAS = "external_links_alias"
-    EXT_LINK_INTERNET = "external_links_internet"
-    EXT_LINK_OTHER = "external_links_other"
-    PROP_BLOCK_BUILTIN = "property_block_builtin"
-    PROP_BLOCK_USER = "property_block_user"
-    PROP_PAGE_BUILTIN = "property_page_builtin"
-    PROP_PAGE_USER = "property_page_user"
-    PROP_VALUES = "property_values"
+
+
+class CritEmb(StrEnum):
+    """Criteria for embedded links in Logseq."""
+
+    ASSET = "embedded_link_asset"
+    INTERNET = "embedded_link_internet"
+    OTHER = "embedded_link_other"
+
+
+class CritExt(StrEnum):
+    """Criteria for file extensions in Logseq."""
+
+    ALIAS = "external_link_alias"
+    INTERNET = "external_link_internet"
+    OTHER = "external_link_other"
+
+
+class CritProp(StrEnum):
+    """Criteria for properties in Logseq."""
+
+    BLOCK_BUILTIN = "property_block_builtin"
+    BLOCK_USER = "property_block_user"
+    PAGE_BUILTIN = "property_page_builtin"
+    PAGE_USER = "property_page_user"
+    VALUES = "property_values"
 
 
 class Edn(StrEnum):

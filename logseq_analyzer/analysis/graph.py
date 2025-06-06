@@ -7,7 +7,7 @@ from itertools import chain
 from typing import Any
 
 from ..logseq_file.file import LogseqFile
-from ..utils.enums import Criteria, FileType, Output
+from ..utils.enums import CritProp, Criteria, FileType, Output
 from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
 from .index import FileIndex
 
@@ -90,10 +90,10 @@ class LogseqGraph:
                 get_data(Criteria.CON_PAGE_REF, []),
                 get_data(Criteria.CON_TAG, []),
                 get_data(Criteria.CON_TAGGED_BACKLINK, []),
-                get_data(Criteria.PROP_PAGE_BUILTIN, []),
-                get_data(Criteria.PROP_PAGE_USER, []),
-                get_data(Criteria.PROP_BLOCK_BUILTIN, []),
-                get_data(Criteria.PROP_BLOCK_USER, []),
+                get_data(CritProp.PAGE_BUILTIN, []),
+                get_data(CritProp.PAGE_USER, []),
+                get_data(CritProp.BLOCK_BUILTIN, []),
+                get_data(CritProp.BLOCK_USER, []),
             )
             if not (linked_references := list(chain.from_iterable(dataset))):
                 continue

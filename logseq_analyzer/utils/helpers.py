@@ -6,9 +6,10 @@ import logging
 import re
 import shutil
 from collections import Counter
+from enum import StrEnum
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Generator, TypeVar
+from typing import TYPE_CHECKING, Any, Generator
 
 from ..utils.enums import Format, Moved
 
@@ -23,7 +24,6 @@ __all__ = [
     "process_pattern_hierarchy",
     "iter_pattern_split",
     "get_count_and_foundin_data",
-    "get_token_map",
     "compile_token_pattern",
     "convert_cljs_date_to_py",
     "BUILT_IN_PROPERTIES",
@@ -93,9 +93,50 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     ]
 )
-_T = TypeVar("_T")
+
+DATETIME_TOKEN_MAP: dict[str, str] = {
+    "yyyy": "%Y",
+    "xxxx": "%Y",
+    "yy": "%y",
+    "xx": "%y",
+    "MMMM": "%B",
+    "MMM": "%b",
+    "MM": "%m",
+    "M": "%#m",
+    "dd": "%d",
+    "d": "%#d",
+    "D": "%j",
+    "EEEE": "%A",
+    "EEE": "%a",
+    "EE": "%a",
+    "E": "%a",
+    "e": "%u",
+    "HH": "%H",
+    "H": "%H",
+    "hh": "%I",
+    "h": "%I",
+    "mm": "%M",
+    "m": "%#M",
+    "ss": "%S",
+    "s": "%#S",
+    "SSS": "%f",
+    "a": "%p",
+    "A": "%p",
+    "Z": "%z",
+    "ZZ": "%z",
+}
+
+
 SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+
+
+class SizeUnit(StrEnum):
+    """Enumeration for size units."""
+
+    SI = "si"  # Powers of 1000
+    IEC = "iec"  # Powers of 1024
+
 
 logger = logging.getLogger(__name__)
 
@@ -245,44 +286,7 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
     return result
 
 
-def get_token_map() -> dict[str, str]:
-    """
-    Get the date token map.
-    """
-    return {
-        "yyyy": "%Y",
-        "xxxx": "%Y",
-        "yy": "%y",
-        "xx": "%y",
-        "MMMM": "%B",
-        "MMM": "%b",
-        "MM": "%m",
-        "M": "%#m",
-        "dd": "%d",
-        "d": "%#d",
-        "D": "%j",
-        "EEEE": "%A",
-        "EEE": "%a",
-        "EE": "%a",
-        "E": "%a",
-        "e": "%u",
-        "HH": "%H",
-        "H": "%H",
-        "hh": "%I",
-        "h": "%I",
-        "mm": "%M",
-        "m": "%#M",
-        "ss": "%S",
-        "s": "%#S",
-        "SSS": "%f",
-        "a": "%p",
-        "A": "%p",
-        "Z": "%z",
-        "ZZ": "%z",
-    }
-
-
-def compile_token_pattern(token_map: dict[str, str]) -> re.Pattern:
+def compile_token_pattern(token_map: dict[str, str] = DATETIME_TOKEN_MAP) -> re.Pattern:
     """
     Set the regex pattern for date tokens.
     """
@@ -290,7 +294,9 @@ def compile_token_pattern(token_map: dict[str, str]) -> re.Pattern:
     return re.compile(pattern)
 
 
-def convert_cljs_date_to_py(cljs_format: str, token_map: dict[str, str], token_pattern: re.Pattern) -> str:
+def convert_cljs_date_to_py(
+    cljs_format: str, token_pattern: re.Pattern, token_map: dict[str, str] = DATETIME_TOKEN_MAP
+) -> str:
     """
     Convert a Clojure-style date format to a Python-style date format.
     """
@@ -314,7 +320,7 @@ def remove_builtin_properties(properties: set[str]) -> set[str]:
     return properties.difference(BUILT_IN_PROPERTIES)
 
 
-def format_bytes(size_bytes: int, system: str = "si", precision: int = 2) -> str:
+def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
     """
     Convert a byte value into a human-readable string using SI or IEC units.
 
@@ -328,8 +334,8 @@ def format_bytes(size_bytes: int, system: str = "si", precision: int = 2) -> str
     if size_bytes < 0:
         raise ValueError("size_bytes must be non-negative")
 
-    units = SI_UNITS if system == "si" else IEC_UNITS
-    base = 1000 if system == "si" else 1024
+    units = IEC_UNITS if system == SizeUnit.IEC else SI_UNITS
+    base = 1024 if system == SizeUnit.IEC else 1000
 
     if size_bytes < base:
         return f"{size_bytes} {units[0]}"

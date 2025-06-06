@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritExt
 
 ALL = re.compile(
     r"""
@@ -51,8 +51,8 @@ ALIAS = re.compile(
 )
 
 PATTERN_MAP = {
-    INTERNET: Criteria.EXT_LINK_INTERNET,
-    ALIAS: Criteria.EXT_LINK_ALIAS,
+    INTERNET: CritExt.INTERNET,
+    ALIAS: CritExt.ALIAS,
 }
 
-FALLBACK = Criteria.EXT_LINK_OTHER
+FALLBACK = CritExt.OTHER

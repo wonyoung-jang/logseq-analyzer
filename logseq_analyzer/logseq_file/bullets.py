@@ -14,7 +14,7 @@ import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
 import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
-from ..utils.enums import Criteria
+from ..utils.enums import CritProp, Criteria
 from ..utils.helpers import (
     extract_builtin_properties,
     iter_pattern_split,
@@ -114,10 +114,10 @@ class LogseqBullets:
         block_props = set(find_all_properties(_content))
 
         for key, value in {
-            Criteria.PROP_BLOCK_BUILTIN: extract_builtin_properties(block_props),
-            Criteria.PROP_BLOCK_USER: remove_builtin_properties(block_props),
-            Criteria.PROP_PAGE_BUILTIN: extract_builtin_properties(page_props),
-            Criteria.PROP_PAGE_USER: remove_builtin_properties(page_props),
+            CritProp.BLOCK_BUILTIN: extract_builtin_properties(block_props),
+            CritProp.BLOCK_USER: remove_builtin_properties(block_props),
+            CritProp.PAGE_BUILTIN: extract_builtin_properties(page_props),
+            CritProp.PAGE_USER: remove_builtin_properties(page_props),
         }.items():
             if value:
                 yield key, value
@@ -130,7 +130,7 @@ class LogseqBullets:
             aliases = list(process_aliases(aliases))
         for key, value in {
             Criteria.CON_ALIASES: aliases,
-            Criteria.PROP_VALUES: propvalues,
+            CritProp.VALUES: propvalues,
         }.items():
             if value:
                 yield key, value
