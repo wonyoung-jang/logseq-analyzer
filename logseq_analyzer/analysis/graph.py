@@ -134,7 +134,6 @@ class LogseqGraph:
         unique_refs = self.unique.linked_refs
         unique_refs_ns = self.unique.linked_refs_ns
         check_for_nodes = LogseqGraph._TO_NODE_TYPE
-
         for f in self.index:
             filename = f.path.name
             node = f.node

@@ -316,9 +316,10 @@ def analyze(
 
     logseq_content_summarizer = LogseqContentSummarizer(index)
     yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report
-    yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.size_report
-    yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.timestamp_report
-    yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.namespace_report
+    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.size_report
+    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.timestamp_report
+    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.namespace_report
+    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.bullet_report
 
     yield OutputDir.INDEX, index.report
     logger.debug("analyze")

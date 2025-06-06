@@ -16,7 +16,7 @@ import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, Node
-from .bullets import LogseqBullets
+from .bullets import BulletInfo, LogseqBullets
 from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
 
 
@@ -108,6 +108,7 @@ class LogseqFileInfo:
     timestamp: TimestampInfo
     size: SizeInfo
     namespace: NamespaceInfo
+    bullet: BulletInfo
 
 
 class LogseqFile:
@@ -185,15 +186,15 @@ class LogseqFile:
 
     def init_file_data(self, hls_prefix: str = Core.HLS_PREFIX) -> None:
         """Extract metadata from a file."""
-        path = self.path
-        path.process()
-        self.info = LogseqFileInfo(
-            timestamp=path.get_timestamp_info(),
-            size=path.get_size_info(),
-            namespace=path.get_namespace_info(),
-        )
-        self.bullets = LogseqBullets(path.read_text())
+        self.path.process()
+        self.bullets = LogseqBullets(self.path.read_text())
         self.bullets.process()
+        self.info = LogseqFileInfo(
+            timestamp=self.path.get_timestamp_info(),
+            size=self.path.get_size_info(),
+            namespace=self.path.get_namespace_info(),
+            bullet=self.bullets.get_bullet_info(),
+        )
         self.is_hls = self.path.name.startswith(hls_prefix)
 
     def process_content_data(self) -> None:

@@ -245,6 +245,7 @@ class OutputDir(StrEnum):
     MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
     NAMESPACES = "namespaces"
     SUMMARY_CONTENT = "summary_content"
+    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
     SUMMARY_FILES_FILE = "summary_files/file_types"
     SUMMARY_FILES_GENERAL = "summary_files/general"
     SUMMARY_FILES_NODE = "summary_files/node_types"

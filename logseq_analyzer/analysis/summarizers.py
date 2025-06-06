@@ -86,7 +86,7 @@ class LogseqFileSummarizer:
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    __slots__ = ("report", "index", "size_report", "timestamp_report", "namespace_report")
+    __slots__ = ("report", "index", "size_report", "timestamp_report", "namespace_report", "bullet_report")
 
     def __init__(self, index: FileIndex) -> None:
         """Initialize the LogseqContentSummarizer instance."""
@@ -95,60 +95,42 @@ class LogseqContentSummarizer:
         self.size_report: dict[str, dict[str, Any]] = {}
         self.timestamp_report: dict[str, dict[str, Any]] = {}
         self.namespace_report: dict[str, dict[str, Any]] = {}
+        self.bullet_report: dict[str, dict[str, Any]] = {}
         self.process()
 
     def process(self) -> None:
         """Process the Logseq content data."""
         self.generate_summary()
         self.sort_report()
-        self.report_size_info()
-        self.report_timestamp_info()
-        self.report_namespace_info()
 
     def generate_summary(self) -> None:
         """Generate summary subsets for content data in the Logseq graph."""
+        sz_report = {}
+        ts_report = {}
+        ns_report = {}
+        bt_report = {}
         report = self.report
         for f in self.index:
-            if not (f_data := f.data):
-                continue
-
             f_name = f.path.name
-            for k, v in f_data.items():
-                report.setdefault(k, {})
-                report[k] = get_count_and_foundin_data(report[k], v, f_name)
+            if f_data := f.data:
+                for k, v in f_data.items():
+                    report.setdefault(k, {})
+                    report[k] = get_count_and_foundin_data(report[k], v, f_name)
+            if f_sz := f.info.size:
+                sz_report[f_name] = f_sz.__dict__
+            if f_ts := f.info.timestamp:
+                ts_report[f_name] = f_ts.__dict__
+            if f_ns := f.info.namespace:
+                ns_report[f_name] = f_ns.__dict__
+            if f_bt := f.info.bullet:
+                bt_report[f_name] = f_bt.__dict__
+        self.size_report = {"report_size": sz_report}
+        self.timestamp_report = {"report_timestamp": ts_report}
+        self.namespace_report = {"report_namespace": ns_report}
+        self.bullet_report = {"report_bullet": bt_report}
 
     def sort_report(self) -> None:
         """Sort the report dictionary by count in descending order."""
         report = self.report
         for k in report:
             report[k] = sort_dict_by_value(report[k], value="count", reverse=True)
-
-    def report_size_info(self) -> None:
-        """Sort the report by file size."""
-        size_report = {}
-        for f in self.index:
-            f_name = f.path.name
-            if not (f_size := f.info.size):
-                continue
-            size_report[f_name] = f_size.__dict__
-        self.size_report = {"size_report": size_report}
-
-    def report_timestamp_info(self) -> None:
-        """Sort the report by file size."""
-        timestamp_report = {}
-        for f in self.index:
-            f_name = f.path.name
-            if not (f_ts := f.info.timestamp):
-                continue
-            timestamp_report[f_name] = f_ts.__dict__
-        self.timestamp_report = {"timestamp_report": timestamp_report}
-
-    def report_namespace_info(self) -> None:
-        """Sort the report by file size."""
-        namespace_report = {}
-        for f in self.index:
-            f_name = f.path.name
-            if not (f_ns := f.info.namespace):
-                continue
-            namespace_report[f_name] = f_ns.__dict__
-        self.namespace_report = {"namespace_report": namespace_report}
