@@ -4,7 +4,6 @@ Module for LogseqBullets class
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Any, Generator
 
 import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
@@ -23,18 +22,9 @@ from ..utils.helpers import (
     process_pattern_hierarchy,
     remove_builtin_properties,
 )
+from .info import BulletInfo
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class BulletInfo:
-    """Bullet statistics class."""
-
-    chars: int
-    bullets: int
-    empty_bullets: int
-    char_per_bullet: float | None
 
 
 class LogseqBullets:

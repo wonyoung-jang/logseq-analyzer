@@ -3,7 +3,6 @@ This module defines the LogseqPath class, which is used to gather file statistic
 """
 
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,42 +13,12 @@ from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileType, TargetDir
 from ..utils.helpers import format_bytes
+from .info import NamespaceInfo, SizeInfo, TimestampInfo
 
 if TYPE_CHECKING:
     from ..app import ConfigEdns, JournalFormats
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class TimestampInfo:
-    """File timestamp information class."""
-
-    time_existed: float
-    time_unmodified: float
-    date_created: str
-    date_modified: str
-
-
-@dataclass
-class SizeInfo:
-    """File size information class."""
-
-    size: int
-    human_readable_size: str
-    has_content: bool
-
-
-@dataclass
-class NamespaceInfo:
-    """NamespaceInfo class."""
-
-    parent_full: str
-    parent: str
-    parts: dict[str, int]
-    root: str
-    stem: str
-    children: set[str] = field(default_factory=set)
 
 
 class LogseqPath:

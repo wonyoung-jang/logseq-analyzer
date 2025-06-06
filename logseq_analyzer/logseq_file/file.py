@@ -16,8 +16,9 @@ import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
 import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
 
 from ..utils.enums import Core, Criteria, Node
-from .bullets import BulletInfo, LogseqBullets
-from .stats import LogseqPath, NamespaceInfo, SizeInfo, TimestampInfo
+from .bullets import LogseqBullets
+from .info import LogseqFileInfo
+from .stats import LogseqPath
 
 
 @dataclass
@@ -99,16 +100,6 @@ class NodeType:
             case (False, False, False, False):
                 n = Node.ORPHAN_TRUE
         self.node_type = n
-
-
-@dataclass
-class LogseqFileInfo:
-    """LogseqFileInfo class."""
-
-    timestamp: TimestampInfo
-    size: SizeInfo
-    namespace: NamespaceInfo
-    bullet: BulletInfo
 
 
 class LogseqFile:
