@@ -73,7 +73,7 @@ class LogseqGraph:
 
         for f in self.index:
             ns_info = f.info.namespace
-            if f.path.is_namespace:
+            if ns_info.is_namespace:
                 update_unique_linked_refs_ns((ns_info.root, f.path.name))
                 process_namespaces(f)
 
@@ -111,8 +111,8 @@ class LogseqGraph:
         filename = f.path.name
         for ns_root_file in self.index[f.info.namespace.root]:
             ns_root_file: LogseqFile
-            if not ns_root_file.path.is_namespace:
-                ns_root_file.path.is_namespace = True
+            if not ns_root_file.info.namespace.is_namespace:
+                ns_root_file.info.namespace.is_namespace = True
             if filename not in ns_root_file.info.namespace.children:
                 ns_root_file.info.namespace.children.add(filename)
 

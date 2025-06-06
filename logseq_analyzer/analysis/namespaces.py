@@ -111,7 +111,7 @@ class LogseqNamespaces:
         part_entries = self._part_entries
         level_distribution = Counter()
         for f in self.index:
-            if not f.path.is_namespace:
+            if not f.info.namespace.is_namespace:
                 continue
             current_level = tree
             f_name = f.path.name
@@ -170,7 +170,7 @@ class LogseqNamespaces:
         unique_parts = self.structure.unique_parts
         non_ns_conflicts = self.conflicts.non_namespace
         dangling_conflicts = self.conflicts.dangling
-        non_ns_names = (f.path.name for f in index if not f.path.is_namespace)
+        non_ns_names = (f.path.name for f in index if not f.info.namespace.is_namespace)
         potential_non_ns_names = unique_parts.intersection(non_ns_names)
         potential_dangling = unique_parts.intersection(self.dangling_links)
         intersect_non_ns = potential_non_ns_names.intersection

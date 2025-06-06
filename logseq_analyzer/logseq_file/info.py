@@ -33,6 +33,7 @@ class NamespaceInfo:
     parts: dict[str, int]
     root: str
     stem: str
+    is_namespace: bool
     children: set[str] = field(default_factory=set)
 
 

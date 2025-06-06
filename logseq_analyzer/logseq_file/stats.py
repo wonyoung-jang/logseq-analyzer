@@ -79,11 +79,10 @@ class LogseqPath:
     __slots__ = (
         "file_type",
         "file",
-        "is_namespace",
-        "name",
-        "uri",
         "logseq_url",
+        "name",
         "stat",
+        "uri",
     )
 
     graph_path: Path = None
@@ -99,11 +98,10 @@ class LogseqPath:
             raise TypeError("file must be a pathlib.Path object.")
         self.file_type: str = ""
         self.file: Path = file
-        self.is_namespace: bool = False
-        self.name: str = ""
-        self.uri: str = file.as_uri()
-        self.stat = file.stat()
         self.logseq_url: str = ""
+        self.name: str = ""
+        self.stat = file.stat()
+        self.uri: str = file.as_uri()
 
     def __repr__(self) -> str:
         """Return a string representation of the LogseqPath instance."""
@@ -134,7 +132,6 @@ class LogseqPath:
     def process(self) -> None:
         """Process the Logseq file path to gather statistics."""
         self.name = LogseqPath.filename.process(self.file)
-        self.is_namespace = Core.NS_SEP in self.name
         self.determine_file_type()
         self.set_logseq_url()
 
@@ -219,4 +216,5 @@ class LogseqPath:
             parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root,
             parent_full=ns_sep.join(_ns_parts_list[:-1]),
             stem=_ns_parts_list[-1],
+            is_namespace=Core.NS_SEP in self.name,
         )
