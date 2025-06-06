@@ -47,6 +47,12 @@ class LogseqBullets:
         "primary",
     )
 
+    _RAW_DATA_MAP: dict[str, Any] = {
+        Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK,
+        Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK,
+        Criteria.CON_ASSETS: ContentPatterns.ASSET,
+    }
+
     _PATTERN_MODULES = (
         AdvancedCommandPatterns,
         CodePatterns,
@@ -97,11 +103,8 @@ class LogseqBullets:
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.content
-        for key, value in {
-            Criteria.COD_INLINE: CodePatterns.INLINE_CODE_BLOCK,
-            Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK,
-            Criteria.CON_ASSETS: ContentPatterns.ASSET,
-        }.items():
+        _raw_data_map = LogseqBullets._RAW_DATA_MAP.items()
+        for key, value in _raw_data_map:
             if value.search(_content):
                 yield key, value.findall(_content)
 

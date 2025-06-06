@@ -137,6 +137,16 @@ class LogseqFile:
         }
     )
 
+    _PRIMARY_DATA_MAP: dict[str, Any] = {
+        Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+        Criteria.CON_DRAW: ContentPatterns.DRAW,
+        Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD,
+        Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+        Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+        Criteria.CON_TAG: ContentPatterns.TAG,
+        Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+    }
+
     _PATTERN_MASKING = (
         (CodePatterns.ALL.sub, f"__{Criteria.COD_INLINE}_"),
         (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{Criteria.COD_INLINE}_"),
@@ -244,15 +254,8 @@ class LogseqFile:
     def extract_primary_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.masked.content
-        for key, value in {
-            Criteria.CON_BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
-            Criteria.CON_DRAW: ContentPatterns.DRAW,
-            Criteria.CON_FLASHCARD: ContentPatterns.FLASHCARD,
-            Criteria.CON_PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-            Criteria.CON_TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-            Criteria.CON_TAG: ContentPatterns.TAG,
-            Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
-        }.items():
+        _primary_data_map = LogseqFile._PRIMARY_DATA_MAP.items()
+        for key, value in _primary_data_map:
             if value.search(_content):
                 yield key, value.findall(_content)
 
