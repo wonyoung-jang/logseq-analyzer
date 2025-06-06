@@ -273,7 +273,7 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     return {Output.MOVED_FILES: moved_files_report}
 
 
-def yield_config_data_reports(
+def report_configurations(
     args: Args,
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
@@ -349,7 +349,7 @@ def run_app(**gui_args) -> None:
     process_graph(index, cache)
 
     progress(70, "Write meta reports...")
-    write_reports(yield_config_data_reports(args, analyzer_dirs, config_edns))
+    write_reports(report_configurations(args, analyzer_dirs, config_edns))
 
     progress(80, "Running core analysis on Logseq graph...")
     write_reports(analyze(args, index, analyzer_dirs))

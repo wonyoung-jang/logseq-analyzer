@@ -5,7 +5,7 @@ Helper functions for file and date processing.
 import logging
 import re
 import shutil
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Generator, TypeVar
@@ -148,13 +148,13 @@ def process_aliases(aliases: str) -> Generator[str, None, None]:
         yield part
 
 
-def sort_dict_by_value(dictionary: dict, value: str = "", reverse: bool = True) -> dict:
+def sort_dict_by_value(data: dict, value: str = "", reverse: bool = False) -> dict:
     """Sort a dictionary by its values."""
     if value:
-        dictionary = dict(sorted(dictionary.items(), key=lambda item: item[1][value], reverse=reverse))
-        return dictionary
-    dictionary = dict(sorted(dictionary.items(), key=lambda item: item[1], reverse=reverse))
-    return dictionary
+        data = dict(sorted(data.items(), key=lambda item: item[1][value], reverse=reverse))
+        return data
+    data = dict(sorted(data.items(), key=lambda item: item[1], reverse=reverse))
+    return data
 
 
 def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
@@ -163,7 +163,7 @@ def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
         yield slot, getattr(obj, slot)
 
 
-def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
+def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generator[tuple[str, str], None, None]:
     """
     Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
@@ -171,10 +171,9 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
         content (str): The content to process.
         pattern_mod (ModuleType): A module containing regex patterns and their corresponding criteria.
 
-    Returns:
-        dict: A dictionary mapping patterns to their respective values.
+    Yields:
+        Generator[tuple[str, str], None, None]: A generator yielding key-value pairs of patterns and their values.
     """
-    output = defaultdict(list)
     finditer_all = pattern_mod.ALL.finditer(content)
     pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP
     fallback: str = pattern_mod.FALLBACK
@@ -183,12 +182,10 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> dict:
         text = match.group(0)
         for pattern, criteria in pattern_map.items():
             if pattern.search(text):
-                output[criteria].append(text)
+                yield criteria, text
                 break
         else:
-            output[fallback].append(text)
-
-    return output
+            yield fallback, text
 
 
 def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[tuple[int, str], None, None]:
@@ -212,18 +209,18 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
             break
 
         if count == 0:
-            yield count, text[: match.start()].strip(" \t\n")
+            yield count, text[: match.start()].strip("\t \n")
             count += 1
 
-        start_of_content = match.end()
-        next_match = next(finditer_pattern(text, start_of_content), None)
-        end_of_content = next_match.start() if next_match else len(text)
+        content_start = match.end()
+        next_match = next(finditer_pattern(text, content_start), None)
+        content_end = next_match.start() if next_match else len(text)
 
-        yield count, text[start_of_content:end_of_content].strip(" \t\n")
+        yield count, text[content_start:content_end].strip("\t \n")
         count += 1
 
     if count == 0:
-        yield count, text.strip(" \t\n")
+        yield count, text.strip("\t \n")
 
 
 def get_count_and_foundin_data(result: dict, collection: list[str], filename: str) -> dict:

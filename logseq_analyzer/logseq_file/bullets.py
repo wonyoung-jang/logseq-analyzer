@@ -3,6 +3,7 @@ Module for LogseqBullets class
 """
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Generator
 
@@ -60,7 +61,6 @@ class LogseqBullets:
         """Post-initialization method to set bullet attributes."""
         self.all_bullets: list[str | None] = []
         self.content: str = content
-        self.has_page_properties: bool = False
         self.primary: str = ""
         self.stats: BulletStats = None
 
@@ -93,8 +93,6 @@ class LogseqBullets:
                 bullet_count_empty += 1
 
         self.primary = primary_bullet
-        if primary_bullet and not primary_bullet.startswith("#"):
-            self.has_page_properties = True
 
         _char_count = len(_content)
         self.stats = BulletStats(
@@ -112,21 +110,21 @@ class LogseqBullets:
             Criteria.CON_ANY_LINKS: ContentPatterns.ANY_LINK,
             Criteria.CON_ASSETS: ContentPatterns.ASSET,
         }.items():
-            if values := value.findall(_content):
-                yield (key, values)
+            if value.search(_content):
+                yield key, value.findall(_content)
 
     def extract_properties(self) -> Generator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
         page_props = set()
         _content = self.content
-        _primary_bullet = self.primary
         _all_bullets = self.all_bullets
-        _find_all_properties = ContentPatterns.PROPERTY.findall
-        if self.has_page_properties:
-            page_props.update(_find_all_properties(_primary_bullet))
+        primary_bullet = self.primary
+        find_all_properties = ContentPatterns.PROPERTY.findall
+        if primary_bullet and not primary_bullet.startswith("#"):
+            page_props.update(find_all_properties(primary_bullet))
             _content = "\n".join(_all_bullets)
             self.content = _content
-        block_props = set(_find_all_properties(_content))
+        block_props = set(find_all_properties(_content))
         for key, value in {
             Criteria.PROP_BLOCK_BUILTIN: extract_builtin_properties(block_props),
             Criteria.PROP_BLOCK_USER: remove_builtin_properties(block_props),
@@ -134,7 +132,7 @@ class LogseqBullets:
             Criteria.PROP_PAGE_USER: remove_builtin_properties(page_props),
         }.items():
             if value:
-                yield (key, value)
+                yield key, value
 
     def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
@@ -147,14 +145,20 @@ class LogseqBullets:
             Criteria.PROP_VALUES: propvalues,
         }.items():
             if value:
-                yield (key, value)
+                yield key, value
 
     def extract_patterns(self) -> Generator[tuple[str, Any]]:
         """
         Process patterns in the content.
         """
         _content = self.content
+        temp_map = defaultdict(list)
         for pattern in LogseqBullets._PATTERN_MODULES:
-            for key, value in process_pattern_hierarchy(_content, pattern).items():
-                if value:
-                    yield (key, value)
+            for key, value in process_pattern_hierarchy(_content, pattern):
+                temp_map[key].append(value)
+
+        if not temp_map:
+            return
+
+        for key, values in temp_map.items():
+            yield key, values

@@ -176,6 +176,8 @@ class LogseqAnalyzerGUI(QMainWindow):
             write_graph=QCheckBox("Write Full Graph Content (large)"),
             graph_cache=QCheckBox("Reindex Graph Cache"),
         )
+        self.progress_bar = QProgressBar(self)
+        self.progress_label = QLabel("Status: Ready")
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.worker = None
         self.init_ui()
@@ -285,11 +287,8 @@ class LogseqAnalyzerGUI(QMainWindow):
 
     def _create_progress_bars_layout(self) -> QFormLayout:
         """Creates and returns the layout for progress bars."""
-        self.progress_bar = QProgressBar(self)
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.progress_label = QLabel("Status: Ready")
-
         progress_bars_layout = QFormLayout()
         progress_bars_layout.addRow("Progress:", self.progress_bar)
         progress_bars_layout.addRow("Status:", self.progress_label)

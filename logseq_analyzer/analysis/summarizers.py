@@ -52,30 +52,29 @@ class LogseqFileSummarizer:
 
     def generate_summary(self) -> None:
         """Generate general subsets for the Logseq Analyzer."""
-        gen = self.general
         for f in self.index:
-            name = f.path.name
-            self.filetypes[f.path.file_type].append(name)
-            self.nodetypes[f.node.node_type].append(name)
-            self.extensions[f.path.file.suffix].append(name)
+            f_name = f.path.name
+            self.filetypes[f.path.file_type].append(f_name)
+            self.nodetypes[f.node.node_type].append(f_name)
+            self.extensions[f.path.file.suffix].append(f_name)
 
             if f.node.backlinked:
-                gen[SummaryFile.BACKLINKED].append(name)
+                self.general[SummaryFile.BACKLINKED].append(f_name)
 
             if f.node.backlinked_ns_only:
-                gen[SummaryFile.BACKLINKED_NS_ONLY].append(name)
+                self.general[SummaryFile.BACKLINKED_NS_ONLY].append(f_name)
 
             if f.is_hls:
-                gen[SummaryFile.IS_HLS].append(name)
+                self.general[SummaryFile.IS_HLS].append(f_name)
 
             if f.info.size.has_content:
-                gen[SummaryFile.HAS_CONTENT].append(name)
+                self.general[SummaryFile.HAS_CONTENT].append(f_name)
 
             if f.node.has_backlinks:
-                gen[SummaryFile.HAS_BACKLINKS].append(name)
+                self.general[SummaryFile.HAS_BACKLINKS].append(f_name)
 
-        for k, v in gen.items():
-            gen[k] = sorted(v)
+        for k, v in self.general.items():
+            self.general[k] = sorted(v)
 
 
 class LogseqContentSummarizer:
@@ -98,9 +97,13 @@ class LogseqContentSummarizer:
         """Generate summary subsets for content data in the Logseq graph."""
         report = self.report
         for f in self.index:
-            for k, v in f.data.items():
+            if not (f_data := f.data):
+                continue
+
+            f_name = f.path.name
+            for k, v in f_data.items():
                 report.setdefault(k, {})
-                report[k] = get_count_and_foundin_data(report[k], v, f.path.name)
+                report[k] = get_count_and_foundin_data(report[k], v, f_name)
 
     def sort_report(self) -> None:
         """Sort the report dictionary by count in descending order."""

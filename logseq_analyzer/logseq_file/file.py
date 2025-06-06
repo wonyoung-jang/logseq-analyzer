@@ -204,18 +204,21 @@ class LogseqFile:
         self.extract_data()
         self.check_has_backlinks()
 
+    def extract_data_pairs(self) -> Generator[tuple[str, Any]]:
+        """
+        Extract data pairs from the Logseq file.
+        """
+        yield from self.extract_primary_data()
+        yield from self.bullets.extract_primary_raw_data()
+        yield from self.bullets.extract_aliases_and_propvalues()
+        yield from self.bullets.extract_properties()
+        yield from self.bullets.extract_patterns()
+
     def extract_data(self) -> None:
         """
         Extract data from the Logseq file.
         """
-        bullets = self.bullets
-        self.data.update(
-            **dict(self.extract_primary_data()),
-            **dict(bullets.extract_primary_raw_data()),
-            **dict(bullets.extract_aliases_and_propvalues()),
-            **dict(bullets.extract_properties()),
-            **dict(bullets.extract_patterns()),
-        )
+        self.data.update(dict(self.extract_data_pairs()))
 
     def mask_blocks(self) -> str:
         """
@@ -249,8 +252,8 @@ class LogseqFile:
             Criteria.CON_TAG: ContentPatterns.TAG,
             Criteria.CON_DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
         }.items():
-            if values := value.findall(_content):
-                yield (key, values)
+            if value.search(_content):
+                yield key, value.findall(_content)
 
     def check_has_backlinks(self) -> None:
         """Check has backlinks in the content."""

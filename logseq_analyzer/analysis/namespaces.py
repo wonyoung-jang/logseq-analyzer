@@ -132,6 +132,7 @@ class LogseqNamespaces:
     def analyze_ns_queries(self, query_criteria: str = Criteria.DBC_NAMESPACE_QUERIES) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
+        search_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.search
         find_all_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.findall
         ns_queries = self.queries
         for f in self.index:
@@ -143,10 +144,16 @@ class LogseqNamespaces:
 
             f_path = f.path
             for query in queries:
+                if not search_page_ref_pattern(query):
+                    logger.warning("Invalid query found: %s", query)
+                    continue
+
                 page_refs = find_all_page_ref_pattern(query)
+
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
+
                 page_ref = page_refs[0]
                 ns_queries.setdefault(query, {})
                 ns_queries[query].setdefault("found_in", []).append(f_path.name)
@@ -159,7 +166,7 @@ class LogseqNamespaces:
     def detect_non_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
         index = self.index
-        parts_items = self.structure.parts.items
+        parts_items = self.structure.parts.items()
         unique_parts = self.structure.unique_parts
         non_ns_conflicts = self.conflicts.non_namespace
         dangling_conflicts = self.conflicts.dangling
@@ -168,7 +175,8 @@ class LogseqNamespaces:
         potential_dangling = unique_parts.intersection(self.dangling_links)
         intersect_non_ns = potential_non_ns_names.intersection
         intersect_dangling = potential_dangling.intersection
-        for entry, parts in parts_items():
+
+        for entry, parts in parts_items:
             for part in intersect_non_ns(parts):
                 non_ns_conflicts[part].append(entry)
             for part in intersect_dangling(parts):
@@ -176,18 +184,21 @@ class LogseqNamespaces:
 
     def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
-        part_levels = self._part_levels.items
+        part_levels = self._part_levels.items()
         part_entries = self._part_entries
         parent_depth_conflicts = self.conflicts.parent_depth
         parent_unique_conflicts = self.conflicts.parent_unique
         join_to_ns_sep = ns_sep.join
-        for part, levels in part_levels():
+        for part, levels in part_levels:
             if len(levels) < 2:
                 continue
+
             details = part_entries[part]
+
             for level in levels:
                 key = (part, level)
                 entries = (d["entry"] for d in details if d["level"] == level)
+
                 for entry in entries:
                     up_to_level = entry.split(ns_sep)[:level]
                     parent_unique_conflicts[key].add(join_to_ns_sep(up_to_level))
