@@ -58,9 +58,9 @@ class Cache:
         cls.graph_dir = analyzer_dirs.graph_dirs.graph_dir.path
         cls.graph_cache = args.graph_cache
 
-    def open(self, protocol: int = 5, writeback: bool = True) -> None:
+    def open(self, protocol: int = 5) -> None:
         """Open the cache file."""
-        self.cache = shelve.open(self.cache_path, protocol=protocol, writeback=writeback)
+        self.cache = shelve.open(self.cache_path, protocol=protocol)
 
     def close(self, index: FileIndex, index_key: str = CacheKey.INDEX) -> None:
         """Close the cache file."""
