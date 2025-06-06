@@ -44,12 +44,12 @@ class SizeInfo:
 class NamespaceInfo:
     """NamespaceInfo class."""
 
+    parent_full: str
+    parent: str
+    parts: dict[str, int]
+    root: str
+    stem: str
     children: set[str] = field(default_factory=set)
-    parent_full: str = ""
-    parent: str = ""
-    parts: dict[str, int] = field(default_factory=dict)
-    root: str = ""
-    stem: str = ""
 
 
 class LogseqPath:

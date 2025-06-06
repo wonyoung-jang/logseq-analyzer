@@ -120,15 +120,19 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, N
 
 def process_aliases(aliases: str) -> Generator[str, None, None]:
     """Process aliases to extract individual aliases."""
-    if not (aliases := aliases.strip()):
+    strip_str = str.strip
+    if not (aliases := strip_str(aliases)):
         return
 
     current = []
     append_current = current.append
     clear_current = current.clear
+    lower_str = str.lower
+    join_chars = "".join
     inside_brackets = False
     pos = 0
-    while pos < len(aliases):
+    length = len(aliases)
+    while pos < length:
         if aliases[pos : pos + 2] == "[[":
             inside_brackets = True
             pos += 2
@@ -136,7 +140,7 @@ def process_aliases(aliases: str) -> Generator[str, None, None]:
             inside_brackets = False
             pos += 2
         elif aliases[pos] == "," and not inside_brackets:
-            if part := "".join(current).strip().lower():
+            if part := lower_str(strip_str(join_chars(current))):
                 yield part
             clear_current()
             pos += 1
@@ -144,7 +148,7 @@ def process_aliases(aliases: str) -> Generator[str, None, None]:
             append_current(aliases[pos])
             pos += 1
 
-    if part := "".join(current).strip().lower():
+    if part := lower_str(strip_str(join_chars(current))):
         yield part
 
 
@@ -175,12 +179,12 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generato
         Generator[tuple[str, str], None, None]: A generator yielding key-value pairs of patterns and their values.
     """
     finditer_all = pattern_mod.ALL.finditer(content)
-    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP
+    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP.items()
     fallback: str = pattern_mod.FALLBACK
 
     for match in finditer_all:
         text = match.group(0)
-        for pattern, criteria in pattern_map.items():
+        for pattern, criteria in pattern_map:
             if pattern.search(text):
                 yield criteria, text
                 break

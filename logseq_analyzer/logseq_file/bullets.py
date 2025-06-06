@@ -79,27 +79,27 @@ class LogseqBullets:
             return
 
         append_all_bullets = self.all_bullets.append
-        bullet_count = 0
-        bullet_count_empty = 0
+        b_count = 0
+        b_empty = 0
         primary_bullet = ""
 
         for bullet_index, bullet in iter_pattern_split(bullet_pattern, _content):
             if bullet:
                 append_all_bullets(bullet)
-                bullet_count += 1
+                b_count += 1
                 if bullet_index == 0:
                     primary_bullet = bullet
             else:
-                bullet_count_empty += 1
+                b_empty += 1
 
         self.primary = primary_bullet
 
         _char_count = len(_content)
         self.stats = BulletStats(
             char_count=_char_count,
-            bullet_count=bullet_count,
-            bullet_count_empty=bullet_count_empty,
-            bullet_density=round(_char_count / bullet_count, 2) if bullet_count else 0.0,
+            bullet_count=b_count,
+            bullet_count_empty=b_empty,
+            bullet_density=round(_char_count / b_count, 2) if b_count else 0.0,
         )
 
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
