@@ -39,7 +39,6 @@ class LogseqJournals:
         "dangling_links",
     )
 
-    date: DateUtilities = DateUtilities
     journal_page_format: str = ""
 
     def __init__(self, index: FileIndex, dangling_links: set[str]) -> None:
@@ -67,9 +66,9 @@ class LogseqJournals:
         """Process journal keys to build the complete timeline and detect missing entries."""
         index = self.index
         page_format = LogseqJournals.journal_page_format
-        dangling = sorted(LogseqJournals.date.journals_to_datetime(self.dangling_links, page_format))
+        dangling = sorted(DateUtilities.journals_to_datetime(self.dangling_links, page_format))
         journals = (f.path.name for f in index if f.path.file_type == journal_file)
-        self.sets.existing.extend(sorted(LogseqJournals.date.journals_to_datetime(journals, page_format)))
+        self.sets.existing.extend(sorted(DateUtilities.journals_to_datetime(journals, page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 
@@ -79,8 +78,8 @@ class LogseqJournals:
         timeline = self.sets.timeline
         append_missing = self.sets.missing.append
         append_timeline = timeline.append
-        get_stats = LogseqJournals.date.stats
-        next_date = LogseqJournals.date.next
+        get_stats = DateUtilities.stats
+        next_date = DateUtilities.next
         for i, date in enumerate(existing):
             append_timeline(date)
             next_expected = next_date(date)

@@ -126,7 +126,7 @@ class LogseqContentSummarizer:
             if f_bt := f_info.bullet:
                 bt_report[f_name] = f_bt.__dict__
         self.size_report = {"report_size": sz_report}
-        self.timestamp_report = {"report_timestamp": ts_report} 
+        self.timestamp_report = {"report_timestamp": ts_report}
         self.namespace_report = {"report_namespace": ns_report}
         self.bullet_report = {"report_bullet": bt_report}
 

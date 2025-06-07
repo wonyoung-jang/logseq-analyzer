@@ -143,14 +143,12 @@ class LogseqPath:
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
-            self.logseq_url = ""
             return
 
         graph_path = str(_graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
         if not _uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
-            self.logseq_url = ""
             return
 
         encoded_path = _uri[len(prefix) : -(len(uri_path.suffix))]
