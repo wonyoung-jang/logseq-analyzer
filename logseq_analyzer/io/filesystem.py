@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ..utils.enums import DirsAnalyzer, DirsDelete, DirsGraph
+from ..utils.enums import Constant, DirsAnalyzer, DirsDelete, DirsGraph
 
 logger = logging.getLogger(__name__)
 
@@ -332,10 +332,10 @@ class LogseqGraphDirs:
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
-    delete_dir: DeleteDirectory = None
-    delete_bak_dir: DeleteBakDirectory = None
-    delete_recycle_dir: DeleteRecycleDirectory = None
-    delete_assets_dir: DeleteAssetsDirectory = None
+    delete_dir: DeleteDirectory = DeleteDirectory(Constant.TO_DELETE_DIR)
+    delete_bak_dir: DeleteBakDirectory = DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR)
+    delete_recycle_dir: DeleteRecycleDirectory = DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR)
+    delete_assets_dir: DeleteAssetsDirectory = DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR)
 
     @property
     def report(self) -> dict[str, Any]:

@@ -2,8 +2,8 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Generator
 
@@ -29,10 +29,6 @@ from .io.filesystem import (
     BakDirectory,
     CacheFile,
     ConfigFile,
-    DeleteAssetsDirectory,
-    DeleteBakDirectory,
-    DeleteDirectory,
-    DeleteRecycleDirectory,
     DrawsDirectory,
     GlobalConfigFile,
     GraphDirectory,
@@ -50,10 +46,9 @@ from .io.report_writer import ReportWriter
 from .logseq_file.file import LogseqFile, LogseqPath
 from .logseq_file.info import JournalFormats
 from .logseq_file.stats import LogseqFileName
+from .utils.date_utilities import DateUtilities
 from .utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
 from .utils.helpers import (
-    compile_token_pattern,
-    convert_cljs_date_to_py,
     process_moves,
     yield_asset_paths,
     yield_bak_rec_paths,
@@ -99,26 +94,15 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     config_edns = setup_config_edns(args, graph_dirs)
     target_dirs = get_target_dirs(config_edns.config)
     ensure_target_dirs(graph_dirs, target_dirs)
-    delete_dirs = setup_delete_dirs()
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
-        delete_dirs=delete_dirs,
+        delete_dirs=AnalyzerDeleteDirs(),
         target_dirs=target_dirs,
         output_dir=OutputDirectory(Constant.OUTPUT_DIR),
     )
 
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
-
-
-def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
-    """Ensure that the target directories exist."""
-    graph_folder_path = graph_dirs.graph_dir.path
-    AssetsDirectory(graph_folder_path / target_dirs[TargetDir.ASSET])
-    DrawsDirectory(graph_folder_path / target_dirs[TargetDir.DRAW])
-    JournalsDirectory(graph_folder_path / target_dirs[TargetDir.JOURNAL])
-    PagesDirectory(graph_folder_path / target_dirs[TargetDir.PAGE])
-    WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDir.WHITEBOARD])
 
 
 def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
@@ -155,26 +139,25 @@ def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     )
 
 
-def setup_delete_dirs() -> AnalyzerDeleteDirs:
-    """Setup the directories for deletion operations."""
-    logger.debug("setup_delete_dirs")
-    return AnalyzerDeleteDirs(
-        delete_dir=DeleteDirectory(Constant.TO_DELETE_DIR),
-        delete_bak_dir=DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR),
-        delete_recycle_dir=DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR),
-        delete_assets_dir=DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR),
-    )
+def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
+    """Ensure that the target directories exist."""
+    graph_folder_path = graph_dirs.graph_dir.path
+    AssetsDirectory(graph_folder_path / target_dirs[TargetDir.ASSET])
+    DrawsDirectory(graph_folder_path / target_dirs[TargetDir.DRAW])
+    JournalsDirectory(graph_folder_path / target_dirs[TargetDir.JOURNAL])
+    PagesDirectory(graph_folder_path / target_dirs[TargetDir.PAGE])
+    WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDir.WHITEBOARD])
 
 
 def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     """Setup journal formats."""
-    _token_pattern = compile_token_pattern()
+    _tokens = DateUtilities.compile_datetime_tokens()
     journal_file_fmt = get_file_name_format(config_edns.config)
     journal_page_title_fmt = get_page_title_format(config_edns.config)
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file=convert_cljs_date_to_py(journal_file_fmt, _token_pattern),
-        page=convert_cljs_date_to_py(journal_page_title_fmt, _token_pattern),
+        file=DateUtilities.cljs_date_to_py(journal_file_fmt, _tokens),
+        page=DateUtilities.cljs_date_to_py(journal_page_title_fmt, _tokens),
         page_title=journal_page_title_fmt,
     )
 

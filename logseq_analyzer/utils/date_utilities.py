@@ -3,8 +3,9 @@ DateUtilities class to handle date-related operations.
 """
 
 import logging
+import re
 from datetime import datetime, timedelta
-from enum import StrEnum, IntEnum
+from enum import IntEnum, StrEnum
 from typing import Any, Generator
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,37 @@ class DateStat(StrEnum):
 
 
 DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
+DATETIME_TOKEN_MAP: dict[str, str] = {
+    "yyyy": "%Y",
+    "xxxx": "%Y",
+    "yy": "%y",
+    "xx": "%y",
+    "MMMM": "%B",
+    "MMM": "%b",
+    "MM": "%m",
+    "M": "%#m",
+    "dd": "%d",
+    "d": "%#d",
+    "D": "%j",
+    "EEEE": "%A",
+    "EEE": "%a",
+    "EE": "%a",
+    "E": "%a",
+    "e": "%u",
+    "HH": "%H",
+    "H": "%H",
+    "hh": "%I",
+    "h": "%I",
+    "mm": "%M",
+    "m": "%#M",
+    "ss": "%S",
+    "s": "%#S",
+    "SSS": "%f",
+    "a": "%p",
+    "A": "%p",
+    "Z": "%z",
+    "ZZ": "%z",
+}
 
 DY = Day
 DS = DateStat
@@ -44,6 +76,8 @@ DS = DateStat
 
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
+
+    token_map = DATETIME_TOKEN_MAP
 
     @staticmethod
     def next(date_obj: datetime) -> datetime:
@@ -90,3 +124,27 @@ class DateUtilities:
                 yield datetime.strptime(key, py_page_format.replace("#", ""))
             except ValueError:
                 pass
+
+    @staticmethod
+    def compile_datetime_tokens() -> re.Pattern:
+        """
+        Set the regex pattern for date tokens.
+        """
+        token_map = DateUtilities.token_map
+        pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
+        return re.compile(pattern)
+
+    @staticmethod
+    def cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
+        """
+        Convert a Clojure-style date format to a Python-style date format.
+        """
+        cljs_format = cljs_format.replace("o", "")
+        get_token = DateUtilities.token_map.get
+
+        def replace_token(match: re.Match) -> str:
+            """Replace a date token with its corresponding Python format."""
+            token = match.group(0)
+            return get_token(token, token)
+
+        return token_pattern.sub(replace_token, cljs_format)
