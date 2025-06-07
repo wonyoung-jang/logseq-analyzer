@@ -119,8 +119,11 @@ class FileIndex:
             del self._name_to_files[f.path.name]
         self._path_to_file.pop(f.path.file, None)
 
-    def remove_deleted_files(self):
+    def remove_deleted_files(self) -> None:
         """Remove deleted files from the cache."""
+        if not self:
+            return
+
         for file in {f for f in self if not f.path.file.exists()}:
             self.remove(file)
 

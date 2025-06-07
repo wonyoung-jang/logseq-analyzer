@@ -134,14 +134,15 @@ class Buttons:
     """Buttons for the GUI."""
 
     run: QPushButton
-    output: QPushButton
-    delete: QPushButton
-    log: QPushButton
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for buttons."""
         self.run.setShortcut("Ctrl+R")
         self.run.setToolTip("Ctrl + R to run analysis")
+
+    def enable_all(self, enabled: bool = True) -> None:
+        """Enable all buttons."""
+        self.run.setEnabled(enabled)
 
 
 @dataclass
@@ -221,9 +222,6 @@ class LogseqAnalyzerGUI(QMainWindow):
         """Sets up the UI groups for the main window."""
         self.buttons = Buttons(
             run=QPushButton("Run Analysis"),
-            output=QPushButton("Open Output Directory"),
-            delete=QPushButton("Open Delete Directory"),
-            log=QPushButton("Open Log File"),
         )
         self.inputs = Inputs(
             graph_folder=QLineEdit(readOnly=True),
@@ -284,10 +282,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         else:
             self.show_error(f"Analysis failed: {error_message}")
 
-        self.buttons.run.setEnabled(True)
-        self.buttons.output.setEnabled(True)
-        self.buttons.delete.setEnabled(True)
-        self.buttons.log.setEnabled(True)
+        self.buttons.enable_all(True)
         self.checkboxes.graph_cache.setEnabled(True)
 
     def setup_ui(self, main_layout) -> None:

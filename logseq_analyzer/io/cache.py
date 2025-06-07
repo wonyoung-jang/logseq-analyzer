@@ -87,10 +87,10 @@ class Cache:
         """Clear the deleted files from the cache."""
         if index_key in self.cache:
             index = self.cache[index_key]
-            del self.cache[index_key]
         else:
             index = FileIndex()
         index.remove_deleted_files()
+        self.cache[index_key] = index
         return index
 
     def iter_modified_files(self, mod_key: str = CacheKey.MOD_TRACKER) -> Generator[Path, Any, None]:
@@ -98,7 +98,6 @@ class Cache:
         mod_tracker = {}
         if mod_key in self.cache:
             mod_tracker = self.cache[mod_key]
-            del self.cache[mod_key]
 
         file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
         for path in file_iter:

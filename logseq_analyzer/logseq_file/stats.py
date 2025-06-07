@@ -129,10 +129,27 @@ class LogseqPath:
     def process(self) -> None:
         """Process the Logseq file path to gather statistics."""
         self.name = LogseqFileName.process(self.file)
-        self.determine_file_type()
-        self.set_logseq_url()
+        self.file_type = self.evaluate_file_type()
+        self.logseq_url = self.set_logseq_url()
 
-    def set_logseq_url(self) -> None:
+    def evaluate_file_type(self, other: str = FileType.OTHER) -> str:
+        """Helper function to determine the file type based on the directory structure."""
+        _result_map = LogseqPath.result_map
+        _parent = self.file.parent.name
+        _parts = self.file.parts
+
+        result = _result_map.get(_parent, (other, other))
+
+        if result[0] != other:
+            return result[0]
+
+        for key, result in _result_map.items():
+            if key in _parts:
+                return result[1]
+
+        return other
+
+    def set_logseq_url(self) -> str:
         """Set the Logseq URL."""
         _graph_path = LogseqPath.graph_path
         _uri = self.uri
@@ -143,34 +160,17 @@ class LogseqPath:
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
-            return
+            return ""
 
         graph_path = str(_graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
         if not _uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
-            return
+            return ""
 
         encoded_path = _uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
-        self.logseq_url = f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
-
-    def determine_file_type(self, other: str = FileType.OTHER) -> None:
-        """Helper function to determine the file type based on the directory structure."""
-        _result_map = LogseqPath.result_map
-        _parent = self.file.parent.name
-        _parts = self.file.parts
-
-        result = _result_map.get(_parent, (other, other))
-
-        if result[0] != other:
-            self.file_type = result[0]
-            return
-
-        for key, result in _result_map.items():
-            if key in _parts:
-                self.file_type = result[1]
-                return
+        return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
     def read_text(self) -> str:
         """Read the text content of a file."""

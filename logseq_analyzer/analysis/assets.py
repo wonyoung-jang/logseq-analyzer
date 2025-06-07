@@ -83,18 +83,23 @@ class LogseqAssetsHls:
     def check_backlinks(self, asset_file_type: str = FileType.ASSET) -> None:
         """Check for backlinks in the HLS assets."""
         asset_mapping = self.asset_mapping
-        asset_names = set(asset_mapping.keys())
         add_backlinked = self.backlinked.add
         add_not_backlinked = self.not_backlinked.add
+        remove_asset = set(asset_mapping.keys()).remove
+        get_asset_file = asset_mapping.get
+        hls_bullets = self.hls_bullets
+        for name in hls_bullets:
+            if not (asset_file := get_asset_file(name)):
+                continue
 
-        for name in asset_names.intersection(self.hls_bullets):
-            add_backlinked(name)
-            asset_mapping[name].node.backlinked = True
-            asset_mapping[name].path.file_type = asset_file_type
+            asset_file.path.file_type = asset_file_type
 
-        for name in asset_names.difference(self.hls_bullets):
-            add_not_backlinked(name)
-            asset_mapping[name].path.file_type = asset_file_type
+            try:
+                remove_asset(name)
+                add_backlinked(name)
+                asset_file.node.backlinked = True
+            except KeyError:
+                add_not_backlinked(name)
 
     @property
     def report(self) -> str:
