@@ -13,10 +13,10 @@ from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileType, TargetDir
 from ..utils.helpers import format_bytes
-from .info import NamespaceInfo, SizeInfo, TimestampInfo
+from .info import NamespaceInfo, SizeInfo, TimestampInfo, JournalFormats
 
 if TYPE_CHECKING:
-    from ..app import ConfigEdns, JournalFormats
+    from ..app import ConfigEdns
 
 logger = logging.getLogger(__name__)
 
@@ -24,19 +24,18 @@ logger = logging.getLogger(__name__)
 class LogseqFileName:
     """LogseqFileName class."""
 
-    date: DateUtilities = DateUtilities
-    journal_format: "JournalFormats" = None
+    journal_format: JournalFormats = None
     ns_file_sep: str = ""
-    target_dirs: dict = {}
+    journal_dir: str = ""
 
     @classmethod
     def configure(
-        cls, analyzer_dirs: LogseqAnalyzerDirs, journal_formats: "JournalFormats", config_edns: "ConfigEdns"
+        cls, analyzer_dirs: LogseqAnalyzerDirs, journal_formats: JournalFormats, config_edns: "ConfigEdns"
     ) -> None:
         """Configure the LogseqPath class with necessary settings."""
         cls.journal_format = journal_formats
         cls.ns_file_sep = get_ns_sep(config_edns.config)
-        cls.target_dirs = analyzer_dirs.target_dirs
+        cls.journal_dir = analyzer_dirs.target_dirs[TargetDir.JOURNAL]
 
     @staticmethod
     def process(file: Path) -> str:
@@ -44,7 +43,7 @@ class LogseqFileName:
         _ns_file_sep = LogseqFileName.ns_file_sep
         name = file.stem.strip(_ns_file_sep)
 
-        if file.parent.name == LogseqFileName.target_dirs[TargetDir.JOURNAL]:
+        if file.parent.name == LogseqFileName.journal_dir:
             return LogseqFileName.process_journal_key(name)
         return LogseqFileName.process_non_journal_key(name, _ns_file_sep)
 
@@ -60,7 +59,7 @@ class LogseqFileName:
             page_title = date_obj.strftime(_page_format)
             if ordinal in _page_title_format:
                 day_number = str(date_obj.day)
-                day_with_ordinal = LogseqFileName.date.append_ordinal_to_day(day_number)
+                day_with_ordinal = DateUtilities.append_ordinal_to_day(day_number)
                 page_title.replace(day_number, day_with_ordinal, 1)
             return page_title.replace("'", "")
         except ValueError as e:
@@ -89,8 +88,6 @@ class LogseqPath:
     now_ts = datetime.now().timestamp()
     result_map: dict = {}
     target_dirs: dict = {}
-    date: DateUtilities = DateUtilities
-    filename: LogseqFileName = LogseqFileName
 
     def __init__(self, file) -> None:
         """Initialize the LogseqPath object."""
@@ -131,7 +128,7 @@ class LogseqPath:
 
     def process(self) -> None:
         """Process the Logseq file path to gather statistics."""
-        self.name = LogseqPath.filename.process(self.file)
+        self.name = LogseqFileName.process(self.file)
         self.determine_file_type()
         self.set_logseq_url()
 

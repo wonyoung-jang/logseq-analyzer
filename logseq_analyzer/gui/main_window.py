@@ -167,24 +167,24 @@ class Inputs:
 class Progress:
     """Progress indicators for the GUI."""
 
-    bar: QProgressBar
+    progress_bar: QProgressBar
     label: QLabel
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for progress indicators."""
-        self.bar.setRange(0, 100)
-        self.bar.setValue(0)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
 
     def layout(self) -> QFormLayout:
         """Creates and returns the layout for progress indicators."""
         layout = QFormLayout()
-        layout.addRow("Progress:", self.bar)
+        layout.addRow("Progress:", self.progress_bar)
         layout.addRow("Status:", self.label)
         return layout
 
     def update_bar(self, progress_value: int = 0) -> None:
         """Updates the progress bar for a given phase."""
-        self.bar.setValue(progress_value)
+        self.progress_bar.setValue(progress_value)
         QApplication.processEvents()
 
     def update_label(self, label: str) -> None:
@@ -238,7 +238,7 @@ class LogseqAnalyzerGUI(QMainWindow):
             write_graph=QCheckBox("Write Full Graph Content (large)"),
             graph_cache=QCheckBox("Reindex Graph Cache"),
         )
-        self.progress = Progress(bar=QProgressBar(self), label=QLabel("Status: Ready"))
+        self.progress = Progress(progress_bar=QProgressBar(self), label=QLabel("Status: Ready"))
 
     def init_ui(self) -> None:
         """Initialize the user interface."""

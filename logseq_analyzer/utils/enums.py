@@ -71,6 +71,8 @@ class CritContent(StrEnum):
 
 
 class CritCode(StrEnum):
+    """Criteria for code blocks in Logseq."""
+
     INLINE = "code_inline"
     ML_ALL = "code_multiline"
     ML_CALC = "code_multiline_calc"

@@ -7,8 +7,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Generator
 
-from .logseq_file.stats import LogseqFileName
-
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
 from .analysis.index import FileIndex
@@ -48,7 +46,9 @@ from .io.filesystem import (
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
+from .logseq_file.info import JournalFormats
 from .logseq_file.file import LogseqFile, LogseqPath
+from .logseq_file.stats import LogseqFileName
 from .utils.enums import ConfigEdnReport, Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
 from .utils.helpers import (
     compile_token_pattern,
@@ -115,15 +115,6 @@ class ConfigEdns:
                 ConfigEdnReport.EDN_CONFIG: self.config,
             }
         }
-
-
-@dataclass
-class JournalFormats:
-    """Formats for Logseq journal files and pages."""
-
-    file: str
-    page: str
-    page_title: str
 
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:

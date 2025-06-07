@@ -286,21 +286,21 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
     return result
 
 
-def compile_token_pattern(token_map: dict[str, str] = DATETIME_TOKEN_MAP) -> re.Pattern:
+def compile_token_pattern() -> re.Pattern:
     """
     Set the regex pattern for date tokens.
     """
+    token_map = DATETIME_TOKEN_MAP
     pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
     return re.compile(pattern)
 
 
-def convert_cljs_date_to_py(
-    cljs_format: str, token_pattern: re.Pattern, token_map: dict[str, str] = DATETIME_TOKEN_MAP
-) -> str:
+def convert_cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
     """
     Convert a Clojure-style date format to a Python-style date format.
     """
     cljs_format = cljs_format.replace("o", "")
+    token_map = DATETIME_TOKEN_MAP
 
     def replace_token(match: re.Match) -> str:
         """Replace a date token with its corresponding Python format."""

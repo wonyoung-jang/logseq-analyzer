@@ -108,18 +108,22 @@ class LogseqGraph:
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
+        index = self.index
         filename = f.path.name
-        for ns_root_file in self.index[f.info.namespace.root]:
+        curr_ns_info = f.info.namespace
+        for ns_root_file in index[curr_ns_info.root]:
             ns_root_file: LogseqFile
-            if not ns_root_file.info.namespace.is_namespace:
-                ns_root_file.info.namespace.is_namespace = True
-            if filename not in ns_root_file.info.namespace.children:
-                ns_root_file.info.namespace.children.add(filename)
+            ns_info = ns_root_file.info.namespace
+            if not ns_info.is_namespace:
+                ns_info.is_namespace = True
+            if filename not in ns_info.children:
+                ns_info.children.add(filename)
 
-        for ns_parent_file in self.index[f.info.namespace.parent_full]:
+        for ns_parent_file in index[curr_ns_info.parent_full]:
             ns_parent_file: LogseqFile
-            if filename not in ns_parent_file.info.namespace.children:
-                ns_parent_file.info.namespace.children.add(filename)
+            ns_info = ns_parent_file.info.namespace
+            if filename not in ns_info.children:
+                ns_info.children.add(filename)
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""
@@ -135,11 +139,12 @@ class LogseqGraph:
         unique_refs_ns = self.unique.linked_refs_ns
         check_for_nodes = LogseqGraph._TO_NODE_TYPE
         for f in self.index:
-            filename = f.path.name
+            f_path = f.path
+            filename = f_path.name
             node = f.node
             node.check_backlinked(filename, unique_refs)
             node.check_backlinked_ns_only(filename, unique_refs_ns)
-            if f.path.file_type in check_for_nodes:
+            if f_path.file_type in check_for_nodes:
                 node.determine_node_type(f.info.size.has_content)
 
     def find_dangling_links(self) -> None:

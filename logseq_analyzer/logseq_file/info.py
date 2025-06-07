@@ -6,6 +6,15 @@ from dataclasses import dataclass, field
 
 
 @dataclass
+class JournalFormats:
+    """Formats for Logseq journal files and pages."""
+
+    file: str
+    page: str
+    page_title: str
+
+
+@dataclass
 class TimestampInfo:
     """File timestamp information class."""
 
