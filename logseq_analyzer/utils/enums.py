@@ -9,6 +9,16 @@ __all__ = [
     "Constant",
     "Core",
     "CritContent",
+    "CritCode",
+    "CritAdvCmd",
+    "CritDblCurly",
+    "CritDblParen",
+    "CritEmb",
+    "CritExt",
+    "CritProp",
+    "DirsAnalyzer",
+    "DirsDelete",
+    "DirsGraph",
     "Edn",
     "FileType",
     "Format",
@@ -149,6 +159,36 @@ class CritProp(StrEnum):
     PAGE_BUILTIN = "property_page_builtin"
     PAGE_USER = "property_page_user"
     VALUES = "property_values"
+
+
+class DirsAnalyzer(StrEnum):
+    """Directories used in the Logseq Analyzer."""
+
+    DIRS = "logseq_analyzer_dirs"
+    GRAPH = "graph_dirs"
+    DELETE = "delete_dirs"
+    TARGET = "target_dirs"
+    OUTPUT = "output_dir"
+
+
+class DirsDelete(StrEnum):
+    """Directories to be deleted in the Logseq Analyzer."""
+
+    DELETE = "to-delete"
+    ASSETS = "to-delete/assets"
+    BAK = "to-delete/bak"
+    RECYCLE = "to-delete/.recycle"
+
+
+class DirsGraph(StrEnum):
+    """Directories in the Logseq graph structure."""
+
+    GRAPH = "graph"
+    LOGSEQ = "graph/logseq"
+    BAK = "graph/logseq/bak"
+    RECYCLE = "graph/logseq/.recycle"
+    USER_CONFIG = "graph/logseq/config.edn"
+    GLOBAL_CONFIG = "global-config.edn"
 
 
 class Edn(StrEnum):

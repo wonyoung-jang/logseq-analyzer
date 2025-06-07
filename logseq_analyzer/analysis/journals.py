@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-@dataclass
+@dataclass(slots=True)
 class JournalSets:
     """Class to hold sets of journal dates."""
 

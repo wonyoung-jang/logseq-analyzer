@@ -3,12 +3,13 @@ Logseq Graph Class
 """
 
 import ast
+from dataclasses import dataclass, field
 import logging
 import re
 from pathlib import Path
 from typing import Any, Generator
 
-from ..utils.enums import Core, Edn, TargetDir
+from ..utils.enums import ConfigEdnReport, Core, Edn, TargetDir
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,28 @@ TOKEN_REGEX: re.Pattern = re.compile(
 )
 COMMENT_REGEX: re.Pattern = re.compile(r";.*")
 NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
+
+@dataclass(slots=True)
+class ConfigEdns:
+    """Configuration EDN files for the Logseq analyzer."""
+
+    config: dict[str, Any] = field(default_factory=dict)
+    default_edn: dict[str, Any] = field(default_factory=dict)
+    user_edn: dict[str, Any] = field(default_factory=dict)
+    global_edn: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def report(self) -> dict[str, Any]:
+        """Generate a report of the configuration EDN files."""
+        return {
+            ConfigEdnReport.CONFIG_EDN: {
+                ConfigEdnReport.EDN_DEFAULT: self.default_edn,
+                ConfigEdnReport.EDN_USER: self.user_edn,
+                ConfigEdnReport.EDN_GLOBAL: self.global_edn,
+                ConfigEdnReport.EDN_CONFIG: self.config,
+            }
+        }
 
 
 class LogseqConfigEDN:

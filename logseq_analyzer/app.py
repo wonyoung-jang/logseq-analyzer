@@ -2,8 +2,8 @@
 This module contains the main application logic for the Logseq analyzer.
 """
 
-import logging
 from dataclasses import dataclass, field
+import logging
 from pathlib import Path
 from typing import Any, Generator
 
@@ -15,6 +15,7 @@ from .analysis.namespaces import LogseqNamespaces
 from .analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
 from .config.arguments import Args
 from .config.graph_config import (
+    ConfigEdns,
     get_default_logseq_config,
     get_edn_from_file,
     get_file_name_format,
@@ -46,10 +47,10 @@ from .io.filesystem import (
     WhiteboardsDirectory,
 )
 from .io.report_writer import ReportWriter
-from .logseq_file.info import JournalFormats
 from .logseq_file.file import LogseqFile, LogseqPath
+from .logseq_file.info import JournalFormats
 from .logseq_file.stats import LogseqFileName
-from .utils.enums import ConfigEdnReport, Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
+from .utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
 from .utils.helpers import (
     compile_token_pattern,
     convert_cljs_date_to_py,
@@ -73,14 +74,11 @@ logger.info("Logseq Analyzer started.")
 logger.debug("Logging initialized to %s", log_file.path)
 
 
+@dataclass(slots=True)
 class GUIInstanceDummy:
     """Dummy class to simulate a GUI instance for testing purposes."""
 
-    __slots__ = ("progress",)
-
-    def __init__(self) -> None:
-        """Initialize dummy GUI instance."""
-        self.progress = {}
+    progress: dict[str, int] = field(default_factory=dict)
 
     def __repr__(self) -> str:
         """Return a string representation of the dummy GUI instance."""
@@ -93,28 +91,6 @@ class GUIInstanceDummy:
     def update_progress(self, percentage) -> None:
         """Simulate updating progress in a GUI."""
         logger.info("Updating progress: %d%%", percentage)
-
-
-@dataclass
-class ConfigEdns:
-    """Configuration EDN files for the Logseq analyzer."""
-
-    config: dict[str, Any] = field(default_factory=dict)
-    default_edn: dict[str, Any] = field(default_factory=dict)
-    user_edn: dict[str, Any] = field(default_factory=dict)
-    global_edn: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the configuration EDN files."""
-        return {
-            ConfigEdnReport.CONFIG_EDN: {
-                ConfigEdnReport.EDN_DEFAULT: self.default_edn,
-                ConfigEdnReport.EDN_USER: self.user_edn,
-                ConfigEdnReport.EDN_GLOBAL: self.global_edn,
-                ConfigEdnReport.EDN_CONFIG: self.config,
-            }
-        }
 
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:

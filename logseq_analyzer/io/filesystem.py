@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..utils.enums import DirsAnalyzer, DirsDelete, DirsGraph
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -302,7 +304,7 @@ class WhiteboardsDirectory(File):
         super().__init__(path)
 
 
-@dataclass
+@dataclass(slots=True)
 class LogseqGraphDirs:
     """Directories related to the Logseq graph."""
 
@@ -317,16 +319,16 @@ class LogseqGraphDirs:
     def report(self) -> dict[str, Any]:
         """Generate a report of the Logseq graph directories."""
         return {
-            "graph_dir": self.graph_dir,
-            "logseq_dir": self.logseq_dir,
-            "bak_dir": self.bak_dir,
-            "recycle_dir": self.recycle_dir,
-            "user_config": self.user_config,
-            "global_config": self.global_config,
+            DirsGraph.GRAPH: self.graph_dir,
+            DirsGraph.LOGSEQ: self.logseq_dir,
+            DirsGraph.BAK: self.bak_dir,
+            DirsGraph.RECYCLE: self.recycle_dir,
+            DirsGraph.USER_CONFIG: self.user_config,
+            DirsGraph.GLOBAL_CONFIG: self.global_config,
         }
 
 
-@dataclass
+@dataclass(slots=True)
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
@@ -339,14 +341,14 @@ class AnalyzerDeleteDirs:
     def report(self) -> dict[str, Any]:
         """Generate a report of the analyzer delete directories."""
         return {
-            "delete_dir": self.delete_dir,
-            "delete_bak_dir": self.delete_bak_dir,
-            "delete_recycle_dir": self.delete_recycle_dir,
-            "delete_assets_dir": self.delete_assets_dir,
+            DirsDelete.DELETE: self.delete_dir,
+            DirsDelete.BAK: self.delete_bak_dir,
+            DirsDelete.RECYCLE: self.delete_recycle_dir,
+            DirsDelete.ASSETS: self.delete_assets_dir,
         }
 
 
-@dataclass
+@dataclass(slots=True)
 class LogseqAnalyzerDirs:
     """Directories used by the Logseq analyzer."""
 
@@ -359,10 +361,10 @@ class LogseqAnalyzerDirs:
     def report(self) -> dict[str, Any]:
         """Generate a report of the Logseq analyzer directories."""
         return {
-            "logseq_analyzer_dirs": {
-                "graph_dirs": self.graph_dirs.report,
-                "delete_dirs": self.delete_dirs.report,
-                "target_dirs": self.target_dirs,
-                "output_dir": self.output_dir,
+            DirsAnalyzer.DIRS: {
+                DirsAnalyzer.GRAPH: self.graph_dirs.report,
+                DirsAnalyzer.DELETE: self.delete_dirs.report,
+                DirsAnalyzer.TARGET: self.target_dirs,
+                DirsAnalyzer.OUTPUT: self.output_dir,
             }
         }

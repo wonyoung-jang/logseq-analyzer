@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-@dataclass
+@dataclass(slots=True)
 class UniqueSets:
     """Dataclass to hold unique sets for linked references and aliases."""
 

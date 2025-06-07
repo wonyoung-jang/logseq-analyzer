@@ -5,18 +5,14 @@ This module defines the LogseqPath class, which is used to gather file statistic
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from ..config.graph_config import get_ns_sep
+from ..config.graph_config import ConfigEdns, get_ns_sep
 from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileType, TargetDir
 from ..utils.helpers import format_bytes
-from .info import NamespaceInfo, SizeInfo, TimestampInfo, JournalFormats
-
-if TYPE_CHECKING:
-    from ..app import ConfigEdns
+from .info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +26,7 @@ class LogseqFileName:
 
     @classmethod
     def configure(
-        cls, analyzer_dirs: LogseqAnalyzerDirs, journal_formats: JournalFormats, config_edns: "ConfigEdns"
+        cls, analyzer_dirs: LogseqAnalyzerDirs, journal_formats: JournalFormats, config_edns: ConfigEdns
     ) -> None:
         """Configure the LogseqPath class with necessary settings."""
         cls.journal_format = journal_formats

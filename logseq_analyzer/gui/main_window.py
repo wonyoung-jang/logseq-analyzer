@@ -140,10 +140,6 @@ class Buttons:
         self.run.setShortcut("Ctrl+R")
         self.run.setToolTip("Ctrl + R to run analysis")
 
-    def enable_all(self, enabled: bool = True) -> None:
-        """Enable all buttons."""
-        self.run.setEnabled(enabled)
-
 
 @dataclass
 class Inputs:
@@ -282,7 +278,7 @@ class LogseqAnalyzerGUI(QMainWindow):
         else:
             self.show_error(f"Analysis failed: {error_message}")
 
-        self.buttons.enable_all(True)
+        self.buttons.run.setEnabled(True)
         self.checkboxes.graph_cache.setEnabled(True)
 
     def setup_ui(self, main_layout) -> None:

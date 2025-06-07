@@ -28,7 +28,7 @@ from .index import FileIndex
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class NamespaceConflicts:
     """Class to hold namespace conflict data."""
 
@@ -38,7 +38,7 @@ class NamespaceConflicts:
     parent_unique: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
 
 
-@dataclass
+@dataclass(slots=True)
 class NamespaceStructure:
     """
     Class to hold namespace structure data.
@@ -101,24 +101,23 @@ class LogseqNamespaces:
         """
         Create namespace parts from the data.
         """
-        details = self.structure.details
-        unique_parts_add = self.structure.unique_parts.add
-        unique_ns_per_level = self.structure.unique_ns_per_level
-        structure_parts = self.structure.parts
-        tree = self.structure.tree
-        data = self.structure.data
+        _structure = self.structure
+        details = _structure.details
+        unique_parts_add = _structure.unique_parts.add
+        unique_ns_per_level = _structure.unique_ns_per_level
+        data = _structure.data
         part_levels = self._part_levels
         part_entries = self._part_entries
         level_distribution = Counter()
         for f in self.index:
             if not f.info.namespace.is_namespace:
                 continue
-            current_level = tree
+            current_level = _structure.tree
             f_name = f.path.name
             data[f_name] = {k: v for k, v in f.info.namespace.__dict__.items() if v}
             if not (parts := data[f_name].get("parts")):
                 continue
-            structure_parts[f_name] = parts
+            _structure.parts[f_name] = parts
             for part, level in parts.items():
                 unique_parts_add(part)
                 unique_ns_per_level[level].add(part)
