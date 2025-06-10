@@ -72,18 +72,17 @@ class AnalysisWorker(QThread):
         """Run the Logseq Analyzer application."""
         try:
             start_time = time.perf_counter()
-
-            def update_progress(value, label) -> None:
-                self.progress_signal.emit(value)
-                self.progress_label.emit(label)
-
-            run_app(**self.args, progress_callback=update_progress)
+            run_app(**self.args, progress_callback=self.update_progress)
             self.finished_signal.emit(True, "", time.perf_counter() - start_time)
         except KeyboardInterrupt:
             self.finished_signal.emit(False, "Analysis interrupted by user.", 0)
         except Exception as e:
             self.finished_signal.emit(False, str(e), 0)
             raise
+
+    def update_progress(self, value, label) -> None:
+        self.progress_signal.emit(value)
+        self.progress_label.emit(label)
 
 
 @dataclass(slots=True, weakref_slot=True)
