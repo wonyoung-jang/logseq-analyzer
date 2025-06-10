@@ -95,5 +95,6 @@ class Args:
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the arguments."""
-        report = ((key, getattr(self, key)) for key in self.__slots__)
+        slots = getattr(self, "__slots__", [])
+        report = ((key, getattr(self, key)) for key in slots)
         return {Output.ARGUMENTS: list(report)}
