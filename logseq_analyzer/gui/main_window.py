@@ -80,7 +80,8 @@ class AnalysisWorker(QThread):
             self.finished_signal.emit(False, str(e), 0)
             raise
 
-    def update_progress(self, value, label) -> None:
+    def update_progress(self, value: int, label: str) -> None:
+        """Update the progress bar and label during analysis."""
         self.progress_signal.emit(value)
         self.progress_label.emit(label)
 

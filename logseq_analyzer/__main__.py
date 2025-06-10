@@ -16,7 +16,7 @@ def main() -> None:
         app = QApplication()
         gui = LogseqAnalyzerGUI()
         gui.show()
-        sys.exit(app.exec())
+        app.exec()
 
 
 if __name__ == "__main__":
