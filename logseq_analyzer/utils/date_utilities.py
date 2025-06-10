@@ -77,8 +77,6 @@ DS = DateStat
 class DateUtilities:
     """DateUtilities class to handle date-related operations."""
 
-    token_map = DATETIME_TOKEN_MAP
-
     @staticmethod
     def next(date_obj: datetime) -> datetime:
         """Return the date of the next day."""
@@ -130,7 +128,7 @@ class DateUtilities:
         """
         Set the regex pattern for date tokens.
         """
-        token_map = DateUtilities.token_map
+        token_map = DATETIME_TOKEN_MAP
         pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
         return re.compile(pattern)
 
@@ -140,7 +138,7 @@ class DateUtilities:
         Convert a Clojure-style date format to a Python-style date format.
         """
         cljs_format = cljs_format.replace("o", "")
-        get_token = DateUtilities.token_map.get
+        get_token = DATETIME_TOKEN_MAP.get
 
         def replace_token(match: re.Match) -> str:
             """Replace a date token with its corresponding Python format."""

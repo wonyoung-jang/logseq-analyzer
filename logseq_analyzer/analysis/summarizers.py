@@ -3,6 +3,7 @@ Logseq Content Summarizer Module
 """
 
 from collections import defaultdict
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
@@ -26,28 +27,18 @@ class SummaryFile(StrEnum):
     IS_HLS = "is_hls"
 
 
+@dataclass(slots=True)
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    __slots__ = (
-        "index",
-        "general",
-        "filetypes",
-        "nodetypes",
-        "extensions",
-    )
+    index: FileIndex
+    general: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    filetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    nodetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    extensions: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
 
-    def __init__(self, index: FileIndex) -> None:
+    def __post_init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
-        self.index: FileIndex = index
-        self.general: dict[str, list[str]] = defaultdict(list)
-        self.filetypes: dict[str, list[str]] = defaultdict(list)
-        self.nodetypes: dict[str, list[str]] = defaultdict(list)
-        self.extensions: dict[str, list[str]] = defaultdict(list)
-        self.process()
-
-    def process(self) -> None:
-        """Generate summary subsets for the Logseq Analyzer."""
         self.generate_summary()
 
     def generate_summary(self) -> None:
@@ -83,23 +74,19 @@ class LogseqFileSummarizer:
             general[k] = sorted(v)
 
 
+@dataclass(slots=True)
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    __slots__ = ("report", "index", "size_report", "timestamp_report", "namespace_report", "bullet_report")
+    index: FileIndex
+    report: dict[str, dict[str, Any]] = field(default_factory=dict)
+    size_report: dict[str, dict[str, Any]] = field(default_factory=dict)
+    timestamp_report: dict[str, dict[str, Any]] = field(default_factory=dict)
+    namespace_report: dict[str, dict[str, Any]] = field(default_factory=dict)
+    bullet_report: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    def __init__(self, index: FileIndex) -> None:
+    def __post_init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
-        self.index: FileIndex = index
-        self.report: dict[str, dict[str, Any]] = {}
-        self.size_report: dict[str, dict[str, Any]] = {}
-        self.timestamp_report: dict[str, dict[str, Any]] = {}
-        self.namespace_report: dict[str, dict[str, Any]] = {}
-        self.bullet_report: dict[str, dict[str, Any]] = {}
-        self.process()
-
-    def process(self) -> None:
-        """Process the Logseq content data."""
         self.generate_summary()
         self.sort_report()
 
@@ -116,10 +103,10 @@ class LogseqContentSummarizer:
             for k, v in f.data.items():
                 report.setdefault(k, {})
                 report[k] = get_count_and_foundin_data(report[k], v, f_name)
-            sz_report[f_name] = f_info.size.__dict__
-            ts_report[f_name] = f_info.timestamp.__dict__
-            ns_report[f_name] = f_info.namespace.__dict__
-            bt_report[f_name] = f_info.bullet.__dict__
+            sz_report[f_name] = f_info.size
+            ts_report[f_name] = f_info.timestamp
+            ns_report[f_name] = f_info.namespace
+            bt_report[f_name] = f_info.bullet
         self.size_report = {"report_size": sz_report}
         self.timestamp_report = {"report_timestamp": ts_report}
         self.namespace_report = {"report_namespace": ns_report}

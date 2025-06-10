@@ -3,7 +3,7 @@ Logseq Graph Class
 """
 
 import ast
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 import logging
 import re
 from pathlib import Path
@@ -67,18 +67,19 @@ class ConfigEdns:
         }
 
 
+@dataclass(slots=True)
 class LogseqConfigEDN:
-    """
-    A simple EDN parser that converts EDN data into Python data structures.
-    """
+    """A simple EDN parser that converts EDN data into Python data structures."""
 
-    __slots__ = ("tokens", "pos", "tok_map")
+    tokens_gen: InitVar[Generator[str, Any, None]]
+    tokens: list[str] = field(default_factory=list)
+    tok_map: dict[str, Any] = field(default_factory=dict)
+    pos: int = 0
 
-    def __init__(self, tokens: Generator[str, Any, None]) -> None:
-        """Initialize the parser with a list of tokens."""
-        self.tokens: list[str] = list(tokens)
-        self.pos: int = 0
-        self.tok_map: dict[str, Any] = {
+    def __post_init__(self, tokens_gen: Generator[str, Any, None]) -> None:
+        """Initialize the token map for parsing EDN structures."""
+        self.tokens = list(tokens_gen)
+        self.tok_map = {
             "{": self.parse_map,
             "[": self.parse_vector,
             "(": self.parse_list,

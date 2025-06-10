@@ -8,7 +8,7 @@ from logseq_analyzer.app import run_app
 from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 
-def main():
+def main() -> None:
     """Main function to run the Logseq Analyzer application."""
     if "--cli" in sys.argv:
         run_app()

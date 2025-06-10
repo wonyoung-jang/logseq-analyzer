@@ -78,7 +78,7 @@ class JournalFormats:
     page_title: str
 
 
-@dataclass
+@dataclass(slots=True)
 class TimestampInfo:
     """File timestamp information class."""
 
@@ -88,7 +88,7 @@ class TimestampInfo:
     date_modified: str
 
 
-@dataclass
+@dataclass(slots=True)
 class SizeInfo:
     """File size information class."""
 
@@ -97,7 +97,7 @@ class SizeInfo:
     has_content: bool
 
 
-@dataclass
+@dataclass(slots=True)
 class NamespaceInfo:
     """NamespaceInfo class."""
 
@@ -110,7 +110,7 @@ class NamespaceInfo:
     children: set[str] = field(default_factory=set)
 
 
-@dataclass
+@dataclass(slots=True)
 class BulletInfo:
     """Bullet statistics class."""
 

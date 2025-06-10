@@ -52,55 +52,31 @@ class NamespaceStructure:
     unique_parts: set[str] = field(default_factory=set)
 
 
+@dataclass(slots=True)
 class LogseqNamespaces:
-    """
-    Class for analyzing namespace data in Logseq.
-    """
+    """Class for analyzing namespace data in Logseq."""
 
-    __slots__ = (
-        "_part_entries",
-        "_part_levels",
-        "conflicts",
-        "queries",
-        "structure",
-        "index",
-        "dangling_links",
-    )
+    index: FileIndex
+    dangling_links: set[str]
+    _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
+    _part_entries: defaultdict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
+    conflicts: NamespaceConflicts = field(default_factory=NamespaceConflicts)
+    structure: NamespaceStructure = field(default_factory=NamespaceStructure)
+    queries: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    def __init__(self, index: FileIndex, dangling_links: set[str]) -> None:
-        """
-        Initialize the LogseqNamespaces instance.
-        """
-        self._part_levels: defaultdict[str, set[int]] = defaultdict(set)
-        self._part_entries: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
-        self.conflicts: NamespaceConflicts = NamespaceConflicts()
-        self.queries: dict[str, dict[str, Any]] = {}
-        self.structure: NamespaceStructure = NamespaceStructure()
-        self.index: FileIndex = index
-        self.dangling_links: set[str] = dangling_links
+    def __post_init__(self) -> None:
+        """Initialize the LogseqNamespaces instance."""
         self.process()
 
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqNamespaces instance."""
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the LogseqNamespaces instance."""
-        return f"{self.__class__.__name__}"
-
     def process(self) -> None:
-        """
-        Process the namespace data from the index.
-        """
+        """Process the namespace data from the index."""
         self.init_ns_parts()
         self.analyze_ns_queries()
         self.detect_non_ns_conflicts()
         self.detect_parent_depth_conflicts()
 
     def init_ns_parts(self) -> None:
-        """
-        Create namespace parts from the data.
-        """
+        """Create namespace parts from the data."""
         _structure = self.structure
         details = _structure.details
         unique_parts_add = _structure.unique_parts.add
@@ -114,7 +90,9 @@ class LogseqNamespaces:
                 continue
             current_level = _structure.tree
             f_name = f.path.name
-            data[f_name] = {k: v for k, v in f.info.namespace.__dict__.items() if v}
+            data[f_name] = {
+                k: getattr(f.info.namespace, k) for k in f.info.namespace.__slots__ if hasattr(f.info.namespace, k)
+            }
             if not (parts := data[f_name].get("parts")):
                 continue
             _structure.parts[f_name] = parts

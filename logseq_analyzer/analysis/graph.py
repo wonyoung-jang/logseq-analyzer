@@ -4,7 +4,7 @@ This module contains functions for processing and analyzing Logseq graph data.
 
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Any
+from typing import Any, ClassVar
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import CritContent, CritProp, FileType, Output
@@ -25,35 +25,21 @@ class UniqueSets:
     aliases: set[str] = field(default_factory=set)
 
 
+@dataclass(slots=True)
 class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
 
-    __slots__ = (
-        "index",
-        "all_linked_refs",
-        "all_dangling_links",
-        "dangling_links",
-        "unique",
-    )
+    index: FileIndex
+    all_linked_refs: dict[str, dict[str, dict]] = field(default_factory=dict)
+    all_dangling_links: dict[str, dict[str, dict]] = field(default_factory=dict)
+    dangling_links: list[str] = field(default_factory=list)
+    unique: UniqueSets = field(default_factory=UniqueSets)
 
-    _TO_NODE_TYPE: frozenset[str] = frozenset({FileType.JOURNAL, FileType.PAGE})
+    _TO_NODE_TYPE: ClassVar[frozenset[FileType]] = frozenset({FileType.JOURNAL, FileType.PAGE})
 
-    def __init__(self, index: FileIndex) -> None:
+    def __post_init__(self) -> None:
         """Initialize the LogseqGraph instance."""
-        self.index: FileIndex = index
-        self.all_linked_refs: dict[str, dict[str, dict]] = {}
-        self.all_dangling_links: dict[str, dict[str, dict]] = {}
-        self.dangling_links: list[str] = []
-        self.unique: UniqueSets = UniqueSets()
         self.process()
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqGraph instance."""
-        return f"{self.__class__.__qualname__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the LogseqGraph instance."""
-        return f"{self.__class__.__qualname__}"
 
     def process(self) -> None:
         """Process the Logseq graph data."""

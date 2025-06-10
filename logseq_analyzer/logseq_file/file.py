@@ -4,7 +4,7 @@ LogseqFile class to process Logseq files.
 
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
 from pathlib import Path
 from typing import Any, Generator
 
@@ -18,6 +18,37 @@ from .info import LogseqFileInfo, NodeType
 from .stats import LogseqPath
 
 
+BACKLINK_CRITERIA: frozenset[str] = frozenset(
+    {
+        CritProp.VALUES,
+        CritProp.BLOCK_BUILTIN,
+        CritProp.BLOCK_USER,
+        CritProp.PAGE_BUILTIN,
+        CritProp.PAGE_USER,
+        CritContent.PAGE_REF,
+        CritContent.TAGGED_BACKLINK,
+        CritContent.TAG,
+    }
+)
+
+PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
+    CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+    CritContent.DRAW: ContentPatterns.DRAW,
+    CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
+    CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+    CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+    CritContent.TAG: ContentPatterns.TAG,
+    CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+}
+
+PATTERN_MASKING = (
+    (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
+    (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
+    (AdvancedCommandPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
+    (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
+)
+
+
 @dataclass(slots=True)
 class MaskedBlocks:
     """Class to hold masked blocks data."""
@@ -25,7 +56,7 @@ class MaskedBlocks:
     content: str
     blocks: dict[str, str]
 
-    def unmask_blocks(self):
+    def unmask_blocks(self) -> None:
         """
         Restore the original content by replacing placeholders with their blocks.
         """
@@ -37,64 +68,22 @@ class MaskedBlocks:
         self.content = content
 
 
+@dataclass(slots=True)
 class LogseqFile:
     """A class to represent a Logseq file."""
 
-    __slots__ = (
-        "path",
-        "data",
-        "bullets",
-        "masked",
-        "node",
-        "info",
-        "is_hls",
-    )
+    path_input: InitVar[Path]
+    path: LogseqPath = None
+    data: dict[str, Any] = field(default_factory=dict)
+    bullets: LogseqBullets = None
+    masked: MaskedBlocks = None
+    node: NodeType = field(default_factory=NodeType)
+    info: LogseqFileInfo = None
+    is_hls: bool = False
 
-    _BACKLINK_CRITERIA: frozenset[str] = frozenset(
-        {
-            CritProp.VALUES,
-            CritProp.BLOCK_BUILTIN,
-            CritProp.BLOCK_USER,
-            CritProp.PAGE_BUILTIN,
-            CritProp.PAGE_USER,
-            CritContent.PAGE_REF,
-            CritContent.TAGGED_BACKLINK,
-            CritContent.TAG,
-        }
-    )
-
-    _PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
-        CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
-        CritContent.DRAW: ContentPatterns.DRAW,
-        CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
-        CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-        CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-        CritContent.TAG: ContentPatterns.TAG,
-        CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
-    }
-
-    _PATTERN_MASKING = (
-        (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
-        (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
-        (AdvancedCommandPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
-        (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
-    )
-
-    def __init__(self, path: Path) -> None:
+    def __post_init__(self, path_input: Path) -> None:
         """Initialize the LogseqFile object."""
-        self.path: LogseqPath = LogseqPath(path)
-        self.node: NodeType = NodeType()
-        self.bullets: LogseqBullets = None
-        self.masked: MaskedBlocks = None
-        self.data: dict[str, Any] = {}
-        self.info: LogseqFileInfo = None
-        self.is_hls: bool = False
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__qualname__}({self.path.name})"
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__qualname__}: {self.path.name}"
+        self.path: LogseqPath = LogseqPath(path_input)
 
     def __hash__(self) -> int:
         return hash(self.path.file.parts)
@@ -159,7 +148,7 @@ class LogseqFile:
         """
         content = self.bullets.content
         blocks = {}
-        pattern_masking = LogseqFile._PATTERN_MASKING
+        pattern_masking = PATTERN_MASKING
         _uuid4 = uuid.uuid4
 
         for sub_regex, prefix in pattern_masking:
@@ -179,11 +168,11 @@ class LogseqFile:
     def extract_primary_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.masked.content
-        _primary_data_map = LogseqFile._PRIMARY_DATA_MAP.items()
+        _primary_data_map = PRIMARY_DATA_MAP.items()
         for key, value in _primary_data_map:
             if value.search(_content):
                 yield key, value.findall(_content)
 
     def check_has_backlinks(self) -> None:
         """Check has backlinks in the content."""
-        self.node.has_backlinks = not LogseqFile._BACKLINK_CRITERIA.isdisjoint(self.data.keys())
+        self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())

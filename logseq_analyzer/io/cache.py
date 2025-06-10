@@ -4,9 +4,10 @@ This module handles caching mechanisms for the application.
 
 import logging
 import shelve
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, ClassVar, Generator
 
 from ..analysis.index import FileIndex
 from ..config.arguments import Args
@@ -23,27 +24,16 @@ class CacheKey(StrEnum):
     MOD_TRACKER = "mod_tracker"
 
 
+@dataclass(slots=True)
 class Cache:
-    """
-    Cache class to manage caching of modified files and directories.
-    """
+    """Cache class to manage caching of modified files and directories."""
 
-    __slots__ = ("cache_path", "cache")
+    cache_path: Path
+    cache: shelve.Shelf[Any] = None
 
-    graph_dir: Path = None
-    graph_cache: bool = False
-    target_dirs: set[str] = set()
-
-    def __init__(self, cache_path: Path = None) -> None:
-        """Initialize the class."""
-        self.cache_path: Path = cache_path
-        self.cache: shelve.Shelf[Any] = None
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__qualname__}(cache_path="{self.cache_path}")'
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__qualname__}: {self.cache_path}"
+    graph_dir: ClassVar[Path] = None
+    graph_cache: ClassVar[bool] = False
+    target_dirs: ClassVar[set[str]] = set()
 
     @classmethod
     def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:

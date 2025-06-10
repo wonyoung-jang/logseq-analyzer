@@ -2,10 +2,11 @@
 FileIndex class.
 """
 
+from dataclasses import dataclass, field
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, ClassVar, Iterator
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
@@ -19,38 +20,22 @@ __all__ = [
 ]
 
 
+@dataclass(slots=True)
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    __slots__ = (
-        "_files",
-        "_name_to_files",
-        "_path_to_file",
-    )
+    _instance: ClassVar["FileIndex"] = None
+    write_graph: ClassVar[bool] = False
 
-    _instance = None
-    write_graph: bool = False
+    _files: set[LogseqFile] = field(default_factory=set)
+    _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
+    _path_to_file: dict[Path, LogseqFile] = field(default_factory=dict)
 
-    def __new__(cls):
+    def __new__(cls) -> "FileIndex":
         """Ensure only one instance of FileIndex is created."""
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            cls._instance = super(FileIndex, cls).__new__(cls)
         return cls._instance
-
-    def __init__(self) -> None:
-        """Initialize the FileIndex instance."""
-        self._files: set[LogseqFile] = set()
-        self._name_to_files: dict[str, list[LogseqFile]] = defaultdict(list)
-        self._path_to_file: dict[Path, LogseqFile] = {}
-        logger.debug("init FileIndex")
-
-    def __repr__(self) -> str:
-        """Return a string representation of the FileIndex."""
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the FileIndex."""
-        return f"{self.__class__.__name__}"
 
     def __len__(self) -> int:
         """Return the number of files in the index."""

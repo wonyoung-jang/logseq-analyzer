@@ -289,7 +289,11 @@ def run_app(**gui_args) -> None:
     progress = gui_args.pop("progress_callback", GUIInstanceDummy().update_progress)
 
     progress(10, "Starting Logseq Analyzer...")
-    args = Args(**gui_args)
+    args = Args()
+    if gui_args:
+        args.set_gui_args(**gui_args)
+    else:
+        args.set_cli_args()
 
     progress(30, "Setting up Logseq Analyzer configurations...")
     analyzer_dirs, config_edns, journal_formats = init_configs(args)

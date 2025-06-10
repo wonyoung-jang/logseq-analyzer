@@ -4,13 +4,13 @@ Reporting module for writing output to files, including HTML reports.
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, ClassVar, TextIO
 
 from ..config.arguments import Args
-from ..utils.enums import Format
 from ..io.filesystem import LogseqAnalyzerDirs
+from ..utils.enums import Format
 
 logger = logging.getLogger(__name__)
 
@@ -227,45 +227,26 @@ class JSONWriter:
             logger.error("Failed to write JSON for %s, falling back to TXT.", prefix)
 
 
-@dataclass
+@dataclass(slots=True)
 class Writers:
     """A dataclass to hold different types of writers for reporting."""
 
-    text: TextWriter = TextWriter
-    html: HTMLWriter = HTMLWriter
-    json: JSONWriter = JSONWriter
+    text: TextWriter = field(default_factory=TextWriter)
+    html: HTMLWriter = field(default_factory=HTMLWriter)
+    json: JSONWriter = field(default_factory=JSONWriter)
 
 
+@dataclass(slots=True)
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    __slots__ = ("prefix", "data", "subdir", "writer")
+    prefix: str
+    data: Any
+    subdir: str
+    writer: Writers = field(default_factory=Writers)
 
-    ext: str = ""
-    output_dir: Path = None
-
-    def __init__(self, prefix: str, data: Any, subdir: str = "", writer: Writers = Writers) -> None:
-        """
-        Initialize the ReportWriter class.
-
-        Args:
-            prefix (str): The prefix for the output filename.
-            data (Any): The data to be written to the file.
-            subdir (str): The type of output to be put into subfolder (e.g., "namespaces", "journals").
-            writer (Writers): The writer class to use for writing the report.
-        """
-        self.prefix: str = prefix
-        self.data: Any = data
-        self.subdir: str = subdir
-        self.writer: Writers = writer
-
-    def __repr__(self) -> str:
-        """String representation of the ReportWriter object."""
-        return f"{self.__class__.__qualname__}(prefix={self.prefix}, items=data, subdir={self.subdir})"
-
-    def __str__(self) -> str:
-        """String representation of the ReportWriter object."""
-        return f"{self.__class__.__qualname__}: {self.prefix}, Items: data, Output Subdir: {self.subdir}"
+    ext: ClassVar[str] = ""
+    output_dir: ClassVar[Path] = None
 
     @classmethod
     def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:

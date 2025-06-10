@@ -5,7 +5,7 @@ Process logseq journals.
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from ..analysis.index import FileIndex
 from ..utils.date_utilities import DateUtilities
@@ -26,37 +26,21 @@ class JournalSets:
     timeline: list[datetime] = field(default_factory=list)
 
 
+@dataclass(slots=True)
 class LogseqJournals:
-    """
-    LogseqJournals class to handle journal files and their processing.
-    """
+    """LogseqJournals class to handle journal files and their processing."""
 
-    __slots__ = (
-        "dangling",
-        "timeline_stats",
-        "sets",
-        "index",
-        "dangling_links",
-    )
+    index: FileIndex
+    dangling_links: set[str]
+    sets: JournalSets = field(default_factory=JournalSets)
+    dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
+    timeline_stats: dict[str, Any] = field(default_factory=dict)
 
-    journal_page_format: str = ""
+    journal_page_format: ClassVar[str] = ""
 
-    def __init__(self, index: FileIndex, dangling_links: set[str]) -> None:
+    def __post_init__(self) -> None:
         """Initialize the LogseqJournals class."""
-        self.sets: JournalSets = JournalSets()
-        self.dangling: dict[str, list[datetime]] = defaultdict(list)
-        self.timeline_stats: dict[str, Any] = {}
-        self.index: FileIndex = index
-        self.dangling_links: set[str] = dangling_links
         self.process()
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqJournals class."""
-        return f"{self.__class__.__qualname__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the LogseqJournals class."""
-        return f"{self.__class__.__qualname__}"
 
     def __len__(self) -> int:
         """Return the number of processed keys."""

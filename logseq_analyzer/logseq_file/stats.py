@@ -2,9 +2,12 @@
 This module defines the LogseqPath class, which is used to gather file statistics for Logseq files.
 """
 
+from dataclasses import dataclass
 import logging
 from datetime import datetime
+from os import stat_result
 from pathlib import Path
+from typing import ClassVar
 from urllib.parse import unquote
 
 from ..config.graph_config import ConfigEdns, get_ns_sep
@@ -17,12 +20,13 @@ from .info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
 logger = logging.getLogger(__name__)
 
 
+@dataclass(slots=True)
 class LogseqFileName:
     """LogseqFileName class."""
 
-    journal_format: JournalFormats = None
-    ns_file_sep: str = ""
-    journal_dir: str = ""
+    journal_format: ClassVar[JournalFormats] = None
+    ns_file_sep: ClassVar[str] = ""
+    journal_dir: ClassVar[str] = ""
 
     @classmethod
     def configure(
@@ -68,41 +72,28 @@ class LogseqFileName:
         return unquote(name).replace(ns_file_sep, ns_sep)
 
 
+@dataclass(slots=True)
 class LogseqPath:
     """LogseqPath class."""
 
-    __slots__ = (
-        "file_type",
-        "file",
-        "logseq_url",
-        "name",
-        "stat",
-        "uri",
-    )
+    file: Path
+    file_type: str = ""
+    logseq_url: str = ""
+    name: str = ""
+    stat: stat_result = None
+    uri: str = ""
 
-    graph_path: Path = None
-    now_ts = datetime.now().timestamp()
-    result_map: dict = {}
-    target_dirs: dict = {}
+    graph_path: ClassVar[Path] = None
+    now_ts: ClassVar[float] = datetime.now().timestamp()
+    result_map: ClassVar[dict] = {}
+    target_dirs: ClassVar[dict] = {}
 
-    def __init__(self, file) -> None:
+    def __post_init__(self) -> None:
         """Initialize the LogseqPath object."""
-        if not isinstance(file, Path):
+        if not isinstance(self.file, Path):
             raise TypeError("file must be a pathlib.Path object.")
-        self.file_type: str = ""
-        self.file: Path = file
-        self.logseq_url: str = ""
-        self.name: str = ""
-        self.stat = file.stat()
-        self.uri: str = file.as_uri()
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqPath instance."""
-        return f"{self.__class__.__qualname__}(file={self.file}, file_type={self.file_type})"
-
-    def __str__(self) -> str:
-        """Return a string representation of the LogseqPath instance."""
-        return f"{self.__class__.__qualname__}({self.file})"
+        self.stat = self.file.stat()
+        self.uri: str = self.file.as_uri()
 
     @classmethod
     def configure(cls, analyzer_dirs: LogseqAnalyzerDirs) -> None:

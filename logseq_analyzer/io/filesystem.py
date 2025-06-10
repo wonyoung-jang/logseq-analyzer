@@ -316,7 +316,7 @@ class LogseqGraphDirs:
     global_config: GlobalConfigFile = None
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[DirsGraph, Any]:
         """Generate a report of the Logseq graph directories."""
         return {
             DirsGraph.GRAPH: self.graph_dir,
@@ -338,7 +338,7 @@ class AnalyzerDeleteDirs:
     delete_assets_dir: DeleteAssetsDirectory = DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR)
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[DirsDelete, Any]:
         """Generate a report of the analyzer delete directories."""
         return {
             DirsDelete.DELETE: self.delete_dir,
@@ -358,7 +358,7 @@ class LogseqAnalyzerDirs:
     output_dir: OutputDirectory = None
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[DirsAnalyzer, dict[DirsAnalyzer, Any]]:
         """Generate a report of the Logseq analyzer directories."""
         return {
             DirsAnalyzer.DIRS: {

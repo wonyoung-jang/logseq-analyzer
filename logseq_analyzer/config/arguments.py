@@ -3,43 +3,26 @@ LogseqAnalyzerArguments Class
 """
 
 import argparse
+from dataclasses import dataclass
 from typing import Any
 
 from ..utils.enums import Output
 
 
+@dataclass(slots=True)
 class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
     # pylint: disable=too-many-instance-attributes
-
-    __slots__ = (
-        "global_config",
-        "graph_cache",
-        "graph_folder",
-        "move_all",
-        "move_bak",
-        "move_recycle",
-        "move_unlinked_assets",
-        "report_format",
-        "write_graph",
-    )
-
-    def __init__(self, **gui_args) -> None:
-        """Initialize the Args class with default values."""
-        self.global_config: str = ""
-        self.graph_cache: bool = False
-        self.graph_folder: str = ""
-        self.move_all: bool = False
-        self.move_bak: bool = False
-        self.move_recycle: bool = False
-        self.move_unlinked_assets: bool = False
-        self.report_format: str = ".txt"
-        self.write_graph: bool = False
-        if gui_args:
-            self.set_gui_args(**gui_args)
-        else:
-            self.set_cli_args()
+    global_config: str = ""
+    graph_cache: bool = False
+    graph_folder: str = ""
+    move_all: bool = False
+    move_bak: bool = False
+    move_recycle: bool = False
+    move_unlinked_assets: bool = False
+    report_format: str = ".txt"
+    write_graph: bool = False
 
     def set_gui_args(self, **gui_args) -> None:
         """Set arguments if provided as keyword arguments from GUI."""

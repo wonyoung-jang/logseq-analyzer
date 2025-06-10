@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from enum import StrEnum
 
-from PySide6.QtCore import QSettings, QThread, Signal
+from PySide6.QtCore import QSettings, QThread, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -86,7 +86,7 @@ class AnalysisWorker(QThread):
             raise
 
 
-@dataclass
+@dataclass(slots=True, weakref_slot=True)
 class Checkboxes:
     """Checkboxes for the GUI."""
 
@@ -123,13 +123,14 @@ class Checkboxes:
             self.move_bak.setChecked(False)
             self.move_recycle.setChecked(False)
 
+    @Slot()
     def force_enable_graph_cache(self) -> None:
         """Force enable and check the graph cache checkbox when the graph folder changes."""
         self.graph_cache.setChecked(True)
         self.graph_cache.setEnabled(False)
 
 
-@dataclass
+@dataclass(slots=True)
 class Buttons:
     """Buttons for the GUI."""
 
@@ -141,7 +142,7 @@ class Buttons:
         self.run.setToolTip("Ctrl + R to run analysis")
 
 
-@dataclass
+@dataclass(slots=True)
 class Inputs:
     """Input fields for the GUI."""
 
@@ -160,7 +161,7 @@ class Inputs:
         return layout
 
 
-@dataclass
+@dataclass(slots=True, weakref_slot=True)
 class Progress:
     """Progress indicators for the GUI."""
 
@@ -190,26 +191,20 @@ class Progress:
         QApplication.processEvents()
 
 
+@dataclass(slots=True)
 class LogseqAnalyzerGUI(QMainWindow):
     """Main GUI class for the Logseq Analyzer application."""
 
-    __slots__ = (
-        "inputs",
-        "checkboxes",
-        "progress",
-        "buttons",
-        "settings",
-        "worker",
-    )
+    inputs: Inputs = None
+    buttons: Buttons = None
+    checkboxes: Checkboxes = None
+    progress: Progress = None
+    settings: QSettings = None
+    worker: AnalysisWorker = None
 
-    def __init__(self) -> None:
+    def __post_init__(self) -> None:
         """Initialize the GUI components and layout."""
-        super().__init__()
-        self.inputs = None
-        self.buttons = None
-        self.checkboxes = None
-        self.progress = None
-        self.worker = None
+        super(LogseqAnalyzerGUI, self).__init__()
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.setup_ui_groups()
         self.init_ui()
@@ -277,7 +272,6 @@ class LogseqAnalyzerGUI(QMainWindow):
             self.show_success(f"{elapsed_time:.2f}")
         else:
             self.show_error(f"Analysis failed: {error_message}")
-
         self.buttons.run.setEnabled(True)
         self.checkboxes.graph_cache.setEnabled(True)
 

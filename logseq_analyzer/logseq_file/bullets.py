@@ -4,6 +4,7 @@ Module for LogseqBullets class
 
 import logging
 from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import Any, Generator
 
 import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
@@ -26,45 +27,29 @@ from .info import BulletInfo
 
 logger = logging.getLogger(__name__)
 
+RAW_DATA_MAP = {
+    CritCode.INLINE: CodePatterns.INLINE_CODE_BLOCK,
+    CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
+    CritContent.ASSETS: ContentPatterns.ASSET,
+}
 
+PATTERN_MODULES = (
+    AdvancedCommandPatterns,
+    CodePatterns,
+    DoubleCurlyBracketsPatterns,
+    DoubleParenthesesPatterns,
+    EmbeddedLinksPatterns,
+    ExternalLinksPatterns,
+)
+
+
+@dataclass(slots=True)
 class LogseqBullets:
     """LogseqBullets class."""
 
-    __slots__ = (
-        "all_bullets",
-        "content",
-        "has_page_properties",
-        "primary",
-    )
-
-    _RAW_DATA_MAP: dict[str, Any] = {
-        CritCode.INLINE: CodePatterns.INLINE_CODE_BLOCK,
-        CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
-        CritContent.ASSETS: ContentPatterns.ASSET,
-    }
-
-    _PATTERN_MODULES = (
-        AdvancedCommandPatterns,
-        CodePatterns,
-        DoubleCurlyBracketsPatterns,
-        DoubleParenthesesPatterns,
-        EmbeddedLinksPatterns,
-        ExternalLinksPatterns,
-    )
-
-    def __init__(self, content: str = "") -> None:
-        """Post-initialization method to set bullet attributes."""
-        self.all_bullets: list[str | None] = []
-        self.content: str = content
-        self.primary: str = ""
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LogseqBullets object."""
-        return f"{self.__class__.__qualname__}()"
-
-    def __str__(self) -> str:
-        """Return a user-friendly string representation of the LogseqBullets object."""
-        return f"{self.__class__.__qualname__}"
+    content: str
+    all_bullets: list[str | None] = field(default_factory=list)
+    primary: str = ""
 
     def process(self, bullet_pattern=ContentPatterns.BULLET) -> None:
         """Process the content to extract bullet information."""
@@ -93,7 +78,7 @@ class LogseqBullets:
     def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.content
-        _raw_data_map = LogseqBullets._RAW_DATA_MAP.items()
+        _raw_data_map = RAW_DATA_MAP.items()
         for key, value in _raw_data_map:
             if value.search(_content):
                 yield key, value.findall(_content)
@@ -141,7 +126,7 @@ class LogseqBullets:
         """
         _content = self.content
         temp_map = defaultdict(list)
-        for pattern in LogseqBullets._PATTERN_MODULES:
+        for pattern in PATTERN_MODULES:
             for key, value in process_pattern_hierarchy(_content, pattern):
                 temp_map[key].append(value)
 
