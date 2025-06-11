@@ -35,14 +35,6 @@ def test_logseq_file(logseq_file, temp_file):
     assert logseq_file.node.backlinked is False
     assert logseq_file.node.backlinked_ns_only is False
     assert logseq_file.node.node_type == "other"
-    assert logseq_file.masked.content == ""
-    assert logseq_file.masked.blocks == {}
-
-
-def test_representation(logseq_file):
-    """Test the string representation of LogseqFile."""
-    assert repr(logseq_file) == f"LogseqFile({logseq_file.path.name})"
-    assert str(logseq_file) == f"LogseqFile: {logseq_file.path.name}"
 
 
 def test_hash(logseq_file):

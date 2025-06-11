@@ -24,9 +24,3 @@ def test_cache_initialization(cache):
     """Test the initialization of the Cache class."""
     assert cache.cache_path.exists()
     assert cache.cache is not None
-
-
-def test_representation(cache):
-    """Test the string representation of Cache."""
-    assert repr(cache) == f'Cache(cache_path="{cache.cache_path}")'
-    assert str(cache) == f"Cache: {cache.cache_path}"

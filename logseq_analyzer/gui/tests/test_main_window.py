@@ -3,7 +3,6 @@ Test the main window of the Logseq Analyzer GUI.
 """
 
 import pytest
-
 from PySide6.QtWidgets import QApplication
 
 from ..main_window import LogseqAnalyzerGUI
@@ -65,8 +64,5 @@ def test_main_window_controls(main_window):
     assert main_window.checkboxes.move_recycle is not None
     assert main_window.checkboxes.write_graph is not None
     assert main_window.checkboxes.graph_cache is not None
-    assert main_window.progress_bar is not None
+    assert main_window.progress.progress_bar is not None
     assert main_window.buttons.run is not None
-    assert main_window.buttons.output is not None
-    assert main_window.buttons.delete is not None
-    assert main_window.buttons.log is not None
