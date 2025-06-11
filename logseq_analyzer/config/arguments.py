@@ -93,7 +93,7 @@ class Args:
             setattr(self, key, value)
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[Output, list[tuple[str, Any]]]:
         """Generate a report of the arguments."""
         slots = getattr(self, "__slots__", [])
         report = ((key, getattr(self, key)) for key in slots)

@@ -112,6 +112,7 @@ class Checkboxes:
         layout.addWidget(self.graph_cache)
         return layout
 
+    @Slot()
     def update_move_options(self) -> None:
         """Update the state of move options checkboxes based on the main checkbox."""
         if self.move_all.isChecked():

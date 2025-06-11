@@ -55,7 +55,7 @@ class ConfigEdns:
     global_edn: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[ConfigEdnReport, Any]:
         """Generate a report of the configuration EDN files."""
         return {
             ConfigEdnReport.CONFIG_EDN: {

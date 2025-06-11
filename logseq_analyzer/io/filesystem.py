@@ -6,7 +6,7 @@ import logging
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from ..utils.enums import Constant, DirsAnalyzer, DirsDelete, DirsGraph
 
@@ -38,40 +38,22 @@ __all__ = [
 ]
 
 
+@dataclass(slots=True)
 class File:
     """A class to represent a file in the Logseq Analyzer."""
 
-    __slots__ = ("_path",)
+    path: Path
 
-    clean_on_init: bool = False
-    must_exist: bool = False
-    is_dir: bool = False
+    clean_on_init: ClassVar[bool] = False
+    must_exist: ClassVar[bool] = False
+    is_dir: ClassVar[bool] = False
 
-    def __init__(self, path: Path) -> None:
+    def __post_init__(self) -> None:
         """Initialize the File class with a path."""
-        self.path: Path = path
+        if not isinstance(self.path, Path):
+            self.path = Path(self.path)
         self.startup()
         logger.info("File initialized: %s", self.path)
-
-    def __repr__(self) -> str:
-        """Return a string representation of the File object."""
-        return f'{self.__class__.__qualname__}(path="{str(self.path)}")'
-
-    def __str__(self) -> str:
-        """Return a string representation of the File object."""
-        return f"{self.__class__.__qualname__}: {str(self.path.resolve())}"
-
-    @property
-    def path(self) -> Path:
-        """Get the path of the file."""
-        return self._path
-
-    @path.setter
-    def path(self, value: str | Path) -> None:
-        """Set the path of the file."""
-        if isinstance(value, str):
-            value = Path(value)
-        self._path = value
 
     def startup(self) -> None:
         """Perform startup operations for the File object."""
@@ -332,10 +314,17 @@ class LogseqGraphDirs:
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
-    delete_dir: DeleteDirectory = DeleteDirectory(Constant.TO_DELETE_DIR)
-    delete_bak_dir: DeleteBakDirectory = DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR)
-    delete_recycle_dir: DeleteRecycleDirectory = DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR)
-    delete_assets_dir: DeleteAssetsDirectory = DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR)
+    delete_dir: DeleteDirectory = None
+    delete_bak_dir: DeleteBakDirectory = None
+    delete_recycle_dir: DeleteRecycleDirectory = None
+    delete_assets_dir: DeleteAssetsDirectory = None
+
+    def __post_init__(self) -> None:
+        """Initialize the AnalyzerDeleteDirs class."""
+        self.delete_dir = DeleteDirectory(Constant.TO_DELETE_DIR)
+        self.delete_bak_dir = DeleteBakDirectory(Constant.TO_DELETE_BAK_DIR)
+        self.delete_recycle_dir = DeleteRecycleDirectory(Constant.TO_DELETE_RECYCLE_DIR)
+        self.delete_assets_dir = DeleteAssetsDirectory(Constant.TO_DELETE_ASSETS_DIR)
 
     @property
     def report(self) -> dict[DirsDelete, Any]:

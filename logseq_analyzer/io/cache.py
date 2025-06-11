@@ -52,9 +52,9 @@ class Cache:
         """Open the cache file."""
         self.cache = shelve.open(self.cache_path, protocol=protocol)
 
-    def close(self, index: FileIndex, index_key: str = CacheKey.INDEX) -> None:
+    def close(self, index: FileIndex) -> None:
         """Close the cache file."""
-        self.cache[index_key] = index
+        self.cache[CacheKey.INDEX] = index
         self.cache.close()
 
     def initialize(self) -> FileIndex:
@@ -73,21 +73,21 @@ class Cache:
         self.cache_path.unlink(missing_ok=True)
         self.open()
 
-    def clear_deleted_files(self, index_key: str = CacheKey.INDEX) -> FileIndex:
+    def clear_deleted_files(self) -> FileIndex:
         """Clear the deleted files from the cache."""
-        if index_key in self.cache:
-            index = self.cache[index_key]
+        if CacheKey.INDEX in self.cache:
+            index = self.cache[CacheKey.INDEX]
         else:
             index = FileIndex()
         index.remove_deleted_files()
-        self.cache[index_key] = index
+        self.cache[CacheKey.INDEX] = index
         return index
 
-    def iter_modified_files(self, mod_key: str = CacheKey.MOD_TRACKER) -> Generator[Path, Any, None]:
+    def iter_modified_files(self) -> Generator[Path, Any, None]:
         """Get the modified files from the cache."""
         mod_tracker = {}
-        if mod_key in self.cache:
-            mod_tracker = self.cache[mod_key]
+        if CacheKey.MOD_TRACKER in self.cache:
+            mod_tracker = self.cache[CacheKey.MOD_TRACKER]
 
         file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
         for path in file_iter:
@@ -98,4 +98,4 @@ class Cache:
             mod_tracker[str_path] = curr_date_mod
             yield path
 
-        self.cache[mod_key] = mod_tracker
+        self.cache[CacheKey.MOD_TRACKER] = mod_tracker
