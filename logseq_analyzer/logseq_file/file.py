@@ -105,7 +105,7 @@ class LogseqFile:
         self.init_file_data()
         self.process_content_data()
 
-    def init_file_data(self, hls_prefix: str = Core.HLS_PREFIX) -> None:
+    def init_file_data(self) -> None:
         """Extract metadata from a file."""
         self.path.process()
         self.bullets = LogseqBullets(self.path.read_text())
@@ -116,7 +116,7 @@ class LogseqFile:
             namespace=self.path.get_namespace_info(),
             bullet=self.bullets.get_bullet_info(),
         )
-        self.is_hls = self.path.name.startswith(hls_prefix)
+        self.is_hls = self.path.name.startswith(Core.HLS_PREFIX)
 
     def process_content_data(self) -> None:
         """Process content data to extract various elements like backlinks, tags, and properties."""

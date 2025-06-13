@@ -2,8 +2,8 @@
 This module defines the LogseqPath class, which is used to gather file statistics for Logseq files.
 """
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from os import stat_result
 from pathlib import Path
@@ -48,7 +48,7 @@ class LogseqFileName:
         return LogseqFileName.process_non_journal_key(name, _ns_file_sep)
 
     @staticmethod
-    def process_journal_key(name: str, ordinal: str = Core.DATE_ORDINAL_SUFFIX) -> str:
+    def process_journal_key(name: str) -> str:
         """Process the journal key to create a page title."""
         _file_format = LogseqFileName.journal_format.file
         _page_format = LogseqFileName.journal_format.page
@@ -57,7 +57,7 @@ class LogseqFileName:
         try:
             date_obj = datetime.strptime(name, _file_format)
             page_title = date_obj.strftime(_page_format)
-            if ordinal in _page_title_format:
+            if Core.DATE_ORDINAL_SUFFIX in _page_title_format:
                 day_number = str(date_obj.day)
                 day_with_ordinal = DateUtilities.append_ordinal_to_day(day_number)
                 page_title.replace(day_number, day_with_ordinal, 1)
@@ -119,22 +119,22 @@ class LogseqPath:
         self.file_type = self.evaluate_file_type()
         self.logseq_url = self.set_logseq_url()
 
-    def evaluate_file_type(self, other: str = FileType.OTHER) -> str:
+    def evaluate_file_type(self) -> str:
         """Helper function to determine the file type based on the directory structure."""
         _result_map = LogseqPath.result_map
         _parent = self.file.parent.name
         _parts = self.file.parts
 
-        result = _result_map.get(_parent, (other, other))
+        result = _result_map.get(_parent, (FileType.OTHER, FileType.OTHER))
 
-        if result[0] != other:
+        if result[0] != FileType.OTHER:
             return result[0]
 
         for key, result in _result_map.items():
             if key in _parts:
                 return result[1]
 
-        return other
+        return FileType.OTHER
 
     def set_logseq_url(self) -> str:
         """Set the Logseq URL."""
@@ -188,15 +188,15 @@ class LogseqPath:
             has_content=bool(_size),
         )
 
-    def get_namespace_info(self, ns_sep: str = Core.NS_SEP) -> NamespaceInfo:
+    def get_namespace_info(self) -> NamespaceInfo:
         """Get the namespace name data."""
-        _ns_parts_list = self.name.split(ns_sep)
+        _ns_parts_list = self.name.split(Core.NS_SEP)
         _ns_root = _ns_parts_list[0]
         return NamespaceInfo(
             parts={part: level for level, part in enumerate(_ns_parts_list, start=1)},
             root=_ns_root,
             parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root,
-            parent_full=ns_sep.join(_ns_parts_list[:-1]),
+            parent_full=Core.NS_SEP.join(_ns_parts_list[:-1]),
             stem=_ns_parts_list[-1],
             is_namespace=Core.NS_SEP in self.name,
         )

@@ -106,7 +106,7 @@ class LogseqNamespaces:
                 part_entries[part].append({"entry": f_name, "level": level})
         details["level_distribution"] = dict(level_distribution)
 
-    def analyze_ns_queries(self, query_criteria: str = CritDblCurly.NAMESPACE_QUERIES) -> None:
+    def analyze_ns_queries(self) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
         search_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.search
@@ -116,7 +116,7 @@ class LogseqNamespaces:
             if not (f_data := f.data):
                 continue
 
-            if not (queries := f_data.get(query_criteria)):
+            if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERIES)):
                 continue
 
             f_path = f.path
@@ -159,13 +159,13 @@ class LogseqNamespaces:
             for part in intersect_dangling(parts):
                 dangling_conflicts[part].append(entry)
 
-    def detect_parent_depth_conflicts(self, ns_sep: str = Core.NS_SEP) -> None:
+    def detect_parent_depth_conflicts(self) -> None:
         """Identify namespace parts that appear at different depths (levels) across entries."""
         part_levels = self._part_levels.items()
         part_entries = self._part_entries
         parent_depth_conflicts = self.conflicts.parent_depth
         parent_unique_conflicts = self.conflicts.parent_unique
-        join_to_ns_sep = ns_sep.join
+        join_to_ns_sep = Core.NS_SEP.join
         for part, levels in part_levels:
             if len(levels) < 2:
                 continue
@@ -177,7 +177,7 @@ class LogseqNamespaces:
                 entries = (d["entry"] for d in details if d["level"] == level)
 
                 for entry in entries:
-                    up_to_level = entry.split(ns_sep)[:level]
+                    up_to_level = entry.split(Core.NS_SEP)[:level]
                     parent_unique_conflicts[key].add(join_to_ns_sep(up_to_level))
                     parent_depth_conflicts[key].append(entry)
 

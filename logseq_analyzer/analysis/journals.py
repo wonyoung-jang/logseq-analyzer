@@ -46,13 +46,13 @@ class LogseqJournals:
         """Return the number of processed keys."""
         return len(self.sets.timeline)
 
-    def process(self, journal_file: str = FileType.JOURNAL) -> None:
+    def process(self) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
         journals_to_datetime = DateUtilities.journals_to_datetime
         index = self.index
         page_format = LogseqJournals.journal_page_format
         dangling = sorted(journals_to_datetime(self.dangling_links, page_format))
-        journals = (f.path.name for f in index if f.path.file_type == journal_file)
+        journals = (f.path.name for f in index if f.path.file_type == FileType.JOURNAL)
         self.sets.existing.extend(sorted(journals_to_datetime(journals, page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)

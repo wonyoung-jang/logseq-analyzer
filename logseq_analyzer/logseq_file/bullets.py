@@ -51,14 +51,14 @@ class LogseqBullets:
     all_bullets: list[str | None] = field(default_factory=list)
     primary: str = ""
 
-    def process(self, bullet_pattern=ContentPatterns.BULLET) -> None:
+    def process(self) -> None:
         """Process the content to extract bullet information."""
         if not (content := self.content):
             return
 
         append_all_bullets = self.all_bullets.append
 
-        for bullet_index, bullet in iter_pattern_split(bullet_pattern, content):
+        for bullet_index, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
             append_all_bullets(bullet)
             if bullet and bullet_index == 0:
                 self.primary = bullet

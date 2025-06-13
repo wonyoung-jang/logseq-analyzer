@@ -38,9 +38,9 @@ class LogseqAssetsHls:
             self.convert_names_to_data()
             self.check_backlinks()
 
-    def get_asset_files(self, sub_asset: FileType = FileType.SUB_ASSET) -> None:
+    def get_asset_files(self) -> None:
         """Retrieve asset files based on specific criteria."""
-        asset_files = (f for f in self.index if f.path.file_type == sub_asset)
+        asset_files = (f for f in self.index if f.path.file_type == FileType.SUB_ASSET)
         self.asset_mapping = {f.path.name: f for f in asset_files}
 
     def convert_names_to_data(self) -> None:
@@ -67,7 +67,7 @@ class LogseqAssetsHls:
                     hls_bullet = f"{hl_page}_{id_}_{hl_stamp}"
                     add_hls_bullet(hls_bullet)
 
-    def check_backlinks(self, asset_file_type: FileType = FileType.ASSET) -> None:
+    def check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
         asset_mapping = self.asset_mapping
         add_backlinked = self.backlinked.add
@@ -79,7 +79,7 @@ class LogseqAssetsHls:
             if not (asset_file := get_asset_file(name)):
                 continue
 
-            asset_file.path.file_type = asset_file_type
+            asset_file.path.file_type = FileType.ASSET
 
             try:
                 remove_asset(name)
@@ -159,9 +159,9 @@ class LogseqAssets:
                 asset_file.node.backlinked = True
                 return
 
-    def yield_assets(self, backlinked=None, asset: FileType = FileType.ASSET) -> Generator[LogseqFile, None]:
+    def yield_assets(self, backlinked=None) -> Generator[LogseqFile, None]:
         """Yield all asset files from the index."""
-        for file in (f for f in self.index if f.path.file_type == asset):
+        for file in (f for f in self.index if f.path.file_type == FileType.ASSET):
             if backlinked is None:
                 yield file
             if file.node.backlinked is backlinked:
