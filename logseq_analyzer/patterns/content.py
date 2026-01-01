@@ -1,6 +1,4 @@
-"""
-Compile frequently used regex patterns for Logseq content.
-"""
+"""Compile frequently used regex patterns for Logseq content."""
 
 import re
 
@@ -120,10 +118,10 @@ DYNAMIC_VARIABLE = re.compile(
 ANY_LINK = re.compile(
     r"""
     \b                                          # word boundary
-    (?:                                       
+    (?:
     (?:(?:https?|ftp)://)                   #   scheme:// (http, https or ftp)
     (?:\S+(?::\S*)?@)?                      #   optional user:pass@
-    (?:                                     
+    (?:
     \d{1,3}(?:\.\d{1,3}){3}             #   IPv4
     |
     \[[0-9A-F:]+\]                      #   IPv6 (in brackets)
