@@ -1,18 +1,20 @@
-"""
-Logseq Content Summarizer Module
-"""
+"""Logseq Content Summarizer Module."""
+
+from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..utils.helpers import get_count_and_foundin_data, sort_dict_by_value
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from .index import FileIndex
 
 __all__ = [
-    "LogseqFileSummarizer",
     "LogseqContentSummarizer",
+    "LogseqFileSummarizer",
     "SummaryFile",
 ]
 

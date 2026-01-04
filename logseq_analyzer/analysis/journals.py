@@ -1,15 +1,18 @@
-"""
-Process logseq journals.
-"""
+"""Process logseq journals."""
+
+from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from ..analysis.index import FileIndex
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import FileType, Output
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from ..analysis.index import FileIndex
 
 __all__ = [
     "LogseqJournals",
@@ -31,7 +34,7 @@ class LogseqJournals:
     """LogseqJournals class to handle journal files and their processing."""
 
     index: FileIndex
-    dangling_links: set[str]
+    dangling_links: list[str]
     sets: JournalSets = field(default_factory=JournalSets)
     dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
     timeline_stats: dict[str, Any] = field(default_factory=dict)
@@ -48,12 +51,11 @@ class LogseqJournals:
 
     def process(self) -> None:
         """Process journal keys to build the complete timeline and detect missing entries."""
-        journals_to_datetime = DateUtilities.journals_to_datetime
-        index = self.index
-        page_format = LogseqJournals.journal_page_format
-        dangling = sorted(journals_to_datetime(self.dangling_links, page_format))
-        journals = (f.path.name for f in index if f.path.file_type == FileType.JOURNAL)
-        self.sets.existing.extend(sorted(journals_to_datetime(journals, page_format)))
+        dangling = sorted(DateUtilities.journals_to_datetime(self.dangling_links, LogseqJournals.journal_page_format))
+        journals = (f.path.name for f in self.index if f.path.file_type == FileType.JOURNAL)
+        self.sets.existing.extend(
+            sorted(DateUtilities.journals_to_datetime(journals, LogseqJournals.journal_page_format))
+        )
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 

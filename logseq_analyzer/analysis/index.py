@@ -1,16 +1,19 @@
-"""
-FileIndex class.
-"""
+"""FileIndex class."""
 
-from dataclasses import dataclass, field
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, ClassVar, Iterator
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from ..logseq_file.file import LogseqFile
 from ..utils.enums import Output
 from ..utils.helpers import yield_attrs
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +27,14 @@ __all__ = [
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    _instance: ClassVar["FileIndex"] = None
-    write_graph: ClassVar[bool] = False
-
     _files: set[LogseqFile] = field(default_factory=set)
     _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
     _path_to_file: dict[Path, LogseqFile] = field(default_factory=dict)
 
-    def __new__(cls) -> "FileIndex":
+    _instance: ClassVar[FileIndex | None] = None
+    write_graph: ClassVar[bool] = False
+
+    def __new__(cls) -> Self:
         """Ensure only one instance of FileIndex is created."""
         if cls._instance is None:
             cls._instance = super(FileIndex, cls).__new__(cls)
@@ -50,12 +53,14 @@ class FileIndex:
         if isinstance(f, LogseqFile):
             if f in self:
                 return f
-            raise KeyError(f"File {f} not found in index.")
+            msg = f"File {f} not found in index."
+            raise KeyError(msg)
         if isinstance(f, str):
             return self._name_to_files.get(f, [])
         if isinstance(f, Path):
             return self._path_to_file.get(f)
-        raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
+        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
+        raise TypeError(msg)
 
     def __contains__(self, f: Any) -> bool:
         """Check if a file is in the index."""
@@ -65,7 +70,8 @@ class FileIndex:
             return f in self._name_to_files
         if isinstance(f, Path):
             return f in self._path_to_file
-        raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
+        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
+        raise TypeError(msg)
 
     def add(self, f: LogseqFile) -> None:
         """Add a file to the index."""
@@ -84,16 +90,17 @@ class FileIndex:
         elif isinstance(f, Path):
             target = self._path_to_file.get(f)
         else:
-            raise TypeError(f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path.")
+            msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
+            raise TypeError(msg)
 
         if target is None:
-            logging.warning("Key %s not found in index.", f)
+            logger.warning("Key %s not found in index.", f)
             return
         self._remove_file(target)
         logger.debug("Key %s removed from index.", f)
 
     def _remove_file(self, f: LogseqFile) -> None:
-        """Helper method to remove a file from the index."""
+        """Remove a file from the index."""
         self._files.discard(f)
         if files := self._name_to_files.get(f.path.name):
             try:

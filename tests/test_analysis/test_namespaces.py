@@ -1,11 +1,9 @@
-"""
-Tests for LogseqJournals
-"""
+"""Tests for LogseqJournals."""
 
 import pytest
 
-from ...analysis.index import FileIndex
-from ..namespaces import LogseqNamespaces
+from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 
 
 @pytest.fixture

@@ -1,15 +1,17 @@
-"""
-This module contains functions for processing and analyzing Logseq graph data.
-"""
+"""Module with functions for processing and analyzing Logseq graph data."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from ..logseq_file.file import LogseqFile
 from ..utils.enums import CritContent, CritProp, FileType, Output
 from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from ..logseq_file.file import LogseqFile
+    from .index import FileIndex
 
 __all__ = [
     "LogseqGraph",
@@ -32,7 +34,7 @@ class LogseqGraph:
     index: FileIndex
     all_linked_refs: dict[str, dict[str, dict]] = field(default_factory=dict)
     all_dangling_links: dict[str, dict[str, dict]] = field(default_factory=dict)
-    dangling_links: list[str] = field(default_factory=list)
+    dangling_links: set[str] = field(default_factory=set)
     unique: UniqueSets = field(default_factory=UniqueSets)
 
     _TO_NODE_TYPE: ClassVar[frozenset[FileType]] = frozenset({FileType.JOURNAL, FileType.PAGE})
@@ -85,7 +87,7 @@ class LogseqGraph:
                 continue
 
             if ns_info.parent:
-                lr_with_ns_parent = linked_references.copy() + [ns_info.parent]
+                lr_with_ns_parent = [*linked_references.copy(), ns_info.parent]
                 all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f.path.name))
             else:
                 all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, linked_references, f.path.name))
@@ -113,7 +115,7 @@ class LogseqGraph:
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""
-        for _, values in self.all_linked_refs.items():
+        for values in self.all_linked_refs.values():
             found_in_map = values.get("found_in", {})
             values["found_in"] = sort_dict_by_value(found_in_map, reverse=True)
 

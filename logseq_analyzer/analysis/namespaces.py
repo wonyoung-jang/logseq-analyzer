@@ -1,5 +1,4 @@
-"""
-This module contains functions for processing and analyzing namespace data in Logseq.
+"""Module containing functions for processing and analyzing namespace data in Logseq.
 
 What are the problems trying to be solved?
 
@@ -14,16 +13,20 @@ Problems:
     3. There is no easy way to get data about namespaces.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.patterns.content as ContentPatterns
+import logseq_analyzer.patterns.content as content_patterns
 
 from ..utils.enums import Core, CritDblCurly, Output
 from ..utils.helpers import sort_dict_by_value
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from .index import FileIndex
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +37,13 @@ class NamespaceConflicts:
 
     dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    parent_depth: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    parent_unique: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    parent_depth: dict[tuple[str, int], list[str]] = field(default_factory=lambda: defaultdict(list))
+    parent_unique: dict[tuple[str, int], set[str]] = field(default_factory=lambda: defaultdict(set))
 
 
 @dataclass(slots=True)
 class NamespaceStructure:
-    """
-    Class to hold namespace structure data.
-    """
+    """Class to hold namespace structure data."""
 
     data: dict[str, Any] = field(default_factory=dict)
     details: dict[str, Any] = field(default_factory=dict)
@@ -57,7 +58,7 @@ class LogseqNamespaces:
     """Class for analyzing namespace data in Logseq."""
 
     index: FileIndex
-    dangling_links: set[str]
+    dangling_links: list[str]
     _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
     _part_entries: defaultdict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
     conflicts: NamespaceConflicts = field(default_factory=NamespaceConflicts)
@@ -109,8 +110,8 @@ class LogseqNamespaces:
     def analyze_ns_queries(self) -> None:
         """Analyze namespace queries."""
         get_structure = self.structure.data.get
-        search_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.search
-        find_all_page_ref_pattern = ContentPatterns.PAGE_REFERENCE.findall
+        search_page_ref_pattern = content_patterns.PAGE_REFERENCE.search
+        find_all_page_ref_pattern = content_patterns.PAGE_REFERENCE.findall
         ns_queries = self.queries
         for f in self.index:
             if not (f_data := f.data):

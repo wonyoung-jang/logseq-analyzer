@@ -1,11 +1,9 @@
-"""
-Tests for LogseqGraph
-"""
+"""Tests for LogseqGraph."""
 
 import pytest
 
-from ..graph import LogseqGraph
-from ...analysis.index import FileIndex
+from logseq_analyzer.analysis.graph import LogseqGraph
+from logseq_analyzer.analysis.index import FileIndex
 
 
 @pytest.fixture

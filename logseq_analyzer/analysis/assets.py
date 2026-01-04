@@ -1,15 +1,19 @@
-"""
-Logseq Assets Analysis Module.
-"""
+"""Logseq Assets Analysis Module."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import ClassVar, Generator
+from typing import TYPE_CHECKING, Any, ClassVar
 
-import logseq_analyzer.patterns.content as ContentPatterns
+import logseq_analyzer.patterns.content as content_patterns
 
-from ..logseq_file.file import LogseqFile
 from ..utils.enums import CritContent, CritEmb, FileType, Output
-from .index import FileIndex
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from ..logseq_file.file import LogseqFile
+    from .index import FileIndex
 
 __all__ = [
     "LogseqAssets",
@@ -45,7 +49,7 @@ class LogseqAssetsHls:
 
     def convert_names_to_data(self) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        find_prop_value_pattern = ContentPatterns.PROPERTY_VALUE.finditer
+        find_prop_value_pattern = content_patterns.PROPERTY_VALUE.finditer
         add_hls_bullet = self.hls_bullets.add
         hls_files = (f.bullets.all_bullets for f in self.index if f.is_hls)
         for f_all_bullets in hls_files:
@@ -89,7 +93,7 @@ class LogseqAssetsHls:
                 add_not_backlinked(name)
 
     @property
-    def report(self) -> str:
+    def report(self) -> dict[str, Any]:
         """Generate a report of the asset analysis."""
         return {
             Output.HLS_ASSET_MAPPING: self.asset_mapping,
@@ -107,7 +111,7 @@ class LogseqAssets:
     backlinked: set[LogseqFile] = field(default_factory=set)
     not_backlinked: set[LogseqFile] = field(default_factory=set)
 
-    _ASSET_CRITERIA: ClassVar[frozenset[CritContent]] = frozenset({CritEmb.ASSET, CritContent.ASSETS})
+    _ASSET_CRITERIA: ClassVar[frozenset[str]] = frozenset({CritEmb.ASSET, CritContent.ASSETS})
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssets instance."""
@@ -159,7 +163,7 @@ class LogseqAssets:
                 asset_file.node.backlinked = True
                 return
 
-    def yield_assets(self, backlinked=None) -> Generator[LogseqFile, None]:
+    def yield_assets(self, *, backlinked: bool | None = None) -> Generator[LogseqFile, None]:
         """Yield all asset files from the index."""
         for file in (f for f in self.index if f.path.file_type == FileType.ASSET):
             if backlinked is None:
@@ -168,7 +172,7 @@ class LogseqAssets:
                 yield file
 
     @property
-    def report(self) -> str:
+    def report(self) -> dict[str, set[LogseqFile]]:
         """Generate a report of the asset analysis."""
         return {
             Output.ASSETS_BACKLINKED: self.backlinked,
