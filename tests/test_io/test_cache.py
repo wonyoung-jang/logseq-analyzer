@@ -1,14 +1,12 @@
-"""
-Test Cache class.
-"""
+"""Test Cache class."""
 
 from pathlib import Path
 
 import pytest
 
-from ...analysis.index import FileIndex
-from ...utils.enums import Constant
-from ..cache import Cache
+from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.io.cache import Cache
+from logseq_analyzer.utils.enums import Constant
 
 
 @pytest.fixture
@@ -20,7 +18,7 @@ def cache():
     cache.close(FileIndex())
 
 
-def test_cache_initialization(cache):
+def test_cache_initialization(cache) -> None:
     """Test the initialization of the Cache class."""
     assert cache.cache_path.exists()
     assert cache.cache is not None

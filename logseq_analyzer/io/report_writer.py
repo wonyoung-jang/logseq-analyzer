@@ -1,16 +1,19 @@
-"""
-Reporting module for writing output to files, including HTML reports.
-"""
+"""Reporting module for writing output to files, including HTML reports."""
+
+from __future__ import annotations
 
 import json
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, ClassVar, TextIO
+from typing import TYPE_CHECKING, Any, ClassVar, TextIO
 
-from ..config.arguments import Args
-from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.enums import Format
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from ..config.arguments import Args
+    from ..io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +23,7 @@ class TextWriter:
 
     @staticmethod
     def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
-        """
-        Write the data to a plain text file with the given prefix and count.
-        """
+        """Write the data to a plain text file with the given prefix and count."""
         with outputpath.open("w", encoding="utf-8") as f:
             if count is not None:
                 f.write(f"{prefix} | {filename}\n")
@@ -32,9 +33,7 @@ class TextWriter:
 
     @staticmethod
     def write_recursive(f: TextIO, data: Any, indent_level: int = 0) -> None:
-        """
-        Recursive function to write nested data structures to plain text files.
-        """
+        """Recursive function to write nested data structures to plain text files."""
         indent = "\t" * indent_level
         if isinstance(data, dict) and indent_level == 0:
             TextWriter.write_toplevel_dict(f, data, indent, indent_level)
@@ -43,9 +42,7 @@ class TextWriter:
 
     @staticmethod
     def write_toplevel_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
-        """
-        Write the top-level dictionary to a file.
-        """
+        """Write the top-level dictionary to a file."""
         f_write = f.write
         write_dict = TextWriter.write_values_is_dict
         write_collection = TextWriter.write_values_is_collection
@@ -60,9 +57,7 @@ class TextWriter:
 
     @staticmethod
     def write_values_is_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
-        """
-        Write values of a dictionary to a file with indentation.
-        """
+        """Write values of a dictionary to a file with indentation."""
         f_write = f.write
         write_recursive = TextWriter.write_recursive
         for key, values in data.items():
@@ -75,9 +70,7 @@ class TextWriter:
 
     @staticmethod
     def write_values_is_collection(f: TextIO, values: Any, indent: str) -> None:
-        """
-        Write values of a collection to a file with indentation.
-        """
+        """Write values of a collection to a file with indentation."""
         f_write = f.write
         f_write(f"{indent}VALUES ({len(values)}):\n")
         for index, value in enumerate(values, 1):
@@ -86,9 +79,7 @@ class TextWriter:
 
     @staticmethod
     def write_not_toplevel_dict(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
-        """
-        Write the non-top-level dictionary to a file.
-        """
+        """Write the non-top-level dictionary to a file."""
         if isinstance(data, dict):
             TextWriter.write_nested_dict(f, data, indent, indent_level)
         elif isinstance(data, (list, set)):
@@ -98,9 +89,7 @@ class TextWriter:
 
     @staticmethod
     def write_nested_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
-        """
-        Write nested dictionaries to a file with indentation.
-        """
+        """Write nested dictionaries to a file with indentation."""
         f_write = f.write
         write_recursive = TextWriter.write_recursive
         for key, values in data.items():
@@ -112,9 +101,7 @@ class TextWriter:
 
     @staticmethod
     def write_nested_collection(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
-        """
-        Write collections (lists, sets) to a file with indentation.
-        """
+        """Write collections (lists, sets) to a file with indentation."""
         f_write = f.write
         write_recursive = TextWriter.write_recursive
         for index, item in enumerate(data, 1):
@@ -130,8 +117,7 @@ class HTMLWriter:
 
     @staticmethod
     def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
-        """
-        Write the data to an HTML file with the given prefix and count.
+        """Write the data to an HTML file with the given prefix and count.
 
         Args:
             outputpath (Path): The path where the HTML file will be written.
@@ -139,16 +125,17 @@ class HTMLWriter:
             count (int | None): The count of items, if applicable.
             filename (str): The name of the file being processed.
             data (Any): The data to be written to the HTML file.
+
         """
         with outputpath.open("w", encoding="utf-8") as f:
             f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
             f.write(f'<meta charset="utf-8">\n<title>{prefix}</title>\n')
             f.write(
-                """<style> 
-                body { font-family: sans-serif; margin: 2em; } 
+                """<style>
+                body { font-family: sans-serif; margin: 2em; }
                 dl { margin-left: 1em; }
-                ol { margin-left: 1em; } 
-                span { display: inline-block; } 
+                ol { margin-left: 1em; }
+                span { display: inline-block; }
                 </style>\n"""
             )
             f.write("</head>\n<body>\n")
@@ -162,8 +149,8 @@ class HTMLWriter:
 
     @staticmethod
     def write_html_recursive(f: TextIO, data: Any) -> None:
-        """
-        Recursive helper to write nested data structures into HTML format.
+        """Recursive helper to write nested data structures into HTML format.
+
         Uses <dl> for dicts, <ol> for lists/sets, and <span> for simple values.
         """
         if isinstance(data, dict):
@@ -175,8 +162,8 @@ class HTMLWriter:
 
     @staticmethod
     def write_collection_html(f: TextIO, data: Any) -> None:
-        """
-        Write collections (lists, sets) to HTML format.
+        """Write collections (lists, sets) to HTML format.
+
         Uses <ol> for ordered lists and <li> for items.
         """
         f.write("<ol>\n")
@@ -193,8 +180,8 @@ class HTMLWriter:
 
     @staticmethod
     def write_dict_html(f: TextIO, data: dict) -> None:
-        """
-        Write a dictionary to HTML format.
+        """Write a dictionary to HTML format.
+
         Uses <dl> for definition lists, <dt> for terms, and <dd> for definitions.
         """
         f.write("<dl>\n")
@@ -216,15 +203,13 @@ class JSONWriter:
 
     @staticmethod
     def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
-        """
-        Write the data to a JSON file.
-        """
+        """Write the data to a JSON file."""
         try:
             with outputpath.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
             logger.info("Successfully wrote JSON for %s items in filename: %s", count, filename)
         except TypeError:
-            logger.error("Failed to write JSON for %s, falling back to TXT.", prefix)
+            logger.exception("Failed to write JSON for %s, falling back to TXT.", prefix)
 
 
 @dataclass(slots=True)
@@ -245,25 +230,23 @@ class ReportWriter:
     subdir: str
     writer: Writers = field(default_factory=Writers)
 
-    ext: ClassVar[str] = ""
-    output_dir: ClassVar[Path] = None
+    ext: ClassVar[str]
+    output_dir: ClassVar[Path]
 
     @classmethod
     def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:
-        """
-        Configure the ReportWriter class with necessary settings.
+        """Configure the ReportWriter class with necessary settings.
 
         Args:
             args (Args): The command-line arguments.
             analyzer_dirs (LogseqAnalyzerDirs): The directories used by the Logseq Analyzer.
+
         """
-        cls.output_dir = analyzer_dirs.output_dir.path
         cls.ext = args.report_format
+        cls.output_dir = analyzer_dirs.output_dir.path
 
     def write(self) -> None:
-        """
-        Write the report to a file in the configured format (TXT, JSON, or HTML).
-        """
+        """Write the report to a file in the configured format (TXT, JSON, or HTML)."""
         _data = self.data
         _prefix = self.prefix
         _ext = self.ext
@@ -282,16 +265,15 @@ class ReportWriter:
         write_method(outputpath, _prefix, count, filename, _data)
 
     def get_output_path(self, filename: str) -> Path:
-        """
-        Get the output path for the report file.
+        """Get the output path for the report file.
 
         Args:
             filename (str): The name of the file to be created.
 
         Returns:
             Path: The output path for the report file.
+
         """
         output_dir = self.output_dir / self.subdir if self.subdir else self.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / filename
-        return output_path
+        return output_dir / filename

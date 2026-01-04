@@ -1,8 +1,7 @@
-"""
-Test the ReportWriter class.
-"""
+"""Test the ReportWriter class."""
 
 import pytest
+
 from ..report_writer import ReportWriter
 
 
@@ -20,7 +19,7 @@ def report_writer():
     return ReportWriter(prefix, data, subdir)
 
 
-def test_report_writer_init(report_writer):
+def test_report_writer_init(report_writer) -> None:
     """Test the initialization of ReportWriter."""
     assert report_writer.prefix == "test_report"
     assert report_writer.data == {
