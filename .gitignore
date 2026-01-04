@@ -28,3 +28,7 @@ to-delete
 user_config.ini
 explore
 explore.py
+
+# Don't ignore
+!.python-version
+!uv.lock
