@@ -204,7 +204,6 @@ dependencies = [
     { name = "pyside6" },
     { name = "pyside6-addons" },
     { name = "pyside6-essentials" },
-    { name = "pytest-cov" },
     { name = "shiboken6" },
 ]
 
@@ -225,7 +224,6 @@ requires-dist = [
     { name = "pyside6", specifier = "==6.9.0" },
     { name = "pyside6-addons", specifier = "==6.9.0" },
     { name = "pyside6-essentials", specifier = "==6.9.0" },
-    { name = "pytest-cov", specifier = "==6.1.1" },
     { name = "shiboken6", specifier = "==6.9.0" },
 ]
 
