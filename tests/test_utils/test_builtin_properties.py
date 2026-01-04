@@ -1,5 +1,6 @@
 import pytest
-from ..helpers import BUILT_IN_PROPERTIES
+
+from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
 
 
 @pytest.fixture
@@ -63,6 +64,6 @@ def builtin_properties_set_static():
     )
 
 
-def test_set_builtin_properties_content(builtin_properties_set_static):
+def test_set_builtin_properties_content(builtin_properties_set_static) -> None:
     """Test the content of built-in properties."""
     assert builtin_properties_set_static == BUILT_IN_PROPERTIES, "Built-in properties content should match."

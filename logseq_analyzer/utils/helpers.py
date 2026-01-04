@@ -1,38 +1,40 @@
-"""
-Helper functions for file and date processing.
-"""
+"""Helper functions for file and date processing."""
+
+from __future__ import annotations
 
 import logging
-import re
 import shutil
 from collections import Counter
 from enum import StrEnum
 from pathlib import Path
-from types import ModuleType
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any
 
 from ..utils.enums import Format, Moved
 
 if TYPE_CHECKING:
+    import re
+    from collections.abc import Generator
+    from types import ModuleType
+
     from ..logseq_file.file import LogseqFile
 
 __all__ = [
-    "iter_files",
-    "process_aliases",
-    "sort_dict_by_value",
-    "yield_attrs",
-    "process_pattern_hierarchy",
-    "iter_pattern_split",
-    "get_count_and_foundin_data",
     "BUILT_IN_PROPERTIES",
-    "extract_builtin_properties",
-    "remove_builtin_properties",
-    "format_bytes",
-    "SI_UNITS",
     "IEC_UNITS",
-    "yield_asset_paths",
-    "yield_bak_rec_paths",
+    "SI_UNITS",
+    "extract_builtin_properties",
+    "format_bytes",
+    "get_count_and_foundin_data",
+    "iter_files",
+    "iter_pattern_split",
+    "process_aliases",
     "process_moves",
+    "process_pattern_hierarchy",
+    "remove_builtin_properties",
+    "sort_dict_by_value",
+    "yield_asset_paths",
+    "yield_attrs",
+    "yield_bak_rec_paths",
 ]
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
@@ -107,9 +109,7 @@ logger = logging.getLogger(__name__)
 
 
 def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path, None, None]:
-    """
-    Recursively iterate over files in the root directory.
-    """
+    """Recursively iterate over files in the root directory."""
     for root, dirs, files in Path.walk(root_dir):
         if root == root_dir:
             continue
@@ -158,13 +158,11 @@ def process_aliases(aliases: str) -> Generator[str, None, None]:
         yield part
 
 
-def sort_dict_by_value(data: dict, value: str = "", reverse: bool = False) -> dict:
+def sort_dict_by_value(data: dict, value: str = "", *, reverse: bool = False) -> dict:
     """Sort a dictionary by its values."""
     if value:
-        data = dict(sorted(data.items(), key=lambda item: item[1][value], reverse=reverse))
-        return data
-    data = dict(sorted(data.items(), key=lambda item: item[1], reverse=reverse))
-    return data
+        return dict(sorted(data.items(), key=lambda item: item[1][value], reverse=reverse))
+    return dict(sorted(data.items(), key=lambda item: item[1], reverse=reverse))
 
 
 def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
@@ -174,8 +172,7 @@ def yield_attrs(obj: object) -> Generator[tuple[str, Any], None, None]:
 
 
 def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generator[tuple[str, str], None, None]:
-    """
-    Process a pattern hierarchy to create a mapping of patterns to their respective values.
+    """Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
     Args:
         content (str): The content to process.
@@ -183,6 +180,7 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generato
 
     Yields:
         Generator[tuple[str, str], None, None]: A generator yielding key-value pairs of patterns and their values.
+
     """
     finditer_all = pattern_mod.ALL.finditer(content)
     pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP.items()
@@ -199,8 +197,8 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generato
 
 
 def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[tuple[int, str], None, None]:
-    """
-    Emulates re.Pattern.split() but yields sections of text instead of returning a list.
+    """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
+
     Iterate over sections of text separated by bullet markers.
 
     Args:
@@ -210,6 +208,7 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
 
     Yields:
         Generator[tuple[int, str], None, None]: Sections of text with their respective indices.
+
     """
     count = 0
     finditer_pattern = pattern.finditer
@@ -234,15 +233,16 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
 
 
 def get_count_and_foundin_data(result: dict, collection: list[str], filename: str) -> dict:
-    """
-    Update the result dictionary with counts and file occurrences.
+    """Update the result dictionary with counts and file occurrences.
 
     Args:
         result (dict): The dictionary to update with counts and file occurrences.
         collection (list[str]): The collection of items to count.
         filename (str): The name of the file containing the path information.
+
     Returns:
         dict: The updated result dictionary with counts and file occurrences.
+
     """
     for item in collection:
         result.setdefault(item, {"count": 0, "found_in": Counter()})
@@ -252,28 +252,30 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
 
 
 def extract_builtin_properties(properties: set[str]) -> set[str]:
-    """Helper function to get built-in properties."""
+    """Get built-in properties."""
     return properties.intersection(BUILT_IN_PROPERTIES)
 
 
 def remove_builtin_properties(properties: set[str]) -> set[str]:
-    """Helper function to get properties that are not built-in."""
+    """Get properties that are not built-in."""
     return properties.difference(BUILT_IN_PROPERTIES)
 
 
 def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
-    """
-    Convert a byte value into a human-readable string using SI or IEC units.
+    """Convert a byte value into a human-readable string using SI or IEC units.
 
     Args:
         size_bytes (int): Number of bytes.
         system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
         precision (int): Number of decimal places.
+
     Returns:
         str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
+
     """
     if size_bytes < 0:
-        raise ValueError("size_bytes must be non-negative")
+        msg = "size_bytes must be non-negative"
+        raise ValueError(msg)
 
     units = IEC_UNITS if system == SizeUnit.IEC else SI_UNITS
     base = 1024 if system == SizeUnit.IEC else 1000
@@ -290,7 +292,7 @@ def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2)
     return f"{size:.{precision}f} {units[idx]}"
 
 
-def yield_asset_paths(unlinked_assets: set["LogseqFile"]) -> Generator[Path, None, None]:
+def yield_asset_paths(unlinked_assets: set[LogseqFile]) -> Generator[Path, None, None]:
     """Yield the file paths of unlinked assets."""
     for asset in unlinked_assets:
         yield asset.path.file
@@ -303,17 +305,17 @@ def yield_bak_rec_paths(source_dir: Path) -> Generator[Path, None, None]:
             yield root / name
 
 
-def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, None]) -> list[str]:
-    """
-    Process the moving of files to a specified directory.
+def process_moves(target_dir: Path, paths: Generator[Path, None, None], *, move: bool) -> list[str]:
+    """Process the moving of files to a specified directory.
 
     Args:
-        move (bool): If True, move the files. If False, simulate the move.
         target_dir (Path): The directory to move files to.
         paths (Generator[Path, None, None]): A generator yielding file paths to move.
+        move (bool): If True, move the files. If False, simulate the move.
 
     Returns:
         list[str]: A list of names of the moved files/folders.
+
     """
     listpaths = list(paths)
     names = [path.name for path in listpaths]
@@ -321,13 +323,13 @@ def process_moves(move: bool, target_dir: Path, paths: Generator[Path, None, Non
         return names
 
     if not move:
-        return [Moved.SIMULATED_PREFIX] + names
+        return [Moved.SIMULATED_PREFIX, *names]
 
     for src in listpaths:
         dest = target_dir / src.name
         try:
             shutil.move(src, dest)
             logger.warning("Moved file: %s to %s", src, dest)
-        except (shutil.Error, OSError) as e:
-            logger.error("Failed to move file: %s to %s: %s", src, dest, e)
+        except (shutil.Error, OSError):
+            logger.exception("Failed to move file: %s to %s", src, dest)
     return names

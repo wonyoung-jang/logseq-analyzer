@@ -1,6 +1,6 @@
-"""
-Enums for the Logseq Analyzer.
-"""
+"""Enums for the Logseq Analyzer."""
+
+from __future__ import annotations
 
 from enum import StrEnum
 
@@ -8,9 +8,9 @@ __all__ = [
     "ConfigEdnReport",
     "Constant",
     "Core",
-    "CritContent",
-    "CritCode",
     "CritAdvCmd",
+    "CritCode",
+    "CritContent",
     "CritDblCurly",
     "CritDblParen",
     "CritEmb",
@@ -192,9 +192,7 @@ class DirsGraph(StrEnum):
 
 
 class Edn(StrEnum):
-    """
-    Enum for EDN data types.
-    """
+    """Enum for EDN data types."""
 
     FILE_NAME_FORMAT = ":journal/file-name-format"
     FILE_NAME_FORMAT_DEFAULT = "yyyy_MM_dd"

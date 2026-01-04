@@ -1,14 +1,12 @@
-"""
-Unit tests for helpers.py module.
-"""
+"""Unit tests for helpers.py module."""
 
 import pytest
 
-from ..helpers import process_aliases
+from logseq_analyzer.utils.helpers import process_aliases
 
 
 @pytest.mark.parametrize(
-    "input_str, expected",
+    ("input_str", "expected"),
     [
         ("a,b,c", ["a", "b", "c"]),
         ("  A  ,  B  ", ["a", "b"]),
@@ -17,5 +15,5 @@ from ..helpers import process_aliases
         ("x,,y,", ["x", "y"]),
     ],
 )
-def test_process_aliases_various(input_str, expected):
+def test_process_aliases_various(input_str, expected) -> None:
     assert list(process_aliases(input_str)) == expected

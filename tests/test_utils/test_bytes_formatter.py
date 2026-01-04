@@ -1,10 +1,10 @@
 import pytest
 
-from ..helpers import format_bytes
+from logseq_analyzer.utils.helpers import format_bytes
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (0, "0 B"),
         (1, "1 B"),
@@ -17,13 +17,13 @@ from ..helpers import format_bytes
         (1125899906842624, "1.00 PiB"),
     ],
 )
-def test_format_bytes_iec(value, expected):
+def test_format_bytes_iec(value, expected) -> None:
     """Test the format_bytes function with IEC units."""
     assert format_bytes(value, "iec") == expected
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (0, "0 B"),
         (1, "1 B"),
@@ -36,6 +36,6 @@ def test_format_bytes_iec(value, expected):
         (1000000000000000, "1.00 PB"),
     ],
 )
-def test_format_bytes_si(value, expected):
+def test_format_bytes_si(value, expected) -> None:
     """Test the format_bytes function with SI units."""
     assert format_bytes(value, "si") == expected

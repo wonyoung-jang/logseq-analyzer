@@ -1,20 +1,23 @@
-"""
-DateUtilities class to handle date-related operations.
-"""
+"""DateUtilities class to handle date-related operations."""
+
+from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import IntEnum, StrEnum
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "DATE_ORDINAL_SUFFIXES",
+    "DateStat",
     "DateUtilities",
     "Day",
-    "DateStat",
-    "DATE_ORDINAL_SUFFIXES",
 ]
 
 
@@ -83,7 +86,7 @@ class DateUtilities:
         return date_obj + timedelta(days=1)
 
     @staticmethod
-    def range(stats: dict[str, datetime | None]) -> dict[str, float | None]:
+    def range(stats: dict[str, datetime]) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
         delta = stats[DS.LAST] - stats[DS.FIRST]
         days = delta.days + 1
@@ -98,8 +101,8 @@ class DateUtilities:
     def stats(dates: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
         stats = {
-            DS.FIRST: min(dates) if dates else datetime.min,
-            DS.LAST: max(dates) if dates else datetime.min,
+            DS.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
+            DS.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
         }
         stats.update(DateUtilities.range(stats))
         return stats
@@ -113,30 +116,27 @@ class DateUtilities:
         return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
     @staticmethod
-    def journals_to_datetime(keys: list[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
+    def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
         """Convert journal keys from strings to datetime objects."""
         for key in keys:
             try:
+                key_to_parse = key
                 for ordinal in DATE_ORDINAL_SUFFIXES:
-                    key = key.replace(ordinal, "")
-                yield datetime.strptime(key, py_page_format.replace("#", ""))
+                    key_to_parse = key_to_parse.replace(ordinal, "")
+                yield datetime.strptime(key_to_parse, py_page_format.replace("#", "")).replace(tzinfo=UTC)
             except ValueError:
                 pass
 
     @staticmethod
     def compile_datetime_tokens() -> re.Pattern:
-        """
-        Set the regex pattern for date tokens.
-        """
+        """Set the regex pattern for date tokens."""
         token_map = DATETIME_TOKEN_MAP
         pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
         return re.compile(pattern)
 
     @staticmethod
     def cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
-        """
-        Convert a Clojure-style date format to a Python-style date format.
-        """
+        """Convert a Clojure-style date format to a Python-style date format."""
         cljs_format = cljs_format.replace("o", "")
         get_token = DATETIME_TOKEN_MAP.get
 
