@@ -1,17 +1,14 @@
-"""
-Tests for LogseqBullets class.
-"""
+"""Tests for LogseqBullets class."""
 
 import pytest
 
-from ..bullets import LogseqBullets
+from logseq_analyzer.logseq_file.bullets import LogseqBullets
 
 
 @pytest.fixture
 def logseq_bullets() -> LogseqBullets:
     """Fixture to create a LogseqBullets object using a temporary file."""
-    bullet_obj = LogseqBullets("")
-    return bullet_obj
+    return LogseqBullets("")
 
 
 def test_logseq_bullets(logseq_bullets) -> None:

@@ -1,13 +1,11 @@
-"""
-Test the LogseqFile class.
-"""
+"""Test the LogseqFile class."""
 
 from pathlib import Path
 from tempfile import TemporaryFile
 
 import pytest
 
-from ..file import LogseqFile
+from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 @pytest.fixture
@@ -22,11 +20,10 @@ def temp_file():
 @pytest.fixture
 def logseq_file(temp_file):
     """Fixture to create a LogseqFile object using a temporary file."""
-    logseq_file_obj = LogseqFile(Path(temp_file))
-    return logseq_file_obj
+    return LogseqFile(Path(temp_file))
 
 
-def test_logseq_file(logseq_file, temp_file):
+def test_logseq_file(logseq_file, temp_file) -> None:
     """Test the LogseqFile functionality."""
     assert logseq_file.path.file == Path(temp_file)
     assert logseq_file.bullets is None
@@ -37,12 +34,12 @@ def test_logseq_file(logseq_file, temp_file):
     assert logseq_file.node.node_type == "other"
 
 
-def test_hash(logseq_file):
+def test_hash(logseq_file) -> None:
     """Test the hash of LogseqFile."""
     assert hash(logseq_file) == hash(logseq_file.path.file.parts)
 
 
-def test_equality(logseq_file, temp_file):
+def test_equality(logseq_file, temp_file) -> None:
     """Test the equality of LogseqFile objects."""
     logseq_file_2 = LogseqFile(Path(temp_file))
     assert logseq_file == logseq_file_2

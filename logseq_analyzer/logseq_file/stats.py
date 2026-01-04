@@ -1,21 +1,24 @@
-"""
-This module defines the LogseqPath class, which is used to gather file statistics for Logseq files.
-"""
+"""Module defining the LogseqPath class, which is used to gather file statistics for Logseq files."""
+
+from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from datetime import datetime
-from os import stat_result
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import unquote
 
 from ..config.graph_config import ConfigEdns, get_ns_sep
-from ..io.filesystem import LogseqAnalyzerDirs
 from ..utils.date_utilities import DateUtilities
 from ..utils.enums import Core, FileType, TargetDir
 from ..utils.helpers import format_bytes
 from .info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
+
+if TYPE_CHECKING:
+    from os import stat_result
+
+    from ..io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +27,9 @@ logger = logging.getLogger(__name__)
 class LogseqFileName:
     """LogseqFileName class."""
 
-    journal_format: ClassVar[JournalFormats] = None
-    ns_file_sep: ClassVar[str] = ""
-    journal_dir: ClassVar[str] = ""
+    journal_format: ClassVar[JournalFormats]
+    ns_file_sep: ClassVar[str]
+    journal_dir: ClassVar[str]
 
     @classmethod
     def configure(
@@ -55,7 +58,7 @@ class LogseqFileName:
         _page_title_format = LogseqFileName.journal_format.page_title
 
         try:
-            date_obj = datetime.strptime(name, _file_format)
+            date_obj = datetime.strptime(name, _file_format).replace(tzinfo=UTC)
             page_title = date_obj.strftime(_page_format)
             if Core.DATE_ORDINAL_SUFFIX in _page_title_format:
                 day_number = str(date_obj.day)
@@ -80,18 +83,19 @@ class LogseqPath:
     file_type: str = ""
     logseq_url: str = ""
     name: str = ""
-    stat: stat_result = None
+    stat: stat_result = field(init=False)
     uri: str = ""
 
-    graph_path: ClassVar[Path] = None
-    now_ts: ClassVar[float] = datetime.now().timestamp()
-    result_map: ClassVar[dict] = {}
-    target_dirs: ClassVar[dict] = {}
+    now_ts: ClassVar[float] = datetime.now(tz=UTC).timestamp()
+    graph_path: ClassVar[Path]
+    result_map: ClassVar[dict]
+    target_dirs: ClassVar[dict]
 
     def __post_init__(self) -> None:
         """Initialize the LogseqPath object."""
         if not isinstance(self.file, Path):
-            raise TypeError("file must be a pathlib.Path object.")
+            msg = "file must be a pathlib.Path object."
+            raise TypeError(msg)
         self.stat = self.file.stat()
         self.uri: str = self.file.as_uri()
 
@@ -100,11 +104,6 @@ class LogseqPath:
         """Configure the LogseqPath class with necessary settings."""
         cls.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
         cls.target_dirs = analyzer_dirs.target_dirs
-        cls.set_result_map()
-
-    @classmethod
-    def set_result_map(cls) -> None:
-        """Set the result map for file type determination."""
         cls.result_map = {
             cls.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
             cls.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
@@ -120,7 +119,7 @@ class LogseqPath:
         self.logseq_url = self.set_logseq_url()
 
     def evaluate_file_type(self) -> str:
-        """Helper function to determine the file type based on the directory structure."""
+        """Determine the file type based on the directory structure."""
         _result_map = LogseqPath.result_map
         _parent = self.file.parent.name
         _parts = self.file.parts
@@ -175,8 +174,8 @@ class LogseqPath:
         return TimestampInfo(
             time_existed=_now - _created_time,
             time_unmodified=_now - _modified_time,
-            date_created=datetime.fromtimestamp(_created_time).isoformat(),
-            date_modified=datetime.fromtimestamp(_modified_time).isoformat(),
+            date_created=datetime.fromtimestamp(_created_time, tz=UTC).isoformat(),
+            date_modified=datetime.fromtimestamp(_modified_time, tz=UTC).isoformat(),
         )
 
     def get_size_info(self) -> SizeInfo:

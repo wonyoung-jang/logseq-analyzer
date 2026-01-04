@@ -1,20 +1,19 @@
-"""
-Module for LogseqBullets class
-"""
+"""Module for LogseqBullets class."""
+
+from __future__ import annotations
 
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
-import logseq_analyzer.patterns.code as CodePatterns
-import logseq_analyzer.patterns.content as ContentPatterns
-import logseq_analyzer.patterns.double_curly as DoubleCurlyBracketsPatterns
-import logseq_analyzer.patterns.double_parentheses as DoubleParenthesesPatterns
-import logseq_analyzer.patterns.embedded_links as EmbeddedLinksPatterns
-import logseq_analyzer.patterns.external_links as ExternalLinksPatterns
-
+from ..patterns import adv_cmd as advanced_command_patterns
+from ..patterns import code as code_patterns
+from ..patterns import content as content_patterns
+from ..patterns import double_curly as double_curly_brackets_patterns
+from ..patterns import double_parentheses as double_parentheses_patterns
+from ..patterns import embedded_links as embedded_links_patterns
+from ..patterns import external_links as external_links_patterns
 from ..utils.enums import CritCode, CritContent, CritProp
 from ..utils.helpers import (
     extract_builtin_properties,
@@ -25,21 +24,24 @@ from ..utils.helpers import (
 )
 from .info import BulletInfo
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 logger = logging.getLogger(__name__)
 
 RAW_DATA_MAP = {
-    CritCode.INLINE: CodePatterns.INLINE_CODE_BLOCK,
-    CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
-    CritContent.ASSETS: ContentPatterns.ASSET,
+    CritCode.INLINE: code_patterns.INLINE_CODE_BLOCK,
+    CritContent.ANY_LINKS: content_patterns.ANY_LINK,
+    CritContent.ASSETS: content_patterns.ASSET,
 }
 
 PATTERN_MODULES = (
-    AdvancedCommandPatterns,
-    CodePatterns,
-    DoubleCurlyBracketsPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinksPatterns,
-    ExternalLinksPatterns,
+    advanced_command_patterns,
+    code_patterns,
+    double_curly_brackets_patterns,
+    double_parentheses_patterns,
+    embedded_links_patterns,
+    external_links_patterns,
 )
 
 
@@ -48,7 +50,7 @@ class LogseqBullets:
     """LogseqBullets class."""
 
     content: str
-    all_bullets: list[str | None] = field(default_factory=list)
+    all_bullets: list[str] = field(default_factory=list)
     primary: str = ""
 
     def process(self) -> None:
@@ -58,7 +60,7 @@ class LogseqBullets:
 
         append_all_bullets = self.all_bullets.append
 
-        for bullet_index, bullet in iter_pattern_split(ContentPatterns.BULLET, content):
+        for bullet_index, bullet in iter_pattern_split(content_patterns.BULLET, content):
             append_all_bullets(bullet)
             if bullet and bullet_index == 0:
                 self.primary = bullet
@@ -89,7 +91,7 @@ class LogseqBullets:
         _content = self.content
         _all_bullets = self.all_bullets
         primary_bullet = self.primary
-        find_all_properties = ContentPatterns.PROPERTY.findall
+        find_all_properties = content_patterns.PROPERTY.findall
 
         if primary_bullet and not primary_bullet.startswith("#"):
             page_props.update(find_all_properties(primary_bullet))
@@ -110,7 +112,7 @@ class LogseqBullets:
     def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
         _content = self.content
-        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(_content))
+        propvalues = dict(content_patterns.PROPERTY_VALUE.findall(_content))
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         for key, value in {
@@ -121,9 +123,7 @@ class LogseqBullets:
                 yield key, value
 
     def extract_patterns(self) -> Generator[tuple[str, Any]]:
-        """
-        Process patterns in the content.
-        """
+        """Process patterns in the content."""
         _content = self.content
         temp_map = defaultdict(list)
         for pattern in PATTERN_MODULES:

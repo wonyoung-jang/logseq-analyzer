@@ -1,22 +1,23 @@
-"""
-LogseqFile class to process Logseq files.
-"""
+"""LogseqFile class to process Logseq files."""
 
-import re
+from __future__ import annotations
+
 import uuid
 from dataclasses import InitVar, dataclass, field
-from pathlib import Path
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.patterns.adv_cmd as AdvancedCommandPatterns
-import logseq_analyzer.patterns.code as CodePatterns
-import logseq_analyzer.patterns.content as ContentPatterns
+import logseq_analyzer.patterns.content as content_patterns
+from logseq_analyzer.patterns import adv_cmd, code
 
 from ..utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
 from .bullets import LogseqBullets
 from .info import LogseqFileInfo, NodeType
 from .stats import LogseqPath
 
+if TYPE_CHECKING:
+    import re
+    from collections.abc import Generator
+    from pathlib import Path
 
 BACKLINK_CRITERIA: frozenset[str] = frozenset(
     {
@@ -32,20 +33,20 @@ BACKLINK_CRITERIA: frozenset[str] = frozenset(
 )
 
 PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
-    CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
-    CritContent.DRAW: ContentPatterns.DRAW,
-    CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
-    CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-    CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-    CritContent.TAG: ContentPatterns.TAG,
-    CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+    CritContent.BLOCKQUOTES: content_patterns.BLOCKQUOTE,
+    CritContent.DRAW: content_patterns.DRAW,
+    CritContent.FLASHCARD: content_patterns.FLASHCARD,
+    CritContent.PAGE_REF: content_patterns.PAGE_REFERENCE,
+    CritContent.TAGGED_BACKLINK: content_patterns.TAGGED_BACKLINK,
+    CritContent.TAG: content_patterns.TAG,
+    CritContent.DYNAMIC_VAR: content_patterns.DYNAMIC_VARIABLE,
 }
 
 PATTERN_MASKING = (
-    (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
-    (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
-    (AdvancedCommandPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
-    (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
+    (code.ALL.sub, f"__{CritCode.ML_ALL}_"),
+    (code.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
+    (adv_cmd.ALL.sub, f"__{CritAdvCmd.ALL}_"),
+    (content_patterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
 )
 
 
@@ -53,17 +54,14 @@ PATTERN_MASKING = (
 class MaskedBlocks:
     """Class to hold masked blocks data."""
 
-    content: str
-    blocks: dict[str, str]
+    content: str = ""
+    blocks: dict[str, str] = field(default_factory=dict)
 
     def unmask_blocks(self) -> None:
-        """
-        Restore the original content by replacing placeholders with their blocks.
-        """
+        """Restore the original content by replacing placeholders with their blocks."""
         content = self.content
         replace_content = content.replace
-        blocks = self.blocks
-        for placeholder, block in blocks.items():
+        for placeholder, block in self.blocks.items():
             content = replace_content(placeholder, block)
         self.content = content
 
@@ -73,12 +71,12 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path_input: InitVar[Path]
-    path: LogseqPath = None
+    path: LogseqPath = field(init=False)
     data: dict[str, Any] = field(default_factory=dict)
-    bullets: LogseqBullets = None
-    masked: MaskedBlocks = None
+    bullets: LogseqBullets = field(init=False)
+    masked: MaskedBlocks = field(default_factory=MaskedBlocks)
     node: NodeType = field(default_factory=NodeType)
-    info: LogseqFileInfo = None
+    info: LogseqFileInfo = field(init=False)
     is_hls: bool = False
 
     def __post_init__(self, path_input: Path) -> None:
@@ -86,14 +84,17 @@ class LogseqFile:
         self.path: LogseqPath = LogseqPath(path_input)
 
     def __hash__(self) -> int:
+        """Return the hash of the LogseqFile based on its path."""
         return hash(self.path.file.parts)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
+        """Check equality based on the file path."""
         if isinstance(other, LogseqFile):
             return self.path.file.parts == other.path.file.parts
         return NotImplemented
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: object) -> bool:
+        """Compare LogseqFile objects based on their file names."""
         if isinstance(other, LogseqFile):
             return self.path.name < other.path.name
         if isinstance(other, str):
@@ -127,9 +128,7 @@ class LogseqFile:
         self.check_has_backlinks()
 
     def extract_data_pairs(self) -> Generator[tuple[str, Any]]:
-        """
-        Extract data pairs from the Logseq file.
-        """
+        """Extract data pairs from the Logseq file."""
         yield from self.extract_primary_data()
         yield from self.bullets.extract_primary_raw_data()
         yield from self.bullets.extract_aliases_and_propvalues()
@@ -137,15 +136,11 @@ class LogseqFile:
         yield from self.bullets.extract_patterns()
 
     def extract_data(self) -> None:
-        """
-        Extract data from the Logseq file.
-        """
+        """Extract data from the Logseq file."""
         self.data.update(dict(self.extract_data_pairs()))
 
-    def mask_blocks(self) -> str:
-        """
-        Mask code blocks and other patterns in the content.
-        """
+    def mask_blocks(self) -> None:
+        """Mask code blocks and other patterns in the content."""
         content = self.bullets.content
         blocks = {}
         pattern_masking = PATTERN_MASKING
@@ -153,7 +148,7 @@ class LogseqFile:
 
         for sub_regex, prefix in pattern_masking:
 
-            def _repl(match, prefix=prefix) -> str:
+            def _repl(match: re.Match, prefix: str = prefix) -> str:
                 placeholder = f"{prefix}{_uuid4()}__"
                 blocks[placeholder] = match.group(0)
                 return placeholder

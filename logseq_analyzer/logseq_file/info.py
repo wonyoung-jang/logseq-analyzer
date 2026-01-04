@@ -1,6 +1,6 @@
-"""
-File information for Logseq files.
-"""
+"""File information for Logseq files."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 
@@ -29,15 +29,16 @@ class NodeType:
 
     @staticmethod
     def _check_for_backlinks(name: str, lookup: set[str]) -> bool:
-        """Helper function to check if a file is backlinked."""
+        """Check if a file is backlinked."""
         try:
             lookup.remove(name)
-            return True
         except KeyError:
             return False
+        else:
+            return True
 
-    def determine_node_type(self, has_content: bool) -> None:
-        """Helper function to determine node type based on summary data."""
+    def determine_node_type(self, *, has_content: bool) -> None:
+        """Determine node type based on summary data."""
         has_backlinks = self.has_backlinks
         backlinked = self.backlinked
         backlinked_ns_only = self.backlinked_ns_only
