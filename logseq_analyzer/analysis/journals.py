@@ -34,7 +34,7 @@ class LogseqJournals:
     """LogseqJournals class to handle journal files and their processing."""
 
     index: FileIndex
-    dangling_links: list[str]
+    dangling_links: set[str]
     sets: JournalSets = field(default_factory=JournalSets)
     dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
     timeline_stats: dict[str, Any] = field(default_factory=dict)

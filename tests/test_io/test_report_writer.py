@@ -2,7 +2,7 @@
 
 import pytest
 
-from ..report_writer import ReportWriter
+from logseq_analyzer.io.report_writer import ReportWriter
 
 
 @pytest.fixture

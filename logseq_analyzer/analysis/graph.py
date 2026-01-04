@@ -133,7 +133,7 @@ class LogseqGraph:
             node.check_backlinked(filename, unique_refs)
             node.check_backlinked_ns_only(filename, unique_refs_ns)
             if f_path.file_type in check_for_nodes:
-                node.determine_node_type(f.info.size.has_content)
+                node.determine_node_type(has_content=f.info.size.has_content)
 
     def find_dangling_links(self) -> None:
         """Process dangling links in the graph."""

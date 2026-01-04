@@ -1,5 +1,7 @@
 """Main entry point for the Logseq Analyzer application."""
 
+from __future__ import annotations
+
 import sys
 
 from PySide6.QtWidgets import QApplication
@@ -9,7 +11,7 @@ from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 
 def main() -> None:
-    """Main function to run the Logseq Analyzer application."""
+    """Run the Logseq Analyzer application."""
     if "--cli" in sys.argv:
         run_app()
     else:

@@ -229,7 +229,7 @@ def loads(edn_str: str) -> EDNToken:
         edn_str (str): The EDN string to parse.
 
     Returns:
-        dict | list | set | Any | None | bool | float | int: The parsed Python data structure.
+        EDNToken: The parsed Python data structure.
 
     """
     parser = LogseqConfigEDN(tokenize(edn_str))

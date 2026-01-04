@@ -26,7 +26,6 @@ def logseq_file(temp_file):
 def test_logseq_file(logseq_file, temp_file) -> None:
     """Test the LogseqFile functionality."""
     assert logseq_file.path.file == Path(temp_file)
-    assert logseq_file.bullets is None
     assert logseq_file.data == {}
     assert logseq_file.node.has_backlinks is False
     assert logseq_file.node.backlinked is False

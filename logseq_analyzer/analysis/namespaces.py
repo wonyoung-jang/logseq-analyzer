@@ -58,7 +58,7 @@ class LogseqNamespaces:
     """Class for analyzing namespace data in Logseq."""
 
     index: FileIndex
-    dangling_links: list[str]
+    dangling_links: set[str]
     _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
     _part_entries: defaultdict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
     conflicts: NamespaceConflicts = field(default_factory=NamespaceConflicts)

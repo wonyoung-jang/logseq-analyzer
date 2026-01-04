@@ -1,11 +1,11 @@
-"""
-This module contains the main application logic for the Logseq analyzer.
-"""
+"""Module for main application logic for the Logseq analyzer."""
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
 
 from .analysis.assets import LogseqAssets, LogseqAssetsHls
 from .analysis.graph import LogseqGraph
@@ -54,7 +54,10 @@ from .utils.helpers import (
     yield_bak_rec_paths,
 )
 
-log_file = LogFile(Constant.LOG_FILE)
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+log_file = LogFile(Path(Constant.LOG_FILE))
 logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     encoding="utf-8",
@@ -83,13 +86,13 @@ class GUIInstanceDummy:
         """Return a string representation of the dummy GUI instance."""
         return f"{self.__class__.__name__}"
 
-    def update_progress(self, percentage) -> None:
+    def update_progress(self, percentage: int) -> None:
         """Simulate updating progress in a GUI."""
         logger.info("Updating progress: %d%%", percentage)
 
 
 def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
-    """Setup Logseq analyzer configuration based on arguments."""
+    """Set up Logseq analyzer configuration based on arguments."""
     graph_dirs = setup_graph_dirs(args)
     config_edns = setup_config_edns(args, graph_dirs)
     target_dirs = get_target_dirs(config_edns.config)
@@ -98,7 +101,7 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
         graph_dirs=graph_dirs,
         delete_dirs=AnalyzerDeleteDirs(),
         target_dirs=target_dirs,
-        output_dir=OutputDirectory(Constant.OUTPUT_DIR),
+        output_dir=OutputDirectory(Path(Constant.OUTPUT_DIR)),
     )
 
     logger.debug("setup_logseq_paths")
@@ -106,7 +109,7 @@ def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
 
 
 def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
-    """Setup the Logseq graph directories."""
+    """Set up the Logseq graph directories."""
     graph_folder_path = Path(args.graph_folder)
     logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ
     bak_dir = logseq_dir / LogseqGraphStructure.BAK
@@ -123,13 +126,20 @@ def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
 
 
 def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
-    """Setup the configuration EDN files."""
+    """Set up the configuration EDN files."""
     default_edn = get_default_logseq_config()
-    user_edn = get_edn_from_file(graph_dirs.user_config.path)
+    user_config_edn_parsed = get_edn_from_file(graph_dirs.user_config.path)
+    user_edn = {}
+    if isinstance(user_config_edn_parsed, dict):
+        user_edn.update(user_config_edn_parsed)
+
     global_edn = {}
     if global_config_path := args.global_config:
         graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
-        global_edn.update(get_edn_from_file(graph_dirs.global_config.path))
+        global_config_edn_parsed = get_edn_from_file(graph_dirs.global_config.path)
+        if isinstance(global_config_edn_parsed, dict):
+            global_edn.update(global_config_edn_parsed)
+
     logger.debug("setup_config_edns")
     return ConfigEdns(
         config=default_edn | user_edn | global_edn,
@@ -150,7 +160,7 @@ def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str])
 
 
 def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
-    """Setup journal formats."""
+    """Set up journal formats."""
     _tokens = DateUtilities.compile_datetime_tokens()
     journal_file_fmt = get_file_name_format(config_edns.config)
     journal_page_title_fmt = get_page_title_format(config_edns.config)
@@ -171,8 +181,8 @@ def init_configs(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns, JournalFor
 
 
 def setup_cache() -> tuple[Cache, FileIndex]:
-    """Setup cache for the Logseq Analyzer."""
-    cache_file = CacheFile(Constant.CACHE_FILE)
+    """Set up cache for the Logseq Analyzer."""
+    cache_file = CacheFile(Path(Constant.CACHE_FILE))
     cache = Cache(cache_file.path)
     cache.open()
     index = cache.initialize()
@@ -186,7 +196,7 @@ def configure_analyzer_settings(
     config_edns: ConfigEdns,
     journal_formats: JournalFormats,
 ) -> None:
-    """Setup the attributes for the LogseqAnalyzer."""
+    """Set up the attributes for the LogseqAnalyzer."""
     Cache.configure(args, analyzer_dirs)
     FileIndex.write_graph = args.write_graph
     LogseqJournals.journal_page_format = journal_formats.page
@@ -206,7 +216,7 @@ def process_graph(index: FileIndex, cache: Cache) -> None:
 
 
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
-    """Setup LogseqFileMover for moving files and directories."""
+    """Set up LogseqFileMover for moving files and directories."""
     dd = analyzer_dirs.delete_dirs
     gd = analyzer_dirs.graph_dirs
     target_asset = dd.delete_assets_dir.path
@@ -216,9 +226,9 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     bak_paths = yield_bak_rec_paths(gd.bak_dir.path)
     rec_paths = yield_bak_rec_paths(gd.recycle_dir.path)
     moved_files_report = {
-        Moved.ASSETS: process_moves(args.move_unlinked_assets, target_asset, asset_paths),
-        Moved.BAK: process_moves(args.move_bak, target_bak, bak_paths),
-        Moved.RECYCLE: process_moves(args.move_recycle, target_rec, rec_paths),
+        Moved.ASSETS: process_moves(target_asset, asset_paths, move=args.move_unlinked_assets),
+        Moved.BAK: process_moves(target_bak, bak_paths, move=args.move_bak),
+        Moved.RECYCLE: process_moves(target_rec, rec_paths, move=args.move_recycle),
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES: moved_files_report}
@@ -284,8 +294,8 @@ def write_reports(data_reports: Generator[tuple[str, Any], None, None]) -> None:
     logger.debug("write_reports")
 
 
-def run_app(**gui_args) -> None:
-    """Main function to run the Logseq analyzer."""
+def run_app(**gui_args: Any) -> None:
+    """Run the Logseq analyzer."""
     progress = gui_args.pop("progress_callback", GUIInstanceDummy().update_progress)
 
     progress(10, "Starting Logseq Analyzer...")

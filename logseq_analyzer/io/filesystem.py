@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -321,10 +321,10 @@ class LogseqGraphDirs:
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
-    delete_dir: DeleteDirectory | None = None
-    delete_bak_dir: DeleteBakDirectory | None = None
-    delete_recycle_dir: DeleteRecycleDirectory | None = None
-    delete_assets_dir: DeleteAssetsDirectory | None = None
+    delete_dir: DeleteDirectory = field(init=False)
+    delete_bak_dir: DeleteBakDirectory = field(init=False)
+    delete_recycle_dir: DeleteRecycleDirectory = field(init=False)
+    delete_assets_dir: DeleteAssetsDirectory = field(init=False)
 
     def __post_init__(self) -> None:
         """Initialize the AnalyzerDeleteDirs class."""
