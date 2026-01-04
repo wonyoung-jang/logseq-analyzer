@@ -1,5 +1,6 @@
 """Test the LogseqFile class."""
 
+from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryFile
 
@@ -9,7 +10,7 @@ from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 @pytest.fixture
-def temp_file():
+def temp_file() -> Generator[str, None, None]:
     """Fixture to create a temporary file for testing."""
     with TemporaryFile() as tmp_file:
         tmp_file.write(b"")
@@ -18,12 +19,12 @@ def temp_file():
 
 
 @pytest.fixture
-def logseq_file(temp_file):
+def logseq_file(temp_file: str) -> LogseqFile:
     """Fixture to create a LogseqFile object using a temporary file."""
     return LogseqFile(Path(temp_file))
 
 
-def test_logseq_file(logseq_file, temp_file) -> None:
+def test_logseq_file(logseq_file: LogseqFile, temp_file: str) -> None:
     """Test the LogseqFile functionality."""
     assert logseq_file.path.file == Path(temp_file)
     assert logseq_file.data == {}
@@ -33,12 +34,12 @@ def test_logseq_file(logseq_file, temp_file) -> None:
     assert logseq_file.node.node_type == "other"
 
 
-def test_hash(logseq_file) -> None:
+def test_hash(logseq_file: LogseqFile) -> None:
     """Test the hash of LogseqFile."""
     assert hash(logseq_file) == hash(logseq_file.path.file.parts)
 
 
-def test_equality(logseq_file, temp_file) -> None:
+def test_equality(logseq_file: LogseqFile, temp_file: str) -> None:
     """Test the equality of LogseqFile objects."""
     logseq_file_2 = LogseqFile(Path(temp_file))
     assert logseq_file == logseq_file_2

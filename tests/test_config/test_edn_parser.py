@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.config.graph_config import LogseqConfigEDN, loads, tokenize
+from logseq_analyzer.config.graph_config import EDNToken, LogseqConfigEDN, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas() -> None:
@@ -28,7 +28,7 @@ def test_tokenize_skips_comments_and_commas() -> None:
         ("foo", "foo"),
     ],
 )
-def test_simple_values(edn, expected) -> None:
+def test_simple_values(edn: str, expected: EDNToken) -> None:
     """Test that simple values are parsed correctly."""
     assert loads(edn) == expected
 
@@ -42,7 +42,7 @@ def test_simple_values(edn, expected) -> None:
         ("{:a 1 :b 2}", {":a": 1, ":b": 2}),
     ],
 )
-def test_collections(edn, expected) -> None:
+def test_collections(edn: str, expected: EDNToken) -> None:
     """Test that collections are parsed correctly."""
     assert loads(edn) == expected
 
@@ -51,6 +51,8 @@ def test_nested_structures() -> None:
     """Test that nested structures are parsed correctly."""
     edn = "{:a [1 (2 3) #{4}] :b {:c 5}}"
     result = loads(edn)
+
+    assert type(result) is dict
     assert result[":a"] == [1, [2, 3], {4}]
     assert result[":b"] == {":c": 5}
 
@@ -60,6 +62,7 @@ def test_unhashable_keys_in_map() -> None:
     edn = '{[1 2] "value"}'
     result = loads(edn)
     # The list [1,2] should be converted to tuple (1,2) for hashing
+    assert type(result) is dict
     assert list(result.keys()) == [(1, 2)]
     assert result[(1, 2)] == "value"
 
@@ -70,6 +73,8 @@ def test_parse_map_key_set() -> None:
     result = loads(edn)
     # The set {1, 2} should become a frozenset of its items as the key
     key = frozenset({1, 2})
+
+    assert type(result) is dict
     assert key in result
     assert result[key] == ":val"
 
@@ -80,6 +85,8 @@ def test_map_key_map() -> None:
     result = loads(edn)
     # The map {:x 10} should become a frozenset of its items as the key
     key = frozenset({(":x", 10)})
+
+    assert type(result) is dict
     assert key in result
     assert result[key] == ":val"
 

@@ -11,7 +11,7 @@ def logseq_bullets() -> LogseqBullets:
     return LogseqBullets("")
 
 
-def test_logseq_bullets(logseq_bullets) -> None:
+def test_logseq_bullets(logseq_bullets: LogseqBullets) -> None:
     """Test the LogseqBullets functionality."""
     assert logseq_bullets.all_bullets == []
     assert logseq_bullets.content == ""

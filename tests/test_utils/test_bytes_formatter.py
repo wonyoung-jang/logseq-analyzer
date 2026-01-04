@@ -1,3 +1,5 @@
+"""Tests for bytes formatter in utils module."""
+
 import pytest
 
 from logseq_analyzer.utils.helpers import format_bytes
@@ -17,7 +19,7 @@ from logseq_analyzer.utils.helpers import format_bytes
         (1125899906842624, "1.00 PiB"),
     ],
 )
-def test_format_bytes_iec(value, expected) -> None:
+def test_format_bytes_iec(value: int, expected: str) -> None:
     """Test the format_bytes function with IEC units."""
     assert format_bytes(value, "iec") == expected
 
@@ -36,6 +38,6 @@ def test_format_bytes_iec(value, expected) -> None:
         (1000000000000000, "1.00 PB"),
     ],
 )
-def test_format_bytes_si(value, expected) -> None:
+def test_format_bytes_si(value: int, expected: str) -> None:
     """Test the format_bytes function with SI units."""
     assert format_bytes(value, "si") == expected

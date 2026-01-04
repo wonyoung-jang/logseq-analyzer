@@ -5,12 +5,10 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ..utils.helpers import get_count_and_foundin_data, sort_dict_by_value
-
-if TYPE_CHECKING:
-    from .index import FileIndex
+from .index import FileIndex
 
 __all__ = [
     "LogseqContentSummarizer",
@@ -33,7 +31,7 @@ class SummaryFile(StrEnum):
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    index: FileIndex
+    index: FileIndex = field(default_factory=FileIndex)
     general: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     filetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     nodetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
@@ -80,7 +78,7 @@ class LogseqFileSummarizer:
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    index: FileIndex
+    index: FileIndex = field(default_factory=FileIndex)
     report: dict[str, dict[str, Any]] = field(default_factory=dict)
     size_report: dict[str, dict[str, Any]] = field(default_factory=dict)
     timestamp_report: dict[str, dict[str, Any]] = field(default_factory=dict)

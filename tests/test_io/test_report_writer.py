@@ -6,7 +6,7 @@ from logseq_analyzer.io.report_writer import ReportWriter
 
 
 @pytest.fixture
-def report_writer():
+def report_writer() -> ReportWriter:
     """Fixture to create a ReportWriter object."""
     prefix = "test_report"
     data = {
@@ -19,7 +19,7 @@ def report_writer():
     return ReportWriter(prefix, data, subdir)
 
 
-def test_report_writer_init(report_writer) -> None:
+def test_report_writer_init(report_writer: ReportWriter) -> None:
     """Test the initialization of ReportWriter."""
     assert report_writer.prefix == "test_report"
     assert report_writer.data == {

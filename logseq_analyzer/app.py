@@ -301,7 +301,7 @@ def run_app(**gui_args: Any) -> None:
     progress(10, "Starting Logseq Analyzer...")
     args = Args()
     if gui_args:
-        args.set_gui_args(**gui_args)
+        args.set_gui_args(gui_args)
     else:
         args.set_cli_args()
 

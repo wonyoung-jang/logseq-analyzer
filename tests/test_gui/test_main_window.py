@@ -1,5 +1,7 @@
 """Test the main window of the Logseq Analyzer GUI."""
 
+from collections.abc import Generator
+
 import pytest
 from PySide6.QtWidgets import QApplication
 
@@ -7,7 +9,7 @@ from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 
 @pytest.fixture(scope="module")
-def app():
+def app() -> Generator[QApplication, None, None]:
     """Fixture for the QApplication."""
     app = QApplication([])
     yield app
@@ -15,7 +17,7 @@ def app():
 
 
 @pytest.fixture(scope="module")
-def gui(app):
+def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI, None, None]:  # noqa: ARG001
     """Fixture for the LogseqAnalyzerGUI."""
     gui = LogseqAnalyzerGUI()
     yield gui
@@ -23,19 +25,19 @@ def gui(app):
 
 
 @pytest.fixture(scope="module")
-def main_window(gui):
+def main_window(gui: LogseqAnalyzerGUI) -> Generator[LogseqAnalyzerGUI, None, None]:
     """Fixture for the main window of the GUI."""
     gui.show()
     yield gui
     gui.close()
 
 
-def test_main_window_title(main_window) -> None:
+def test_main_window_title(main_window: LogseqAnalyzerGUI) -> None:
     """Test if the main window title is correct."""
     assert main_window.windowTitle() == "Logseq Analyzer"
 
 
-def test_main_window_initialization(main_window) -> None:
+def test_main_window_initialization(main_window: LogseqAnalyzerGUI) -> None:
     """Test if the main window initializes correctly."""
     assert main_window is not None
     assert main_window.isVisible() is True
@@ -43,16 +45,18 @@ def test_main_window_initialization(main_window) -> None:
     assert main_window.isActiveWindow() is True
 
 
-def test_main_window_layout(main_window) -> None:
+def test_main_window_layout(main_window: LogseqAnalyzerGUI) -> None:
     """Test if the main window layout is set correctly."""
     layout = main_window.layout()
     assert layout is not None
     assert layout.count() > 0
-    assert layout.itemAt(0) is not None
-    assert layout.itemAt(0).widget() is not None
+
+    layout_item_0 = layout.itemAt(0)
+    assert layout_item_0 is not None
+    assert layout_item_0.widget() is not None
 
 
-def test_main_window_controls(main_window) -> None:
+def test_main_window_controls(main_window: LogseqAnalyzerGUI) -> None:
     """Test if the main window controls are present."""
     assert main_window.inputs.graph_folder is not None
     assert main_window.inputs.global_config is not None

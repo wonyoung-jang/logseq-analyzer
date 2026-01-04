@@ -1,5 +1,6 @@
 """Test Cache class."""
 
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,7 @@ from logseq_analyzer.utils.enums import Constant
 
 
 @pytest.fixture
-def cache():
+def cache() -> Generator[Cache, None, None]:
     """Fixture to create a Cache object."""
     cache = Cache(Path(Constant.CACHE_FILE))
     cache.open()
@@ -18,7 +19,7 @@ def cache():
     cache.close(FileIndex())
 
 
-def test_cache_initialization(cache) -> None:
+def test_cache_initialization(cache: Cache) -> None:
     """Test the initialization of the Cache class."""
     assert cache.cache_path.exists()
     assert cache.cache is not None

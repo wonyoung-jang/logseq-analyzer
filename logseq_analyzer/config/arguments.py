@@ -23,7 +23,7 @@ class Args:
     report_format: str = ".txt"
     write_graph: bool = False
 
-    def set_gui_args(self, **gui_args: dict[str, Any]) -> None:
+    def set_gui_args(self, gui_args: dict[str, Any]) -> None:
         """Set arguments if provided as keyword arguments from GUI."""
         for arg, value in gui_args.items():
             setattr(self, arg, value)

@@ -15,5 +15,6 @@ from logseq_analyzer.utils.helpers import process_aliases
         ("x,,y,", ["x", "y"]),
     ],
 )
-def test_process_aliases_various(input_str, expected) -> None:
+def test_process_aliases_various(input_str: str, expected: list[str]) -> None:
+    """Test process_aliases with various inputs."""
     assert list(process_aliases(input_str)) == expected
