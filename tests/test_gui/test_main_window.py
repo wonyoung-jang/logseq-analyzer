@@ -1,11 +1,9 @@
-"""
-Test the main window of the Logseq Analyzer GUI.
-"""
+"""Test the main window of the Logseq Analyzer GUI."""
 
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from ..main_window import LogseqAnalyzerGUI
+from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 
 @pytest.fixture(scope="module")
@@ -32,12 +30,12 @@ def main_window(gui):
     gui.close()
 
 
-def test_main_window_title(main_window):
+def test_main_window_title(main_window) -> None:
     """Test if the main window title is correct."""
     assert main_window.windowTitle() == "Logseq Analyzer"
 
 
-def test_main_window_initialization(main_window):
+def test_main_window_initialization(main_window) -> None:
     """Test if the main window initializes correctly."""
     assert main_window is not None
     assert main_window.isVisible() is True
@@ -45,7 +43,7 @@ def test_main_window_initialization(main_window):
     assert main_window.isActiveWindow() is True
 
 
-def test_main_window_layout(main_window):
+def test_main_window_layout(main_window) -> None:
     """Test if the main window layout is set correctly."""
     layout = main_window.layout()
     assert layout is not None
@@ -54,7 +52,7 @@ def test_main_window_layout(main_window):
     assert layout.itemAt(0).widget() is not None
 
 
-def test_main_window_controls(main_window):
+def test_main_window_controls(main_window) -> None:
     """Test if the main window controls are present."""
     assert main_window.inputs.graph_folder is not None
     assert main_window.inputs.global_config is not None

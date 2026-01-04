@@ -1,6 +1,8 @@
 """Logseq Analyzer GUI using PySide6."""
 
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from PySide6.QtCore import QSettings, Slot
@@ -47,16 +49,16 @@ class Argument(StrEnum):
 class LogseqAnalyzerGUI(QWidget):
     """Main GUI class for the Logseq Analyzer application."""
 
-    inputs: Inputs = None
-    buttons: Buttons = None
-    checkboxes: Checkboxes = None
-    progress: Progress = None
-    settings: QSettings = None
-    worker: AnalysisWorker = None
+    inputs: Inputs = field(init=False)
+    buttons: Buttons = field(init=False)
+    checkboxes: Checkboxes = field(init=False)
+    progress: Progress = field(init=False)
+    worker: AnalysisWorker = field(init=False)
+    settings: QSettings = field(init=False)
 
     def __post_init__(self) -> None:
         """Initialize the GUI components and layout."""
-        super(LogseqAnalyzerGUI, self).__init__()
+        super().__init__()
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
         self.setup_ui_objects()
         self.initialize_layout()
@@ -64,7 +66,7 @@ class LogseqAnalyzerGUI(QWidget):
         self.load_settings()
 
     def setup_ui_objects(self) -> None:
-        """Sets up the UI groups for the main window."""
+        """Set up the UI groups for the main window."""
         self.buttons = Buttons(
             run=QPushButton("Run Analysis"),
             exit=QPushButton("Exit"),
@@ -131,8 +133,8 @@ class LogseqAnalyzerGUI(QWidget):
         self.worker.start()
 
     @Slot()
-    def handle_analysis_complete(self, success, error_message, elapsed_time) -> None:
-        """Handle completion of analysis"""
+    def handle_analysis_complete(self, error_message: str, elapsed_time: float, success: bool) -> None:  # noqa: FBT001
+        """Handle completion of analysis."""
         if success:
             self.show_success(f"{elapsed_time:.2f}")
         else:
@@ -141,7 +143,7 @@ class LogseqAnalyzerGUI(QWidget):
         self.checkboxes.graph_cache.setEnabled(True)
 
     def create_graph_folder_layout(self) -> QWidget:
-        """Creates and returns the layout for the graph folder input field."""
+        """Create and return the layout for the graph folder input field."""
         button_graph_folder = QPushButton("Browse")
         button_graph_folder.clicked.connect(self.select_graph_folder)
         button_clear = QPushButton("Clear")
@@ -156,7 +158,7 @@ class LogseqAnalyzerGUI(QWidget):
         return widget
 
     def create_global_config_layout(self) -> QWidget:
-        """Creates and returns the layout for the global config input field."""
+        """Create and return the layout for the global config input field."""
         button_global_config = QPushButton("Browse")
         button_global_config.clicked.connect(self.select_global_config_file)
         button_clear = QPushButton("Clear")
@@ -227,13 +229,13 @@ class LogseqAnalyzerGUI(QWidget):
         get_settings = self.settings.value
         _inputs = self.inputs
         _check = self.checkboxes
-        _check.move_all.setChecked(get_settings(Argument.MOVE_ALL, False, type=bool))
-        _check.move_assets.setChecked(get_settings(Argument.MOVE_UNLINKED_ASSETS, False, type=bool))
-        _check.move_bak.setChecked(get_settings(Argument.MOVE_BAK, False, type=bool))
-        _check.move_recycle.setChecked(get_settings(Argument.MOVE_RECYCLE, False, type=bool))
-        _check.write_graph.setChecked(get_settings(Argument.WRITE_GRAPH, False, type=bool))
-        _check.graph_cache.setChecked(get_settings(Argument.GRAPH_CACHE, False, type=bool))
-        _inputs.graph_folder.setText(get_settings(Argument.GRAPH_FOLDER, ""))
-        _inputs.global_config.setText(get_settings(Argument.GLOBAL_CONFIG, ""))
-        _inputs.report_format.setCurrentText(get_settings(Argument.REPORT_FORMAT, Format.TXT))
-        self.restoreGeometry(get_settings(Argument.GEOMETRY, b""))
+        _check.move_all.setChecked(bool(get_settings(Argument.MOVE_ALL, defaultValue=False, type=bool)))
+        _check.move_assets.setChecked(bool(get_settings(Argument.MOVE_UNLINKED_ASSETS, defaultValue=False, type=bool)))
+        _check.move_bak.setChecked(bool(get_settings(Argument.MOVE_BAK, defaultValue=False, type=bool)))
+        _check.move_recycle.setChecked(bool(get_settings(Argument.MOVE_RECYCLE, defaultValue=False, type=bool)))
+        _check.write_graph.setChecked(bool(get_settings(Argument.WRITE_GRAPH, defaultValue=False, type=bool)))
+        _check.graph_cache.setChecked(bool(get_settings(Argument.GRAPH_CACHE, defaultValue=False, type=bool)))
+        _inputs.graph_folder.setText(str(get_settings(Argument.GRAPH_FOLDER, "", type=str)))
+        _inputs.global_config.setText(str(get_settings(Argument.GLOBAL_CONFIG, "", type=str)))
+        _inputs.report_format.setCurrentText(str(get_settings(Argument.REPORT_FORMAT, Format.TXT, type=str)))
+        self.restoreGeometry(get_settings(Argument.GEOMETRY))

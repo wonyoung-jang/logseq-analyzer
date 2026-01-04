@@ -1,10 +1,11 @@
 """UI components for the Logseq Analyzer GUI."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QApplication,
     QCheckBox,
     QComboBox,
     QFormLayout,
@@ -20,8 +21,8 @@ from PySide6.QtWidgets import (
 from ..utils.enums import Format
 
 __all__ = [
-    "Checkboxes",
     "Buttons",
+    "Checkboxes",
     "Inputs",
     "Progress",
 ]
@@ -46,14 +47,15 @@ class Checkboxes(QWidget):
         self.initialize_layout()
 
     def initialize_layout(self) -> None:
-        """Creates and returns the layout for checkboxes."""
-        layout = QVBoxLayout(self)
+        """Create and return the layout for checkboxes."""
+        layout = QVBoxLayout()
         layout.addWidget(self.move_all)
         layout.addWidget(self.move_assets)
         layout.addWidget(self.move_bak)
         layout.addWidget(self.move_recycle)
         layout.addWidget(self.write_graph)
         layout.addWidget(self.graph_cache)
+        self.setLayout(layout)
 
     @Slot()
     def update_move_options(self) -> None:
@@ -91,10 +93,11 @@ class Buttons(QWidget):
         self.initialize_layout()
 
     def initialize_layout(self) -> None:
-        """Creates and returns the layout for buttons."""
-        layout = QHBoxLayout(self)
+        """Create and return the layout for buttons."""
+        layout = QHBoxLayout()
         layout.addWidget(self.run)
         layout.addWidget(self.exit)
+        self.setLayout(layout)
 
 
 @dataclass(slots=True)
@@ -108,13 +111,14 @@ class Inputs(QWidget):
     def __post_init__(self) -> None:
         """Post-initialization to set default values for inputs."""
         super(Inputs, self).__init__()
-        self.report_format.addItems({Format.TXT, Format.JSON, Format.MD, Format.HTML})
+        self.report_format.addItems((Format.TXT, Format.JSON, Format.MD, Format.HTML))
         self.initialize_layout()
 
     def initialize_layout(self) -> None:
-        """Creates and returns the layout for the report format input field."""
-        layout = QFormLayout(self)
+        """Create and return the layout for the report format input field."""
+        layout = QFormLayout()
         layout.addRow(QLabel("Report Format:"), self.report_format)
+        self.setLayout(layout)
 
 
 @dataclass(slots=True, weakref_slot=True)
@@ -132,19 +136,18 @@ class Progress(QWidget):
         self.initialize_layout()
 
     def initialize_layout(self) -> None:
-        """Creates and returns the layout for progress indicators."""
-        layout = QFormLayout(self)
+        """Create and return the layout for progress indicators."""
+        layout = QFormLayout()
         layout.addRow("Progress:", self.progress_bar)
         layout.addRow("Status:", self.label)
+        self.setLayout(layout)
 
     @Slot()
     def update_bar(self, progress_value: int = 0) -> None:
-        """Updates the progress bar for a given phase."""
+        """Update the progress bar for a given phase."""
         self.progress_bar.setValue(progress_value)
-        QApplication.processEvents()
 
     @Slot()
     def update_label(self, label: str) -> None:
-        """Updates the progress label with a given message."""
+        """Update the progress label with a given message."""
         self.label.setText(f"Status: {label}")
-        QApplication.processEvents()
