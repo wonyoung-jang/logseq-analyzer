@@ -1,13 +1,11 @@
-"""
-Tests for LogseqConfigEDN.
-"""
+"""Tests for LogseqConfigEDN."""
 
 import pytest
 
-from ..graph_config import LogseqConfigEDN, loads, tokenize
+from logseq_analyzer.config.graph_config import LogseqConfigEDN, loads, tokenize
 
 
-def test_tokenize_skips_comments_and_commas():
+def test_tokenize_skips_comments_and_commas() -> None:
     """Test that tokenize skips comments and commas."""
     edn = "1, 2 ; comment\n 3"
     tokens = list(tokenize(edn))
@@ -15,7 +13,7 @@ def test_tokenize_skips_comments_and_commas():
 
 
 @pytest.mark.parametrize(
-    "edn, expected",
+    ("edn", "expected"),
     [
         ("42", 42),
         ("-7", -7),
@@ -30,13 +28,13 @@ def test_tokenize_skips_comments_and_commas():
         ("foo", "foo"),
     ],
 )
-def test_simple_values(edn, expected):
+def test_simple_values(edn, expected) -> None:
     """Test that simple values are parsed correctly."""
     assert loads(edn) == expected
 
 
 @pytest.mark.parametrize(
-    "edn, expected",
+    ("edn", "expected"),
     [
         ("[1 2 3]", [1, 2, 3]),
         ("(4 5 6)", [4, 5, 6]),
@@ -44,12 +42,12 @@ def test_simple_values(edn, expected):
         ("{:a 1 :b 2}", {":a": 1, ":b": 2}),
     ],
 )
-def test_collections(edn, expected):
+def test_collections(edn, expected) -> None:
     """Test that collections are parsed correctly."""
     assert loads(edn) == expected
 
 
-def test_nested_structures():
+def test_nested_structures() -> None:
     """Test that nested structures are parsed correctly."""
     edn = "{:a [1 (2 3) #{4}] :b {:c 5}}"
     result = loads(edn)
@@ -57,7 +55,7 @@ def test_nested_structures():
     assert result[":b"] == {":c": 5}
 
 
-def test_unhashable_keys_in_map():
+def test_unhashable_keys_in_map() -> None:
     """Test that unhashable keys in a map raise an error."""
     edn = '{[1 2] "value"}'
     result = loads(edn)
@@ -66,7 +64,7 @@ def test_unhashable_keys_in_map():
     assert result[(1, 2)] == "value"
 
 
-def test_parse_map_key_set():
+def test_parse_map_key_set() -> None:
     """Test that a map with a set as a key is parsed correctly."""
     edn = "{#{1 2} :val}"
     result = loads(edn)
@@ -76,7 +74,7 @@ def test_parse_map_key_set():
     assert result[key] == ":val"
 
 
-def test_map_key_map():
+def test_map_key_map() -> None:
     """Test that a map with a map as a key is parsed correctly."""
     edn = "{{:x 10} :val}"
     result = loads(edn)
@@ -86,25 +84,25 @@ def test_map_key_map():
     assert result[key] == ":val"
 
 
-def test_unexpected_end():
+def test_unexpected_end() -> None:
     """Test that an unexpected end of input raises an error."""
     with pytest.raises(ValueError, match="Unexpected end of EDN input"):
         loads("")
 
 
-def test_extra_data():
+def test_extra_data() -> None:
     """Test that extra data after a valid EDN structure raises an error."""
     with pytest.raises(ValueError, match="Unexpected extra EDN data: 2"):
         loads("1 2")
 
 
-def test_invalid_number_as_symbol():
+def test_invalid_number_as_symbol() -> None:
     """Test that invalid numbers are parsed as symbols."""
     # Tokens that look like invalid numbers should be parsed as symbols
     assert loads("1.2.3") == "1.2.3"
 
 
-def test_string_with_spaces_and_commas():
+def test_string_with_spaces_and_commas() -> None:
     """Test that strings with spaces and commas are parsed correctly."""
     edn = '"a, b, c"'
     tokens = list(tokenize(edn))
@@ -112,7 +110,7 @@ def test_string_with_spaces_and_commas():
     assert loads(edn) == "a, b, c"
 
 
-def test_tokenize():
+def test_tokenize() -> None:
     """Test that the tokenize function works correctly."""
     edn = "1, 2 ; comment\n 3"
     tokens = tokenize(edn)

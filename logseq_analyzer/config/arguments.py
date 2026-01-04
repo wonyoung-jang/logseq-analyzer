@@ -1,6 +1,6 @@
-"""
-LogseqAnalyzerArguments Class
-"""
+"""LogseqAnalyzerArguments Class."""
+
+from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
@@ -13,7 +13,6 @@ from ..utils.enums import Output
 class Args:
     """A class to represent command line arguments for the Logseq Analyzer."""
 
-    # pylint: disable=too-many-instance-attributes
     global_config: str = ""
     graph_cache: bool = False
     graph_folder: str = ""
@@ -24,7 +23,7 @@ class Args:
     report_format: str = ".txt"
     write_graph: bool = False
 
-    def set_gui_args(self, **gui_args) -> None:
+    def set_gui_args(self, **gui_args: dict[str, Any]) -> None:
         """Set arguments if provided as keyword arguments from GUI."""
         for arg, value in gui_args.items():
             setattr(self, arg, value)

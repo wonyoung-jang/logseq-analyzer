@@ -1,36 +1,39 @@
-"""
-Logseq Graph Class
-"""
+"""Logseq Graph Class."""
+
+from __future__ import annotations
 
 import ast
-from dataclasses import InitVar, dataclass, field
 import logging
 import re
-from pathlib import Path
-from typing import Any, Generator
+from dataclasses import InitVar, dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from ..utils.enums import ConfigEdnReport, Core, Edn, TargetDir
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "TOKEN_REGEX",
     "NUMBER_REGEX",
-    "LogseqConfigEDN",
+    "TOKEN_REGEX",
     "EDNToken",
-    "loads",
-    "tokenize",
-    "get_edn_from_file",
+    "Edn",
+    "LogseqConfigEDN",
     "get_default_logseq_config",
-    "get_target_dirs",
+    "get_edn_from_file",
+    "get_file_name_format",
     "get_ns_sep",
     "get_page_title_format",
-    "get_file_name_format",
-    "Edn",
+    "get_target_dirs",
+    "loads",
+    "tokenize",
 ]
 
 
-type EDNToken = dict | list | set | Any | None | bool | float | int
+type EDNToken = Any | None | dict | list | set | bool | float | int | ast.AST
 
 TOKEN_REGEX: re.Pattern = re.compile(
     r"""
@@ -100,25 +103,33 @@ class LogseqConfigEDN:
         """Parse the entire EDN input and return the resulting Python object."""
         value = self.parse_value()
         if self.peek() is not None:
-            raise ValueError(f"Unexpected extra EDN data: {self.peek()}")
+            msg = f"Unexpected extra EDN data: {self.peek()}"
+            raise ValueError(msg)
         return value
 
     def parse_value(self) -> EDNToken:
         """Parse a single EDN value."""
         tok = self.peek()
         if tok is None:
-            raise ValueError("Unexpected end of EDN input")
-        tok_map = self.tok_map
-        if tok in tok_map:
-            return tok_map[tok]()
-        if tok.startswith('"'):
-            return self.parse_string()
-        if tok in ("true", "false", "nil"):
-            return self.parse_literal()
+            msg = "Unexpected end of EDN input"
+            raise ValueError(msg)
+
+        if isinstance(tok, str):
+            if tok in self.tok_map:
+                return self.tok_map[tok]()
+
+            if tok.startswith('"'):
+                return self.parse_string()
+
+            if tok in ("true", "false", "nil"):
+                return self.parse_literal()
+
+            if tok.startswith(":"):
+                return self.parse_keyword()
+
         if self.is_number(tok, NUMBER_REGEX):
             return self.parse_number()
-        if tok.startswith(":"):
-            return self.parse_keyword()
+
         return self.parse_symbol()
 
     def parse_map(self) -> dict:
@@ -177,9 +188,9 @@ class LogseqConfigEDN:
             result.add(self.parse_value())
         return result
 
-    def parse_string(self) -> str:
+    def parse_string(self) -> EDNToken:
         """Parse a string from EDN."""
-        tok = self.next()
+        tok = str(self.next())
         return ast.literal_eval(tok)
 
     def parse_literal(self) -> None | bool:
@@ -191,63 +202,64 @@ class LogseqConfigEDN:
             "nil": None,
         }.get(tok)
 
-    def is_number(self, tok, number_regex: re.Pattern = NUMBER_REGEX) -> bool:
+    def is_number(self, tok: Any, number_regex: re.Pattern = NUMBER_REGEX) -> bool:
         """Check if the token is a valid number (integer or float)."""
         return number_regex.fullmatch(tok) is not None
 
     def parse_number(self) -> float | int:
         """Parse a number (integer or float) from EDN."""
-        tok = self.next()
+        tok = str(self.next())
         if "." in tok or "e" in tok or "E" in tok:
             return float(tok)
         return int(tok)
 
     def parse_keyword(self) -> EDNToken | None:
         """Parse a keyword from EDN."""
-        tok = self.next()
-        return tok
+        return self.next()
 
     def parse_symbol(self) -> EDNToken | None:
         """Parse a symbol from EDN."""
-        tok = self.next()
-        return tok
+        return self.next()
 
 
 def loads(edn_str: str) -> EDNToken:
-    """
-    Parse an EDN-formatted string and return the corresponding Python data structure.
+    """Parse an EDN-formatted string and return the corresponding Python data structure.
 
     Args:
         edn_str (str): The EDN string to parse.
+
     Returns:
         dict | list | set | Any | None | bool | float | int: The parsed Python data structure.
+
     """
     parser = LogseqConfigEDN(tokenize(edn_str))
     return parser.parse()
 
 
 def tokenize(edn_str: str) -> Generator[str, Any, None]:
-    """
-    Yield EDN tokens, skipping comments, whitespace, and commas.
+    """Yield EDN tokens, skipping comments, whitespace, and commas.
+
     Comments start with ';' and run to end-of-line.
     Commas are treated as whitespace per EDN spec.
 
     Args:
         edn_str (str): The EDN string to tokenize.
+
     Yields:
         str: The next token in the EDN string.
+
     """
     edn = COMMENT_REGEX.sub("", edn_str)
     for match in TOKEN_REGEX.finditer(edn):
         yield match.group().strip()
 
 
-def get_edn_from_file(path: Path) -> None:
-    """
-    Initialize the LogseqGraphConfig from a file.
+def get_edn_from_file(path: Path) -> EDNToken:
+    """Initialize the LogseqGraphConfig from a file.
 
     Args:
         path (Path): The path to the config file.
+
     """
     with path.open("r", encoding="utf-8") as f:
         edn_data = loads(f.read())
@@ -256,11 +268,11 @@ def get_edn_from_file(path: Path) -> None:
 
 
 def get_default_logseq_config() -> dict[str, Any]:
-    """
-    Get the default Logseq configuration.
+    """Get the default Logseq configuration.
 
     Returns:
         dict[str, Any]: The default Logseq configuration.
+
     """
     return {
         ":meta/version": 1,
@@ -397,14 +409,14 @@ def get_default_logseq_config() -> dict[str, Any]:
 
 
 def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
-    """
-    Get the target directories for Logseq.
+    """Get the target directories for Logseq.
 
     Args:
         config (dict[str, Any]): The configuration dictionary.
 
     Returns:
         dict[str, str]: A dictionary containing the target directories.
+
     """
     return {
         TargetDir.ASSET: TargetDir.ASSET,
