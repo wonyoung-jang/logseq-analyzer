@@ -1,9 +1,13 @@
 """Test the LogseqAssets and LogseqAssetsHls classes."""
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
-from logseq_analyzer.analysis.index import FileIndex
+
+if TYPE_CHECKING:
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 @pytest.fixture

@@ -1,7 +1,5 @@
 """Module for main application logic for the Logseq analyzer."""
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,7 +53,7 @@ from .utils.helpers import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 log_file = LogFile(Path(Constant.LOG_FILE))
 logging.basicConfig(
@@ -238,7 +236,7 @@ def report_configurations(
     args: Args,
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
-) -> Generator[tuple[str, Any], None, None]:
+) -> Iterator[tuple[str, Any]]:
     """Yield configuration data reports."""
     yield OutputDir.META, args.report
     yield OutputDir.META, config_edns.report
@@ -249,7 +247,7 @@ def analyze(
     args: Args,
     index: FileIndex,
     analyzer_dirs: LogseqAnalyzerDirs,
-) -> Generator[tuple[str, Any], None, None]:
+) -> Iterator[tuple[str, Any]]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     yield OutputDir.GRAPH, logseq_graph.report
@@ -286,7 +284,7 @@ def analyze(
     logger.debug("analyze")
 
 
-def write_reports(data_reports: Generator[tuple[str, Any], None, None]) -> None:
+def write_reports(data_reports: Iterator[tuple[str, Any]]) -> None:
     """Write reports to the specified output directories."""
     for subdir, reports in data_reports:
         for prefix, data in reports.items():

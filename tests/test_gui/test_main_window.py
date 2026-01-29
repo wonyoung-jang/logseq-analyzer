@@ -1,15 +1,18 @@
 """Test the main window of the Logseq Analyzer GUI."""
 
-from collections.abc import Generator
+from typing import TYPE_CHECKING
 
 import pytest
 from PySide6.QtWidgets import QApplication
 
 from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 
 @pytest.fixture(scope="module")
-def app() -> Generator[QApplication, None, None]:
+def app() -> Generator[QApplication]:
     """Fixture for the QApplication."""
     app = QApplication([])
     yield app
@@ -17,7 +20,7 @@ def app() -> Generator[QApplication, None, None]:
 
 
 @pytest.fixture(scope="module")
-def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI, None, None]:  # noqa: ARG001
+def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI]:  # noqa: ARG001
     """Fixture for the LogseqAnalyzerGUI."""
     gui = LogseqAnalyzerGUI()
     yield gui
@@ -25,7 +28,7 @@ def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI, None, None]:  # noqa:
 
 
 @pytest.fixture(scope="module")
-def main_window(gui: LogseqAnalyzerGUI) -> Generator[LogseqAnalyzerGUI, None, None]:
+def main_window(gui: LogseqAnalyzerGUI) -> Generator[LogseqAnalyzerGUI]:
     """Fixture for the main window of the GUI."""
     gui.show()
     yield gui

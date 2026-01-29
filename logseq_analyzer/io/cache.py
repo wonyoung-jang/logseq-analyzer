@@ -1,7 +1,5 @@
 """Module for handling caching mechanisms for the application."""
 
-from __future__ import annotations
-
 import logging
 import shelve
 from dataclasses import dataclass, field
@@ -84,7 +82,7 @@ class Cache:
         self.cache[CacheKey.INDEX] = index
         return index
 
-    def iter_modified_files(self) -> Generator[Path, Any, None]:
+    def iter_modified_files(self) -> Generator[Path, Any]:
         """Get the modified files from the cache."""
         mod_tracker = {}
         if CacheKey.MOD_TRACKER in self.cache:

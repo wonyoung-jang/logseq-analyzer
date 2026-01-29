@@ -1,7 +1,5 @@
 """Module defining the LogseqPath class, which is used to gather file statistics for Logseq files."""
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime

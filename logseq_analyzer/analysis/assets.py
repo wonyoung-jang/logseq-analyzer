@@ -1,7 +1,5 @@
 """Logseq Assets Analysis Module."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -14,11 +12,6 @@ if TYPE_CHECKING:
 
     from ..logseq_file.file import LogseqFile
     from .index import FileIndex
-
-__all__ = [
-    "LogseqAssets",
-    "LogseqAssetsHls",
-]
 
 
 @dataclass(slots=True)
@@ -163,7 +156,7 @@ class LogseqAssets:
                 asset_file.node.backlinked = True
                 return
 
-    def yield_assets(self, *, backlinked: bool | None = None) -> Generator[LogseqFile, None]:
+    def yield_assets(self, *, backlinked: bool | None = None) -> Generator[LogseqFile]:
         """Yield all asset files from the index."""
         for file in (f for f in self.index if f.path.file_type == FileType.ASSET):
             if backlinked is None:

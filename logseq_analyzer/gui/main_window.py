@@ -1,7 +1,5 @@
 """Logseq Analyzer GUI using PySide6."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -23,11 +21,6 @@ from PySide6.QtWidgets import (
 from ..utils.enums import Format
 from .analysis_worker import AnalysisWorker
 from .ui_components import Buttons, Checkboxes, Inputs, Progress
-
-__all__ = [
-    "Argument",
-    "LogseqAnalyzerGUI",
-]
 
 
 class Argument(StrEnum):

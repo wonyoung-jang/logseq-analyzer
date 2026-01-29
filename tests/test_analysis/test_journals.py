@@ -1,11 +1,14 @@
 """Tests for LogseqJournals."""
 
 import datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.index import FileIndex
 from logseq_analyzer.analysis.journals import LogseqJournals
+
+if TYPE_CHECKING:
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 @pytest.fixture

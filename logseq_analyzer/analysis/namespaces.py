@@ -13,8 +13,6 @@ Problems:
     3. There is no easy way to get data about namespaces.
 """
 
-from __future__ import annotations
-
 import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field

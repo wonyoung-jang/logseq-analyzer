@@ -1,7 +1,5 @@
 """LogseqFile class to process Logseq files."""
 
-from __future__ import annotations
-
 import uuid
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
