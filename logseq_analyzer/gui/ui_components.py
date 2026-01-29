@@ -32,7 +32,7 @@ class Checkboxes(QWidget):
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for checkboxes."""
-        super(Checkboxes, self).__init__()
+        super().__init__()
         self.move_all.toggled.connect(self.update_move_options)
         self.graph_cache.setEnabled(True)
         self.initialize_layout()
@@ -76,7 +76,7 @@ class Buttons(QWidget):
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for buttons."""
-        super(Buttons, self).__init__()
+        super().__init__()
         self.run.setShortcut("Ctrl+R")
         self.run.setToolTip("Ctrl + R to run analysis")
         self.exit.setShortcut("Ctrl+W")
@@ -101,7 +101,7 @@ class Inputs(QWidget):
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for inputs."""
-        super(Inputs, self).__init__()
+        super().__init__()
         self.report_format.addItems((Format.TXT, Format.JSON, Format.MD, Format.HTML))
         self.initialize_layout()
 
@@ -121,7 +121,7 @@ class Progress(QWidget):
 
     def __post_init__(self) -> None:
         """Post-initialization to set default values for progress indicators."""
-        super(Progress, self).__init__()
+        super().__init__()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         self.initialize_layout()
