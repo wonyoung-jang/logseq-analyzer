@@ -1,7 +1,5 @@
 __pycache__
-.*
-.*/
-.*/*
+..playground/
 *.code-workspace
 *.dat
 *.json
@@ -28,7 +26,9 @@ to-delete
 user_config.ini
 explore
 explore.py
+site/
+.coverage
 
 # Don't ignore
-!.python-version
 !uv.lock
+!.python-version

@@ -40,7 +40,7 @@ class Core(StrEnum):
 class CritContent(StrEnum):
     """Criteria for filtering files."""
 
-    ALIASES = "content_aliase"
+    ALIASES = "content_aliases"
     ANY_LINKS = "content_any_link"
     ASSETS = "content_asset"
     BLOCKQUOTES = "content_blockquote"
