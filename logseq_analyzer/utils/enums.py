@@ -1,34 +1,6 @@
 """Enums for the Logseq Analyzer."""
 
-from __future__ import annotations
-
 from enum import StrEnum
-
-__all__ = [
-    "ConfigEdnReport",
-    "Constant",
-    "Core",
-    "CritAdvCmd",
-    "CritCode",
-    "CritContent",
-    "CritDblCurly",
-    "CritDblParen",
-    "CritEmb",
-    "CritExt",
-    "CritProp",
-    "DirsAnalyzer",
-    "DirsDelete",
-    "DirsGraph",
-    "Edn",
-    "FileType",
-    "Format",
-    "LogseqGraphStructure",
-    "Moved",
-    "Node",
-    "Output",
-    "OutputDir",
-    "TargetDir",
-]
 
 
 class ConfigEdnReport(StrEnum):
@@ -68,7 +40,7 @@ class Core(StrEnum):
 class CritContent(StrEnum):
     """Criteria for filtering files."""
 
-    ALIASES = "content_aliase"
+    ALIASES = "content_aliases"
     ANY_LINKS = "content_any_link"
     ASSETS = "content_asset"
     BLOCKQUOTES = "content_blockquote"

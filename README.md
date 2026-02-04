@@ -43,11 +43,11 @@ Simple utility to analyze a Logseq graph for basic information to assist with th
 
 ### Graphs, backlinks, and orphans
 
-Logseq currenty runs with two definitions of an "Orphan" page.
+Logseq currently runs with two definitions of an "Orphan" page.
 1. The `All pages` view: Page that is not backlinked and has no content
 2. The `Graph` view: Page that is not backlinked and has no backlinks
 
-Anybody with a sizeable number of pages will tell you that the Graph view in Logseq becomes unwieldly very quickly. While the All pages orphans can be removed with the "Remove orphaned pages?" action from `All pages`, the Graph orphans are only accessible via the `Graph` view. The Graph orphans may contain lots of content, but since they aren't don't link to or from anything, they have high chance of not surfacing again. This analyzer will show each type of orphan in the graph for further review.
+Anybody with a sizeable number of pages will tell you that the Graph view in Logseq becomes unwieldy very quickly. While the All pages orphans can be removed with the "Remove orphaned pages?" action from `All pages`, the Graph orphans are only accessible via the `Graph` view. The Graph orphans may contain lots of content, but since they aren't don't link to or from anything, they have high chance of not surfacing again. This analyzer will show each type of orphan in the graph for further review.
 
 Note: While Logseq doesn't count namespace hierarchies as backlinks, this program does, as it reflects how the Graph view interprets backlinks, otherwise many pages may potentially be considered orphans, depending on the complexity of some namespaces.
 

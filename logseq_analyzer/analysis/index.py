@@ -1,7 +1,5 @@
 """FileIndex class."""
 
-from __future__ import annotations
-
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -18,11 +16,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-__all__ = [
-    "FileIndex",
-]
-
-
 @dataclass(slots=True)
 class FileIndex:
     """Class to index files in the Logseq graph."""
@@ -36,8 +29,10 @@ class FileIndex:
 
     def __new__(cls) -> Self:
         """Ensure only one instance of FileIndex is created."""
-        if cls._instance is None:
-            cls._instance = super(FileIndex, cls).__new__(cls)
+        if isinstance(cls._instance, cls):
+            return cls._instance
+
+        cls._instance = super().__new__(cls)
         return cls._instance
 
     def __len__(self) -> int:

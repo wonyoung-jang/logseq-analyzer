@@ -1,9 +1,13 @@
 """Tests for LogseqJournals."""
 
+from typing import TYPE_CHECKING
+
 import pytest
 
-from logseq_analyzer.analysis.index import FileIndex
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
+
+if TYPE_CHECKING:
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 @pytest.fixture

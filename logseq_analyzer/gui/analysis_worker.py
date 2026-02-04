@@ -1,16 +1,10 @@
 """Worker thread for running the Logseq Analyzer application."""
 
-from __future__ import annotations
-
 import time
 
 from PySide6.QtCore import QThread, Signal
 
 from ..app import run_app
-
-__all__ = [
-    "AnalysisWorker",
-]
 
 
 class AnalysisWorker(QThread):

@@ -1,7 +1,5 @@
 """DateUtilities class to handle date-related operations."""
 
-from __future__ import annotations
-
 import logging
 import re
 from datetime import UTC, datetime, timedelta
@@ -9,16 +7,9 @@ from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable
+    from collections.abc import Iterable, Iterator
 
 logger = logging.getLogger(__name__)
-
-__all__ = [
-    "DATE_ORDINAL_SUFFIXES",
-    "DateStat",
-    "DateUtilities",
-    "Day",
-]
 
 
 class Day(IntEnum):
@@ -116,7 +107,7 @@ class DateUtilities:
         return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
     @staticmethod
-    def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Generator[datetime, Any, None]:
+    def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Iterator[datetime]:
         """Convert journal keys from strings to datetime objects."""
         for key in keys:
             try:
@@ -130,19 +121,17 @@ class DateUtilities:
     @staticmethod
     def compile_datetime_tokens() -> re.Pattern:
         """Set the regex pattern for date tokens."""
-        token_map = DATETIME_TOKEN_MAP
-        pattern = "|".join(re.escape(k) for k in sorted(token_map.keys(), key=len, reverse=True))
+        sorted_keys = sorted(DATETIME_TOKEN_MAP.keys(), key=len, reverse=True)
+        pattern = "|".join(re.escape(str(k)) for k in sorted_keys)
         return re.compile(pattern)
 
     @staticmethod
     def cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
         """Convert a Clojure-style date format to a Python-style date format."""
-        cljs_format = cljs_format.replace("o", "")
-        get_token = DATETIME_TOKEN_MAP.get
 
         def replace_token(match: re.Match) -> str:
             """Replace a date token with its corresponding Python format."""
             token = match.group(0)
-            return get_token(token, token)
+            return DATETIME_TOKEN_MAP.get(token, token)
 
-        return token_pattern.sub(replace_token, cljs_format)
+        return token_pattern.sub(replace_token, cljs_format.replace("o", ""))

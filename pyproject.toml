@@ -7,7 +7,7 @@ name = "logseq_analyzer"
 version = "0.1.0"
 description = "A tool to analyze your Logseq graph."
 authors = [{ name = "Wonyoung Jang", email = "contact@wonyoungjang.org" }]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "colorama==0.4.6",
     "furo==2024.8.6",
@@ -15,9 +15,6 @@ dependencies = [
     "packaging==25.0",
     "pluggy==1.5.0",
     "pyside6==6.9.0",
-    "PySide6_Addons==6.9.0",
-    "PySide6_Essentials==6.9.0",
-    "shiboken6==6.9.0",
 ]
 
 [project.urls]
@@ -30,68 +27,6 @@ logseq-analyzer = "logseq_analyzer.__main__:main"
 module-name = "logseq_analyzer"
 module-root = ""
 
-[tool.ruff]
-line-length = 120
-indent-width = 4
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
-]
-extend-exclude = ["docs", ".playground"]
-
-
-[tool.ruff.lint]
-select = ["E4", "E7", "E9", "F"]
-ignore = [
-    "ANN401",
-    "ARG002",
-    "C901",
-    "COM812",
-    "D203",
-    "D213",
-    "ERA001",
-    "PLR2004",
-    "S",
-    "TID252",
-    "T201",
-]
-fixable = ["ALL"]
-unfixable = []
-extend-select = ["ALL"]
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
-docstring-code-format = false
-docstring-code-line-length = "dynamic"
-
 [tool.vulture]
 paths = ["./logseq_analyzer", "whitelist.py"]
 ignore_decorators = ["@app.*"]
@@ -103,6 +38,10 @@ addopts = ["--strict-markers", "--strict-config", "-ra", "-v"]
 testpaths = ["tests"]
 
 [dependency-groups]
+docs = [
+    "mkdocstrings-python>=2.0.1",
+    "zensical>=0.0.20",
+]
 tests = [
     "coverage>=7.8.2",
     "pytest>=8.3.5",

@@ -1,9 +1,13 @@
 """Tests for LogseqGraph."""
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from logseq_analyzer.analysis.graph import LogseqGraph
-from logseq_analyzer.analysis.index import FileIndex
+
+if TYPE_CHECKING:
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 @pytest.fixture

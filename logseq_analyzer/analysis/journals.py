@@ -1,7 +1,5 @@
 """Process logseq journals."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -13,10 +11,6 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from ..analysis.index import FileIndex
-
-__all__ = [
-    "LogseqJournals",
-]
 
 
 @dataclass(slots=True)

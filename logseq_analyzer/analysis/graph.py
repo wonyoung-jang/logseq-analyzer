@@ -1,7 +1,5 @@
 """Module with functions for processing and analyzing Logseq graph data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -12,10 +10,6 @@ from ..utils.helpers import get_count_and_foundin_data, remove_builtin_propertie
 if TYPE_CHECKING:
     from ..logseq_file.file import LogseqFile
     from .index import FileIndex
-
-__all__ = [
-    "LogseqGraph",
-]
 
 
 @dataclass(slots=True)
