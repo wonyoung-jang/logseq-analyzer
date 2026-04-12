@@ -127,7 +127,7 @@ class FileIndex:
     @property
     def report(self) -> dict[str, Any]:
         """Generate a report of the indexed files."""
-        report = {
+        report: dict[str, Any] = {
             Output.GRAPH_CONTENT_DATA: self.graph_content_data,
             Output.GRAPH_DATA: self.graph_data,
             Output.IDX_FILES: self._files,

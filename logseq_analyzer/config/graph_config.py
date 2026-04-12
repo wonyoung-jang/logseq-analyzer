@@ -175,14 +175,16 @@ class LogseqConfigEDN:
         tok = str(self.next())
         return ast.literal_eval(tok)
 
-    def parse_literal(self) -> None | bool:
+    def parse_literal(self) -> bool | None:
         """Parse a literal value from EDN."""
         tok = self.next()
-        return {
-            "true": True,
-            "false": False,
-            "nil": None,
-        }.get(tok)
+        if isinstance(tok, str):
+            return {
+                "true": True,
+                "false": False,
+                "nil": None,
+            }.get(tok)
+        return None
 
     def is_number(self, tok: Any, number_regex: re.Pattern = NUMBER_REGEX) -> bool:
         """Check if the token is a valid number (integer or float)."""

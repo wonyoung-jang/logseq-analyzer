@@ -77,9 +77,8 @@ class DateUtilities:
         return date_obj + timedelta(days=1)
 
     @staticmethod
-    def range(stats: dict[str, datetime]) -> dict[str, float | None]:
+    def range(delta: timedelta) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
-        delta = stats[DS.LAST] - stats[DS.FIRST]
         days = delta.days + 1
         return {
             DS.DAYS: days if delta else 0.0,
@@ -91,11 +90,12 @@ class DateUtilities:
     @staticmethod
     def stats(dates: list[datetime]) -> dict[str, Any]:
         """Get statistics about the timeline."""
-        stats = {
+        stats: dict[str, Any] = {
             DS.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
             DS.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
         }
-        stats.update(DateUtilities.range(stats))
+        delta = stats[DS.LAST] - stats[DS.FIRST]
+        stats.update(DateUtilities.range(delta))
         return stats
 
     @staticmethod

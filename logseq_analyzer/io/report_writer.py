@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, TextIO
 from ..utils.enums import Format
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     from ..config.arguments import Args
@@ -253,12 +254,13 @@ class ReportWriter:
         filename = f"{_prefix}.{_ext}" if count else f"(EMPTY) {_prefix}.{_ext}"
         outputpath = self.get_output_path(filename)
         logger.info("Writing %s as %s", _prefix, _ext)
-        write_method = {
+        write_method_map: dict[str, Callable] = {
             Format.TXT: _writer.text.write,
             Format.MD: _writer.text.write,
             Format.JSON: _writer.json.write,
             Format.HTML: _writer.html.write,
-        }.get(_ext, _writer.text.write)
+        }
+        write_method = write_method_map.get(_ext, _writer.text.write)
 
         write_method(outputpath, _prefix, count, filename, _data)
 
