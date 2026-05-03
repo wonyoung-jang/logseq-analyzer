@@ -6,6 +6,8 @@ from PySide6.QtCore import QThread, Signal
 
 from logseq_analyzer.app import run_app
 
+# ruff: noqa: FBT003
+
 
 class AnalysisWorker(QThread):
     """Thread worker for running the Logseq Analyzer application."""
@@ -13,8 +15,6 @@ class AnalysisWorker(QThread):
     progress_signal = Signal(int)
     progress_label = Signal(str)
     finished_signal = Signal(str, float, bool)
-
-    __slots__ = ("gui_args",)
 
     def __init__(self, args: dict) -> None:
         """Initialize the worker with arguments."""
@@ -26,11 +26,11 @@ class AnalysisWorker(QThread):
         try:
             start_time = time.perf_counter()
             run_app(**self.gui_args, progress_callback=self.update_progress)
-            self.finished_signal.emit("", time.perf_counter() - start_time, True)  # noqa: FBT003
+            self.finished_signal.emit("", time.perf_counter() - start_time, True)
         except KeyboardInterrupt:
-            self.finished_signal.emit("Analysis interrupted by user.", 0, False)  # noqa: FBT003
+            self.finished_signal.emit("Analysis interrupted by user.", 0, False)
         except Exception as e:
-            self.finished_signal.emit(str(e), 0, False)  # noqa: FBT003
+            self.finished_signal.emit(str(e), 0, False)
             raise
 
     def update_progress(self, value: int, label: str) -> None:

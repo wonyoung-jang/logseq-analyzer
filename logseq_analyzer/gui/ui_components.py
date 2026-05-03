@@ -1,7 +1,5 @@
 """UI components for the Logseq Analyzer GUI."""
 
-from dataclasses import dataclass
-
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -19,34 +17,27 @@ from PySide6.QtWidgets import (
 from logseq_analyzer.utils.enums import Format
 
 
-@dataclass(slots=True, weakref_slot=True)
 class Checkboxes(QWidget):
     """Checkboxes for the GUI."""
 
-    move_all: QCheckBox
-    move_assets: QCheckBox
-    move_bak: QCheckBox
-    move_recycle: QCheckBox
-    write_graph: QCheckBox
-    graph_cache: QCheckBox
-
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         """Post-initialization to set default values for checkboxes."""
         super().__init__()
-        self.move_all.toggled.connect(self.update_move_options)
+        self.move_all = QCheckBox("Enable all move options")
+        self.move_assets = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
+        self.move_bak = QCheckBox("Move Bak to 'to_delete' folder")
+        self.move_recycle = QCheckBox("Move Recycle to 'to_delete' folder")
+        self.write_graph = QCheckBox("Write Full Graph Content (large)")
+        self.graph_cache = QCheckBox("Reindex Graph Cache")
         self.graph_cache.setEnabled(True)
-        self.initialize_layout()
-
-    def initialize_layout(self) -> None:
-        """Create and return the layout for checkboxes."""
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         layout.addWidget(self.move_all)
         layout.addWidget(self.move_assets)
         layout.addWidget(self.move_bak)
         layout.addWidget(self.move_recycle)
         layout.addWidget(self.write_graph)
         layout.addWidget(self.graph_cache)
-        self.setLayout(layout)
+        self.move_all.toggled.connect(self.update_move_options)
 
     @Slot()
     def update_move_options(self) -> None:
@@ -67,71 +58,48 @@ class Checkboxes(QWidget):
         self.graph_cache.setEnabled(False)
 
 
-@dataclass(slots=True)
 class Buttons(QWidget):
     """Buttons for the GUI."""
 
-    run: QPushButton
-    exit: QPushButton
-
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         """Post-initialization to set default values for buttons."""
         super().__init__()
+        self.run = QPushButton("Run Analysis")
         self.run.setShortcut("Ctrl+R")
         self.run.setToolTip("Ctrl + R to run analysis")
+        self.exit = QPushButton("Exit")
         self.exit.setShortcut("Ctrl+W")
         self.exit.setToolTip("Ctrl + W to exit")
-        self.initialize_layout()
-
-    def initialize_layout(self) -> None:
-        """Create and return the layout for buttons."""
-        layout = QHBoxLayout()
+        layout = QHBoxLayout(self)
         layout.addWidget(self.run)
         layout.addWidget(self.exit)
-        self.setLayout(layout)
 
 
-@dataclass(slots=True)
 class Inputs(QWidget):
     """Input fields for the GUI."""
 
-    graph_folder: QLineEdit
-    global_config: QLineEdit
-    report_format: QComboBox
-
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         """Post-initialization to set default values for inputs."""
         super().__init__()
+        self.graph_folder = QLineEdit(readOnly=True)
+        self.global_config = QLineEdit(readOnly=True)
+        self.report_format = QComboBox()
         self.report_format.addItems((Format.TXT, Format.JSON, Format.MD, Format.HTML))
-        self.initialize_layout()
-
-    def initialize_layout(self) -> None:
-        """Create and return the layout for the report format input field."""
-        layout = QFormLayout()
+        layout = QFormLayout(self)
         layout.addRow(QLabel("Report Format:"), self.report_format)
-        self.setLayout(layout)
 
 
-@dataclass(slots=True, weakref_slot=True)
 class Progress(QWidget):
     """Progress indicators for the GUI."""
 
-    progress_bar: QProgressBar
-    label: QLabel
-
-    def __post_init__(self) -> None:
-        """Post-initialization to set default values for progress indicators."""
+    def __init__(self) -> None:
+        """Initialize the progress indicators."""
         super().__init__()
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        self.initialize_layout()
-
-    def initialize_layout(self) -> None:
-        """Create and return the layout for progress indicators."""
-        layout = QFormLayout()
+        self.progress_bar = QProgressBar(minimum=0, maximum=100, value=0)
+        self.label = QLabel("Ready")
+        layout = QFormLayout(self)
         layout.addRow("Progress:", self.progress_bar)
         layout.addRow("Status:", self.label)
-        self.setLayout(layout)
 
     @Slot()
     def update_bar(self, progress_value: int = 0) -> None:
@@ -141,4 +109,4 @@ class Progress(QWidget):
     @Slot()
     def update_label(self, label: str) -> None:
         """Update the progress label with a given message."""
-        self.label.setText(f"Status: {label}")
+        self.label.setText(f"{label}")

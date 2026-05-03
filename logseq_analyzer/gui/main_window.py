@@ -1,18 +1,13 @@
 """Logseq Analyzer GUI using PySide6."""
 
-from dataclasses import dataclass, field
 from enum import StrEnum
 
 from PySide6.QtCore import QSettings, Slot
 from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMessageBox,
-    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -38,49 +33,19 @@ class Argument(StrEnum):
     WRITE_GRAPH = "write_graph"
 
 
-@dataclass(slots=True)
 class LogseqAnalyzerGUI(QWidget):
     """Main GUI class for the Logseq Analyzer application."""
 
-    inputs: Inputs = field(init=False)
-    buttons: Buttons = field(init=False)
-    checkboxes: Checkboxes = field(init=False)
-    progress: Progress = field(init=False)
-    worker: AnalysisWorker = field(init=False)
-    settings: QSettings = field(init=False)
-
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         """Initialize the GUI components and layout."""
         super().__init__()
+        self.setWindowTitle("Logseq Analyzer")
+        self.resize(500, 500)
+        self.buttons = Buttons()
+        self.inputs = Inputs()
+        self.checkboxes = Checkboxes()
+        self.progress = Progress()
         self.settings = QSettings("LogseqAnalyzer", "LogseqAnalyzerGUI")
-        self.setup_ui_objects()
-        self.initialize_layout()
-        self.connect_signals()
-        self.load_settings()
-
-    def setup_ui_objects(self) -> None:
-        """Set up the UI groups for the main window."""
-        self.buttons = Buttons(
-            run=QPushButton("Run Analysis"),
-            exit=QPushButton("Exit"),
-        )
-        self.inputs = Inputs(
-            graph_folder=QLineEdit(readOnly=True),
-            global_config=QLineEdit(readOnly=True),
-            report_format=QComboBox(),
-        )
-        self.checkboxes = Checkboxes(
-            move_all=QCheckBox("Enable all move options"),
-            move_assets=QCheckBox("Move Unlinked Assets to 'to_delete' folder"),
-            move_bak=QCheckBox("Move Bak to 'to_delete' folder"),
-            move_recycle=QCheckBox("Move Recycle to 'to_delete' folder"),
-            write_graph=QCheckBox("Write Full Graph Content (large)"),
-            graph_cache=QCheckBox("Reindex Graph Cache"),
-        )
-        self.progress = Progress(progress_bar=QProgressBar(self), label=QLabel("Status: Ready"))
-
-    def initialize_layout(self) -> None:
-        """Initialize the user interface."""
         layout = QVBoxLayout(self)
         layout.addWidget(self.create_graph_folder_layout())
         layout.addWidget(self.create_global_config_layout())
@@ -88,8 +53,8 @@ class LogseqAnalyzerGUI(QWidget):
         layout.addWidget(self.checkboxes)
         layout.addWidget(self.progress)
         layout.addWidget(self.buttons)
-        self.setWindowTitle("Logseq Analyzer")
-        self.resize(500, 500)
+        self.connect_signals()
+        self.load_settings()
 
     def connect_signals(self) -> None:
         """Connect signals to their respective slots."""
@@ -141,13 +106,12 @@ class LogseqAnalyzerGUI(QWidget):
         button_graph_folder.clicked.connect(self.select_graph_folder)
         button_clear = QPushButton("Clear")
         button_clear.clicked.connect(self.inputs.graph_folder.clear)
-        layout = QHBoxLayout()
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
         layout.addWidget(QLabel("Graph Folder (Required):"))
         layout.addWidget(self.inputs.graph_folder)
         layout.addWidget(button_graph_folder)
         layout.addWidget(button_clear)
-        widget = QWidget()
-        widget.setLayout(layout)
         return widget
 
     def create_global_config_layout(self) -> QWidget:
@@ -156,13 +120,12 @@ class LogseqAnalyzerGUI(QWidget):
         button_global_config.clicked.connect(self.select_global_config_file)
         button_clear = QPushButton("Clear")
         button_clear.clicked.connect(self.inputs.global_config.clear)
-        layout = QHBoxLayout()
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
         layout.addWidget(QLabel("Global Config File (Optional):"))
         layout.addWidget(self.inputs.global_config)
         layout.addWidget(button_global_config)
         layout.addWidget(button_clear)
-        widget = QWidget()
-        widget.setLayout(layout)
         return widget
 
     @Slot()
