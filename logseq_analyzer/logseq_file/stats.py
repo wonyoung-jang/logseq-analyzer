@@ -7,16 +7,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import unquote
 
-from ..config.graph_config import ConfigEdns, get_ns_sep
-from ..utils.date_utilities import DateUtilities
-from ..utils.enums import Core, FileType, TargetDir
-from ..utils.helpers import format_bytes
-from .info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
+from logseq_analyzer.config.graph_config import ConfigEdns, get_ns_sep
+from logseq_analyzer.logseq_file.info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
+from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.enums import Core, FileType, TargetDir
+from logseq_analyzer.utils.helpers import format_bytes
 
 if TYPE_CHECKING:
     from os import stat_result
 
-    from ..io.filesystem import LogseqAnalyzerDirs
+    from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 

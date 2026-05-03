@@ -4,7 +4,7 @@ import argparse
 from dataclasses import dataclass
 from typing import Any
 
-from ..utils.enums import Output
+from logseq_analyzer.utils.enums import Output
 
 
 @dataclass(slots=True)

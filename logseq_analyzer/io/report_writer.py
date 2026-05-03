@@ -5,14 +5,14 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, TextIO
 
-from ..utils.enums import Format
+from logseq_analyzer.utils.enums import Format
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from ..config.arguments import Args
-    from ..io.filesystem import LogseqAnalyzerDirs
+    from logseq_analyzer.config.arguments import Args
+    from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 

@@ -5,22 +5,22 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from ..patterns import adv_cmd as advanced_command_patterns
-from ..patterns import code as code_patterns
-from ..patterns import content as content_patterns
-from ..patterns import double_curly as double_curly_brackets_patterns
-from ..patterns import double_parentheses as double_parentheses_patterns
-from ..patterns import embedded_links as embedded_links_patterns
-from ..patterns import external_links as external_links_patterns
-from ..utils.enums import CritCode, CritContent, CritProp
-from ..utils.helpers import (
+from logseq_analyzer.logseq_file.info import BulletInfo
+from logseq_analyzer.patterns import adv_cmd as advanced_command_patterns
+from logseq_analyzer.patterns import code as code_patterns
+from logseq_analyzer.patterns import content as content_patterns
+from logseq_analyzer.patterns import double_curly as double_curly_brackets_patterns
+from logseq_analyzer.patterns import double_parentheses as double_parentheses_patterns
+from logseq_analyzer.patterns import embedded_links as embedded_links_patterns
+from logseq_analyzer.patterns import external_links as external_links_patterns
+from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
+from logseq_analyzer.utils.helpers import (
     extract_builtin_properties,
     iter_pattern_split,
     process_aliases,
     process_pattern_hierarchy,
     remove_builtin_properties,
 )
-from .info import BulletInfo
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

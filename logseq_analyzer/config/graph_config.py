@@ -6,7 +6,7 @@ import re
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from ..utils.enums import ConfigEdnReport, Core, Edn, TargetDir
+from logseq_analyzer.utils.enums import ConfigEdnReport, Core, Edn, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

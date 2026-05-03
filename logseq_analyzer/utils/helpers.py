@@ -7,14 +7,14 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ..utils.enums import Format, Moved
+from logseq_analyzer.utils.enums import Format, Moved
 
 if TYPE_CHECKING:
     import re
     from collections.abc import Iterator
     from types import ModuleType
 
-    from ..logseq_file.file import LogseqFile
+    from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(

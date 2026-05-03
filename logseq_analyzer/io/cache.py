@@ -6,15 +6,15 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from ..analysis.index import FileIndex
-from ..utils.helpers import iter_files
+from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.utils.helpers import iter_files
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-    from ..config.arguments import Args
-    from ..io.filesystem import LogseqAnalyzerDirs
+    from logseq_analyzer.config.arguments import Args
+    from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
 

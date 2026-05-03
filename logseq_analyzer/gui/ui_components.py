@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..utils.enums import Format
+from logseq_analyzer.utils.enums import Format
 
 
 @dataclass(slots=True, weakref_slot=True)

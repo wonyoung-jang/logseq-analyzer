@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import CritExt
+from logseq_analyzer.utils.enums import CritExt
 
 ALL = re.compile(
     r"""

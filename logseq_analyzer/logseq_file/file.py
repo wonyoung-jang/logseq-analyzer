@@ -5,12 +5,11 @@ from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import logseq_analyzer.patterns.content as content_patterns
+from logseq_analyzer.logseq_file.bullets import LogseqBullets
+from logseq_analyzer.logseq_file.info import LogseqFileInfo, NodeType
+from logseq_analyzer.logseq_file.stats import LogseqPath
 from logseq_analyzer.patterns import adv_cmd, code
-
-from ..utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
-from .bullets import LogseqBullets
-from .info import LogseqFileInfo, NodeType
-from .stats import LogseqPath
+from logseq_analyzer.utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
 
 if TYPE_CHECKING:
     import re

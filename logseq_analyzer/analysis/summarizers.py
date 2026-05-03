@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from ..utils.helpers import get_count_and_foundin_data, sort_dict_by_value
-from .index import FileIndex
+from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.utils.helpers import get_count_and_foundin_data, sort_dict_by_value
 
 
 class SummaryFile(StrEnum):

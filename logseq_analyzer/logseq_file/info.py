@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from ..utils.enums import Node
+from logseq_analyzer.utils.enums import Node
 
 
 @dataclass(slots=True)

@@ -4,13 +4,13 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from ..utils.date_utilities import DateUtilities
-from ..utils.enums import FileType, Output
+from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.enums import FileType, Output
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from ..analysis.index import FileIndex
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 @dataclass(slots=True)

@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from ..utils.enums import CritContent, CritProp, FileType, Output
-from ..utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
+from logseq_analyzer.utils.enums import CritContent, CritProp, FileType, Output
+from logseq_analyzer.utils.helpers import get_count_and_foundin_data, remove_builtin_properties, sort_dict_by_value
 
 if TYPE_CHECKING:
-    from ..logseq_file.file import LogseqFile
-    from .index import FileIndex
+    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 @dataclass(slots=True)

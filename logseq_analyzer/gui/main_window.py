@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..utils.enums import Format
-from .analysis_worker import AnalysisWorker
-from .ui_components import Buttons, Checkboxes, Inputs, Progress
+from logseq_analyzer.gui.analysis_worker import AnalysisWorker
+from logseq_analyzer.gui.ui_components import Buttons, Checkboxes, Inputs, Progress
+from logseq_analyzer.utils.enums import Format
 
 
 class Argument(StrEnum):

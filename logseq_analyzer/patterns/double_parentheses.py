@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import CritDblParen
+from logseq_analyzer.utils.enums import CritDblParen
 
 ALL = re.compile(
     r"""

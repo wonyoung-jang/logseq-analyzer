@@ -2,7 +2,7 @@
 
 import re
 
-from ..utils.enums import CritDblCurly
+from logseq_analyzer.utils.enums import CritDblCurly
 
 ALL = re.compile(
     r"""

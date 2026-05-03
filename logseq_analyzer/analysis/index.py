@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from ..logseq_file.file import LogseqFile
-from ..utils.enums import Output
-from ..utils.helpers import yield_attrs
+from logseq_analyzer.logseq_file.file import LogseqFile
+from logseq_analyzer.utils.enums import Output
+from logseq_analyzer.utils.helpers import yield_attrs
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

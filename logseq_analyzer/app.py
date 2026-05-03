@@ -5,14 +5,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .analysis.assets import LogseqAssets, LogseqAssetsHls
-from .analysis.graph import LogseqGraph
-from .analysis.index import FileIndex
-from .analysis.journals import LogseqJournals
-from .analysis.namespaces import LogseqNamespaces
-from .analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
-from .config.arguments import Args
-from .config.graph_config import (
+from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
+from logseq_analyzer.analysis.graph import LogseqGraph
+from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.analysis.journals import LogseqJournals
+from logseq_analyzer.analysis.namespaces import LogseqNamespaces
+from logseq_analyzer.analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
+from logseq_analyzer.config.arguments import Args
+from logseq_analyzer.config.graph_config import (
     ConfigEdns,
     get_default_logseq_config,
     get_edn_from_file,
@@ -20,8 +20,8 @@ from .config.graph_config import (
     get_page_title_format,
     get_target_dirs,
 )
-from .io.cache import Cache
-from .io.filesystem import (
+from logseq_analyzer.io.cache import Cache
+from logseq_analyzer.io.filesystem import (
     AnalyzerDeleteDirs,
     AssetsDirectory,
     BakDirectory,
@@ -40,13 +40,13 @@ from .io.filesystem import (
     RecycleDirectory,
     WhiteboardsDirectory,
 )
-from .io.report_writer import ReportWriter
-from .logseq_file.file import LogseqFile, LogseqPath
-from .logseq_file.info import JournalFormats
-from .logseq_file.stats import LogseqFileName
-from .utils.date_utilities import DateUtilities
-from .utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
-from .utils.helpers import (
+from logseq_analyzer.io.report_writer import ReportWriter
+from logseq_analyzer.logseq_file.file import LogseqFile, LogseqPath
+from logseq_analyzer.logseq_file.info import JournalFormats
+from logseq_analyzer.logseq_file.stats import LogseqFileName
+from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
+from logseq_analyzer.utils.helpers import (
     process_moves,
     yield_asset_paths,
     yield_bak_rec_paths,

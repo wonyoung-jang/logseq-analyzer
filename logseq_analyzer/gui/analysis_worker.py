@@ -4,7 +4,7 @@ import time
 
 from PySide6.QtCore import QThread, Signal
 
-from ..app import run_app
+from logseq_analyzer.app import run_app
 
 
 class AnalysisWorker(QThread):

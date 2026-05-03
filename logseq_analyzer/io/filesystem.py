@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ..utils.enums import Constant, DirsAnalyzer, DirsDelete, DirsGraph
+from logseq_analyzer.utils.enums import Constant, DirsAnalyzer, DirsDelete, DirsGraph
 
 logger = logging.getLogger(__name__)
 

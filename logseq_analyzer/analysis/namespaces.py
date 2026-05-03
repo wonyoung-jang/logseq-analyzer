@@ -19,12 +19,11 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import logseq_analyzer.patterns.content as content_patterns
-
-from ..utils.enums import Core, CritDblCurly, Output
-from ..utils.helpers import sort_dict_by_value
+from logseq_analyzer.utils.enums import Core, CritDblCurly, Output
+from logseq_analyzer.utils.helpers import sort_dict_by_value
 
 if TYPE_CHECKING:
-    from .index import FileIndex
+    from logseq_analyzer.analysis.index import FileIndex
 
 logger = logging.getLogger(__name__)
 
