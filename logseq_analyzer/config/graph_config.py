@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from ..utils.enums import ConfigEdnReport, Core, Edn, TargetDir
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -56,12 +56,12 @@ class ConfigEdns:
 class LogseqConfigEDN:
     """A simple EDN parser that converts EDN data into Python data structures."""
 
-    tokens_gen: InitVar[Generator[str, Any]]
+    tokens_gen: InitVar[Iterator[Any]]
     tokens: list[str] = field(default_factory=list)
     tok_map: dict[str, Any] = field(default_factory=dict)
     pos: int = 0
 
-    def __post_init__(self, tokens_gen: Generator[str, Any]) -> None:
+    def __post_init__(self, tokens_gen: Iterator[Any]) -> None:
         """Initialize the token map for parsing EDN structures."""
         self.tokens = list(tokens_gen)
         self.tok_map = {
@@ -220,7 +220,7 @@ def loads(edn_str: str) -> EDNToken:
     return parser.parse()
 
 
-def tokenize(edn_str: str) -> Generator[str, Any]:
+def tokenize(edn_str: str) -> Iterator[Any]:
     """Yield EDN tokens, skipping comments, whitespace, and commas.
 
     Comments start with ';' and run to end-of-line.

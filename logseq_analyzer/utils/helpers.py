@@ -11,7 +11,7 @@ from ..utils.enums import Format, Moved
 
 if TYPE_CHECKING:
     import re
-    from collections.abc import Generator
+    from collections.abc import Iterator
     from types import ModuleType
 
     from ..logseq_file.file import LogseqFile
@@ -88,7 +88,7 @@ class SizeUnit(StrEnum):
 logger = logging.getLogger(__name__)
 
 
-def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path]:
+def iter_files(root_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
     """Recursively iterate over files in the root directory."""
     for root, dirs, files in Path.walk(root_dir):
         if root == root_dir:
@@ -104,7 +104,7 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Generator[Path]:
             dirs.clear()
 
 
-def process_aliases(aliases: str) -> Generator[str]:
+def process_aliases(aliases: str) -> Iterator[str]:
     """Process aliases to extract individual aliases."""
     strip_str = str.strip
     if not (aliases := strip_str(aliases)):
@@ -145,13 +145,13 @@ def sort_dict_by_value(data: dict, value: str = "", *, reverse: bool = False) ->
     return dict(sorted(data.items(), key=lambda item: item[1], reverse=reverse))
 
 
-def yield_attrs(obj: object) -> Generator[tuple[str, Any]]:
+def yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
     """Collect slotted attributes from an object."""
     for slot in getattr(type(obj), "__slots__", ()):
         yield slot, getattr(obj, slot)
 
 
-def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generator[tuple[str, str]]:
+def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Iterator[tuple[str, str]]:
     """Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
     Args:
@@ -159,7 +159,7 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generato
         pattern_mod (ModuleType): A module containing regex patterns and their corresponding criteria.
 
     Yields:
-        Generator[tuple[str, str], None, None]: A generator yielding key-value pairs of patterns and their values.
+        Iterator[tuple[str, str]]: A generator yielding key-value pairs of patterns and their values.
 
     """
     finditer_all = pattern_mod.ALL.finditer(content)
@@ -176,7 +176,7 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Generato
             yield fallback, text
 
 
-def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Generator[tuple[int, str]]:
+def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Iterator[tuple[int, str]]:
     """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
 
     Iterate over sections of text separated by bullet markers.
@@ -187,7 +187,7 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Gen
         maxsplit (int): Maximum number of splits. If 0, all sections are returned.
 
     Yields:
-        Generator[tuple[int, str], None, None]: Sections of text with their respective indices.
+        Iterator[tuple[int, str]]: Sections of text with their respective indices.
 
     """
     count = 0
@@ -272,25 +272,25 @@ def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2)
     return f"{size:.{precision}f} {units[idx]}"
 
 
-def yield_asset_paths(unlinked_assets: set[LogseqFile]) -> Generator[Path]:
+def yield_asset_paths(unlinked_assets: set[LogseqFile]) -> Iterator[Path]:
     """Yield the file paths of unlinked assets."""
     for asset in unlinked_assets:
         yield asset.path.file
 
 
-def yield_bak_rec_paths(source_dir: Path) -> Generator[Path]:
+def yield_bak_rec_paths(source_dir: Path) -> Iterator[Path]:
     """Yield the file paths of bak and recycle directories."""
     for root, dirs, files in Path.walk(source_dir):
         for name in dirs + files:
             yield root / name
 
 
-def process_moves(target_dir: Path, paths: Generator[Path], *, move: bool) -> list[str]:
+def process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
     """Process the moving of files to a specified directory.
 
     Args:
         target_dir (Path): The directory to move files to.
-        paths (Generator[Path, None, None]): A generator yielding file paths to move.
+        paths (Iterator[Path]): An iterator yielding file paths to move.
         move (bool): If True, move the files. If False, simulate the move.
 
     Returns:
@@ -310,6 +310,6 @@ def process_moves(target_dir: Path, paths: Generator[Path], *, move: bool) -> li
         try:
             shutil.move(src, dest)
             logger.warning("Moved file: %s to %s", src, dest)
-        except (shutil.Error, OSError):
+        except shutil.Error, OSError:
             logger.exception("Failed to move file: %s to %s", src, dest)
     return names

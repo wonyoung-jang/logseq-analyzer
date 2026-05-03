@@ -8,11 +8,11 @@ from PySide6.QtWidgets import QApplication
 from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 
 @pytest.fixture(scope="module")
-def app() -> Generator[QApplication]:
+def app() -> Iterator[QApplication]:
     """Fixture for the QApplication."""
     app = QApplication([])
     yield app
@@ -20,7 +20,7 @@ def app() -> Generator[QApplication]:
 
 
 @pytest.fixture(scope="module")
-def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI]:  # noqa: ARG001
+def gui(app: QApplication) -> Iterator[LogseqAnalyzerGUI]:  # noqa: ARG001
     """Fixture for the LogseqAnalyzerGUI."""
     gui = LogseqAnalyzerGUI()
     yield gui
@@ -28,7 +28,7 @@ def gui(app: QApplication) -> Generator[LogseqAnalyzerGUI]:  # noqa: ARG001
 
 
 @pytest.fixture(scope="module")
-def main_window(gui: LogseqAnalyzerGUI) -> Generator[LogseqAnalyzerGUI]:
+def main_window(gui: LogseqAnalyzerGUI) -> Iterator[LogseqAnalyzerGUI]:
     """Fixture for the main window of the GUI."""
     gui.show()
     yield gui

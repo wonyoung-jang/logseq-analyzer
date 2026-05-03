@@ -23,7 +23,7 @@ from ..utils.helpers import (
 from .info import BulletInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class LogseqBullets:
             char_per_bullet=round(_char_count / _b_count, 2) if _b_count else None,
         )
 
-    def extract_primary_raw_data(self) -> Generator[tuple[str, Any]]:
+    def extract_primary_raw_data(self) -> Iterator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.content
         _raw_data_map = RAW_DATA_MAP.items()
@@ -83,7 +83,7 @@ class LogseqBullets:
             if value.search(_content):
                 yield key, value.findall(_content)
 
-    def extract_properties(self) -> Generator[tuple[str, Any]]:
+    def extract_properties(self) -> Iterator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
         page_props = set()
         _content = self.content
@@ -107,7 +107,7 @@ class LogseqBullets:
             if value:
                 yield key, value
 
-    def extract_aliases_and_propvalues(self) -> Generator[tuple[str, Any]]:
+    def extract_aliases_and_propvalues(self) -> Iterator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
         _content = self.content
         propvalues = dict(content_patterns.PROPERTY_VALUE.findall(_content))
@@ -120,7 +120,7 @@ class LogseqBullets:
             if value:
                 yield key, value
 
-    def extract_patterns(self) -> Generator[tuple[str, Any]]:
+    def extract_patterns(self) -> Iterator[tuple[str, Any]]:
         """Process patterns in the content."""
         _content = self.content
         temp_map = defaultdict(list)

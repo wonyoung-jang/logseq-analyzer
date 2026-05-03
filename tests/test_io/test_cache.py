@@ -10,11 +10,11 @@ from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.utils.enums import Constant
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 
 @pytest.fixture
-def cache() -> Generator[Cache]:
+def cache() -> Iterator[Cache]:
     """Fixture to create a Cache object."""
     cache = Cache(Path(Constant.CACHE_FILE))
     cache.open()

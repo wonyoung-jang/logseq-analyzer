@@ -9,11 +9,11 @@ import pytest
 from logseq_analyzer.logseq_file.file import LogseqFile
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
 
 @pytest.fixture
-def temp_file() -> Generator[str]:
+def temp_file() -> Iterator[str]:
     """Fixture to create a temporary file for testing."""
     with TemporaryFile() as tmp_file:
         tmp_file.write(b"")

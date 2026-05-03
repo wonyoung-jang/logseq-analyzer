@@ -10,7 +10,7 @@ from ..analysis.index import FileIndex
 from ..utils.helpers import iter_files
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
     from pathlib import Path
 
     from ..config.arguments import Args
@@ -32,7 +32,6 @@ class Cache:
 
     cache_path: Path
     cache: shelve.Shelf[Any] = field(init=False)
-
     graph_dir: ClassVar[Path]
     graph_cache: ClassVar[bool] = False
     target_dirs: ClassVar[set[str]] = set()
@@ -82,7 +81,7 @@ class Cache:
         self.cache[CacheKey.INDEX] = index
         return index
 
-    def iter_modified_files(self) -> Generator[Path, Any]:
+    def iter_modified_files(self) -> Iterator[Path]:
         """Get the modified files from the cache."""
         mod_tracker = {}
         if CacheKey.MOD_TRACKER in self.cache:

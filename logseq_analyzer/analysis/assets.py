@@ -4,14 +4,13 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import logseq_analyzer.patterns.content as content_patterns
-
-from ..utils.enums import CritContent, CritEmb, FileType, Output
+from logseq_analyzer.utils.enums import CritContent, CritEmb, FileType, Output
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
-    from ..logseq_file.file import LogseqFile
-    from .index import FileIndex
+    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 @dataclass(slots=True)
@@ -156,7 +155,7 @@ class LogseqAssets:
                 asset_file.node.backlinked = True
                 return
 
-    def yield_assets(self, *, backlinked: bool | None = None) -> Generator[LogseqFile]:
+    def yield_assets(self, *, backlinked: bool | None = None) -> Iterator[LogseqFile]:
         """Yield all asset files from the index."""
         for file in (f for f in self.index if f.path.file_type == FileType.ASSET):
             if backlinked is None:

@@ -14,7 +14,7 @@ from .stats import LogseqPath
 
 if TYPE_CHECKING:
     import re
-    from collections.abc import Generator
+    from collections.abc import Iterator
     from pathlib import Path
 
 BACKLINK_CRITERIA: frozenset[str] = frozenset(
@@ -125,7 +125,7 @@ class LogseqFile:
         self.extract_data()
         self.check_has_backlinks()
 
-    def extract_data_pairs(self) -> Generator[tuple[str, Any]]:
+    def extract_data_pairs(self) -> Iterator[tuple[str, Any]]:
         """Extract data pairs from the Logseq file."""
         yield from self.extract_primary_data()
         yield from self.bullets.extract_primary_raw_data()
@@ -158,7 +158,7 @@ class LogseqFile:
             blocks=blocks,
         )
 
-    def extract_primary_data(self) -> Generator[tuple[str, Any]]:
+    def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
         """Extract primary data from the content."""
         _content = self.masked.content
         _primary_data_map = PRIMARY_DATA_MAP.items()
