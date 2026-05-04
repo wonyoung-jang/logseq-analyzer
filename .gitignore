@@ -32,3 +32,4 @@ site/
 # Don't ignore
 !uv.lock
 !.python-version
+.tally-config.toml

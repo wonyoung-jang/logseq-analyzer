@@ -64,10 +64,6 @@ class LogseqNamespaces:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqNamespaces instance."""
-        self.process()
-
-    def process(self) -> None:
-        """Process the namespace data from the index."""
         self.init_ns_parts()
         self.analyze_ns_queries()
         self.detect_non_ns_conflicts()
@@ -113,22 +109,17 @@ class LogseqNamespaces:
         for f in self.index:
             if not (f_data := f.data):
                 continue
-
             if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERIES)):
                 continue
-
             f_path = f.path
             for query in queries:
                 if not search_page_ref_pattern(query):
                     logger.warning("Invalid query found: %s", query)
                     continue
-
                 page_refs = find_all_page_ref_pattern(query)
-
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue
-
                 page_ref = page_refs[0]
                 ns_queries.setdefault(query, {})
                 ns_queries[query].setdefault("found_in", []).append(f_path.name)
@@ -150,7 +141,6 @@ class LogseqNamespaces:
         potential_dangling = unique_parts.intersection(self.dangling_links)
         intersect_non_ns = potential_non_ns_names.intersection
         intersect_dangling = potential_dangling.intersection
-
         for entry, parts in parts_items:
             for part in intersect_non_ns(parts):
                 non_ns_conflicts[part].append(entry)
@@ -167,13 +157,10 @@ class LogseqNamespaces:
         for part, levels in part_levels:
             if len(levels) < 2:
                 continue
-
             details = part_entries[part]
-
             for level in levels:
                 key = (part, level)
                 entries = (d["entry"] for d in details if d["level"] == level)
-
                 for entry in entries:
                     up_to_level = entry.split(Core.NS_SEP)[:level]
                     parent_unique_conflicts[key].add(join_to_ns_sep(up_to_level))

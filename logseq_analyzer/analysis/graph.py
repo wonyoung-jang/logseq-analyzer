@@ -30,15 +30,10 @@ class LogseqGraph:
     all_dangling_links: dict[str, dict[str, dict]] = field(default_factory=dict)
     dangling_links: set[str] = field(default_factory=set)
     unique: UniqueSets = field(default_factory=UniqueSets)
-
     _TO_NODE_TYPE: ClassVar[frozenset[FileType]] = frozenset({FileType.JOURNAL, FileType.PAGE})
 
     def __post_init__(self) -> None:
         """Initialize the LogseqGraph instance."""
-        self.process()
-
-    def process(self) -> None:
-        """Process the Logseq graph data."""
         self.post_process_content()
         self.process_nodes()
         self.sort_all_linked_references()
@@ -52,20 +47,16 @@ class LogseqGraph:
         update_unique_linked_refs_ns = self.unique.linked_refs_ns.update
         update_unique_aliases = self.unique.aliases.update
         process_namespaces = self.process_namespaces
-
         for f in self.index:
             ns_info = f.info.namespace
             if ns_info.is_namespace:
                 update_unique_linked_refs_ns((ns_info.root, f.path.name))
                 process_namespaces(f)
-
             if not (f_data := f.data):
                 continue
-
             get_data = f_data.get
             if found_aliases := get_data(CritContent.ALIASES, []):
                 update_unique_aliases(found_aliases)
-
             dataset = (
                 found_aliases,
                 get_data(CritContent.DRAW, []),
@@ -79,13 +70,11 @@ class LogseqGraph:
             )
             if not (linked_references := list(chain.from_iterable(dataset))):
                 continue
-
             if ns_info.parent:
                 lr_with_ns_parent = [*linked_references.copy(), ns_info.parent]
                 all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, lr_with_ns_parent, f.path.name))
             else:
                 all_linked_refs.update(get_count_and_foundin_data(all_linked_refs, linked_references, f.path.name))
-
             update_unique_linked_refs(linked_references)
 
     def process_namespaces(self, f: LogseqFile) -> None:
@@ -100,7 +89,6 @@ class LogseqGraph:
                 ns_info.is_namespace = True
             if filename not in ns_info.children:
                 ns_info.children.add(filename)
-
         for ns_parent_file in index[curr_ns_info.parent_full]:
             ns_parent_file: LogseqFile
             ns_info = ns_parent_file.info.namespace
@@ -112,7 +100,6 @@ class LogseqGraph:
         for values in self.all_linked_refs.values():
             found_in_map = values.get("found_in", {})
             values["found_in"] = sort_dict_by_value(found_in_map, reverse=True)
-
         self.all_linked_refs = sort_dict_by_value(self.all_linked_refs, value="count", reverse=True)
 
     def process_nodes(self) -> None:
@@ -132,11 +119,9 @@ class LogseqGraph:
     def find_dangling_links(self) -> None:
         """Process dangling links in the graph."""
         all_file_names = (f.path.name for f in self.index)
-
         all_refs = self.unique.linked_refs.union(self.unique.linked_refs_ns)
         all_refs.difference_update(all_file_names)
         all_refs.difference_update(self.unique.aliases)
-
         self.dangling_links = remove_builtin_properties(all_refs)
 
     def extract_all_dangling_link_data(self) -> None:

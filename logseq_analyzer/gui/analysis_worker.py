@@ -1,6 +1,6 @@
 """Worker thread for running the Logseq Analyzer application."""
 
-import time
+from time import perf_counter
 
 from PySide6.QtCore import QThread, Signal
 
@@ -24,9 +24,9 @@ class AnalysisWorker(QThread):
     def run(self) -> None:
         """Run the Logseq Analyzer application."""
         try:
-            start_time = time.perf_counter()
+            start_time = perf_counter()
             run_app(**self.gui_args, progress_callback=self.update_progress)
-            self.finished_signal.emit("", time.perf_counter() - start_time, True)
+            self.finished_signal.emit("", perf_counter() - start_time, True)
         except KeyboardInterrupt:
             self.finished_signal.emit("Analysis interrupted by user.", 0, False)
         except Exception as e:

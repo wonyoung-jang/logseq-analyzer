@@ -46,11 +46,7 @@ from logseq_analyzer.logseq_file.info import JournalFormats
 from logseq_analyzer.logseq_file.stats import LogseqFileName
 from logseq_analyzer.utils.date_utilities import DateUtilities
 from logseq_analyzer.utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
-from logseq_analyzer.utils.helpers import (
-    process_moves,
-    yield_asset_paths,
-    yield_bak_rec_paths,
-)
+from logseq_analyzer.utils.helpers import process_moves, yield_asset_paths, yield_bak_rec_paths
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

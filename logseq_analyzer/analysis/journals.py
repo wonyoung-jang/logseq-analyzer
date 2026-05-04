@@ -32,19 +32,10 @@ class LogseqJournals:
     sets: JournalSets = field(default_factory=JournalSets)
     dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
     timeline_stats: dict[str, Any] = field(default_factory=dict)
-
     journal_page_format: ClassVar[str] = ""
 
     def __post_init__(self) -> None:
         """Initialize the LogseqJournals class."""
-        self.process()
-
-    def __len__(self) -> int:
-        """Return the number of processed keys."""
-        return len(self.sets.timeline)
-
-    def process(self) -> None:
-        """Process journal keys to build the complete timeline and detect missing entries."""
         dangling = sorted(DateUtilities.journals_to_datetime(self.dangling_links, LogseqJournals.journal_page_format))
         journals = (f.path.name for f in self.index if f.path.file_type == FileType.JOURNAL)
         self.sets.existing.extend(
@@ -52,6 +43,10 @@ class LogseqJournals:
         )
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
+
+    def __len__(self) -> int:
+        """Return the number of processed keys."""
+        return len(self.sets.timeline)
 
     def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""

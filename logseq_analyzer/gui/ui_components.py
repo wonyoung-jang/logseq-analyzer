@@ -81,8 +81,8 @@ class Inputs(QWidget):
     def __init__(self) -> None:
         """Post-initialization to set default values for inputs."""
         super().__init__()
-        self.graph_folder = QLineEdit(readOnly=True)
-        self.global_config = QLineEdit(readOnly=True)
+        self.graph_folder = QLineEdit(readOnly=True, clearButtonEnabled=True)
+        self.global_config = QLineEdit(readOnly=True, clearButtonEnabled=True)
         self.report_format = QComboBox()
         self.report_format.addItems((Format.TXT, Format.JSON, Format.MD, Format.HTML))
         layout = QFormLayout(self)

@@ -25,10 +25,6 @@ class LogseqAssetsHls:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
-        self.process()
-
-    def process(self) -> None:
-        """Process HLS assets to analyze backlinks and bullet content."""
         self.get_asset_files()
         if self.asset_mapping:
             self.convert_names_to_data()
@@ -74,9 +70,7 @@ class LogseqAssetsHls:
         for name in hls_bullets:
             if not (asset_file := get_asset_file(name)):
                 continue
-
             asset_file.path.file_type = FileType.ASSET
-
             try:
                 remove_asset(name)
                 add_backlinked(name)
@@ -102,15 +96,10 @@ class LogseqAssets:
     index: FileIndex
     backlinked: set[LogseqFile] = field(default_factory=set)
     not_backlinked: set[LogseqFile] = field(default_factory=set)
-
     _ASSET_CRITERIA: ClassVar[frozenset[str]] = frozenset({CritEmb.ASSET, CritContent.ASSETS})
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssets instance."""
-        self.process()
-
-    def process(self) -> None:
-        """Handle assets for the Logseq Analyzer."""
         asset_mentions = set()
         update_mentions = asset_mentions.update
         clear_mentions = asset_mentions.clear
@@ -118,31 +107,23 @@ class LogseqAssets:
         update_asset_backlink = LogseqAssets.update_asset_backlink
         yield_assets = self.yield_assets
         index = self.index
-
         for f in index:
             asset_file_processed = False
             if not (f_data := f.data):
                 continue
-
             get_data = f_data.get
             for criteria in asset_criteria:
                 update_mentions(get_data(criteria, []))
-
             if not asset_mentions:
                 continue
-
             f_name = f.path.name
             for asset_file in yield_assets(backlinked=False):
                 update_asset_backlink(asset_mentions, asset_file, f_name)
                 asset_file_processed = True
-
             if not asset_file_processed:
                 break
-
             clear_mentions()
-
         del asset_mentions
-
         self.backlinked.update(yield_assets(backlinked=True))
         self.not_backlinked.update(yield_assets(backlinked=False))
 

@@ -31,39 +31,25 @@ class LogseqFileSummarizer:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
-        self.generate_summary()
-
-    def generate_summary(self) -> None:
-        """Generate general subsets for the Logseq Analyzer."""
-        general = self.general
-        filetypes = self.filetypes
-        nodetypes = self.nodetypes
-        extensions = self.extensions
         for f in self.index:
             f_node = f.node
             f_path = f.path
             f_name = f_path.name
-            filetypes[f_path.file_type].append(f_name)
-            nodetypes[f_node.node_type].append(f_name)
-            extensions[f_path.file.suffix].append(f_name)
-
+            self.filetypes[f_path.file_type].append(f_name)
+            self.nodetypes[f_node.node_type].append(f_name)
+            self.extensions[f_path.file.suffix].append(f_name)
             if f_node.backlinked:
-                general[SummaryFile.BACKLINKED].append(f_name)
-
+                self.general[SummaryFile.BACKLINKED].append(f_name)
             if f_node.backlinked_ns_only:
-                general[SummaryFile.BACKLINKED_NS_ONLY].append(f_name)
-
+                self.general[SummaryFile.BACKLINKED_NS_ONLY].append(f_name)
             if f.is_hls:
-                general[SummaryFile.IS_HLS].append(f_name)
-
+                self.general[SummaryFile.IS_HLS].append(f_name)
             if f.info.size.has_content:
-                general[SummaryFile.HAS_CONTENT].append(f_name)
-
+                self.general[SummaryFile.HAS_CONTENT].append(f_name)
             if f_node.has_backlinks:
-                general[SummaryFile.HAS_BACKLINKS].append(f_name)
-
-        for k, v in general.items():
-            general[k] = sorted(v)
+                self.general[SummaryFile.HAS_BACKLINKS].append(f_name)
+        for k, v in self.general.items():
+            self.general[k] = sorted(v)
 
 
 @dataclass(slots=True)
@@ -88,13 +74,12 @@ class LogseqContentSummarizer:
         ts_report = {}
         ns_report = {}
         bt_report = {}
-        report = self.report
         for f in self.index:
             f_name = f.path.name
             f_info = f.info
             for k, v in f.data.items():
-                report.setdefault(k, {})
-                report[k] = get_count_and_foundin_data(report[k], v, f_name)
+                self.report.setdefault(k, {})
+                self.report[k] = get_count_and_foundin_data(self.report[k], v, f_name)
             sz_report[f_name] = f_info.size
             ts_report[f_name] = f_info.timestamp
             ns_report[f_name] = f_info.namespace

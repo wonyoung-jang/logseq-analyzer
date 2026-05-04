@@ -23,7 +23,6 @@ class FileIndex:
     _files: set[LogseqFile] = field(default_factory=set)
     _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
     _path_to_file: dict[Path, LogseqFile] = field(default_factory=dict)
-
     _instance: ClassVar[FileIndex | None] = None
     write_graph: ClassVar[bool] = False
 
@@ -31,7 +30,6 @@ class FileIndex:
         """Ensure only one instance of FileIndex is created."""
         if isinstance(cls._instance, cls):
             return cls._instance
-
         cls._instance = super().__new__(cls)
         return cls._instance
 
@@ -110,7 +108,6 @@ class FileIndex:
         """Remove deleted files from the cache."""
         if not self:
             return
-
         for file in {f for f in self if not f.path.file.exists()}:
             self.remove(file)
 

@@ -65,23 +65,20 @@ class LogseqAnalyzerGUI(QWidget):
     @Slot()
     def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
-        _inputs = self.inputs
-        _checks = self.checkboxes
         gui_args = {
-            Argument.MOVE_UNLINKED_ASSETS: _checks.move_assets.isChecked(),
-            Argument.MOVE_ALL: _checks.move_all.isChecked(),
-            Argument.MOVE_BAK: _checks.move_bak.isChecked(),
-            Argument.MOVE_RECYCLE: _checks.move_recycle.isChecked(),
-            Argument.WRITE_GRAPH: _checks.write_graph.isChecked(),
-            Argument.GRAPH_CACHE: _checks.graph_cache.isChecked(),
-            Argument.GRAPH_FOLDER: _inputs.graph_folder.text(),
-            Argument.GLOBAL_CONFIG: _inputs.global_config.text(),
-            Argument.REPORT_FORMAT: _inputs.report_format.currentText(),
+            Argument.MOVE_UNLINKED_ASSETS: self.checkboxes.move_assets.isChecked(),
+            Argument.MOVE_ALL: self.checkboxes.move_all.isChecked(),
+            Argument.MOVE_BAK: self.checkboxes.move_bak.isChecked(),
+            Argument.MOVE_RECYCLE: self.checkboxes.move_recycle.isChecked(),
+            Argument.WRITE_GRAPH: self.checkboxes.write_graph.isChecked(),
+            Argument.GRAPH_CACHE: self.checkboxes.graph_cache.isChecked(),
+            Argument.GRAPH_FOLDER: self.inputs.graph_folder.text(),
+            Argument.GLOBAL_CONFIG: self.inputs.global_config.text(),
+            Argument.REPORT_FORMAT: self.inputs.report_format.currentText(),
         }
         if not gui_args[Argument.GRAPH_FOLDER]:
             self.show_error("Graph folder is required.")
             return
-
         self.save_settings()
         self.buttons.run.setEnabled(False)
         self.worker = AnalysisWorker(gui_args)
@@ -104,28 +101,22 @@ class LogseqAnalyzerGUI(QWidget):
         """Create and return the layout for the graph folder input field."""
         button_graph_folder = QPushButton("Browse")
         button_graph_folder.clicked.connect(self.select_graph_folder)
-        button_clear = QPushButton("Clear")
-        button_clear.clicked.connect(self.inputs.graph_folder.clear)
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.addWidget(QLabel("Graph Folder (Required):"))
         layout.addWidget(self.inputs.graph_folder)
         layout.addWidget(button_graph_folder)
-        layout.addWidget(button_clear)
         return widget
 
     def create_global_config_layout(self) -> QWidget:
         """Create and return the layout for the global config input field."""
         button_global_config = QPushButton("Browse")
         button_global_config.clicked.connect(self.select_global_config_file)
-        button_clear = QPushButton("Clear")
-        button_clear.clicked.connect(self.inputs.global_config.clear)
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.addWidget(QLabel("Global Config File (Optional):"))
         layout.addWidget(self.inputs.global_config)
         layout.addWidget(button_global_config)
-        layout.addWidget(button_clear)
         return widget
 
     @Slot()
@@ -166,32 +157,28 @@ class LogseqAnalyzerGUI(QWidget):
 
     def save_settings(self) -> None:
         """Save current settings using QSettings."""
-        set_settings = self.settings.setValue
-        _inputs = self.inputs
-        _check = self.checkboxes
-        set_settings(Argument.MOVE_ALL, _check.move_all.isChecked())
-        set_settings(Argument.MOVE_UNLINKED_ASSETS, _check.move_assets.isChecked())
-        set_settings(Argument.MOVE_BAK, _check.move_bak.isChecked())
-        set_settings(Argument.MOVE_RECYCLE, _check.move_recycle.isChecked())
-        set_settings(Argument.WRITE_GRAPH, _check.write_graph.isChecked())
-        set_settings(Argument.GRAPH_CACHE, _check.graph_cache.isChecked())
-        set_settings(Argument.GRAPH_FOLDER, _inputs.graph_folder.text())
-        set_settings(Argument.GLOBAL_CONFIG, _inputs.global_config.text())
-        set_settings(Argument.REPORT_FORMAT, _inputs.report_format.currentText())
-        set_settings(Argument.GEOMETRY, self.saveGeometry())
+        self.settings.setValue(Argument.MOVE_ALL, self.checkboxes.move_all.isChecked())
+        self.settings.setValue(Argument.MOVE_UNLINKED_ASSETS, self.checkboxes.move_assets.isChecked())
+        self.settings.setValue(Argument.MOVE_BAK, self.checkboxes.move_bak.isChecked())
+        self.settings.setValue(Argument.MOVE_RECYCLE, self.checkboxes.move_recycle.isChecked())
+        self.settings.setValue(Argument.WRITE_GRAPH, self.checkboxes.write_graph.isChecked())
+        self.settings.setValue(Argument.GRAPH_CACHE, self.checkboxes.graph_cache.isChecked())
+        self.settings.setValue(Argument.GRAPH_FOLDER, self.inputs.graph_folder.text())
+        self.settings.setValue(Argument.GLOBAL_CONFIG, self.inputs.global_config.text())
+        self.settings.setValue(Argument.REPORT_FORMAT, self.inputs.report_format.currentText())
+        self.settings.setValue(Argument.GEOMETRY, self.saveGeometry())
 
     def load_settings(self) -> None:
         """Load settings using QSettings."""
-        get_settings = self.settings.value
-        _inputs = self.inputs
-        _check = self.checkboxes
-        _check.move_all.setChecked(bool(get_settings(Argument.MOVE_ALL, defaultValue=False, type=bool)))
-        _check.move_assets.setChecked(bool(get_settings(Argument.MOVE_UNLINKED_ASSETS, defaultValue=False, type=bool)))
-        _check.move_bak.setChecked(bool(get_settings(Argument.MOVE_BAK, defaultValue=False, type=bool)))
-        _check.move_recycle.setChecked(bool(get_settings(Argument.MOVE_RECYCLE, defaultValue=False, type=bool)))
-        _check.write_graph.setChecked(bool(get_settings(Argument.WRITE_GRAPH, defaultValue=False, type=bool)))
-        _check.graph_cache.setChecked(bool(get_settings(Argument.GRAPH_CACHE, defaultValue=False, type=bool)))
-        _inputs.graph_folder.setText(str(get_settings(Argument.GRAPH_FOLDER, "", type=str)))
-        _inputs.global_config.setText(str(get_settings(Argument.GLOBAL_CONFIG, "", type=str)))
-        _inputs.report_format.setCurrentText(str(get_settings(Argument.REPORT_FORMAT, Format.TXT, type=str)))
-        self.restoreGeometry(get_settings(Argument.GEOMETRY))
+        self.checkboxes.move_all.setChecked(bool(self.settings.value(Argument.MOVE_ALL, defaultValue=False)))
+        self.checkboxes.move_assets.setChecked(
+            bool(self.settings.value(Argument.MOVE_UNLINKED_ASSETS, defaultValue=False))
+        )
+        self.checkboxes.move_bak.setChecked(bool(self.settings.value(Argument.MOVE_BAK, defaultValue=False)))
+        self.checkboxes.move_recycle.setChecked(bool(self.settings.value(Argument.MOVE_RECYCLE, defaultValue=False)))
+        self.checkboxes.write_graph.setChecked(bool(self.settings.value(Argument.WRITE_GRAPH, defaultValue=False)))
+        self.checkboxes.graph_cache.setChecked(bool(self.settings.value(Argument.GRAPH_CACHE, defaultValue=False)))
+        self.inputs.graph_folder.setText(str(self.settings.value(Argument.GRAPH_FOLDER, "", type=str)))
+        self.inputs.global_config.setText(str(self.settings.value(Argument.GLOBAL_CONFIG, "", type=str)))
+        self.inputs.report_format.setCurrentText(str(self.settings.value(Argument.REPORT_FORMAT, Format.TXT, type=str)))
+        self.restoreGeometry(self.settings.value(Argument.GEOMETRY))
