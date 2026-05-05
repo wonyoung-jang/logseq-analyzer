@@ -42,39 +42,32 @@ class TextWriter:
     @staticmethod
     def write_toplevel_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
         """Write the top-level dictionary to a file."""
-        f_write = f.write
-        write_dict = TextWriter.write_values_is_dict
-        write_collection = TextWriter.write_values_is_collection
         for key, values in data.items():
-            f_write(f"{indent}KEY: {key}\n")
+            f.write(f"{indent}KEY: {key}\n")
             if isinstance(values, dict):
-                write_dict(f, values, indent, indent_level)
+                TextWriter.write_values_is_dict(f, values, indent, indent_level)
             elif isinstance(values, (list, set)):
-                write_collection(f, values, indent)
+                TextWriter.write_values_is_collection(f, values, indent)
             else:
-                f_write(f"{indent}VAL: {values}\n\n")
+                f.write(f"{indent}VAL: {values}\n\n")
 
     @staticmethod
     def write_values_is_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
         """Write values of a dictionary to a file with indentation."""
-        f_write = f.write
-        write_recursive = TextWriter.write_recursive
         for key, values in data.items():
             if not isinstance(values, (list, set, dict)):
-                f_write(f"{indent}\t{key:<60}: {values}\n")
+                f.write(f"{indent}\t{key:<60}: {values}\n")
             else:
-                f_write(f"{indent}\t{key:<60}:\n")
-                write_recursive(f, values, indent_level + 2)
-        f_write("\n" + "-" * 180 + "\n\n")
+                f.write(f"{indent}\t{key:<60}:\n")
+                TextWriter.write_recursive(f, values, indent_level + 2)
+        f.write("\n" + "-" * 180 + "\n\n")
 
     @staticmethod
     def write_values_is_collection(f: TextIO, values: Any, indent: str) -> None:
         """Write values of a collection to a file with indentation."""
-        f_write = f.write
-        f_write(f"{indent}VALUES ({len(values)}):\n")
-        for index, value in enumerate(values, 1):
-            f_write(f"{indent}\t{index}\t|\t{value}\n")
-        f_write("\n")
+        f.write(f"{indent}VALUES ({len(values)}):\n")
+        f.writelines(f"{indent}\t{index}\t|\t{value}\n" for index, value in enumerate(values, 1))
+        f.write("\n")
 
     @staticmethod
     def write_not_toplevel_dict(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
@@ -89,26 +82,22 @@ class TextWriter:
     @staticmethod
     def write_nested_dict(f: TextIO, data: dict, indent: str, indent_level: int = 0) -> None:
         """Write nested dictionaries to a file with indentation."""
-        f_write = f.write
-        write_recursive = TextWriter.write_recursive
         for key, values in data.items():
             if isinstance(values, (list, set, dict)):
-                f_write(f"{indent}{key}:\n")
-                write_recursive(f, values, indent_level + 1)
+                f.write(f"{indent}{key}:\n")
+                TextWriter.write_recursive(f, values, indent_level + 1)
             else:
-                f_write(f"{indent}{key:<60}: {values}\n")
+                f.write(f"{indent}{key:<60}: {values}\n")
 
     @staticmethod
     def write_nested_collection(f: TextIO, data: Any, indent: str, indent_level: int = 0) -> None:
         """Write collections (lists, sets) to a file with indentation."""
-        f_write = f.write
-        write_recursive = TextWriter.write_recursive
         for index, item in enumerate(data, 1):
             if isinstance(item, (list, set, dict)):
-                f_write(f"{indent}{index}:\n")
-                write_recursive(f, item, indent_level + 1)
+                f.write(f"{indent}{index}:\n")
+                TextWriter.write_recursive(f, item, indent_level + 1)
             else:
-                f_write(f"{indent}{index}\t|\t{item}\n")
+                f.write(f"{indent}{index}\t|\t{item}\n")
 
 
 class HTMLWriter:
@@ -228,7 +217,6 @@ class ReportWriter:
     data: Any
     subdir: str
     writer: Writers = field(default_factory=Writers)
-
     ext: ClassVar[str]
     output_dir: ClassVar[Path]
 
@@ -246,23 +234,18 @@ class ReportWriter:
 
     def write(self) -> None:
         """Write the report to a file in the configured format (TXT, JSON, or HTML)."""
-        _data = self.data
-        _prefix = self.prefix
-        _ext = self.ext
-        _writer = self.writer
-        count = len(_data) if hasattr(_data, "__len__") else None
-        filename = f"{_prefix}.{_ext}" if count else f"(EMPTY) {_prefix}.{_ext}"
+        count = len(self.data) if hasattr(self.data, "__len__") else None
+        filename = f"{self.prefix}.{self.ext}" if count else f"(EMPTY) {self.prefix}.{self.ext}"
         outputpath = self.get_output_path(filename)
-        logger.info("Writing %s as %s", _prefix, _ext)
+        logger.info("Writing %s as %s", self.prefix, self.ext)
         write_method_map: dict[str, Callable] = {
-            Format.TXT: _writer.text.write,
-            Format.MD: _writer.text.write,
-            Format.JSON: _writer.json.write,
-            Format.HTML: _writer.html.write,
+            Format.TXT: self.writer.text.write,
+            Format.MD: self.writer.text.write,
+            Format.JSON: self.writer.json.write,
+            Format.HTML: self.writer.html.write,
         }
-        write_method = write_method_map.get(_ext, _writer.text.write)
-
-        write_method(outputpath, _prefix, count, filename, _data)
+        write_method = write_method_map.get(self.ext, self.writer.text.write)
+        write_method(outputpath, self.prefix, count, filename, self.data)
 
     def get_output_path(self, filename: str) -> Path:
         """Get the output path for the report file.

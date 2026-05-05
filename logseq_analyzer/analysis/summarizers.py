@@ -3,10 +3,12 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.analysis.index import FileIndex
 from logseq_analyzer.utils.helpers import get_count_and_foundin_data, sort_dict_by_value
+
+if TYPE_CHECKING:
+    from logseq_analyzer.analysis.index import FileIndex
 
 
 class SummaryFile(StrEnum):
@@ -23,7 +25,7 @@ class SummaryFile(StrEnum):
 class LogseqFileSummarizer:
     """Class to summarize Logseq files."""
 
-    index: FileIndex = field(default_factory=FileIndex)
+    index: FileIndex
     general: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     filetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     nodetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
@@ -32,22 +34,19 @@ class LogseqFileSummarizer:
     def __post_init__(self) -> None:
         """Initialize the LogseqFileSummarizer instance."""
         for f in self.index:
-            f_node = f.node
-            f_path = f.path
-            f_name = f_path.name
-            self.filetypes[f_path.file_type].append(f_name)
-            self.nodetypes[f_node.node_type].append(f_name)
-            self.extensions[f_path.file.suffix].append(f_name)
-            if f_node.backlinked:
-                self.general[SummaryFile.BACKLINKED].append(f_name)
-            if f_node.backlinked_ns_only:
-                self.general[SummaryFile.BACKLINKED_NS_ONLY].append(f_name)
+            self.filetypes[f.path.file_type].append(f.path.name)
+            self.nodetypes[f.node.node_type].append(f.path.name)
+            self.extensions[f.path.file.suffix].append(f.path.name)
+            if f.node.backlinked:
+                self.general[SummaryFile.BACKLINKED].append(f.path.name)
+            if f.node.backlinked_ns_only:
+                self.general[SummaryFile.BACKLINKED_NS_ONLY].append(f.path.name)
             if f.is_hls:
-                self.general[SummaryFile.IS_HLS].append(f_name)
+                self.general[SummaryFile.IS_HLS].append(f.path.name)
             if f.info.size.has_content:
-                self.general[SummaryFile.HAS_CONTENT].append(f_name)
-            if f_node.has_backlinks:
-                self.general[SummaryFile.HAS_BACKLINKS].append(f_name)
+                self.general[SummaryFile.HAS_CONTENT].append(f.path.name)
+            if f.node.has_backlinks:
+                self.general[SummaryFile.HAS_BACKLINKS].append(f.path.name)
         for k, v in self.general.items():
             self.general[k] = sorted(v)
 
@@ -56,7 +55,7 @@ class LogseqFileSummarizer:
 class LogseqContentSummarizer:
     """Class to summarize Logseq content."""
 
-    index: FileIndex = field(default_factory=FileIndex)
+    index: FileIndex
     report: dict[str, dict[str, Any]] = field(default_factory=dict)
     size_report: dict[str, dict[str, Any]] = field(default_factory=dict)
     timestamp_report: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -65,32 +64,17 @@ class LogseqContentSummarizer:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqContentSummarizer instance."""
-        self.generate_summary()
-        self.sort_report()
-
-    def generate_summary(self) -> None:
-        """Generate summary subsets for content data in the Logseq graph."""
-        sz_report = {}
-        ts_report = {}
-        ns_report = {}
-        bt_report = {}
+        self.size_report["report_size"] = {}
+        self.timestamp_report["report_timestamp"] = {}
+        self.namespace_report["report_namespace"] = {}
+        self.bullet_report["report_bullet"] = {}
         for f in self.index:
-            f_name = f.path.name
-            f_info = f.info
             for k, v in f.data.items():
                 self.report.setdefault(k, {})
-                self.report[k] = get_count_and_foundin_data(self.report[k], v, f_name)
-            sz_report[f_name] = f_info.size
-            ts_report[f_name] = f_info.timestamp
-            ns_report[f_name] = f_info.namespace
-            bt_report[f_name] = f_info.bullet
-        self.size_report = {"report_size": sz_report}
-        self.timestamp_report = {"report_timestamp": ts_report}
-        self.namespace_report = {"report_namespace": ns_report}
-        self.bullet_report = {"report_bullet": bt_report}
-
-    def sort_report(self) -> None:
-        """Sort the report dictionary by count in descending order."""
-        report = self.report
-        for k in report:
-            report[k] = sort_dict_by_value(report[k], value="count", reverse=True)
+                self.report[k] = get_count_and_foundin_data(self.report[k], v, f.path.name)
+            self.size_report["report_size"][f.path.name] = f.info.size
+            self.timestamp_report["report_timestamp"][f.path.name] = f.info.timestamp
+            self.namespace_report["report_namespace"][f.path.name] = f.info.namespace
+            self.bullet_report["report_bullet"][f.path.name] = f.info.bullet
+        for k in self.report:
+            self.report[k] = sort_dict_by_value(self.report[k], value="count", reverse=True)

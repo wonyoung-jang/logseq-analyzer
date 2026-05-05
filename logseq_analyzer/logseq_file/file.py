@@ -56,11 +56,11 @@ class MaskedBlocks:
 
     def unmask_blocks(self) -> None:
         """Restore the original content by replacing placeholders with their blocks."""
-        content = self.content
-        replace_content = content.replace
+        _content = self.content
+        replace_content = _content.replace
         for placeholder, block in self.blocks.items():
-            content = replace_content(placeholder, block)
-        self.content = content
+            _content = replace_content(placeholder, block)
+        self.content = _content
 
 
 @dataclass(slots=True)

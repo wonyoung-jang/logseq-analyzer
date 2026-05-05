@@ -24,9 +24,9 @@ class AnalysisWorker(QThread):
     def run(self) -> None:
         """Run the Logseq Analyzer application."""
         try:
-            start_time = perf_counter()
+            _start = perf_counter()
             run_app(**self.gui_args, progress_callback=self.update_progress)
-            self.finished_signal.emit("", perf_counter() - start_time, True)
+            self.finished_signal.emit("", perf_counter() - _start, True)
         except KeyboardInterrupt:
             self.finished_signal.emit("Analysis interrupted by user.", 0, False)
         except Exception as e:

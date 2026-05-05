@@ -15,11 +15,10 @@ from logseq_analyzer.patterns import embedded_links as embedded_links_patterns
 from logseq_analyzer.patterns import external_links as external_links_patterns
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
 from logseq_analyzer.utils.helpers import (
-    extract_builtin_properties,
+    BUILT_IN_PROPERTIES,
     iter_pattern_split,
     process_aliases,
     process_pattern_hierarchy,
-    remove_builtin_properties,
 )
 
 if TYPE_CHECKING:
@@ -55,9 +54,7 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         if not (content := self.content):
             return
-
         append_all_bullets = self.all_bullets.append
-
         for bullet_index, bullet in iter_pattern_split(content_patterns.BULLET, content):
             append_all_bullets(bullet)
             if bullet and bullet_index == 0:
@@ -67,11 +64,10 @@ class LogseqBullets:
         """Get bullet statistics."""
         _char_count = len(self.content)
         _b_count = len(self.all_bullets)
-        _b_empty = self.all_bullets.count("")
         return BulletInfo(
             chars=_char_count,
             bullets=_b_count,
-            empty_bullets=_b_empty,
+            empty_bullets=self.all_bullets.count(""),
             char_per_bullet=round(_char_count / _b_count, 2) if _b_count else None,
         )
 
@@ -99,10 +95,10 @@ class LogseqBullets:
         block_props = set(find_all_properties(_content))
 
         for key, value in {
-            CritProp.BLOCK_BUILTIN: extract_builtin_properties(block_props),
-            CritProp.BLOCK_USER: remove_builtin_properties(block_props),
-            CritProp.PAGE_BUILTIN: extract_builtin_properties(page_props),
-            CritProp.PAGE_USER: remove_builtin_properties(page_props),
+            CritProp.BLOCK_BUILTIN: block_props.intersection(BUILT_IN_PROPERTIES),
+            CritProp.BLOCK_USER: block_props.difference(BUILT_IN_PROPERTIES),
+            CritProp.PAGE_BUILTIN: page_props.intersection(BUILT_IN_PROPERTIES),
+            CritProp.PAGE_USER: page_props.difference(BUILT_IN_PROPERTIES),
         }.items():
             if value:
                 yield key, value

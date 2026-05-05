@@ -41,30 +41,24 @@ class LogseqFileName:
     @staticmethod
     def process(file: Path) -> str:
         """Process the Logseq filename based on its parent directory."""
-        _ns_file_sep = LogseqFileName.ns_file_sep
-        name = file.stem.strip(_ns_file_sep)
-
+        name = file.stem.strip(LogseqFileName.ns_file_sep)
         if file.parent.name == LogseqFileName.journal_dir:
             return LogseqFileName.process_journal_key(name)
-        return LogseqFileName.process_non_journal_key(name, _ns_file_sep)
+        return LogseqFileName.process_non_journal_key(name, LogseqFileName.ns_file_sep)
 
     @staticmethod
     def process_journal_key(name: str) -> str:
         """Process the journal key to create a page title."""
-        _file_format = LogseqFileName.journal_format.file
-        _page_format = LogseqFileName.journal_format.page
-        _page_title_format = LogseqFileName.journal_format.page_title
-
         try:
-            date_obj = datetime.strptime(name, _file_format).replace(tzinfo=UTC)
-            page_title = date_obj.strftime(_page_format)
-            if Core.DATE_ORDINAL_SUFFIX in _page_title_format:
+            date_obj = datetime.strptime(name, LogseqFileName.journal_format.file).replace(tzinfo=UTC)
+            page_title = date_obj.strftime(LogseqFileName.journal_format.page)
+            if Core.DATE_ORDINAL_SUFFIX in LogseqFileName.journal_format.page_title:
                 day_number = str(date_obj.day)
                 day_with_ordinal = DateUtilities.append_ordinal_to_day(day_number)
                 page_title.replace(day_number, day_with_ordinal, 1)
             return page_title.replace("'", "")
         except ValueError as e:
-            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, _page_format, e)
+            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, LogseqFileName.journal_format.page, e)
             return name
 
     @staticmethod
@@ -83,7 +77,6 @@ class LogseqPath:
     name: str = ""
     stat: stat_result = field(init=False)
     uri: str = ""
-
     now_ts: ClassVar[float] = datetime.now(tz=UTC).timestamp()
     graph_path: ClassVar[Path]
     result_map: ClassVar[dict]
@@ -118,41 +111,29 @@ class LogseqPath:
 
     def evaluate_file_type(self) -> str:
         """Determine the file type based on the directory structure."""
-        _result_map = LogseqPath.result_map
-        _parent = self.file.parent.name
-        _parts = self.file.parts
-
-        result = _result_map.get(_parent, (FileType.OTHER, FileType.OTHER))
-
-        if result[0] != FileType.OTHER:
-            return result[0]
-
-        for key, result in _result_map.items():
-            if key in _parts:
-                return result[1]
-
+        _result = LogseqPath.result_map.get(self.file.parent.name, (FileType.OTHER, FileType.OTHER))
+        if _result[0] != FileType.OTHER:
+            return _result[0]
+        for key, _result in LogseqPath.result_map.items():
+            if key in self.file.parts:
+                return _result[1]
         return FileType.OTHER
 
     def set_logseq_url(self) -> str:
         """Set the Logseq URL."""
-        _graph_path = LogseqPath.graph_path
-        _uri = self.uri
-
-        uri_path = Path(_uri)
-        target_index = len(uri_path.parts) - len(_graph_path.parts)
+        uri_path = Path(self.uri)
+        target_index = len(uri_path.parts) - len(LogseqPath.graph_path.parts)
         target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
             return ""
-
-        graph_path = str(_graph_path).replace("\\", "/")
+        graph_path = str(LogseqPath.graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
-        if not _uri.startswith(prefix):
+        if not self.uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
             return ""
-
-        encoded_path = _uri[len(prefix) : -(len(uri_path.suffix))]
+        encoded_path = self.uri[len(prefix) : -(len(uri_path.suffix))]
         encoded_path = encoded_path.replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
 
@@ -166,33 +147,28 @@ class LogseqPath:
 
     def get_timestamp_info(self) -> TimestampInfo:
         """Get the timestamps for the file."""
-        _now = LogseqPath.now_ts
-        _created_time = self.stat.st_birthtime
-        _modified_time = self.stat.st_mtime
         return TimestampInfo(
-            time_existed=_now - _created_time,
-            time_unmodified=_now - _modified_time,
-            date_created=datetime.fromtimestamp(_created_time, tz=UTC).isoformat(),
-            date_modified=datetime.fromtimestamp(_modified_time, tz=UTC).isoformat(),
+            time_existed=LogseqPath.now_ts - self.stat.st_birthtime,
+            time_unmodified=LogseqPath.now_ts - self.stat.st_mtime,
+            date_created=datetime.fromtimestamp(self.stat.st_birthtime, tz=UTC).isoformat(),
+            date_modified=datetime.fromtimestamp(self.stat.st_mtime, tz=UTC).isoformat(),
         )
 
     def get_size_info(self) -> SizeInfo:
         """Get the size information for the file."""
-        _size = self.stat.st_size
         return SizeInfo(
-            size=_size,
-            human_readable_size=format_bytes(_size),
-            has_content=bool(_size),
+            size=self.stat.st_size,
+            human_readable_size=format_bytes(self.stat.st_size),
+            has_content=bool(self.stat.st_size),
         )
 
     def get_namespace_info(self) -> NamespaceInfo:
         """Get the namespace name data."""
         _ns_parts_list = self.name.split(Core.NS_SEP)
-        _ns_root = _ns_parts_list[0]
         return NamespaceInfo(
             parts={part: level for level, part in enumerate(_ns_parts_list, start=1)},
-            root=_ns_root,
-            parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_root,
+            root=_ns_parts_list[0],
+            parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_parts_list[0],
             parent_full=Core.NS_SEP.join(_ns_parts_list[:-1]),
             stem=_ns_parts_list[-1],
             is_namespace=Core.NS_SEP in self.name,

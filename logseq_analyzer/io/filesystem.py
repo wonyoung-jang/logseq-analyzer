@@ -16,7 +16,6 @@ class File:
     """A class to represent a file in the Logseq Analyzer."""
 
     path: Path
-
     clean_on_init: bool = False
     must_exist: bool = False
     is_dir: bool = False

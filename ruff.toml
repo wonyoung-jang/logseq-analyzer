@@ -1,5 +1,8 @@
 line-length = 120
 indent-width = 4
+target-version = "py314"
+fix = true
+unsafe-fixes = true
 exclude = [
     ".bzr",
     ".direnv",
@@ -28,27 +31,46 @@ exclude = [
     "site-packages",
     "venv",
 ]
-extend-exclude = ["docs", ".playground"]
+extend-exclude = [
+    "docs",
+    "..playground",
+]
 
 
 [lint]
-select = ["E4", "E7", "E9", "F"]
+select = ["ALL"]
 ignore = [
     "ANN401",
-    "ARG002",
-    "C901",
-    "COM812",
+    "D102",
     "D203",
     "D213",
+    "COM812",
     "ERA001",
     "PLR2004",
-    "S",
-    "TID252",
     "T201",
+    "TD002",
+    "TD003",
+    "FIX002",
+    "S",
+    "PTH102",
+    "PTH103",
+    "PTH107",
+    "PTH108",
+    "PTH110",
+    "PTH112",
+    "PTH113",
+    "PTH114",
+    "PTH117",
+    "PTH118",
+    "PTH119",
+    "PTH120",
+    "PTH122",
+    "PTH123",
+    "PTH206",
+    "PTH211",
 ]
 fixable = ["ALL"]
 unfixable = []
-extend-select = ["ALL"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [format]
@@ -58,3 +80,4 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
+

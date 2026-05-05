@@ -106,35 +106,27 @@ def iter_files(root_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
 
 def process_aliases(aliases: str) -> Iterator[str]:
     """Process aliases to extract individual aliases."""
-    strip_str = str.strip
-    if not (aliases := strip_str(aliases)):
+    if not (aliases := aliases.strip()):
         return
-
     current = []
-    append_current = current.append
-    clear_current = current.clear
-    lower_str = str.lower
-    join_chars = "".join
-    inside_brackets = False
+    is_inside_brackets = False
     pos = 0
-    length = len(aliases)
-    while pos < length:
+    while pos < len(aliases):
         if aliases[pos : pos + 2] == "[[":
-            inside_brackets = True
+            is_inside_brackets = True
             pos += 2
         elif aliases[pos : pos + 2] == "]]":
-            inside_brackets = False
+            is_inside_brackets = False
             pos += 2
-        elif aliases[pos] == "," and not inside_brackets:
-            if part := lower_str(strip_str(join_chars(current))):
+        elif aliases[pos] == "," and not is_inside_brackets:
+            if part := "".join(current).strip().lower():
                 yield part
-            clear_current()
+            current.clear()
             pos += 1
         else:
-            append_current(aliases[pos])
+            current.append(aliases[pos])
             pos += 1
-
-    if part := lower_str(strip_str(join_chars(current))):
+    if part := "".join(current).strip().lower():
         yield part
 
 
@@ -163,12 +155,11 @@ def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Iterator
 
     """
     finditer_all = pattern_mod.ALL.finditer(content)
-    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP.items()
+    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP
     fallback: str = pattern_mod.FALLBACK
-
     for match in finditer_all:
         text = match.group(0)
-        for pattern, criteria in pattern_map:
+        for pattern, criteria in pattern_map.items():
             if pattern.search(text):
                 yield criteria, text
                 break
@@ -190,26 +181,20 @@ def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Ite
         Iterator[tuple[int, str]]: Sections of text with their respective indices.
 
     """
-    count = 0
-    finditer_pattern = pattern.finditer
-
-    for match in finditer_pattern(text):
-        if maxsplit and count >= maxsplit:
+    _count = 0
+    for match in pattern.finditer(text):
+        if maxsplit and _count >= maxsplit:
             break
-
-        if count == 0:
-            yield count, text[: match.start()].strip("\t \n")
-            count += 1
-
+        if _count == 0:
+            yield _count, text[: match.start()].strip("\t \n")
+            _count += 1
         content_start = match.end()
-        next_match = next(finditer_pattern(text, content_start), None)
+        next_match = next(pattern.finditer(text, content_start), None)
         content_end = next_match.start() if next_match else len(text)
-
-        yield count, text[content_start:content_end].strip("\t \n")
-        count += 1
-
-    if count == 0:
-        yield count, text.strip("\t \n")
+        yield _count, text[content_start:content_end].strip("\t \n")
+        _count += 1
+    if _count == 0:
+        yield _count, text.strip("\t \n")
 
 
 def get_count_and_foundin_data(result: dict, collection: list[str], filename: str) -> dict:
@@ -229,16 +214,6 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
         result[item]["count"] = result[item].get("count", 0) + 1
         result[item]["found_in"][filename] += 1
     return result
-
-
-def extract_builtin_properties(properties: set[str]) -> set[str]:
-    """Get built-in properties."""
-    return properties.intersection(BUILT_IN_PROPERTIES)
-
-
-def remove_builtin_properties(properties: set[str]) -> set[str]:
-    """Get properties that are not built-in."""
-    return properties.difference(BUILT_IN_PROPERTIES)
 
 
 def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:

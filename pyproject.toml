@@ -28,7 +28,7 @@ module-name = "logseq_analyzer"
 module-root = ""
 
 [tool.vulture]
-paths = ["./logseq_analyzer", "whitelist.py"]
+paths = ["./logseq_analyzer"]
 ignore_decorators = ["@app.*"]
 min_confidence = 40
 verbose = false

@@ -85,7 +85,6 @@ class FileIndex:
         else:
             msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
             raise TypeError(msg)
-
         if target is None:
             logger.warning("Key %s not found in index.", f)
             return

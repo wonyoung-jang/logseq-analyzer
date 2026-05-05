@@ -1,8 +1,20 @@
 """File information for Logseq files."""
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 
-from logseq_analyzer.utils.enums import Node
+
+class Node(StrEnum):
+    """Node types for the Logseq Analyzer."""
+
+    BRANCH = "branch"
+    LEAF = "leaf"
+    ORPHAN_GRAPH = "orphan_graph"
+    ORPHAN_NAMESPACE = "orphan_namespace"
+    ORPHAN_NAMESPACE_TRUE = "orphan_namespace_true"
+    ORPHAN_TRUE = "orphan_true"
+    OTHER = "other"
+    ROOT = "root"
 
 
 @dataclass(slots=True)
@@ -37,10 +49,7 @@ class NodeType:
 
     def determine_node_type(self, *, has_content: bool) -> None:
         """Determine node type based on summary data."""
-        has_backlinks = self.has_backlinks
-        backlinked = self.backlinked
-        backlinked_ns_only = self.backlinked_ns_only
-        match (has_content, has_backlinks, backlinked, backlinked_ns_only):
+        match (has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True, True):
                 n = Node.BRANCH
             case (True, True, True, False):

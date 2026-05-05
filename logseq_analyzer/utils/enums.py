@@ -221,19 +221,6 @@ class Moved(StrEnum):
     SIMULATED_PREFIX = "======== Simulated only ========"
 
 
-class Node(StrEnum):
-    """Node types for the Logseq Analyzer."""
-
-    BRANCH = "branch"
-    LEAF = "leaf"
-    ORPHAN_GRAPH = "orphan_graph"
-    ORPHAN_NAMESPACE = "orphan_namespace"
-    ORPHAN_NAMESPACE_TRUE = "orphan_namespace_true"
-    ORPHAN_TRUE = "orphan_true"
-    OTHER = "other"
-    ROOT = "root"
-
-
 class Output(StrEnum):
     """Output types for the Logseq Analyzer."""
 

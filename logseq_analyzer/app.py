@@ -85,24 +85,23 @@ class GUIInstanceDummy:
         logger.info("Updating progress: %d%%", percentage)
 
 
-def setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
+def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     """Set up Logseq analyzer configuration based on arguments."""
-    graph_dirs = setup_graph_dirs(args)
-    config_edns = setup_config_edns(args, graph_dirs)
+    graph_dirs = _setup_graph_dirs(args)
+    config_edns = _setup_config_edns(args, graph_dirs)
     target_dirs = get_target_dirs(config_edns.config)
-    ensure_target_dirs(graph_dirs, target_dirs)
+    _ensure_target_dirs(graph_dirs, target_dirs)
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
         delete_dirs=AnalyzerDeleteDirs(),
         target_dirs=target_dirs,
         output_dir=OutputDirectory(Path(Constant.OUTPUT_DIR)),
     )
-
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
 
 
-def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
+def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:
     """Set up the Logseq graph directories."""
     graph_folder_path = Path(args.graph_folder)
     logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ
@@ -119,7 +118,7 @@ def setup_graph_dirs(args: Args) -> LogseqGraphDirs:
     )
 
 
-def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
+def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     """Set up the configuration EDN files."""
     default_edn = get_default_logseq_config()
     user_config_edn_parsed = get_edn_from_file(graph_dirs.user_config.path)
@@ -143,7 +142,7 @@ def setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     )
 
 
-def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
+def _ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]) -> None:
     """Ensure that the target directories exist."""
     graph_folder_path = graph_dirs.graph_dir.path
     AssetsDirectory(graph_folder_path / target_dirs[TargetDir.ASSET])
@@ -153,7 +152,7 @@ def ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str])
     WhiteboardsDirectory(graph_folder_path / target_dirs[TargetDir.WHITEBOARD])
 
 
-def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
+def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     """Set up journal formats."""
     _tokens = DateUtilities.compile_datetime_tokens()
     journal_file_fmt = get_file_name_format(config_edns.config)
@@ -168,8 +167,8 @@ def setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
 
 def init_configs(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns, JournalFormats]:
     """Initialize configurations for the Logseq analyzer."""
-    analyzer_dirs, config_edns = setup_logseq_paths(args)
-    journal_formats = setup_journal_formats(config_edns)
+    analyzer_dirs, config_edns = _setup_logseq_paths(args)
+    journal_formats = _setup_journal_formats(config_edns)
     logger.debug("init_configs")
     return analyzer_dirs, config_edns, journal_formats
 
