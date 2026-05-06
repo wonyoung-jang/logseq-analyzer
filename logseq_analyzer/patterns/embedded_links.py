@@ -43,8 +43,8 @@ ASSET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-PATTERN_MAP = {
-    INTERNET: CritEmb.INTERNET,
-    ASSET: CritEmb.ASSET,
+PATTERN_MAP: dict[str, re.Pattern] = {
+    CritEmb.INTERNET: INTERNET,
+    CritEmb.ASSET: ASSET,
 }
 FALLBACK = CritEmb.OTHER

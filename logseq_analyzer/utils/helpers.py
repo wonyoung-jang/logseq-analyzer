@@ -12,9 +12,9 @@ from logseq_analyzer.utils.enums import Format, Moved
 if TYPE_CHECKING:
     import re
     from collections.abc import Iterator
-    from re import Pattern
 
     from logseq_analyzer.logseq_file.file import LogseqFile
+
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
     [
         "alias",
@@ -138,34 +138,6 @@ def yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
     """Collect slotted attributes from an object."""
     for slot in getattr(type(obj), "__slots__", ()):
         yield slot, getattr(obj, slot)
-
-
-def process_pattern_hierarchy(
-    content: str,
-    all_pattern: Pattern[str],
-    pattern_map: dict[Pattern[str], str],
-    fallback: str,
-) -> Iterator[tuple[str, str]]:
-    """Process a pattern hierarchy to create a mapping of patterns to their respective values.
-
-    Args:
-        content (str): The content to process.
-        all_pattern (Pattern[str]): A regex pattern that matches all relevant patterns in the content.
-        pattern_map (dict[Pattern[str], str]): A mapping of specific regex patterns to their corresponding criteria.
-        fallback (str): A fallback criteria to use when no specific pattern matches.
-
-    Yields:
-        Iterator[tuple[str, str]]: A generator yielding key-value pairs of patterns and their values.
-
-    """
-    for match in all_pattern.finditer(content):
-        text = match.group(0)
-        for pattern, criteria in pattern_map.items():
-            if pattern.search(text):
-                yield criteria, text
-                break
-        else:
-            yield fallback, text
 
 
 def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Iterator[tuple[int, str]]:

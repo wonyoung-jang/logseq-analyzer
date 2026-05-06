@@ -47,8 +47,8 @@ ALIAS = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-PATTERN_MAP = {
-    INTERNET: CritExt.INTERNET,
-    ALIAS: CritExt.ALIAS,
+PATTERN_MAP: dict[str, re.Pattern] = {
+    CritExt.INTERNET: INTERNET,
+    CritExt.ALIAS: ALIAS,
 }
 FALLBACK = CritExt.OTHER

@@ -26,7 +26,7 @@ BLOCK_REFERENCE = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-PATTERN_MAP = {
-    BLOCK_REFERENCE: CritDblParen.BLOCK_REFS,
+PATTERN_MAP: dict[str, re.Pattern] = {
+    CritDblParen.BLOCK_REFS: BLOCK_REFERENCE,
 }
 FALLBACK = CritDblParen.ALL_REFS

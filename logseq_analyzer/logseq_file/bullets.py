@@ -14,15 +14,11 @@ import logseq_analyzer.patterns.embedded_links as emb_lnk_ptns
 import logseq_analyzer.patterns.external_links as ext_lnk_ptns
 from logseq_analyzer.logseq_file.info import BulletInfo
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
-from logseq_analyzer.utils.helpers import (
-    BUILT_IN_PROPERTIES,
-    iter_pattern_split,
-    process_aliases,
-    process_pattern_hierarchy,
-)
+from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, iter_pattern_split, process_aliases
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from re import Pattern
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +100,36 @@ class LogseqBullets:
         """Process patterns in the content."""
         _temp_map = defaultdict(list)
         for all_pattern, pattern_map, fallback in PATTERN_MODULES:
-            for key, value in process_pattern_hierarchy(self.content, all_pattern, pattern_map, fallback):
+            for key, value in self.process_pattern_hierarchy(all_pattern, pattern_map, fallback):
                 _temp_map[key].append(value)
         if not _temp_map:
             return
         for key, values in _temp_map.items():
             yield key, values
+
+    def process_pattern_hierarchy(
+        self,
+        all_pattern: Pattern[str],
+        pattern_map: dict[str, Pattern[str]],
+        fallback: str,
+    ) -> Iterator[tuple[str, str]]:
+        """Process a pattern hierarchy to create a mapping of patterns to their respective values.
+
+        Args:
+            content (str): The content to process.
+            all_pattern (Pattern[str]): A regex pattern that matches all relevant patterns in the content.
+            pattern_map (dict[str, Pattern[str]]): A mapping of specific regex patterns to their corresponding criteria.
+            fallback (str): A fallback criteria to use when no specific pattern matches.
+
+        Yields:
+            Iterator[tuple[str, str]]: A generator yielding key-value pairs of patterns and their values.
+
+        """
+        for match in all_pattern.finditer(self.content):
+            text = match.group(0)
+            for criteria, pattern in pattern_map.items():
+                if pattern.search(text):
+                    yield criteria, text
+                    break
+            else:
+                yield fallback, text

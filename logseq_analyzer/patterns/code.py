@@ -37,8 +37,8 @@ CALC_BLOCK = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-PATTERN_MAP: dict[re.Pattern[str], CritCode] = {
-    CALC_BLOCK: CritCode.ML_CALC,
-    MULTILINE_CODE_LANG: CritCode.ML_LANG,
+PATTERN_MAP: dict[str, re.Pattern] = {
+    CritCode.ML_CALC: CALC_BLOCK,
+    CritCode.ML_LANG: MULTILINE_CODE_LANG,
 }
 FALLBACK = CritCode.ML_ALL
