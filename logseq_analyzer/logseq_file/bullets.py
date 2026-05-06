@@ -53,43 +53,32 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         if not (content := self.content):
             return
-        append_all_bullets = self.all_bullets.append
         for bullet_index, bullet in iter_pattern_split(content_patterns.BULLET, content):
-            append_all_bullets(bullet)
+            self.all_bullets.append(bullet)
             if bullet and bullet_index == 0:
                 self.primary = bullet
 
     def get_bullet_info(self) -> BulletInfo:
         """Get bullet statistics."""
-        _char_count = len(self.content)
-        _b_count = len(self.all_bullets)
         return BulletInfo(
-            chars=_char_count,
-            bullets=_b_count,
+            chars=len(self.content),
+            bullets=len(self.all_bullets),
             empty_bullets=self.all_bullets.count(""),
-            char_per_bullet=round(_char_count / _b_count, 2) if _b_count else None,
         )
 
     def extract_primary_raw_data(self) -> Iterator[tuple[str, Any]]:
         """Extract primary data from the content."""
-        _content = self.content
-        _raw_data_map = RAW_DATA_MAP.items()
-        for key, value in _raw_data_map:
-            if value.search(_content):
-                yield key, value.findall(_content)
+        for key, value in RAW_DATA_MAP.items():
+            if value.search(self.content):
+                yield key, value.findall(self.content)
 
     def extract_properties(self) -> Iterator[tuple[str, Any]]:
         """Extract page and block properties from the content."""
         page_props = set()
-        _content = self.content
-        _all_bullets = self.all_bullets
-        primary_bullet = self.primary
-        find_all_properties = content_patterns.PROPERTY.findall
-        if primary_bullet and not primary_bullet.startswith("#"):
-            page_props.update(find_all_properties(primary_bullet))
-            _content = "\n".join(_all_bullets)
-            self.content = _content
-        block_props = set(find_all_properties(_content))
+        if self.primary and not self.primary.startswith("#"):
+            page_props.update(content_patterns.PROPERTY.findall(self.primary))
+            self.content = "\n".join(self.all_bullets)
+        block_props = set(content_patterns.PROPERTY.findall(self.content))
         for key, value in {
             CritProp.BLOCK_BUILTIN: block_props.intersection(BUILT_IN_PROPERTIES),
             CritProp.BLOCK_USER: block_props.difference(BUILT_IN_PROPERTIES),
@@ -101,8 +90,7 @@ class LogseqBullets:
 
     def extract_aliases_and_propvalues(self) -> Iterator[tuple[str, Any]]:
         """Extract aliases and properties from the content."""
-        _content = self.content
-        propvalues = dict(content_patterns.PROPERTY_VALUE.findall(_content))
+        propvalues = dict(content_patterns.PROPERTY_VALUE.findall(self.content))
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         for key, value in {

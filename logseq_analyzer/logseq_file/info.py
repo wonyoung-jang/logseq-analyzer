@@ -137,7 +137,11 @@ class BulletInfo:
     chars: int
     bullets: int
     empty_bullets: int
-    char_per_bullet: float | None
+    char_per_bullet: float | None = field(init=False)
+
+    def __post_init__(self) -> None:
+        """Calculate characters per bullet."""
+        self.char_per_bullet = round(self.chars / self.bullets, 2) if self.bullets else None
 
 
 @dataclass(slots=True)

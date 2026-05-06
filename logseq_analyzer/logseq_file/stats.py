@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from os import stat_result
 
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,11 +43,11 @@ class LogseqFileName:
         """Process the Logseq filename based on its parent directory."""
         name = file.stem.strip(LogseqFileName.ns_file_sep)
         if file.parent.name == LogseqFileName.journal_dir:
-            return LogseqFileName.process_journal_key(name)
-        return LogseqFileName.process_non_journal_key(name, LogseqFileName.ns_file_sep)
+            return LogseqFileName._get_journal_key(name)
+        return LogseqFileName._get_non_journal_key(name)
 
     @staticmethod
-    def process_journal_key(name: str) -> str:
+    def _get_journal_key(name: str) -> str:
         """Process the journal key to create a page title."""
         try:
             date_obj = datetime.strptime(name, LogseqFileName.journal_format.file).replace(tzinfo=UTC)
@@ -61,9 +62,9 @@ class LogseqFileName:
             return name
 
     @staticmethod
-    def process_non_journal_key(name: str, ns_file_sep: str, ns_sep: str = Core.NS_SEP) -> str:
+    def _get_non_journal_key(name: str, ns_sep: str = Core.NS_SEP) -> str:
         """Process non-journal keys to create a page title."""
-        return unquote(name).replace(ns_file_sep, ns_sep)
+        return unquote(name).replace(LogseqFileName.ns_file_sep, ns_sep)
 
 
 @dataclass(slots=True)
@@ -75,7 +76,7 @@ class LogseqPath:
     logseq_url: str = ""
     name: str = ""
     stat: stat_result = field(init=False)
-    uri: str = ""
+    uri: str = field(init=False)
     now_ts: ClassVar[float] = datetime.now(tz=UTC).timestamp()
     graph_path: ClassVar[Path]
     result_map: ClassVar[dict]
@@ -163,12 +164,12 @@ class LogseqPath:
 
     def get_namespace_info(self) -> NamespaceInfo:
         """Get the namespace name data."""
-        _ns_parts_list = self.name.split(Core.NS_SEP)
+        _ns_parts = self.name.split(Core.NS_SEP)
         return NamespaceInfo(
-            parts={part: level for level, part in enumerate(_ns_parts_list, start=1)},
-            root=_ns_parts_list[0],
-            parent=_ns_parts_list[-2] if len(_ns_parts_list) > 2 else _ns_parts_list[0],
-            parent_full=Core.NS_SEP.join(_ns_parts_list[:-1]),
-            stem=_ns_parts_list[-1],
+            parts={part: level for level, part in enumerate(_ns_parts, start=1)},
+            root=_ns_parts[0],
+            parent=_ns_parts[-2] if len(_ns_parts) > 2 else _ns_parts[0],
+            parent_full=Core.NS_SEP.join(_ns_parts[:-1]),
+            stem=_ns_parts[-1],
             is_namespace=Core.NS_SEP in self.name,
         )

@@ -55,9 +55,8 @@ class MaskedBlocks:
     def unmask_blocks(self) -> None:
         """Restore the original content by replacing placeholders with their blocks."""
         _content = self.content
-        replace_content = _content.replace
         for placeholder, block in self.blocks.items():
-            _content = replace_content(placeholder, block)
+            _content = _content.replace(placeholder, block)
         self.content = _content
 
 
@@ -132,34 +131,27 @@ class LogseqFile:
 
     def extract_data(self) -> None:
         """Extract data from the Logseq file."""
-        self.data.update(dict(self.extract_data_pairs()))
+        self.data.update(self.extract_data_pairs())
 
     def mask_blocks(self) -> None:
         """Mask code blocks and other patterns in the content."""
-        content = self.bullets.content
-        blocks = {}
-        pattern_masking = PATTERN_MASKING
-        _uuid4 = uuid.uuid4
-        for sub_regex, prefix in pattern_masking:
+        _content = self.bullets.content
+        _blocks = {}
+        for sub_regex, prefix in PATTERN_MASKING:
 
             def _repl(match: re.Match, prefix: str = prefix) -> str:
-                placeholder = f"{prefix}{_uuid4()}__"
-                blocks[placeholder] = match.group(0)
+                placeholder = f"{prefix}{uuid.uuid4()}__"
+                _blocks[placeholder] = match.group(0)
                 return placeholder
 
-            content = sub_regex(_repl, content)
-        self.masked: MaskedBlocks = MaskedBlocks(
-            content=content,
-            blocks=blocks,
-        )
+            _content = sub_regex(_repl, _content)
+        self.masked = MaskedBlocks(_content, _blocks)
 
     def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
         """Extract primary data from the content."""
-        _content = self.masked.content
-        _primary_data_map = PRIMARY_DATA_MAP.items()
-        for key, value in _primary_data_map:
-            if value.search(_content):
-                yield key, value.findall(_content)
+        for key, value in PRIMARY_DATA_MAP.items():
+            if value.search(self.masked.content):
+                yield key, value.findall(self.masked.content)
 
     def check_has_backlinks(self) -> None:
         """Check has backlinks in the content."""
