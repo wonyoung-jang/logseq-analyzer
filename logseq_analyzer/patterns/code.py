@@ -12,7 +12,6 @@ ALL = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 INLINE_CODE_BLOCK = re.compile(
     r"""
     `                   # One backtick
@@ -21,7 +20,6 @@ INLINE_CODE_BLOCK = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 MULTILINE_CODE_LANG = re.compile(
     r"""
     ```                 # Three backticks
@@ -31,7 +29,6 @@ MULTILINE_CODE_LANG = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 CALC_BLOCK = re.compile(
     r"""
     ```calc             # Three backticks followed by "calc"
@@ -40,10 +37,8 @@ CALC_BLOCK = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
-PATTERN_MAP = {
+PATTERN_MAP: dict[re.Pattern[str], CritCode] = {
     CALC_BLOCK: CritCode.ML_CALC,
     MULTILINE_CODE_LANG: CritCode.ML_LANG,
 }
-
 FALLBACK = CritCode.ML_ALL

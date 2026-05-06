@@ -11,7 +11,6 @@ BULLET = re.compile(
     """,
     re.MULTILINE | re.IGNORECASE | re.VERBOSE,
 )
-
 PAGE_REFERENCE = re.compile(
     r"""
     (?<!\#)     # Negative lookbehind: not preceded by #
@@ -21,7 +20,6 @@ PAGE_REFERENCE = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 TAGGED_BACKLINK = re.compile(
     r"""
     \#          # Hash character
@@ -31,7 +29,6 @@ TAGGED_BACKLINK = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 TAG = re.compile(
     r"""
     \#              # Hash character
@@ -41,7 +38,6 @@ TAG = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PROPERTY = re.compile(
     r"""
     ^                   # Start of line
@@ -52,7 +48,6 @@ PROPERTY = re.compile(
     """,
     re.MULTILINE | re.IGNORECASE | re.VERBOSE,
 )
-
 PROPERTY_VALUE = re.compile(
     r"""
     ^                   # Start of line
@@ -65,7 +60,6 @@ PROPERTY_VALUE = re.compile(
     """,
     re.MULTILINE | re.IGNORECASE | re.VERBOSE,
 )
-
 ASSET = re.compile(
     r"""
     assets/         # assets/ literal string
@@ -73,7 +67,6 @@ ASSET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 DRAW = re.compile(
     r"""
     (?<!\#)             # Negative lookbehind: not preceded by #
@@ -84,7 +77,6 @@ DRAW = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 BLOCKQUOTE = re.compile(
     r"""
     (?:^|\s)            # Start of line or whitespace
@@ -93,7 +85,6 @@ BLOCKQUOTE = re.compile(
     """,
     re.MULTILINE | re.IGNORECASE | re.VERBOSE,
 )
-
 FLASHCARD = re.compile(
     r"""
     (?:^|\s)            # Start of line or whitespace
@@ -103,7 +94,6 @@ FLASHCARD = re.compile(
     """,
     re.MULTILINE | re.IGNORECASE | re.VERBOSE,
 )
-
 DYNAMIC_VARIABLE = re.compile(
     r"""
     <%                  # Opening tag
@@ -114,7 +104,6 @@ DYNAMIC_VARIABLE = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 ANY_LINK = re.compile(
     r"""
     \b                                          # word boundary

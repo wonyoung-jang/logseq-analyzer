@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
-
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +62,6 @@ DATETIME_TOKEN_MAP: dict[str, str] = {
     "Z": "%z",
     "ZZ": "%z",
 }
-
 DY = Day
 DS = DateStat
 

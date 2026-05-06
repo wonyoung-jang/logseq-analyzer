@@ -84,6 +84,15 @@ class LogseqAssetsHls:
         }
 
 
+def _update_asset_backlink(asset_mentions: set[str], asset_file: LogseqFile, filename: str) -> None:
+    """Update the asset backlink information."""
+    names = (asset_file.path.name, filename)
+    for asset_mention in asset_mentions:
+        if any(name in asset_mention for name in names):
+            asset_file.node.backlinked = True
+            return
+
+
 @dataclass(slots=True)
 class LogseqAssets:
     """Class to handle assets in Logseq."""
@@ -105,7 +114,7 @@ class LogseqAssets:
             if not _mentioned_assets:
                 continue
             for asset_file in self.yield_assets(backlinked=False):
-                LogseqAssets.update_asset_backlink(_mentioned_assets, asset_file, f.path.name)
+                _update_asset_backlink(_mentioned_assets, asset_file, f.path.name)
                 _is_asset_processed = True
             if not _is_asset_processed:
                 break
@@ -113,15 +122,6 @@ class LogseqAssets:
         del _mentioned_assets
         self.backlinked.update(self.yield_assets(backlinked=True))
         self.not_backlinked.update(self.yield_assets(backlinked=False))
-
-    @staticmethod
-    def update_asset_backlink(asset_mentions: set[str], asset_file: LogseqFile, filename: str) -> None:
-        """Update the asset backlink information."""
-        names = (asset_file.path.name, filename)
-        for asset_mention in asset_mentions:
-            if any(name in asset_mention for name in names):
-                asset_file.node.backlinked = True
-                return
 
     def yield_assets(self, *, backlinked: bool | None = None) -> Iterator[LogseqFile]:
         """Yield all asset files from the index."""

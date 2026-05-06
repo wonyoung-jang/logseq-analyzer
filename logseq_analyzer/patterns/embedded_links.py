@@ -11,7 +11,6 @@ ALL = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 INTERNET = re.compile(
     r"""
     \!\[.*?\]           # ![...]
@@ -33,7 +32,6 @@ INTERNET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 ASSET = re.compile(
     r"""
     \!\[.*?\]               # ![...]
@@ -45,10 +43,8 @@ ASSET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PATTERN_MAP = {
     INTERNET: CritEmb.INTERNET,
     ASSET: CritEmb.ASSET,
 }
-
 FALLBACK = CritEmb.OTHER

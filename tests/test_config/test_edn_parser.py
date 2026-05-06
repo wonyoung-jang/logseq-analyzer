@@ -51,7 +51,6 @@ def test_nested_structures() -> None:
     """Test that nested structures are parsed correctly."""
     edn = "{:a [1 (2 3) #{4}] :b {:c 5}}"
     result = loads(edn)
-
     assert type(result) is dict
     assert result[":a"] == [1, [2, 3], {4}]
     assert result[":b"] == {":c": 5}
@@ -73,7 +72,6 @@ def test_parse_map_key_set() -> None:
     result = loads(edn)
     # The set {1, 2} should become a frozenset of its items as the key
     key = frozenset({1, 2})
-
     assert type(result) is dict
     assert key in result
     assert result[key] == ":val"
@@ -85,7 +83,6 @@ def test_map_key_map() -> None:
     result = loads(edn)
     # The map {:x 10} should become a frozenset of its items as the key
     key = frozenset({(":x", 10)})
-
     assert type(result) is dict
     assert key in result
     assert result[key] == ":val"

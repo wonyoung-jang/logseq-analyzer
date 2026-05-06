@@ -12,11 +12,9 @@ from logseq_analyzer.utils.enums import Format, Moved
 if TYPE_CHECKING:
     import re
     from collections.abc import Iterator
-    from types import ModuleType
+    from re import Pattern
 
     from logseq_analyzer.logseq_file.file import LogseqFile
-
-
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
     [
         "alias",
@@ -73,7 +71,6 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     ]
 )
-
 SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
 
@@ -143,21 +140,25 @@ def yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
         yield slot, getattr(obj, slot)
 
 
-def process_pattern_hierarchy(content: str, pattern_mod: ModuleType) -> Iterator[tuple[str, str]]:
+def process_pattern_hierarchy(
+    content: str,
+    all_pattern: Pattern[str],
+    pattern_map: dict[Pattern[str], str],
+    fallback: str,
+) -> Iterator[tuple[str, str]]:
     """Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
     Args:
         content (str): The content to process.
-        pattern_mod (ModuleType): A module containing regex patterns and their corresponding criteria.
+        all_pattern (Pattern[str]): A regex pattern that matches all relevant patterns in the content.
+        pattern_map (dict[Pattern[str], str]): A mapping of specific regex patterns to their corresponding criteria.
+        fallback (str): A fallback criteria to use when no specific pattern matches.
 
     Yields:
         Iterator[tuple[str, str]]: A generator yielding key-value pairs of patterns and their values.
 
     """
-    finditer_all = pattern_mod.ALL.finditer(content)
-    pattern_map: dict[re.Pattern, str] = pattern_mod.PATTERN_MAP
-    fallback: str = pattern_mod.FALLBACK
-    for match in finditer_all:
+    for match in all_pattern.finditer(content):
         text = match.group(0)
         for pattern, criteria in pattern_map.items():
             if pattern.search(text):
@@ -231,19 +232,15 @@ def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2)
     if size_bytes < 0:
         msg = "size_bytes must be non-negative"
         raise ValueError(msg)
-
     units = IEC_UNITS if system == SizeUnit.IEC else SI_UNITS
     base = 1024 if system == SizeUnit.IEC else 1000
-
     if size_bytes < base:
         return f"{size_bytes} {units[0]}"
-
     idx = 0
     size = float(size_bytes)
     while size >= base and idx < len(units) - 1:
         size /= base
         idx += 1
-
     return f"{size:.{precision}f} {units[idx]}"
 
 
@@ -276,10 +273,8 @@ def process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> lis
     names = [path.name for path in listpaths]
     if not names:
         return names
-
     if not move:
         return [Moved.SIMULATED_PREFIX, *names]
-
     for src in listpaths:
         dest = target_dir / src.name
         try:

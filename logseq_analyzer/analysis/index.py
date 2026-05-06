@@ -12,7 +12,6 @@ from logseq_analyzer.utils.helpers import yield_attrs
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
 logger = logging.getLogger(__name__)
 
 

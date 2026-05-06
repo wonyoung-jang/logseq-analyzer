@@ -41,7 +41,6 @@ def test_set_gui_args(args_instance: Args) -> None:
         "report_format": ".json",
     }
     args_instance.set_gui_args(gui_args)
-
     assert args_instance.graph_folder == Path("/path/to/graph")
     assert args_instance.global_config == Path("/path/to/config.ini")
     assert args_instance.move_unlinked_assets is True
@@ -66,9 +65,7 @@ def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch, args_instance: Args
         ".md",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-
     args_instance.set_cli_args()
-
     assert (
         args_instance.graph_folder == test_graph_path
     )  # argparse handles Path conversion implicitly if type=Path is used, but here it's just stored
@@ -100,9 +97,7 @@ def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch, args_instance: 
         ".json",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-
     args_instance.set_cli_args()
-
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == test_config_path
     assert args_instance.move_unlinked_assets is True
@@ -123,9 +118,7 @@ def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch, args_instance: A
         # Only required arg is provided
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-
     args_instance.set_cli_args()
-
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == ""
     assert args_instance.move_unlinked_assets is False
@@ -144,7 +137,6 @@ def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch, args_ins
         "--write-graph",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-
     # argparse.parse_args() calls sys.exit() upon error
     with pytest.raises(SystemExit):
         args_instance.set_cli_args()

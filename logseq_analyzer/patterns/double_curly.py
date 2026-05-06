@@ -12,7 +12,6 @@ ALL = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 EMBED = re.compile(
     r"""
     \{\{embed\          # "{{embed" followed by space
@@ -21,7 +20,6 @@ EMBED = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PAGE_EMBED = re.compile(
     r"""
     \{\{embed\          # "{{embed" followed by space
@@ -32,7 +30,6 @@ PAGE_EMBED = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 BLOCK_EMBED = re.compile(
     r"""
     \{\{embed\          # "{{embed" followed by space
@@ -47,7 +44,6 @@ BLOCK_EMBED = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 NAMESPACE_QUERY = re.compile(
     r"""
     \{\{namespace\      # "{{namespace" followed by space
@@ -56,7 +52,6 @@ NAMESPACE_QUERY = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 CARD = re.compile(
     r"""
     \{\{cards\          # "{{cards" followed by space
@@ -65,7 +60,6 @@ CARD = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 CLOZE = re.compile(
     r"""
     \{\{cloze\          # "{{cloze" followed by space
@@ -74,7 +68,6 @@ CLOZE = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 SIMPLE_QUERY = re.compile(
     r"""
     \{\{query\          # "{{query" followed by space
@@ -83,7 +76,6 @@ SIMPLE_QUERY = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 QUERY_FUNCTION = re.compile(
     r"""
     \{\{function\       # "{{function" followed by space
@@ -92,7 +84,6 @@ QUERY_FUNCTION = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 EMBED_VIDEO_URL = re.compile(
     r"""
     \{\{video\          # "{{video" followed by space
@@ -101,7 +92,6 @@ EMBED_VIDEO_URL = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 EMBED_TWITTER_TWEET = re.compile(
     r"""
     \{\{tweet\          # "{{tweet" followed by space
@@ -110,7 +100,6 @@ EMBED_TWITTER_TWEET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 EMBED_YOUTUBE_TIMESTAMP = re.compile(
     r"""
     \{\{youtube-timestamp\  # "{{youtube-timestamp" followed by space
@@ -119,7 +108,6 @@ EMBED_YOUTUBE_TIMESTAMP = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 RENDERER = re.compile(
     r"""
     \{\{renderer\       # "{{renderer" followed by space
@@ -128,7 +116,6 @@ RENDERER = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PATTERN_MAP = {
     PAGE_EMBED: CritDblCurly.PAGE_EMBEDS,
     BLOCK_EMBED: CritDblCurly.BLOCK_EMBEDS,
@@ -143,5 +130,4 @@ PATTERN_MAP = {
     EMBED_YOUTUBE_TIMESTAMP: CritDblCurly.YOUTUBE_TIMESTAMPS,
     RENDERER: CritDblCurly.RENDERERS,
 }
-
 FALLBACK = CritDblCurly.ALL

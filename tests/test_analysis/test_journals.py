@@ -20,7 +20,7 @@ def logseq_journals(file_index: FileIndex) -> LogseqJournals:
 def test_len(logseq_journals: LogseqJournals) -> None:
     """Test the __len__ method of LogseqJournals."""
     assert len(logseq_journals) == 0
-    logseq_journals.sets.timeline = [
+    logseq_journals.timeline = [
         datetime.datetime.min.replace(tzinfo=datetime.UTC),
         datetime.datetime.max.replace(tzinfo=datetime.UTC),
     ]

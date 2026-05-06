@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from os import stat_result
 
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
-
 logger = logging.getLogger(__name__)
 
 

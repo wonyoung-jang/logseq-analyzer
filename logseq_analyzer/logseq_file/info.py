@@ -17,6 +17,16 @@ class Node(StrEnum):
     ROOT = "root"
 
 
+def _check_for_backlinks(name: str, lookup: set[str]) -> bool:
+    """Check if a file is backlinked."""
+    try:
+        lookup.remove(name)
+    except KeyError:
+        return False
+    else:
+        return True
+
+
 @dataclass(slots=True)
 class NodeType:
     """Class to hold node type data."""
@@ -29,50 +39,52 @@ class NodeType:
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""
         if not self.backlinked:
-            self.backlinked = NodeType._check_for_backlinks(name, lookup)
+            self.backlinked = _check_for_backlinks(name, lookup)
 
     def check_backlinked_ns_only(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked only in its namespace and update the node state."""
-        if not self.backlinked_ns_only and NodeType._check_for_backlinks(name, lookup):
+        if not self.backlinked_ns_only and _check_for_backlinks(name, lookup):
             self.backlinked_ns_only = True
             self.backlinked = False
 
-    @staticmethod
-    def _check_for_backlinks(name: str, lookup: set[str]) -> bool:
-        """Check if a file is backlinked."""
-        try:
-            lookup.remove(name)
-        except KeyError:
-            return False
-        else:
-            return True
-
     def determine_node_type(self, *, has_content: bool) -> None:
         """Determine node type based on summary data."""
-        match (has_content, self.has_backlinks, self.backlinked, self.backlinked_ns_only):
-            case (True, True, True, True):
+        if has_content:
+            self.node_type = self._node_type_has_content()
+        else:
+            self.node_type = self._node_type_no_content()
+
+    def _node_type_has_content(self) -> str:
+        """Determine node type based on summary data."""
+        match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+            case (True, True, True):
                 n = Node.BRANCH
-            case (True, True, True, False):
+            case (True, True, False):
                 n = Node.BRANCH
-            case (True, True, False, True):
+            case (True, False, True):
                 n = Node.BRANCH
-            case (True, True, False, False):
+            case (True, False, False):
                 n = Node.ROOT
-            case (True, False, True, True):
+            case (False, True, True):
                 n = Node.LEAF
-            case (True, False, True, False):
+            case (False, True, False):
                 n = Node.LEAF
-            case (True, False, False, True):
+            case (False, False, True):
                 n = Node.ORPHAN_NAMESPACE
-            case (True, False, False, False):
+            case (False, False, False):
                 n = Node.ORPHAN_GRAPH
-            case (False, False, True, True):
+        self.node_type = n
+
+    def _node_type_no_content(self) -> str:
+        """Determine node type based on summary data."""
+        match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+            case (False, True, True):
                 n = Node.LEAF
-            case (False, False, True, False):
+            case (False, True, False):
                 n = Node.LEAF
-            case (False, False, False, True):
+            case (False, False, True):
                 n = Node.ORPHAN_NAMESPACE_TRUE
-            case (False, False, False, False):
+            case (False, False, False):
                 n = Node.ORPHAN_TRUE
         self.node_type = n
 

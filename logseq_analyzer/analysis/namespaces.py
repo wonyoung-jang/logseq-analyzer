@@ -1,12 +1,10 @@
 """Module containing functions for processing and analyzing namespace data in Logseq.
 
 What are the problems trying to be solved?
-
 Logseq's move to a database system from a markdown one.
 Currently, namespace pages are full and valid, so root/parent/child is a name.
 The proposed migration by Logseq is to split each part and tag the children with their parents.
 Now we have three pages of root, parent, and child.
-
 Problems:
     1. The split namespace parts may conflict with existing, non-namespace pages.
     2. Some parents may appear across multiple namespaces at different depths.
@@ -24,7 +22,6 @@ from logseq_analyzer.utils.helpers import sort_dict_by_value
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex
-
 logger = logging.getLogger(__name__)
 
 

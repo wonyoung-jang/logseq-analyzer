@@ -28,7 +28,6 @@ BACKLINK_CRITERIA: frozenset[str] = frozenset(
         CritContent.TAG,
     }
 )
-
 PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
     CritContent.BLOCKQUOTES: content_patterns.BLOCKQUOTE,
     CritContent.DRAW: content_patterns.DRAW,
@@ -38,7 +37,6 @@ PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
     CritContent.TAG: content_patterns.TAG,
     CritContent.DYNAMIC_VAR: content_patterns.DYNAMIC_VARIABLE,
 }
-
 PATTERN_MASKING = (
     (code.ALL.sub, f"__{CritCode.ML_ALL}_"),
     (code.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
@@ -142,7 +140,6 @@ class LogseqFile:
         blocks = {}
         pattern_masking = PATTERN_MASKING
         _uuid4 = uuid.uuid4
-
         for sub_regex, prefix in pattern_masking:
 
             def _repl(match: re.Match, prefix: str = prefix) -> str:
@@ -151,7 +148,6 @@ class LogseqFile:
                 return placeholder
 
             content = sub_regex(_repl, content)
-
         self.masked: MaskedBlocks = MaskedBlocks(
             content=content,
             blocks=blocks,

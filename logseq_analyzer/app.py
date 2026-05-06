@@ -125,14 +125,12 @@ def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     user_edn = {}
     if isinstance(user_config_edn_parsed, dict):
         user_edn.update(user_config_edn_parsed)
-
     global_edn = {}
     if global_config_path := args.global_config:
         graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
         global_config_edn_parsed = get_edn_from_file(graph_dirs.global_config.path)
         if isinstance(global_config_edn_parsed, dict):
             global_edn.update(global_config_edn_parsed)
-
     logger.debug("setup_config_edns")
     return ConfigEdns(
         config=default_edn | user_edn | global_edn,
@@ -246,35 +244,27 @@ def analyze(
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     yield OutputDir.GRAPH, logseq_graph.report
-
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
     yield OutputDir.NAMESPACES, logseq_namespaces.report
-
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links)
     yield OutputDir.JOURNALS, logseq_journals.report
-
     logseq_assets_hls = LogseqAssetsHls(index)
     yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
-
     logseq_assets = LogseqAssets(index)
     yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
-
     moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
     yield OutputDir.MOVED_FILES, moved_files
-
     logseq_file_summarizer = LogseqFileSummarizer(index)
     yield OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general
     yield OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes
     yield OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes
     yield OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions
-
     logseq_content_summarizer = LogseqContentSummarizer(index)
     yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.size_report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.timestamp_report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.namespace_report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.bullet_report
-
     yield OutputDir.INDEX, index.report
     logger.debug("analyze")
 
@@ -290,33 +280,24 @@ def write_reports(data_reports: Iterator[tuple[str, Any]]) -> None:
 def run_app(**gui_args: Any) -> None:
     """Run the Logseq analyzer."""
     progress = gui_args.pop("progress_callback", GUIInstanceDummy().update_progress)
-
     progress(10, "Starting Logseq Analyzer...")
     args = Args()
     if gui_args:
         args.set_gui_args(gui_args)
     else:
         args.set_cli_args()
-
     progress(30, "Setting up Logseq Analyzer configurations...")
     analyzer_dirs, config_edns, journal_formats = init_configs(args)
-
     progress(40, "Configure Logseq Analyzer settings...")
     configure_analyzer_settings(args, analyzer_dirs, config_edns, journal_formats)
-
     progress(50, "Setup cache...")
     cache, index = setup_cache()
-
     progress(60, "Process Logseq graph...")
     process_graph(index, cache)
-
     progress(70, "Write meta reports...")
     write_reports(report_configurations(args, analyzer_dirs, config_edns))
-
     progress(80, "Running core analysis on Logseq graph...")
     write_reports(analyze(args, index, analyzer_dirs))
-
     progress(90, "Finalizing analysis...")
     cache.close(index)
-
     progress(100, "Logseq Analyzer completed successfully.")

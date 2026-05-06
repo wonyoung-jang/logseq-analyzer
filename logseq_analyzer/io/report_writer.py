@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
     from logseq_analyzer.config.arguments import Args
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
-
 logger = logging.getLogger(__name__)
 
 

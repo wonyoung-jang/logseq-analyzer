@@ -6,9 +6,8 @@ from PySide6.QtCore import QThread, Signal
 
 from logseq_analyzer.app import run_app
 
+
 # ruff: noqa: FBT003
-
-
 class AnalysisWorker(QThread):
     """Thread worker for running the Logseq Analyzer application."""
 

@@ -5,14 +5,14 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+import logseq_analyzer.patterns.adv_cmd as adv_cmd_ptns
+import logseq_analyzer.patterns.code as cde_ptns
+import logseq_analyzer.patterns.content as content_patterns
+import logseq_analyzer.patterns.double_curly as dbl_crly_br_ptns
+import logseq_analyzer.patterns.double_parentheses as dbl_prn_ptns
+import logseq_analyzer.patterns.embedded_links as emb_lnk_ptns
+import logseq_analyzer.patterns.external_links as ext_lnk_ptns
 from logseq_analyzer.logseq_file.info import BulletInfo
-from logseq_analyzer.patterns import adv_cmd as advanced_command_patterns
-from logseq_analyzer.patterns import code as code_patterns
-from logseq_analyzer.patterns import content as content_patterns
-from logseq_analyzer.patterns import double_curly as double_curly_brackets_patterns
-from logseq_analyzer.patterns import double_parentheses as double_parentheses_patterns
-from logseq_analyzer.patterns import embedded_links as embedded_links_patterns
-from logseq_analyzer.patterns import external_links as external_links_patterns
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
 from logseq_analyzer.utils.helpers import (
     BUILT_IN_PROPERTIES,
@@ -27,18 +27,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 RAW_DATA_MAP = {
-    CritCode.INLINE: code_patterns.INLINE_CODE_BLOCK,
+    CritCode.INLINE: cde_ptns.INLINE_CODE_BLOCK,
     CritContent.ANY_LINKS: content_patterns.ANY_LINK,
     CritContent.ASSETS: content_patterns.ASSET,
 }
-
 PATTERN_MODULES = (
-    advanced_command_patterns,
-    code_patterns,
-    double_curly_brackets_patterns,
-    double_parentheses_patterns,
-    embedded_links_patterns,
-    external_links_patterns,
+    (adv_cmd_ptns.ALL, adv_cmd_ptns.PATTERN_MAP, adv_cmd_ptns.FALLBACK),
+    (cde_ptns.ALL, cde_ptns.PATTERN_MAP, cde_ptns.FALLBACK),
+    (dbl_crly_br_ptns.ALL, dbl_crly_br_ptns.PATTERN_MAP, dbl_crly_br_ptns.FALLBACK),
+    (dbl_prn_ptns.ALL, dbl_prn_ptns.PATTERN_MAP, dbl_prn_ptns.FALLBACK),
+    (emb_lnk_ptns.ALL, emb_lnk_ptns.PATTERN_MAP, emb_lnk_ptns.FALLBACK),
+    (ext_lnk_ptns.ALL, ext_lnk_ptns.PATTERN_MAP, ext_lnk_ptns.FALLBACK),
 )
 
 
@@ -86,14 +85,11 @@ class LogseqBullets:
         _all_bullets = self.all_bullets
         primary_bullet = self.primary
         find_all_properties = content_patterns.PROPERTY.findall
-
         if primary_bullet and not primary_bullet.startswith("#"):
             page_props.update(find_all_properties(primary_bullet))
             _content = "\n".join(_all_bullets)
             self.content = _content
-
         block_props = set(find_all_properties(_content))
-
         for key, value in {
             CritProp.BLOCK_BUILTIN: block_props.intersection(BUILT_IN_PROPERTIES),
             CritProp.BLOCK_USER: block_props.difference(BUILT_IN_PROPERTIES),
@@ -118,14 +114,11 @@ class LogseqBullets:
 
     def extract_patterns(self) -> Iterator[tuple[str, Any]]:
         """Process patterns in the content."""
-        _content = self.content
-        temp_map = defaultdict(list)
-        for pattern in PATTERN_MODULES:
-            for key, value in process_pattern_hierarchy(_content, pattern):
-                temp_map[key].append(value)
-
-        if not temp_map:
+        _temp_map = defaultdict(list)
+        for all_pattern, pattern_map, fallback in PATTERN_MODULES:
+            for key, value in process_pattern_hierarchy(self.content, all_pattern, pattern_map, fallback):
+                _temp_map[key].append(value)
+        if not _temp_map:
             return
-
-        for key, values in temp_map.items():
+        for key, values in _temp_map.items():
             yield key, values

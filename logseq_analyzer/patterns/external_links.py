@@ -12,7 +12,6 @@ ALL = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 INTERNET = re.compile(
     r"""
     (?<!\!)             # Negative lookbehind: not preceded by !
@@ -35,7 +34,6 @@ INTERNET = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 ALIAS = re.compile(
     r"""
     (?<!\!)             # Negative lookbehind: not preceded by !
@@ -49,10 +47,8 @@ ALIAS = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PATTERN_MAP = {
     INTERNET: CritExt.INTERNET,
     ALIAS: CritExt.ALIAS,
 }
-
 FALLBACK = CritExt.OTHER

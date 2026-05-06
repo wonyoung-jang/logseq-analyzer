@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
     from logseq_analyzer.config.arguments import Args
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
-
 logger = logging.getLogger(__name__)
 
 
@@ -86,7 +85,6 @@ class Cache:
         mod_tracker = {}
         if CacheKey.MOD_TRACKER in self.cache:
             mod_tracker = self.cache[CacheKey.MOD_TRACKER]
-
         file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
         for path in file_iter:
             str_path = str(path)
@@ -95,5 +93,4 @@ class Cache:
                 continue
             mod_tracker[str_path] = curr_date_mod
             yield path
-
         self.cache[CacheKey.MOD_TRACKER] = mod_tracker

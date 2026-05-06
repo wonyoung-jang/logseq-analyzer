@@ -14,7 +14,6 @@ ALL = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 EXPORT = re.compile(
     r"""
     \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT"
@@ -25,33 +24,30 @@ EXPORT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 EXPORT_ASCII = re.compile(
     r"""
-    \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT ascii"
-    \s{1}                   # Single space
-    ascii                   # "ascii"
-    .*?                     # Any characters (non-greedy)
-    \#\+END_EXPORT          # "#+END_EXPORT"
-    .*?                     # Any characters (non-greedy)
-    (?:\n|$)                # Newline or end-of-file
+    \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT ascii"
+    \s{1}               # Single space
+    ascii               # "ascii"
+    .*?                 # Any characters (non-greedy)
+    \#\+END_EXPORT      # "#+END_EXPORT"
+    .*?                 # Any characters (non-greedy)
+    (?:\n|$)            # Newline or end-of-file
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 EXPORT_LATEX = re.compile(
     r"""
-    \#\+BEGIN_EXPORT        # "#+BEGIN_EXPORT latex"
-    \s{1}                   # Single space
-    latex                   # "latex"
-    .*?                     # Any characters (non-greedy)
-    \#\+END_EXPORT          # "#+END_EXPORT"
-    .*?                     # Any characters (non-greedy)
-    (?:\n|$)                # Newline or end-of-file
+    \#\+BEGIN_EXPORT    # "#+BEGIN_EXPORT latex"
+    \s{1}               # Single space
+    latex               # "latex"
+    .*?                 # Any characters (non-greedy)
+    \#\+END_EXPORT      # "#+END_EXPORT"
+    .*?                 # Any characters (non-greedy)
+    (?:\n|$)            # Newline or end-of-file
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 CAUTION = re.compile(
     r"""
     \#\+BEGIN_CAUTION   # "#+BEGIN_CAUTION"
@@ -62,7 +58,6 @@ CAUTION = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 CENTER = re.compile(
     r"""
     \#\+BEGIN_CENTER    # "#+BEGIN_CENTER"
@@ -73,7 +68,6 @@ CENTER = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 COMMENT = re.compile(
     r"""
     \#\+BEGIN_COMMENT   # "#+BEGIN_COMMENT"
@@ -84,7 +78,6 @@ COMMENT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 EXAMPLE = re.compile(
     r"""
     \#\+BEGIN_EXAMPLE   # "#+BEGIN_EXAMPLE"
@@ -95,7 +88,6 @@ EXAMPLE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 IMPORTANT = re.compile(
     r"""
     \#\+BEGIN_IMPORTANT # "#+BEGIN_IMPORTANT"
@@ -106,7 +98,6 @@ IMPORTANT = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 NOTE = re.compile(
     r"""
     \#\+BEGIN_NOTE      # "#+BEGIN_NOTE"
@@ -117,7 +108,6 @@ NOTE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 PINNED = re.compile(
     r"""
     \#\+BEGIN_PINNED    # "#+BEGIN_PINNED"
@@ -128,7 +118,6 @@ PINNED = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 QUERY = re.compile(
     r"""
     \#\+BEGIN_QUERY     # "#+BEGIN_QUERY"
@@ -139,7 +128,6 @@ QUERY = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 QUOTE = re.compile(
     r"""
     \#\+BEGIN_QUOTE     # "#+BEGIN_QUOTE"
@@ -150,7 +138,6 @@ QUOTE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 TIP = re.compile(
     r"""
     \#\+BEGIN_TIP       # "#+BEGIN_TIP"
@@ -161,7 +148,6 @@ TIP = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 VERSE = re.compile(
     r"""
     \#\+BEGIN_VERSE     # "#+BEGIN_VERSE"
@@ -172,7 +158,6 @@ VERSE = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
 WARNING = re.compile(
     r"""
     \#\+BEGIN_WARNING   # "#+BEGIN_WARNING"
@@ -183,8 +168,7 @@ WARNING = re.compile(
     """,
     re.DOTALL | re.IGNORECASE | re.VERBOSE,
 )
-
-PATTERN_MAP = {
+PATTERN_MAP: dict[re.Pattern[str], CritAdvCmd] = {
     EXPORT_ASCII: CritAdvCmd.EXPORT_ASCII,
     EXPORT_LATEX: CritAdvCmd.EXPORT_LATEX,
     EXPORT: CritAdvCmd.EXPORT,
@@ -201,5 +185,4 @@ PATTERN_MAP = {
     VERSE: CritAdvCmd.VERSE,
     WARNING: CritAdvCmd.WARNING,
 }
-
 FALLBACK = CritAdvCmd.ALL

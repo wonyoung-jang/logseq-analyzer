@@ -13,7 +13,6 @@ ALL = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 BLOCK_REFERENCE = re.compile(
     r"""
     (?<!\{\{embed\ )    # Negative lookbehind: not preceded by "{{embed "
@@ -27,9 +26,7 @@ BLOCK_REFERENCE = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
-
 PATTERN_MAP = {
     BLOCK_REFERENCE: CritDblParen.BLOCK_REFS,
 }
-
 FALLBACK = CritDblParen.ALL_REFS

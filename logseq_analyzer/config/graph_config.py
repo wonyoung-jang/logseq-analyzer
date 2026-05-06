@@ -11,12 +11,8 @@ from logseq_analyzer.utils.enums import ConfigEdnReport, Core, Edn, TargetDir
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
-
 logger = logging.getLogger(__name__)
-
-
 type EDNToken = Any | None | dict | list | set | bool | float | int | ast.AST
-
 TOKEN_REGEX: re.Pattern = re.compile(
     r"""
     "(?:\\.|[^"\\])*"         | # strings
@@ -95,23 +91,17 @@ class LogseqConfigEDN:
         if tok is None:
             msg = "Unexpected end of EDN input"
             raise ValueError(msg)
-
         if isinstance(tok, str):
             if tok in self.tok_map:
                 return self.tok_map[tok]()
-
             if tok.startswith('"'):
                 return self.parse_string()
-
             if tok in ("true", "false", "nil"):
                 return self.parse_literal()
-
             if tok.startswith(":"):
                 return self.parse_keyword()
-
         if self.is_number(tok, NUMBER_REGEX):
             return self.parse_number()
-
         return self.parse_symbol()
 
     def parse_map(self) -> dict:

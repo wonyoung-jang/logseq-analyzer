@@ -53,7 +53,6 @@ def test_main_window_layout(main_window: LogseqAnalyzerGUI) -> None:
     layout = main_window.layout()
     assert layout is not None
     assert layout.count() > 0
-
     layout_item_0 = layout.itemAt(0)
     assert layout_item_0 is not None
     assert layout_item_0.widget() is not None
