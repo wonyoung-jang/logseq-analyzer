@@ -16,7 +16,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.patterns.content as content_patterns
+from logseq_analyzer.patterns.content import ContentPatterns
 from logseq_analyzer.utils.enums import Core, CritDblCurly, Output
 from logseq_analyzer.utils.helpers import sort_dict_by_value
 
@@ -97,10 +97,10 @@ class LogseqNamespaces:
             if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERIES)):
                 continue
             for query in queries:
-                if not content_patterns.PAGE_REFERENCE.search(query):
+                if not ContentPatterns.PAGE_REFERENCE.search(query):
                     logger.warning("Invalid query found: %s", query)
                     continue
-                page_refs = content_patterns.PAGE_REFERENCE.findall(query)
+                page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
                 if len(page_refs) != 1:
                     logger.warning("Invalid references found in query: %s", query)
                     continue

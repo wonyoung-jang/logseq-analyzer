@@ -4,11 +4,11 @@ import uuid
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import logseq_analyzer.patterns.content as content_patterns
 from logseq_analyzer.logseq_file.bullets import LogseqBullets
 from logseq_analyzer.logseq_file.info import LogseqFileInfo, NodeType
 from logseq_analyzer.logseq_file.stats import LogseqPath
-from logseq_analyzer.patterns import adv_cmd, code
+from logseq_analyzer.patterns.content import ContentPatterns
+from logseq_analyzer.patterns.patterns import AdvCmdPatterns, CodePatterns
 from logseq_analyzer.utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
 
 if TYPE_CHECKING:
@@ -29,19 +29,19 @@ BACKLINK_CRITERIA: frozenset[str] = frozenset(
     }
 )
 PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
-    CritContent.BLOCKQUOTES: content_patterns.BLOCKQUOTE,
-    CritContent.DRAW: content_patterns.DRAW,
-    CritContent.FLASHCARD: content_patterns.FLASHCARD,
-    CritContent.PAGE_REF: content_patterns.PAGE_REFERENCE,
-    CritContent.TAGGED_BACKLINK: content_patterns.TAGGED_BACKLINK,
-    CritContent.TAG: content_patterns.TAG,
-    CritContent.DYNAMIC_VAR: content_patterns.DYNAMIC_VARIABLE,
+    CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+    CritContent.DRAW: ContentPatterns.DRAW,
+    CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
+    CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+    CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+    CritContent.TAG: ContentPatterns.TAG,
+    CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
 }
 PATTERN_MASKING = (
-    (code.ALL.sub, f"__{CritCode.ML_ALL}_"),
-    (code.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
-    (adv_cmd.ALL.sub, f"__{CritAdvCmd.ALL}_"),
-    (content_patterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
+    (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
+    (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
+    (AdvCmdPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
+    (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
 )
 
 

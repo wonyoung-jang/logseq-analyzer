@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-import logseq_analyzer.patterns.content as content_patterns
+from logseq_analyzer.patterns.content import ContentPatterns
 from logseq_analyzer.utils.enums import CritContent, CritEmb, FileType, Output
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class LogseqAssetsHls:
                 if not bullet.strip().startswith("[:span]"):
                     continue
                 hl_page, id_, hl_stamp = "", "", ""
-                for prop_value in content_patterns.PROPERTY_VALUE.finditer(bullet):
+                for prop_value in ContentPatterns.PROPERTY_VALUE.finditer(bullet):
                     propkey = prop_value.group(1)
                     value = prop_value.group(2).strip()
                     match propkey:
