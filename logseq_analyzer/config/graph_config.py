@@ -4,15 +4,19 @@ import ast
 import logging
 import re
 from dataclasses import InitVar, dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import ConfigEdnReport, Core, Edn, TargetDir
+from logseq_analyzer.utils.enums import Core, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
+
 logger = logging.getLogger(__name__)
+
 type EDNToken = Any | None | dict | list | set | bool | float | int | ast.AST
+
 TOKEN_REGEX: re.Pattern = re.compile(
     r"""
     "(?:\\.|[^"\\])*"         | # strings
@@ -26,6 +30,20 @@ COMMENT_REGEX: re.Pattern = re.compile(r";.*")
 NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
 
+class Edn(StrEnum):
+    """Enum for EDN data types."""
+
+    FILE_NAME_FORMAT = ":journal/file-name-format"
+    FILE_NAME_FORMAT_DEFAULT = "yyyy_MM_dd"
+    JOURNALS_DIR = ":journals-directory"
+    NS_FILE = ":file/name-format"
+    PAGE_TITLE_FORMAT = ":journal/page-title-format"
+    PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
+    PAGES_DIR = ":pages-directory"
+    PROP_PAGES = ":property-pages/enabled?"
+    WHITEBOARDS_DIR = ":whiteboards-directory"
+
+
 @dataclass(slots=True)
 class ConfigEdns:
     """Configuration EDN files for the Logseq analyzer."""
@@ -35,15 +53,24 @@ class ConfigEdns:
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
 
+    class ConfigEdnReport(StrEnum):
+        """Configuration EDN reports for the Logseq Analyzer."""
+
+        CONFIG_EDN = "config_edns"
+        EDN_DEFAULT = "edn_default"
+        EDN_USER = "edn_user"
+        EDN_GLOBAL = "edn_global"
+        EDN_CONFIG = "edn_config"
+
     @property
     def report(self) -> dict[ConfigEdnReport, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            ConfigEdnReport.CONFIG_EDN: {
-                ConfigEdnReport.EDN_DEFAULT: self.default_edn,
-                ConfigEdnReport.EDN_USER: self.user_edn,
-                ConfigEdnReport.EDN_GLOBAL: self.global_edn,
-                ConfigEdnReport.EDN_CONFIG: self.config,
+            self.ConfigEdnReport.CONFIG_EDN: {
+                self.ConfigEdnReport.EDN_DEFAULT: self.default_edn,
+                self.ConfigEdnReport.EDN_USER: self.user_edn,
+                self.ConfigEdnReport.EDN_GLOBAL: self.global_edn,
+                self.ConfigEdnReport.EDN_CONFIG: self.config,
             }
         }
 

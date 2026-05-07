@@ -3,6 +3,7 @@
 import logging
 import shutil
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -50,7 +51,7 @@ from logseq_analyzer.logseq_file.file import LogseqFile, LogseqPath
 from logseq_analyzer.logseq_file.info import JournalFormats
 from logseq_analyzer.logseq_file.stats import LogseqFileName
 from logseq_analyzer.utils.date_utilities import DateUtilities
-from logseq_analyzer.utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
+from logseq_analyzer.utils.enums import Constant, Output, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -113,6 +114,15 @@ def _setup_delete_dirs() -> AnalyzerDeleteDirs:
         delete_recycle_dir=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
         delete_assets_dir=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
     )
+
+
+class LogseqGraphStructure(StrEnum):
+    """Logseq graph structure components."""
+
+    BAK = "bak"
+    CONFIG_EDN = "config.edn"
+    LOGSEQ = "logseq"
+    RECYCLE = ".recycle"
 
 
 def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:
@@ -245,6 +255,15 @@ def _process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> li
     return names
 
 
+class Moved(StrEnum):
+    """Moved files and directories in the Logseq Analyzer."""
+
+    ASSETS = "assets"
+    BAK = "bak"
+    RECYCLE = "recycle"
+    SIMULATED_PREFIX = "======== Simulated only ========"
+
+
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
     """Set up LogseqFileMover for moving files and directories."""
 
@@ -274,6 +293,25 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES: moved_files_report}
+
+
+class OutputDir(StrEnum):
+    """Output directories for the Logseq Analyzer."""
+
+    GRAPH = "graph"
+    INDEX = "index"
+    JOURNALS = "journals"
+    META = "_meta"
+    MOVED_FILES = "moved_files"
+    MOVED_FILES_ASSETS = "moved_files/assets"
+    MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
+    NAMESPACES = "namespaces"
+    SUMMARY_CONTENT = "summary_content"
+    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
+    SUMMARY_FILES_FILE = "summary_files/file_types"
+    SUMMARY_FILES_GENERAL = "summary_files/general"
+    SUMMARY_FILES_NODE = "summary_files/node_types"
+    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
 
 
 def report_configurations(

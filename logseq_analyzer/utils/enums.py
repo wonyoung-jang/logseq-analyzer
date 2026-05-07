@@ -3,16 +3,6 @@
 from enum import StrEnum
 
 
-class ConfigEdnReport(StrEnum):
-    """Configuration EDN reports for the Logseq Analyzer."""
-
-    CONFIG_EDN = "config_edns"
-    EDN_DEFAULT = "edn_default"
-    EDN_USER = "edn_user"
-    EDN_GLOBAL = "edn_global"
-    EDN_CONFIG = "edn_config"
-
-
 class Constant(StrEnum):
     """Constants used in the Logseq Analyzer."""
 
@@ -133,20 +123,6 @@ class CritProp(StrEnum):
     VALUES = "property_values"
 
 
-class Edn(StrEnum):
-    """Enum for EDN data types."""
-
-    FILE_NAME_FORMAT = ":journal/file-name-format"
-    FILE_NAME_FORMAT_DEFAULT = "yyyy_MM_dd"
-    JOURNALS_DIR = ":journals-directory"
-    NS_FILE = ":file/name-format"
-    PAGE_TITLE_FORMAT = ":journal/page-title-format"
-    PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
-    PAGES_DIR = ":pages-directory"
-    PROP_PAGES = ":property-pages/enabled?"
-    WHITEBOARDS_DIR = ":whiteboards-directory"
-
-
 class FileType(StrEnum):
     """File types for the Logseq Analyzer."""
 
@@ -171,24 +147,6 @@ class Format(StrEnum):
     MD = "md"
     ORG = "org"
     TXT = "txt"
-
-
-class LogseqGraphStructure(StrEnum):
-    """Logseq graph structure components."""
-
-    BAK = "bak"
-    CONFIG_EDN = "config.edn"
-    LOGSEQ = "logseq"
-    RECYCLE = ".recycle"
-
-
-class Moved(StrEnum):
-    """Moved files and directories in the Logseq Analyzer."""
-
-    ASSETS = "assets"
-    BAK = "bak"
-    RECYCLE = "recycle"
-    SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 class Output(StrEnum):
@@ -232,25 +190,6 @@ class Output(StrEnum):
     NS_QUERIES = "ns_queries"
     NS_UNIQUE_PARTS = "ns_unique_parts"
     NS_UNIQUE_PER_LEVEL = "ns_unique_per_level"
-
-
-class OutputDir(StrEnum):
-    """Output directories for the Logseq Analyzer."""
-
-    GRAPH = "graph"
-    INDEX = "index"
-    JOURNALS = "journals"
-    META = "_meta"
-    MOVED_FILES = "moved_files"
-    MOVED_FILES_ASSETS = "moved_files/assets"
-    MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
-    NAMESPACES = "namespaces"
-    SUMMARY_CONTENT = "summary_content"
-    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
-    SUMMARY_FILES_FILE = "summary_files/file_types"
-    SUMMARY_FILES_GENERAL = "summary_files/general"
-    SUMMARY_FILES_NODE = "summary_files/node_types"
-    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
 
 
 class TargetDir(StrEnum):
