@@ -2,11 +2,10 @@
 
 import logging
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
-
-from logseq_analyzer.utils.enums import Constant, DirsAnalyzer, DirsDelete, DirsGraph
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +23,6 @@ class File:
         """Initialize the File class with a path."""
         if not isinstance(self.path, Path):
             self.path = Path(self.path)
-        self.startup()
-        logger.info("File initialized: %s", self.path)
-
-    def startup(self) -> None:
-        """Perform startup operations for the File object."""
         if self.must_exist:
             self.validate()
         if self.clean_on_init and self.path.exists():
@@ -36,6 +30,7 @@ class File:
         self.make_if_missing()
         if not (self.must_exist or self.clean_on_init):
             self.validate()
+        logger.info("File initialized: %s", self.path)
 
     def validate(self) -> None:
         """Validate the file path."""
@@ -84,208 +79,73 @@ class File:
             logger.exception("Error creating path")
 
 
-@dataclass(slots=True)
-class OutputDirectory(File):
-    """Class to handle the output directory for the Logseq Analyzer."""
+def _file_cls(name: str, *, is_dir: bool = False, must_exist: bool = False, clean_on_init: bool = False) -> type[File]:
+    """File subclass with preset flags."""
 
-    def __post_init__(self) -> None:
-        """Post-initialization for OutputDirectory."""
-        self.clean_on_init = True
-        self.is_dir = True
-        return super().__post_init__()
+    class _C(File):
+        def __post_init__(self) -> None:
+            self.is_dir = is_dir
+            self.must_exist = must_exist
+            self.clean_on_init = clean_on_init
+            super().__post_init__()
 
-
-@dataclass(slots=True)
-class LogFile(File):
-    """Class to handle the log file for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for LogFile."""
-        return super().__post_init__()
+    _C.__name__ = _C.__qualname__ = name
+    return _C
 
 
-@dataclass(slots=True)
-class GraphDirectory(File):
-    """Class to handle the graph directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for GraphDirectory."""
-        self.must_exist = True
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class LogseqDirectory(File):
-    """Class to handle the Logseq directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for LogseqDirectory."""
-        self.must_exist = True
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class ConfigFile(File):
-    """Class to handle the config file for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for ConfigFile."""
-        self.must_exist = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class DeleteDirectory(File):
-    """Class to handle the delete directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for DeleteDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class DeleteBakDirectory(File):
-    """Class to handle the delete bak directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for DeleteBakDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class DeleteRecycleDirectory(File):
-    """Class to handle the delete recycle directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for DeleteRecycleDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class DeleteAssetsDirectory(File):
-    """Class to handle the delete assets directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for DeleteAssetsDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class CacheFile(File):
-    """Class to handle the cache file for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for CacheFile."""
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class BakDirectory(File):
-    """Class to handle the bak directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for BakDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class RecycleDirectory(File):
-    """Class to handle the recycle directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for RecycleDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class GlobalConfigFile(File):
-    """Class to handle the global config file for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for GlobalConfigFile."""
-        self.must_exist = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class AssetsDirectory(File):
-    """Class to handle the assets directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for AssetsDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class DrawsDirectory(File):
-    """Class to handle the draws directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for DrawsDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class JournalsDirectory(File):
-    """Class to handle the journals directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for JournalsDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class PagesDirectory(File):
-    """Class to handle the pages directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for PagesDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
-
-
-@dataclass(slots=True)
-class WhiteboardsDirectory(File):
-    """Class to handle the whiteboards directory for the Logseq Analyzer."""
-
-    def __post_init__(self) -> None:
-        """Post-initialization for WhiteboardsDirectory."""
-        self.is_dir = True
-        return super().__post_init__()
+# fmt: off
+OutputDirectory         = _file_cls("OutputDirectory",         is_dir=True, clean_on_init=True)
+LogFile                 = _file_cls("LogFile")
+GraphDirectory          = _file_cls("GraphDirectory",          is_dir=True, must_exist=True)
+LogseqDirectory         = _file_cls("LogseqDirectory",         is_dir=True, must_exist=True)
+ConfigFile              = _file_cls("ConfigFile",              must_exist=True)
+GlobalConfigFile        = _file_cls("GlobalConfigFile",        must_exist=True)
+CacheFile               = _file_cls("CacheFile")
+BakDirectory            = _file_cls("BakDirectory",            is_dir=True)
+RecycleDirectory        = _file_cls("RecycleDirectory",        is_dir=True)
+AssetsDirectory         = _file_cls("AssetsDirectory",         is_dir=True)
+DrawsDirectory          = _file_cls("DrawsDirectory",          is_dir=True)
+JournalsDirectory       = _file_cls("JournalsDirectory",       is_dir=True)
+PagesDirectory          = _file_cls("PagesDirectory",          is_dir=True)
+WhiteboardsDirectory    = _file_cls("WhiteboardsDirectory",    is_dir=True)
+DeleteDirectory         = _file_cls("DeleteDirectory",         is_dir=True)
+DeleteBakDirectory      = _file_cls("DeleteBakDirectory",      is_dir=True)
+DeleteRecycleDirectory  = _file_cls("DeleteRecycleDirectory",  is_dir=True)
+DeleteAssetsDirectory   = _file_cls("DeleteAssetsDirectory",   is_dir=True)
+# fmt: on
 
 
 @dataclass(slots=True)
 class LogseqGraphDirs:
     """Directories related to the Logseq graph."""
 
-    graph_dir: GraphDirectory
-    logseq_dir: LogseqDirectory
-    bak_dir: BakDirectory
-    recycle_dir: RecycleDirectory
-    user_config: ConfigFile
-    global_config: GlobalConfigFile | None = None
+    graph_dir: File
+    logseq_dir: File
+    bak_dir: File
+    recycle_dir: File
+    user_config: File
+    global_config: File | None = None
+
+    class Dirname(StrEnum):
+        """Directories in the Logseq graph structure."""
+
+        GRAPH = "graph"
+        LOGSEQ = "graph/logseq"
+        BAK = "graph/logseq/bak"
+        RECYCLE = "graph/logseq/.recycle"
+        USER_CONFIG = "graph/logseq/config.edn"
+        GLOBAL_CONFIG = "global-config.edn"
 
     @property
-    def report(self) -> dict[DirsGraph, Any]:
+    def report(self) -> dict[Dirname, Any]:
         """Generate a report of the Logseq graph directories."""
         return {
-            DirsGraph.GRAPH: self.graph_dir,
-            DirsGraph.LOGSEQ: self.logseq_dir,
-            DirsGraph.BAK: self.bak_dir,
-            DirsGraph.RECYCLE: self.recycle_dir,
-            DirsGraph.USER_CONFIG: self.user_config,
-            DirsGraph.GLOBAL_CONFIG: self.global_config,
+            self.Dirname.GRAPH: self.graph_dir,
+            self.Dirname.LOGSEQ: self.logseq_dir,
+            self.Dirname.BAK: self.bak_dir,
+            self.Dirname.RECYCLE: self.recycle_dir,
+            self.Dirname.USER_CONFIG: self.user_config,
+            self.Dirname.GLOBAL_CONFIG: self.global_config,
         }
 
 
@@ -293,26 +153,27 @@ class LogseqGraphDirs:
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
-    delete_dir: DeleteDirectory = field(init=False)
-    delete_bak_dir: DeleteBakDirectory = field(init=False)
-    delete_recycle_dir: DeleteRecycleDirectory = field(init=False)
-    delete_assets_dir: DeleteAssetsDirectory = field(init=False)
+    delete_dir: File
+    delete_bak_dir: File
+    delete_recycle_dir: File
+    delete_assets_dir: File
 
-    def __post_init__(self) -> None:
-        """Initialize the AnalyzerDeleteDirs class."""
-        self.delete_dir = DeleteDirectory(Path(Constant.TO_DELETE_DIR))
-        self.delete_bak_dir = DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR))
-        self.delete_recycle_dir = DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR))
-        self.delete_assets_dir = DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR))
+    class Dirname(StrEnum):
+        """Directories to be deleted in the Logseq Analyzer."""
+
+        DELETE = "to-delete"
+        ASSETS = "to-delete/assets"
+        BAK = "to-delete/bak"
+        RECYCLE = "to-delete/.recycle"
 
     @property
-    def report(self) -> dict[DirsDelete, Any]:
+    def report(self) -> dict[Dirname, Any]:
         """Generate a report of the analyzer delete directories."""
         return {
-            DirsDelete.DELETE: self.delete_dir,
-            DirsDelete.BAK: self.delete_bak_dir,
-            DirsDelete.RECYCLE: self.delete_recycle_dir,
-            DirsDelete.ASSETS: self.delete_assets_dir,
+            self.Dirname.DELETE: self.delete_dir,
+            self.Dirname.BAK: self.delete_bak_dir,
+            self.Dirname.RECYCLE: self.delete_recycle_dir,
+            self.Dirname.ASSETS: self.delete_assets_dir,
         }
 
 
@@ -323,16 +184,25 @@ class LogseqAnalyzerDirs:
     graph_dirs: LogseqGraphDirs
     delete_dirs: AnalyzerDeleteDirs
     target_dirs: dict[str, str]
-    output_dir: OutputDirectory
+    output_dir: File
+
+    class DirsAnalyzer(StrEnum):
+        """Directories used in the Logseq Analyzer."""
+
+        DIRS = "logseq_analyzer_dirs"
+        GRAPH = "graph_dirs"
+        DELETE = "delete_dirs"
+        TARGET = "target_dirs"
+        OUTPUT = "output_dir"
 
     @property
     def report(self) -> dict[DirsAnalyzer, dict[DirsAnalyzer, Any]]:
         """Generate a report of the Logseq analyzer directories."""
         return {
-            DirsAnalyzer.DIRS: {
-                DirsAnalyzer.GRAPH: self.graph_dirs.report,
-                DirsAnalyzer.DELETE: self.delete_dirs.report,
-                DirsAnalyzer.TARGET: self.target_dirs,
-                DirsAnalyzer.OUTPUT: self.output_dir,
+            self.DirsAnalyzer.DIRS: {
+                self.DirsAnalyzer.GRAPH: self.graph_dirs.report,
+                self.DirsAnalyzer.DELETE: self.delete_dirs.report,
+                self.DirsAnalyzer.TARGET: self.target_dirs,
+                self.DirsAnalyzer.OUTPUT: self.output_dir,
             }
         }

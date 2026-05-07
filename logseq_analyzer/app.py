@@ -28,6 +28,10 @@ from logseq_analyzer.io.filesystem import (
     BakDirectory,
     CacheFile,
     ConfigFile,
+    DeleteAssetsDirectory,
+    DeleteBakDirectory,
+    DeleteDirectory,
+    DeleteRecycleDirectory,
     DrawsDirectory,
     GlobalConfigFile,
     GraphDirectory,
@@ -93,12 +97,22 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     _ensure_target_dirs(graph_dirs, target_dirs)
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
-        delete_dirs=AnalyzerDeleteDirs(),
+        delete_dirs=_setup_delete_dirs(),
         target_dirs=target_dirs,
         output_dir=OutputDirectory(Path(Constant.OUTPUT_DIR)),
     )
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
+
+
+def _setup_delete_dirs() -> AnalyzerDeleteDirs:
+    """Set up the directories for deleting files."""
+    return AnalyzerDeleteDirs(
+        delete_dir=DeleteDirectory(Path(Constant.TO_DELETE_DIR)),
+        delete_bak_dir=DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR)),
+        delete_recycle_dir=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
+        delete_assets_dir=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
+    )
 
 
 def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:

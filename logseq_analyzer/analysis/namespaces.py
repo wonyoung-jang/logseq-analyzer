@@ -94,7 +94,7 @@ class LogseqNamespaces:
         for f in self.index:
             if not (f_data := f.data):
                 continue
-            if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERIES)):
+            if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERY)):
                 continue
             for query in queries:
                 if not ContentPatterns.PAGE_REFERENCE.search(query):

@@ -128,3 +128,4 @@ class ContentPatterns:
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    INLINE_CODE_BLOCK = re.compile(r"`[^`].+?`", re.IGNORECASE)

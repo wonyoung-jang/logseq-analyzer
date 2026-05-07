@@ -86,18 +86,18 @@ class CritDblCurly(StrEnum):
     """Criteria for double curly brackets in Logseq."""
 
     ALL = "double_curly_all_or_macros"
-    BLOCK_EMBEDS = "double_curly_block_embeds"
-    CARDS = "double_curly_cards"
-    CLOZES = "double_curly_clozes"
-    EMBEDS = "double_curly_embeds"
-    NAMESPACE_QUERIES = "double_curly_namespace_queries"
-    PAGE_EMBEDS = "double_curly_page_embeds"
-    QUERY_FUNCTIONS = "double_curly_query_functions"
-    RENDERERS = "double_curly_renderers"
-    SIMPLE_QUERIES = "double_curly_simple_queries"
-    TWITTER_TWEETS = "double_curly_twitter_tweets"
-    VIDEO_URLS = "double_curly_video_urls"
-    YOUTUBE_TIMESTAMPS = "double_curly_youtube_timesteps"
+    BLOCK_EMBED = "double_curly_block_embeds"
+    CARD = "double_curly_cards"
+    CLOZE = "double_curly_clozes"
+    EMBED = "double_curly_embeds"
+    NAMESPACE_QUERY = "double_curly_namespace_queries"
+    PAGE_EMBED = "double_curly_page_embeds"
+    QUERY_FUNCTION = "double_curly_query_functions"
+    RENDERER = "double_curly_renderers"
+    SIMPLE_QUERY = "double_curly_simple_queries"
+    EMBED_TWITTER_TWEET = "double_curly_twitter_tweets"
+    EMBED_VIDEO_URL = "double_curly_video_urls"
+    YOUTUBE_TIMESTAMP = "double_curly_youtube_timesteps"
 
 
 class CritDblParen(StrEnum):
@@ -131,36 +131,6 @@ class CritProp(StrEnum):
     PAGE_BUILTIN = "property_page_builtin"
     PAGE_USER = "property_page_user"
     VALUES = "property_values"
-
-
-class DirsAnalyzer(StrEnum):
-    """Directories used in the Logseq Analyzer."""
-
-    DIRS = "logseq_analyzer_dirs"
-    GRAPH = "graph_dirs"
-    DELETE = "delete_dirs"
-    TARGET = "target_dirs"
-    OUTPUT = "output_dir"
-
-
-class DirsDelete(StrEnum):
-    """Directories to be deleted in the Logseq Analyzer."""
-
-    DELETE = "to-delete"
-    ASSETS = "to-delete/assets"
-    BAK = "to-delete/bak"
-    RECYCLE = "to-delete/.recycle"
-
-
-class DirsGraph(StrEnum):
-    """Directories in the Logseq graph structure."""
-
-    GRAPH = "graph"
-    LOGSEQ = "graph/logseq"
-    BAK = "graph/logseq/bak"
-    RECYCLE = "graph/logseq/.recycle"
-    USER_CONFIG = "graph/logseq/config.edn"
-    GLOBAL_CONFIG = "global-config.edn"
 
 
 class Edn(StrEnum):

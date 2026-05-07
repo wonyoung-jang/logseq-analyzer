@@ -39,7 +39,7 @@ PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
 }
 PATTERN_MASKING = (
     (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
-    (CodePatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
+    (ContentPatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
     (AdvCmdPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
     (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
 )

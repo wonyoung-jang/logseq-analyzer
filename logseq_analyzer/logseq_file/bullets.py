@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.info import BulletInfo
 from logseq_analyzer.patterns.content import ContentPatterns
-from logseq_analyzer.patterns.patterns import PATTERNS, CodePatterns
+from logseq_analyzer.patterns.patterns import PATTERNS
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, iter_pattern_split, process_aliases
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 RAW_DATA_MAP = {
-    CritCode.INLINE: CodePatterns.INLINE_CODE_BLOCK,
+    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
     CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
     CritContent.ASSETS: ContentPatterns.ASSET,
 }
