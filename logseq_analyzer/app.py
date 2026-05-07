@@ -1,6 +1,7 @@
 """Module for main application logic for the Logseq analyzer."""
 
 import logging
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -46,7 +47,6 @@ from logseq_analyzer.logseq_file.info import JournalFormats
 from logseq_analyzer.logseq_file.stats import LogseqFileName
 from logseq_analyzer.utils.date_utilities import DateUtilities
 from logseq_analyzer.utils.enums import Constant, LogseqGraphStructure, Moved, Output, OutputDir, TargetDir
-from logseq_analyzer.utils.helpers import process_moves, yield_asset_paths, yield_bak_rec_paths
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -182,10 +182,7 @@ def setup_cache() -> tuple[Cache, FileIndex]:
 
 
 def configure_analyzer_settings(
-    args: Args,
-    analyzer_dirs: LogseqAnalyzerDirs,
-    config_edns: ConfigEdns,
-    journal_formats: JournalFormats,
+    args: Args, analyzer_dirs: LogseqAnalyzerDirs, config_edns: ConfigEdns, journal_formats: JournalFormats
 ) -> None:
     """Set up the attributes for the LogseqAnalyzer."""
     Cache.configure(args, analyzer_dirs)
@@ -206,29 +203,67 @@ def process_graph(index: FileIndex, cache: Cache) -> None:
     logger.debug("process_graph")
 
 
+def _process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
+    """Process the moving of files to a specified directory.
+
+    Args:
+        target_dir (Path): The directory to move files to.
+        paths (Iterator[Path]): An iterator yielding file paths to move.
+        move (bool): If True, move the files. If False, simulate the move.
+
+    Returns:
+        list[str]: A list of names of the moved files/folders.
+
+    """
+    listpaths = list(paths)
+    names = [path.name for path in listpaths]
+    if not names:
+        return names
+    if not move:
+        return [Moved.SIMULATED_PREFIX, *names]
+    for src in listpaths:
+        dest = target_dir / src.name
+        try:
+            shutil.move(src, dest)
+            logger.warning("Moved file: %s to %s", src, dest)
+        except shutil.Error, OSError:
+            logger.exception("Failed to move file: %s to %s", src, dest)
+    return names
+
+
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
     """Set up LogseqFileMover for moving files and directories."""
+
+    def _yield_asset(unlinked_assets: set[LogseqFile]) -> Iterator[Path]:
+        """Yield the file paths of unlinked assets."""
+        for asset in unlinked_assets:
+            yield asset.path.file
+
+    def _yield_bakrec(source_dir: Path) -> Iterator[Path]:
+        """Yield the file paths of bak and recycle directories."""
+        for root, dirs, files in Path.walk(source_dir):
+            for name in dirs + files:
+                yield root / name
+
     dd = analyzer_dirs.delete_dirs
     gd = analyzer_dirs.graph_dirs
     target_asset = dd.delete_assets_dir.path
     target_bak = dd.delete_bak_dir.path
     target_rec = dd.delete_recycle_dir.path
-    asset_paths = yield_asset_paths(lsa.not_backlinked)
-    bak_paths = yield_bak_rec_paths(gd.bak_dir.path)
-    rec_paths = yield_bak_rec_paths(gd.recycle_dir.path)
+    asset_paths = _yield_asset(lsa.not_backlinked)
+    bak_paths = _yield_bakrec(gd.bak_dir.path)
+    rec_paths = _yield_bakrec(gd.recycle_dir.path)
     moved_files_report = {
-        Moved.ASSETS: process_moves(target_asset, asset_paths, move=args.move_unlinked_assets),
-        Moved.BAK: process_moves(target_bak, bak_paths, move=args.move_bak),
-        Moved.RECYCLE: process_moves(target_rec, rec_paths, move=args.move_recycle),
+        Moved.ASSETS: _process_moves(target_asset, asset_paths, move=args.move_unlinked_assets),
+        Moved.BAK: _process_moves(target_bak, bak_paths, move=args.move_bak),
+        Moved.RECYCLE: _process_moves(target_rec, rec_paths, move=args.move_recycle),
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES: moved_files_report}
 
 
 def report_configurations(
-    args: Args,
-    analyzer_dirs: LogseqAnalyzerDirs,
-    config_edns: ConfigEdns,
+    args: Args, analyzer_dirs: LogseqAnalyzerDirs, config_edns: ConfigEdns
 ) -> Iterator[tuple[str, Any]]:
     """Yield configuration data reports."""
     yield OutputDir.META, args.report

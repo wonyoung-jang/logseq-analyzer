@@ -89,6 +89,9 @@ class LogseqPath:
             raise TypeError(msg)
         self.stat = self.file.stat()
         self.uri: str = self.file.as_uri()
+        self.name = LogseqFileName.process(self.file)
+        self.file_type = self.evaluate_file_type()
+        self.logseq_url = self.set_logseq_url()
 
     @classmethod
     def configure(cls, analyzer_dirs: LogseqAnalyzerDirs) -> None:
@@ -102,12 +105,6 @@ class LogseqPath:
             cls.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
             cls.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         }
-
-    def process(self) -> None:
-        """Process the Logseq file path to gather statistics."""
-        self.name = LogseqFileName.process(self.file)
-        self.file_type = self.evaluate_file_type()
-        self.logseq_url = self.set_logseq_url()
 
     def evaluate_file_type(self) -> str:
         """Determine the file type based on the directory structure."""

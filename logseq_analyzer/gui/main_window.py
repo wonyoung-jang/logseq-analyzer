@@ -53,8 +53,8 @@ class LogseqAnalyzerGUI(QWidget):
         layout.addWidget(self.checkboxes)
         layout.addWidget(self.progress)
         layout.addWidget(self.buttons)
-        self.connect_signals()
         self.load_settings()
+        self.connect_signals()
 
     def connect_signals(self) -> None:
         """Connect signals to their respective slots."""

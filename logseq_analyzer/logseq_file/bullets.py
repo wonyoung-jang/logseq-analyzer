@@ -7,21 +7,13 @@ from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.info import BulletInfo
 from logseq_analyzer.patterns.content import ContentPatterns
-from logseq_analyzer.patterns.patterns import (
-    AdvCmdPatterns,
-    CodePatterns,
-    DoubleCurlyPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinkPatterns,
-    ExternalLinkPatterns,
-)
+from logseq_analyzer.patterns.patterns import PATTERNS, CodePatterns
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, iter_pattern_split, process_aliases
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterator
 
-    from logseq_analyzer.patterns.patterns import IPattern
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +22,6 @@ RAW_DATA_MAP = {
     CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
     CritContent.ASSETS: ContentPatterns.ASSET,
 }
-PATTERN_TYPES: Sequence[type[IPattern]] = (
-    AdvCmdPatterns,
-    CodePatterns,
-    DoubleCurlyPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinkPatterns,
-    ExternalLinkPatterns,
-)
 
 
 @dataclass(slots=True)
@@ -48,7 +32,7 @@ class LogseqBullets:
     all_bullets: list[str] = field(default_factory=list)
     primary: str = ""
 
-    def process(self) -> None:
+    def __post_init__(self) -> None:
         """Process the content to extract bullet information."""
         if not self.content:
             return
@@ -102,7 +86,7 @@ class LogseqBullets:
     def extract_patterns(self) -> Iterator[tuple[str, list[str]]]:
         """Process patterns in the content."""
         _temp_map = defaultdict(list)
-        for ptn_cls in PATTERN_TYPES:
+        for ptn_cls in PATTERNS:
             for k, v in ptn_cls.process_pattern_hierarchy(self.content):
                 _temp_map[k].append(v)
         yield from _temp_map.items()

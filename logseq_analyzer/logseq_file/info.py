@@ -73,7 +73,7 @@ class NodeType:
                 n = Node.ORPHAN_NAMESPACE
             case (False, False, False):
                 n = Node.ORPHAN_GRAPH
-        self.node_type = n
+        return n
 
     def _node_type_no_content(self) -> str:
         """Determine node type based on summary data."""
@@ -86,7 +86,7 @@ class NodeType:
                 n = Node.ORPHAN_NAMESPACE_TRUE
             case (False, False, False):
                 n = Node.ORPHAN_TRUE
-        self.node_type = n
+        return n
 
 
 @dataclass(slots=True)

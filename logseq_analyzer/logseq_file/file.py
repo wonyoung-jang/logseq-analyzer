@@ -52,12 +52,28 @@ class MaskedBlocks:
     content: str = ""
     blocks: dict[str, str] = field(default_factory=dict)
 
+    def mask(self, content: str) -> None:
+        """Mask code blocks and other patterns in the content."""
+        self.content = content
+        for sub_regex, prefix in PATTERN_MASKING:
+
+            def _repl(match: re.Match, prefix: str = prefix) -> str:
+                placeholder = f"{prefix}{uuid.uuid4()}__"
+                self.blocks[placeholder] = match.group(0)
+                return placeholder
+
+            self.content = sub_regex(_repl, self.content)
+
+    def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
+        """Extract primary data from the content."""
+        for key, value in PRIMARY_DATA_MAP.items():
+            if value.search(self.content):
+                yield key, value.findall(self.content)
+
     def unmask_blocks(self) -> None:
         """Restore the original content by replacing placeholders with their blocks."""
-        _content = self.content
         for placeholder, block in self.blocks.items():
-            _content = _content.replace(placeholder, block)
-        self.content = _content
+            self.content = self.content.replace(placeholder, block)
 
 
 @dataclass(slots=True)
@@ -75,7 +91,7 @@ class LogseqFile:
 
     def __post_init__(self, path_input: Path) -> None:
         """Initialize the LogseqFile object."""
-        self.path: LogseqPath = LogseqPath(path_input)
+        self.path = LogseqPath(path_input)
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -97,14 +113,7 @@ class LogseqFile:
 
     def process(self) -> None:
         """Process the Logseq file to extract metadata and content."""
-        self.init_file_data()
-        self.process_content_data()
-
-    def init_file_data(self) -> None:
-        """Extract metadata from a file."""
-        self.path.process()
         self.bullets = LogseqBullets(self.path.read_text())
-        self.bullets.process()
         self.info = LogseqFileInfo(
             timestamp=self.path.get_timestamp_info(),
             size=self.path.get_size_info(),
@@ -112,47 +121,12 @@ class LogseqFile:
             bullet=self.bullets.get_bullet_info(),
         )
         self.is_hls = self.path.name.startswith(Core.HLS_PREFIX)
-
-    def process_content_data(self) -> None:
-        """Process content data to extract various elements like backlinks, tags, and properties."""
         if not self.info.size.has_content:
             return
-        self.mask_blocks()
-        self.extract_data()
-        self.check_has_backlinks()
-
-    def extract_data_pairs(self) -> Iterator[tuple[str, Any]]:
-        """Extract data pairs from the Logseq file."""
-        yield from self.extract_primary_data()
-        yield from self.bullets.extract_primary_raw_data()
-        yield from self.bullets.extract_aliases_and_propvalues()
-        yield from self.bullets.extract_properties()
-        yield from self.bullets.extract_patterns()
-
-    def extract_data(self) -> None:
-        """Extract data from the Logseq file."""
-        self.data.update(self.extract_data_pairs())
-
-    def mask_blocks(self) -> None:
-        """Mask code blocks and other patterns in the content."""
-        _content = self.bullets.content
-        _blocks = {}
-        for sub_regex, prefix in PATTERN_MASKING:
-
-            def _repl(match: re.Match, prefix: str = prefix) -> str:
-                placeholder = f"{prefix}{uuid.uuid4()}__"
-                _blocks[placeholder] = match.group(0)
-                return placeholder
-
-            _content = sub_regex(_repl, _content)
-        self.masked = MaskedBlocks(_content, _blocks)
-
-    def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
-        """Extract primary data from the content."""
-        for key, value in PRIMARY_DATA_MAP.items():
-            if value.search(self.masked.content):
-                yield key, value.findall(self.masked.content)
-
-    def check_has_backlinks(self) -> None:
-        """Check has backlinks in the content."""
+        self.masked.mask(self.bullets.content)
+        self.data.update(self.masked.extract_primary_data())
+        self.data.update(self.bullets.extract_primary_raw_data())
+        self.data.update(self.bullets.extract_aliases_and_propvalues())
+        self.data.update(self.bullets.extract_properties())
+        self.data.update(self.bullets.extract_patterns())
         self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())

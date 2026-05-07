@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from logseq_analyzer.logseq_file.file import LogseqFile
 from logseq_analyzer.utils.enums import Output
@@ -24,13 +24,6 @@ class FileIndex:
     _path_to_file: dict[Path, LogseqFile] = field(default_factory=dict)
     _instance: ClassVar[FileIndex | None] = None
     write_graph: ClassVar[bool] = False
-
-    def __new__(cls) -> Self:
-        """Ensure only one instance of FileIndex is created."""
-        if isinstance(cls._instance, cls):
-            return cls._instance
-        cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __len__(self) -> int:
         """Return the number of files in the index."""
@@ -106,8 +99,9 @@ class FileIndex:
         """Remove deleted files from the cache."""
         if not self:
             return
-        for file in {f for f in self if not f.path.file.exists()}:
-            self.remove(file)
+        for f in self:
+            if not f.path.file.exists():
+                self.remove(f)
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:

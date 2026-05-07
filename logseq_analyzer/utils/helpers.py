@@ -1,19 +1,17 @@
 """Helper functions for file and date processing."""
 
 import logging
-import shutil
 from collections import Counter
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import Format, Moved
+from logseq_analyzer.utils.enums import Format
 
 if TYPE_CHECKING:
     import re
     from collections.abc import Iterator
 
-    from logseq_analyzer.logseq_file.file import LogseqFile
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
     [
@@ -214,44 +212,3 @@ def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2)
         size /= base
         idx += 1
     return f"{size:.{precision}f} {units[idx]}"
-
-
-def yield_asset_paths(unlinked_assets: set[LogseqFile]) -> Iterator[Path]:
-    """Yield the file paths of unlinked assets."""
-    for asset in unlinked_assets:
-        yield asset.path.file
-
-
-def yield_bak_rec_paths(source_dir: Path) -> Iterator[Path]:
-    """Yield the file paths of bak and recycle directories."""
-    for root, dirs, files in Path.walk(source_dir):
-        for name in dirs + files:
-            yield root / name
-
-
-def process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
-    """Process the moving of files to a specified directory.
-
-    Args:
-        target_dir (Path): The directory to move files to.
-        paths (Iterator[Path]): An iterator yielding file paths to move.
-        move (bool): If True, move the files. If False, simulate the move.
-
-    Returns:
-        list[str]: A list of names of the moved files/folders.
-
-    """
-    listpaths = list(paths)
-    names = [path.name for path in listpaths]
-    if not names:
-        return names
-    if not move:
-        return [Moved.SIMULATED_PREFIX, *names]
-    for src in listpaths:
-        dest = target_dir / src.name
-        try:
-            shutil.move(src, dest)
-            logger.warning("Moved file: %s to %s", src, dest)
-        except shutil.Error, OSError:
-            logger.exception("Failed to move file: %s to %s", src, dest)
-    return names
