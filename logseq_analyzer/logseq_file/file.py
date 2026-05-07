@@ -115,10 +115,10 @@ class LogseqFile:
         """Process the Logseq file to extract metadata and content."""
         self.bullets = LogseqBullets(self.path.read_text())
         self.info = LogseqFileInfo(
-            timestamp=self.path.get_timestamp_info(),
-            size=self.path.get_size_info(),
-            namespace=self.path.get_namespace_info(),
-            bullet=self.bullets.get_bullet_info(),
+            timestamp=self.path.timestamp_info,
+            size=self.path.size_info,
+            namespace=self.path.namespace_info,
+            bullet=self.bullets.bullet_info,
         )
         self.is_hls = self.path.name.startswith(Core.HLS_PREFIX)
         if not self.info.size.has_content:

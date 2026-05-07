@@ -3,16 +3,14 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, ClassVar, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 from logseq_analyzer.utils.enums import Format
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
     from pathlib import Path
 
-    from logseq_analyzer.config.arguments import Args
-    from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
 logger = logging.getLogger(__name__)
 
 
@@ -212,31 +210,16 @@ class Writers:
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    prefix: str
-    data: Any
-    subdir: str
+    ext: str
+    output_dir: Path
     writer: Writers = field(default_factory=Writers)
-    ext: ClassVar[str]
-    output_dir: ClassVar[Path]
 
-    @classmethod
-    def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:
-        """Configure the ReportWriter class with necessary settings.
-
-        Args:
-            args (Args): The command-line arguments.
-            analyzer_dirs (LogseqAnalyzerDirs): The directories used by the Logseq Analyzer.
-
-        """
-        cls.ext = args.report_format
-        cls.output_dir = analyzer_dirs.output_dir.path
-
-    def write(self) -> None:
+    def write(self, prefix: str, data: Any, subdir: str) -> None:
         """Write the report to a file in the configured format (TXT, JSON, or HTML)."""
-        count = len(self.data) if hasattr(self.data, "__len__") else None
-        filename = f"{self.prefix}.{self.ext}" if count else f"(EMPTY) {self.prefix}.{self.ext}"
-        outputpath = self.get_output_path(filename)
-        logger.info("Writing %s as %s", self.prefix, self.ext)
+        count = len(data) if hasattr(data, "__len__") else None
+        filename = f"{prefix}.{self.ext}" if count else f"(EMPTY) {prefix}.{self.ext}"
+        outputpath = self.get_output_path(filename, subdir)
+        logger.info("Writing %s as %s", prefix, self.ext)
         write_method_map: dict[str, Callable] = {
             Format.TXT: self.writer.text.write,
             Format.MD: self.writer.text.write,
@@ -244,18 +227,26 @@ class ReportWriter:
             Format.HTML: self.writer.html.write,
         }
         write_method = write_method_map.get(self.ext, self.writer.text.write)
-        write_method(outputpath, self.prefix, count, filename, self.data)
+        write_method(outputpath, prefix, count, filename, data)
 
-    def get_output_path(self, filename: str) -> Path:
+    def get_output_path(self, filename: str, subdir: str) -> Path:
         """Get the output path for the report file.
 
         Args:
             filename (str): The name of the file to be created.
+            subdir (str): The subdirectory where the file should be created.
 
         Returns:
             Path: The output path for the report file.
 
         """
-        output_dir = self.output_dir / self.subdir if self.subdir else self.output_dir
+        output_dir = self.output_dir / subdir if subdir else self.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
         return output_dir / filename
+
+    def write_reports(self, data_reports: Iterator[tuple[str, Any]]) -> None:
+        """Write reports to the specified output directories."""
+        for subdir, reports in data_reports:
+            for prefix, data in reports.items():
+                self.write(prefix, data, subdir)
+        logger.debug("write_reports")

@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.date_utilities import date_next, date_stats, journals_to_datetime
 from logseq_analyzer.utils.enums import FileType, Output
 
 if TYPE_CHECKING:
@@ -29,9 +29,9 @@ class LogseqJournals:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqJournals class."""
-        dangling = sorted(DateUtilities.journals_to_datetime(self.dangling_links, LogseqJournals.journal_page_format))
+        dangling = sorted(journals_to_datetime(self.dangling_links, LogseqJournals.journal_page_format))
         journals = (f.path.name for f in self.index if f.path.file_type == FileType.JOURNAL)
-        self.existing.extend(sorted(DateUtilities.journals_to_datetime(journals, LogseqJournals.journal_page_format)))
+        self.existing.extend(sorted(journals_to_datetime(journals, LogseqJournals.journal_page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 
@@ -43,18 +43,18 @@ class LogseqJournals:
         """Build a complete timeline of journal entries, filling in any missing dates."""
         for i, date in enumerate(self.existing):
             self.timeline.append(date)
-            next_expected = DateUtilities.next(date)
+            next_expected = date_next(date)
             next_existing = self.existing[i + 1] if i + 1 < len(self.existing) else None
             while next_existing and next_expected < next_existing:
                 self.timeline.append(next_expected)
                 if next_expected not in dangling_journals:
                     self.missing.append(next_expected)
-                next_expected = DateUtilities.next(next_expected)
+                next_expected = date_next(next_expected)
         self.all_journals = sorted(self.timeline + dangling_journals)
         self.timeline_stats = {
-            "timeline": DateUtilities.stats(self.timeline),
-            "dangling": DateUtilities.stats(dangling_journals),
-            "total": DateUtilities.stats(self.all_journals),
+            "timeline": date_stats(self.timeline),
+            "dangling": date_stats(dangling_journals),
+            "total": date_stats(self.all_journals),
         }
 
     def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:

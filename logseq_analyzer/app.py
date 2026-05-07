@@ -2,7 +2,6 @@
 
 import logging
 import shutil
-from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -50,7 +49,7 @@ from logseq_analyzer.io.report_writer import ReportWriter
 from logseq_analyzer.logseq_file.file import LogseqFile, LogseqPath
 from logseq_analyzer.logseq_file.info import JournalFormats
 from logseq_analyzer.logseq_file.stats import LogseqFileName
-from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.date_utilities import cljs_date_to_py, compile_datetime_tokens
 from logseq_analyzer.utils.enums import Constant, Output, TargetDir
 
 if TYPE_CHECKING:
@@ -71,25 +70,6 @@ logger.info("Logseq Analyzer started.")
 logger.debug("Logging initialized to %s", log_file.path)
 
 
-@dataclass(slots=True)
-class GUIInstanceDummy:
-    """Dummy class to simulate a GUI instance for testing purposes."""
-
-    progress: dict[str, int] = field(default_factory=dict)
-
-    def __repr__(self) -> str:
-        """Return a string representation of the dummy GUI instance."""
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        """Return a string representation of the dummy GUI instance."""
-        return f"{self.__class__.__name__}"
-
-    def update_progress(self, percentage: int) -> None:
-        """Simulate updating progress in a GUI."""
-        logger.info("Updating progress: %d%%", percentage)
-
-
 def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     """Set up Logseq analyzer configuration based on arguments."""
     graph_dirs = _setup_graph_dirs(args)
@@ -98,22 +78,17 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     _ensure_target_dirs(graph_dirs, target_dirs)
     analyzer_dirs = LogseqAnalyzerDirs(
         graph_dirs=graph_dirs,
-        delete_dirs=_setup_delete_dirs(),
+        delete_dirs=AnalyzerDeleteDirs(
+            delete_dir=DeleteDirectory(Path(Constant.TO_DELETE_DIR)),
+            delete_bak_dir=DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR)),
+            delete_recycle_dir=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
+            delete_assets_dir=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
+        ),
         target_dirs=target_dirs,
         output_dir=OutputDirectory(Path(Constant.OUTPUT_DIR)),
     )
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
-
-
-def _setup_delete_dirs() -> AnalyzerDeleteDirs:
-    """Set up the directories for deleting files."""
-    return AnalyzerDeleteDirs(
-        delete_dir=DeleteDirectory(Path(Constant.TO_DELETE_DIR)),
-        delete_bak_dir=DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR)),
-        delete_recycle_dir=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
-        delete_assets_dir=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
-    )
 
 
 class LogseqGraphStructure(StrEnum):
@@ -176,13 +151,13 @@ def _ensure_target_dirs(graph_dirs: LogseqGraphDirs, target_dirs: dict[str, str]
 
 def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     """Set up journal formats."""
-    _tokens = DateUtilities.compile_datetime_tokens()
+    _tokens = compile_datetime_tokens()
     journal_file_fmt = get_file_name_format(config_edns.config)
     journal_page_title_fmt = get_page_title_format(config_edns.config)
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file=DateUtilities.cljs_date_to_py(journal_file_fmt, _tokens),
-        page=DateUtilities.cljs_date_to_py(journal_page_title_fmt, _tokens),
+        file=cljs_date_to_py(journal_file_fmt, _tokens),
+        page=cljs_date_to_py(journal_page_title_fmt, _tokens),
         page_title=journal_page_title_fmt,
     )
 
@@ -214,7 +189,6 @@ def configure_analyzer_settings(
     LogseqJournals.journal_page_format = journal_formats.page
     LogseqPath.configure(analyzer_dirs)
     LogseqFileName.configure(analyzer_dirs, journal_formats, config_edns)
-    ReportWriter.configure(args, analyzer_dirs)
     logger.debug("configure_analyzer_settings")
 
 
@@ -323,30 +297,26 @@ def report_configurations(
     yield OutputDir.META, analyzer_dirs.report
 
 
-def analyze(
-    args: Args,
-    index: FileIndex,
-    analyzer_dirs: LogseqAnalyzerDirs,
-) -> Iterator[tuple[str, Any]]:
+def analyze(args: Args, index: FileIndex, analyzer_dirs: LogseqAnalyzerDirs) -> Iterator[tuple[str, Any]]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
-    yield OutputDir.GRAPH, logseq_graph.report
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
-    yield OutputDir.NAMESPACES, logseq_namespaces.report
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links)
-    yield OutputDir.JOURNALS, logseq_journals.report
     logseq_assets_hls = LogseqAssetsHls(index)
-    yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
     logseq_assets = LogseqAssets(index)
-    yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
     moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
-    yield OutputDir.MOVED_FILES, moved_files
     logseq_file_summarizer = LogseqFileSummarizer(index)
+    logseq_content_summarizer = LogseqContentSummarizer(index)
+    yield OutputDir.GRAPH, logseq_graph.report
+    yield OutputDir.NAMESPACES, logseq_namespaces.report
+    yield OutputDir.JOURNALS, logseq_journals.report
+    yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
+    yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
+    yield OutputDir.MOVED_FILES, moved_files
     yield OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general
     yield OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes
     yield OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes
     yield OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions
-    logseq_content_summarizer = LogseqContentSummarizer(index)
     yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.size_report
     yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.timestamp_report
@@ -356,17 +326,9 @@ def analyze(
     logger.debug("analyze")
 
 
-def write_reports(data_reports: Iterator[tuple[str, Any]]) -> None:
-    """Write reports to the specified output directories."""
-    for subdir, reports in data_reports:
-        for prefix, data in reports.items():
-            ReportWriter(prefix, data, subdir).write()
-    logger.debug("write_reports")
-
-
 def run_app(**gui_args: Any) -> None:
     """Run the Logseq analyzer."""
-    progress = gui_args.pop("progress_callback", GUIInstanceDummy().update_progress)
+    progress = gui_args.pop("progress_callback", lambda pct, msg: print(f"{pct}% - {msg}"))
     progress(10, "Starting Logseq Analyzer...")
     args = Args()
     if gui_args:
@@ -382,9 +344,13 @@ def run_app(**gui_args: Any) -> None:
     progress(60, "Process Logseq graph...")
     process_graph(index, cache)
     progress(70, "Write meta reports...")
-    write_reports(report_configurations(args, analyzer_dirs, config_edns))
+    report_writer = ReportWriter(
+        ext=args.report_format,
+        output_dir=analyzer_dirs.output_dir.path,
+    )
+    report_writer.write_reports(report_configurations(args, analyzer_dirs, config_edns))
     progress(80, "Running core analysis on Logseq graph...")
-    write_reports(analyze(args, index, analyzer_dirs))
+    report_writer.write_reports(analyze(args, index, analyzer_dirs))
     progress(90, "Finalizing analysis...")
     cache.close(index)
     progress(100, "Logseq Analyzer completed successfully.")

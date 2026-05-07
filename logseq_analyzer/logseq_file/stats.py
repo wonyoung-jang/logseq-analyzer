@@ -10,7 +10,7 @@ from urllib.parse import unquote
 
 from logseq_analyzer.config.graph_config import ConfigEdns, get_ns_sep
 from logseq_analyzer.logseq_file.info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
-from logseq_analyzer.utils.date_utilities import DateUtilities
+from logseq_analyzer.utils.date_utilities import append_ordinal_to_day
 from logseq_analyzer.utils.enums import Core, FileType, TargetDir
 
 if TYPE_CHECKING:
@@ -64,7 +64,7 @@ class LogseqFileName:
             page_title = date_obj.strftime(LogseqFileName.journal_format.page)
             if Core.DATE_ORDINAL_SUFFIX in LogseqFileName.journal_format.page_title:
                 day_number = str(date_obj.day)
-                day_with_ordinal = DateUtilities.append_ordinal_to_day(day_number)
+                day_with_ordinal = append_ordinal_to_day(day_number)
                 page_title.replace(day_number, day_with_ordinal, 1)
             return page_title.replace("'", "")
         except ValueError as e:
@@ -117,7 +117,6 @@ class LogseqPath:
     now_ts: ClassVar[float] = datetime.now(tz=UTC).timestamp()
     graph_path: ClassVar[Path]
     result_map: ClassVar[dict]
-    target_dirs: ClassVar[dict]
 
     def __post_init__(self) -> None:
         """Initialize the LogseqPath object."""
@@ -134,13 +133,12 @@ class LogseqPath:
     def configure(cls, analyzer_dirs: LogseqAnalyzerDirs) -> None:
         """Configure the LogseqPath class with necessary settings."""
         cls.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
-        cls.target_dirs = analyzer_dirs.target_dirs
         cls.result_map = {
-            cls.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
-            cls.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
-            cls.target_dirs[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
-            cls.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
-            cls.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
+            analyzer_dirs.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
+            analyzer_dirs.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
+            analyzer_dirs.target_dirs[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
+            analyzer_dirs.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
+            analyzer_dirs.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         }
 
     def evaluate_file_type(self) -> str:
@@ -179,7 +177,8 @@ class LogseqPath:
             logger.warning("Failed to decode file %s with utf-8 encoding.", self.file)
             return ""
 
-    def get_timestamp_info(self) -> TimestampInfo:
+    @property
+    def timestamp_info(self) -> TimestampInfo:
         """Get the timestamps for the file."""
         return TimestampInfo(
             time_existed=LogseqPath.now_ts - self.stat.st_birthtime,
@@ -188,7 +187,8 @@ class LogseqPath:
             date_modified=datetime.fromtimestamp(self.stat.st_mtime, tz=UTC).isoformat(),
         )
 
-    def get_size_info(self) -> SizeInfo:
+    @property
+    def size_info(self) -> SizeInfo:
         """Get the size information for the file."""
         return SizeInfo(
             size=self.stat.st_size,
@@ -196,7 +196,8 @@ class LogseqPath:
             has_content=bool(self.stat.st_size),
         )
 
-    def get_namespace_info(self) -> NamespaceInfo:
+    @property
+    def namespace_info(self) -> NamespaceInfo:
         """Get the namespace name data."""
         _ns_parts = self.name.split(Core.NS_SEP)
         return NamespaceInfo(

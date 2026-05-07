@@ -1,6 +1,5 @@
 """Helper functions for file and date processing."""
 
-import logging
 from collections import Counter
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
@@ -59,9 +58,6 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     ]
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 def sort_dict_by_value(data: dict, value: str = "", *, reverse: bool = False) -> dict:

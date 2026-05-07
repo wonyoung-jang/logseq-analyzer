@@ -94,7 +94,8 @@ class LogseqBullets:
         if _count == 0:
             yield _count, self.content.strip("\t \n")
 
-    def get_bullet_info(self) -> BulletInfo:
+    @property
+    def bullet_info(self) -> BulletInfo:
         """Get bullet statistics."""
         return BulletInfo(
             chars=len(self.content),

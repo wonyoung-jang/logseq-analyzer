@@ -66,16 +66,15 @@ DY = Day
 DS = DateStat
 
 
-class DateUtilities:
-    """DateUtilities class to handle date-related operations."""
+def date_next(date_obj: datetime) -> datetime:
+    """Return the date of the next day."""
+    return date_obj + timedelta(days=1)
 
-    @staticmethod
-    def next(date_obj: datetime) -> datetime:
-        """Return the date of the next day."""
-        return date_obj + timedelta(days=1)
 
-    @staticmethod
-    def range(delta: timedelta) -> dict[str, float | None]:
+def date_stats(dates: list[datetime]) -> dict[str, Any]:
+    """Get statistics about the timeline."""
+
+    def _range(delta: timedelta) -> dict[str, float | None]:
         """Compute the range between two dates in days, weeks, months, and years."""
         days = delta.days + 1
         return {
@@ -85,51 +84,48 @@ class DateUtilities:
             DS.YEARS: round(days / DY.IN_YEAR, 2) if delta else 0.0,
         }
 
-    @staticmethod
-    def stats(dates: list[datetime]) -> dict[str, Any]:
-        """Get statistics about the timeline."""
-        stats: dict[str, Any] = {
-            DS.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
-            DS.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
-        }
-        delta = stats[DS.LAST] - stats[DS.FIRST]
-        stats.update(DateUtilities.range(delta))
-        return stats
+    stats: dict[str, Any] = {
+        DS.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
+        DS.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
+    }
+    delta = stats[DS.LAST] - stats[DS.FIRST]
+    stats.update(_range(delta))
+    return stats
 
-    @staticmethod
-    def append_ordinal_to_day(day: str) -> str:
-        """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-        day_as_int = int(day)
-        if 11 <= day_as_int <= 13:
-            return day + "th"
-        return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
-    @staticmethod
-    def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Iterator[datetime]:
-        """Convert journal keys from strings to datetime objects."""
-        for key in keys:
-            try:
-                key_to_parse = key
-                for ordinal in DATE_ORDINAL_SUFFIXES:
-                    key_to_parse = key_to_parse.replace(ordinal, "")
-                yield datetime.strptime(key_to_parse, py_page_format.replace("#", "")).replace(tzinfo=UTC)
-            except ValueError:
-                pass
+def append_ordinal_to_day(day: str) -> str:
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    day_as_int = int(day)
+    if 11 <= day_as_int <= 13:
+        return day + "th"
+    return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
-    @staticmethod
-    def compile_datetime_tokens() -> re.Pattern:
-        """Set the regex pattern for date tokens."""
-        sorted_keys = sorted(DATETIME_TOKEN_MAP.keys(), key=len, reverse=True)
-        pattern = "|".join(re.escape(str(k)) for k in sorted_keys)
-        return re.compile(pattern)
 
-    @staticmethod
-    def cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
-        """Convert a Clojure-style date format to a Python-style date format."""
+def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Iterator[datetime]:
+    """Convert journal keys from strings to datetime objects."""
+    for key in keys:
+        try:
+            key_to_parse = key
+            for ordinal in DATE_ORDINAL_SUFFIXES:
+                key_to_parse = key_to_parse.replace(ordinal, "")
+            yield datetime.strptime(key_to_parse, py_page_format.replace("#", "")).replace(tzinfo=UTC)
+        except ValueError:
+            pass
 
-        def replace_token(match: re.Match) -> str:
-            """Replace a date token with its corresponding Python format."""
-            token = match.group(0)
-            return DATETIME_TOKEN_MAP.get(token, token)
 
-        return token_pattern.sub(replace_token, cljs_format.replace("o", ""))
+def compile_datetime_tokens() -> re.Pattern:
+    """Set the regex pattern for date tokens."""
+    sorted_keys = sorted(DATETIME_TOKEN_MAP.keys(), key=len, reverse=True)
+    pattern = "|".join(re.escape(str(k)) for k in sorted_keys)
+    return re.compile(pattern)
+
+
+def cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
+    """Convert a Clojure-style date format to a Python-style date format."""
+
+    def replace_token(match: re.Match) -> str:
+        """Replace a date token with its corresponding Python format."""
+        token = match.group(0)
+        return DATETIME_TOKEN_MAP.get(token, token)
+
+    return token_pattern.sub(replace_token, cljs_format.replace("o", ""))

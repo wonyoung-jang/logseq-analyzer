@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
     from logseq_analyzer.config.arguments import Args
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +53,7 @@ class Cache:
     target_dirs: ClassVar[set[str]] = set()
 
     @classmethod
-    def configure(cls, args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:
+    def configure(cls: type[Cache], args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> None:
         """Configure the Cache class with necessary settings.
 
         Args:
