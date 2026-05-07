@@ -8,11 +8,17 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from logseq_analyzer.logseq_file.file import LogseqFile
 from logseq_analyzer.utils.enums import Output
-from logseq_analyzer.utils.helpers import yield_attrs
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
 logger = logging.getLogger(__name__)
+
+
+def _yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
+    """Collect slotted attributes from an object."""
+    for slot in getattr(type(obj), "__slots__", ()):
+        yield slot, getattr(obj, slot)
 
 
 @dataclass(slots=True)
@@ -106,7 +112,7 @@ class FileIndex:
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
-        return {file: {k: v for k, v in yield_attrs(file) if v and k not in ("data", "masked")} for file in self}
+        return {file: {k: v for k, v in _yield_attrs(file) if v and k not in ("data", "masked")} for file in self}
 
     @property
     def graph_content_data(self) -> dict[LogseqFile, Any]:

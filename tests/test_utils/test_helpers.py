@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.utils.helpers import process_aliases
+from logseq_analyzer.logseq_file.bullets import process_aliases
 
 
 @pytest.mark.parametrize(

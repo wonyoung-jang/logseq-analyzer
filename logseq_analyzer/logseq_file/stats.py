@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import unquote
@@ -11,7 +12,6 @@ from logseq_analyzer.config.graph_config import ConfigEdns, get_ns_sep
 from logseq_analyzer.logseq_file.info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
 from logseq_analyzer.utils.date_utilities import DateUtilities
 from logseq_analyzer.utils.enums import Core, FileType, TargetDir
-from logseq_analyzer.utils.helpers import format_bytes
 
 if TYPE_CHECKING:
     from os import stat_result
@@ -19,6 +19,16 @@ if TYPE_CHECKING:
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
 
 logger = logging.getLogger(__name__)
+
+SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+
+
+class SizeUnit(StrEnum):
+    """Enumeration for size units."""
+
+    SI = "si"  # Powers of 1000
+    IEC = "iec"  # Powers of 1024
 
 
 @dataclass(slots=True)
@@ -65,6 +75,33 @@ class LogseqFileName:
     def _get_non_journal_key(name: str, ns_sep: str = Core.NS_SEP) -> str:
         """Process non-journal keys to create a page title."""
         return unquote(name).replace(LogseqFileName.ns_file_sep, ns_sep)
+
+
+def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
+    """Convert a byte value into a human-readable string using SI or IEC units.
+
+    Args:
+        size_bytes (int): Number of bytes.
+        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
+        precision (int): Number of decimal places.
+
+    Returns:
+        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
+
+    """
+    if size_bytes < 0:
+        msg = "size_bytes must be non-negative"
+        raise ValueError(msg)
+    units = IEC_UNITS if system == SizeUnit.IEC else SI_UNITS
+    base = 1024 if system == SizeUnit.IEC else 1000
+    if size_bytes < base:
+        return f"{size_bytes} {units[0]}"
+    idx = 0
+    size = float(size_bytes)
+    while size >= base and idx < len(units) - 1:
+        size /= base
+        idx += 1
+    return f"{size:.{precision}f} {units[idx]}"
 
 
 @dataclass(slots=True)

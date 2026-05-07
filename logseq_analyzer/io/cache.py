@@ -4,14 +4,14 @@ import logging
 import shelve
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from logseq_analyzer.analysis.index import FileIndex
-from logseq_analyzer.utils.helpers import iter_files
+from logseq_analyzer.utils.enums import Format
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from pathlib import Path
 
     from logseq_analyzer.config.arguments import Args
     from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
@@ -23,6 +23,22 @@ class CacheKey(StrEnum):
 
     INDEX = "index"
     MOD_TRACKER = "mod_tracker"
+
+
+def _iter_files(root_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
+    """Recursively iterate over files in the root directory."""
+    for root, dirs, files in Path.walk(root_dir):
+        if root == root_dir:
+            continue
+        if any(name in target_dirs for name in (root.name, root.parent.name)):
+            for file in files:
+                if Path(file).suffix == Format.ORG:
+                    logger.info("Skipping org-mode file %s in %s", file, root)
+                    continue
+                yield root / file
+        else:
+            logger.info("Skipping directory %s outside target directories", root)
+            dirs.clear()
 
 
 @dataclass(slots=True)
@@ -85,7 +101,7 @@ class Cache:
         mod_tracker = {}
         if CacheKey.MOD_TRACKER in self.cache:
             mod_tracker = self.cache[CacheKey.MOD_TRACKER]
-        file_iter = iter_files(Cache.graph_dir, Cache.target_dirs)
+        file_iter = _iter_files(Cache.graph_dir, Cache.target_dirs)
         for path in file_iter:
             str_path = str(path)
             curr_date_mod = path.stat().st_mtime

@@ -9,7 +9,7 @@ from logseq_analyzer.logseq_file.info import BulletInfo
 from logseq_analyzer.patterns.content import ContentPatterns
 from logseq_analyzer.patterns.patterns import PATTERNS
 from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
-from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, iter_pattern_split, process_aliases
+from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -24,6 +24,32 @@ RAW_DATA_MAP = {
 }
 
 
+def process_aliases(aliases: str) -> Iterator[str]:
+    """Process aliases to extract individual aliases."""
+    if not (aliases := aliases.strip()):
+        return
+    current = []
+    is_inside_brackets = False
+    pos = 0
+    while pos < len(aliases):
+        if aliases[pos : pos + 2] == "[[":
+            is_inside_brackets = True
+            pos += 2
+        elif aliases[pos : pos + 2] == "]]":
+            is_inside_brackets = False
+            pos += 2
+        elif aliases[pos] == "," and not is_inside_brackets:
+            if part := "".join(current).strip().lower():
+                yield part
+            current.clear()
+            pos += 1
+        else:
+            current.append(aliases[pos])
+            pos += 1
+    if part := "".join(current).strip().lower():
+        yield part
+
+
 @dataclass(slots=True)
 class LogseqBullets:
     """LogseqBullets class."""
@@ -36,10 +62,37 @@ class LogseqBullets:
         """Process the content to extract bullet information."""
         if not self.content:
             return
-        for bullet_index, bullet in iter_pattern_split(ContentPatterns.BULLET, self.content):
+        for bullet_index, bullet in self._iter_pattern_split():
             self.all_bullets.append(bullet)
             if bullet and bullet_index == 0:
                 self.primary = bullet
+
+    def _iter_pattern_split(self, maxsplit: int = 0) -> Iterator[tuple[int, str]]:
+        """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
+
+        Iterate over sections of text separated by bullet markers.
+
+        Args:
+            maxsplit (int): Maximum number of splits. If 0, all sections are returned.
+
+        Yields:
+            Iterator[tuple[int, str]]: Sections of text with their respective indices.
+
+        """
+        _count = 0
+        for match in ContentPatterns.BULLET.finditer(self.content):
+            if maxsplit and _count >= maxsplit:
+                break
+            if _count == 0:
+                yield _count, self.content[: match.start()].strip("\t \n")
+                _count += 1
+            content_start = match.end()
+            next_match = next(ContentPatterns.BULLET.finditer(self.content, content_start), None)
+            content_end = next_match.start() if next_match else len(self.content)
+            yield _count, self.content[content_start:content_end].strip("\t \n")
+            _count += 1
+        if _count == 0:
+            yield _count, self.content.strip("\t \n")
 
     def get_bullet_info(self) -> BulletInfo:
         """Get bullet statistics."""

@@ -2,16 +2,6 @@
 
 import logging
 from collections import Counter
-from enum import StrEnum
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-from logseq_analyzer.utils.enums import Format
-
-if TYPE_CHECKING:
-    import re
-    from collections.abc import Iterator
-
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
     [
@@ -69,60 +59,9 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     ]
 )
-SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
-
-
-class SizeUnit(StrEnum):
-    """Enumeration for size units."""
-
-    SI = "si"  # Powers of 1000
-    IEC = "iec"  # Powers of 1024
 
 
 logger = logging.getLogger(__name__)
-
-
-def iter_files(root_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
-    """Recursively iterate over files in the root directory."""
-    for root, dirs, files in Path.walk(root_dir):
-        if root == root_dir:
-            continue
-        if any(name in target_dirs for name in (root.name, root.parent.name)):
-            for file in files:
-                if Path(file).suffix == Format.ORG:
-                    logger.info("Skipping org-mode file %s in %s", file, root)
-                    continue
-                yield root / file
-        else:
-            logger.info("Skipping directory %s outside target directories", root)
-            dirs.clear()
-
-
-def process_aliases(aliases: str) -> Iterator[str]:
-    """Process aliases to extract individual aliases."""
-    if not (aliases := aliases.strip()):
-        return
-    current = []
-    is_inside_brackets = False
-    pos = 0
-    while pos < len(aliases):
-        if aliases[pos : pos + 2] == "[[":
-            is_inside_brackets = True
-            pos += 2
-        elif aliases[pos : pos + 2] == "]]":
-            is_inside_brackets = False
-            pos += 2
-        elif aliases[pos] == "," and not is_inside_brackets:
-            if part := "".join(current).strip().lower():
-                yield part
-            current.clear()
-            pos += 1
-        else:
-            current.append(aliases[pos])
-            pos += 1
-    if part := "".join(current).strip().lower():
-        yield part
 
 
 def sort_dict_by_value(data: dict, value: str = "", *, reverse: bool = False) -> dict:
@@ -130,42 +69,6 @@ def sort_dict_by_value(data: dict, value: str = "", *, reverse: bool = False) ->
     if value:
         return dict(sorted(data.items(), key=lambda item: item[1][value], reverse=reverse))
     return dict(sorted(data.items(), key=lambda item: item[1], reverse=reverse))
-
-
-def yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
-    """Collect slotted attributes from an object."""
-    for slot in getattr(type(obj), "__slots__", ()):
-        yield slot, getattr(obj, slot)
-
-
-def iter_pattern_split(pattern: re.Pattern, text: str, maxsplit: int = 0) -> Iterator[tuple[int, str]]:
-    """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
-
-    Iterate over sections of text separated by bullet markers.
-
-    Args:
-        pattern (re.Pattern): The regex pattern to match bullet markers.
-        text (str): The text to split into sections.
-        maxsplit (int): Maximum number of splits. If 0, all sections are returned.
-
-    Yields:
-        Iterator[tuple[int, str]]: Sections of text with their respective indices.
-
-    """
-    _count = 0
-    for match in pattern.finditer(text):
-        if maxsplit and _count >= maxsplit:
-            break
-        if _count == 0:
-            yield _count, text[: match.start()].strip("\t \n")
-            _count += 1
-        content_start = match.end()
-        next_match = next(pattern.finditer(text, content_start), None)
-        content_end = next_match.start() if next_match else len(text)
-        yield _count, text[content_start:content_end].strip("\t \n")
-        _count += 1
-    if _count == 0:
-        yield _count, text.strip("\t \n")
 
 
 def get_count_and_foundin_data(result: dict, collection: list[str], filename: str) -> dict:
@@ -185,30 +88,3 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
         result[item]["count"] = result[item].get("count", 0) + 1
         result[item]["found_in"][filename] += 1
     return result
-
-
-def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
-    """Convert a byte value into a human-readable string using SI or IEC units.
-
-    Args:
-        size_bytes (int): Number of bytes.
-        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
-        precision (int): Number of decimal places.
-
-    Returns:
-        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
-
-    """
-    if size_bytes < 0:
-        msg = "size_bytes must be non-negative"
-        raise ValueError(msg)
-    units = IEC_UNITS if system == SizeUnit.IEC else SI_UNITS
-    base = 1024 if system == SizeUnit.IEC else 1000
-    if size_bytes < base:
-        return f"{size_bytes} {units[0]}"
-    idx = 0
-    size = float(size_bytes)
-    while size >= base and idx < len(units) - 1:
-        size /= base
-        idx += 1
-    return f"{size:.{precision}f} {units[idx]}"
