@@ -5,9 +5,9 @@ from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.bullets import LogseqBullets
-from logseq_analyzer.logseq_file.info import LogseqFileInfo, NodeType
+from logseq_analyzer.logseq_file.info import JournalFormats, LogseqFileInfo, NodeType
 from logseq_analyzer.logseq_file.stats import LogseqPath
-from logseq_analyzer.patterns.content import ContentPatterns
+from logseq_analyzer.patterns.content import PRIMARY_DATA_MAP, ContentPatterns
 from logseq_analyzer.patterns.patterns import AdvCmdPatterns, CodePatterns
 from logseq_analyzer.utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
 
@@ -28,41 +28,43 @@ BACKLINK_CRITERIA: frozenset[str] = frozenset(
         CritContent.TAG,
     }
 )
-PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
-    CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
-    CritContent.DRAW: ContentPatterns.DRAW,
-    CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
-    CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-    CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-    CritContent.TAG: ContentPatterns.TAG,
-    CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+MASK_MAP: dict[str, re.Pattern] = {
+    CritCode.ML_ALL: CodePatterns.ALL,
+    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    CritAdvCmd.ALL: AdvCmdPatterns.ALL,
+    CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
 }
-PATTERN_MASKING = (
-    (CodePatterns.ALL.sub, f"__{CritCode.ML_ALL}_"),
-    (ContentPatterns.INLINE_CODE_BLOCK.sub, f"__{CritCode.INLINE}_"),
-    (AdvCmdPatterns.ALL.sub, f"__{CritAdvCmd.ALL}_"),
-    (ContentPatterns.ANY_LINK.sub, f"__{CritContent.ANY_LINKS}_"),
-)
+
+
+@dataclass(slots=True)
+class LogseqFileContext:
+    """Class to hold context data for a Logseq file."""
+
+    now_ts: float
+    journal_format: JournalFormats
+    ns_file_sep: str
+    journal_dir: str
+    graph_path: Path
+    result_map: dict
 
 
 @dataclass(slots=True)
 class MaskedBlocks:
     """Class to hold masked blocks data."""
 
-    content: str = ""
+    content: str
     blocks: dict[str, str] = field(default_factory=dict)
 
-    def mask(self, content: str) -> None:
+    def __post_init__(self) -> None:
         """Mask code blocks and other patterns in the content."""
-        self.content = content
-        for sub_regex, prefix in PATTERN_MASKING:
+        for prefix, regex in MASK_MAP.items():
 
             def _repl(match: re.Match, prefix: str = prefix) -> str:
-                placeholder = f"{prefix}{uuid.uuid4()}__"
+                placeholder = f"__{prefix}__{uuid.uuid4()}__"
                 self.blocks[placeholder] = match.group(0)
                 return placeholder
 
-            self.content = sub_regex(_repl, self.content)
+            self.content = regex.sub(_repl, self.content)
 
     def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
         """Extract primary data from the content."""
@@ -81,17 +83,34 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path_input: InitVar[Path]
-    path: LogseqPath = field(init=False)
+    context: LogseqFileContext
     data: dict[str, Any] = field(default_factory=dict)
-    bullets: LogseqBullets = field(init=False)
-    masked: MaskedBlocks = field(default_factory=MaskedBlocks)
     node: NodeType = field(default_factory=NodeType)
-    info: LogseqFileInfo = field(init=False)
     is_hls: bool = False
+    path: LogseqPath = field(init=False)
+    bullets: LogseqBullets = field(init=False)
+    info: LogseqFileInfo = field(init=False)
 
     def __post_init__(self, path_input: Path) -> None:
         """Initialize the LogseqFile object."""
-        self.path = LogseqPath(path_input)
+        self.path = LogseqPath(path_input, self.context)
+        self.bullets = LogseqBullets(self.path.read_text())
+        self.info = LogseqFileInfo(
+            timestamp=self.path.timestamp_info,
+            size=self.path.size_info,
+            namespace=self.path.namespace_info,
+            bullet=self.bullets.bullet_info,
+        )
+        self.is_hls = self.path.name.startswith(Core.HLS_PREFIX)
+        if not self.info.size.has_content:
+            return
+        _masked = MaskedBlocks(self.bullets.content)
+        self.data.update(_masked.extract_primary_data())
+        self.data.update(self.bullets.extract_primary_raw_data())
+        self.data.update(self.bullets.extract_aliases_and_propvalues())
+        self.data.update(self.bullets.extract_properties())
+        self.data.update(self.bullets.extract_patterns())
+        self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -111,22 +130,10 @@ class LogseqFile:
             return self.path.name < other
         return NotImplemented
 
-    def process(self) -> None:
-        """Process the Logseq file to extract metadata and content."""
-        self.bullets = LogseqBullets(self.path.read_text())
-        self.info = LogseqFileInfo(
-            timestamp=self.path.timestamp_info,
-            size=self.path.size_info,
-            namespace=self.path.namespace_info,
-            bullet=self.bullets.bullet_info,
-        )
-        self.is_hls = self.path.name.startswith(Core.HLS_PREFIX)
-        if not self.info.size.has_content:
-            return
-        self.masked.mask(self.bullets.content)
-        self.data.update(self.masked.extract_primary_data())
-        self.data.update(self.bullets.extract_primary_raw_data())
-        self.data.update(self.bullets.extract_aliases_and_propvalues())
-        self.data.update(self.bullets.extract_properties())
-        self.data.update(self.bullets.extract_patterns())
-        self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
+    def yield_attrs(self) -> Iterator[tuple[str, Any]]:
+        """Yield the attributes of the LogseqFile."""
+        yield "node", self.node
+        yield "is_hls", self.is_hls
+        yield "path", self.path
+        yield "bullets", self.bullets
+        yield "info", self.info

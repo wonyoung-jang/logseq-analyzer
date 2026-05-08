@@ -53,24 +53,49 @@ class ConfigEdns:
     user_edn: dict[str, Any] = field(default_factory=dict)
     global_edn: dict[str, Any] = field(default_factory=dict)
 
-    class ConfigEdnReport(StrEnum):
-        """Configuration EDN reports for the Logseq Analyzer."""
+    def get_target_dirs(self) -> dict[str, str]:
+        """Get the target directories for Logseq.
 
-        CONFIG_EDN = "config_edns"
-        EDN_DEFAULT = "edn_default"
-        EDN_USER = "edn_user"
-        EDN_GLOBAL = "edn_global"
-        EDN_CONFIG = "edn_config"
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+
+        Returns:
+            dict[str, str]: A dictionary containing the target directories.
+
+        """
+        return {
+            TargetDir.ASSET: TargetDir.ASSET,
+            TargetDir.DRAW: TargetDir.DRAW,
+            TargetDir.PAGE: self.config.get(Edn.PAGES_DIR, TargetDir.PAGE),
+            TargetDir.JOURNAL: self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL),
+            TargetDir.WHITEBOARD: self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD),
+        }
+
+    def get_page_title_format(self) -> str:
+        """Get the page title format from the configuration."""
+        return self.config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT)
+
+    def get_file_name_format(self) -> str:
+        """Get the file name format from the configuration."""
+        return self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT)
+
+    def get_ns_sep(self) -> str:
+        """Get the namespace separator based on the configuration."""
+        ns_format = self.config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR)
+        return {
+            Core.NS_CONFIG_LEGACY: Core.NS_FILE_SEP_LEGACY,
+            Core.NS_CONFIG_TRIPLE_LOWBAR: Core.NS_FILE_SEP_TRIPLE_LOWBAR,
+        }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR)
 
     @property
-    def report(self) -> dict[ConfigEdnReport, Any]:
+    def report(self) -> dict[str, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            self.ConfigEdnReport.CONFIG_EDN: {
-                self.ConfigEdnReport.EDN_DEFAULT: self.default_edn,
-                self.ConfigEdnReport.EDN_USER: self.user_edn,
-                self.ConfigEdnReport.EDN_GLOBAL: self.global_edn,
-                self.ConfigEdnReport.EDN_CONFIG: self.config,
+            "config_edns": {
+                "edn_default": self.default_edn,
+                "edn_user": self.user_edn,
+                "edn_global": self.global_edn,
+                "edn_config": self.config,
             }
         }
 
@@ -126,10 +151,10 @@ class LogseqConfigEDN:
             if tok in ("true", "false", "nil"):
                 return self.parse_literal()
             if tok.startswith(":"):
-                return self.parse_keyword()
-        if self.is_number(tok, NUMBER_REGEX):
+                return self.next()
+        if self.is_number(tok):
             return self.parse_number()
-        return self.parse_symbol()
+        return self.next()
 
     def parse_map(self) -> dict:
         """Parse a map (dictionary) from EDN."""
@@ -203,9 +228,9 @@ class LogseqConfigEDN:
             }.get(tok)
         return None
 
-    def is_number(self, tok: Any, number_regex: re.Pattern = NUMBER_REGEX) -> bool:
+    def is_number(self, tok: Any) -> bool:
         """Check if the token is a valid number (integer or float)."""
-        return number_regex.fullmatch(tok) is not None
+        return NUMBER_REGEX.fullmatch(tok) is not None
 
     def parse_number(self) -> float | int:
         """Parse a number (integer or float) from EDN."""
@@ -213,14 +238,6 @@ class LogseqConfigEDN:
         if "." in tok or "e" in tok or "E" in tok:
             return float(tok)
         return int(tok)
-
-    def parse_keyword(self) -> EDNToken | None:
-        """Parse a keyword from EDN."""
-        return self.next()
-
-    def parse_symbol(self) -> EDNToken | None:
-        """Parse a symbol from EDN."""
-        return self.next()
 
 
 def loads(edn_str: str) -> EDNToken:
@@ -233,8 +250,7 @@ def loads(edn_str: str) -> EDNToken:
         EDNToken: The parsed Python data structure.
 
     """
-    parser = LogseqConfigEDN(tokenize(edn_str))
-    return parser.parse()
+    return LogseqConfigEDN(tokenize(edn_str)).parse()
 
 
 def tokenize(edn_str: str) -> Iterator[Any]:
@@ -264,7 +280,7 @@ def get_edn_from_file(path: Path) -> EDNToken:
     """
     with path.open("r", encoding="utf-8") as f:
         edn_data = loads(f.read())
-        logger.debug("Initializing config from file: %s", path)
+    logger.debug("Initializing config from file: %s", path)
     return edn_data
 
 
@@ -407,44 +423,6 @@ def get_default_logseq_config() -> dict[str, Any]:
         },
         ":file/name-format": ":triple-lowbar",
     }
-
-
-def get_target_dirs(config: dict[str, Any]) -> dict[str, str]:
-    """Get the target directories for Logseq.
-
-    Args:
-        config (dict[str, Any]): The configuration dictionary.
-
-    Returns:
-        dict[str, str]: A dictionary containing the target directories.
-
-    """
-    return {
-        TargetDir.ASSET: TargetDir.ASSET,
-        TargetDir.DRAW: TargetDir.DRAW,
-        TargetDir.PAGE: config.get(Edn.PAGES_DIR, TargetDir.PAGE),
-        TargetDir.JOURNAL: config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL),
-        TargetDir.WHITEBOARD: config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD),
-    }
-
-
-def get_ns_sep(config: dict[str, Any]) -> str:
-    """Get the namespace separator based on the configuration."""
-    ns_format = config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR)
-    return {
-        Core.NS_CONFIG_LEGACY: Core.NS_FILE_SEP_LEGACY,
-        Core.NS_CONFIG_TRIPLE_LOWBAR: Core.NS_FILE_SEP_TRIPLE_LOWBAR,
-    }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR)
-
-
-def get_page_title_format(config: dict[str, Any]) -> str:
-    """Get the page title format from the configuration."""
-    return config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT)
-
-
-def get_file_name_format(config: dict[str, Any]) -> str:
-    """Get the file name format from the configuration."""
-    return config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT)
 
 
 def get_prop_pages_enabled(config: dict[str, Any]) -> bool:

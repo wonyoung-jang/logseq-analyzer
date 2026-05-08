@@ -3,9 +3,7 @@
 import logging
 import shutil
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +16,7 @@ class File:
     clean_on_init: bool = False
     must_exist: bool = False
     is_dir: bool = False
+    create: bool = True
 
     def __post_init__(self) -> None:
         """Initialize the File class with a path."""
@@ -27,9 +26,8 @@ class File:
             self.validate()
         if self.clean_on_init and self.path.exists():
             self.clean()
-        self.make_if_missing()
-        if not (self.must_exist or self.clean_on_init):
-            self.validate()
+        if self.create:
+            self.make_if_missing()
         logger.info("File initialized: %s", self.path)
 
     def validate(self) -> None:
@@ -79,7 +77,9 @@ class File:
             logger.exception("Error creating path")
 
 
-def _file_cls(name: str, *, is_dir: bool = False, must_exist: bool = False, clean_on_init: bool = False) -> type[File]:
+def _file_cls(
+    name: str, *, is_dir: bool = False, must_exist: bool = False, clean_on_init: bool = False, create: bool = True
+) -> type[File]:
     """File subclass with preset flags."""
 
     class _C(File):
@@ -87,6 +87,7 @@ def _file_cls(name: str, *, is_dir: bool = False, must_exist: bool = False, clea
             self.is_dir = is_dir
             self.must_exist = must_exist
             self.clean_on_init = clean_on_init
+            self.create = create
             super().__post_init__()
 
     _C.__name__ = _C.__qualname__ = name
@@ -100,7 +101,7 @@ GraphDirectory          = _file_cls("GraphDirectory",          is_dir=True, must
 LogseqDirectory         = _file_cls("LogseqDirectory",         is_dir=True, must_exist=True)
 ConfigFile              = _file_cls("ConfigFile",              must_exist=True)
 GlobalConfigFile        = _file_cls("GlobalConfigFile",        must_exist=True)
-CacheFile               = _file_cls("CacheFile")
+CacheFile               = _file_cls("CacheFile",               create=False)
 BakDirectory            = _file_cls("BakDirectory",            is_dir=True)
 RecycleDirectory        = _file_cls("RecycleDirectory",        is_dir=True)
 AssetsDirectory         = _file_cls("AssetsDirectory",         is_dir=True)
@@ -126,26 +127,16 @@ class LogseqGraphDirs:
     user_config: File
     global_config: File | None = None
 
-    class Dirname(StrEnum):
-        """Directories in the Logseq graph structure."""
-
-        GRAPH = "graph"
-        LOGSEQ = "graph/logseq"
-        BAK = "graph/logseq/bak"
-        RECYCLE = "graph/logseq/.recycle"
-        USER_CONFIG = "graph/logseq/config.edn"
-        GLOBAL_CONFIG = "global-config.edn"
-
     @property
-    def report(self) -> dict[Dirname, Any]:
+    def report(self) -> dict[str, File | None]:
         """Generate a report of the Logseq graph directories."""
         return {
-            self.Dirname.GRAPH: self.graph_dir,
-            self.Dirname.LOGSEQ: self.logseq_dir,
-            self.Dirname.BAK: self.bak_dir,
-            self.Dirname.RECYCLE: self.recycle_dir,
-            self.Dirname.USER_CONFIG: self.user_config,
-            self.Dirname.GLOBAL_CONFIG: self.global_config,
+            "graph": self.graph_dir,
+            "graph/logseq": self.logseq_dir,
+            "graph/logseq/bak": self.bak_dir,
+            "graph/logseq/.recycle": self.recycle_dir,
+            "graph/logseq/config.edn": self.user_config,
+            "global-config.edn": self.global_config,
         }
 
 
@@ -158,22 +149,14 @@ class AnalyzerDeleteDirs:
     delete_recycle_dir: File
     delete_assets_dir: File
 
-    class Dirname(StrEnum):
-        """Directories to be deleted in the Logseq Analyzer."""
-
-        DELETE = "to-delete"
-        ASSETS = "to-delete/assets"
-        BAK = "to-delete/bak"
-        RECYCLE = "to-delete/.recycle"
-
     @property
-    def report(self) -> dict[Dirname, Any]:
+    def report(self) -> dict[str, File]:
         """Generate a report of the analyzer delete directories."""
         return {
-            self.Dirname.DELETE: self.delete_dir,
-            self.Dirname.BAK: self.delete_bak_dir,
-            self.Dirname.RECYCLE: self.delete_recycle_dir,
-            self.Dirname.ASSETS: self.delete_assets_dir,
+            "to-delete": self.delete_dir,
+            "to-delete/bak": self.delete_bak_dir,
+            "to-delete/.recycle": self.delete_recycle_dir,
+            "to-delete/assets": self.delete_assets_dir,
         }
 
 
@@ -186,23 +169,14 @@ class LogseqAnalyzerDirs:
     target_dirs: dict[str, str]
     output_dir: File
 
-    class DirsAnalyzer(StrEnum):
-        """Directories used in the Logseq Analyzer."""
-
-        DIRS = "logseq_analyzer_dirs"
-        GRAPH = "graph_dirs"
-        DELETE = "delete_dirs"
-        TARGET = "target_dirs"
-        OUTPUT = "output_dir"
-
     @property
-    def report(self) -> dict[DirsAnalyzer, dict[DirsAnalyzer, Any]]:
+    def report(self) -> dict[str, dict]:
         """Generate a report of the Logseq analyzer directories."""
         return {
-            self.DirsAnalyzer.DIRS: {
-                self.DirsAnalyzer.GRAPH: self.graph_dirs.report,
-                self.DirsAnalyzer.DELETE: self.delete_dirs.report,
-                self.DirsAnalyzer.TARGET: self.target_dirs,
-                self.DirsAnalyzer.OUTPUT: self.output_dir,
+            "logseq_analyzer_dirs": {
+                "graph_dirs": self.graph_dirs.report,
+                "delete_dirs": self.delete_dirs.report,
+                "target_dirs": self.target_dirs,
+                "output_dir": self.output_dir,
             }
         }

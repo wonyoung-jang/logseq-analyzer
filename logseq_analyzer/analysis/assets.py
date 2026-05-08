@@ -1,7 +1,7 @@
 """Logseq Assets Analysis Module."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.patterns.content import ContentPatterns
 from logseq_analyzer.utils.enums import CritContent, CritEmb, FileType, Output
@@ -84,13 +84,15 @@ class LogseqAssetsHls:
         }
 
 
-def _update_asset_backlink(asset_mentions: set[str], asset_file: LogseqFile, filename: str) -> None:
+def _update_asset_backlink(mentions: set[str], file: LogseqFile, filename: str) -> None:
     """Update the asset backlink information."""
-    names = (asset_file.path.name, filename)
-    for asset_mention in asset_mentions:
-        if any(name in asset_mention for name in names):
-            asset_file.node.backlinked = True
+    for mention in mentions:
+        if any(name in mention for name in (file.path.name, filename)):
+            file.node.backlinked = True
             return
+
+
+_ASSET_CRITERIA = frozenset({CritEmb.ASSET, CritContent.ASSETS})
 
 
 @dataclass(slots=True)
@@ -100,26 +102,24 @@ class LogseqAssets:
     index: FileIndex
     backlinked: set[LogseqFile] = field(default_factory=set)
     not_backlinked: set[LogseqFile] = field(default_factory=set)
-    _ASSET_CRITERIA: ClassVar[frozenset[str]] = frozenset({CritEmb.ASSET, CritContent.ASSETS})
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssets instance."""
-        _mentioned_assets = set()
+        _mentioned = set()
         for f in self.index:
             _is_asset_processed = False
             if not (f_data := f.data):
                 continue
-            for criteria in LogseqAssets._ASSET_CRITERIA:
-                _mentioned_assets.update(f_data.get(criteria, []))
-            if not _mentioned_assets:
+            for criteria in _ASSET_CRITERIA:
+                _mentioned.update(f_data.get(criteria, []))
+            if not _mentioned:
                 continue
-            for asset_file in self.yield_assets(backlinked=False):
-                _update_asset_backlink(_mentioned_assets, asset_file, f.path.name)
+            for file in self.yield_assets(backlinked=False):
+                _update_asset_backlink(_mentioned, file, f.path.name)
                 _is_asset_processed = True
             if not _is_asset_processed:
                 break
-            _mentioned_assets.clear()
-        del _mentioned_assets
+            _mentioned.clear()
         self.backlinked.update(self.yield_assets(backlinked=True))
         self.not_backlinked.update(self.yield_assets(backlinked=False))
 

@@ -3,18 +3,6 @@
 from enum import StrEnum
 
 
-class Constant(StrEnum):
-    """Constants used in the Logseq Analyzer."""
-
-    CACHE_FILE = "logseq-analyzer-cache"
-    LOG_FILE = "logseq_analyzer.log"
-    OUTPUT_DIR = "logseq-analyzer-output"
-    TO_DELETE_ASSETS_DIR = "to-delete/assets"
-    TO_DELETE_BAK_DIR = "to-delete/bak"
-    TO_DELETE_DIR = "to-delete"
-    TO_DELETE_RECYCLE_DIR = "to-delete/.recycle"
-
-
 class Core(StrEnum):
     """Core components of the Logseq Analyzer."""
 

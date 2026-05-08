@@ -33,3 +33,4 @@ site/
 !uv.lock
 !.python-version
 .tally-config.toml
+lsa.pstats

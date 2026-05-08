@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.utils.enums import FileType, Output
 
@@ -81,19 +81,19 @@ class LogseqJournals:
 
     index: FileIndex
     dangling_links: set[str]
+    journal_page_format: str
     all_journals: list[datetime] = field(default_factory=list)
     existing: list[datetime] = field(default_factory=list)
     missing: list[datetime] = field(default_factory=list)
     timeline: list[datetime] = field(default_factory=list)
     dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
     timeline_stats: dict[str, Any] = field(default_factory=dict)
-    journal_page_format: ClassVar[str] = ""
 
     def __post_init__(self) -> None:
         """Initialize the LogseqJournals class."""
-        dangling = sorted(journals_to_datetime(self.dangling_links, LogseqJournals.journal_page_format))
+        dangling = sorted(journals_to_datetime(self.dangling_links, self.journal_page_format))
         journals = (f.path.name for f in self.index if f.path.file_type == FileType.JOURNAL)
-        self.existing.extend(sorted(journals_to_datetime(journals, LogseqJournals.journal_page_format)))
+        self.existing.extend(sorted(journals_to_datetime(journals, self.journal_page_format)))
         self.build_complete_timeline(dangling)
         self.get_dangling_journals_outside_range(dangling)
 

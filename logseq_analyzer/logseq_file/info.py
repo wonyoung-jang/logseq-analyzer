@@ -31,10 +31,10 @@ def _check_for_backlinks(name: str, lookup: set[str]) -> bool:
 class NodeType:
     """Class to hold node type data."""
 
-    has_backlinks: bool = field(default=False, init=False)
-    backlinked: bool = field(default=False, init=False)
-    backlinked_ns_only: bool = field(default=False, init=False)
-    node_type: str = field(default=Node.OTHER, init=False)
+    has_backlinks: bool = False
+    backlinked: bool = False
+    backlinked_ns_only: bool = False
+    node_type: str = Node.OTHER
 
     def check_backlinked(self, name: str, lookup: set[str]) -> None:
         """Check if a file is backlinked and update the node state."""

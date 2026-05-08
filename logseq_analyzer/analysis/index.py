@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.file import LogseqFile
 from logseq_analyzer.utils.enums import Output
@@ -15,12 +15,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _yield_attrs(obj: object) -> Iterator[tuple[str, Any]]:
-    """Collect slotted attributes from an object."""
-    for slot in getattr(type(obj), "__slots__", ()):
-        yield slot, getattr(obj, slot)
-
-
 @dataclass(slots=True)
 class FileIndex:
     """Class to index files in the Logseq graph."""
@@ -28,8 +22,7 @@ class FileIndex:
     _files: set[LogseqFile] = field(default_factory=set)
     _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
     _path_to_file: dict[Path, LogseqFile] = field(default_factory=dict)
-    _instance: ClassVar[FileIndex | None] = None
-    write_graph: ClassVar[bool] = False
+    write_graph: bool = field(init=False, default=False)
 
     def __len__(self) -> int:
         """Return the number of files in the index."""
@@ -39,7 +32,7 @@ class FileIndex:
         """Iterate over the files in the index."""
         return iter(self._files)
 
-    def __getitem__(self, f: Any) -> Any:
+    def __getitem__(self, f: Any) -> LogseqFile | list[LogseqFile] | None:
         """Get a file by its key."""
         if isinstance(f, LogseqFile):
             if f in self:
@@ -112,7 +105,7 @@ class FileIndex:
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
         """Get metadata file data from the graph."""
-        return {file: {k: v for k, v in _yield_attrs(file) if v and k not in ("data", "masked")} for file in self}
+        return {file: {k: v for k, v in file.yield_attrs() if v} for file in self}
 
     @property
     def graph_content_data(self) -> dict[LogseqFile, Any]:
@@ -129,7 +122,7 @@ class FileIndex:
             Output.IDX_NAME_TO_FILES: self._name_to_files,
             Output.IDX_PATH_TO_FILE: self._path_to_file,
         }
-        if FileIndex.write_graph:
+        if self.write_graph:
             _report[Output.GRAPH_CONTENT] = {f: f.bullets.content for f in self}
             _report[Output.GRAPH_BULLETS] = {f: f.bullets.all_bullets for f in self}
         return _report

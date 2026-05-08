@@ -5,17 +5,16 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from logseq_analyzer.config.graph_config import ConfigEdns, get_ns_sep
 from logseq_analyzer.logseq_file.info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
-from logseq_analyzer.utils.enums import Core, FileType, TargetDir
+from logseq_analyzer.utils.enums import Core, FileType
 
 if TYPE_CHECKING:
     from os import stat_result
 
-    from logseq_analyzer.io.filesystem import LogseqAnalyzerDirs
+    from logseq_analyzer.logseq_file.file import LogseqFileContext
 
 logger = logging.getLogger(__name__)
 
@@ -30,58 +29,56 @@ class SizeUnit(StrEnum):
     IEC = "iec"  # Powers of 1024
 
 
+_ORDINAL_SUFFIX = {1: "st", 2: "nd", 3: "rd"}
+
+
 def append_ordinal_to_day(day: str) -> str:
     """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-    day_as_int = int(day)
-    if 11 <= day_as_int <= 13:
+    day_int = int(day)
+    if 11 <= day_int <= 13:
         return day + "th"
-    return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
+    return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
+
+
+def _get_non_journal_key(name: str, ns_file_sep: str) -> str:
+    """Process non-journal keys to create a page title."""
+    return unquote(name).replace(ns_file_sep, Core.NS_SEP)
+
+
+def _get_journal_key(name: str, file_fmt: str, page_fmt: str, page_title_fmt: str) -> str:
+    """Process the journal key to create a page title."""
+    try:
+        date_obj = datetime.strptime(name, file_fmt).replace(tzinfo=UTC)
+        page_title = date_obj.strftime(page_fmt)
+        if Core.DATE_ORDINAL_SUFFIX in page_title_fmt:
+            day_number = str(date_obj.day)
+            day_with_ordinal = append_ordinal_to_day(day_number)
+            page_title = page_title.replace(day_number, day_with_ordinal, 1)
+        return page_title.replace("'", "")
+    except ValueError as e:
+        logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, page_fmt, e)
+        return name
 
 
 @dataclass(slots=True)
 class LogseqFileName:
     """LogseqFileName class."""
 
-    journal_format: ClassVar[JournalFormats]
-    ns_file_sep: ClassVar[str]
-    journal_dir: ClassVar[str]
+    journal_format: JournalFormats
+    ns_file_sep: str
+    journal_dir: str
 
-    @classmethod
-    def configure(
-        cls, analyzer_dirs: LogseqAnalyzerDirs, journal_formats: JournalFormats, config_edns: ConfigEdns
-    ) -> None:
-        """Configure the LogseqPath class with necessary settings."""
-        cls.journal_format = journal_formats
-        cls.ns_file_sep = get_ns_sep(config_edns.config)
-        cls.journal_dir = analyzer_dirs.target_dirs[TargetDir.JOURNAL]
-
-    @staticmethod
-    def process(file: Path) -> str:
+    def __call__(self, file: Path) -> str:
         """Process the Logseq filename based on its parent directory."""
-        name = file.stem.strip(LogseqFileName.ns_file_sep)
-        if file.parent.name == LogseqFileName.journal_dir:
-            return LogseqFileName._get_journal_key(name)
-        return LogseqFileName._get_non_journal_key(name)
-
-    @staticmethod
-    def _get_journal_key(name: str) -> str:
-        """Process the journal key to create a page title."""
-        try:
-            date_obj = datetime.strptime(name, LogseqFileName.journal_format.file).replace(tzinfo=UTC)
-            page_title = date_obj.strftime(LogseqFileName.journal_format.page)
-            if Core.DATE_ORDINAL_SUFFIX in LogseqFileName.journal_format.page_title:
-                day_number = str(date_obj.day)
-                day_with_ordinal = append_ordinal_to_day(day_number)
-                page_title.replace(day_number, day_with_ordinal, 1)
-            return page_title.replace("'", "")
-        except ValueError as e:
-            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, LogseqFileName.journal_format.page, e)
-            return name
-
-    @staticmethod
-    def _get_non_journal_key(name: str, ns_sep: str = Core.NS_SEP) -> str:
-        """Process non-journal keys to create a page title."""
-        return unquote(name).replace(LogseqFileName.ns_file_sep, ns_sep)
+        name = file.stem.strip(self.ns_file_sep)
+        if file.parent.name == self.journal_dir:
+            return _get_journal_key(
+                name,
+                self.journal_format.file,
+                self.journal_format.page,
+                self.journal_format.page_title,
+            )
+        return _get_non_journal_key(name, self.ns_file_sep)
 
 
 def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
@@ -116,44 +113,32 @@ class LogseqPath:
     """LogseqPath class."""
 
     file: Path
+    context: LogseqFileContext
     file_type: str = ""
     logseq_url: str = ""
     name: str = ""
-    stat: stat_result = field(init=False)
     uri: str = field(init=False)
-    now_ts: ClassVar[float] = datetime.now(tz=UTC).timestamp()
-    graph_path: ClassVar[Path]
-    result_map: ClassVar[dict]
+    _stat: stat_result = field(init=False)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqPath object."""
-        if not isinstance(self.file, Path):
-            msg = "file must be a pathlib.Path object."
-            raise TypeError(msg)
-        self.stat = self.file.stat()
+        self._stat = self.file.stat()
         self.uri: str = self.file.as_uri()
-        self.name = LogseqFileName.process(self.file)
+        _filenamer = LogseqFileName(
+            journal_format=self.context.journal_format,
+            ns_file_sep=self.context.ns_file_sep,
+            journal_dir=self.context.journal_dir,
+        )
+        self.name = _filenamer(self.file)
         self.file_type = self.evaluate_file_type()
         self.logseq_url = self.set_logseq_url()
 
-    @classmethod
-    def configure(cls, analyzer_dirs: LogseqAnalyzerDirs) -> None:
-        """Configure the LogseqPath class with necessary settings."""
-        cls.graph_path = analyzer_dirs.graph_dirs.graph_dir.path
-        cls.result_map = {
-            analyzer_dirs.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
-            analyzer_dirs.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
-            analyzer_dirs.target_dirs[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
-            analyzer_dirs.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
-            analyzer_dirs.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
-        }
-
     def evaluate_file_type(self) -> str:
         """Determine the file type based on the directory structure."""
-        _result = LogseqPath.result_map.get(self.file.parent.name, (FileType.OTHER, FileType.OTHER))
+        _result = self.context.result_map.get(self.file.parent.name, (FileType.OTHER, FileType.OTHER))
         if _result[0] != FileType.OTHER:
             return _result[0]
-        for key, _result in LogseqPath.result_map.items():
+        for key, _result in self.context.result_map.items():
             if key in self.file.parts:
                 return _result[1]
         return FileType.OTHER
@@ -161,13 +146,13 @@ class LogseqPath:
     def set_logseq_url(self) -> str:
         """Set the Logseq URL."""
         uri_path = Path(self.uri)
-        target_index = len(uri_path.parts) - len(LogseqPath.graph_path.parts)
+        target_index = len(uri_path.parts) - len(self.context.graph_path.parts)
         target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
             return ""
-        graph_path = str(LogseqPath.graph_path).replace("\\", "/")
+        graph_path = str(self.context.graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
         if not self.uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
@@ -188,19 +173,19 @@ class LogseqPath:
     def timestamp_info(self) -> TimestampInfo:
         """Get the timestamps for the file."""
         return TimestampInfo(
-            time_existed=LogseqPath.now_ts - self.stat.st_birthtime,
-            time_unmodified=LogseqPath.now_ts - self.stat.st_mtime,
-            date_created=datetime.fromtimestamp(self.stat.st_birthtime, tz=UTC).isoformat(),
-            date_modified=datetime.fromtimestamp(self.stat.st_mtime, tz=UTC).isoformat(),
+            time_existed=self.context.now_ts - self._stat.st_birthtime,
+            time_unmodified=self.context.now_ts - self._stat.st_mtime,
+            date_created=datetime.fromtimestamp(self._stat.st_birthtime, tz=UTC).isoformat(),
+            date_modified=datetime.fromtimestamp(self._stat.st_mtime, tz=UTC).isoformat(),
         )
 
     @property
     def size_info(self) -> SizeInfo:
         """Get the size information for the file."""
         return SizeInfo(
-            size=self.stat.st_size,
-            human_readable_size=format_bytes(self.stat.st_size),
-            has_content=bool(self.stat.st_size),
+            size=self._stat.st_size,
+            human_readable_size=format_bytes(self._stat.st_size),
+            has_content=bool(self._stat.st_size),
         )
 
     @property

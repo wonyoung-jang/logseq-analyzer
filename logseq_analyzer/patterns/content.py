@@ -2,6 +2,8 @@
 
 import re
 
+from logseq_analyzer.utils.enums import CritContent
+
 
 class ContentPatterns:
     """Class to hold compiled regex patterns for Logseq content."""
@@ -129,3 +131,14 @@ class ContentPatterns:
         re.IGNORECASE | re.VERBOSE,
     )
     INLINE_CODE_BLOCK = re.compile(r"`[^`].+?`", re.IGNORECASE)
+
+
+PRIMARY_DATA_MAP: dict[str, re.Pattern] = {
+    CritContent.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+    CritContent.DRAW: ContentPatterns.DRAW,
+    CritContent.FLASHCARD: ContentPatterns.FLASHCARD,
+    CritContent.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+    CritContent.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+    CritContent.TAG: ContentPatterns.TAG,
+    CritContent.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+}

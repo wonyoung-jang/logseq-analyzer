@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.app import Constant
 from logseq_analyzer.io.cache import Cache
-from logseq_analyzer.utils.enums import Constant
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -24,5 +24,5 @@ def cache() -> Iterator[Cache]:
 
 def test_cache_initialization(cache: Cache) -> None:
     """Test the initialization of the Cache class."""
-    assert cache.cache_path.exists()
+    assert cache.path.exists()
     assert cache.cache is not None
