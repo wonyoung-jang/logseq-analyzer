@@ -2,15 +2,77 @@
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from logseq_analyzer.utils.date_utilities import date_next, date_stats, journals_to_datetime
 from logseq_analyzer.utils.enums import FileType, Output
 
 if TYPE_CHECKING:
-    from datetime import datetime
+    from collections.abc import Iterable, Iterator
 
     from logseq_analyzer.analysis.index import FileIndex
+
+
+class Day(IntEnum):
+    """Enum for days of the week."""
+
+    IN_WEEK = 7
+    IN_MONTH = 30
+    IN_YEAR = 365
+
+
+class DateStat(StrEnum):
+    """Enum for date statistics."""
+
+    FIRST = "first"
+    LAST = "last"
+    DAYS = "days"
+    WEEKS = "weeks"
+    MONTHS = "months"
+    YEARS = "years"
+
+
+DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
+
+
+def date_next(date_obj: datetime) -> datetime:
+    """Return the date of the next day."""
+    return date_obj + timedelta(days=1)
+
+
+def date_stats(dates: list[datetime]) -> dict[str, Any]:
+    """Get statistics about the timeline."""
+
+    def _range(delta: timedelta) -> dict[str, float | None]:
+        """Compute the range between two dates in days, weeks, months, and years."""
+        days = delta.days + 1
+        return {
+            DateStat.DAYS: days if delta else 0.0,
+            DateStat.WEEKS: round(days / Day.IN_WEEK, 2) if delta else 0.0,
+            DateStat.MONTHS: round(days / Day.IN_MONTH, 2) if delta else 0.0,
+            DateStat.YEARS: round(days / Day.IN_YEAR, 2) if delta else 0.0,
+        }
+
+    stats: dict[str, Any] = {
+        DateStat.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
+        DateStat.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
+    }
+    delta = stats[DateStat.LAST] - stats[DateStat.FIRST]
+    stats.update(_range(delta))
+    return stats
+
+
+def journals_to_datetime(keys: Iterable[str], py_page_format: str = "") -> Iterator[datetime]:
+    """Convert journal keys from strings to datetime objects."""
+    for key in keys:
+        try:
+            key_to_parse = key
+            for ordinal in DATE_ORDINAL_SUFFIXES:
+                key_to_parse = key_to_parse.replace(ordinal, "")
+            yield datetime.strptime(key_to_parse, py_page_format.replace("#", "")).replace(tzinfo=UTC)
+        except ValueError:
+            pass
 
 
 @dataclass(slots=True)

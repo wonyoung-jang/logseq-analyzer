@@ -10,7 +10,6 @@ from urllib.parse import unquote
 
 from logseq_analyzer.config.graph_config import ConfigEdns, get_ns_sep
 from logseq_analyzer.logseq_file.info import JournalFormats, NamespaceInfo, SizeInfo, TimestampInfo
-from logseq_analyzer.utils.date_utilities import append_ordinal_to_day
 from logseq_analyzer.utils.enums import Core, FileType, TargetDir
 
 if TYPE_CHECKING:
@@ -29,6 +28,14 @@ class SizeUnit(StrEnum):
 
     SI = "si"  # Powers of 1000
     IEC = "iec"  # Powers of 1024
+
+
+def append_ordinal_to_day(day: str) -> str:
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    day_as_int = int(day)
+    if 11 <= day_as_int <= 13:
+        return day + "th"
+    return day + {1: "st", 2: "nd", 3: "rd"}.get(day_as_int % 10, "th")
 
 
 @dataclass(slots=True)
