@@ -32,7 +32,7 @@ class SizeUnit(StrEnum):
 _ORDINAL_SUFFIX = {1: "st", 2: "nd", 3: "rd"}
 
 
-def append_ordinal_to_day(day: str) -> str:
+def _append_ordinal_to_day(day: str) -> str:
     """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
     day_int = int(day)
     if 11 <= day_int <= 13:
@@ -52,7 +52,7 @@ def _get_journal_key(name: str, file_fmt: str, page_fmt: str, page_title_fmt: st
         page_title = date_obj.strftime(page_fmt)
         if Core.DATE_ORDINAL_SUFFIX in page_title_fmt:
             day_number = str(date_obj.day)
-            day_with_ordinal = append_ordinal_to_day(day_number)
+            day_with_ordinal = _append_ordinal_to_day(day_number)
             page_title = page_title.replace(day_number, day_with_ordinal, 1)
         return page_title.replace("'", "")
     except ValueError as e:
@@ -60,25 +60,12 @@ def _get_journal_key(name: str, file_fmt: str, page_fmt: str, page_title_fmt: st
         return name
 
 
-@dataclass(slots=True)
-class LogseqFileName:
-    """LogseqFileName class."""
-
-    journal_format: JournalFormats
-    ns_file_sep: str
-    journal_dir: str
-
-    def __call__(self, file: Path) -> str:
-        """Process the Logseq filename based on its parent directory."""
-        name = file.stem.strip(self.ns_file_sep)
-        if file.parent.name == self.journal_dir:
-            return _get_journal_key(
-                name,
-                self.journal_format.file,
-                self.journal_format.page,
-                self.journal_format.page_title,
-            )
-        return _get_non_journal_key(name, self.ns_file_sep)
+def _process_filename(file: Path, ns_file_sep: str, journal_dir: str, jf: JournalFormats) -> str:
+    """Process the filename to create a page title."""
+    name = file.stem.strip(ns_file_sep)
+    if file.parent.name == journal_dir:
+        return _get_journal_key(name, jf.file, jf.page, jf.page_title)
+    return _get_non_journal_key(name, ns_file_sep)
 
 
 def format_bytes(size_bytes: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
@@ -124,12 +111,12 @@ class LogseqPath:
         """Initialize the LogseqPath object."""
         self._stat = self.file.stat()
         self.uri: str = self.file.as_uri()
-        _filenamer = LogseqFileName(
-            journal_format=self.context.journal_format,
+        self.name = _process_filename(
+            self.file,
+            jf=self.context.journal_format,
             ns_file_sep=self.context.ns_file_sep,
             journal_dir=self.context.journal_dir,
         )
-        self.name = _filenamer(self.file)
         self.file_type = self.evaluate_file_type()
         self.logseq_url = self.set_logseq_url()
 

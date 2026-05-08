@@ -17,15 +17,7 @@ logger = logging.getLogger(__name__)
 
 type EDNToken = Any | None | dict | list | set | bool | float | int | ast.AST
 
-TOKEN_REGEX: re.Pattern = re.compile(
-    r"""
-    "(?:\\.|[^"\\])*"         | # strings
-    \#\{                      | # set literal
-    \{|\}|\[|\]|\(|\)         | # delimiters
-    [^"\s\{\}\[\]\(\),]+        # atoms (numbers, symbols, keywords, etc.)
-    """,
-    re.VERBOSE,
-)
+TOKEN_REGEX: re.Pattern = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
 COMMENT_REGEX: re.Pattern = re.compile(r";.*")
 NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
@@ -86,6 +78,10 @@ class ConfigEdns:
             Core.NS_CONFIG_LEGACY: Core.NS_FILE_SEP_LEGACY,
             Core.NS_CONFIG_TRIPLE_LOWBAR: Core.NS_FILE_SEP_TRIPLE_LOWBAR,
         }.get(ns_format, Core.NS_FILE_SEP_TRIPLE_LOWBAR)
+
+    def get_prop_pages_enabled(self) -> bool:
+        """Check if property pages are enabled in the configuration."""
+        return self.config.get(Edn.PROP_PAGES, True)
 
     @property
     def report(self) -> dict[str, Any]:
@@ -278,153 +274,140 @@ def get_edn_from_file(path: Path) -> EDNToken:
         path (Path): The path to the config file.
 
     """
-    with path.open("r", encoding="utf-8") as f:
-        edn_data = loads(f.read())
     logger.debug("Initializing config from file: %s", path)
-    return edn_data
+    with path.open("r", encoding="utf-8") as f:
+        return loads(f.read())
 
 
-def get_default_logseq_config() -> dict[str, Any]:
-    """Get the default Logseq configuration.
-
-    Returns:
-        dict[str, Any]: The default Logseq configuration.
-
-    """
-    return {
-        ":meta/version": 1,
-        ":preferred-format": "Markdown",
-        ":preferred-workflow": ":now",
-        ":hidden": [],
-        ":default-templates": {":journals": ""},
-        ":journal/page-title-format": "MMM do, yyyy",
-        ":journal/file-name-format": "yyyy_MM_dd",
-        ":ui/enable-tooltip?": True,
-        ":ui/show-brackets?": True,
-        ":ui/show-full-blocks?": False,
-        ":ui/auto-expand-block-refs?": True,
-        ":feature/enable-block-timestamps?": False,
-        ":feature/enable-search-remove-accents?": True,
-        ":feature/enable-journals?": True,
-        ":feature/enable-flashcards?": True,
-        ":feature/enable-whiteboards?": True,
-        ":feature/disable-scheduled-and-deadline-query?": False,
-        ":scheduled/future-days": 7,
-        ":start-of-week": 6,
-        ":export/bullet-indentation": ":tab",
-        ":publishing/all-pages-public?": False,
-        ":pages-directory": "pages",
-        ":journals-directory": "journals",
-        ":whiteboards-directory": "whiteboards",
-        ":shortcuts": {},
-        ":shortcut/doc-mode-enter-for-new-block?": False,
-        ":block/content-max-length": 10000,
-        ":ui/show-command-doc?": True,
-        ":ui/show-empty-bullets?": False,
-        ":query/views": {":pprint": ["fn", ["r"], [":pre.code", ["pprint", "r"]]]},
-        ":query/result-transforms": {
-            ":sort-by-priority": [
-                "fn",
-                ["result"],
-                ["sort-by", ["fn", ["h"], ["get", "h", ":block/priority", "Z"]], "result"],
-            ]
-        },
-        ":default-queries": {
-            ":journals": [
-                {
-                    ":title": "🔨 NOW",
-                    ":query": [
-                        ":find",
-                        ["pull", "?h", ["*"]],
-                        ":in",
-                        "$",
-                        "?start",
-                        "?today",
-                        ":where",
-                        ["?h", ":block/marker", "?marker"],
-                        [["contains?", {"NOW", "DOING"}, "?marker"]],
-                        ["?h", ":block/page", "?p"],
-                        ["?p", ":block/journal?", True],
-                        ["?p", ":block/journal-day", "?d"],
-                        [[">=", "?d", "?start"]],
-                        [["<=", "?d", "?today"]],
+DEFAULT_LOGSEQ_CONFIG = {
+    ":meta/version": 1,
+    ":preferred-format": "Markdown",
+    ":preferred-workflow": ":now",
+    ":hidden": [],
+    ":default-templates": {":journals": ""},
+    ":journal/page-title-format": "MMM do, yyyy",
+    ":journal/file-name-format": "yyyy_MM_dd",
+    ":ui/enable-tooltip?": True,
+    ":ui/show-brackets?": True,
+    ":ui/show-full-blocks?": False,
+    ":ui/auto-expand-block-refs?": True,
+    ":feature/enable-block-timestamps?": False,
+    ":feature/enable-search-remove-accents?": True,
+    ":feature/enable-journals?": True,
+    ":feature/enable-flashcards?": True,
+    ":feature/enable-whiteboards?": True,
+    ":feature/disable-scheduled-and-deadline-query?": False,
+    ":scheduled/future-days": 7,
+    ":start-of-week": 6,
+    ":export/bullet-indentation": ":tab",
+    ":publishing/all-pages-public?": False,
+    ":pages-directory": "pages",
+    ":journals-directory": "journals",
+    ":whiteboards-directory": "whiteboards",
+    ":shortcuts": {},
+    ":shortcut/doc-mode-enter-for-new-block?": False,
+    ":block/content-max-length": 10000,
+    ":ui/show-command-doc?": True,
+    ":ui/show-empty-bullets?": False,
+    ":query/views": {":pprint": ["fn", ["r"], [":pre.code", ["pprint", "r"]]]},
+    ":query/result-transforms": {
+        ":sort-by-priority": [
+            "fn",
+            ["result"],
+            ["sort-by", ["fn", ["h"], ["get", "h", ":block/priority", "Z"]], "result"],
+        ]
+    },
+    ":default-queries": {
+        ":journals": [
+            {
+                ":title": "🔨 NOW",
+                ":query": [
+                    ":find",
+                    ["pull", "?h", ["*"]],
+                    ":in",
+                    "$",
+                    "?start",
+                    "?today",
+                    ":where",
+                    ["?h", ":block/marker", "?marker"],
+                    [["contains?", {"NOW", "DOING"}, "?marker"]],
+                    ["?h", ":block/page", "?p"],
+                    ["?p", ":block/journal?", True],
+                    ["?p", ":block/journal-day", "?d"],
+                    [[">=", "?d", "?start"]],
+                    [["<=", "?d", "?today"]],
+                ],
+                ":inputs": [":14d", ":today"],
+                ":result-transform": [
+                    "fn",
+                    ["result"],
+                    [
+                        "sort-by",
+                        ["fn", ["h"], ["get", "h", ":block/priority", "Z"]],
+                        "result",
                     ],
-                    ":inputs": [":14d", ":today"],
-                    ":result-transform": [
-                        "fn",
-                        ["result"],
-                        [
-                            "sort-by",
-                            ["fn", ["h"], ["get", "h", ":block/priority", "Z"]],
-                            "result",
-                        ],
-                    ],
-                    ":group-by-page?": False,
-                    ":collapsed?": False,
-                },
-                {
-                    ":title": "📅 NEXT",
-                    ":query": [
-                        ":find",
-                        ["pull", "?h", ["*"]],
-                        ":in",
-                        "$",
-                        "?start",
-                        "?next",
-                        ":where",
-                        ["?h", ":block/marker", "?marker"],
-                        [["contains?", {"NOW", "LATER", "TODO"}, "?marker"]],
-                        ["?h", ":block/page", "?p"],
-                        ["?p", ":block/journal?", True],
-                        ["?p", ":block/journal-day", "?d"],
-                        [[">", "?d", "?start"]],
-                        [["<", "?d", "?next"]],
-                    ],
-                    ":inputs": [":today", ":7d-after"],
-                    ":group-by-page?": False,
-                    ":collapsed?": False,
-                },
-            ]
-        },
-        ":commands": [],
-        ":outliner/block-title-collapse-enabled?": False,
-        ":macros": {},
-        ":ref/default-open-blocks-level": 2,
-        ":ref/linked-references-collapsed-threshold": 100,
-        ":graph/settings": {
-            ":orphan-pages?": True,
-            ":builtin-pages?": False,
-            ":excluded-pages?": False,
-            ":journal?": False,
-        },
-        ":graph/forcesettings": {
-            ":link-dist": 180,
-            ":charge-strength": -600,
-            ":charge-range": 600,
-        },
-        ":favorites": [],
-        ":srs/learning-fraction": 0.5,
-        ":srs/initial-interval": 4,
-        ":property-pages/enabled?": True,
-        ":editor/extra-codemirror-options": {
-            ":lineWrapping": False,
-            ":lineNumbers": True,
-            ":readOnly": False,
-        },
-        ":editor/logical-outdenting?": False,
-        ":editor/preferred-pasting-file?": False,
-        ":dwim/settings": {
-            ":admonition&src?": True,
-            ":markup?": False,
-            ":block-ref?": True,
-            ":page-ref?": True,
-            ":properties?": True,
-            ":list?": False,
-        },
-        ":file/name-format": ":triple-lowbar",
-    }
-
-
-def get_prop_pages_enabled(config: dict[str, Any]) -> bool:
-    """Check if property pages are enabled in the configuration."""
-    return config.get(Edn.PROP_PAGES, True)
+                ],
+                ":group-by-page?": False,
+                ":collapsed?": False,
+            },
+            {
+                ":title": "📅 NEXT",
+                ":query": [
+                    ":find",
+                    ["pull", "?h", ["*"]],
+                    ":in",
+                    "$",
+                    "?start",
+                    "?next",
+                    ":where",
+                    ["?h", ":block/marker", "?marker"],
+                    [["contains?", {"NOW", "LATER", "TODO"}, "?marker"]],
+                    ["?h", ":block/page", "?p"],
+                    ["?p", ":block/journal?", True],
+                    ["?p", ":block/journal-day", "?d"],
+                    [[">", "?d", "?start"]],
+                    [["<", "?d", "?next"]],
+                ],
+                ":inputs": [":today", ":7d-after"],
+                ":group-by-page?": False,
+                ":collapsed?": False,
+            },
+        ]
+    },
+    ":commands": [],
+    ":outliner/block-title-collapse-enabled?": False,
+    ":macros": {},
+    ":ref/default-open-blocks-level": 2,
+    ":ref/linked-references-collapsed-threshold": 100,
+    ":graph/settings": {
+        ":orphan-pages?": True,
+        ":builtin-pages?": False,
+        ":excluded-pages?": False,
+        ":journal?": False,
+    },
+    ":graph/forcesettings": {
+        ":link-dist": 180,
+        ":charge-strength": -600,
+        ":charge-range": 600,
+    },
+    ":favorites": [],
+    ":srs/learning-fraction": 0.5,
+    ":srs/initial-interval": 4,
+    ":property-pages/enabled?": True,
+    ":editor/extra-codemirror-options": {
+        ":lineWrapping": False,
+        ":lineNumbers": True,
+        ":readOnly": False,
+    },
+    ":editor/logical-outdenting?": False,
+    ":editor/preferred-pasting-file?": False,
+    ":dwim/settings": {
+        ":admonition&src?": True,
+        ":markup?": False,
+        ":block-ref?": True,
+        ":page-ref?": True,
+        ":properties?": True,
+        ":list?": False,
+    },
+    ":file/name-format": ":triple-lowbar",
+}

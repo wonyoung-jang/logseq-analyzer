@@ -14,7 +14,7 @@ from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
 from logseq_analyzer.config.arguments import Args
-from logseq_analyzer.config.graph_config import ConfigEdns, get_default_logseq_config, get_edn_from_file
+from logseq_analyzer.config.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.filesystem import (
     AnalyzerDeleteDirs,
@@ -171,7 +171,7 @@ def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:
 
 def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     """Set up the configuration EDN files."""
-    default_edn = get_default_logseq_config()
+    default_edn = DEFAULT_LOGSEQ_CONFIG
     user_config_edn_parsed = get_edn_from_file(graph_dirs.user_config.path)
     user_edn = user_config_edn_parsed if isinstance(user_config_edn_parsed, dict) else {}
     global_edn = {}
