@@ -3,6 +3,7 @@
 import logging
 import re
 import shutil
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from itertools import chain
@@ -15,7 +16,6 @@ from logseq_analyzer.analysis.graph import LogseqGraph
 from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqSummarizer
-from logseq_analyzer.io.arguments import Args
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.filesystem import (
     AnalyzerDeleteDirs,
@@ -49,39 +49,9 @@ if TYPE_CHECKING:
 
     from logseq_analyzer.analysis.index import FileIndex
 
-
-class Constant(StrEnum):
-    """Constants used in the Logseq Analyzer."""
-
-    CACHE_FILE = "logseq-analyzer-cache.db"
-    LOG_FILE = "logseq_analyzer.log"
-    OUTPUT_DIR = "logseq-analyzer-output"
-    TO_DELETE_ASSETS_DIR = "to-delete/assets"
-    TO_DELETE_BAK_DIR = "to-delete/bak"
-    TO_DELETE_DIR = "to-delete"
-    TO_DELETE_RECYCLE_DIR = "to-delete/.recycle"
-
-
 logger = logging.getLogger(__name__)
 
-
-def _init_logging() -> None:
-    """Initialize logging for the Logseq Analyzer."""
-    log_file = LogFile(Path(Constant.LOG_FILE))
-    logging.basicConfig(
-        datefmt="%Y-%m-%d %H:%M:%S",
-        encoding="utf-8",
-        filemode="w",
-        filename=log_file.path,
-        force=True,
-        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
-        level=logging.DEBUG,
-    )
-    logger.info("Logseq Analyzer started.")
-    logger.debug("Logging initialized to %s", log_file.path)
-
-
-DATETIME_TOKEN_MAP: dict[str, str] = {
+_DATETIME_TOKEN_MAP: dict[str, str] = {
     "yyyy": "%Y",
     "xxxx": "%Y",
     "yy": "%y",
@@ -113,8 +83,20 @@ DATETIME_TOKEN_MAP: dict[str, str] = {
     "ZZ": "%z",
 }
 _DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
-    "|".join(re.escape(str(k)) for k in sorted(DATETIME_TOKEN_MAP.keys(), key=len, reverse=True))
+    "|".join(re.escape(str(k)) for k in sorted(_DATETIME_TOKEN_MAP.keys(), key=len, reverse=True))
 )
+
+
+class Constant(StrEnum):
+    """Constants used in the Logseq Analyzer."""
+
+    CACHE_FILE = "logseq-analyzer-cache.db"
+    LOG_FILE = "logseq_analyzer.log"
+    OUTPUT_DIR = "logseq-analyzer-output"
+    TO_DELETE_ASSETS_DIR = "to-delete/assets"
+    TO_DELETE_BAK_DIR = "to-delete/bak"
+    TO_DELETE_DIR = "to-delete"
+    TO_DELETE_RECYCLE_DIR = "to-delete/.recycle"
 
 
 class LogseqGraphStructure(StrEnum):
@@ -124,6 +106,52 @@ class LogseqGraphStructure(StrEnum):
     CONFIG_EDN = "config.edn"
     LOGSEQ = "logseq"
     RECYCLE = ".recycle"
+
+
+class Moved(StrEnum):
+    """Moved files and directories in the Logseq Analyzer."""
+
+    ASSETS = "assets"
+    BAK = "bak"
+    RECYCLE = "recycle"
+    SIMULATED_PREFIX = "======== Simulated only ========"
+
+
+@dataclass(slots=True)
+class Args:
+    """A class to represent arguments for the Logseq Analyzer."""
+
+    global_config: str = ""
+    graph_cache: bool = False
+    graph_folder: str = ""
+    move_bak: bool = False
+    move_recycle: bool = False
+    move_unlinked_assets: bool = False
+    report_format: str = ".txt"
+    write_graph: bool = False
+
+    @property
+    def report(self) -> dict[Output, list[tuple[str, Any]]]:
+        """Generate a report of the arguments."""
+        return {
+            Output.ARGUMENTS: [(s, getattr(self, s)) for s in self.__slots__],
+        }
+
+
+def _init_logging() -> None:
+    """Initialize logging for the Logseq Analyzer."""
+    log_file = LogFile(Path(Constant.LOG_FILE))
+    logging.basicConfig(
+        datefmt="%Y-%m-%d %H:%M:%S",
+        encoding="utf-8",
+        filemode="w",
+        filename=log_file.path,
+        force=True,
+        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
+        level=logging.DEBUG,
+    )
+    logger.info("Logseq Analyzer started.")
+    logger.debug("Logging initialized to %s", log_file.path)
 
 
 def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
@@ -175,15 +203,15 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     return analyzer_dirs, config_edns
 
 
-def _cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
+def _cljs_date_to_py(cljs_format: str) -> str:
     """Convert a Clojure-style date format to a Python-style date format."""
 
     def _repl(match: re.Match) -> str:
         """Replace a date token with its corresponding Python format."""
         token = match.group(0)
-        return DATETIME_TOKEN_MAP.get(token, token)
+        return _DATETIME_TOKEN_MAP.get(token, token)
 
-    return token_pattern.sub(_repl, cljs_format.replace("o", ""))
+    return _DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
 
 
 def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
@@ -192,8 +220,8 @@ def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     journal_page_fmt = config_edns.get_page_title_format()
     logger.debug("setup_journal_formats")
     return JournalFormats(
-        file=_cljs_date_to_py(journal_file_fmt, _DATETIME_TOKEN_PATTERN),
-        page=_cljs_date_to_py(journal_page_fmt, _DATETIME_TOKEN_PATTERN),
+        file=_cljs_date_to_py(journal_file_fmt),
+        page=_cljs_date_to_py(journal_page_fmt),
         page_title=journal_page_fmt,
     )
 
@@ -238,15 +266,6 @@ def _process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> li
         except shutil.Error, OSError:
             logger.exception("Failed to move file: %s to %s", src, dest)
     return names
-
-
-class Moved(StrEnum):
-    """Moved files and directories in the Logseq Analyzer."""
-
-    ASSETS = "assets"
-    BAK = "bak"
-    RECYCLE = "recycle"
-    SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
@@ -314,20 +333,16 @@ def analyze(
     logger.debug("analyze")
 
 
-def run_app(gui_args: dict[str, object] | None = None) -> None:
+def run_app(arguments: dict[str, object]) -> None:
     """Run the Logseq analyzer."""
     _init_logging()
-    progress = gui_args.pop("progress_callback", lambda pct, msg: print(f"{pct}% - {msg}"))
-    progress(10, "Starting Logseq Analyzer...")
-    args = Args()
-    if gui_args:
-        args.set_gui_args(gui_args)
-    else:
-        args.set_cli_args()
-    progress(30, "Setting up Logseq Analyzer configurations...")
+    _prog = arguments.pop("progress_callback", lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))
+    _prog(10, "Starting Logseq Analyzer...")
+    args = Args(**arguments)
+    _prog(30, "Setting up Logseq Analyzer configurations...")
     analyzer_dirs, config_edns = _setup_logseq_paths(args)
     journal_formats = _setup_journal_formats(config_edns)
-    progress(40, "Configure Logseq Analyzer settings...")
+    _prog(40, "Configure Logseq Analyzer settings...")
     _context = LogseqFileContext(
         now_ts=datetime.now(tz=UTC).timestamp(),
         journal_format=journal_formats,
@@ -342,19 +357,19 @@ def run_app(gui_args: dict[str, object] | None = None) -> None:
             analyzer_dirs.target[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         },
     )
-    progress(50, "Setup cache...")
+    _prog(50, "Setup cache...")
     cache, index = setup_cache(args, analyzer_dirs)
     index.write_graph = args.write_graph
-    progress(60, "Process Logseq graph...")
+    _prog(60, "Process Logseq graph...")
     for path in cache.iter_modified_files():
         index.add(LogseqFile(path, context=_context))
-    progress(70, "Write meta reports...")
+    _prog(70, "Write meta reports...")
     _writer = ReportWriter(
         ext=args.report_format,
         output_dir=analyzer_dirs.output.path,
     )
     _writer.write_reports(report_configurations(args, analyzer_dirs, config_edns))
-    progress(80, "Running core analysis on Logseq graph...")
+    _prog(80, "Running core analysis on Logseq graph...")
     _analysis = analyze(
         args,
         index,
@@ -362,6 +377,6 @@ def run_app(gui_args: dict[str, object] | None = None) -> None:
         journal_formats.page,
     )
     _writer.write_reports(_analysis)
-    progress(90, "Finalizing analysis...")
+    _prog(90, "Finalizing analysis...")
     cache.close(index)
-    progress(100, "Logseq Analyzer completed successfully.")
+    _prog(100, "Logseq Analyzer completed successfully.")

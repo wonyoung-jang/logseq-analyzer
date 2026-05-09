@@ -25,7 +25,7 @@ class AnalysisWorker(QThread):
         try:
             _start = perf_counter()
             self.gui_args["progress_callback"] = self.update_progress
-            run_app(gui_args=self.gui_args)
+            run_app(arguments=self.gui_args)
             self.finished_signal.emit("", perf_counter() - _start, True)
         except KeyboardInterrupt:
             self.finished_signal.emit("Analysis interrupted by user.", 0, False)
