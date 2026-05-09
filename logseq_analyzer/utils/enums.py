@@ -126,8 +126,6 @@ class FileType(StrEnum):
 class Format(StrEnum):
     """File formats used in the Logseq Analyzer."""
 
-    HTML = "html"
-    JSON = "json"
     MD = "md"
     ORG = "org"
     TXT = "txt"

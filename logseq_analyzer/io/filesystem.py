@@ -77,75 +77,22 @@ class File:
             logger.exception("Error creating path")
 
 
-def _file_cls(
-    name: str, *, is_dir: bool = False, must_exist: bool = False, clean_on_init: bool = False, create: bool = True
-) -> type[File]:
-    """File subclass with preset flags."""
-
-    class _C(File):
-        def __post_init__(self) -> None:
-            self.is_dir = is_dir
-            self.must_exist = must_exist
-            self.clean_on_init = clean_on_init
-            self.create = create
-            super().__post_init__()
-
-    _C.__name__ = _C.__qualname__ = name
-    return _C
-
-
-# fmt: off
-OutputDirectory         = _file_cls("OutputDirectory",         is_dir=True, clean_on_init=True)
-LogFile                 = _file_cls("LogFile")
-GraphDirectory          = _file_cls("GraphDirectory",          is_dir=True, must_exist=True)
-LogseqDirectory         = _file_cls("LogseqDirectory",         is_dir=True, must_exist=True)
-ConfigFile              = _file_cls("ConfigFile",              must_exist=True)
-GlobalConfigFile        = _file_cls("GlobalConfigFile",        must_exist=True)
-CacheFile               = _file_cls("CacheFile",               create=False)
-BakDirectory            = _file_cls("BakDirectory",            is_dir=True)
-RecycleDirectory        = _file_cls("RecycleDirectory",        is_dir=True)
-AssetsDirectory         = _file_cls("AssetsDirectory",         is_dir=True)
-DrawsDirectory          = _file_cls("DrawsDirectory",          is_dir=True)
-JournalsDirectory       = _file_cls("JournalsDirectory",       is_dir=True)
-PagesDirectory          = _file_cls("PagesDirectory",          is_dir=True)
-WhiteboardsDirectory    = _file_cls("WhiteboardsDirectory",    is_dir=True)
-DeleteDirectory         = _file_cls("DeleteDirectory",         is_dir=True)
-DeleteBakDirectory      = _file_cls("DeleteBakDirectory",      is_dir=True)
-DeleteRecycleDirectory  = _file_cls("DeleteRecycleDirectory",  is_dir=True)
-DeleteAssetsDirectory   = _file_cls("DeleteAssetsDirectory",   is_dir=True)
-# fmt: on
-
-
 @dataclass(slots=True)
-class LogseqGraphDirs:
-    """Directories related to the Logseq graph."""
+class LogseqAnalyzerDirs:
+    """Directories used by the Logseq analyzer."""
 
     graph: File
     logseq: File
     bak: File
     recycle: File
     config_user: File
-    config_global: File | None = None
-
-
-@dataclass(slots=True)
-class AnalyzerDeleteDirs:
-    """Directories for deletion operations in the Logseq analyzer."""
-
-    directory: File
-    bak: File
-    recycle: File
-    assets: File
-
-
-@dataclass(slots=True)
-class LogseqAnalyzerDirs:
-    """Directories used by the Logseq analyzer."""
-
-    graph: LogseqGraphDirs
-    delete: AnalyzerDeleteDirs
+    del_directory: File
+    del_bak: File
+    del_recycle: File
+    del_assets: File
     target: dict[str, str]
     output: File
+    config_global: File | None = None
 
     @property
     def report(self) -> dict[str, dict]:
@@ -153,18 +100,18 @@ class LogseqAnalyzerDirs:
         return {
             "logseq_analyzer_dirs": {
                 "graph_dirs": {
-                    "graph": self.graph.graph,
-                    "graph/logseq": self.graph.logseq,
-                    "graph/logseq/bak": self.graph.bak,
-                    "graph/logseq/.recycle": self.graph.recycle,
-                    "graph/logseq/config.edn": self.graph.config_user,
-                    "global-config.edn": self.graph.config_global,
+                    "graph": self.graph,
+                    "graph/logseq": self.logseq,
+                    "graph/logseq/bak": self.bak,
+                    "graph/logseq/.recycle": self.recycle,
+                    "graph/logseq/config.edn": self.config_user,
+                    "global-config.edn": self.config_global,
                 },
                 "delete_dirs": {
-                    "to-delete": self.delete.directory,
-                    "to-delete/bak": self.delete.bak,
-                    "to-delete/.recycle": self.delete.recycle,
-                    "to-delete/assets": self.delete.assets,
+                    "to-delete": self.del_directory,
+                    "to-delete/bak": self.del_bak,
+                    "to-delete/.recycle": self.del_recycle,
+                    "to-delete/assets": self.del_assets,
                 },
                 "target_dirs": self.target,
                 "output_dir": self.output,

@@ -69,7 +69,7 @@ class Inputs(QWidget):
         self.graph_folder = QLineEdit(readOnly=True, clearButtonEnabled=True)
         self.global_config = QLineEdit(readOnly=True, clearButtonEnabled=True)
         self.report_format = QComboBox()
-        self.report_format.addItems((Format.TXT, Format.JSON, Format.MD, Format.HTML))
+        self.report_format.addItems((Format.TXT, Format.MD))
         layout = QFormLayout(self)
         layout.addRow(QLabel("Report Format:"), self.report_format)
 

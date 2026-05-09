@@ -174,5 +174,5 @@ class LogseqAnalyzerGUI(QWidget):
         )
         self.inputs.graph_folder.setText(str(self.settings.value(Argument.GRAPH_FOLDER, "", type=str)))
         self.inputs.global_config.setText(str(self.settings.value(Argument.GLOBAL_CONFIG, "", type=str)))
-        self.inputs.report_format.setCurrentText(str(self.settings.value(Argument.REPORT_FORMAT, Format.TXT, type=str)))
+        self.inputs.report_format.setCurrentText(str(self.settings.value(Argument.REPORT_FORMAT, Format.MD, type=str)))
         self.restoreGeometry(self.settings.value(Argument.GEOMETRY))

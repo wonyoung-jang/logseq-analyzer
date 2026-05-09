@@ -1,8 +1,7 @@
 """Reporting module for writing output to files, including HTML reports."""
 
-import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TextIO
 
 from logseq_analyzer.utils.enums import Format
@@ -97,113 +96,10 @@ class TextWriter:
                 f.write(f"{indent}{index}\t|\t{item}\n")
 
 
-class HTMLWriter:
-    """A class to handle writing HTML content."""
-
-    @staticmethod
-    def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
-        """Write the data to an HTML file with the given prefix and count.
-
-        Args:
-            outputpath (Path): The path where the HTML file will be written.
-            prefix (str): The prefix for the HTML title and header.
-            count (int | None): The count of items, if applicable.
-            filename (str): The name of the file being processed.
-            data (Any): The data to be written to the HTML file.
-
-        """
-        with outputpath.open("w", encoding="utf-8") as f:
-            f.write('<!DOCTYPE html>\n<html lang="en">\n<head>\n')
-            f.write(f'<meta charset="utf-8">\n<title>{prefix}</title>\n')
-            f.write(
-                """<style>
-                body { font-family: sans-serif; margin: 2em; }
-                dl { margin-left: 1em; }
-                ol { margin-left: 1em; }
-                span { display: inline-block; }
-                </style>\n"""
-            )
-            f.write("</head>\n<body>\n")
-            f.write(f"<h1>{prefix}</h1>\n")
-            if count is not None:
-                f.write(f"<p>{filename}</p>\n")
-                f.write(f"<p>COUNT: {count}</p>\n")
-                f.write(f"<p>TYPE: {data.__class__.__qualname__}</p>\n")
-            HTMLWriter.write_html_recursive(f, data)
-            f.write("</body>\n</html>\n")
-
-    @staticmethod
-    def write_html_recursive(f: TextIO, data: Any) -> None:
-        """Recursive helper to write nested data structures into HTML format.
-
-        Uses <dl> for dicts, <ol> for lists/sets, and <span> for simple values.
-        """
-        if isinstance(data, dict):
-            HTMLWriter.write_dict_html(f, data)
-        elif isinstance(data, (list, set)):
-            HTMLWriter.write_collection_html(f, data)
-        else:
-            f.write(f"<span>{data}</span>\n")
-
-    @staticmethod
-    def write_collection_html(f: TextIO, data: Any) -> None:
-        """Write collections (lists, sets) to HTML format.
-
-        Uses <ol> for ordered lists and <li> for items.
-        """
-        f.write("<ol>\n")
-        for item in data:
-            f.write("  <li>")
-            if isinstance(item, (dict, list, set)):
-                f.write("\n")
-                HTMLWriter.write_html_recursive(f, item)
-                f.write("  ")
-            else:
-                f.write(f"<span>{item}</span>")
-            f.write("</li>\n")
-        f.write("</ol>\n")
-
-    @staticmethod
-    def write_dict_html(f: TextIO, data: dict) -> None:
-        """Write a dictionary to HTML format.
-
-        Uses <dl> for definition lists, <dt> for terms, and <dd> for definitions.
-        """
-        f.write("<dl>\n")
-        for key, value in data.items():
-            f.write(f"  <dt><strong>{key}</strong></dt>\n")
-            f.write("  <dd>")
-            if isinstance(value, (dict, list, set)):
-                f.write("\n")
-                HTMLWriter.write_html_recursive(f, value)
-                f.write("  ")
-            else:
-                f.write(f"<span>{value}</span>")
-            f.write("</dd>\n")
-        f.write("</dl>\n")
-
-
-class JSONWriter:
-    """A class to handle writing JSON content."""
-
-    @staticmethod
-    def write(outputpath: Path, prefix: str, count: int | None, filename: str, data: Any) -> None:
-        """Write the data to a JSON file."""
-        try:
-            with outputpath.open("w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
-            logger.info("Successfully wrote JSON for %s items in filename: %s", count, filename)
-        except TypeError:
-            logger.exception("Failed to write JSON for %s, falling back to TXT.", prefix)
-
-
-@dataclass(slots=True)
-class Writers:
-    """A dataclass to hold different types of writers for reporting."""
-
-    text: TextWriter = field(default_factory=TextWriter)
-    html: HTMLWriter = field(default_factory=HTMLWriter)
-    json: JSONWriter = field(default_factory=JSONWriter)
+WRITE_METHOD_MAP: dict[str, Callable] = {
+    Format.TXT: TextWriter.write,
+    Format.MD: TextWriter.write,
+}
 
 
 @dataclass(slots=True)
@@ -212,7 +108,6 @@ class ReportWriter:
 
     ext: str
     output_dir: Path
-    writer: Writers = field(default_factory=Writers)
 
     def write(self, prefix: str, data: Any, subdir: str) -> None:
         """Write the report to a file in the configured format (TXT, JSON, or HTML)."""
@@ -220,13 +115,7 @@ class ReportWriter:
         filename = f"{prefix}.{self.ext}" if count else f"(EMPTY) {prefix}.{self.ext}"
         outputpath = self.get_output_path(filename, subdir)
         logger.info("Writing %s as %s", prefix, self.ext)
-        write_method_map: dict[str, Callable] = {
-            Format.TXT: self.writer.text.write,
-            Format.MD: self.writer.text.write,
-            Format.JSON: self.writer.json.write,
-            Format.HTML: self.writer.html.write,
-        }
-        write_method = write_method_map.get(self.ext, self.writer.text.write)
+        write_method = WRITE_METHOD_MAP.get(self.ext, TextWriter.write)
         write_method(outputpath, prefix, count, filename, data)
 
     def get_output_path(self, filename: str, subdir: str) -> Path:
@@ -244,7 +133,7 @@ class ReportWriter:
         output_dir.mkdir(parents=True, exist_ok=True)
         return output_dir / filename
 
-    def write_reports(self, data_reports: Iterator[tuple[str, Any]]) -> None:
+    def write_reports(self, data_reports: Iterator[tuple[str, dict]]) -> None:
         """Write reports to the specified output directories."""
         for subdir, reports in data_reports:
             for prefix, data in reports.items():
