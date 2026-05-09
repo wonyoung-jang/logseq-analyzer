@@ -14,30 +14,37 @@ _ASSET_CRITERIA = frozenset((Crit.Emb.ASSET, Crit.Content.ASSETS))
 
 
 @dataclass(slots=True)
-class LogseqAssetsHls:
+class LogseqAssets:
     """Class to handle HLS assets in Logseq."""
 
     index: FileIndex
     asset_mapping: dict[str, LogseqFile] = field(default_factory=dict)
     hls_bullets: set[str] = field(default_factory=set)
-    backlinked: set[str] = field(default_factory=set)
-    not_backlinked: set[str] = field(default_factory=set)
+    backlinked_hls: set[str] = field(default_factory=set)
+    not_backlinked_hls: set[str] = field(default_factory=set)
+    backlinked: set[LogseqFile] = field(default_factory=set)
+    not_backlinked: set[LogseqFile] = field(default_factory=set)
+    _mentioned: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
         for f in self.index:
-            self._get_asset_files(f)
+            self._get_asset_file(f)
         if self.asset_mapping:
             for f in self.index:
-                self._convert_names_to_data(f)
-            self.check_backlinks()
+                self._get_hls_bullet(f)
+            self._check_backlinks()
+        for f in self.index:
+            self._process(f)
+        self.backlinked.update(self.index.yield_assets_with_backlink(backlinked=True))
+        self.not_backlinked.update(self.index.yield_assets_with_backlink(backlinked=False))
 
-    def _get_asset_files(self, f: LogseqFile) -> None:
+    def _get_asset_file(self, f: LogseqFile) -> None:
         """Get asset files from the index."""
         if f.path.file_type == FileType.SUB_ASSET:
             self.asset_mapping[f.path.name] = f
 
-    def _convert_names_to_data(self, f: LogseqFile) -> None:
+    def _get_hls_bullet(self, f: LogseqFile) -> None:
         """Convert a list of names to a dictionary of hashes and their corresponding files."""
         if not f.is_hls:
             return
@@ -59,7 +66,7 @@ class LogseqAssetsHls:
                 hls_bullet = f"{hl_page}_{id_}_{hl_stamp}"
                 self.hls_bullets.add(hls_bullet)
 
-    def check_backlinks(self) -> None:
+    def _check_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
         _asset_mapping_keys = set(self.asset_mapping.keys())
         for name in self.hls_bullets:
@@ -68,39 +75,10 @@ class LogseqAssetsHls:
             asset_file.path.file_type = FileType.ASSET  # TODO: Refactor, mutates file directly
             if name in _asset_mapping_keys:
                 _asset_mapping_keys.remove(name)
-                self.backlinked.add(name)
+                self.backlinked_hls.add(name)
                 asset_file.node.backlinked = True  # TODO: Refactor, mutates file directly
             else:
-                self.not_backlinked.add(name)
-
-    @property
-    def report(self) -> dict[str, Any]:
-        """Generate a report of the asset analysis."""
-        return {
-            OutputDir.HLS_ASSETS: {
-                Output.HLS_ASSET_MAPPING: self.asset_mapping,
-                Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
-                Output.HLS_NOT_BACKLINKED: self.not_backlinked,
-                Output.HLS_BACKLINKED: self.backlinked,
-            }
-        }
-
-
-@dataclass(slots=True)
-class LogseqAssets:
-    """Class to handle assets in Logseq."""
-
-    index: FileIndex
-    backlinked: set[LogseqFile] = field(default_factory=set)
-    not_backlinked: set[LogseqFile] = field(default_factory=set)
-    _mentioned: set[str] = field(default_factory=set)
-
-    def __post_init__(self) -> None:
-        """Initialize the LogseqAssets instance."""
-        for f in self.index:
-            self._process(f)
-        self.backlinked.update(self.index.yield_assets_with_backlink(backlinked=True))
-        self.not_backlinked.update(self.index.yield_assets_with_backlink(backlinked=False))
+                self.not_backlinked_hls.add(name)
 
     def _process(self, f: LogseqFile) -> None:
         _is_asset_processed = False
@@ -126,11 +104,17 @@ class LogseqAssets:
                 return
 
     @property
-    def report(self) -> dict[str, dict[str, set[LogseqFile]]]:
+    def report(self) -> dict[str, Any]:
         """Generate a report of the asset analysis."""
         return {
+            OutputDir.HLS_ASSETS: {
+                Output.HLS_ASSET_MAPPING: self.asset_mapping,
+                Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
+                Output.HLS_NOT_BACKLINKED: self.not_backlinked_hls,
+                Output.HLS_BACKLINKED: self.backlinked_hls,
+            },
             OutputDir.ASSETS: {
                 Output.ASSETS_BACKLINKED: self.backlinked,
                 Output.ASSETS_NOT_BACKLINKED: self.not_backlinked,
-            }
+            },
         }

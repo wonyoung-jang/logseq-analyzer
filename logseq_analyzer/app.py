@@ -8,7 +8,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
+from logseq_analyzer.analysis.assets import LogseqAssets
 from logseq_analyzer.analysis.file import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.analysis.graph import LogseqGraph
 from logseq_analyzer.analysis.journals import LogseqJournals
@@ -226,7 +226,6 @@ def analyze(
     logseq_graph = LogseqGraph(index)
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt)
-    logseq_assets_hls = LogseqAssetsHls(index)
     logseq_assets = LogseqAssets(index)
     logseq_file_mover = LogseqFileMover(
         should_move_bak=args.move_bak,
@@ -246,7 +245,6 @@ def analyze(
     yield from logseq_graph.report.items()
     yield from logseq_namespaces.report.items()
     yield from logseq_journals.report.items()
-    yield from logseq_assets_hls.report.items()
     yield from logseq_assets.report.items()
     yield from logseq_file_mover.report.items()
     yield from logseq_summarizer.report.items()

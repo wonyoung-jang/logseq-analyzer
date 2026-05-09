@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
+from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssets
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex
@@ -17,9 +17,9 @@ def logseq_assets(file_index: FileIndex) -> LogseqAssets:
 
 
 @pytest.fixture
-def logseq_assets_hls(file_index: FileIndex) -> LogseqAssetsHls:
+def logseq_assets_hls(file_index: FileIndex) -> LogseqAssets:
     """Fixture for LogseqAssetsHls."""
-    return LogseqAssetsHls(file_index)
+    return LogseqAssets(file_index)
 
 
 def test_logseq_assets_initialization(logseq_assets: LogseqAssets) -> None:
@@ -28,9 +28,9 @@ def test_logseq_assets_initialization(logseq_assets: LogseqAssets) -> None:
     assert logseq_assets.not_backlinked == set()
 
 
-def test_logseq_assets_hls_initialization(logseq_assets_hls: LogseqAssetsHls) -> None:
+def test_logseq_assets_hls_initialization(logseq_assets_hls: LogseqAssets) -> None:
     """Test the initialization of LogseqAssetsHls."""
     assert logseq_assets_hls.asset_mapping == {}
-    assert logseq_assets_hls.backlinked == set()
+    assert logseq_assets_hls.backlinked_hls == set()
     assert logseq_assets_hls.hls_bullets == set()
-    assert logseq_assets_hls.not_backlinked == set()
+    assert logseq_assets_hls.not_backlinked_hls == set()
