@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import IntEnum, StrEnum
+from itertools import chain
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.utils.enums import Output
@@ -33,7 +34,7 @@ class DateStat(StrEnum):
     YEARS = "years"
 
 
-DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset({"st", "nd", "rd", "th"})
+DATE_ORDINAL_SUFFIXES = frozenset(("st", "nd", "rd", "th"))
 
 
 def date_next(date_obj: datetime) -> datetime:
@@ -110,27 +111,27 @@ class LogseqJournals:
             except ValueError:
                 pass
 
-    def process(self, dangling_journals: list[datetime]) -> None:
+    def process(self, danglingdt: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
         for i, date in enumerate(self.existing):
             self.timeline.append(date)
-            next_expected = date_next(date)
-            next_existing = self.existing[i + 1] if i + 1 < len(self.existing) else None
-            while next_existing and next_expected < next_existing:
-                self.timeline.append(next_expected)
-                if next_expected not in dangling_journals:
-                    self.missing.append(next_expected)
-                next_expected = date_next(next_expected)
-        self.all_journals.extend(sorted(self.timeline + dangling_journals))
+            _expected = date_next(date)
+            _existing = self.existing[i + 1] if i + 1 < len(self.existing) else None
+            while _existing and _expected < _existing:
+                self.timeline.append(_expected)
+                if _expected not in danglingdt:
+                    self.missing.append(_expected)
+                _expected = date_next(_expected)
+        self.all_journals.extend(sorted(chain(self.timeline, danglingdt)))
         self.timeline_stats = {
             "timeline": date_stats(self.timeline),
-            "dangling": date_stats(dangling_journals),
+            "dangling": date_stats(danglingdt),
             "total": date_stats(self.all_journals),
         }
-        for link in dangling_journals:
-            if link < self.timeline_stats["timeline"]["first"]:
+        for link in danglingdt:
+            if link < self.timeline_stats["timeline"][DateStat.FIRST]:
                 self.dangling["past"].append(link)
-            elif link > self.timeline_stats["timeline"]["last"]:
+            elif link > self.timeline_stats["timeline"][DateStat.LAST]:
                 self.dangling["future"].append(link)
             else:
                 self.dangling["inside"].append(link)

@@ -3,12 +3,12 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import Crit, CritEmb, FileType, Output
+from logseq_analyzer.utils.enums import Crit, FileType, Output
 from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
+    from logseq_analyzer.analysis.file import LogseqFile
     from logseq_analyzer.analysis.index import FileIndex
-    from logseq_analyzer.logseq_file.file import LogseqFile
 
 
 @dataclass(slots=True)
@@ -23,20 +23,12 @@ class LogseqAssetsHls:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqAssetsHls instance."""
-        self.get_asset_files()
-        if self.asset_mapping:
-            self.convert_names_to_data()
-            self.check_backlinks()
-
-    def get_asset_files(self) -> None:
-        """Retrieve asset files based on specific criteria."""
         for f in self.index:
             self._get_asset_files(f)
-
-    def convert_names_to_data(self) -> None:
-        """Convert a list of names to a dictionary of hashes and their corresponding files."""
-        for f in self.index:
-            self._convert_names_to_data(f)
+        if self.asset_mapping:
+            for f in self.index:
+                self._convert_names_to_data(f)
+            self.check_backlinks()
 
     def _get_asset_files(self, f: LogseqFile) -> None:
         """Get asset files from the index."""
@@ -71,11 +63,11 @@ class LogseqAssetsHls:
         for name in self.hls_bullets:
             if not (asset_file := self.asset_mapping.get(name)):
                 continue
-            asset_file.path.file_type = FileType.ASSET
+            asset_file.path.file_type = FileType.ASSET  # TODO: Refactor, mutates file directly
             if name in _asset_mapping_keys:
                 _asset_mapping_keys.remove(name)
                 self.backlinked.add(name)
-                asset_file.node.backlinked = True
+                asset_file.node.backlinked = True  # TODO: Refactor, mutates file directly
             else:
                 self.not_backlinked.add(name)
 
@@ -90,7 +82,7 @@ class LogseqAssetsHls:
         }
 
 
-_ASSET_CRITERIA = frozenset({CritEmb.ASSET, Crit.Content.ASSETS})
+_ASSET_CRITERIA = frozenset({Crit.Emb.ASSET, Crit.Content.ASSETS})
 
 
 @dataclass(slots=True)
@@ -129,7 +121,7 @@ class LogseqAssets:
         """Update the asset backlink information."""
         for mention in self._mentioned:
             if any(name in mention for name in (file.path.name, target_name)):
-                file.node.backlinked = True
+                file.node.backlinked = True  # TODO: Refactor, mutates file directly
                 return
 
     @property

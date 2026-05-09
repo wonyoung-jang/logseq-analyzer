@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.logseq_file.file import LogseqFile
+from logseq_analyzer.analysis.file import LogseqFile
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

@@ -16,13 +16,13 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import Core, CritDblCurly, Output
+from logseq_analyzer.utils.enums import Core, Crit, Output
 from logseq_analyzer.utils.helpers import sort_dict_by_value
 from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
+    from logseq_analyzer.analysis.file import LogseqFile
     from logseq_analyzer.analysis.index import FileIndex
-    from logseq_analyzer.logseq_file.file import LogseqFile
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class LogseqNamespaces:
     def _analyze_ns_queries(self, f: LogseqFile) -> None:
         if not (f_data := f.data):
             return
-        if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERY)):
+        if not (queries := f_data.get(Crit.DblCurly.NAMESPACE_QUERY)):
             return
         for query in queries:
             if not ContentPatterns.PAGE_REFERENCE.search(query):

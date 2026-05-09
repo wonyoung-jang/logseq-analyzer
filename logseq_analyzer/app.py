@@ -10,10 +10,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
+from logseq_analyzer.analysis.file import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.analysis.graph import LogseqGraph
 from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
-from logseq_analyzer.analysis.summarizers import LogseqContentSummarizer, LogseqFileSummarizer
+from logseq_analyzer.analysis.summarizers import LogseqSummarizer
 from logseq_analyzer.config.arguments import Args
 from logseq_analyzer.config.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.cache import Cache
@@ -41,8 +42,6 @@ from logseq_analyzer.io.filesystem import (
     WhiteboardsDirectory,
 )
 from logseq_analyzer.io.report_writer import ReportWriter
-from logseq_analyzer.logseq_file.file import LogseqFile
-from logseq_analyzer.logseq_file.info import JournalFormats, LogseqFileContext
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
@@ -118,17 +117,49 @@ _DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
 )
 
 
+class LogseqGraphStructure(StrEnum):
+    """Logseq graph structure components."""
+
+    BAK = "bak"
+    CONFIG_EDN = "config.edn"
+    LOGSEQ = "logseq"
+    RECYCLE = ".recycle"
+
+
 def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     """Set up Logseq analyzer configuration based on arguments."""
-    graph_dirs = _setup_graph_dirs(args)
-    config_edns = _setup_config_edns(args, graph_dirs)
+    graph_path = Path(args.graph_folder)
+    logseq_dir = graph_path / LogseqGraphStructure.LOGSEQ
+    bak_dir = logseq_dir / LogseqGraphStructure.BAK
+    recycle_dir = logseq_dir / LogseqGraphStructure.RECYCLE
+    user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN
+    graph_dirs = LogseqGraphDirs(
+        graph=GraphDirectory(graph_path),
+        logseq=LogseqDirectory(logseq_dir),
+        bak=BakDirectory(bak_dir),
+        recycle=RecycleDirectory(recycle_dir),
+        config_user=ConfigFile(user_config_file),
+    )
+    default_edn = DEFAULT_LOGSEQ_CONFIG
+    user_config_edn_parsed = get_edn_from_file(graph_dirs.config_user.path)
+    user_edn = user_config_edn_parsed if isinstance(user_config_edn_parsed, dict) else {}
+    global_edn = {}
+    if args.global_config:
+        graph_dirs.config_global = GlobalConfigFile(Path(args.global_config))
+        parsed = get_edn_from_file(graph_dirs.config_global.path)
+        global_edn = parsed if isinstance(parsed, dict) else {}
+    config_edns = ConfigEdns(
+        config=default_edn | user_edn | global_edn,
+        default_edn=default_edn,
+        user_edn=user_edn,
+        global_edn=global_edn,
+    )
     target_dirs = config_edns.get_target_dirs()
-    _graph_dir = graph_dirs.graph.path
-    AssetsDirectory(_graph_dir / target_dirs[TargetDir.ASSET])
-    DrawsDirectory(_graph_dir / target_dirs[TargetDir.DRAW])
-    JournalsDirectory(_graph_dir / target_dirs[TargetDir.JOURNAL])
-    PagesDirectory(_graph_dir / target_dirs[TargetDir.PAGE])
-    WhiteboardsDirectory(_graph_dir / target_dirs[TargetDir.WHITEBOARD])
+    AssetsDirectory(graph_dirs.graph.path / target_dirs[TargetDir.ASSET])
+    DrawsDirectory(graph_dirs.graph.path / target_dirs[TargetDir.DRAW])
+    JournalsDirectory(graph_dirs.graph.path / target_dirs[TargetDir.JOURNAL])
+    PagesDirectory(graph_dirs.graph.path / target_dirs[TargetDir.PAGE])
+    WhiteboardsDirectory(graph_dirs.graph.path / target_dirs[TargetDir.WHITEBOARD])
     analyzer_dirs = LogseqAnalyzerDirs(
         graph=graph_dirs,
         delete=AnalyzerDeleteDirs(
@@ -144,60 +175,15 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     return analyzer_dirs, config_edns
 
 
-class LogseqGraphStructure(StrEnum):
-    """Logseq graph structure components."""
-
-    BAK = "bak"
-    CONFIG_EDN = "config.edn"
-    LOGSEQ = "logseq"
-    RECYCLE = ".recycle"
-
-
-def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:
-    """Set up the Logseq graph directories."""
-    graph_folder_path = Path(args.graph_folder)
-    logseq_dir = graph_folder_path / LogseqGraphStructure.LOGSEQ
-    bak_dir = logseq_dir / LogseqGraphStructure.BAK
-    recycle_dir = logseq_dir / LogseqGraphStructure.RECYCLE
-    user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN
-    logger.debug("setup_graph_dirs")
-    return LogseqGraphDirs(
-        graph=GraphDirectory(graph_folder_path),
-        logseq=LogseqDirectory(logseq_dir),
-        bak=BakDirectory(bak_dir),
-        recycle=RecycleDirectory(recycle_dir),
-        config_user=ConfigFile(user_config_file),
-    )
-
-
-def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
-    """Set up the configuration EDN files."""
-    default_edn = DEFAULT_LOGSEQ_CONFIG
-    user_config_edn_parsed = get_edn_from_file(graph_dirs.config_user.path)
-    user_edn = user_config_edn_parsed if isinstance(user_config_edn_parsed, dict) else {}
-    global_edn = {}
-    if args.global_config:
-        graph_dirs.config_global = GlobalConfigFile(Path(args.global_config))
-        parsed = get_edn_from_file(graph_dirs.config_global.path)
-        global_edn = parsed if isinstance(parsed, dict) else {}
-    logger.debug("setup_config_edns")
-    return ConfigEdns(
-        config=default_edn | user_edn | global_edn,
-        default_edn=default_edn,
-        user_edn=user_edn,
-        global_edn=global_edn,
-    )
-
-
 def _cljs_date_to_py(cljs_format: str, token_pattern: re.Pattern) -> str:
     """Convert a Clojure-style date format to a Python-style date format."""
 
-    def replace_token(match: re.Match) -> str:
+    def _repl(match: re.Match) -> str:
         """Replace a date token with its corresponding Python format."""
         token = match.group(0)
         return DATETIME_TOKEN_MAP.get(token, token)
 
-    return token_pattern.sub(replace_token, cljs_format.replace("o", ""))
+    return token_pattern.sub(_repl, cljs_format.replace("o", ""))
 
 
 def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
@@ -316,16 +302,14 @@ def analyze(
     logseq_assets_hls = LogseqAssetsHls(index)
     logseq_assets = LogseqAssets(index)
     moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
-    logseq_file_summarizer = LogseqFileSummarizer(index)
-    logseq_content_summarizer = LogseqContentSummarizer(index)
+    logseq_summarizer = LogseqSummarizer(index)
     yield OutputDir.GRAPH, logseq_graph.report
     yield OutputDir.NAMESPACES, logseq_namespaces.report
     yield OutputDir.JOURNALS, logseq_journals.report
     yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
     yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
     yield OutputDir.MOVED_FILES, moved_files
-    yield from logseq_file_summarizer.report.items()
-    yield from logseq_content_summarizer.report.items()
+    yield from logseq_summarizer.report.items()
     yield OutputDir.INDEX, index.report
     logger.debug("analyze")
 

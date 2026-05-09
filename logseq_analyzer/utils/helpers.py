@@ -3,7 +3,7 @@
 from collections import Counter
 
 BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
-    [
+    (
         "alias",
         "aliases",
         "background_color",
@@ -56,7 +56,7 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "title",
         "todo",
         "updated-at",
-    ]
+    )
 )
 
 
@@ -80,7 +80,10 @@ def get_count_and_foundin_data(result: dict, collection: list[str], filename: st
 
     """
     for item in collection:
-        result.setdefault(item, {"count": 0, "found_in": Counter()})
+        result.setdefault(
+            item,
+            {"count": 0, "found_in": Counter()},
+        )
         result[item]["count"] = result[item].get("count", 0) + 1
         result[item]["found_in"][filename] += 1
     return result

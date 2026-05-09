@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Crit, CritProp, FileType, Output
+from logseq_analyzer.utils.enums import Crit, FileType, Output
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
+    from logseq_analyzer.analysis.file import LogseqFile
     from logseq_analyzer.analysis.index import FileIndex
-    from logseq_analyzer.logseq_file.file import LogseqFile
 
 _TO_NODE_TYPE = frozenset({FileType.JOURNAL, FileType.PAGE})
 
@@ -28,65 +28,57 @@ class LogseqGraph:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqGraph instance."""
-        self.post_process_content()
+        self.process()
         self.process_nodes()
         self.sort_all_linked_references()
-        self.process_dangling_links()
+        self.process_dangling()
 
-    def post_process_content(self) -> None:
+    def process(self) -> None:
         """Post-process the content data for all files."""
         for f in self.index:
             self._post_process_content(f)
 
     def _post_process_content(self, f: LogseqFile) -> None:
-        ns_info = f.info.namespace
-        if ns_info.is_namespace:
-            self.linked_refs_ns.update((ns_info.root, f.path.name))
+        if f.info.namespace.is_namespace:
+            self.linked_refs_ns.update((f.info.namespace.root, f.path.name))
             self.process_namespaces(f)
         if not (f_data := f.data):
             return
-        if found_aliases := f_data.get(Crit.Content.ALIASES, []):
-            self.aliases.update(found_aliases)
-        dataset = (
-            found_aliases,
+        if _aliases := f_data.get(Crit.Content.ALIASES, []):
+            self.aliases.update(_aliases)
+        _dataset = (
+            _aliases,
             f_data.get(Crit.Content.DRAW, []),
             f_data.get(Crit.Content.PAGE_REF, []),
             f_data.get(Crit.Content.TAG, []),
             f_data.get(Crit.Content.TAGGED_BACKLINK, []),
-            f_data.get(CritProp.PAGE_BUILTIN, []),
-            f_data.get(CritProp.PAGE_USER, []),
-            f_data.get(CritProp.BLOCK_BUILTIN, []),
-            f_data.get(CritProp.BLOCK_USER, []),
+            f_data.get(Crit.Prop.PAGE_BUILTIN, []),
+            f_data.get(Crit.Prop.PAGE_USER, []),
+            f_data.get(Crit.Prop.BLOCK_BUILTIN, []),
+            f_data.get(Crit.Prop.BLOCK_USER, []),
         )
-        if not (linked_references := list(chain.from_iterable(dataset))):
+        if not (_linkedrefs := list(chain.from_iterable(_dataset))):
             return
-        if ns_info.parent:
-            lr_with_ns_parent = [*linked_references, ns_info.parent]
-            self.all_linked_refs.update(
-                get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
-            )
+        if f.info.namespace.parent:
+            lr_with_ns_parent = [*_linkedrefs, f.info.namespace.parent]
+            _data = get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
+            self.all_linked_refs.update(_data)
         else:
-            self.all_linked_refs.update(
-                get_count_and_foundin_data(self.all_linked_refs, linked_references, f.path.name)
-            )
-        self.linked_refs.update(linked_references)
+            _data = get_count_and_foundin_data(self.all_linked_refs, _linkedrefs, f.path.name)
+            self.all_linked_refs.update(_data)
+        self.linked_refs.update(_linkedrefs)
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
-        ns_roots = self.index[f.info.namespace.root]
-        if isinstance(ns_roots, list):
-            for ns_root_file in ns_roots:
-                ns_info = ns_root_file.info.namespace
-                if not ns_info.is_namespace:
-                    ns_info.is_namespace = True
-                if f.path.name not in ns_info.children:
-                    ns_info.children.add(f.path.name)
-        ns_parents = self.index[f.info.namespace.parent_full]
-        if isinstance(ns_parents, list):
-            for ns_parent_file in ns_parents:
-                ns_info = ns_parent_file.info.namespace
-                if f.path.name not in ns_info.children:
-                    ns_info.children.add(f.path.name)
+        _roots = self.index[f.info.namespace.root]
+        if isinstance(_roots, list):
+            for _root in _roots:
+                _root.info.namespace.is_namespace = True
+                _root.info.namespace.children.add(f.path.name)
+        _parents = self.index[f.info.namespace.parent_full]
+        if isinstance(_parents, list):
+            for _parent in _parents:
+                _parent.info.namespace.children.add(f.path.name)
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""
@@ -102,12 +94,18 @@ class LogseqGraph:
 
     def _process_nodes(self, f: LogseqFile) -> None:
         """Process summary data for a single file based on metadata and content analysis."""
-        f.node.check_backlinked(f.path.name, self.linked_refs)
-        f.node.check_backlinked_ns_only(f.path.name, self.linked_refs_ns)
+        if f.path.name in self.linked_refs:
+            self.linked_refs.remove(f.path.name)
+            f.node.backlinked = True
+        if f.path.name in self.linked_refs_ns:
+            self.linked_refs_ns.remove(f.path.name)
+            if not f.node.backlinked_ns_only:
+                f.node.backlinked_ns_only = True
+                f.node.backlinked = False
         if f.path.file_type in _TO_NODE_TYPE:
             f.node.determine_node_type(has_content=f.info.size.has_content)
 
-    def process_dangling_links(self) -> None:
+    def process_dangling(self) -> None:
         """Process dangling links in the graph."""
         self.dangling_links = (
             (self.linked_refs | self.linked_refs_ns)

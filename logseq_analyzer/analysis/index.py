@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.logseq_file.file import LogseqFile
+from logseq_analyzer.analysis.file import LogseqFile
 from logseq_analyzer.utils.enums import FileType, Output
 
 if TYPE_CHECKING:

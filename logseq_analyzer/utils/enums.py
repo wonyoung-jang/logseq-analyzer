@@ -32,101 +32,79 @@ class Crit(StrEnum):
         TAG = "content_tag"
         TAGGED_BACKLINK = "content_tagged_backlink"
 
+    class Code(StrEnum):
+        """Criteria for code blocks in Logseq."""
 
-class CritContent(StrEnum):
-    """Criteria for filtering files."""
+        INLINE = "code_inline"
+        ML_ALL = "code_multiline"
+        ML_CALC = "code_multiline_calc"
+        ML_LANG = "code_multiline_lang"
 
-    ALIASES = "content_aliases"
-    ANY_LINKS = "content_any_link"
-    ASSETS = "content_asset"
-    BLOCKQUOTES = "content_blockquote"
-    DRAW = "content_draw"
-    DYNAMIC_VAR = "content_dynamic_variable"
-    FLASHCARD = "content_flashcard"
-    PAGE_REF = "content_page_reference"
-    TAG = "content_tag"
-    TAGGED_BACKLINK = "content_tagged_backlink"
+    class AdvCmd(StrEnum):
+        """Criteria for advanced commands in Logseq."""
 
+        ALL = "adv_cmd"
+        CAUTION = "adv_cmd_caution"
+        CENTER = "adv_cmd_center"
+        COMMENT = "adv_cmd_comment"
+        EXAMPLE = "adv_cmd_example"
+        EXPORT = "adv_cmd_export"
+        EXPORT_ASCII = "adv_cmd_export_ascii"
+        EXPORT_LATEX = "adv_cmd_export_latex"
+        IMPORTANT = "adv_cmd_important"
+        NOTE = "adv_cmd_note"
+        PINNED = "adv_cmd_pinned"
+        QUERY = "adv_cmd_query"
+        QUOTE = "adv_cmd_quote"
+        TIP = "adv_cmd_tip"
+        VERSE = "adv_cmd_verse"
+        WARNING = "adv_cmd_warning"
 
-class CritCode(StrEnum):
-    """Criteria for code blocks in Logseq."""
+    class DblCurly(StrEnum):
+        """Criteria for double curly brackets in Logseq."""
 
-    INLINE = "code_inline"
-    ML_ALL = "code_multiline"
-    ML_CALC = "code_multiline_calc"
-    ML_LANG = "code_multiline_lang"
+        ALL = "double_curly_all_or_macros"
+        BLOCK_EMBED = "double_curly_block_embeds"
+        CARD = "double_curly_cards"
+        CLOZE = "double_curly_clozes"
+        EMBED = "double_curly_embeds"
+        NAMESPACE_QUERY = "double_curly_namespace_queries"
+        PAGE_EMBED = "double_curly_page_embeds"
+        QUERY_FUNCTION = "double_curly_query_functions"
+        RENDERER = "double_curly_renderers"
+        SIMPLE_QUERY = "double_curly_simple_queries"
+        EMBED_TWITTER_TWEET = "double_curly_twitter_tweets"
+        EMBED_VIDEO_URL = "double_curly_video_urls"
+        YOUTUBE_TIMESTAMP = "double_curly_youtube_timesteps"
 
+    class DblParen(StrEnum):
+        """Criteria for double parentheses in Logseq."""
 
-class CritAdvCmd(StrEnum):
-    """Criteria for advanced commands in Logseq."""
+        ALL_REFS = "double_parentheses_all_refs"
+        BLOCK_REFS = "double_parentheses_block_refs"
 
-    ALL = "adv_cmd"
-    CAUTION = "adv_cmd_caution"
-    CENTER = "adv_cmd_center"
-    COMMENT = "adv_cmd_comment"
-    EXAMPLE = "adv_cmd_example"
-    EXPORT = "adv_cmd_export"
-    EXPORT_ASCII = "adv_cmd_export_ascii"
-    EXPORT_LATEX = "adv_cmd_export_latex"
-    IMPORTANT = "adv_cmd_important"
-    NOTE = "adv_cmd_note"
-    PINNED = "adv_cmd_pinned"
-    QUERY = "adv_cmd_query"
-    QUOTE = "adv_cmd_quote"
-    TIP = "adv_cmd_tip"
-    VERSE = "adv_cmd_verse"
-    WARNING = "adv_cmd_warning"
+    class Emb(StrEnum):
+        """Criteria for embedded links in Logseq."""
 
+        ASSET = "embedded_link_asset"
+        INTERNET = "embedded_link_internet"
+        OTHER = "embedded_link_other"
 
-class CritDblCurly(StrEnum):
-    """Criteria for double curly brackets in Logseq."""
+    class Ext(StrEnum):
+        """Criteria for file extensions in Logseq."""
 
-    ALL = "double_curly_all_or_macros"
-    BLOCK_EMBED = "double_curly_block_embeds"
-    CARD = "double_curly_cards"
-    CLOZE = "double_curly_clozes"
-    EMBED = "double_curly_embeds"
-    NAMESPACE_QUERY = "double_curly_namespace_queries"
-    PAGE_EMBED = "double_curly_page_embeds"
-    QUERY_FUNCTION = "double_curly_query_functions"
-    RENDERER = "double_curly_renderers"
-    SIMPLE_QUERY = "double_curly_simple_queries"
-    EMBED_TWITTER_TWEET = "double_curly_twitter_tweets"
-    EMBED_VIDEO_URL = "double_curly_video_urls"
-    YOUTUBE_TIMESTAMP = "double_curly_youtube_timesteps"
+        ALIAS = "external_link_alias"
+        INTERNET = "external_link_internet"
+        OTHER = "external_link_other"
 
+    class Prop(StrEnum):
+        """Criteria for properties in Logseq."""
 
-class CritDblParen(StrEnum):
-    """Criteria for double parentheses in Logseq."""
-
-    ALL_REFS = "double_parentheses_all_refs"
-    BLOCK_REFS = "double_parentheses_block_refs"
-
-
-class CritEmb(StrEnum):
-    """Criteria for embedded links in Logseq."""
-
-    ASSET = "embedded_link_asset"
-    INTERNET = "embedded_link_internet"
-    OTHER = "embedded_link_other"
-
-
-class CritExt(StrEnum):
-    """Criteria for file extensions in Logseq."""
-
-    ALIAS = "external_link_alias"
-    INTERNET = "external_link_internet"
-    OTHER = "external_link_other"
-
-
-class CritProp(StrEnum):
-    """Criteria for properties in Logseq."""
-
-    BLOCK_BUILTIN = "property_block_builtin"
-    BLOCK_USER = "property_block_user"
-    PAGE_BUILTIN = "property_page_builtin"
-    PAGE_USER = "property_page_user"
-    VALUES = "property_values"
+        BLOCK_BUILTIN = "property_block_builtin"
+        BLOCK_USER = "property_block_user"
+        PAGE_BUILTIN = "property_page_builtin"
+        PAGE_USER = "property_page_user"
+        VALUES = "property_values"
 
 
 class FileType(StrEnum):

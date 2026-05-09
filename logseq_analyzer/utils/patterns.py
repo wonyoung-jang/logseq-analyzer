@@ -3,7 +3,7 @@
 import re
 from typing import TYPE_CHECKING, ClassVar
 
-from logseq_analyzer.utils.enums import Crit, CritAdvCmd, CritCode, CritDblCurly, CritDblParen, CritEmb, CritExt
+from logseq_analyzer.utils.enums import Crit
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -93,23 +93,23 @@ class AdvCmdPatterns(IPattern):
 
     ALL = re.compile(r"#\+BEGIN_.*?#\+END_.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritAdvCmd.EXPORT: _advcmd("EXPORT"),
-        CritAdvCmd.EXPORT_ASCII: _advcmd("EXPORT", "ascii"),
-        CritAdvCmd.EXPORT_LATEX: _advcmd("EXPORT", "latex"),
-        CritAdvCmd.CAUTION: _advcmd("CAUTION"),
-        CritAdvCmd.CENTER: _advcmd("CENTER"),
-        CritAdvCmd.COMMENT: _advcmd("COMMENT"),
-        CritAdvCmd.EXAMPLE: _advcmd("EXAMPLE"),
-        CritAdvCmd.IMPORTANT: _advcmd("IMPORTANT"),
-        CritAdvCmd.NOTE: _advcmd("NOTE"),
-        CritAdvCmd.PINNED: _advcmd("PINNED"),
-        CritAdvCmd.QUERY: _advcmd("QUERY"),
-        CritAdvCmd.QUOTE: _advcmd("QUOTE"),
-        CritAdvCmd.TIP: _advcmd("TIP"),
-        CritAdvCmd.VERSE: _advcmd("VERSE"),
-        CritAdvCmd.WARNING: _advcmd("WARNING"),
+        Crit.AdvCmd.EXPORT: _advcmd("EXPORT"),
+        Crit.AdvCmd.EXPORT_ASCII: _advcmd("EXPORT", "ascii"),
+        Crit.AdvCmd.EXPORT_LATEX: _advcmd("EXPORT", "latex"),
+        Crit.AdvCmd.CAUTION: _advcmd("CAUTION"),
+        Crit.AdvCmd.CENTER: _advcmd("CENTER"),
+        Crit.AdvCmd.COMMENT: _advcmd("COMMENT"),
+        Crit.AdvCmd.EXAMPLE: _advcmd("EXAMPLE"),
+        Crit.AdvCmd.IMPORTANT: _advcmd("IMPORTANT"),
+        Crit.AdvCmd.NOTE: _advcmd("NOTE"),
+        Crit.AdvCmd.PINNED: _advcmd("PINNED"),
+        Crit.AdvCmd.QUERY: _advcmd("QUERY"),
+        Crit.AdvCmd.QUOTE: _advcmd("QUOTE"),
+        Crit.AdvCmd.TIP: _advcmd("TIP"),
+        Crit.AdvCmd.VERSE: _advcmd("VERSE"),
+        Crit.AdvCmd.WARNING: _advcmd("WARNING"),
     }
-    FALLBACK = CritAdvCmd.ALL
+    FALLBACK = Crit.AdvCmd.ALL
 
 
 class CodePatterns(IPattern):
@@ -117,10 +117,10 @@ class CodePatterns(IPattern):
 
     ALL = re.compile(r"```.*?```", re.DOTALL | re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritCode.ML_CALC: re.compile(r"```calc.*?```", re.DOTALL | re.IGNORECASE),
-        CritCode.ML_LANG: re.compile(r"```\w+.*?```", re.DOTALL | re.IGNORECASE),
+        Crit.Code.ML_CALC: re.compile(r"```calc.*?```", re.DOTALL | re.IGNORECASE),
+        Crit.Code.ML_LANG: re.compile(r"```\w+.*?```", re.DOTALL | re.IGNORECASE),
     }
-    FALLBACK = CritCode.ML_ALL
+    FALLBACK = Crit.Code.ML_ALL
 
 
 class DoubleCurlyPatterns(IPattern):
@@ -128,20 +128,20 @@ class DoubleCurlyPatterns(IPattern):
 
     ALL = re.compile(r"\{\{.*?\}\}", re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritDblCurly.EMBED: _dblcurly("embed"),
-        CritDblCurly.PAGE_EMBED: re.compile(r"\{\{embed \[\[.*?\]\]\}\}", re.IGNORECASE),
-        CritDblCurly.BLOCK_EMBED: re.compile(rf"\{{\{{embed \(\({_UUID}\)\)\}}\}}", re.IGNORECASE),
-        CritDblCurly.NAMESPACE_QUERY: _dblcurly("namespace"),
-        CritDblCurly.CARD: _dblcurly("cards"),
-        CritDblCurly.CLOZE: _dblcurly("cloze"),
-        CritDblCurly.SIMPLE_QUERY: _dblcurly("query"),
-        CritDblCurly.QUERY_FUNCTION: _dblcurly("function"),
-        CritDblCurly.EMBED_VIDEO_URL: _dblcurly("video"),
-        CritDblCurly.EMBED_TWITTER_TWEET: _dblcurly("tweet"),
-        CritDblCurly.YOUTUBE_TIMESTAMP: _dblcurly("youtube-timestamp"),
-        CritDblCurly.RENDERER: _dblcurly("renderer"),
+        Crit.DblCurly.EMBED: _dblcurly("embed"),
+        Crit.DblCurly.PAGE_EMBED: re.compile(r"\{\{embed \[\[.*?\]\]\}\}", re.IGNORECASE),
+        Crit.DblCurly.BLOCK_EMBED: re.compile(rf"\{{\{{embed \(\({_UUID}\)\)\}}\}}", re.IGNORECASE),
+        Crit.DblCurly.NAMESPACE_QUERY: _dblcurly("namespace"),
+        Crit.DblCurly.CARD: _dblcurly("cards"),
+        Crit.DblCurly.CLOZE: _dblcurly("cloze"),
+        Crit.DblCurly.SIMPLE_QUERY: _dblcurly("query"),
+        Crit.DblCurly.QUERY_FUNCTION: _dblcurly("function"),
+        Crit.DblCurly.EMBED_VIDEO_URL: _dblcurly("video"),
+        Crit.DblCurly.EMBED_TWITTER_TWEET: _dblcurly("tweet"),
+        Crit.DblCurly.YOUTUBE_TIMESTAMP: _dblcurly("youtube-timestamp"),
+        Crit.DblCurly.RENDERER: _dblcurly("renderer"),
     }
-    FALLBACK = CritDblCurly.ALL
+    FALLBACK = Crit.DblCurly.ALL
 
 
 class DoubleParenthesesPatterns(IPattern):
@@ -149,9 +149,9 @@ class DoubleParenthesesPatterns(IPattern):
 
     ALL = re.compile(r"(?<!\{\{embed )\(\(.*?\)\)", re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritDblParen.BLOCK_REFS: re.compile(rf"(?<!\{{\{{embed )\(\({_UUID}\)\)", re.IGNORECASE),
+        Crit.DblParen.BLOCK_REFS: re.compile(rf"(?<!\{{\{{embed )\(\({_UUID}\)\)", re.IGNORECASE),
     }
-    FALLBACK = CritDblParen.ALL_REFS
+    FALLBACK = Crit.DblParen.ALL_REFS
 
 
 class EmbeddedLinkPatterns(IPattern):
@@ -159,10 +159,10 @@ class EmbeddedLinkPatterns(IPattern):
 
     ALL = re.compile(r"\!\[.*?\]\(.*?\)", re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritEmb.INTERNET: _internet_link(embedded=True),
-        CritEmb.ASSET: re.compile(r"\!\[.*?\]\(.*?assets/.*?\)", re.IGNORECASE),
+        Crit.Emb.INTERNET: _internet_link(embedded=True),
+        Crit.Emb.ASSET: re.compile(r"\!\[.*?\]\(.*?assets/.*?\)", re.IGNORECASE),
     }
-    FALLBACK = CritEmb.OTHER
+    FALLBACK = Crit.Emb.OTHER
 
 
 class ExternalLinkPatterns(IPattern):
@@ -170,10 +170,10 @@ class ExternalLinkPatterns(IPattern):
 
     ALL = re.compile(r"(?<!\!)\[.*?\]\(.*?\)", re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        CritExt.INTERNET: _internet_link(embedded=False),
-        CritExt.ALIAS: re.compile(r"(?<!\!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)", re.IGNORECASE),
+        Crit.Ext.INTERNET: _internet_link(embedded=False),
+        Crit.Ext.ALIAS: re.compile(r"(?<!\!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)", re.IGNORECASE),
     }
-    FALLBACK = CritExt.OTHER
+    FALLBACK = Crit.Ext.OTHER
 
 
 PATTERNS: Sequence[type[IPattern]] = (
@@ -185,7 +185,7 @@ PATTERNS: Sequence[type[IPattern]] = (
     ExternalLinkPatterns,
 )
 RAW_DATA_MAP = {
-    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
     Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
     Crit.Content.ASSETS: ContentPatterns.ASSET,
 }
@@ -199,8 +199,8 @@ PRIMARY_DATA_MAP = {
     Crit.Content.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
 }
 MASK_MAP = {
-    CritCode.ML_ALL: CodePatterns.ALL,
-    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
-    CritAdvCmd.ALL: AdvCmdPatterns.ALL,
+    Crit.Code.ML_ALL: CodePatterns.ALL,
+    Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,
     Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
 }
