@@ -15,8 +15,7 @@ from logseq_analyzer.analysis.graph import LogseqGraph
 from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqSummarizer
-from logseq_analyzer.config.arguments import Args
-from logseq_analyzer.config.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
+from logseq_analyzer.io.arguments import Args
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.filesystem import (
     AnalyzerDeleteDirs,
@@ -41,6 +40,7 @@ from logseq_analyzer.io.filesystem import (
     RecycleDirectory,
     WhiteboardsDirectory,
 )
+from logseq_analyzer.io.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.report_writer import ReportWriter
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 

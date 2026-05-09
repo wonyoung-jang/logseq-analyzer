@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from logseq_analyzer.config.arguments import Args
+from logseq_analyzer.io.arguments import Args
 from logseq_analyzer.utils.enums import Output
 
 
