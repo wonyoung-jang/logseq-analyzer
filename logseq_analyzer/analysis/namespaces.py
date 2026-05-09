@@ -22,6 +22,8 @@ from logseq_analyzer.utils.helpers import sort_dict_by_value
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.logseq_file.file import LogseqFile
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +55,7 @@ class LogseqNamespaces:
 
     index: FileIndex
     dangling_links: set[str]
+    _level_dist: Counter = field(default_factory=Counter)
     _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
     _part_entries: defaultdict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
     conflicts: NamespaceConflicts = field(default_factory=NamespaceConflicts)
@@ -68,54 +71,57 @@ class LogseqNamespaces:
 
     def init_ns_parts(self) -> None:
         """Create namespace parts from the data."""
-        _level_dist = Counter()
         for f in self.index:
-            if not f.info.namespace.is_namespace:
-                continue
-            _curr_tree_lvl = self.structure.tree
-            self.structure.data[f.path.name] = {
-                k: getattr(f.info.namespace, k) for k in f.info.namespace.__slots__ if hasattr(f.info.namespace, k)
-            }
-            if not (parts := self.structure.data[f.path.name].get("parts")):
-                continue
-            self.structure.parts[f.path.name] = parts
-            for part, level in parts.items():
-                self.structure.unique_parts.add(part)
-                self.structure.unique_ns_per_level[level].add(part)
-                _level_dist[level] += 1
-                _curr_tree_lvl.setdefault(part, {})
-                _curr_tree_lvl = _curr_tree_lvl[part]
-                self._part_levels[part].add(level)
-                self._part_entries[part].append({"entry": f.path.name, "level": level})
-        self.structure.details["level_distribution"] = dict(_level_dist)
+            self._init_ns_parts(f)
+        self.structure.details["level_distribution"] = dict(self._level_dist)
 
     def analyze_ns_queries(self) -> None:
         """Analyze namespace queries."""
         for f in self.index:
-            if not (f_data := f.data):
-                continue
-            if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERY)):
-                continue
-            for query in queries:
-                if not ContentPatterns.PAGE_REFERENCE.search(query):
-                    logger.warning("Invalid query found: %s", query)
-                    continue
-                page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
-                if len(page_refs) != 1:
-                    logger.warning("Invalid references found in query: %s", query)
-                    continue
-                self.queries.setdefault(query, {})
-                self.queries[query].setdefault("found_in", []).append(f.path.name)
-                self.queries[query]["namespace"] = page_refs[0]
-                self.queries[query]["size"] = self.structure.data.get(page_refs[0], {}).get("size", 0)
-                self.queries[query]["uri"] = f.path.uri
-                self.queries[query]["logseq_url"] = f.path.logseq_url
+            self._analyze_ns_queries(f)
         self.queries = sort_dict_by_value(self.queries, value="size", reverse=True)
+
+    def _init_ns_parts(self, f: LogseqFile) -> None:
+        """Initialize namespace parts for a given file."""
+        if not f.info.namespace.is_namespace:
+            return
+        self.structure.data[f.path.name] = {k: getattr(f.info.namespace, k) for k in f.info.namespace.__slots__}
+        if not (parts := self.structure.data[f.path.name].get("parts")):
+            return
+        self.structure.parts[f.path.name] = parts
+        _curr_tree_lvl = self.structure.tree
+        for part, level in parts.items():
+            self.structure.unique_parts.add(part)
+            self.structure.unique_ns_per_level[level].add(part)
+            self._level_dist[level] += 1
+            _curr_tree_lvl.setdefault(part, {})
+            _curr_tree_lvl = _curr_tree_lvl[part]
+            self._part_levels[part].add(level)
+            self._part_entries[part].append({"entry": f.path.name, "level": level})
+
+    def _analyze_ns_queries(self, f: LogseqFile) -> None:
+        if not (f_data := f.data):
+            return
+        if not (queries := f_data.get(CritDblCurly.NAMESPACE_QUERY)):
+            return
+        for query in queries:
+            if not ContentPatterns.PAGE_REFERENCE.search(query):
+                logger.warning("Invalid query found: %s", query)
+                continue
+            page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
+            if len(page_refs) != 1:
+                logger.warning("Invalid references found in query: %s", query)
+                continue
+            self.queries.setdefault(query, {})
+            self.queries[query].setdefault("found_in", []).append(f.path.name)
+            self.queries[query]["namespace"] = page_refs[0]
+            self.queries[query]["size"] = self.structure.data.get(page_refs[0], {}).get("size", 0)
+            self.queries[query]["uri"] = f.path.uri
+            self.queries[query]["logseq_url"] = f.path.logseq_url
 
     def detect_non_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        non_ns_names = (f.path.name for f in self.index if not f.info.namespace.is_namespace)
-        potential_non_ns_names = self.structure.unique_parts.intersection(non_ns_names)
+        potential_non_ns_names = self.structure.unique_parts.intersection(self.index.yield_non_ns_names())
         potential_dangling = self.structure.unique_parts.intersection(self.dangling_links)
         for entry, parts in self.structure.parts.items():
             for part in potential_non_ns_names.intersection(parts):
@@ -148,7 +154,7 @@ class LogseqNamespaces:
             Output.NS_DETAILS: self.structure.details,
             Output.NS_HIERARCHY: self.structure.tree,
             Output.NS_PARTS: self.structure.parts,
-            Output.NS_QUERIES: self.queries,
             Output.NS_UNIQUE_PARTS: self.structure.unique_parts,
             Output.NS_UNIQUE_PER_LEVEL: self.structure.unique_ns_per_level,
+            Output.NS_QUERIES: self.queries,
         }

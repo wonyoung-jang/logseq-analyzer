@@ -188,3 +188,22 @@ class TargetDir(StrEnum):
     JOURNAL = "journals"
     PAGE = "pages"
     WHITEBOARD = "whiteboards"
+
+
+class OutputDir(StrEnum):
+    """Output directories for the Logseq Analyzer."""
+
+    GRAPH = "graph"
+    INDEX = "index"
+    JOURNALS = "journals"
+    META = "_meta"
+    MOVED_FILES = "moved_files"
+    MOVED_FILES_ASSETS = "moved_files/assets"
+    MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
+    NAMESPACES = "namespaces"
+    SUMMARY_CONTENT = "summary_content"
+    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
+    SUMMARY_FILES_FILE = "summary_files/file_types"
+    SUMMARY_FILES_GENERAL = "summary_files/general"
+    SUMMARY_FILES_NODE = "summary_files/node_types"
+    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"

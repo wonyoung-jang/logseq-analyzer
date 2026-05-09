@@ -5,6 +5,7 @@ import re
 import shutil
 from datetime import UTC, datetime
 from enum import StrEnum
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -40,9 +41,9 @@ from logseq_analyzer.io.filesystem import (
     WhiteboardsDirectory,
 )
 from logseq_analyzer.io.report_writer import ReportWriter
-from logseq_analyzer.logseq_file.file import LogseqFile, LogseqFileContext
-from logseq_analyzer.logseq_file.info import JournalFormats
-from logseq_analyzer.utils.enums import FileType, Output, TargetDir
+from logseq_analyzer.logseq_file.file import LogseqFile
+from logseq_analyzer.logseq_file.info import JournalFormats, LogseqFileContext
+from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -175,8 +176,8 @@ def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     user_config_edn_parsed = get_edn_from_file(graph_dirs.user_config.path)
     user_edn = user_config_edn_parsed if isinstance(user_config_edn_parsed, dict) else {}
     global_edn = {}
-    if global_config_path := args.global_config:
-        graph_dirs.global_config = GlobalConfigFile(Path(global_config_path))
+    if args.global_config:
+        graph_dirs.global_config = GlobalConfigFile(Path(args.global_config))
         parsed = get_edn_from_file(graph_dirs.global_config.path)
         global_edn = parsed if isinstance(parsed, dict) else {}
     logger.debug("setup_config_edns")
@@ -213,9 +214,8 @@ def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
 
 def setup_cache(args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> tuple[Cache, FileIndex]:
     """Set up cache for the Logseq Analyzer."""
-    cache_file = CacheFile(Path(Constant.CACHE_FILE))
     cache = Cache(
-        path=cache_file.path,
+        path=CacheFile(Path(Constant.CACHE_FILE)).path,
         target_dirs=set(analyzer_dirs.target_dirs.values()),
         graph_dir=analyzer_dirs.graph_dirs.graph_dir.path,
         graph_cache=args.graph_cache,
@@ -274,7 +274,7 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     def _yield_bakrec(source_dir: Path) -> Iterator[Path]:
         """Yield the file paths of bak and recycle directories."""
         for root, dirs, files in Path.walk(source_dir):
-            for name in dirs + files:
+            for name in chain(dirs, files):
                 yield root / name
 
     dd = analyzer_dirs.delete_dirs
@@ -292,25 +292,6 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
     }
     logger.debug("setup_logseq_file_mover")
     return {Output.MOVED_FILES: moved_files_report}
-
-
-class OutputDir(StrEnum):
-    """Output directories for the Logseq Analyzer."""
-
-    GRAPH = "graph"
-    INDEX = "index"
-    JOURNALS = "journals"
-    META = "_meta"
-    MOVED_FILES = "moved_files"
-    MOVED_FILES_ASSETS = "moved_files/assets"
-    MOVED_FILES_HLS_ASSETS = "moved_files/hls_assets"
-    NAMESPACES = "namespaces"
-    SUMMARY_CONTENT = "summary_content"
-    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
-    SUMMARY_FILES_FILE = "summary_files/file_types"
-    SUMMARY_FILES_GENERAL = "summary_files/general"
-    SUMMARY_FILES_NODE = "summary_files/node_types"
-    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
 
 
 def report_configurations(
@@ -343,15 +324,8 @@ def analyze(
     yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
     yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
     yield OutputDir.MOVED_FILES, moved_files
-    yield OutputDir.SUMMARY_FILES_GENERAL, logseq_file_summarizer.general
-    yield OutputDir.SUMMARY_FILES_FILE, logseq_file_summarizer.filetypes
-    yield OutputDir.SUMMARY_FILES_NODE, logseq_file_summarizer.nodetypes
-    yield OutputDir.SUMMARY_FILES_EXTENSIONS, logseq_file_summarizer.extensions
-    yield OutputDir.SUMMARY_CONTENT, logseq_content_summarizer.report
-    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.size_report
-    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.timestamp_report
-    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.namespace_report
-    yield OutputDir.SUMMARY_CONTENT_INFO, logseq_content_summarizer.bullet_report
+    yield from logseq_file_summarizer.report.items()
+    yield from logseq_content_summarizer.report.items()
     yield OutputDir.INDEX, index.report
     logger.debug("analyze")
 

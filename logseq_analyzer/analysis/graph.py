@@ -36,37 +36,40 @@ class LogseqGraph:
     def post_process_content(self) -> None:
         """Post-process the content data for all files."""
         for f in self.index:
-            ns_info = f.info.namespace
-            if ns_info.is_namespace:
-                self.linked_refs_ns.update((ns_info.root, f.path.name))
-                self.process_namespaces(f)
-            if not (f_data := f.data):
-                continue
-            if found_aliases := f_data.get(CritContent.ALIASES, []):
-                self.aliases.update(found_aliases)
-            dataset = (
-                found_aliases,
-                f_data.get(CritContent.DRAW, []),
-                f_data.get(CritContent.PAGE_REF, []),
-                f_data.get(CritContent.TAG, []),
-                f_data.get(CritContent.TAGGED_BACKLINK, []),
-                f_data.get(CritProp.PAGE_BUILTIN, []),
-                f_data.get(CritProp.PAGE_USER, []),
-                f_data.get(CritProp.BLOCK_BUILTIN, []),
-                f_data.get(CritProp.BLOCK_USER, []),
+            self._post_process_content(f)
+
+    def _post_process_content(self, f: LogseqFile) -> None:
+        ns_info = f.info.namespace
+        if ns_info.is_namespace:
+            self.linked_refs_ns.update((ns_info.root, f.path.name))
+            self.process_namespaces(f)
+        if not (f_data := f.data):
+            return
+        if found_aliases := f_data.get(CritContent.ALIASES, []):
+            self.aliases.update(found_aliases)
+        dataset = (
+            found_aliases,
+            f_data.get(CritContent.DRAW, []),
+            f_data.get(CritContent.PAGE_REF, []),
+            f_data.get(CritContent.TAG, []),
+            f_data.get(CritContent.TAGGED_BACKLINK, []),
+            f_data.get(CritProp.PAGE_BUILTIN, []),
+            f_data.get(CritProp.PAGE_USER, []),
+            f_data.get(CritProp.BLOCK_BUILTIN, []),
+            f_data.get(CritProp.BLOCK_USER, []),
+        )
+        if not (linked_references := list(chain.from_iterable(dataset))):
+            return
+        if ns_info.parent:
+            lr_with_ns_parent = [*linked_references, ns_info.parent]
+            self.all_linked_refs.update(
+                get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
             )
-            if not (linked_references := list(chain.from_iterable(dataset))):
-                continue
-            if ns_info.parent:
-                lr_with_ns_parent = [*linked_references, ns_info.parent]
-                self.all_linked_refs.update(
-                    get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
-                )
-            else:
-                self.all_linked_refs.update(
-                    get_count_and_foundin_data(self.all_linked_refs, linked_references, f.path.name)
-                )
-            self.linked_refs.update(linked_references)
+        else:
+            self.all_linked_refs.update(
+                get_count_and_foundin_data(self.all_linked_refs, linked_references, f.path.name)
+            )
+        self.linked_refs.update(linked_references)
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
@@ -95,16 +98,20 @@ class LogseqGraph:
     def process_nodes(self) -> None:
         """Process summary data for each file based on metadata and content analysis."""
         for f in self.index:
-            f.node.check_backlinked(f.path.name, self.linked_refs)
-            f.node.check_backlinked_ns_only(f.path.name, self.linked_refs_ns)
-            if f.path.file_type in _TO_NODE_TYPE:
-                f.node.determine_node_type(has_content=f.info.size.has_content)
+            self._process_nodes(f)
+
+    def _process_nodes(self, f: LogseqFile) -> None:
+        """Process summary data for a single file based on metadata and content analysis."""
+        f.node.check_backlinked(f.path.name, self.linked_refs)
+        f.node.check_backlinked_ns_only(f.path.name, self.linked_refs_ns)
+        if f.path.file_type in _TO_NODE_TYPE:
+            f.node.determine_node_type(has_content=f.info.size.has_content)
 
     def process_dangling_links(self) -> None:
         """Process dangling links in the graph."""
         self.dangling_links = (
             (self.linked_refs | self.linked_refs_ns)
-            - {f.path.name for f in self.index}
+            - set(self.index.yield_names())
             - self.aliases
             - BUILT_IN_PROPERTIES
         )

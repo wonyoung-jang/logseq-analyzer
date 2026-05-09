@@ -5,7 +5,7 @@ from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.bullets import LogseqBullets
-from logseq_analyzer.logseq_file.info import JournalFormats, LogseqFileInfo, NodeType
+from logseq_analyzer.logseq_file.info import LogseqFileContext, LogseqFileInfo, NodeType
 from logseq_analyzer.logseq_file.stats import LogseqPath
 from logseq_analyzer.patterns.content import PRIMARY_DATA_MAP, ContentPatterns
 from logseq_analyzer.patterns.patterns import AdvCmdPatterns, CodePatterns
@@ -34,18 +34,6 @@ MASK_MAP: dict[str, re.Pattern] = {
     CritAdvCmd.ALL: AdvCmdPatterns.ALL,
     CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
 }
-
-
-@dataclass(slots=True)
-class LogseqFileContext:
-    """Class to hold context data for a Logseq file."""
-
-    now_ts: float
-    journal_format: JournalFormats
-    ns_file_sep: str
-    journal_dir: str
-    graph_path: Path
-    result_map: dict
 
 
 @dataclass(slots=True)

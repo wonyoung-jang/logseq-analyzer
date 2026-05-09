@@ -127,18 +127,6 @@ class LogseqGraphDirs:
     user_config: File
     global_config: File | None = None
 
-    @property
-    def report(self) -> dict[str, File | None]:
-        """Generate a report of the Logseq graph directories."""
-        return {
-            "graph": self.graph_dir,
-            "graph/logseq": self.logseq_dir,
-            "graph/logseq/bak": self.bak_dir,
-            "graph/logseq/.recycle": self.recycle_dir,
-            "graph/logseq/config.edn": self.user_config,
-            "global-config.edn": self.global_config,
-        }
-
 
 @dataclass(slots=True)
 class AnalyzerDeleteDirs:
@@ -148,16 +136,6 @@ class AnalyzerDeleteDirs:
     delete_bak_dir: File
     delete_recycle_dir: File
     delete_assets_dir: File
-
-    @property
-    def report(self) -> dict[str, File]:
-        """Generate a report of the analyzer delete directories."""
-        return {
-            "to-delete": self.delete_dir,
-            "to-delete/bak": self.delete_bak_dir,
-            "to-delete/.recycle": self.delete_recycle_dir,
-            "to-delete/assets": self.delete_assets_dir,
-        }
 
 
 @dataclass(slots=True)
@@ -174,8 +152,20 @@ class LogseqAnalyzerDirs:
         """Generate a report of the Logseq analyzer directories."""
         return {
             "logseq_analyzer_dirs": {
-                "graph_dirs": self.graph_dirs.report,
-                "delete_dirs": self.delete_dirs.report,
+                "graph_dirs": {
+                    "graph": self.graph_dirs.graph_dir,
+                    "graph/logseq": self.graph_dirs.logseq_dir,
+                    "graph/logseq/bak": self.graph_dirs.bak_dir,
+                    "graph/logseq/.recycle": self.graph_dirs.recycle_dir,
+                    "graph/logseq/config.edn": self.graph_dirs.user_config,
+                    "global-config.edn": self.graph_dirs.global_config,
+                },
+                "delete_dirs": {
+                    "to-delete": self.delete_dirs.delete_dir,
+                    "to-delete/bak": self.delete_dirs.delete_bak_dir,
+                    "to-delete/.recycle": self.delete_dirs.delete_recycle_dir,
+                    "to-delete/assets": self.delete_dirs.delete_assets_dir,
+                },
                 "target_dirs": self.target_dirs,
                 "output_dir": self.output_dir,
             }

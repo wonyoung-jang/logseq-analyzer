@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.file import LogseqFile
-from logseq_analyzer.utils.enums import Output
+from logseq_analyzer.utils.enums import FileType, Output
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -101,6 +101,24 @@ class FileIndex:
         for f in self:
             if not f.path.file.exists():
                 self.remove(f)
+
+    def yield_names(self) -> Iterator[str]:
+        """Yield all file names from the index."""
+        yield from (f.path.name for f in self)
+
+    def yield_non_ns_names(self) -> Iterator[str]:
+        """Yield all non-namespace file names from the index."""
+        yield from (f.path.name for f in self if not f.info.namespace.is_namespace)
+
+    def yield_journals(self) -> Iterator[str]:
+        """Yield all journal files from the index."""
+        yield from (f.path.name for f in self if f.path.file_type == FileType.JOURNAL)
+
+    def yield_assets_with_backlink(self, *, backlinked: bool) -> Iterator[LogseqFile]:
+        """Yield asset files with or without backlinks."""
+        for f in self:
+            if (backlinked or f.node.backlinked == backlinked) and f.path.file_type == FileType.ASSET:
+                yield f
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:

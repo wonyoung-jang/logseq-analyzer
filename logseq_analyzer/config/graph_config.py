@@ -100,12 +100,12 @@ class ConfigEdns:
 class LogseqConfigEDN:
     """A simple EDN parser that converts EDN data into Python data structures."""
 
-    tokens_gen: InitVar[Iterator[Any]]
+    tokens_gen: InitVar[Iterator[str]]
     tokens: list[str] = field(default_factory=list)
     tok_map: dict[str, Any] = field(default_factory=dict)
     pos: int = 0
 
-    def __post_init__(self, tokens_gen: Iterator[Any]) -> None:
+    def __post_init__(self, tokens_gen: Iterator[str]) -> None:
         """Initialize the token map for parsing EDN structures."""
         self.tokens = list(tokens_gen)
         self.tok_map = {
@@ -249,7 +249,7 @@ def loads(edn_str: str) -> EDNToken:
     return LogseqConfigEDN(tokenize(edn_str)).parse()
 
 
-def tokenize(edn_str: str) -> Iterator[Any]:
+def tokenize(edn_str: str) -> Iterator[str]:
     """Yield EDN tokens, skipping comments, whitespace, and commas.
 
     Comments start with ';' and run to end-of-line.

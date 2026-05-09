@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import FileType, Output
+from logseq_analyzer.utils.enums import Output
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -91,17 +91,26 @@ class LogseqJournals:
 
     def __post_init__(self) -> None:
         """Initialize the LogseqJournals class."""
-        dangling = sorted(journals_to_datetime(self.dangling_links, self.journal_page_format))
-        journals = (f.path.name for f in self.index if f.path.file_type == FileType.JOURNAL)
-        self.existing.extend(sorted(journals_to_datetime(journals, self.journal_page_format)))
-        self.build_complete_timeline(dangling)
-        self.get_dangling_journals_outside_range(dangling)
+        _dangling_journals = sorted(self._journals_to_datetime(self.dangling_links))
+        self.existing.extend(sorted(self._journals_to_datetime(self.index.yield_journals())))
+        self.process(_dangling_journals)
 
     def __len__(self) -> int:
         """Return the number of processed keys."""
         return len(self.timeline)
 
-    def build_complete_timeline(self, dangling_journals: list[datetime]) -> None:
+    def _journals_to_datetime(self, keys: Iterable[str]) -> Iterator[datetime]:
+        """Convert journal keys from strings to datetime objects."""
+        for key in keys:
+            try:
+                key_to_parse = key
+                for ordinal in DATE_ORDINAL_SUFFIXES:
+                    key_to_parse = key_to_parse.replace(ordinal, "")
+                yield datetime.strptime(key_to_parse, self.journal_page_format.replace("#", "")).replace(tzinfo=UTC)
+            except ValueError:
+                pass
+
+    def process(self, dangling_journals: list[datetime]) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
         for i, date in enumerate(self.existing):
             self.timeline.append(date)
@@ -112,15 +121,12 @@ class LogseqJournals:
                 if next_expected not in dangling_journals:
                     self.missing.append(next_expected)
                 next_expected = date_next(next_expected)
-        self.all_journals = sorted(self.timeline + dangling_journals)
+        self.all_journals.extend(sorted(self.timeline + dangling_journals))
         self.timeline_stats = {
             "timeline": date_stats(self.timeline),
             "dangling": date_stats(dangling_journals),
             "total": date_stats(self.all_journals),
         }
-
-    def get_dangling_journals_outside_range(self, dangling_journals: list[datetime]) -> None:
-        """Check for dangling journals that are outside the range of the complete timeline."""
         for link in dangling_journals:
             if link < self.timeline_stats["timeline"]["first"]:
                 self.dangling["past"].append(link)

@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Node(StrEnum):
@@ -49,10 +53,7 @@ class NodeType:
 
     def determine_node_type(self, *, has_content: bool) -> None:
         """Determine node type based on summary data."""
-        if has_content:
-            self.node_type = self._node_type_has_content()
-        else:
-            self.node_type = self._node_type_no_content()
+        self.node_type = self._node_type_has_content() if has_content else self._node_type_no_content()
 
     def _node_type_has_content(self) -> str:
         """Determine node type based on summary data."""
@@ -87,6 +88,18 @@ class NodeType:
             case (False, False, False):
                 n = Node.ORPHAN_TRUE
         return n
+
+
+@dataclass(slots=True)
+class LogseqFileContext:
+    """Class to hold context data for a Logseq file."""
+
+    now_ts: float
+    journal_format: JournalFormats
+    ns_file_sep: str
+    journal_dir: str
+    graph_path: Path
+    result_map: dict
 
 
 @dataclass(slots=True)

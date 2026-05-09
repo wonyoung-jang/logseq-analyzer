@@ -14,7 +14,7 @@ from logseq_analyzer.utils.enums import Core, FileType
 if TYPE_CHECKING:
     from os import stat_result
 
-    from logseq_analyzer.logseq_file.file import LogseqFileContext
+    from logseq_analyzer.logseq_file.info import LogseqFileContext
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class LogseqPath:
     def __post_init__(self) -> None:
         """Initialize the LogseqPath object."""
         self._stat = self.file.stat()
-        self.uri: str = self.file.as_uri()
+        self.uri = self.file.as_uri()
         self.name = _process_filename(
             self.file,
             jf=self.context.journal_format,
