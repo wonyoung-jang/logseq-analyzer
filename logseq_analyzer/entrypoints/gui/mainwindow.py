@@ -17,7 +17,6 @@ class Argument(StrEnum):
     GLOBAL_CONFIG = "global_config"
     GRAPH_CACHE = "graph_cache"
     GRAPH_FOLDER = "graph_folder"
-    MOVE_ALL = "move_all"
     MOVE_BAK = "move_bak"
     MOVE_RECYCLE = "move_recycle"
     MOVE_UNLINKED_ASSETS = "move_unlinked_assets"
@@ -59,7 +58,6 @@ class LogseqAnalyzerGUI(QWidget):
         """Run the analysis with the provided arguments."""
         gui_args = {
             Argument.MOVE_UNLINKED_ASSETS: self.checkboxes.move_assets.isChecked(),
-            Argument.MOVE_ALL: self.checkboxes.move_all.isChecked(),
             Argument.MOVE_BAK: self.checkboxes.move_bak.isChecked(),
             Argument.MOVE_RECYCLE: self.checkboxes.move_recycle.isChecked(),
             Argument.WRITE_GRAPH: self.checkboxes.write_graph.isChecked(),
@@ -149,7 +147,6 @@ class LogseqAnalyzerGUI(QWidget):
 
     def save_settings(self) -> None:
         """Save current settings using QSettings."""
-        self.settings.setValue(Argument.MOVE_ALL, self.checkboxes.move_all.isChecked())
         self.settings.setValue(Argument.MOVE_UNLINKED_ASSETS, self.checkboxes.move_assets.isChecked())
         self.settings.setValue(Argument.MOVE_BAK, self.checkboxes.move_bak.isChecked())
         self.settings.setValue(Argument.MOVE_RECYCLE, self.checkboxes.move_recycle.isChecked())
@@ -162,7 +159,6 @@ class LogseqAnalyzerGUI(QWidget):
 
     def load_settings(self) -> None:
         """Load settings using QSettings."""
-        self.checkboxes.move_all.setChecked(bool(self.settings.value(Argument.MOVE_ALL, defaultValue=False, type=bool)))
         self.checkboxes.move_assets.setChecked(
             bool(self.settings.value(Argument.MOVE_UNLINKED_ASSETS, defaultValue=False, type=bool))
         )

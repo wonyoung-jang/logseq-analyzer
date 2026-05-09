@@ -33,7 +33,6 @@ def test_set_gui_args(args_instance: Args) -> None:
         "graph_folder": Path("/path/to/graph"),
         "global_config": Path("/path/to/config.ini"),
         "move_unlinked_assets": True,
-        "move_all": False,
         "move_bak": False,
         "move_recycle": True,
         "write_graph": False,

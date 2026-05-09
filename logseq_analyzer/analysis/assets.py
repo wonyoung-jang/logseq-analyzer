@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from logseq_analyzer.analysis.file import LogseqFile
     from logseq_analyzer.analysis.index import FileIndex
 
+_ASSET_CRITERIA = frozenset((Crit.Emb.ASSET, Crit.Content.ASSETS))
+
 
 @dataclass(slots=True)
 class LogseqAssetsHls:
@@ -80,9 +82,6 @@ class LogseqAssetsHls:
             Output.HLS_NOT_BACKLINKED: self.not_backlinked,
             Output.HLS_BACKLINKED: self.backlinked,
         }
-
-
-_ASSET_CRITERIA = frozenset({Crit.Emb.ASSET, Crit.Content.ASSETS})
 
 
 @dataclass(slots=True)

@@ -314,7 +314,7 @@ def analyze(
     logger.debug("analyze")
 
 
-def run_app(**gui_args: Any) -> None:
+def run_app(gui_args: dict[str, object] | None = None) -> None:
     """Run the Logseq analyzer."""
     _init_logging()
     progress = gui_args.pop("progress_callback", lambda pct, msg: print(f"{pct}% - {msg}"))

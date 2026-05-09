@@ -23,33 +23,18 @@ class Checkboxes(QWidget):
     def __init__(self) -> None:
         """Post-initialization to set default values for checkboxes."""
         super().__init__()
-        self.move_all = QCheckBox("Enable all move options")
-        self.move_assets = QCheckBox("Move Unlinked Assets to 'to_delete' folder")
-        self.move_bak = QCheckBox("Move Bak to 'to_delete' folder")
-        self.move_recycle = QCheckBox("Move Recycle to 'to_delete' folder")
-        self.write_graph = QCheckBox("Write Full Graph Content (large)")
-        self.graph_cache = QCheckBox("Reindex Graph Cache")
+        self.move_assets = QCheckBox("Move unlinked assets to 'to_delete/'")
+        self.move_bak = QCheckBox("Move bak to 'to_delete/'")
+        self.move_recycle = QCheckBox("Move recycle to 'to_delete/'")
+        self.write_graph = QCheckBox("Write full graph content (large)")
+        self.graph_cache = QCheckBox("Reindex graph cache (slower)")
         self.graph_cache.setEnabled(True)
         layout = QVBoxLayout(self)
-        layout.addWidget(self.move_all)
         layout.addWidget(self.move_assets)
         layout.addWidget(self.move_bak)
         layout.addWidget(self.move_recycle)
         layout.addWidget(self.write_graph)
         layout.addWidget(self.graph_cache)
-        self.move_all.toggled.connect(self.update_move_options)
-
-    @Slot()
-    def update_move_options(self) -> None:
-        """Update the state of move options checkboxes based on the main checkbox."""
-        if self.move_all.isChecked():
-            self.move_assets.setChecked(True)
-            self.move_bak.setChecked(True)
-            self.move_recycle.setChecked(True)
-        else:
-            self.move_assets.setChecked(False)
-            self.move_bak.setChecked(False)
-            self.move_recycle.setChecked(False)
 
     @Slot()
     def force_enable_graph_cache(self) -> None:

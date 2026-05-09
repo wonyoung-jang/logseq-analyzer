@@ -21,7 +21,9 @@ dependencies = [
 Home = "https://github.com/wonyoung-jang/logseq-analyzer"
 
 [project.scripts]
-logseq-analyzer = "logseq_analyzer.__main__:main"
+logseq-analyzer = "logseq_analyzer.entrypoints.gui.__main__:main"
+logseq-analyzer-gui = "logseq_analyzer.entrypoints.gui.__main__:main"
+logseq-analyzer-cli = "logseq_analyzer.entrypoints.cli.__main__:main"
 
 [tool.uv.build-backend]
 module-name = "logseq_analyzer"

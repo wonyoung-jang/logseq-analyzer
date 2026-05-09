@@ -14,7 +14,6 @@ class Args:
     global_config: str = ""
     graph_cache: bool = False
     graph_folder: str = ""
-    move_all: bool = False
     move_bak: bool = False
     move_recycle: bool = False
     move_unlinked_assets: bool = False
@@ -30,18 +29,10 @@ class Args:
         """Parse command line arguments and set them as attributes."""
         parser = argparse.ArgumentParser(description="Logseq Analyzer")
         parser.add_argument(
-            "-g",
-            "--graph-folder",
+            "--global-config",
             action="store",
-            help="path to your main Logseq graph folder (contains subfolders)",
-            required=True,
-        )
-        parser.add_argument(
-            "-wg",
-            "--write-graph",
-            action="store_true",
-            help="write all graph content to output folder (warning: may result in large file)",
-            default=False,
+            help="path to global configuration file",
+            default="",
         )
         parser.add_argument(
             "--graph-cache",
@@ -50,16 +41,11 @@ class Args:
             default=True,
         )
         parser.add_argument(
-            "--move-all",
-            action="store_true",
-            help="move all (assets, bak, recycle) to their respective folders in 'to-delete' directory",
-            default=False,
-        )
-        parser.add_argument(
-            "--move-unlinked-assets",
-            action="store_true",
-            help='move unlinked assets to "to-delete/assets" folder',
-            default=False,
+            "-g",
+            "--graph-folder",
+            action="store",
+            help="path to your main Logseq graph folder (contains subfolders)",
+            required=True,
         )
         parser.add_argument(
             "--move-bak",
@@ -74,16 +60,23 @@ class Args:
             default=False,
         )
         parser.add_argument(
-            "--global-config",
-            action="store",
-            help="path to global configuration file",
-            default="",
+            "--move-unlinked-assets",
+            action="store_true",
+            help='move unlinked assets to "to-delete/assets" folder',
+            default=False,
         )
         parser.add_argument(
             "--report-format",
             action="store",
             help="report format (.txt, .json, .md, .html)",
             default=".txt",
+        )
+        parser.add_argument(
+            "-wg",
+            "--write-graph",
+            action="store_true",
+            help="write all graph content to output folder (warning: may result in large file)",
+            default=False,
         )
         args = parser.parse_args()
         for key, value in vars(args).items():
