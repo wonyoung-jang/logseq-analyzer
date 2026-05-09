@@ -120,32 +120,32 @@ DeleteAssetsDirectory   = _file_cls("DeleteAssetsDirectory",   is_dir=True)
 class LogseqGraphDirs:
     """Directories related to the Logseq graph."""
 
-    graph_dir: File
-    logseq_dir: File
-    bak_dir: File
-    recycle_dir: File
-    user_config: File
-    global_config: File | None = None
+    graph: File
+    logseq: File
+    bak: File
+    recycle: File
+    config_user: File
+    config_global: File | None = None
 
 
 @dataclass(slots=True)
 class AnalyzerDeleteDirs:
     """Directories for deletion operations in the Logseq analyzer."""
 
-    delete_dir: File
-    delete_bak_dir: File
-    delete_recycle_dir: File
-    delete_assets_dir: File
+    directory: File
+    bak: File
+    recycle: File
+    assets: File
 
 
 @dataclass(slots=True)
 class LogseqAnalyzerDirs:
     """Directories used by the Logseq analyzer."""
 
-    graph_dirs: LogseqGraphDirs
-    delete_dirs: AnalyzerDeleteDirs
-    target_dirs: dict[str, str]
-    output_dir: File
+    graph: LogseqGraphDirs
+    delete: AnalyzerDeleteDirs
+    target: dict[str, str]
+    output: File
 
     @property
     def report(self) -> dict[str, dict]:
@@ -153,20 +153,20 @@ class LogseqAnalyzerDirs:
         return {
             "logseq_analyzer_dirs": {
                 "graph_dirs": {
-                    "graph": self.graph_dirs.graph_dir,
-                    "graph/logseq": self.graph_dirs.logseq_dir,
-                    "graph/logseq/bak": self.graph_dirs.bak_dir,
-                    "graph/logseq/.recycle": self.graph_dirs.recycle_dir,
-                    "graph/logseq/config.edn": self.graph_dirs.user_config,
-                    "global-config.edn": self.graph_dirs.global_config,
+                    "graph": self.graph.graph,
+                    "graph/logseq": self.graph.logseq,
+                    "graph/logseq/bak": self.graph.bak,
+                    "graph/logseq/.recycle": self.graph.recycle,
+                    "graph/logseq/config.edn": self.graph.config_user,
+                    "global-config.edn": self.graph.config_global,
                 },
                 "delete_dirs": {
-                    "to-delete": self.delete_dirs.delete_dir,
-                    "to-delete/bak": self.delete_dirs.delete_bak_dir,
-                    "to-delete/.recycle": self.delete_dirs.delete_recycle_dir,
-                    "to-delete/assets": self.delete_dirs.delete_assets_dir,
+                    "to-delete": self.delete.directory,
+                    "to-delete/bak": self.delete.bak,
+                    "to-delete/.recycle": self.delete.recycle,
+                    "to-delete/assets": self.delete.assets,
                 },
-                "target_dirs": self.target_dirs,
-                "output_dir": self.output_dir,
+                "target_dirs": self.target,
+                "output_dir": self.output,
             }
         }

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import CritContent, CritProp, FileType, Output
+from logseq_analyzer.utils.enums import Crit, CritProp, FileType, Output
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -45,14 +45,14 @@ class LogseqGraph:
             self.process_namespaces(f)
         if not (f_data := f.data):
             return
-        if found_aliases := f_data.get(CritContent.ALIASES, []):
+        if found_aliases := f_data.get(Crit.Content.ALIASES, []):
             self.aliases.update(found_aliases)
         dataset = (
             found_aliases,
-            f_data.get(CritContent.DRAW, []),
-            f_data.get(CritContent.PAGE_REF, []),
-            f_data.get(CritContent.TAG, []),
-            f_data.get(CritContent.TAGGED_BACKLINK, []),
+            f_data.get(Crit.Content.DRAW, []),
+            f_data.get(Crit.Content.PAGE_REF, []),
+            f_data.get(Crit.Content.TAG, []),
+            f_data.get(Crit.Content.TAGGED_BACKLINK, []),
             f_data.get(CritProp.PAGE_BUILTIN, []),
             f_data.get(CritProp.PAGE_USER, []),
             f_data.get(CritProp.BLOCK_BUILTIN, []),

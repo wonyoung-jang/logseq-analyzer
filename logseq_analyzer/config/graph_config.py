@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 type EDNToken = Any | None | dict | list | set | bool | float | int | ast.AST
 
-TOKEN_REGEX: re.Pattern = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
-COMMENT_REGEX: re.Pattern = re.compile(r";.*")
-NUMBER_REGEX: re.Pattern = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+TOKEN_REGEX = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
+COMMENT_REGEX = re.compile(r";.*")
+NUMBER_REGEX = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
 
 class Edn(StrEnum):

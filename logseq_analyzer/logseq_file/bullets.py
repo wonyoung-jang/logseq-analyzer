@@ -6,22 +6,15 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.logseq_file.info import BulletInfo
-from logseq_analyzer.patterns.content import ContentPatterns
-from logseq_analyzer.patterns.patterns import PATTERNS
-from logseq_analyzer.utils.enums import CritCode, CritContent, CritProp
+from logseq_analyzer.utils.enums import Crit, CritProp
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
+from logseq_analyzer.utils.patterns import PATTERNS, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
 logger = logging.getLogger(__name__)
-
-RAW_DATA_MAP = {
-    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
-    CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
-    CritContent.ASSETS: ContentPatterns.ASSET,
-}
 
 
 def process_aliases(aliases: str) -> Iterator[str]:
@@ -131,7 +124,7 @@ class LogseqBullets:
         if aliases := propvalues.get("alias"):
             aliases = list(process_aliases(aliases))
         for key, value in {
-            CritContent.ALIASES: aliases,
+            Crit.Content.ALIASES: aliases,
             CritProp.VALUES: propvalues,
         }.items():
             if value:

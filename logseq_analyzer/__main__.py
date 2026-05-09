@@ -5,7 +5,7 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from logseq_analyzer.app import run_app
-from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
+from logseq_analyzer.entrypoints.gui.mainwindow import LogseqAnalyzerGUI
 
 
 def main() -> None:

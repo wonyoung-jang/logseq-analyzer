@@ -123,22 +123,22 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
     graph_dirs = _setup_graph_dirs(args)
     config_edns = _setup_config_edns(args, graph_dirs)
     target_dirs = config_edns.get_target_dirs()
-    _graph_dir = graph_dirs.graph_dir.path
+    _graph_dir = graph_dirs.graph.path
     AssetsDirectory(_graph_dir / target_dirs[TargetDir.ASSET])
     DrawsDirectory(_graph_dir / target_dirs[TargetDir.DRAW])
     JournalsDirectory(_graph_dir / target_dirs[TargetDir.JOURNAL])
     PagesDirectory(_graph_dir / target_dirs[TargetDir.PAGE])
     WhiteboardsDirectory(_graph_dir / target_dirs[TargetDir.WHITEBOARD])
     analyzer_dirs = LogseqAnalyzerDirs(
-        graph_dirs=graph_dirs,
-        delete_dirs=AnalyzerDeleteDirs(
-            delete_dir=DeleteDirectory(Path(Constant.TO_DELETE_DIR)),
-            delete_bak_dir=DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR)),
-            delete_recycle_dir=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
-            delete_assets_dir=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
+        graph=graph_dirs,
+        delete=AnalyzerDeleteDirs(
+            directory=DeleteDirectory(Path(Constant.TO_DELETE_DIR)),
+            bak=DeleteBakDirectory(Path(Constant.TO_DELETE_BAK_DIR)),
+            recycle=DeleteRecycleDirectory(Path(Constant.TO_DELETE_RECYCLE_DIR)),
+            assets=DeleteAssetsDirectory(Path(Constant.TO_DELETE_ASSETS_DIR)),
         ),
-        target_dirs=target_dirs,
-        output_dir=OutputDirectory(Path(Constant.OUTPUT_DIR)),
+        target=target_dirs,
+        output=OutputDirectory(Path(Constant.OUTPUT_DIR)),
     )
     logger.debug("setup_logseq_paths")
     return analyzer_dirs, config_edns
@@ -162,23 +162,23 @@ def _setup_graph_dirs(args: Args) -> LogseqGraphDirs:
     user_config_file = logseq_dir / LogseqGraphStructure.CONFIG_EDN
     logger.debug("setup_graph_dirs")
     return LogseqGraphDirs(
-        graph_dir=GraphDirectory(graph_folder_path),
-        logseq_dir=LogseqDirectory(logseq_dir),
-        bak_dir=BakDirectory(bak_dir),
-        recycle_dir=RecycleDirectory(recycle_dir),
-        user_config=ConfigFile(user_config_file),
+        graph=GraphDirectory(graph_folder_path),
+        logseq=LogseqDirectory(logseq_dir),
+        bak=BakDirectory(bak_dir),
+        recycle=RecycleDirectory(recycle_dir),
+        config_user=ConfigFile(user_config_file),
     )
 
 
 def _setup_config_edns(args: Args, graph_dirs: LogseqGraphDirs) -> ConfigEdns:
     """Set up the configuration EDN files."""
     default_edn = DEFAULT_LOGSEQ_CONFIG
-    user_config_edn_parsed = get_edn_from_file(graph_dirs.user_config.path)
+    user_config_edn_parsed = get_edn_from_file(graph_dirs.config_user.path)
     user_edn = user_config_edn_parsed if isinstance(user_config_edn_parsed, dict) else {}
     global_edn = {}
     if args.global_config:
-        graph_dirs.global_config = GlobalConfigFile(Path(args.global_config))
-        parsed = get_edn_from_file(graph_dirs.global_config.path)
+        graph_dirs.config_global = GlobalConfigFile(Path(args.global_config))
+        parsed = get_edn_from_file(graph_dirs.config_global.path)
         global_edn = parsed if isinstance(parsed, dict) else {}
     logger.debug("setup_config_edns")
     return ConfigEdns(
@@ -216,8 +216,8 @@ def setup_cache(args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> tuple[Cache, F
     """Set up cache for the Logseq Analyzer."""
     cache = Cache(
         path=CacheFile(Path(Constant.CACHE_FILE)).path,
-        target_dirs=set(analyzer_dirs.target_dirs.values()),
-        graph_dir=analyzer_dirs.graph_dirs.graph_dir.path,
+        target_dirs=set(analyzer_dirs.target.values()),
+        graph_dir=analyzer_dirs.graph.graph.path,
         graph_cache=args.graph_cache,
     )
     cache.open()
@@ -277,14 +277,14 @@ def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyze
             for name in chain(dirs, files):
                 yield root / name
 
-    dd = analyzer_dirs.delete_dirs
-    gd = analyzer_dirs.graph_dirs
-    target_asset = dd.delete_assets_dir.path
-    target_bak = dd.delete_bak_dir.path
-    target_rec = dd.delete_recycle_dir.path
+    dd = analyzer_dirs.delete
+    gd = analyzer_dirs.graph
+    target_asset = dd.assets.path
+    target_bak = dd.bak.path
+    target_rec = dd.recycle.path
     asset_paths = _yield_asset(lsa.not_backlinked)
-    bak_paths = _yield_bakrec(gd.bak_dir.path)
-    rec_paths = _yield_bakrec(gd.recycle_dir.path)
+    bak_paths = _yield_bakrec(gd.bak.path)
+    rec_paths = _yield_bakrec(gd.recycle.path)
     moved_files_report = {
         Moved.ASSETS: _process_moves(target_asset, asset_paths, move=args.move_unlinked_assets),
         Moved.BAK: _process_moves(target_bak, bak_paths, move=args.move_bak),
@@ -348,14 +348,14 @@ def run_app(**gui_args: Any) -> None:
         now_ts=datetime.now(tz=UTC).timestamp(),
         journal_format=journal_formats,
         ns_file_sep=config_edns.get_ns_sep(),
-        journal_dir=analyzer_dirs.target_dirs[TargetDir.JOURNAL],
-        graph_path=analyzer_dirs.graph_dirs.graph_dir.path,
+        journal_dir=analyzer_dirs.target[TargetDir.JOURNAL],
+        graph_path=analyzer_dirs.graph.graph.path,
         result_map={
-            analyzer_dirs.target_dirs[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
-            analyzer_dirs.target_dirs[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
-            analyzer_dirs.target_dirs[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
-            analyzer_dirs.target_dirs[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
-            analyzer_dirs.target_dirs[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
+            analyzer_dirs.target[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
+            analyzer_dirs.target[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
+            analyzer_dirs.target[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
+            analyzer_dirs.target[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
+            analyzer_dirs.target[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         },
     )
     progress(50, "Setup cache...")
@@ -367,7 +367,7 @@ def run_app(**gui_args: Any) -> None:
     progress(70, "Write meta reports...")
     _writer = ReportWriter(
         ext=args.report_format,
-        output_dir=analyzer_dirs.output_dir.path,
+        output_dir=analyzer_dirs.output.path,
     )
     _writer.write_reports(report_configurations(args, analyzer_dirs, config_edns))
     progress(80, "Running core analysis on Logseq graph...")

@@ -5,7 +5,7 @@ import shelve
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.analysis.index import FileIndex
 from logseq_analyzer.utils.enums import Format
@@ -32,7 +32,7 @@ class Cache:
     graph_dir: Path
     graph_cache: bool
     target_dirs: set[str]
-    cache: shelve.Shelf[Any] = field(init=False)
+    cache: shelve.Shelf = field(init=False)
 
     def open(self, protocol: int = 5) -> None:
         """Open the cache file."""
@@ -60,24 +60,15 @@ class Cache:
     def initialize(self) -> FileIndex:
         """Clear the cache if needed."""
         if self.graph_cache:
-            self._clear()
+            self.cache.close()
+            self.path.unlink(missing_ok=True)
+            self.open()
             logger.info("Cache cleared and reset index.")
             return FileIndex()
-        index = self._clear_deleted_files()
-        logger.info("Cache not cleared, checking for deleted files.")
-        return index
-
-    def _clear(self) -> None:
-        """Clear the cache."""
-        self.cache.close()
-        self.path.unlink(missing_ok=True)
-        self.open()
-
-    def _clear_deleted_files(self) -> FileIndex:
-        """Clear the deleted files from the cache."""
         index = self.cache[CacheKey.INDEX] if CacheKey.INDEX in self.cache else FileIndex()
         index.remove_deleted_files()
         self.cache[CacheKey.INDEX] = index
+        logger.info("Cache not cleared, checking for deleted files.")
         return index
 
     def _iter_files(self) -> Iterator[Path]:

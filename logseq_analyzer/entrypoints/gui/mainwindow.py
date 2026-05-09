@@ -13,8 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from logseq_analyzer.gui.analysis_worker import AnalysisWorker
-from logseq_analyzer.gui.ui_components import Buttons, Checkboxes, Inputs, Progress
+from logseq_analyzer.entrypoints.gui.components import Buttons, Checkboxes, Inputs, Progress
+from logseq_analyzer.entrypoints.gui.worker import AnalysisWorker
 from logseq_analyzer.utils.enums import Format
 
 

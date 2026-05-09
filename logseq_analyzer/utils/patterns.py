@@ -3,18 +3,36 @@
 import re
 from typing import TYPE_CHECKING, ClassVar
 
-from logseq_analyzer.utils.enums import CritAdvCmd, CritCode, CritDblCurly, CritDblParen, CritEmb, CritExt
+from logseq_analyzer.utils.enums import Crit, CritAdvCmd, CritCode, CritDblCurly, CritDblParen, CritEmb, CritExt
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-_URL = (
+URL = (
     r"(?:(?:https?|ftp)://)"
     r"(?:\S+(?::\S*)?@)?"
     r"(?:\d{1,3}(?:\.\d{1,3}){3}|\[[0-9A-F:]+\]|(?:[A-Z0-9-]+\.)+[A-Z]{2,})"
     r"(?::\d{2,5})?(?:/[^\s]*)?"
 )
+
+
+class ContentPatterns:
+    """Class to hold compiled regex patterns for Logseq content."""
+
+    BULLET = re.compile(r"^\s*-\s*", re.MULTILINE | re.IGNORECASE)
+    PAGE_REFERENCE = re.compile(r"(?<!#)\[\[(.+?)\]\]", re.IGNORECASE)
+    TAGGED_BACKLINK = re.compile(r"#\[\[([^\]#]+?)\]\]", re.IGNORECASE)
+    TAG = re.compile(r"#(?!\[\[)([^\]#\s]+?)(?=\s|$)", re.IGNORECASE)
+    PROPERTY = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)(?=::)", re.MULTILINE | re.IGNORECASE)
+    PROPERTY_VALUE = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)::(.*)$", re.MULTILINE | re.IGNORECASE)
+    ASSET = re.compile(r"assets/(.+)", re.IGNORECASE)
+    DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
+    BLOCKQUOTE = re.compile(r"(?:^|\s)-\ >.*", re.MULTILINE | re.IGNORECASE)
+    FLASHCARD = re.compile(r"(?:^|\s)-\ .*#card|\[\[card\]\].*", re.MULTILINE | re.IGNORECASE)
+    DYNAMIC_VARIABLE = re.compile(r"<%\s*.*?\s*%>", re.IGNORECASE)
+    ANY_LINK = re.compile(rf"\b(?:{URL})\b", re.IGNORECASE)
+    INLINE_CODE_BLOCK = re.compile(r"`[^`].+?`", re.IGNORECASE)
 
 
 def _advcmd(key: str, variant: str = "") -> re.Pattern:
@@ -37,7 +55,7 @@ def _dblcurly(key: str) -> re.Pattern:
 def _internet_link(*, embedded: bool) -> re.Pattern:
     prefix = r"\!\[.*?\]" if embedded else r"(?<!\!)\[.*?\]"
     return re.compile(
-        rf'{prefix}\({_URL}(?:\s+["\'][^)]*["\'])?\)',
+        rf'{prefix}\({URL}(?:\s+["\'][^)]*["\'])?\)',
         re.IGNORECASE,
     )
 
@@ -166,3 +184,23 @@ PATTERNS: Sequence[type[IPattern]] = (
     EmbeddedLinkPatterns,
     ExternalLinkPatterns,
 )
+RAW_DATA_MAP = {
+    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
+    Crit.Content.ASSETS: ContentPatterns.ASSET,
+}
+PRIMARY_DATA_MAP = {
+    Crit.Content.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+    Crit.Content.DRAW: ContentPatterns.DRAW,
+    Crit.Content.FLASHCARD: ContentPatterns.FLASHCARD,
+    Crit.Content.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
+    Crit.Content.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
+    Crit.Content.TAG: ContentPatterns.TAG,
+    Crit.Content.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
+}
+MASK_MAP = {
+    CritCode.ML_ALL: CodePatterns.ALL,
+    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    CritAdvCmd.ALL: AdvCmdPatterns.ALL,
+    Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
+}

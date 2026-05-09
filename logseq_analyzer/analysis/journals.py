@@ -55,8 +55,8 @@ def date_stats(dates: list[datetime]) -> dict[str, Any]:
         }
 
     stats: dict[str, Any] = {
-        DateStat.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=None),
-        DateStat.LAST: max(dates) if dates else datetime.min.replace(tzinfo=None),
+        DateStat.FIRST: min(dates) if dates else datetime.min.replace(tzinfo=UTC),
+        DateStat.LAST: max(dates) if dates else datetime.min.replace(tzinfo=UTC),
     }
     delta = stats[DateStat.LAST] - stats[DateStat.FIRST]
     stats.update(_range(delta))

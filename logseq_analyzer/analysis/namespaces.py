@@ -16,9 +16,9 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.patterns.content import ContentPatterns
 from logseq_analyzer.utils.enums import Core, CritDblCurly, Output
 from logseq_analyzer.utils.helpers import sort_dict_by_value
+from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex

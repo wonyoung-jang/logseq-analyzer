@@ -3,8 +3,8 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.patterns.content import ContentPatterns
-from logseq_analyzer.utils.enums import CritContent, CritEmb, FileType, Output
+from logseq_analyzer.utils.enums import Crit, CritEmb, FileType, Output
+from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex
@@ -90,7 +90,7 @@ class LogseqAssetsHls:
         }
 
 
-_ASSET_CRITERIA = frozenset({CritEmb.ASSET, CritContent.ASSETS})
+_ASSET_CRITERIA = frozenset({CritEmb.ASSET, Crit.Content.ASSETS})
 
 
 @dataclass(slots=True)

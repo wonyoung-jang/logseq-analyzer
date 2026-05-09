@@ -15,6 +15,24 @@ class Core(StrEnum):
     NS_SEP = "/"
 
 
+class Crit(StrEnum):
+    """Criteria for Logseq Analyzer."""
+
+    class Content(StrEnum):
+        """Content criteria."""
+
+        ALIASES = "content_aliases"
+        ANY_LINKS = "content_any_link"
+        ASSETS = "content_asset"
+        BLOCKQUOTES = "content_blockquote"
+        DRAW = "content_draw"
+        DYNAMIC_VAR = "content_dynamic_variable"
+        FLASHCARD = "content_flashcard"
+        PAGE_REF = "content_page_reference"
+        TAG = "content_tag"
+        TAGGED_BACKLINK = "content_tagged_backlink"
+
+
 class CritContent(StrEnum):
     """Criteria for filtering files."""
 

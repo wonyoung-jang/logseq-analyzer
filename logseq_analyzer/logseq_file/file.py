@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING, Any
 from logseq_analyzer.logseq_file.bullets import LogseqBullets
 from logseq_analyzer.logseq_file.info import LogseqFileContext, LogseqFileInfo, NodeType
 from logseq_analyzer.logseq_file.stats import LogseqPath
-from logseq_analyzer.patterns.content import PRIMARY_DATA_MAP, ContentPatterns
-from logseq_analyzer.patterns.patterns import AdvCmdPatterns, CodePatterns
-from logseq_analyzer.utils.enums import Core, CritAdvCmd, CritCode, CritContent, CritProp
+from logseq_analyzer.utils.enums import Core, Crit, CritProp
+from logseq_analyzer.utils.patterns import MASK_MAP, PRIMARY_DATA_MAP
 
 if TYPE_CHECKING:
     import re
@@ -17,23 +16,17 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 BACKLINK_CRITERIA: frozenset[str] = frozenset(
-    {
+    (
         CritProp.VALUES,
         CritProp.BLOCK_BUILTIN,
         CritProp.BLOCK_USER,
         CritProp.PAGE_BUILTIN,
         CritProp.PAGE_USER,
-        CritContent.PAGE_REF,
-        CritContent.TAGGED_BACKLINK,
-        CritContent.TAG,
-    }
+        Crit.Content.PAGE_REF,
+        Crit.Content.TAGGED_BACKLINK,
+        Crit.Content.TAG,
+    )
 )
-MASK_MAP: dict[str, re.Pattern] = {
-    CritCode.ML_ALL: CodePatterns.ALL,
-    CritCode.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
-    CritAdvCmd.ALL: AdvCmdPatterns.ALL,
-    CritContent.ANY_LINKS: ContentPatterns.ANY_LINK,
-}
 
 
 @dataclass(slots=True)
@@ -81,8 +74,13 @@ class LogseqFile:
 
     def __post_init__(self, path_input: Path) -> None:
         """Initialize the LogseqFile object."""
-        self.path = LogseqPath(path_input, self.context)
-        self.bullets = LogseqBullets(self.path.read_text())
+        self.path = LogseqPath(
+            file=path_input,
+            context=self.context,
+        )
+        self.bullets = LogseqBullets(
+            content=self.path.read_text(),
+        )
         self.info = LogseqFileInfo(
             timestamp=self.path.timestamp_info,
             size=self.path.size_info,

@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 SI_UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 IEC_UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+_ORDINAL_SUFFIX = {1: "st", 2: "nd", 3: "rd"}
 
 
 class SizeUnit(StrEnum):
@@ -27,9 +28,6 @@ class SizeUnit(StrEnum):
 
     SI = "si"  # Powers of 1000
     IEC = "iec"  # Powers of 1024
-
-
-_ORDINAL_SUFFIX = {1: "st", 2: "nd", 3: "rd"}
 
 
 def _append_ordinal_to_day(day: str) -> str:
@@ -137,7 +135,6 @@ class LogseqPath:
         target_segment = uri_path.parts[target_index]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
-            logger.warning("Invalid target segment for Logseq URL: %s", target_segments_to_final)
             return ""
         graph_path = str(self.context.graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
