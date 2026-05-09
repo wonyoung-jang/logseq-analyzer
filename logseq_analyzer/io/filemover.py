@@ -8,7 +8,7 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Output
+from logseq_analyzer.utils.enums import Output, OutputDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -56,10 +56,12 @@ class LogseqFileMover:
     def report(self) -> dict[str, object]:
         """Generate a report of the moved files."""
         return {
-            Output.MOVED_FILES: {
-                Moved.ASSETS: self.moved_unlinked_assets,
-                Moved.BAK: self.moved_bak,
-                Moved.RECYCLE: self.moved_recycle,
+            OutputDir.MOVED_FILES: {
+                Output.MOVED_FILES: {
+                    Moved.ASSETS: self.moved_unlinked_assets,
+                    Moved.BAK: self.moved_bak,
+                    Moved.RECYCLE: self.moved_recycle,
+                }
             }
         }
 

@@ -7,6 +7,7 @@ from dataclasses import InitVar, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
+from logseq_analyzer.analysis.journals import OutputDir
 from logseq_analyzer.utils.enums import Core, TargetDir
 
 if TYPE_CHECKING:
@@ -87,11 +88,13 @@ class ConfigEdns:
     def report(self) -> dict[str, Any]:
         """Generate a report of the configuration EDN files."""
         return {
-            "config_edns": {
-                "edn_default": self.default_edn,
-                "edn_user": self.user_edn,
-                "edn_global": self.global_edn,
-                "edn_config": self.config,
+            OutputDir.META: {
+                "config_edns": {
+                    "edn_default": self.default_edn,
+                    "edn_user": self.user_edn,
+                    "edn_global": self.global_edn,
+                    "edn_config": self.config,
+                }
             }
         }
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Crit, FileType, Output
+from logseq_analyzer.utils.enums import Crit, FileType, Output, OutputDir
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
@@ -119,10 +119,12 @@ class LogseqGraph:
     def report(self) -> dict[str, object]:
         """Generate a report of the graph analysis."""
         return {
-            Output.GRAPH_ALL_LINKED_REFERENCES: self.all_linked_refs,
-            Output.GRAPH_ALL_DANGLING_LINKS: self.all_dangling_links,
-            Output.GRAPH_DANGLING_LINKS: self.dangling_links,
-            Output.GRAPH_UNIQUE_ALIASES: self.aliases,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS: self.linked_refs_ns,
-            Output.GRAPH_UNIQUE_LINKED_REFERENCES: self.linked_refs,
+            OutputDir.GRAPH: {
+                Output.GRAPH_ALL_LINKED_REFERENCES: self.all_linked_refs,
+                Output.GRAPH_ALL_DANGLING_LINKS: self.all_dangling_links,
+                Output.GRAPH_DANGLING_LINKS: self.dangling_links,
+                Output.GRAPH_UNIQUE_ALIASES: self.aliases,
+                Output.GRAPH_UNIQUE_LINKED_REFERENCES_NS: self.linked_refs_ns,
+                Output.GRAPH_UNIQUE_LINKED_REFERENCES: self.linked_refs,
+            }
         }

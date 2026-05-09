@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.analysis.file import LogseqFile
-from logseq_analyzer.utils.enums import FileType, Output
+from logseq_analyzer.utils.enums import FileType, Output, OutputDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -143,4 +143,4 @@ class FileIndex:
         if self.write_graph:
             _report[Output.GRAPH_CONTENT] = {f: f.bullets.content for f in self}
             _report[Output.GRAPH_BULLETS] = {f: f.bullets.all_bullets for f in self}
-        return _report
+        return {OutputDir.MOVED_FILES: _report}

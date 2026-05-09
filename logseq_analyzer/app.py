@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssetsHls
 from logseq_analyzer.analysis.file import JournalFormats, LogseqFile, LogseqFileContext
@@ -99,19 +99,21 @@ class Args:
     write_graph: bool = False
 
     @property
-    def report(self) -> dict[Output, list[tuple[str, Any]]]:
+    def report(self) -> dict[Output, list[tuple[str, object]]]:
         """Generate a report of the arguments."""
         return {
-            Output.ARGUMENTS: {
-                "global_config": self.global_config,
-                "graph_cache": self.graph_cache,
-                "graph_folder": self.graph_folder,
-                "move_bak": self.move_bak,
-                "move_recycle": self.move_recycle,
-                "move_unlinked_assets": self.move_unlinked_assets,
-                "report_format": self.report_format,
-                "write_graph": self.write_graph,
-            },
+            OutputDir.META: {
+                Output.ARGUMENTS: {
+                    "global_config": self.global_config,
+                    "graph_cache": self.graph_cache,
+                    "graph_folder": self.graph_folder,
+                    "move_bak": self.move_bak,
+                    "move_recycle": self.move_recycle,
+                    "move_unlinked_assets": self.move_unlinked_assets,
+                    "report_format": self.report_format,
+                    "write_graph": self.write_graph,
+                },
+            }
         }
 
 
@@ -219,7 +221,7 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
     journal_page_fmt: str,
-) -> Iterator[tuple[str, Any]]:
+) -> Iterator[tuple[str, dict]]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
@@ -238,17 +240,17 @@ def analyze(
         recycle_dir=analyzer_dirs.recycle.path,
     )
     logseq_summarizer = LogseqSummarizer(index)
-    yield OutputDir.META, args.report
-    yield OutputDir.META, config_edns.report
-    yield OutputDir.META, analyzer_dirs.report
-    yield OutputDir.GRAPH, logseq_graph.report
-    yield OutputDir.NAMESPACES, logseq_namespaces.report
-    yield OutputDir.JOURNALS, logseq_journals.report
-    yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
-    yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
-    yield OutputDir.MOVED_FILES, logseq_file_mover.report
+    yield from args.report.items()
+    yield from config_edns.report.items()
+    yield from analyzer_dirs.report.items()
+    yield from logseq_graph.report.items()
+    yield from logseq_namespaces.report.items()
+    yield from logseq_journals.report.items()
+    yield from logseq_assets_hls.report.items()
+    yield from logseq_assets.report.items()
+    yield from logseq_file_mover.report.items()
     yield from logseq_summarizer.report.items()
-    yield OutputDir.INDEX, index.report
+    yield from index.report.items()
 
 
 def run_app(arguments: dict[str, object]) -> None:

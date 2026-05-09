@@ -5,6 +5,8 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from logseq_analyzer.analysis.namespaces import OutputDir
+
 logger = logging.getLogger(__name__)
 
 
@@ -98,22 +100,24 @@ class LogseqAnalyzerDirs:
     def report(self) -> dict[str, dict]:
         """Generate a report of the Logseq analyzer directories."""
         return {
-            "logseq_analyzer_dirs": {
-                "graph_dirs": {
-                    "graph": self.graph,
-                    "graph/logseq": self.logseq,
-                    "graph/logseq/bak": self.bak,
-                    "graph/logseq/.recycle": self.recycle,
-                    "graph/logseq/config.edn": self.config_user,
-                    "global-config.edn": self.config_global,
-                },
-                "delete_dirs": {
-                    "to-delete": self.del_directory,
-                    "to-delete/bak": self.del_bak,
-                    "to-delete/.recycle": self.del_recycle,
-                    "to-delete/assets": self.del_assets,
-                },
-                "target_dirs": self.target,
-                "output_dir": self.output,
+            OutputDir.META: {
+                "logseq_analyzer_dirs": {
+                    "graph_dirs": {
+                        "graph": self.graph,
+                        "graph/logseq": self.logseq,
+                        "graph/logseq/bak": self.bak,
+                        "graph/logseq/.recycle": self.recycle,
+                        "graph/logseq/config.edn": self.config_user,
+                        "global-config.edn": self.config_global,
+                    },
+                    "delete_dirs": {
+                        "to-delete": self.del_directory,
+                        "to-delete/bak": self.del_bak,
+                        "to-delete/.recycle": self.del_recycle,
+                        "to-delete/assets": self.del_assets,
+                    },
+                    "target_dirs": self.target,
+                    "output_dir": self.output,
+                }
             }
         }

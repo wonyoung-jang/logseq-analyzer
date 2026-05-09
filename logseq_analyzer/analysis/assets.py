@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import Crit, FileType, Output
+from logseq_analyzer.utils.enums import Crit, FileType, Output, OutputDir
 from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
@@ -77,10 +77,12 @@ class LogseqAssetsHls:
     def report(self) -> dict[str, Any]:
         """Generate a report of the asset analysis."""
         return {
-            Output.HLS_ASSET_MAPPING: self.asset_mapping,
-            Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
-            Output.HLS_NOT_BACKLINKED: self.not_backlinked,
-            Output.HLS_BACKLINKED: self.backlinked,
+            OutputDir.HLS_ASSETS: {
+                Output.HLS_ASSET_MAPPING: self.asset_mapping,
+                Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
+                Output.HLS_NOT_BACKLINKED: self.not_backlinked,
+                Output.HLS_BACKLINKED: self.backlinked,
+            }
         }
 
 
@@ -124,9 +126,11 @@ class LogseqAssets:
                 return
 
     @property
-    def report(self) -> dict[str, set[LogseqFile]]:
+    def report(self) -> dict[str, dict[str, set[LogseqFile]]]:
         """Generate a report of the asset analysis."""
         return {
-            Output.ASSETS_BACKLINKED: self.backlinked,
-            Output.ASSETS_NOT_BACKLINKED: self.not_backlinked,
+            OutputDir.ASSETS: {
+                Output.ASSETS_BACKLINKED: self.backlinked,
+                Output.ASSETS_NOT_BACKLINKED: self.not_backlinked,
+            }
         }
