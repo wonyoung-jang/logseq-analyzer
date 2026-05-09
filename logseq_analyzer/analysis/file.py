@@ -438,7 +438,7 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path_input: InitVar[Path]
-    context: LogseqFileContext
+    context: LogseqFileContext = field(repr=False)
     data: dict[str, Any] = field(default_factory=dict)
     node: NodeType = field(default_factory=NodeType)
     is_hls: bool = False

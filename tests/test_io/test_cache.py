@@ -16,7 +16,12 @@ if TYPE_CHECKING:
 @pytest.fixture
 def cache() -> Iterator[Cache]:
     """Fixture to create a Cache object."""
-    cache = Cache(Path(Constant.CACHE_FILE))
+    cache = Cache(
+        Path(Constant.CACHE_FILE),
+        graph_dir=Path("test_graph"),
+        graph_cache=True,
+        target_dirs={"journals", "pages"},
+    )
     cache.open()
     yield cache
     cache.close(FileIndex())

@@ -1,9 +1,10 @@
 """Argument parsing and CLI entry point for Logseq Analyzer."""
 
 import argparse
+from typing import Any
 
 
-def get_cli_args() -> dict[str, object]:
+def get_cli_args() -> dict[str, Any]:
     """Parse command line arguments and set them as attributes."""
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
     parser.add_argument(

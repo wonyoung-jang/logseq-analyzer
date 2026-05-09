@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def logseq_journals(file_index: FileIndex) -> LogseqJournals:
     """Fixture for LogseqJournals."""
-    return LogseqJournals(file_index, dangling_links=set())
+    return LogseqJournals(file_index, dangling_links=set(), journal_page_format="")
 
 
 def test_len(logseq_journals: LogseqJournals) -> None:

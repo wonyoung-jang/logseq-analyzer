@@ -1,11 +1,11 @@
 """Test the LogseqAnalyzerArguments class."""
 
 import sys
-from pathlib import Path
 
 import pytest
 
-from logseq_analyzer.io.arguments import Args
+from logseq_analyzer.app import Args
+from logseq_analyzer.entrypoints.cli.cli import get_cli_args
 from logseq_analyzer.utils.enums import Output
 
 
@@ -27,11 +27,11 @@ def test_initialization(args_instance: Args) -> None:
     assert args_instance.report_format == ".txt"
 
 
-def test_set_gui_args(args_instance: Args) -> None:
+def test_set_gui_args() -> None:
     """Test setting arguments via set_gui_args."""
     gui_args = {
-        "graph_folder": Path("/path/to/graph"),
-        "global_config": Path("/path/to/config.ini"),
+        "graph_folder": "/path/to/graph",
+        "global_config": "/path/to/config.ini",
         "move_unlinked_assets": True,
         "move_bak": False,
         "move_recycle": True,
@@ -39,9 +39,9 @@ def test_set_gui_args(args_instance: Args) -> None:
         "graph_cache": True,
         "report_format": ".json",
     }
-    args_instance.set_gui_args(gui_args)
-    assert args_instance.graph_folder == Path("/path/to/graph")
-    assert args_instance.global_config == Path("/path/to/config.ini")
+    args_instance = Args(**gui_args)
+    assert args_instance.graph_folder == "/path/to/graph"
+    assert args_instance.global_config == "/path/to/config.ini"
     assert args_instance.move_unlinked_assets is True
     assert args_instance.move_bak is False
     assert args_instance.move_recycle is True
@@ -51,7 +51,7 @@ def test_set_gui_args(args_instance: Args) -> None:
     assert not hasattr(args_instance, "non_existent_arg")
 
 
-def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch, args_instance: Args) -> None:
+def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test setting arguments via set_cli_args with basic flags."""
     test_graph_path = "/fake/graph/dir"
     mock_argv = [
@@ -64,10 +64,8 @@ def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch, args_instance: Args
         ".md",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-    args_instance.set_cli_args()
-    assert (
-        args_instance.graph_folder == test_graph_path
-    )  # argparse handles Path conversion implicitly if type=Path is used, but here it's just stored
+    args_instance = Args(**get_cli_args())
+    assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == ""  # Default argparse value
     assert args_instance.move_unlinked_assets is True
     assert args_instance.move_bak is False  # Default argparse value
@@ -77,7 +75,7 @@ def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch, args_instance: Args
     assert args_instance.report_format == ".md"
 
 
-def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch, args_instance: Args) -> None:
+def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test setting arguments via set_cli_args with all flags."""
     test_graph_path = "/another/graph"
     test_config_path = "/path/to/global.ini"
@@ -96,7 +94,7 @@ def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch, args_instance: 
         ".json",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-    args_instance.set_cli_args()
+    args_instance = Args(**get_cli_args())
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == test_config_path
     assert args_instance.move_unlinked_assets is True
@@ -107,7 +105,7 @@ def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch, args_instance: 
     assert args_instance.report_format == ".json"
 
 
-def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch, args_instance: Args) -> None:
+def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test default values when using set_cli_args."""
     test_graph_path = "/default/test/graph"
     mock_argv = [
@@ -117,7 +115,7 @@ def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch, args_instance: A
         # Only required arg is provided
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
-    args_instance.set_cli_args()
+    args_instance = Args(**get_cli_args())
     assert args_instance.graph_folder == test_graph_path
     assert args_instance.global_config == ""
     assert args_instance.move_unlinked_assets is False
@@ -128,7 +126,7 @@ def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch, args_instance: A
     assert args_instance.report_format == ".txt"  # Default value specified in add_argument
 
 
-def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch, args_instance: Args) -> None:
+def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that argparse raises SystemExit if required arg is missing."""
     mock_argv = [
         "script_name",
@@ -138,11 +136,11 @@ def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch, args_ins
     monkeypatch.setattr(sys, "argv", mock_argv)
     # argparse.parse_args() calls sys.exit() upon error
     with pytest.raises(SystemExit):
-        args_instance.set_cli_args()
+        Args(**get_cli_args())
 
 
 def test_report(args_instance: Args) -> None:
     """Test the report generation."""
     report = args_instance.report[Output.ARGUMENTS]
-    assert isinstance(report, list)
-    assert ("graph_folder", "") in report
+    assert isinstance(report, dict)
+    assert "graph_folder" in report

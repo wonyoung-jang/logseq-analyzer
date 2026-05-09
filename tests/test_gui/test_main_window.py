@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from logseq_analyzer.gui.main_window import LogseqAnalyzerGUI
+from logseq_analyzer.entrypoints.gui.mainwindow import LogseqAnalyzerGUI
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

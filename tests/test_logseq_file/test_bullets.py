@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.logseq_file.bullets import LogseqBullets
+from logseq_analyzer.analysis.file import LogseqBullets
 
 
 @pytest.fixture

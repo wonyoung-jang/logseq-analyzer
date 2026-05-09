@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.logseq_file.stats import format_bytes
+from logseq_analyzer.analysis.file import format_bytes
 
 
 @pytest.mark.parametrize(

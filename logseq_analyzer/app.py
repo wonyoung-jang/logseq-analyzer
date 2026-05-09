@@ -2,11 +2,9 @@
 
 import logging
 import re
-import shutil
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +15,7 @@ from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqSummarizer
 from logseq_analyzer.io.cache import Cache
+from logseq_analyzer.io.filemover import LogseqFileMover
 from logseq_analyzer.io.filesystem import File, LogseqAnalyzerDirs
 from logseq_analyzer.io.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.report_writer import ReportWriter
@@ -84,15 +83,6 @@ class LogseqGraphStructure(StrEnum):
     CONFIG_EDN = "config.edn"
     LOGSEQ = "logseq"
     RECYCLE = ".recycle"
-
-
-class Moved(StrEnum):
-    """Moved files and directories in the Logseq Analyzer."""
-
-    ASSETS = "assets"
-    BAK = "bak"
-    RECYCLE = "recycle"
-    SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 @dataclass(slots=True)
@@ -223,62 +213,6 @@ def setup_cache(args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> tuple[Cache, F
     return cache, index
 
 
-def _process_moves(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
-    """Process the moving of files to a specified directory.
-
-    Args:
-        target_dir (Path): The directory to move files to.
-        paths (Iterator[Path]): An iterator yielding file paths to move.
-        move (bool): If True, move the files. If False, simulate the move.
-
-    Returns:
-        list[str]: A list of names of the moved files/folders.
-
-    """
-    listpaths = list(paths)
-    names = [path.name for path in listpaths]
-    if not names:
-        return names
-    if not move:
-        return [Moved.SIMULATED_PREFIX, *names]
-    for src in listpaths:
-        dest = target_dir / src.name
-        try:
-            shutil.move(src, dest)
-            logger.warning("Moved file: %s to %s", src, dest)
-        except shutil.Error, OSError:
-            logger.exception("Failed to move file: %s to %s", src, dest)
-    return names
-
-
-def setup_file_mover(args: Args, lsa: LogseqAssets, analyzer_dirs: LogseqAnalyzerDirs) -> dict[str, Any]:
-    """Set up LogseqFileMover for moving files and directories."""
-
-    def _yield_asset(unlinked_assets: set[LogseqFile]) -> Iterator[Path]:
-        """Yield the file paths of unlinked assets."""
-        for asset in unlinked_assets:
-            yield asset.path.file
-
-    def _yield_bakrec(source_dir: Path) -> Iterator[Path]:
-        """Yield the file paths of bak and recycle directories."""
-        for root, dirs, files in Path.walk(source_dir):
-            for name in chain(dirs, files):
-                yield root / name
-
-    target_asset = analyzer_dirs.del_assets.path
-    target_bak = analyzer_dirs.del_bak.path
-    target_rec = analyzer_dirs.del_recycle.path
-    asset_paths = _yield_asset(lsa.not_backlinked)
-    bak_paths = _yield_bakrec(analyzer_dirs.bak.path)
-    rec_paths = _yield_bakrec(analyzer_dirs.recycle.path)
-    moved_files_report = {
-        Moved.ASSETS: _process_moves(target_asset, asset_paths, move=args.move_unlinked_assets),
-        Moved.BAK: _process_moves(target_bak, bak_paths, move=args.move_bak),
-        Moved.RECYCLE: _process_moves(target_rec, rec_paths, move=args.move_recycle),
-    }
-    return {Output.MOVED_FILES: moved_files_report}
-
-
 def analyze(
     args: Args,
     index: FileIndex,
@@ -292,7 +226,17 @@ def analyze(
     logseq_journals = LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt)
     logseq_assets_hls = LogseqAssetsHls(index)
     logseq_assets = LogseqAssets(index)
-    moved_files = setup_file_mover(args, logseq_assets, analyzer_dirs)
+    logseq_file_mover = LogseqFileMover(
+        should_move_bak=args.move_bak,
+        should_move_recycle=args.move_recycle,
+        should_move_unlinked_assets=args.move_unlinked_assets,
+        unlinked_assets=logseq_assets.not_backlinked,
+        del_assets=analyzer_dirs.del_assets.path,
+        del_bak=analyzer_dirs.del_bak.path,
+        del_recycle=analyzer_dirs.del_recycle.path,
+        bak_dir=analyzer_dirs.bak.path,
+        recycle_dir=analyzer_dirs.recycle.path,
+    )
     logseq_summarizer = LogseqSummarizer(index)
     yield OutputDir.META, args.report
     yield OutputDir.META, config_edns.report
@@ -302,7 +246,7 @@ def analyze(
     yield OutputDir.JOURNALS, logseq_journals.report
     yield OutputDir.MOVED_FILES_HLS_ASSETS, logseq_assets_hls.report
     yield OutputDir.MOVED_FILES_ASSETS, logseq_assets.report
-    yield OutputDir.MOVED_FILES, moved_files
+    yield OutputDir.MOVED_FILES, logseq_file_mover.report
     yield from logseq_summarizer.report.items()
     yield OutputDir.INDEX, index.report
 
@@ -338,18 +282,9 @@ def run_app(arguments: dict[str, object]) -> None:
     for path in cache.iter_modified_files():
         index.add(LogseqFile(path, context=_context))
     _prog(70, "Setup writer...")
-    _writer = ReportWriter(
-        ext=args.report_format,
-        output_dir=analyzer_dirs.output.path,
-    )
+    _writer = ReportWriter(ext=args.report_format, output_dir=analyzer_dirs.output.path)
     _prog(80, "Running core analysis on Logseq graph...")
-    _analysis = analyze(
-        args,
-        index,
-        analyzer_dirs,
-        config_edns,
-        journal_formats.page,
-    )
+    _analysis = analyze(args, index, analyzer_dirs, config_edns, journal_formats.page)
     _writer.write_reports(_analysis)
     _prog(90, "Finalizing analysis...")
     cache.close(index)
