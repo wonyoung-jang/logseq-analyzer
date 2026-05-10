@@ -13,7 +13,7 @@ from logseq_analyzer.utils.enums import Output, OutputDir
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from logseq_analyzer.analysis.file import LogseqFile
+    from logseq_analyzer.domain.file import LogseqFile
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ from logseq_analyzer.utils.enums import Output, OutputDir
 from logseq_analyzer.utils.helpers import get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
-    from logseq_analyzer.analysis.file import LogseqFile
-    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.domain.file import LogseqFile
+    from logseq_analyzer.domain.index import FileIndex
 
 
 @dataclass(slots=True)

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.file import (
+from logseq_analyzer.domain.file import (
     JournalFormats,
     LogseqBullets,
     LogseqFile,

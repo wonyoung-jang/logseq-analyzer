@@ -21,8 +21,8 @@ from logseq_analyzer.utils.helpers import sort_dict_by_value
 from logseq_analyzer.utils.patterns import ContentPatterns
 
 if TYPE_CHECKING:
-    from logseq_analyzer.analysis.file import LogseqFile
-    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.domain.file import LogseqFile
+    from logseq_analyzer.domain.index import FileIndex
 
 logger = logging.getLogger(__name__)
 

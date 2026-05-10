@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.index import FileIndex
 from logseq_analyzer.app import Constant
+from logseq_analyzer.domain.index import FileIndex
 from logseq_analyzer.io.cache import Cache
 
 if TYPE_CHECKING:

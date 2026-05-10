@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.domain.index import FileIndex
 
 
 @pytest.fixture

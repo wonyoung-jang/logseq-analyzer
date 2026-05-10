@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.analysis.index import FileIndex
+from logseq_analyzer.domain.index import FileIndex
 from logseq_analyzer.utils.enums import Format
 
 if TYPE_CHECKING:

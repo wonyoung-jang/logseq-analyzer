@@ -12,7 +12,7 @@ from logseq_analyzer.utils.enums import Output, OutputDir
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.domain.index import FileIndex
 
 
 class Day(IntEnum):

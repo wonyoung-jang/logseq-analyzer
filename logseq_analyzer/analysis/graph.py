@@ -8,10 +8,10 @@ from logseq_analyzer.utils.enums import Crit, FileType, Output, OutputDir
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES, get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
-    from logseq_analyzer.analysis.file import LogseqFile
-    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.domain.file import LogseqFile
+    from logseq_analyzer.domain.index import FileIndex
 
-_TO_NODE_TYPE = frozenset({FileType.JOURNAL, FileType.PAGE})
+_TO_NODE_TYPE = frozenset((FileType.JOURNAL, FileType.PAGE))
 
 
 @dataclass(slots=True)
@@ -70,15 +70,11 @@ class LogseqGraph:
 
     def process_namespaces(self, f: LogseqFile) -> None:
         """Post-process namespaces in the content data."""
-        _roots = self.index[f.info.namespace.root]
-        if isinstance(_roots, list):
-            for _root in _roots:
-                _root.info.namespace.is_namespace = True
-                _root.info.namespace.children.add(f.path.name)
-        _parents = self.index[f.info.namespace.parent_full]
-        if isinstance(_parents, list):
-            for _parent in _parents:
-                _parent.info.namespace.children.add(f.path.name)
+        for _root in self.index.get_from_name(f.info.namespace.root):
+            _root.info.namespace.is_namespace = True
+            _root.info.namespace.children.add(f.path.name)
+        for _parent in self.index.get_from_name(f.info.namespace.parent_full):
+            _parent.info.namespace.children.add(f.path.name)
 
     def sort_all_linked_references(self) -> None:
         """Sort all linked references by count and found_in."""

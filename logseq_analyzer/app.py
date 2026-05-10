@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from logseq_analyzer.analysis.assets import LogseqAssets
-from logseq_analyzer.analysis.file import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.analysis.graph import LogseqGraph
 from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqSummarizer
+from logseq_analyzer.domain.file import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.filemover import LogseqFileMover
@@ -24,7 +24,7 @@ from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from logseq_analyzer.analysis.index import FileIndex
+    from logseq_analyzer.domain.index import FileIndex
 
 logger = logging.getLogger(__name__)
 
