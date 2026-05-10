@@ -1,7 +1,7 @@
 """Logseq Assets Analysis Module."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.utils.enums import Crit, FileType, Output, OutputDir
 from logseq_analyzer.utils.patterns import ContentPatterns
@@ -104,16 +104,14 @@ class LogseqAssets:
                 return
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[str, object]:
         """Generate a report of the asset analysis."""
         return {
-            OutputDir.HLS_ASSETS: {
+            OutputDir.ASSETS: {
                 Output.HLS_ASSET_MAPPING: self.asset_mapping,
                 Output.HLS_FORMATTED_BULLETS: self.hls_bullets,
                 Output.HLS_NOT_BACKLINKED: self.not_backlinked_hls,
                 Output.HLS_BACKLINKED: self.backlinked_hls,
-            },
-            OutputDir.ASSETS: {
                 Output.ASSETS_BACKLINKED: self.backlinked,
                 Output.ASSETS_NOT_BACKLINKED: self.not_backlinked,
             },

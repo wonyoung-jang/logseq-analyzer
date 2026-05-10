@@ -66,13 +66,15 @@ class ReportWriter:
     ext: str
     output_dir: Path
 
-    def write_reports(self, data_reports: Iterator[tuple[str, dict]]) -> None:
+    def write_reports(self, data_reports: Iterator[dict[str, dict]]) -> None:
         """Write reports to the specified output directories."""
-        for subdir, reports in data_reports:
-            for prefix, data in reports.items():
-                filename = f"{prefix}.{self.ext}" if len(data) else f"(EMPTY) {prefix}.{self.ext}"
-                output_dir = self.output_dir / subdir if subdir else self.output_dir
-                output_dir.mkdir(parents=True, exist_ok=True)
-                path = output_dir / filename
-                logger.info("Writing %s as %s", prefix, self.ext)
-                _write(path, data)
+        for data_report in data_reports:
+            for subdir, reports in data_report.items():
+                logger.info("Processing reports for subdir: %s", subdir)
+                for prefix, data in reports.items():
+                    filename = f"{prefix}.{self.ext}" if len(data) else f"(EMPTY) {prefix}.{self.ext}"
+                    output_dir = self.output_dir / subdir if subdir else self.output_dir
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    path = output_dir / filename
+                    logger.info("\tWriting %s as %s", prefix, self.ext)
+                    _write(path, data)

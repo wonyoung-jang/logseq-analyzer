@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.io.ednconfig import EDNToken, LogseqConfigEDN, loads, tokenize
+from logseq_analyzer.io.ednconfig import EDNValue, LogseqConfigEDN, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas() -> None:
@@ -28,7 +28,7 @@ def test_tokenize_skips_comments_and_commas() -> None:
         ("foo", "foo"),
     ],
 )
-def test_simple_values(edn: str, expected: EDNToken) -> None:
+def test_simple_values(edn: str, expected: EDNValue) -> None:
     """Test that simple values are parsed correctly."""
     assert loads(edn) == expected
 
@@ -42,7 +42,7 @@ def test_simple_values(edn: str, expected: EDNToken) -> None:
         ("{:a 1 :b 2}", {":a": 1, ":b": 2}),
     ],
 )
-def test_collections(edn: str, expected: EDNToken) -> None:
+def test_collections(edn: str, expected: EDNValue) -> None:
     """Test that collections are parsed correctly."""
     assert loads(edn) == expected
 

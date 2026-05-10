@@ -184,12 +184,12 @@ PATTERNS: Sequence[type[IPattern]] = (
     EmbeddedLinkPatterns,
     ExternalLinkPatterns,
 )
-RAW_DATA_MAP = {
+RAW_DATA_MAP: dict[str, re.Pattern[str]] = {
     Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
     Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
     Crit.Content.ASSETS: ContentPatterns.ASSET,
 }
-PRIMARY_DATA_MAP = {
+PRIMARY_DATA_MAP: dict[str, re.Pattern[str]] = {
     Crit.Content.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
     Crit.Content.DRAW: ContentPatterns.DRAW,
     Crit.Content.FLASHCARD: ContentPatterns.FLASHCARD,
@@ -198,7 +198,7 @@ PRIMARY_DATA_MAP = {
     Crit.Content.TAG: ContentPatterns.TAG,
     Crit.Content.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
 }
-MASK_MAP = {
+MASK_MAP: dict[str, re.Pattern[str]] = {
     Crit.Code.ML_ALL: CodePatterns.ALL,
     Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
     Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,

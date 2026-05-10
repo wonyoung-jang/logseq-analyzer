@@ -131,6 +131,16 @@ class Format(StrEnum):
     TXT = "txt"
 
 
+class TargetDir(StrEnum):
+    """Target directories for the Logseq Analyzer."""
+
+    ASSET = "assets"
+    DRAW = "draws"
+    JOURNAL = "journals"
+    PAGE = "pages"
+    WHITEBOARD = "whiteboards"
+
+
 class Output(StrEnum):
     """Output types for the Logseq Analyzer."""
 
@@ -141,9 +151,8 @@ class Output(StrEnum):
     GRAPH_ALL_LINKED_REFERENCES = "graph_all_linked_references"
     GRAPH_BULLETS = "graph_content_bullets"
     GRAPH_CONTENT = "graph_content"
-    GRAPH_CONTENT_DATA = "graph_content_data"
+    GRAPH_DATA = "graph_content_data"
     GRAPH_DANGLING_LINKS = "graph_dangling_links"
-    GRAPH_DATA = "graph_data"
     GRAPH_UNIQUE_ALIASES = "graph_unique_aliases"
     GRAPH_UNIQUE_LINKED_REFERENCES = "graph_unique_linked_references"
     GRAPH_UNIQUE_LINKED_REFERENCES_NS = "graph_unique_linked_references_ns"
@@ -153,7 +162,6 @@ class Output(StrEnum):
     HLS_NOT_BACKLINKED = "hls_not_backlinked"
     IDX_FILES = "index_files"
     IDX_NAME_TO_FILES = "index_name_to_files"
-    IDX_PATH_TO_FILE = "index_path_to_file"
     JOURNALS_ALL = "journals_all"
     JOURNALS_DANGLING = "journals_dangling"
     JOURNALS_EXISTING = "journals_existing"
@@ -183,16 +191,6 @@ class Output(StrEnum):
     SUMMARY_REPORT_BULLET = "report_bullet"
 
 
-class TargetDir(StrEnum):
-    """Target directories for the Logseq Analyzer."""
-
-    ASSET = "assets"
-    DRAW = "draws"
-    JOURNAL = "journals"
-    PAGE = "pages"
-    WHITEBOARD = "whiteboards"
-
-
 class OutputDir(StrEnum):
     """Output directories for the Logseq Analyzer."""
 
@@ -201,12 +199,11 @@ class OutputDir(StrEnum):
     JOURNALS = "journals"
     META = "_meta"
     MOVED_FILES = "moved_files"
-    ASSETS = "assets/assets"
-    HLS_ASSETS = "assets/hls_assets"
+    ASSETS = "assets"
     NAMESPACES = "namespaces"
-    SUMMARY_CONTENT = "summary_content"
-    SUMMARY_CONTENT_INFO = "summary_content/info_reports"
-    SUMMARY_FILES_FILE = "summary_files/file_types"
-    SUMMARY_FILES_GENERAL = "summary_files/general"
-    SUMMARY_FILES_NODE = "summary_files/node_types"
-    SUMMARY_FILES_EXTENSIONS = "summary_files/extensions"
+    SUMMARY_CONTENT = "summary/content"
+    SUMMARY_CONTENT_INFO = "summary/content_info"
+    SUMMARY_FILE_GENERAL = "summary/file_general"
+    SUMMARY_FILE_FILETYPE = "summary/file_filetype"
+    SUMMARY_FILE_NODETYPE = "summary/file_nodetype"
+    SUMMARY_FILE_EXTENSION = "summary/file_extension"

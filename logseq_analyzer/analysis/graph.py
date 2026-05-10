@@ -61,11 +61,9 @@ class LogseqGraph:
             return
         if f.info.namespace.parent:
             lr_with_ns_parent = [*_linkedrefs, f.info.namespace.parent]
-            _data = get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
-            self.all_linked_refs.update(_data)
+            self.all_linked_refs = get_count_and_foundin_data(self.all_linked_refs, lr_with_ns_parent, f.path.name)
         else:
-            _data = get_count_and_foundin_data(self.all_linked_refs, _linkedrefs, f.path.name)
-            self.all_linked_refs.update(_data)
+            self.all_linked_refs = get_count_and_foundin_data(self.all_linked_refs, _linkedrefs, f.path.name)
         self.linked_refs.update(_linkedrefs)
 
     def process_namespaces(self, f: LogseqFile) -> None:

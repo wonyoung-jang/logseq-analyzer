@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import IntEnum
 from itertools import chain
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from logseq_analyzer.utils.enums import Output, OutputDir
 
@@ -114,7 +114,7 @@ class LogseqJournals:
                 self.dangling["inside"].append(link)
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[str, object]:
         """Get a report of the journal processing results."""
         return {
             OutputDir.JOURNALS: {

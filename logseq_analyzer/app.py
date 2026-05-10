@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from logseq_analyzer.analysis.assets import LogseqAssets
 from logseq_analyzer.analysis.graph import LogseqGraph
@@ -22,9 +22,10 @@ from logseq_analyzer.io.reporter import ReportWriter
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from logseq_analyzer.domain.index import FileIndex
+    from logseq_analyzer.entrypoints.cli.cli import ArgumentDict
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,20 @@ class LogseqGraphStructure(StrEnum):
     CONFIG_EDN = "config.edn"
     LOGSEQ = "logseq"
     RECYCLE = ".recycle"
+
+
+class ArgumentDict(TypedDict, total=False):
+    """Typed dictionary for command line arguments."""
+
+    global_config: str
+    graph_cache: bool
+    graph_folder: str
+    move_bak: bool
+    move_recycle: bool
+    move_unlinked_assets: bool
+    report_format: str
+    write_graph: bool
+    progress_callback: Callable
 
 
 @dataclass(slots=True)
@@ -221,7 +236,7 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
     journal_page_fmt: str,
-) -> Iterator[tuple[str, dict]]:
+) -> Iterator[dict[str, dict]]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
@@ -239,19 +254,19 @@ def analyze(
         recycle_dir=analyzer_dirs.recycle.path,
     )
     logseq_summarizer = LogseqSummarizer(index)
-    yield from args.report.items()
-    yield from config_edns.report.items()
-    yield from analyzer_dirs.report.items()
-    yield from logseq_graph.report.items()
-    yield from logseq_namespaces.report.items()
-    yield from logseq_journals.report.items()
-    yield from logseq_assets.report.items()
-    yield from logseq_file_mover.report.items()
-    yield from logseq_summarizer.report.items()
-    yield from index.report.items()
+    yield args.report
+    yield config_edns.report
+    yield analyzer_dirs.report
+    yield logseq_graph.report
+    yield logseq_namespaces.report
+    yield logseq_journals.report
+    yield logseq_assets.report
+    yield logseq_file_mover.report
+    yield logseq_summarizer.report
+    yield index.report
 
 
-def run_app(arguments: dict[str, object]) -> None:
+def run_app(arguments: ArgumentDict) -> None:
     """Run the Logseq analyzer."""
     _init_logging()
     _prog = arguments.pop("progress_callback", lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))

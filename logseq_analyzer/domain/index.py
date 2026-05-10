@@ -3,13 +3,13 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.file import LogseqFile
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -30,19 +30,7 @@ class FileIndex:
         """Iterate over the files in the index."""
         return iter(self._files)
 
-    def __getitem__(self, f: Any) -> LogseqFile | list[LogseqFile] | None:
-        """Get a file by its key."""
-        if isinstance(f, LogseqFile):
-            if f in self:
-                return f
-            msg = f"File {f} not found in index."
-            raise KeyError(msg)
-        if isinstance(f, str):
-            return self._name_to_files.get(f, [])
-        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
-        raise TypeError(msg)
-
-    def __contains__(self, f: Any) -> bool:
+    def __contains__(self, f: LogseqFile | str | object) -> bool:
         """Check if a file is in the index."""
         if isinstance(f, LogseqFile):
             return f in self._files
@@ -60,7 +48,7 @@ class FileIndex:
         self._files.add(f)
         self._name_to_files[f.path.name].append(f)
 
-    def remove(self, f: Any) -> None:
+    def remove(self, f: LogseqFile | str | object) -> None:
         """Strategy to remove a file from the index."""
         if isinstance(f, LogseqFile):
             target = f
@@ -112,20 +100,14 @@ class FileIndex:
                 yield f
 
     @property
-    def graph_data(self) -> dict[LogseqFile, dict[str, Any]]:
-        """Get metadata file data from the graph."""
-        return {file: {k: v for k, v in file.yield_attrs() if v} for file in self}
-
-    @property
-    def graph_content_data(self) -> dict[LogseqFile, Any]:
+    def graph_data(self) -> dict[LogseqFile, dict[str, Iterable[str]]]:
         """Get content data from the graph."""
         return {file: {k: v for k, v in file.data.items() if v} for file in self}
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[str, object]:
         """Generate a report of the indexed files."""
-        _report: dict[str, Any] = {
-            Output.GRAPH_CONTENT_DATA: self.graph_content_data,
+        _report: dict[str, object] = {
             Output.GRAPH_DATA: self.graph_data,
             Output.IDX_FILES: self._files,
             Output.IDX_NAME_TO_FILES: self._name_to_files,
@@ -133,4 +115,4 @@ class FileIndex:
         if self.write_graph:
             _report[Output.GRAPH_CONTENT] = {f: f.bullets.content for f in self}
             _report[Output.GRAPH_BULLETS] = {f: f.bullets.all_bullets for f in self}
-        return {OutputDir.MOVED_FILES: _report}
+        return {OutputDir.INDEX: _report}

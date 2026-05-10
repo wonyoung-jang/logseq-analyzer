@@ -4,7 +4,7 @@ from time import perf_counter
 
 from PySide6.QtCore import QThread, Signal
 
-from logseq_analyzer.app import run_app
+from logseq_analyzer.app import ArgumentDict, run_app
 
 
 # ruff: noqa: FBT003
@@ -15,10 +15,10 @@ class AnalysisWorker(QThread):
     progress_label = Signal(str)
     finished_signal = Signal(str, float, bool)
 
-    def __init__(self, args: dict) -> None:
+    def __init__(self, args: ArgumentDict) -> None:
         """Initialize the worker with arguments."""
         super().__init__()
-        self.gui_args = args
+        self.gui_args: ArgumentDict = args
 
     def run(self) -> None:
         """Run the Logseq Analyzer application."""

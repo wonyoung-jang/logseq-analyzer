@@ -7,7 +7,7 @@ from dataclasses import InitVar, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from logseq_analyzer.utils.enums import Core, Crit, FileType
@@ -16,12 +16,12 @@ from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP,
 
 if TYPE_CHECKING:
     import re
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterable, Iterator, Sequence
     from os import stat_result
 
 logger = logging.getLogger(__name__)
 
-BACKLINK_CRITERIA: frozenset[str] = frozenset(
+_BACKLINK_CRITERIA: frozenset[str] = frozenset(
     (
         Crit.Prop.VALUES,
         Crit.Prop.BLOCK_BUILTIN,
@@ -33,8 +33,8 @@ BACKLINK_CRITERIA: frozenset[str] = frozenset(
         Crit.Content.TAG,
     )
 )
-SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
+_SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+_IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
 _ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
 
 
@@ -136,13 +136,13 @@ class LogseqBullets:
             empty_bullets=self.all_bullets.count(""),
         )
 
-    def extract_primary_raw_data(self) -> Iterator[tuple[str, Any]]:
+    def extract_primary_raw_data(self) -> Iterator[tuple[str, list[str]]]:
         """Extract primary data from the content."""
         for key, value in RAW_DATA_MAP.items():
             if value.search(self.content):
                 yield key, value.findall(self.content)
 
-    def extract_properties(self) -> Iterator[tuple[str, Any]]:
+    def extract_properties(self) -> Iterator[tuple[str, set[str]]]:
         """Extract page and block properties from the content."""
         page_props = set()
         if self.primary and not self.primary.startswith("#"):
@@ -158,10 +158,10 @@ class LogseqBullets:
             if value:
                 yield key, value
 
-    def extract_aliases_and_propvalues(self) -> Iterator[tuple[str, Any]]:
+    def extract_aliases_and_propvalues(self) -> Iterator[tuple[str, list[str] | dict[str, str]]]:
         """Extract aliases and properties from the content."""
         propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
-        aliases = list(process_aliases(raw)) if (raw := propvalues.get("alias")) else None
+        aliases = list(process_aliases(raw)) if (raw := propvalues.get("alias")) else []
         for key, value in {
             Crit.Content.ALIASES: aliases,
             Crit.Prop.VALUES: propvalues,
@@ -230,7 +230,7 @@ def format_bytes(size: int, system: str = SizeUnit.SI, precision: int = 2) -> st
         msg = "size_bytes must be non-negative"
         raise ValueError(msg)
     is_iec = system == SizeUnit.IEC
-    units = IEC_UNITS if is_iec else SI_UNITS
+    units = _IEC_UNITS if is_iec else _SI_UNITS
     base = 1024 if is_iec else 1000
     if size < base:
         return f"{size} {units[0]}"
@@ -408,6 +408,25 @@ class NamespaceInfo:
     is_namespace: bool
     children: set[str] = field(default_factory=set)
 
+    @property
+    def size(self) -> int:
+        """Return the number of parts in the namespace."""
+        return len(self.children)
+
+    @property
+    def as_dict(self) -> dict[str, object]:
+        """Return a dictionary representation of the NamespaceInfo."""
+        return {
+            "parent_full": self.parent_full,
+            "parent": self.parent,
+            "parts": self.parts,
+            "root": self.root,
+            "stem": self.stem,
+            "is_namespace": self.is_namespace,
+            "children": self.children,
+            "size": self.size,
+        }
+
 
 @dataclass(slots=True)
 class BulletInfo:
@@ -438,15 +457,15 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path_input: InitVar[Path]
-    context: LogseqFileContext = field(repr=False)
-    data: dict[str, Any] = field(default_factory=dict)
-    node: NodeType = field(default_factory=NodeType)
-    is_hls: bool = False
-    masked_content: str = ""
-    masked_blocks: dict[str, str] = field(default_factory=dict)
     path: LogseqPath = field(init=False)
-    bullets: LogseqBullets = field(init=False)
-    info: LogseqFileInfo = field(init=False)
+    context: LogseqFileContext = field(repr=False)
+    data: dict[str, Iterable[str]] = field(default_factory=dict, repr=False)
+    node: NodeType = field(default_factory=NodeType, repr=False)
+    is_hls: bool = field(default=False, repr=False)
+    masked_content: str = field(default="", repr=False)
+    masked_blocks: dict[str, str] = field(default_factory=dict, repr=False)
+    bullets: LogseqBullets = field(init=False, repr=False)
+    info: LogseqFileInfo = field(init=False, repr=False)
 
     def __post_init__(self, path_input: Path) -> None:
         """Initialize the LogseqFile object."""
@@ -470,7 +489,7 @@ class LogseqFile:
             self.data.update(self.bullets.extract_aliases_and_propvalues())
             self.data.update(self.bullets.extract_properties())
             self.data.update(self.bullets.extract_patterns())
-            self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
+            self.node.has_backlinks = not _BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -490,15 +509,7 @@ class LogseqFile:
             return self.path.name < other
         return NotImplemented
 
-    def yield_attrs(self) -> Iterator[tuple[str, Any]]:
-        """Yield the attributes of the LogseqFile."""
-        yield "node", self.node
-        yield "is_hls", self.is_hls
-        yield "path", self.path
-        yield "bullets", self.bullets
-        yield "info", self.info
-
-    def extract_primary_data(self) -> Iterator[tuple[str, Any]]:
+    def extract_primary_data(self) -> Iterator[tuple[str, list[str]]]:
         """Extract primary data from the content."""
         self.masked_content = self.bullets.content
 

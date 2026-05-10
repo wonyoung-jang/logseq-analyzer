@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.utils.enums import Output, OutputDir
 from logseq_analyzer.utils.helpers import get_count_and_foundin_data, sort_dict_by_value
@@ -21,11 +21,8 @@ class LogseqSummarizer:
     filetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     nodetypes: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     extensions: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    content: dict[str, dict[str, Any]] = field(default_factory=dict)
-    size_report: dict[str, Any] = field(default_factory=dict)
-    timestamp_report: dict[str, Any] = field(default_factory=dict)
-    namespace_report: dict[str, Any] = field(default_factory=dict)
-    bullet_report: dict[str, Any] = field(default_factory=dict)
+    content: dict[str, dict[str, dict[str, object]]] = field(default_factory=dict)
+    content_info: dict[str, dict[str, object]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqSummarizer instance."""
@@ -34,7 +31,8 @@ class LogseqSummarizer:
         for k, v in self.file.items():
             self.file[k] = sorted(v)
         for k, v in self.content.items():
-            self.content[k] = sort_dict_by_value(v, value="count", reverse=True)
+            if k != "_info":
+                self.content[k] = sort_dict_by_value(v, value="count", reverse=True)
 
     def _process(self, f: LogseqFile) -> None:
         """Process a file for summarization."""
@@ -54,24 +52,22 @@ class LogseqSummarizer:
         for k, v in f.data.items():
             self.content.setdefault(k, {})
             self.content[k] = get_count_and_foundin_data(self.content[k], v, f.path.name)
-        self.size_report[f.path.name] = f.info.size
-        self.timestamp_report[f.path.name] = f.info.timestamp
-        self.namespace_report[f.path.name] = f.info.namespace
-        self.bullet_report[f.path.name] = f.info.bullet
+        self.content_info.setdefault("info", {})
+        self.content_info["info"][f.path.name] = {
+            Output.SUMMARY_REPORT_BULLET: f.info.bullet,
+            Output.SUMMARY_REPORT_NAMESPACE: f.info.namespace,
+            Output.SUMMARY_REPORT_SIZE: f.info.size,
+            Output.SUMMARY_REPORT_TIMESTAMP: f.info.timestamp,
+        }
 
     @property
-    def report(self) -> dict:
+    def report(self) -> dict[str, object]:
         """Generate a report of the summarization."""
         return {
-            OutputDir.SUMMARY_FILES_GENERAL: self.file,
-            OutputDir.SUMMARY_FILES_FILE: self.filetypes,
-            OutputDir.SUMMARY_FILES_NODE: self.nodetypes,
-            OutputDir.SUMMARY_FILES_EXTENSIONS: self.extensions,
+            OutputDir.SUMMARY_FILE_GENERAL: self.file,
+            OutputDir.SUMMARY_FILE_FILETYPE: self.filetypes,
+            OutputDir.SUMMARY_FILE_NODETYPE: self.nodetypes,
+            OutputDir.SUMMARY_FILE_EXTENSION: self.extensions,
             OutputDir.SUMMARY_CONTENT: self.content,
-            OutputDir.SUMMARY_CONTENT_INFO: {
-                Output.SUMMARY_REPORT_SIZE: self.size_report,
-                Output.SUMMARY_REPORT_TIMESTAMP: self.timestamp_report,
-                Output.SUMMARY_REPORT_NAMESPACE: self.namespace_report,
-                Output.SUMMARY_REPORT_BULLET: self.bullet_report,
-            },
+            OutputDir.SUMMARY_CONTENT_INFO: self.content_info,
         }

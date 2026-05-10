@@ -14,7 +14,7 @@ Problems:
 import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypedDict
 
 from logseq_analyzer.utils.enums import Core, Crit, Output, OutputDir
 from logseq_analyzer.utils.helpers import sort_dict_by_value
@@ -26,6 +26,22 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+type _NsSlotData = dict[str, object]
+type _NsTree = dict[str, "_NsTree"]
+
+
+class _PartEntry(TypedDict):
+    entry: str
+    level: int
+
+
+class _QueryInfo(TypedDict, total=False):
+    found_in: list[str]
+    namespace: str
+    size: int
+    uri: str
+    logseq_url: str
+
 
 @dataclass(slots=True)
 class LogseqNamespaces:
@@ -33,33 +49,31 @@ class LogseqNamespaces:
 
     index: FileIndex
     dangling_links: set[str]
-    _level_dist: Counter = field(default_factory=Counter)
     _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
-    _part_entries: defaultdict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
-    cnflcts_dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    cnflcts_non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    cnflcts_parent_depth: dict[tuple[str, int], list[str]] = field(default_factory=lambda: defaultdict(list))
-    cnflcts_parent_unique: dict[tuple[str, int], set[str]] = field(default_factory=lambda: defaultdict(set))
-    data: dict[str, Any] = field(default_factory=dict)
-    details: dict[str, Any] = field(default_factory=dict)
-    parts: dict[str, Any] = field(default_factory=dict)
-    tree: dict[str, Any] = field(default_factory=dict)
-    unique_ns_per_level: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    _part_entries: defaultdict[str, list[_PartEntry]] = field(default_factory=lambda: defaultdict(list))
+    conflicts_dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflicts_non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflicts_parent_depth: dict[tuple[str, int], list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflicts_parent_unique: dict[tuple[str, int], set[str]] = field(default_factory=lambda: defaultdict(set))
+    data: dict[str, _NsSlotData] = field(default_factory=dict)
+    details: dict[str, Counter[int]] = field(default_factory=dict)
+    parts: dict[str, dict[str, int]] = field(default_factory=dict)
+    tree: _NsTree = field(default_factory=dict)
+    unique_ns_per_level: dict[int, set[str]] = field(default_factory=lambda: defaultdict(set))
     unique_parts: set[str] = field(default_factory=set)
-    queries: dict[str, dict[str, Any]] = field(default_factory=dict)
+    queries: dict[str, _QueryInfo] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqNamespaces instance."""
         self.init_ns_parts()
         self.analyze_ns_queries()
-        self.detect_non_ns_conflicts()
-        self.detect_parent_depth_conflicts()
+        self.analyze_ns_conflicts()
 
     def init_ns_parts(self) -> None:
         """Create namespace parts from the data."""
+        self.details["level_distribution"] = Counter()
         for f in self.index:
             self._init_ns_parts(f)
-        self.details["level_distribution"] = dict(self._level_dist)
 
     def analyze_ns_queries(self) -> None:
         """Analyze namespace queries."""
@@ -71,17 +85,16 @@ class LogseqNamespaces:
         """Initialize namespace parts for a given file."""
         if not f.info.namespace.is_namespace:
             return
-        self.data[f.path.name] = {k: getattr(f.info.namespace, k) for k in f.info.namespace.__slots__}
-        if not (parts := self.data[f.path.name].get("parts")):
+        self.data[f.path.name] = f.info.namespace.as_dict
+        if not (parts := f.info.namespace.parts):
             return
         self.parts[f.path.name] = parts
-        _curr_tree_lvl = self.tree
+        cur = self.tree
         for part, level in parts.items():
             self.unique_parts.add(part)
             self.unique_ns_per_level[level].add(part)
-            self._level_dist[level] += 1
-            _curr_tree_lvl.setdefault(part, {})
-            _curr_tree_lvl = _curr_tree_lvl[part]
+            self.details["level_distribution"][level] += 1
+            cur = cur.setdefault(part, {})
             self._part_levels[part].add(level)
             self._part_entries[part].append({"entry": f.path.name, "level": level})
 
@@ -91,32 +104,28 @@ class LogseqNamespaces:
         if not (queries := f_data.get(Crit.DblCurly.NAMESPACE_QUERY)):
             return
         for query in queries:
-            if not ContentPatterns.PAGE_REFERENCE.search(query):
-                logger.warning("Invalid query found: %s", query)
-                continue
-            page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
+            page_refs: list[str] = ContentPatterns.PAGE_REFERENCE.findall(query)
             if len(page_refs) != 1:
-                logger.warning("Invalid references found in query: %s", query)
+                logger.warning("Invalid query: %s", query)
                 continue
-            self.queries.setdefault(query, {})
-            self.queries[query].setdefault("found_in", []).append(f.path.name)
-            self.queries[query]["namespace"] = page_refs[0]
-            self.queries[query]["size"] = self.data.get(page_refs[0], {}).get("size", 0)
-            self.queries[query]["uri"] = f.path.uri
-            self.queries[query]["logseq_url"] = f.path.logseq_url
+            qinfo = self.queries.setdefault(query, {})
+            qinfo.setdefault("found_in", []).append(f.path.name)
+            qinfo["namespace"] = page_refs[0]
+            qinfo["size"] = (
+                _s if (_d := self.data.get(page_refs[0])) and (_s := _d.get("size")) and isinstance(_s, int) else 0
+            )
+            qinfo["uri"] = f.path.uri
+            qinfo["logseq_url"] = f.path.logseq_url
 
-    def detect_non_ns_conflicts(self) -> None:
+    def analyze_ns_conflicts(self) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        potential_non_ns_names = self.unique_parts.intersection(self.index.yield_non_ns_names())
+        potential_non_ns = self.unique_parts.intersection(self.index.yield_non_ns_names())
         potential_dangling = self.unique_parts.intersection(self.dangling_links)
         for entry, parts in self.parts.items():
-            for part in potential_non_ns_names.intersection(parts):
-                self.cnflcts_non_namespace[part].append(entry)
+            for part in potential_non_ns.intersection(parts):
+                self.conflicts_non_namespace[part].append(entry)
             for part in potential_dangling.intersection(parts):
-                self.cnflcts_dangling[part].append(entry)
-
-    def detect_parent_depth_conflicts(self) -> None:
-        """Identify namespace parts that appear at different depths (levels) across entries."""
+                self.conflicts_dangling[part].append(entry)
         for part, levels in self._part_levels.items():
             if len(levels) < 2:
                 continue
@@ -125,18 +134,18 @@ class LogseqNamespaces:
                 entries = (d["entry"] for d in self._part_entries[part] if d["level"] == level)
                 for entry in entries:
                     up_to_level = entry.split(Core.NS_SEP)[:level]
-                    self.cnflcts_parent_unique[key].add(Core.NS_SEP.join(up_to_level))
-                    self.cnflcts_parent_depth[key].append(entry)
+                    self.conflicts_parent_unique[key].add(Core.NS_SEP.join(up_to_level))
+                    self.conflicts_parent_depth[key].append(entry)
 
     @property
-    def report(self) -> dict[str, Any]:
+    def report(self) -> dict[str, object]:
         """Generate a report of the namespace analysis."""
         return {
             OutputDir.NAMESPACES: {
-                Output.NS_CONFLICTS_DANGLING: self.cnflcts_dangling,
-                Output.NS_CONFLICTS_NON_NAMESPACE: self.cnflcts_non_namespace,
-                Output.NS_CONFLICTS_PARENT_DEPTH: self.cnflcts_parent_depth,
-                Output.NS_CONFLICTS_PARENT_UNIQUE: self.cnflcts_parent_unique,
+                Output.NS_CONFLICTS_DANGLING: self.conflicts_dangling,
+                Output.NS_CONFLICTS_NON_NAMESPACE: self.conflicts_non_namespace,
+                Output.NS_CONFLICTS_PARENT_DEPTH: self.conflicts_parent_depth,
+                Output.NS_CONFLICTS_PARENT_UNIQUE: self.conflicts_parent_unique,
                 Output.NS_DATA: self.data,
                 Output.NS_DETAILS: self.details,
                 Output.NS_HIERARCHY: self.tree,
