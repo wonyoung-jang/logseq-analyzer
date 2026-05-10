@@ -19,8 +19,8 @@ class LogseqGraph:
     """Class to handle all Logseq files in the graph directory."""
 
     index: FileIndex
-    all_linked_refs: dict[str, dict[str, dict]] = field(default_factory=dict)
-    all_dangling_links: dict[str, dict[str, dict]] = field(default_factory=dict)
+    all_linked_refs: dict = field(default_factory=dict)
+    all_dangling_links: dict = field(default_factory=dict)
     dangling_links: set[str] = field(default_factory=set)
     linked_refs: set[str] = field(default_factory=set)
     linked_refs_ns: set[str] = field(default_factory=set)

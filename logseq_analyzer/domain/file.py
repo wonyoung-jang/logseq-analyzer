@@ -247,7 +247,7 @@ class LogseqPath:
     """LogseqPath class."""
 
     file: Path
-    context: LogseqFileContext
+    context: LogseqFileContext = field(repr=False)
     file_type: str = ""
     logseq_url: str = ""
     name: str = ""

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.journals import LogseqJournals
+from logseq_analyzer.service.journals import LogseqJournals
 
 if TYPE_CHECKING:
     from logseq_analyzer.domain.index import FileIndex

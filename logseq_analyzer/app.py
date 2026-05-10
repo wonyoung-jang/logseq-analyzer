@@ -8,17 +8,17 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from logseq_analyzer.analysis.assets import LogseqAssets
-from logseq_analyzer.analysis.graph import LogseqGraph
-from logseq_analyzer.analysis.journals import LogseqJournals
-from logseq_analyzer.analysis.namespaces import LogseqNamespaces
-from logseq_analyzer.analysis.summarizers import LogseqSummarizer
 from logseq_analyzer.domain.file import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.filemover import LogseqFileMover
 from logseq_analyzer.io.filesystem import File, LogseqAnalyzerDirs
 from logseq_analyzer.io.reporter import ReportWriter
+from logseq_analyzer.service.assets import LogseqAssets
+from logseq_analyzer.service.graph import LogseqGraph
+from logseq_analyzer.service.journals import LogseqJournals
+from logseq_analyzer.service.namespaces import LogseqNamespaces
+from logseq_analyzer.service.summarizers import LogseqSummarizer
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
