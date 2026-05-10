@@ -7,8 +7,7 @@ from dataclasses import InitVar, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.analysis.journals import OutputDir
-from logseq_analyzer.utils.enums import Core, TargetDir
+from logseq_analyzer.utils.enums import Core, OutputDir, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

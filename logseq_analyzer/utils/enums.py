@@ -172,6 +172,15 @@ class Output(StrEnum):
     NS_QUERIES = "ns_queries"
     NS_UNIQUE_PARTS = "ns_unique_parts"
     NS_UNIQUE_PER_LEVEL = "ns_unique_per_level"
+    SUMMARY_BACKLINKED = "backlinked"
+    SUMMARY_BACKLINKED_NS_ONLY = "backlinked_ns_only"
+    SUMMARY_HAS_BACKLINKS = "has_backlinks"
+    SUMMARY_HAS_CONTENT = "has_content"
+    SUMMARY_IS_HLS = "is_hls"
+    SUMMARY_REPORT_SIZE = "report_size"
+    SUMMARY_REPORT_TIMESTAMP = "report_timestamp"
+    SUMMARY_REPORT_NAMESPACE = "report_namespace"
+    SUMMARY_REPORT_BULLET = "report_bullet"
 
 
 class TargetDir(StrEnum):

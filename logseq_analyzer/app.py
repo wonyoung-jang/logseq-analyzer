@@ -15,10 +15,10 @@ from logseq_analyzer.analysis.journals import LogseqJournals
 from logseq_analyzer.analysis.namespaces import LogseqNamespaces
 from logseq_analyzer.analysis.summarizers import LogseqSummarizer
 from logseq_analyzer.io.cache import Cache
+from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.filemover import LogseqFileMover
 from logseq_analyzer.io.filesystem import File, LogseqAnalyzerDirs
-from logseq_analyzer.io.graph_config import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
-from logseq_analyzer.io.report_writer import ReportWriter
+from logseq_analyzer.io.reporter import ReportWriter
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
@@ -99,7 +99,7 @@ class Args:
     write_graph: bool = False
 
     @property
-    def report(self) -> dict[Output, list[tuple[str, object]]]:
+    def report(self) -> dict[str, object]:
         """Generate a report of the arguments."""
         return {
             OutputDir.META: {

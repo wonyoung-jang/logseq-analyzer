@@ -16,8 +16,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.analysis.journals import OutputDir
-from logseq_analyzer.utils.enums import Core, Crit, Output
+from logseq_analyzer.utils.enums import Core, Crit, Output, OutputDir
 from logseq_analyzer.utils.helpers import sort_dict_by_value
 from logseq_analyzer.utils.patterns import ContentPatterns
 

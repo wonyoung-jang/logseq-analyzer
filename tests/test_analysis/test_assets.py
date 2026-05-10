@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.analysis.assets import LogseqAssets, LogseqAssets
+from logseq_analyzer.analysis.assets import LogseqAssets
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.index import FileIndex

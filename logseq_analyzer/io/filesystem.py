@@ -5,7 +5,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from logseq_analyzer.analysis.namespaces import OutputDir
+from logseq_analyzer.utils.enums import OutputDir
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from logseq_analyzer.io.report_writer import ReportWriter
+from logseq_analyzer.io.reporter import ReportWriter
 
 
 @pytest.fixture

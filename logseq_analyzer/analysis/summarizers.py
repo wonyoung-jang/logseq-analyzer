@@ -2,29 +2,14 @@
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.utils.enums import OutputDir
+from logseq_analyzer.utils.enums import Output, OutputDir
 from logseq_analyzer.utils.helpers import get_count_and_foundin_data, sort_dict_by_value
 
 if TYPE_CHECKING:
     from logseq_analyzer.analysis.file import LogseqFile
     from logseq_analyzer.analysis.index import FileIndex
-
-
-class SummaryFile(StrEnum):
-    """Summary files for the Logseq Analyzer."""
-
-    BACKLINKED = "backlinked"
-    BACKLINKED_NS_ONLY = "backlinked_ns_only"
-    HAS_BACKLINKS = "has_backlinks"
-    HAS_CONTENT = "has_content"
-    IS_HLS = "is_hls"
-    REPORT_SIZE = "report_size"
-    REPORT_TIMESTAMP = "report_timestamp"
-    REPORT_NAMESPACE = "report_namespace"
-    REPORT_BULLET = "report_bullet"
 
 
 @dataclass(slots=True)
@@ -57,15 +42,15 @@ class LogseqSummarizer:
         self.nodetypes[f.node.node_type].append(f.path.name)
         self.extensions[f.path.file.suffix].append(f.path.name)
         if f.node.backlinked:
-            self.file[SummaryFile.BACKLINKED].append(f.path.name)
+            self.file[Output.SUMMARY_BACKLINKED].append(f.path.name)
         if f.node.backlinked_ns_only:
-            self.file[SummaryFile.BACKLINKED_NS_ONLY].append(f.path.name)
+            self.file[Output.SUMMARY_BACKLINKED_NS_ONLY].append(f.path.name)
         if f.is_hls:
-            self.file[SummaryFile.IS_HLS].append(f.path.name)
+            self.file[Output.SUMMARY_IS_HLS].append(f.path.name)
         if f.info.size.has_content:
-            self.file[SummaryFile.HAS_CONTENT].append(f.path.name)
+            self.file[Output.SUMMARY_HAS_CONTENT].append(f.path.name)
         if f.node.has_backlinks:
-            self.file[SummaryFile.HAS_BACKLINKS].append(f.path.name)
+            self.file[Output.SUMMARY_HAS_BACKLINKS].append(f.path.name)
         for k, v in f.data.items():
             self.content.setdefault(k, {})
             self.content[k] = get_count_and_foundin_data(self.content[k], v, f.path.name)
@@ -84,9 +69,9 @@ class LogseqSummarizer:
             OutputDir.SUMMARY_FILES_EXTENSIONS: self.extensions,
             OutputDir.SUMMARY_CONTENT: self.content,
             OutputDir.SUMMARY_CONTENT_INFO: {
-                SummaryFile.REPORT_SIZE: self.size_report,
-                SummaryFile.REPORT_TIMESTAMP: self.timestamp_report,
-                SummaryFile.REPORT_NAMESPACE: self.namespace_report,
-                SummaryFile.REPORT_BULLET: self.bullet_report,
+                Output.SUMMARY_REPORT_SIZE: self.size_report,
+                Output.SUMMARY_REPORT_TIMESTAMP: self.timestamp_report,
+                Output.SUMMARY_REPORT_NAMESPACE: self.namespace_report,
+                Output.SUMMARY_REPORT_BULLET: self.bullet_report,
             },
         }

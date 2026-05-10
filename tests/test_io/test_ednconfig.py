@@ -2,7 +2,7 @@
 
 import pytest
 
-from logseq_analyzer.io.graph_config import EDNToken, LogseqConfigEDN, loads, tokenize
+from logseq_analyzer.io.ednconfig import EDNToken, LogseqConfigEDN, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas() -> None:
