@@ -15,7 +15,6 @@ from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
 from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
-    import re
     from collections.abc import Iterable, Iterator, Sequence
     from os import stat_result
 
@@ -462,8 +461,6 @@ class LogseqFile:
     data: dict[str, Iterable[str]] = field(default_factory=dict, repr=False)
     node: NodeType = field(default_factory=NodeType, repr=False)
     is_hls: bool = field(default=False, repr=False)
-    masked_content: str = field(default="", repr=False)
-    masked_blocks: dict[str, str] = field(default_factory=dict, repr=False)
     bullets: LogseqBullets = field(init=False, repr=False)
     info: LogseqFileInfo = field(init=False, repr=False)
 
@@ -511,22 +508,9 @@ class LogseqFile:
 
     def extract_primary_data(self) -> Iterator[tuple[str, list[str]]]:
         """Extract primary data from the content."""
-        self.masked_content = self.bullets.content
-
+        _masked_content = self.bullets.content
         for prefix, regex in MASK_MAP.items():
-
-            def _repl(match: re.Match, prefix: str = prefix) -> str:
-                placeholder = f"__{prefix}__{uuid.uuid4()}__"
-                self.masked_blocks[placeholder] = match.group(0)
-                return placeholder
-
-            self.masked_content = regex.sub(_repl, self.masked_content)
-
+            _masked_content = regex.sub(f"__{prefix}__{uuid.uuid4()}__", _masked_content)
         for key, value in PRIMARY_DATA_MAP.items():
-            if value.search(self.masked_content):
-                yield key, value.findall(self.masked_content)
-
-    def unmask_blocks(self) -> None:
-        """Restore the original content by replacing placeholders with their blocks."""
-        for placeholder, block in self.masked_blocks.items():
-            self.masked_content = self.masked_content.replace(placeholder, block)
+            if value.search(_masked_content):
+                yield key, value.findall(_masked_content)

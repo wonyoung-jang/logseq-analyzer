@@ -238,7 +238,7 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
     journal_page_fmt: str,
-) -> Iterator[dict[str, dict]]:
+) -> Iterator[dict[str, object]]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)

@@ -1,6 +1,7 @@
 """Logseq Analyzer GUI using PySide6."""
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QSettings, Slot
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
@@ -8,6 +9,9 @@ from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPu
 from logseq_analyzer.entrypoints.gui.components import Buttons, Checkboxes, Inputs, Progress
 from logseq_analyzer.entrypoints.gui.worker import AnalysisWorker
 from logseq_analyzer.utils.enums import Format
+
+if TYPE_CHECKING:
+    from logseq_analyzer.app import ArgumentDict
 
 
 class Argument(StrEnum):
@@ -56,7 +60,7 @@ class LogseqAnalyzerGUI(QWidget):
     @Slot()
     def run_analysis(self) -> None:
         """Run the analysis with the provided arguments."""
-        gui_args = {
+        gui_args: ArgumentDict = {
             Argument.MOVE_UNLINKED_ASSETS: self.checkboxes.move_assets.isChecked(),
             Argument.MOVE_BAK: self.checkboxes.move_bak.isChecked(),
             Argument.MOVE_RECYCLE: self.checkboxes.move_recycle.isChecked(),
@@ -66,7 +70,7 @@ class LogseqAnalyzerGUI(QWidget):
             Argument.GLOBAL_CONFIG: self.inputs.global_config.text(),
             Argument.REPORT_FORMAT: self.inputs.report_format.currentText(),
         }
-        if not gui_args[Argument.GRAPH_FOLDER]:
+        if not gui_args.get(Argument.GRAPH_FOLDER):
             self.show_error("Graph folder is required.")
             return
         self.save_settings()
