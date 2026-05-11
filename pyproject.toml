@@ -40,6 +40,9 @@ addopts = ["--strict-markers", "--strict-config", "-ra", "-v"]
 testpaths = ["tests"]
 
 [dependency-groups]
+dev = [
+    "line-profiler>=5.0.2",
+]
 docs = [
     "mkdocstrings-python>=2.0.1",
     "zensical>=0.0.20",

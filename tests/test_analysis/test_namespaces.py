@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.service.namespaces import LogseqNamespaces
+from logseq_analyzer.service.analysis import LogseqNamespaces
 
 if TYPE_CHECKING:
     from logseq_analyzer.domain.index import FileIndex

@@ -34,3 +34,4 @@ site/
 !.python-version
 .tally-config.toml
 lsa.pstats
+logseq_analyzer.entrypoints.gui.lprof

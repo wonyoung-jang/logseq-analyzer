@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.service.graph import LogseqGraph
+from logseq_analyzer.service.analysis import LogseqGraph
 
 if TYPE_CHECKING:
     from logseq_analyzer.domain.index import FileIndex

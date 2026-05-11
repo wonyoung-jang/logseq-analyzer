@@ -14,11 +14,13 @@ from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_
 from logseq_analyzer.io.filemover import LogseqFileMover
 from logseq_analyzer.io.filesystem import File, LogseqAnalyzerDirs
 from logseq_analyzer.io.reporter import ReportWriter
-from logseq_analyzer.service.assets import LogseqAssets
-from logseq_analyzer.service.graph import LogseqGraph
-from logseq_analyzer.service.journals import LogseqJournals
-from logseq_analyzer.service.namespaces import LogseqNamespaces
-from logseq_analyzer.service.summarizers import LogseqSummarizer
+from logseq_analyzer.service.analysis import (
+    LogseqAssets,
+    LogseqGraph,
+    LogseqJournals,
+    LogseqNamespaces,
+    LogseqSummarizer,
+)
 from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 
 if TYPE_CHECKING:
