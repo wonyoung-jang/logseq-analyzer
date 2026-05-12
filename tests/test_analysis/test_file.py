@@ -6,14 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.domain.file import (
-    JournalFormats,
-    LogseqBullets,
-    LogseqFile,
-    LogseqFileContext,
-    format_bytes,
-    process_aliases,
-)
+from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext, _format_bytes, _process_aliases
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -35,7 +28,7 @@ if TYPE_CHECKING:
 )
 def test_format_bytes_iec(value: int, expected: str) -> None:
     """Test the format_bytes function with IEC units."""
-    assert format_bytes(value, "iec") == expected
+    assert _format_bytes(value, "iec") == expected
 
 
 @pytest.mark.parametrize(
@@ -54,20 +47,7 @@ def test_format_bytes_iec(value: int, expected: str) -> None:
 )
 def test_format_bytes_si(value: int, expected: str) -> None:
     """Test the format_bytes function with SI units."""
-    assert format_bytes(value, "si") == expected
-
-
-@pytest.fixture
-def logseq_bullets() -> LogseqBullets:
-    """Fixture to create a LogseqBullets object using a temporary file."""
-    return LogseqBullets("")
-
-
-def test_logseq_bullets(logseq_bullets: LogseqBullets) -> None:
-    """Test the LogseqBullets functionality."""
-    assert logseq_bullets.all_bullets == []
-    assert logseq_bullets.content == ""
-    assert logseq_bullets.primary == ""
+    assert _format_bytes(value, "si") == expected
 
 
 @pytest.fixture
@@ -92,7 +72,7 @@ def logseq_file_context() -> LogseqFileContext:
         ns_file_sep="__",
         journal_dir="journals",
         graph_path=Path("test_graph"),
-        result_map={},
+        filetype_map={},
     )
 
 
@@ -114,4 +94,4 @@ def logseq_file(temp_file: str, logseq_file_context: LogseqFileContext) -> Logse
 )
 def test_process_aliases_various(input_str: str, expected: list[str]) -> None:
     """Test process_aliases with various inputs."""
-    assert list(process_aliases(input_str)) == expected
+    assert list(_process_aliases(input_str)) == expected

@@ -97,7 +97,7 @@ class LogseqAnalyzerDirs:
     config_global: File | None = None
 
     @property
-    def report(self) -> dict[str, object]:
+    def report(self) -> dict:
         """Generate a report of the Logseq analyzer directories."""
         return {
             OutputDir.META: {

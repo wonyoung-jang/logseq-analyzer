@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from logseq_analyzer.domain.index import FileIndex
+    from logseq_analyzer.domain.model import FileIndex
 
 
 def test_file_index_initialization(file_index: FileIndex) -> None:

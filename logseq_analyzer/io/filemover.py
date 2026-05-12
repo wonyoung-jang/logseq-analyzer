@@ -13,7 +13,7 @@ from logseq_analyzer.utils.enums import Output, OutputDir
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from logseq_analyzer.domain.file import LogseqFile
+    from logseq_analyzer.domain.model import LogseqFile
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class LogseqFileMover:
         self.moved_recycle = _move(self.del_recycle, _yield_dir(self.recycle_dir), move=self.should_move_recycle)
 
     @property
-    def report(self) -> dict[str, object]:
+    def report(self) -> dict:
         """Generate a report of the moved files."""
         return {
             OutputDir.MOVED_FILES: {
@@ -105,4 +105,4 @@ def _yield_dir(path: Path) -> Iterator[Path]:
 def _yield_asset(unlinked_assets: set[LogseqFile]) -> Iterator[Path]:
     """Yield the file paths of unlinked assets."""
     for asset in unlinked_assets:
-        yield asset.path.file
+        yield asset.path

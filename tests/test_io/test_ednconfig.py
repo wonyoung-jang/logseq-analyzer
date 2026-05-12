@@ -118,5 +118,5 @@ def test_tokenize() -> None:
     """Test that the tokenize function works correctly."""
     edn = "1, 2 ; comment\n 3"
     tokens = tokenize(edn)
-    edn_class = LogseqConfigEDN(tokens)
+    edn_class = LogseqConfigEDN(list(tokens))
     assert edn_class.tokens == ["1", "2", "3"]

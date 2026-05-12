@@ -173,7 +173,6 @@ class Output(StrEnum):
     NS_CONFLICTS_NON_NAMESPACE = "ns_conflicts_non_namespace"
     NS_CONFLICTS_PARENT_DEPTH = "ns_conflicts_parent_depth"
     NS_CONFLICTS_PARENT_UNIQUE = "ns_conflicts_parent_unique"
-    NS_DATA = "ns_data"
     NS_DETAILS = "ns_details"
     NS_HIERARCHY = "ns_hierarchy"
     NS_PARTS = "ns_parts"
@@ -185,8 +184,7 @@ class Output(StrEnum):
     SUMMARY_HAS_BACKLINKS = "has_backlinks"
     SUMMARY_HAS_CONTENT = "has_content"
     SUMMARY_IS_HLS = "is_hls"
-    SUMMARY_REPORT_SIZE = "report_size"
-    SUMMARY_REPORT_TIMESTAMP = "report_timestamp"
+    SUMMARY_REPORT_FILE_INFO = "report_file_info"
     SUMMARY_REPORT_NAMESPACE = "report_namespace"
     SUMMARY_REPORT_BULLET = "report_bullet"
 

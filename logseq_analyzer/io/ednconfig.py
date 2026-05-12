@@ -3,7 +3,7 @@
 import ast
 import logging
 import re
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -40,10 +40,10 @@ class Edn(StrEnum):
 class ConfigEdns:
     """Configuration EDN files for the Logseq analyzer."""
 
-    config: dict[str, EDNValue] = field(default_factory=dict)
-    default_edn: dict[str, EDNValue] = field(default_factory=dict)
-    user_edn: dict[str, EDNValue] = field(default_factory=dict)
-    global_edn: dict[str, EDNValue] = field(default_factory=dict)
+    config: dict = field(default_factory=dict)
+    default_edn: dict = field(default_factory=dict)
+    user_edn: dict = field(default_factory=dict)
+    global_edn: dict = field(default_factory=dict)
 
     def get_target_dirs(self) -> dict[str, str]:
         """Get the target directories for Logseq.
@@ -82,7 +82,7 @@ class ConfigEdns:
         return bool(self.config.get(Edn.PROP_PAGES, True))
 
     @property
-    def report(self) -> dict[str, object]:
+    def report(self) -> dict:
         """Generate a report of the configuration EDN files."""
         return {
             OutputDir.META: {
@@ -100,15 +100,13 @@ class ConfigEdns:
 class LogseqConfigEDN:
     """A simple EDN parser that converts EDN data into Python data structures."""
 
-    tokens_gen: InitVar[Iterator[str]]
-    tokens: list[str] = field(init=False)
+    tokens: list[str]
     _fn_map: dict[str, Callable[[], list | set | dict]] = field(init=False)
     _literal_map: dict[str, bool | None] = field(init=False)
     pos: int = 0
 
-    def __post_init__(self, tokens_gen: Iterator[str]) -> None:
+    def __post_init__(self) -> None:
         """Initialize the token map for parsing EDN structures."""
-        self.tokens = list(tokens_gen)
         self._fn_map = {
             "{": self.parse_map,
             "[": self.parse_vector,
@@ -237,7 +235,7 @@ def loads(edn_str: str) -> EDNValue:
         EDNValue: The parsed Python data structure.
 
     """
-    return LogseqConfigEDN(tokenize(edn_str)).parse()
+    return LogseqConfigEDN(list(tokenize(edn_str))).parse()
 
 
 def tokenize(edn_str: str) -> Iterator[str]:

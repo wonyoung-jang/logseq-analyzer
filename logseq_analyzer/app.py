@@ -8,7 +8,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from logseq_analyzer.domain.file import JournalFormats, LogseqFile, LogseqFileContext
+from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.io.cache import Cache
 from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
 from logseq_analyzer.io.filemover import LogseqFileMover
@@ -26,7 +26,7 @@ from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-    from logseq_analyzer.domain.index import FileIndex
+    from logseq_analyzer.domain.model import FileIndex
     from logseq_analyzer.entrypoints.cli.cli import ArgumentDict
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class Args:
     write_graph: bool = False
 
     @property
-    def report(self) -> dict[str, object]:
+    def report(self) -> dict:
         """Generate a report of the arguments."""
         return {
             OutputDir.META: {
@@ -238,11 +238,10 @@ def analyze(
     analyzer_dirs: LogseqAnalyzerDirs,
     config_edns: ConfigEdns,
     journal_page_fmt: str,
-) -> Iterator[dict[str, object]]:
+) -> Iterator[dict]:
     """Perform core analysis on the Logseq graph."""
     logseq_graph = LogseqGraph(index)
     logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
-    logseq_journals = LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt)
     logseq_assets = LogseqAssets(index)
     logseq_file_mover = LogseqFileMover(
         should_move_bak=args.move_bak,
@@ -255,6 +254,7 @@ def analyze(
         bak_dir=analyzer_dirs.bak.path,
         recycle_dir=analyzer_dirs.recycle.path,
     )
+    logseq_journals = LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt)
     logseq_summarizer = LogseqSummarizer(index)
     yield args.report
     yield config_edns.report
@@ -273,7 +273,16 @@ def run_app(arguments: ArgumentDict) -> None:
     _init_logging()
     _prog = arguments.pop("progress_callback", lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))
     _prog(10, "Starting Logseq Analyzer...")
-    args = Args(**arguments)
+    args = Args(
+        global_config=arguments.get("global_config", ""),
+        graph_cache=arguments.get("graph_cache", False),
+        graph_folder=arguments.get("graph_folder", ""),
+        move_bak=arguments.get("move_bak", False),
+        move_recycle=arguments.get("move_recycle", False),
+        move_unlinked_assets=arguments.get("move_unlinked_assets", False),
+        report_format=arguments.get("report_format", ".txt"),
+        write_graph=arguments.get("write_graph", False),
+    )
     _prog(30, "Setting up Logseq Analyzer configurations...")
     analyzer_dirs, config_edns = _setup_logseq_paths(args)
     journal_formats = _setup_journal_formats(config_edns)
@@ -284,7 +293,7 @@ def run_app(arguments: ArgumentDict) -> None:
         ns_file_sep=config_edns.get_ns_sep(),
         journal_dir=analyzer_dirs.target[TargetDir.JOURNAL],
         graph_path=analyzer_dirs.graph.path,
-        result_map={
+        filetype_map={
             analyzer_dirs.target[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
             analyzer_dirs.target[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
             analyzer_dirs.target[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
