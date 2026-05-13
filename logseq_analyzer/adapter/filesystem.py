@@ -5,7 +5,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from logseq_analyzer.utils.enums import OutputDir
+from logseq_analyzer.utils.enums import Output
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class LogseqAnalyzerDirs:
     def report(self) -> dict:
         """Generate a report of the Logseq analyzer directories."""
         return {
-            OutputDir.META: {
+            Output.Dir.META: {
                 "logseq_analyzer_dirs": {
                     "graph_dirs": {
                         "graph": self.graph,

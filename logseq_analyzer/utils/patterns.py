@@ -204,15 +204,3 @@ MASK_MAP: dict[str, re.Pattern[str]] = {
     Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,
     Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
 }
-BACKLINK_CRITERIA: frozenset[str] = frozenset(
-    (
-        Crit.Prop.VALUES,
-        Crit.Prop.BLOCK_BUILTIN,
-        Crit.Prop.BLOCK_USER,
-        Crit.Prop.PAGE_BUILTIN,
-        Crit.Prop.PAGE_USER,
-        Crit.Content.PAGE_REF,
-        Crit.Content.TAGGED_BACKLINK,
-        Crit.Content.TAG,
-    )
-)

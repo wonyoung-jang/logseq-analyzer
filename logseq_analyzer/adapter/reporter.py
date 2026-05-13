@@ -51,9 +51,8 @@ def _write_toplevel(f: TextIO, vals: object) -> None:
                 _write_recursive(f, v, level=2)
             else:
                 f.write(f"\t{k:<60}: {v}\n")
-        f.write("-" * 180 + "\n")
     elif isinstance(vals, (list, set, tuple)):
-        f.write(f"VALUES ({len(vals)}):\n")
+        f.write(f"\tVALUES ({len(vals)}):\n")
         f.writelines(f"\t{i}\t|\t{v}\n" for i, v in enumerate(vals, 1))
     else:
         f.write(f"VAL: {vals}\n")

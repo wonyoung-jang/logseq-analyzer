@@ -8,12 +8,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
+from logseq_analyzer.adapter.cache import Cache
+from logseq_analyzer.adapter.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
+from logseq_analyzer.adapter.filemover import LogseqFileMover
+from logseq_analyzer.adapter.filesystem import File, LogseqAnalyzerDirs
+from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext
-from logseq_analyzer.io.cache import Cache
-from logseq_analyzer.io.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
-from logseq_analyzer.io.filemover import LogseqFileMover
-from logseq_analyzer.io.filesystem import File, LogseqAnalyzerDirs
-from logseq_analyzer.io.reporter import ReportWriter
 from logseq_analyzer.service.analysis import (
     LogseqAssets,
     LogseqGraph,
@@ -21,7 +21,7 @@ from logseq_analyzer.service.analysis import (
     LogseqNamespaces,
     LogseqSummarizer,
 )
-from logseq_analyzer.utils.enums import FileType, Output, OutputDir, TargetDir
+from logseq_analyzer.utils.enums import FileType, Output, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -119,8 +119,8 @@ class Args:
     def report(self) -> dict:
         """Generate a report of the arguments."""
         return {
-            OutputDir.META: {
-                Output.ARGUMENTS: {
+            Output.Dir.META: {
+                Output.File.ARGUMENTS: {
                     "global_config": self.global_config,
                     "graph_cache": self.graph_cache,
                     "graph_folder": self.graph_folder,
@@ -235,13 +235,6 @@ def _iter_files(graph_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
             dirs.clear()
 
 
-def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
-    """Set up cache for the Logseq Analyzer."""
-    cache = Cache(path=File(Path(Constant.CACHE_FILE), create=False).path)
-    index = cache.reset() if args.graph_cache else cache.load()
-    return cache, index
-
-
 def analyze(
     args: Args,
     index: FileIndex,
@@ -250,10 +243,14 @@ def analyze(
     journal_page_fmt: str,
 ) -> Iterator[dict]:
     """Perform core analysis on the Logseq graph."""
+    yield args.report
+    yield config_edns.report
+    yield analyzer_dirs.report
     logseq_graph = LogseqGraph(index)
-    logseq_namespaces = LogseqNamespaces(index, logseq_graph.dangling_links)
     logseq_assets = LogseqAssets(index)
-    logseq_file_mover = LogseqFileMover(
+    yield LogseqNamespaces(index, logseq_graph.dangling_links).report
+    yield LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt).report
+    yield LogseqFileMover(
         should_move_bak=args.move_bak,
         should_move_recycle=args.move_recycle,
         should_move_unlinked_assets=args.move_unlinked_assets,
@@ -263,19 +260,15 @@ def analyze(
         del_recycle=analyzer_dirs.del_recycle.path,
         bak_dir=analyzer_dirs.bak.path,
         recycle_dir=analyzer_dirs.recycle.path,
-    )
-    logseq_journals = LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt)
-    logseq_summarizer = LogseqSummarizer(index)
-    yield args.report
-    yield config_edns.report
-    yield analyzer_dirs.report
+    ).report
+    yield LogseqSummarizer(index).report
     yield logseq_graph.report
-    yield logseq_namespaces.report
-    yield logseq_journals.report
     yield logseq_assets.report
-    yield logseq_file_mover.report
-    yield logseq_summarizer.report
-    yield index.report
+    idx_report = index.report
+    if args.write_graph:
+        idx_report[Output.File.GRAPH_CONTENT] = {f: f.content for f in index}
+        idx_report[Output.File.GRAPH_BULLETS] = {f: f.all_bullets for f in index}
+    yield idx_report
 
 
 def run_app(arguments: ArgumentDict) -> None:
@@ -312,8 +305,8 @@ def run_app(arguments: ArgumentDict) -> None:
         },
     )
     _prog(50, "Setup cache...")
-    cache, index = setup_cache(args)
-    index.write_graph = args.write_graph
+    cache = Cache(path=File(Path(Constant.CACHE_FILE), create=False).path)
+    index = cache.reset() if args.graph_cache else cache.load()
     _prog(60, "Process Logseq graph...")
     _files = _iter_files(analyzer_dirs.graph.path, set(analyzer_dirs.target.values()))
     for path in cache.get_modified(_files):

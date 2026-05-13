@@ -11,21 +11,70 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from logseq_analyzer.utils.enums import Core, Crit, FileType, Output, OutputDir
-from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
-from logseq_analyzer.utils.patterns import (
-    BACKLINK_CRITERIA,
-    MASK_MAP,
-    PATTERNS,
-    PRIMARY_DATA_MAP,
-    RAW_DATA_MAP,
-    ContentPatterns,
-)
+from logseq_analyzer.utils.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output
+from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
 logger = logging.getLogger(__name__)
+
+BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
+    (
+        "alias",
+        "aliases",
+        "background_color",
+        "background-color",
+        "collapsed",
+        "created_at",
+        "created-at",
+        "custom-id",
+        "doing",
+        "done",
+        "exclude-from-graph-view",
+        "filetags",
+        "filters",
+        "heading",
+        "hl-color",
+        "hl-page",
+        "hl-stamp",
+        "hl-type",
+        "icon",
+        "id",
+        "last_modified_at",
+        "last-modified-at",
+        "later",
+        "logseq.color",
+        "logseq.macro-arguments",
+        "logseq.macro-name",
+        "logseq.order-list-type",
+        "logseq.query/nlp-date",
+        "logseq.table.borders",
+        "logseq.table.compact",
+        "logseq.table.headers",
+        "logseq.table.hover",
+        "logseq.table.max-width",
+        "logseq.table.stripes",
+        "logseq.table.version",
+        "logseq.tldraw.page",
+        "logseq.tldraw.shape",
+        "logseq.tldraw.shape",
+        "ls-type",
+        "macro",
+        "now",
+        "public",
+        "query-properties",
+        "query-sort-by",
+        "query-sort-desc",
+        "query-table",
+        "tags",
+        "template-including-parent",
+        "template",
+        "title",
+        "todo",
+        "updated-at",
+    )
+)
 _SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
 _IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
 _ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
@@ -113,7 +162,6 @@ class FileIndex:
 
     _files: set[LogseqFile] = field(default_factory=set)
     _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
-    write_graph: bool = field(init=False, default=False)
 
     def __len__(self) -> int:
         """Return the number of files in the index."""
@@ -191,22 +239,15 @@ class FileIndex:
                 yield f
 
     @property
-    def graph_data(self) -> dict[LogseqFile, dict[str, Iterable[str]]]:
-        """Get content data from the graph."""
-        return {file: {k: v for k, v in file.data.items() if v} for file in self}
-
-    @property
     def report(self) -> dict:
         """Generate a report of the indexed files."""
-        _report: dict[str, object] = {
-            Output.GRAPH_DATA: self.graph_data,
-            Output.IDX_FILES: self._files,
-            Output.IDX_NAME_TO_FILES: self._name_to_files,
+        return {
+            Output.Dir.INDEX: {
+                Output.File.GRAPH_DATA: {file: {k: v for k, v in file.data.items() if v} for file in self},
+                Output.File.IDX_FILES: self._files,
+                Output.File.IDX_NAME_TO_FILES: self._name_to_files,
+            }
         }
-        if self.write_graph:
-            _report[Output.GRAPH_CONTENT] = {f: f.content for f in self}
-            _report[Output.GRAPH_BULLETS] = {f: f.all_bullets for f in self}
-        return {OutputDir.INDEX: _report}
 
 
 @dataclass(slots=True)
@@ -320,7 +361,6 @@ class LogseqFile:
         try:
             self.content = self.path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.warning("Failed to decode file %s with utf-8 encoding.", self.path)
             self.content = ""
         self.name = self._get_name()
         self.filetype = self._get_filetype()
@@ -505,15 +545,17 @@ class LogseqFile:
             Iterator[tuple[int, str]]: Sections of text with their respective indices.
 
         """
-        _count = 0
-        for match in ContentPatterns.BULLET.finditer(self.content):
-            if _count == 0:
-                yield _count, self.content[: match.start()].strip("\t \n")
-                _count += 1
-            content_start = match.end()
-            next_match = next(ContentPatterns.BULLET.finditer(self.content, content_start), None)
-            content_end = next_match.start() if next_match else len(self.content)
-            yield _count, self.content[content_start:content_end].strip("\t \n")
-            _count += 1
-        if _count == 0:
-            yield _count, self.content.strip("\t \n")
+        count = 0
+        iterator = ContentPatterns.BULLET.finditer(self.content)
+        try:
+            current = next(iterator)
+        except StopIteration:
+            yield count, self.content.strip("\t \n")
+            return
+        yield count, self.content[: current.start()].strip("\t \n")
+        count += 1
+        for nxt in iterator:
+            yield count, self.content[current.end() : nxt.start()].strip("\t \n")
+            count += 1
+            current = nxt
+        yield count, self.content[current.end() :].strip("\t \n")

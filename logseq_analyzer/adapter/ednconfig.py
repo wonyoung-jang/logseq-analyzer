@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Core, OutputDir, TargetDir
+from logseq_analyzer.utils.enums import Core, Output, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -85,7 +85,7 @@ class ConfigEdns:
     def report(self) -> dict:
         """Generate a report of the configuration EDN files."""
         return {
-            OutputDir.META: {
+            Output.Dir.META: {
                 "config_edns": {
                     "edn_default": self.default_edn,
                     "edn_user": self.user_edn,

@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.app import Constant
 from logseq_analyzer.domain.model import FileIndex
-from logseq_analyzer.io.cache import Cache
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
