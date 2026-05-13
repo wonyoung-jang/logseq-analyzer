@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-URL = (
+_URL = (
     r"(?:(?:https?|ftp)://)"
     r"(?:\S+(?::\S*)?@)?"
     r"(?:\d{1,3}(?:\.\d{1,3}){3}|\[[0-9A-F:]+\]|(?:[A-Z0-9-]+\.)+[A-Z]{2,})"
@@ -31,7 +31,7 @@ class ContentPatterns:
     BLOCKQUOTE = re.compile(r"(?:^|\s)-\ >.*", re.MULTILINE | re.IGNORECASE)
     FLASHCARD = re.compile(r"(?:^|\s)-\ .*#card|\[\[card\]\].*", re.MULTILINE | re.IGNORECASE)
     DYNAMIC_VARIABLE = re.compile(r"<%\s*.*?\s*%>", re.IGNORECASE)
-    ANY_LINK = re.compile(rf"\b(?:{URL})\b", re.IGNORECASE)
+    ANY_LINK = re.compile(rf"\b(?:{_URL})\b", re.IGNORECASE)
     INLINE_CODE_BLOCK = re.compile(r"`[^`].+?`", re.IGNORECASE)
 
 
@@ -55,7 +55,7 @@ def _dblcurly(key: str) -> re.Pattern:
 def _internet_link(*, embedded: bool) -> re.Pattern:
     prefix = r"\!\[.*?\]" if embedded else r"(?<!\!)\[.*?\]"
     return re.compile(
-        rf'{prefix}\({URL}(?:\s+["\'][^)]*["\'])?\)',
+        rf'{prefix}\({_URL}(?:\s+["\'][^)]*["\'])?\)',
         re.IGNORECASE,
     )
 
@@ -68,7 +68,7 @@ class IPattern:
     FALLBACK: str
 
     @classmethod
-    def process_pattern_hierarchy(cls, content: str) -> Iterator[tuple[str, str]]:
+    def process_hierarchy(cls, content: str) -> Iterator[tuple[str, str]]:
         """Process a pattern hierarchy to create a mapping of patterns to their respective values.
 
         Args:
@@ -204,3 +204,15 @@ MASK_MAP: dict[str, re.Pattern[str]] = {
     Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,
     Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
 }
+BACKLINK_CRITERIA: frozenset[str] = frozenset(
+    (
+        Crit.Prop.VALUES,
+        Crit.Prop.BLOCK_BUILTIN,
+        Crit.Prop.BLOCK_USER,
+        Crit.Prop.PAGE_BUILTIN,
+        Crit.Prop.PAGE_USER,
+        Crit.Content.PAGE_REF,
+        Crit.Content.TAGGED_BACKLINK,
+        Crit.Content.TAG,
+    )
+)

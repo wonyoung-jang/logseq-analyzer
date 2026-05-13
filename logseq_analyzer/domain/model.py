@@ -1,6 +1,7 @@
-"""LogseqFile class to process Logseq files."""
+"""Domain model classes for Logseq graph and files."""
 
 import logging
+import math
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -12,13 +13,98 @@ from urllib.parse import unquote
 
 from logseq_analyzer.utils.enums import Core, Crit, FileType, Output, OutputDir
 from logseq_analyzer.utils.helpers import BUILT_IN_PROPERTIES
-from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
+from logseq_analyzer.utils.patterns import (
+    BACKLINK_CRITERIA,
+    MASK_MAP,
+    PATTERNS,
+    PRIMARY_DATA_MAP,
+    RAW_DATA_MAP,
+    ContentPatterns,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
-
 logger = logging.getLogger(__name__)
+_SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+_IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
+_ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
+
+
+class SizeUnit(StrEnum):
+    """Enumeration for size units."""
+
+    SI = "si"  # Powers of 1000
+    IEC = "iec"  # Powers of 1024
+
+
+class Node(StrEnum):
+    """Node types for the Logseq Analyzer."""
+
+    BRANCH = "branch"
+    LEAF = "leaf"
+    ORPHAN_GRAPH = "orphan_graph"
+    ORPHAN_NAMESPACE = "orphan_namespace"
+    ORPHAN_NAMESPACE_TRUE = "orphan_namespace_true"
+    ORPHAN_TRUE = "orphan_true"
+    OTHER = "other"
+    ROOT = "root"
+
+
+def _process_aliases(aliases: str) -> Iterator[str]:
+    """Process aliases to extract individual aliases."""
+    if not (aliases := aliases.strip()):
+        return
+    current = []
+    is_inside_brackets = False
+    pos = 0
+    while pos < len(aliases):
+        if aliases[pos : pos + 2] == "[[":
+            is_inside_brackets = True
+            pos += 2
+        elif aliases[pos : pos + 2] == "]]":
+            is_inside_brackets = False
+            pos += 2
+        elif aliases[pos] == "," and not is_inside_brackets:
+            if part := "".join(current).strip().lower():
+                yield part
+            current.clear()
+            pos += 1
+        else:
+            current.append(aliases[pos])
+            pos += 1
+    if part := "".join(current).strip().lower():
+        yield part
+
+
+def _append_ordinal_to_day(day: str) -> str:
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    day_int = int(day)
+    if 11 <= day_int <= 13:
+        return day + "th"
+    return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
+
+
+def _format_bytes(size: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
+    """Convert a byte value into a human-readable string using SI or IEC units.
+
+    Args:
+        size (int): Number of bytes.
+        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
+        precision (int): Number of decimal places.
+
+    Returns:
+        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
+
+    """
+    if size < 0:
+        msg = "size_bytes must be non-negative"
+        raise ValueError(msg)
+    units, base = (_IEC_UNITS, 1024) if system == SizeUnit.IEC else (_SI_UNITS, 1000)
+    if size < base:
+        return f"{size} {units[0]}"
+    idx = min(int(math.log(size, base)), len(units) - 1)
+    return f"{size / base**idx:.{precision}f} {units[idx]}"
 
 
 @dataclass(slots=True)
@@ -82,8 +168,6 @@ class FileIndex:
 
     def remove_deleted_files(self) -> None:
         """Remove deleted files from the cache."""
-        if not self:
-            return
         for f in self:
             if not f.path.exists():
                 self.remove(f)
@@ -103,14 +187,8 @@ class FileIndex:
     def yield_backlinked_assets(self, *, backlinked: bool) -> Iterator[LogseqFile]:
         """Yield asset files with or without backlinks."""
         for f in self:
-            if (f.node.backlinked == backlinked or backlinked) and f.filetype == FileType.ASSET:
+            if f.node.backlinked == backlinked and f.filetype == FileType.ASSET:
                 yield f
-
-    def yield_backlinked_assets_name(self, *, backlinked: bool) -> Iterator[str]:
-        """Yield asset file names with or without backlinks."""
-        for f in self:
-            if (f.node.backlinked == backlinked or backlinked) and f.filetype == FileType.ASSET:
-                yield f.name
 
     @property
     def graph_data(self) -> dict[LogseqFile, dict[str, Iterable[str]]]:
@@ -131,137 +209,16 @@ class FileIndex:
         return {OutputDir.INDEX: _report}
 
 
-_BACKLINK_CRITERIA: frozenset[str] = frozenset(
-    (
-        Crit.Prop.VALUES,
-        Crit.Prop.BLOCK_BUILTIN,
-        Crit.Prop.BLOCK_USER,
-        Crit.Prop.PAGE_BUILTIN,
-        Crit.Prop.PAGE_USER,
-        Crit.Content.PAGE_REF,
-        Crit.Content.TAGGED_BACKLINK,
-        Crit.Content.TAG,
-    )
-)
-_SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-_IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
-_ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
-
-
-class SizeUnit(StrEnum):
-    """Enumeration for size units."""
-
-    SI = "si"  # Powers of 1000
-    IEC = "iec"  # Powers of 1024
-
-
-class Node(StrEnum):
-    """Node types for the Logseq Analyzer."""
-
-    BRANCH = "branch"
-    LEAF = "leaf"
-    ORPHAN_GRAPH = "orphan_graph"
-    ORPHAN_NAMESPACE = "orphan_namespace"
-    ORPHAN_NAMESPACE_TRUE = "orphan_namespace_true"
-    ORPHAN_TRUE = "orphan_true"
-    OTHER = "other"
-    ROOT = "root"
-
-
-def _process_aliases(aliases: str) -> Iterator[str]:
-    """Process aliases to extract individual aliases."""
-    if not (aliases := aliases.strip()):
-        return
-    current = []
-    is_inside_brackets = False
-    pos = 0
-    while pos < len(aliases):
-        if aliases[pos : pos + 2] == "[[":
-            is_inside_brackets = True
-            pos += 2
-        elif aliases[pos : pos + 2] == "]]":
-            is_inside_brackets = False
-            pos += 2
-        elif aliases[pos] == "," and not is_inside_brackets:
-            if part := "".join(current).strip().lower():
-                yield part
-            current.clear()
-            pos += 1
-        else:
-            current.append(aliases[pos])
-            pos += 1
-    if part := "".join(current).strip().lower():
-        yield part
-
-
-def _append_ordinal_to_day(day: str) -> str:
-    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-    day_int = int(day)
-    if 11 <= day_int <= 13:
-        return day + "th"
-    return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
-
-
-def _process_filename(file: Path, ns_file_sep: str, journal_dir: str, jf: JournalFormats) -> str:
-    """Process the filename to create a page title."""
-    name = file.stem.strip(ns_file_sep)
-    if file.parent.name == journal_dir:
-        try:
-            date_obj = datetime.strptime(name, jf.file).replace(tzinfo=UTC)
-            page_title = date_obj.strftime(jf.page)
-            if Core.DATE_ORDINAL_SUFFIX in jf.page_title:
-                day_number = str(date_obj.day)
-                day_with_ordinal = _append_ordinal_to_day(day_number)
-                page_title = page_title.replace(day_number, day_with_ordinal, 1)
-            return page_title.replace("'", "")
-        except ValueError as e:
-            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, jf.page, e)
-            return name
-    return unquote(name).replace(ns_file_sep, Core.NS_SEP)
-
-
-def _format_bytes(size: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
-    """Convert a byte value into a human-readable string using SI or IEC units.
-
-    Args:
-        size (int): Number of bytes.
-        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
-        precision (int): Number of decimal places.
-
-    Returns:
-        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
-
-    """
-    if size < 0:
-        msg = "size_bytes must be non-negative"
-        raise ValueError(msg)
-    if system == SizeUnit.IEC:
-        units, base = _IEC_UNITS, 1024
-    elif system == SizeUnit.SI:
-        units, base = _SI_UNITS, 1000
-    else:
-        msg = f"Invalid system '{system}'. Use 'si' or 'iec'."
-        raise ValueError(msg)
-    if size < base:
-        return f"{size} {units[0]}"
-    idx = 0
-    _size = float(size)
-    while _size >= base and idx < len(units) - 1:
-        _size /= base
-        idx += 1
-    return f"{_size:.{precision}f} {units[idx]}"
-
-
 @dataclass(slots=True)
 class NodeType:
     """Class to hold node type data."""
 
-    has_backlinks: bool = False
-    backlinked: bool = False
-    backlinked_ns_only: bool = False
-    nodetype: str = Node.OTHER
+    has_backlinks: bool = False  # TODO: "mutable"
+    backlinked: bool = False  # TODO: "mutable"
+    backlinked_ns_only: bool = False  # TODO: "mutable"
+    nodetype: str = Node.OTHER  # TODO: "mutable"
 
-    def determine_node_type(self, *, has_content: bool) -> None:
+    def determine(self, *, has_content: bool) -> None:
         """Determine node type based on summary data."""
         match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True) | (True, True, False) | (True, False, True):
@@ -318,9 +275,8 @@ class NamespaceInfo:
     parent: str
     parts: tuple[tuple[str, int], ...]
     root: str
-    stem: str
-    is_namespace: bool
-    children: set[str] = field(default_factory=set)
+    is_namespace: bool  # TODO: "mutable"
+    children: set[str] = field(default_factory=set)  # TODO: "mutable"
 
     @property
     def size(self) -> int:
@@ -355,6 +311,9 @@ class LogseqFile:
     primary_bullet: str = field(init=False, repr=False, default="")
     all_bullets: list[str] = field(default_factory=list, repr=False)
     node: NodeType = field(default_factory=NodeType, repr=False)
+    _ns_info: NamespaceInfo | None = field(default=None, repr=False)
+    _bullet_info: BulletInfo | None = field(default=None, repr=False)
+    _file_info: FileInfo | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFile object."""
@@ -363,13 +322,8 @@ class LogseqFile:
         except UnicodeDecodeError:
             logger.warning("Failed to decode file %s with utf-8 encoding.", self.path)
             self.content = ""
-        self.name = _process_filename(
-            self.path,
-            jf=self.context.journal_format,
-            ns_file_sep=self.context.ns_file_sep,
-            journal_dir=self.context.journal_dir,
-        )
-        self.filetype = self.evaluate_file_type()
+        self.name = self._get_name()
+        self.filetype = self._get_filetype()
         if self.content:
             for i, bullet in self._iter_pattern_split():
                 self.all_bullets.append(bullet)
@@ -380,7 +334,7 @@ class LogseqFile:
             self.data.update(self.extract_aliases_and_propvalues())
             self.data.update(self.extract_properties())
             self.data.update(self.extract_patterns())
-            self.node.has_backlinks = not _BACKLINK_CRITERIA.isdisjoint(self.data.keys())
+            self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -429,40 +383,64 @@ class LogseqFile:
     @property
     def file_info(self) -> FileInfo:
         """Return the information of the file."""
-        _stat = self.path.stat()
-        return FileInfo(
-            time_existed=self.context.now_ts - _stat.st_birthtime,
-            time_unmodified=self.context.now_ts - _stat.st_mtime,
-            date_created=datetime.fromtimestamp(_stat.st_birthtime, tz=UTC).isoformat(),
-            date_modified=datetime.fromtimestamp(_stat.st_mtime, tz=UTC).isoformat(),
-            size=_stat.st_size,
-            human_readable_size=_format_bytes(_stat.st_size),
-            has_content=bool(_stat.st_size),
-        )
+        if self._file_info is None:
+            _stat = self.path.stat()
+            self._file_info = FileInfo(
+                time_existed=self.context.now_ts - _stat.st_birthtime,
+                time_unmodified=self.context.now_ts - _stat.st_mtime,
+                date_created=datetime.fromtimestamp(_stat.st_birthtime, tz=UTC).isoformat(),
+                date_modified=datetime.fromtimestamp(_stat.st_mtime, tz=UTC).isoformat(),
+                size=_stat.st_size,
+                human_readable_size=_format_bytes(_stat.st_size),
+                has_content=bool(_stat.st_size),
+            )
+        return self._file_info
 
     @property
     def ns_info(self) -> NamespaceInfo:
         """Return the namespace information of the file."""
-        _ns_parts = self.name.split(Core.NS_SEP)
-        return NamespaceInfo(
-            parts=tuple((part, level) for level, part in enumerate(_ns_parts, start=1)),
-            root=_ns_parts[0],
-            parent=_ns_parts[-2] if len(_ns_parts) > 2 else _ns_parts[0],
-            parent_full=Core.NS_SEP.join(_ns_parts[:-1]),
-            stem=_ns_parts[-1],
-            is_namespace=Core.NS_SEP in self.name,
-        )
+        if self._ns_info is None:
+            _ns_parts = self.name.split(Core.NS_SEP)
+            self._ns_info = NamespaceInfo(
+                parent_full=Core.NS_SEP.join(_ns_parts[:-1]),
+                parent=_ns_parts[-2] if len(_ns_parts) > 2 else _ns_parts[0],
+                parts=tuple((part, level) for level, part in enumerate(_ns_parts, start=1)),
+                root=_ns_parts[0],
+                is_namespace=Core.NS_SEP in self.name,
+            )
+        return self._ns_info
 
     @property
     def bullet_info(self) -> BulletInfo:
         """Return the bullet information of the file."""
-        return BulletInfo(
-            chars=len(self.content),
-            bullets=len(self.all_bullets),
-            empty_bullets=self.all_bullets.count(""),
-        )
+        if self._bullet_info is None:
+            self._bullet_info = BulletInfo(
+                chars=len(self.content),
+                bullets=len(self.all_bullets),
+                empty_bullets=self.all_bullets.count(""),
+            )
+        return self._bullet_info
 
-    def evaluate_file_type(self) -> str:
+    def _get_name(self) -> str:
+        """Process the filename to create a page title."""
+        name = self.path.stem.strip(self.context.ns_file_sep)
+        if self.path.parent.name == self.context.journal_dir:
+            try:
+                date_obj = datetime.strptime(name, self.context.journal_format.file).replace(tzinfo=UTC)
+                page_title = date_obj.strftime(self.context.journal_format.page)
+                if Core.DATE_ORDINAL_SUFFIX in self.context.journal_format.page_title:
+                    day_number = str(date_obj.day)
+                    day_with_ordinal = _append_ordinal_to_day(day_number)
+                    page_title = page_title.replace(day_number, day_with_ordinal, 1)
+                return page_title.replace("'", "")
+            except ValueError as e:
+                logger.warning(
+                    "Failed to parse date, key '%s', fmt `%s`: %s", name, self.context.journal_format.page, e
+                )
+                return name
+        return unquote(name).replace(self.context.ns_file_sep, Core.NS_SEP)
+
+    def _get_filetype(self) -> str:
         """Determine the file type based on the directory structure."""
         if (_result := self.context.filetype_map.get(self.path.parent.name)) and _result[0] != FileType.OTHER:
             return _result[0]
@@ -473,23 +451,25 @@ class LogseqFile:
 
     def extract_primary_data(self) -> Iterator[tuple[str, list[str]]]:
         """Extract primary data from the content."""
-        _masked_content = self.content
+        masked = self.content
         for prefix, regex in MASK_MAP.items():
-            _masked_content = regex.sub(f"__{prefix}__{uuid.uuid4()}__", _masked_content)
+            masked = regex.sub(f"__{prefix}__{uuid.uuid4()}__", masked)
         for prefix, regex in PRIMARY_DATA_MAP.items():
-            if regex.search(_masked_content):
-                yield prefix, regex.findall(_masked_content)
+            if result := regex.findall(masked):
+                yield prefix, result
         for prefix, regex in RAW_DATA_MAP.items():
-            if regex.search(self.content):
-                yield prefix, regex.findall(self.content)
+            if result := regex.findall(self.content):
+                yield prefix, result
 
     def extract_properties(self) -> Iterator[tuple[str, set[str]]]:
         """Extract page and block properties from the content."""
         page_props = set()
+        block_props = set()
         if self.primary_bullet and not self.primary_bullet.startswith("#"):
             page_props.update(ContentPatterns.PROPERTY.findall(self.primary_bullet))
-            self.content = "\n".join(self.all_bullets)
-        block_props = set(ContentPatterns.PROPERTY.findall(self.content))
+            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.all_bullets)))
+        else:
+            block_props.update(ContentPatterns.PROPERTY.findall(self.content))
         if block_builtin := block_props.intersection(BUILT_IN_PROPERTIES):
             yield Crit.Prop.BLOCK_BUILTIN, block_builtin
         if block_user := block_props.difference(BUILT_IN_PROPERTIES):
@@ -504,25 +484,22 @@ class LogseqFile:
         propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
         if propvalues:
             yield Crit.Prop.VALUES, propvalues
-        aliases = list(_process_aliases(raw)) if (raw := propvalues.get("alias")) else []
-        if aliases:
-            yield Crit.Content.ALIASES, aliases
+            aliases = list(_process_aliases(raw)) if (raw := propvalues.get("alias")) else []
+            if aliases:
+                yield Crit.Content.ALIASES, aliases
 
     def extract_patterns(self) -> Iterator[tuple[str, list[str]]]:
         """Process patterns in the content."""
         _temp_map = defaultdict(list)
         for ptn_cls in PATTERNS:
-            for k, v in ptn_cls.process_pattern_hierarchy(self.content):
+            for k, v in ptn_cls.process_hierarchy(self.content):
                 _temp_map[k].append(v)
         yield from _temp_map.items()
 
-    def _iter_pattern_split(self, maxsplit: int = 0) -> Iterator[tuple[int, str]]:
+    def _iter_pattern_split(self) -> Iterator[tuple[int, str]]:
         """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
 
         Iterate over sections of text separated by bullet markers.
-
-        Args:
-            maxsplit (int): Maximum number of splits. If 0, all sections are returned.
 
         Yields:
             Iterator[tuple[int, str]]: Sections of text with their respective indices.
@@ -530,8 +507,6 @@ class LogseqFile:
         """
         _count = 0
         for match in ContentPatterns.BULLET.finditer(self.content):
-            if maxsplit and _count >= maxsplit:
-                break
             if _count == 0:
                 yield _count, self.content[: match.start()].strip("\t \n")
                 _count += 1

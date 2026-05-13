@@ -1,5 +1,6 @@
 __pycache__
 ..playground/
+.venv/
 *.code-workspace
 *.dat
 *.json

@@ -219,16 +219,26 @@ def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
     )
 
 
-def setup_cache(args: Args, analyzer_dirs: LogseqAnalyzerDirs) -> tuple[Cache, FileIndex]:
+def _iter_files(graph_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
+    """Recursively iterate over files in the root directory."""
+    for root, dirs, files in Path.walk(graph_dir):
+        if root == graph_dir:
+            continue
+        if any(name in target_dirs for name in (root.name, root.parent.name)):
+            for file in files:
+                if Path(file).suffix == ".org":
+                    logger.info("Skipping org-mode file %s in %s", file, root)
+                    continue
+                yield root / file
+        else:
+            logger.info("Skipping directory %s outside target directories", root)
+            dirs.clear()
+
+
+def setup_cache(args: Args) -> tuple[Cache, FileIndex]:
     """Set up cache for the Logseq Analyzer."""
-    cache = Cache(
-        path=File(Path(Constant.CACHE_FILE), create=False).path,
-        target_dirs=set(analyzer_dirs.target.values()),
-        graph_dir=analyzer_dirs.graph.path,
-        graph_cache=args.graph_cache,
-    )
-    cache.open()
-    index = cache.initialize()
+    cache = Cache(path=File(Path(Constant.CACHE_FILE), create=False).path)
+    index = cache.reset() if args.graph_cache else cache.load()
     return cache, index
 
 
@@ -302,16 +312,17 @@ def run_app(arguments: ArgumentDict) -> None:
         },
     )
     _prog(50, "Setup cache...")
-    cache, index = setup_cache(args, analyzer_dirs)
+    cache, index = setup_cache(args)
     index.write_graph = args.write_graph
     _prog(60, "Process Logseq graph...")
-    for path in cache.iter_modified_files():
+    _files = _iter_files(analyzer_dirs.graph.path, set(analyzer_dirs.target.values()))
+    for path in cache.get_modified(_files):
         index.add(LogseqFile(path, context=_context))
     _prog(70, "Setup writer...")
     _writer = ReportWriter(ext=args.report_format, output_dir=analyzer_dirs.output.path)
     _prog(80, "Running core analysis on Logseq graph...")
     _analysis = analyze(args, index, analyzer_dirs, config_edns, journal_formats.page)
     _writer.write_reports(_analysis)
-    _prog(90, "Finalizing analysis...")
-    cache.close(index)
+    _prog(90, "Saving index to cache...")
+    cache.save(index)
     _prog(100, "Logseq Analyzer completed successfully.")

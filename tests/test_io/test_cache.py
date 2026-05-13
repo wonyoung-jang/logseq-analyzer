@@ -16,18 +16,11 @@ if TYPE_CHECKING:
 @pytest.fixture
 def cache() -> Iterator[Cache]:
     """Fixture to create a Cache object."""
-    cache = Cache(
-        Path(Constant.CACHE_FILE),
-        graph_dir=Path("test_graph"),
-        graph_cache=True,
-        target_dirs={"journals", "pages"},
-    )
-    cache.open()
+    cache = Cache(Path(Constant.CACHE_FILE))
     yield cache
-    cache.close(FileIndex())
+    cache.save(FileIndex())
 
 
 def test_cache_initialization(cache: Cache) -> None:
     """Test the initialization of the Cache class."""
     assert cache.path.exists()
-    assert cache.cache is not None

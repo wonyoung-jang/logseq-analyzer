@@ -32,6 +32,15 @@ class Crit(StrEnum):
         TAG = "content_tag"
         TAGGED_BACKLINK = "content_tagged_backlink"
 
+    class Prop(StrEnum):
+        """Criteria for properties in Logseq."""
+
+        BLOCK_BUILTIN = "property_block_builtin"
+        BLOCK_USER = "property_block_user"
+        PAGE_BUILTIN = "property_page_builtin"
+        PAGE_USER = "property_page_user"
+        VALUES = "property_values"
+
     class Code(StrEnum):
         """Criteria for code blocks in Logseq."""
 
@@ -97,15 +106,6 @@ class Crit(StrEnum):
         INTERNET = "external_link_internet"
         OTHER = "external_link_other"
 
-    class Prop(StrEnum):
-        """Criteria for properties in Logseq."""
-
-        BLOCK_BUILTIN = "property_block_builtin"
-        BLOCK_USER = "property_block_user"
-        PAGE_BUILTIN = "property_page_builtin"
-        PAGE_USER = "property_page_user"
-        VALUES = "property_values"
-
 
 class FileType(StrEnum):
     """File types for the Logseq Analyzer."""
@@ -127,7 +127,6 @@ class Format(StrEnum):
     """File formats used in the Logseq Analyzer."""
 
     MD = "md"
-    ORG = "org"
     TXT = "txt"
 
 

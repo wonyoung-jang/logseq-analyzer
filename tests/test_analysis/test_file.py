@@ -6,7 +6,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext, _format_bytes, _process_aliases
+from logseq_analyzer.domain.model import (
+    JournalFormats,
+    LogseqFile,
+    LogseqFileContext,
+    _format_bytes,
+    _process_aliases,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

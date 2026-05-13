@@ -15,7 +15,7 @@ def _write(path: Path, data: dict) -> None:
     """Write the data to a plain text file with the given prefix and count."""
     with path.open("w", encoding="utf-8") as f:
         f.write(f"{path.name}\n")
-        f.write(f"COUNT: {len(data)}\n\n")
+        f.write(f"COUNT: {len(data)}\n")
         _write_recursive(f, data, level=0)
 
 
@@ -24,6 +24,7 @@ def _write_recursive(f: TextIO, data: object, level: int = 0) -> None:
     if isinstance(data, dict):
         for key, vals in data.items():
             if level == 0:
+                f.write("-" * 180 + "\n")
                 f.write(f"KEY: {key}\n")
                 _write_toplevel(f, vals)
             elif isinstance(vals, (dict, list, set, tuple)):
@@ -50,13 +51,12 @@ def _write_toplevel(f: TextIO, vals: object) -> None:
                 _write_recursive(f, v, level=2)
             else:
                 f.write(f"\t{k:<60}: {v}\n")
-        f.write("\n" + "-" * 180 + "\n\n")
+        f.write("-" * 180 + "\n")
     elif isinstance(vals, (list, set, tuple)):
         f.write(f"VALUES ({len(vals)}):\n")
         f.writelines(f"\t{i}\t|\t{v}\n" for i, v in enumerate(vals, 1))
-        f.write("\n")
     else:
-        f.write(f"VAL: {vals}\n\n")
+        f.write(f"VAL: {vals}\n")
 
 
 @dataclass(slots=True)
