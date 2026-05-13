@@ -32,8 +32,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_TO_NODE_TYPE: frozenset[str] = frozenset((FileType.JOURNAL, FileType.PAGE))
-_ASSET_CRITERIA: frozenset[str] = frozenset((Crit.Emb.ASSET, Crit.Content.ASSETS))
 _DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset(("st", "nd", "rd", "th"))
 
 type _NsTree = dict[str, "_NsTree"]
@@ -169,22 +167,13 @@ class LogseqGraph:
             if not f.node.backlinked_ns_only:
                 f.node.backlinked_ns_only = True  # TODO: Refactor
                 f.node.backlinked = False  # TODO: Refactor
-        if f.filetype in _TO_NODE_TYPE:
+        if f.filetype in (FileType.JOURNAL, FileType.PAGE):
             f.node.determine(has_content=f.file_info.has_content)  # TODO: Refactor
 
     @property
     def report(self) -> dict:
         """Generate a report of the graph analysis."""
-        return {
-            Output.Dir.GRAPH: {
-                Output.File.GRAPH_ALL_LINKED_REFERENCES: self.linked_refs_count,
-                Output.File.GRAPH_ALL_DANGLING_LINKS: self.dangling_links_count,
-                Output.File.GRAPH_DANGLING_LINKS: self.dangling_links,
-                Output.File.GRAPH_UNIQUE_ALIASES: self.aliases,
-                Output.File.GRAPH_UNIQUE_LINKED_REFERENCES_NS: self.linked_refs_ns,
-                Output.File.GRAPH_UNIQUE_LINKED_REFERENCES: self.linked_refs,
-            }
-        }
+        return {Output.Dir.GRAPH: {k: getattr(self, k) for k in self.__slots__ if k not in ("index")}}
 
 
 @dataclass(slots=True)
@@ -256,8 +245,8 @@ class LogseqAssets:
         """Process a file to find mentions of assets and determine if they are backlinked."""
         if not (f_data := f.data):
             return
-        for criteria in _ASSET_CRITERIA:
-            self._mentions.update(f_data.get(criteria, []))
+        self._mentions.update(f_data.get(Crit.Emb.ASSET, []))
+        self._mentions.update(f_data.get(Crit.Content.ASSETS, []))
         if not self._mentions:
             return
         unlinked_assets = list(self.index.yield_backlinked_assets(backlinked=False))
@@ -274,14 +263,7 @@ class LogseqAssets:
     def report(self) -> dict:
         """Generate a report of the asset analysis."""
         return {
-            Output.Dir.ASSETS: {
-                Output.File.HLS_ASSET_MAPPING: self.asset_mapping,
-                Output.File.HLS_FORMATTED_BULLETS: self.hls_bullets,
-                Output.File.HLS_NOT_BACKLINKED: self.not_backlinked_hls,
-                Output.File.HLS_BACKLINKED: self.backlinked_hls,
-                Output.File.ASSETS_BACKLINKED: self.backlinked,
-                Output.File.ASSETS_NOT_BACKLINKED: self.not_backlinked,
-            },
+            Output.Dir.ASSETS: {k: getattr(self, k) for k in self.__slots__ if k not in ("index", "_mentions")},
         }
 
 
@@ -364,16 +346,9 @@ class LogseqNamespaces:
         """Generate a report of the namespace analysis."""
         return {
             Output.Dir.NAMESPACES: {
-                Output.File.NS_CONFLICTS_DANGLING: self.conflicts_dangling,
-                Output.File.NS_CONFLICTS_NON_NAMESPACE: self.conflicts_non_namespace,
-                Output.File.NS_CONFLICTS_PARENT_DEPTH: self.conflicts_parent_depth,
-                Output.File.NS_CONFLICTS_PARENT_UNIQUE: self.conflicts_parent_unique,
-                Output.File.NS_DETAILS: self.details,
-                Output.File.NS_HIERARCHY: self.tree,
-                Output.File.NS_PARTS: self.parts,
-                Output.File.NS_UNIQUE_PARTS: self.unique_parts,
-                Output.File.NS_UNIQUE_PER_LEVEL: self.unique_ns_per_level,
-                Output.File.NS_QUERIES: self.queries,
+                k: getattr(self, k)
+                for k in self.__slots__
+                if k not in ("index", "dangling_links", "_part_levels", "_part_entries")
             }
         }
 
@@ -440,12 +415,9 @@ class LogseqJournals:
         """Get a report of the journal processing results."""
         return {
             Output.Dir.JOURNALS: {
-                Output.File.JOURNALS_ALL: self.all_,
-                Output.File.JOURNALS_DANGLING: self.dangling,
-                Output.File.JOURNALS_EXISTING: self.existing,
-                Output.File.JOURNALS_TIMELINE: self.timeline,
-                Output.File.JOURNALS_MISSING: self.missing,
-                Output.File.JOURNALS_TIMELINE_STATS: self.stat,
+                k: getattr(self, k)
+                for k in self.__slots__
+                if k not in ("index", "journal_page_format", "dangling_links")
             }
         }
 

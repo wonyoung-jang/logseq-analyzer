@@ -118,20 +118,7 @@ class Args:
     @property
     def report(self) -> dict:
         """Generate a report of the arguments."""
-        return {
-            Output.Dir.META: {
-                Output.File.ARGUMENTS: {
-                    "global_config": self.global_config,
-                    "graph_cache": self.graph_cache,
-                    "graph_folder": self.graph_folder,
-                    "move_bak": self.move_bak,
-                    "move_recycle": self.move_recycle,
-                    "move_unlinked_assets": self.move_unlinked_assets,
-                    "report_format": self.report_format,
-                    "write_graph": self.write_graph,
-                },
-            }
-        }
+        return {Output.Dir.META: {Output.File.ARGUMENTS: {k: getattr(self, k) for k in self.__slots__}}}
 
 
 def _init_logging() -> None:

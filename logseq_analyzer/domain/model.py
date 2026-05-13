@@ -75,16 +75,8 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     )
 )
-_SI_UNITS: Sequence[str] = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-_IEC_UNITS: Sequence[str] = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
+_SIZE_UNITS: Sequence[str] = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
 _ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
-
-
-class SizeUnit(StrEnum):
-    """Enumeration for size units."""
-
-    SI = "si"  # Powers of 1000
-    IEC = "iec"  # Powers of 1024
 
 
 class Node(StrEnum):
@@ -134,26 +126,23 @@ def _append_ordinal_to_day(day: str) -> str:
     return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
 
 
-def _format_bytes(size: int, system: str = SizeUnit.SI, precision: int = 2) -> str:
-    """Convert a byte value into a human-readable string using SI or IEC units.
+def _format_bytes(size: int) -> str:
+    """Convert a byte value into a human-readable string using IEC units.
 
     Args:
         size (int): Number of bytes.
-        system (str): 'si' for powers of 1000, 'iec' for powers of 1024.
-        precision (int): Number of decimal places.
 
     Returns:
-        str: Human-readable string, e.g. '1.23 MB' or '1.20 MiB'.
+        str: Human-readable string, e.g. '1.23 MB'.
 
     """
     if size < 0:
-        msg = "size_bytes must be non-negative"
+        msg = "size must be non-negative"
         raise ValueError(msg)
-    units, base = (_IEC_UNITS, 1024) if system == SizeUnit.IEC else (_SI_UNITS, 1000)
-    if size < base:
-        return f"{size} {units[0]}"
-    idx = min(int(math.log(size, base)), len(units) - 1)
-    return f"{size / base**idx:.{precision}f} {units[idx]}"
+    if size < 1024:
+        return f"{size} {_SIZE_UNITS[0]}"
+    idx = min(int(math.log(size, 1024)), len(_SIZE_UNITS) - 1)
+    return f"{size / 1024**idx:.2f} {_SIZE_UNITS[idx]}"
 
 
 @dataclass(slots=True)
