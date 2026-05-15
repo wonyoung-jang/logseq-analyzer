@@ -1,16 +1,11 @@
 """Tests for LogseqJournals."""
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from logseq_analyzer.service.analysis import LogseqNamespaces
 
-if TYPE_CHECKING:
-    from logseq_analyzer.domain.model import FileIndex
-
 
 @pytest.fixture
-def logseq_namespaces(file_index: FileIndex) -> LogseqNamespaces:
+def logseq_namespaces() -> LogseqNamespaces:
     """Fixture for LogseqNamespaces."""
-    return LogseqNamespaces(file_index, dangling_links=set())
+    return LogseqNamespaces()

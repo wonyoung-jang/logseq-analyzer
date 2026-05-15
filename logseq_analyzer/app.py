@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import DEFAULT_LOGSEQ_CONFIG, ConfigEdns, get_edn_from_file
@@ -14,20 +14,13 @@ from logseq_analyzer.adapter.filemover import LogseqFileMover
 from logseq_analyzer.adapter.filesystem import File, LogseqAnalyzerDirs
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext
-from logseq_analyzer.service.analysis import (
-    LogseqAssets,
-    LogseqGraph,
-    LogseqJournals,
-    LogseqNamespaces,
-    LogseqSummarizer,
-)
-from logseq_analyzer.utils.enums import FileType, Output, TargetDir
+from logseq_analyzer.service.analysis import LogseqAnalyzer
+from logseq_analyzer.utils.enums import Output
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from logseq_analyzer.domain.model import FileIndex
-    from logseq_analyzer.entrypoints.cli.cli import ArgumentDict
 
 logger = logging.getLogger(__name__)
 
@@ -86,20 +79,6 @@ class LogseqGraphStructure(StrEnum):
     CONFIG_EDN = "config.edn"
     LOGSEQ = "logseq"
     RECYCLE = ".recycle"
-
-
-class ArgumentDict(TypedDict, total=False):
-    """Typed dictionary for command line arguments."""
-
-    global_config: str
-    graph_cache: bool
-    graph_folder: str
-    move_bak: bool
-    move_recycle: bool
-    move_unlinked_assets: bool
-    report_format: str
-    write_graph: bool
-    progress_callback: Callable
 
 
 @dataclass(slots=True)
@@ -162,11 +141,8 @@ def _setup_logseq_paths(args: Args) -> tuple[LogseqAnalyzerDirs, ConfigEdns]:
         global_edn=global_edn,
     )
     target_dirs = config_edns.get_target_dirs()
-    File(graph.path / target_dirs[TargetDir.ASSET], is_dir=True)
-    File(graph.path / target_dirs[TargetDir.DRAW], is_dir=True)
-    File(graph.path / target_dirs[TargetDir.JOURNAL], is_dir=True)
-    File(graph.path / target_dirs[TargetDir.PAGE], is_dir=True)
-    File(graph.path / target_dirs[TargetDir.WHITEBOARD], is_dir=True)
+    for dir_name, _, _ in target_dirs.values():
+        File(graph.path / dir_name, is_dir=True)
     analyzer_dirs = LogseqAnalyzerDirs(
         graph=graph,
         logseq=logseq,
@@ -193,17 +169,6 @@ def _cljs_date_to_py(cljs_format: str) -> str:
         return _DATETIME_TOKEN_MAP.get(token, token)
 
     return _DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
-
-
-def _setup_journal_formats(config_edns: ConfigEdns) -> JournalFormats:
-    """Set up journal formats."""
-    journal_file_fmt = config_edns.get_file_name_format()
-    journal_page_fmt = config_edns.get_page_title_format()
-    return JournalFormats(
-        file=_cljs_date_to_py(journal_file_fmt),
-        page=_cljs_date_to_py(journal_page_fmt),
-        page_title=journal_page_fmt,
-    )
 
 
 def _iter_files(graph_dir: Path, target_dirs: set[str]) -> Iterator[Path]:
@@ -233,71 +198,61 @@ def analyze(
     yield args.report
     yield config_edns.report
     yield analyzer_dirs.report
-    logseq_graph = LogseqGraph(index)
-    logseq_assets = LogseqAssets(index)
-    yield LogseqNamespaces(index, logseq_graph.dangling_links).report
-    yield LogseqJournals(index, logseq_graph.dangling_links, journal_page_fmt).report
+    analyzer = LogseqAnalyzer(index, journal_page_fmt)
+    analyzer.process()
+    yield analyzer.graph.report
+    yield analyzer.asset.report
+    yield analyzer.namespace.report
+    yield analyzer.journal.report
+    yield analyzer.summary.report
     yield LogseqFileMover(
         should_move_bak=args.move_bak,
         should_move_recycle=args.move_recycle,
         should_move_unlinked_assets=args.move_unlinked_assets,
-        unlinked_assets=logseq_assets.not_backlinked,
+        unlinked_assets=analyzer.asset.not_backlinked,
         del_assets=analyzer_dirs.del_assets.path,
         del_bak=analyzer_dirs.del_bak.path,
         del_recycle=analyzer_dirs.del_recycle.path,
         bak_dir=analyzer_dirs.bak.path,
         recycle_dir=analyzer_dirs.recycle.path,
     ).report
-    yield LogseqSummarizer(index).report
-    yield logseq_graph.report
-    yield logseq_assets.report
     idx_report = index.report
+    idx_report[Output.Dir.INDEX][Output.File.GRAPH_DATA] = {f.name: f.data for f in index}
     if args.write_graph:
-        idx_report[Output.File.GRAPH_CONTENT] = {f: f.content for f in index}
-        idx_report[Output.File.GRAPH_BULLETS] = {f: f.all_bullets for f in index}
+        idx_report[Output.Dir.INDEX][Output.File.GRAPH_CONTENT] = {f.name: f.content for f in index}
+        idx_report[Output.Dir.INDEX][Output.File.GRAPH_BULLETS] = {f.name: f.all_bullets for f in index}
     yield idx_report
 
 
-def run_app(arguments: ArgumentDict) -> None:
+def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
     _init_logging()
-    _prog = arguments.pop("progress_callback", lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))
+    _prog = progress_callback or (lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))
     _prog(10, "Starting Logseq Analyzer...")
-    args = Args(
-        global_config=arguments.get("global_config", ""),
-        graph_cache=arguments.get("graph_cache", False),
-        graph_folder=arguments.get("graph_folder", ""),
-        move_bak=arguments.get("move_bak", False),
-        move_recycle=arguments.get("move_recycle", False),
-        move_unlinked_assets=arguments.get("move_unlinked_assets", False),
-        report_format=arguments.get("report_format", ".txt"),
-        write_graph=arguments.get("write_graph", False),
-    )
+    args = Args(**arguments)
     _prog(30, "Setting up Logseq Analyzer configurations...")
     analyzer_dirs, config_edns = _setup_logseq_paths(args)
-    journal_formats = _setup_journal_formats(config_edns)
+    journal_formats = JournalFormats(
+        file=_cljs_date_to_py(config_edns.filename_fmt),
+        page=_cljs_date_to_py(config_edns.pagetitle_fmt),
+        page_title=config_edns.pagetitle_fmt,
+    )
+    logger.info("JournalFormats: %s", journal_formats)
     _prog(40, "Configure Logseq Analyzer settings...")
     _context = LogseqFileContext(
         now_ts=datetime.now(tz=UTC).timestamp(),
         journal_format=journal_formats,
         ns_file_sep=config_edns.get_ns_sep(),
-        journal_dir=analyzer_dirs.target[TargetDir.JOURNAL],
         graph_path=analyzer_dirs.graph.path,
-        filetype_map={
-            analyzer_dirs.target[TargetDir.ASSET]: (FileType.ASSET, FileType.SUB_ASSET),
-            analyzer_dirs.target[TargetDir.DRAW]: (FileType.DRAW, FileType.SUB_DRAW),
-            analyzer_dirs.target[TargetDir.JOURNAL]: (FileType.JOURNAL, FileType.SUB_JOURNAL),
-            analyzer_dirs.target[TargetDir.PAGE]: (FileType.PAGE, FileType.SUB_PAGE),
-            analyzer_dirs.target[TargetDir.WHITEBOARD]: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
-        },
+        target=analyzer_dirs.target,
     )
     _prog(50, "Setup cache...")
     cache = Cache(path=File(Path(Constant.CACHE_FILE), create=False).path)
     index = cache.reset() if args.graph_cache else cache.load()
     _prog(60, "Process Logseq graph...")
-    _files = _iter_files(analyzer_dirs.graph.path, set(analyzer_dirs.target.values()))
+    _files = _iter_files(analyzer_dirs.graph.path, {dir_name for dir_name, _, _ in analyzer_dirs.target.values()})
     for path in cache.get_modified(_files):
-        index.add(LogseqFile(path, context=_context))
+        index.add(LogseqFile(path, ctx=_context))
     _prog(70, "Setup writer...")
     _writer = ReportWriter(ext=args.report_format, output_dir=analyzer_dirs.output.path)
     _prog(80, "Running core analysis on Logseq graph...")

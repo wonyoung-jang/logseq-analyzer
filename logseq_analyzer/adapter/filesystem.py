@@ -92,7 +92,7 @@ class LogseqAnalyzerDirs:
     del_bak: File
     del_recycle: File
     del_assets: File
-    target: dict[str, str]
+    target: dict[str, tuple[str, str, str]]
     output: File
     config_global: File | None = None
 

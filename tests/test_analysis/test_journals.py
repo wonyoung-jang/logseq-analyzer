@@ -1,20 +1,16 @@
 """Tests for LogseqJournals."""
 
 import datetime
-from typing import TYPE_CHECKING
 
 import pytest
 
 from logseq_analyzer.service.analysis import LogseqJournals
 
-if TYPE_CHECKING:
-    from logseq_analyzer.domain.model import FileIndex
-
 
 @pytest.fixture
-def logseq_journals(file_index: FileIndex) -> LogseqJournals:
+def logseq_journals() -> LogseqJournals:
     """Fixture for LogseqJournals."""
-    return LogseqJournals(file_index, dangling_links=set(), journal_page_format="")
+    return LogseqJournals()
 
 
 def test_len(logseq_journals: LogseqJournals) -> None:

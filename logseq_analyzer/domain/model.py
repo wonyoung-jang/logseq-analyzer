@@ -7,11 +7,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from logseq_analyzer.utils.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output
+from logseq_analyzer.utils.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output, TargetDir
 from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
@@ -57,7 +58,6 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "logseq.table.stripes",
         "logseq.table.version",
         "logseq.tldraw.page",
-        "logseq.tldraw.shape",
         "logseq.tldraw.shape",
         "ls-type",
         "macro",
@@ -166,7 +166,7 @@ class FileIndex:
             return f in self._files
         if isinstance(f, str):
             return f in self._name_to_files
-        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
+        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile | str"
         raise TypeError(msg)
 
     def get_from_name(self, name: str) -> list[LogseqFile]:
@@ -189,7 +189,7 @@ class FileIndex:
             for target in self._name_to_files.pop(f, []):
                 self._remove_file(target)
             return
-        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile, int, str, or Path."
+        msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile | str"
         raise TypeError(msg)
 
     def _remove_file(self, f: LogseqFile) -> None:
@@ -232,7 +232,6 @@ class FileIndex:
         """Generate a report of the indexed files."""
         return {
             Output.Dir.INDEX: {
-                Output.File.GRAPH_DATA: {file: {k: v for k, v in file.data.items() if v} for file in self},
                 Output.File.IDX_FILES: self._files,
                 Output.File.IDX_NAME_TO_FILES: self._name_to_files,
             }
@@ -243,12 +242,23 @@ class FileIndex:
 class NodeType:
     """Class to hold node type data."""
 
+    has_content: bool = False  # TODO: "mutable"
     has_backlinks: bool = False  # TODO: "mutable"
     backlinked: bool = False  # TODO: "mutable"
     backlinked_ns_only: bool = False  # TODO: "mutable"
     nodetype: str = Node.OTHER  # TODO: "mutable"
 
-    def determine(self, *, has_content: bool) -> None:
+    def mark_backlinked(self) -> None:
+        """Mark this node as backlinked."""
+        self.backlinked = True
+        self.backlinked_ns_only = False
+
+    def mark_backlinked_ns_only(self) -> None:
+        """Mark this node as backlinked via namespace only."""
+        self.backlinked = False
+        self.backlinked_ns_only = True
+
+    def determine(self) -> None:
         """Determine node type based on summary data."""
         match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True) | (True, True, False) | (True, False, True):
@@ -258,9 +268,9 @@ class NodeType:
             case (False, True, True) | (False, True, False):
                 self.nodetype = Node.LEAF
             case (False, False, True):
-                self.nodetype = Node.ORPHAN_NAMESPACE if has_content else Node.ORPHAN_NAMESPACE_TRUE
+                self.nodetype = Node.ORPHAN_NAMESPACE if self.has_content else Node.ORPHAN_NAMESPACE_TRUE
             case (False, False, False):
-                self.nodetype = Node.ORPHAN_GRAPH if has_content else Node.ORPHAN_TRUE
+                self.nodetype = Node.ORPHAN_GRAPH if self.has_content else Node.ORPHAN_TRUE
 
 
 @dataclass(slots=True)
@@ -270,9 +280,8 @@ class LogseqFileContext:
     now_ts: float
     journal_format: JournalFormats
     ns_file_sep: str
-    journal_dir: str
     graph_path: Path
-    filetype_map: dict
+    target: dict
 
 
 @dataclass(slots=True)
@@ -308,6 +317,14 @@ class NamespaceInfo:
     is_namespace: bool  # TODO: "mutable"
     children: set[str] = field(default_factory=set)  # TODO: "mutable"
 
+    def mark_as_namespace_root(self) -> None:
+        """Mark this page as a namespace root (does not contain NS_SEP itself)."""
+        self.is_namespace = True
+
+    def add_child(self, name: str) -> None:
+        """Register a child namespace page."""
+        self.children.add(name)
+
     @property
     def size(self) -> int:
         """Return the number of parts in the namespace."""
@@ -333,7 +350,7 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path: Path
-    context: LogseqFileContext = field(repr=False)
+    ctx: LogseqFileContext = field(repr=False)
     name: str = field(init=False)
     content: str = field(init=False, repr=False)
     data: dict[str, Iterable[str]] = field(default_factory=dict, repr=False)
@@ -349,7 +366,7 @@ class LogseqFile:
         """Initialize the LogseqFile object."""
         try:
             self.content = self.path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
+        except OSError, ValueError:
             self.content = ""
         self.name = self._get_name()
         self.filetype = self._get_filetype()
@@ -359,10 +376,11 @@ class LogseqFile:
                 if bullet and i == 0:
                     self.primary_bullet = bullet
         if self.file_info.has_content:
-            self.data.update(self.extract_primary_data())
-            self.data.update(self.extract_aliases_and_propvalues())
-            self.data.update(self.extract_properties())
-            self.data.update(self.extract_patterns())
+            self.data.update(self._extract_primary_data())
+            self.data.update(self._extract_aliases_and_propvalues())
+            self.data.update(self._extract_properties())
+            self.data.update(self._extract_patterns())
+            self.node.has_content = bool(self.content)
             self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
@@ -397,11 +415,11 @@ class LogseqFile:
     def ls_url(self) -> str:
         """Return the Logseq URL."""
         uri_path = Path(self.uri)
-        target_segment = uri_path.parts[len(uri_path.parts) - len(self.context.graph_path.parts)]
+        target_segment = uri_path.parts[len(uri_path.parts) - len(self.ctx.graph_path.parts)]
         target_segments_to_final = target_segment[:-1]
         if target_segments_to_final not in ("page", "block-id"):
             return ""
-        graph_path = str(self.context.graph_path).replace("\\", "/")
+        graph_path = str(self.ctx.graph_path).replace("\\", "/")
         prefix = f"file:///{graph_path}/{target_segment}/"
         if not self.uri.startswith(prefix):
             logger.warning("URI does not start with the expected prefix: %s", prefix)
@@ -415,8 +433,8 @@ class LogseqFile:
         if self._file_info is None:
             _stat = self.path.stat()
             self._file_info = FileInfo(
-                time_existed=self.context.now_ts - _stat.st_birthtime,
-                time_unmodified=self.context.now_ts - _stat.st_mtime,
+                time_existed=self.ctx.now_ts - _stat.st_birthtime,
+                time_unmodified=self.ctx.now_ts - _stat.st_mtime,
                 date_created=datetime.fromtimestamp(_stat.st_birthtime, tz=UTC).isoformat(),
                 date_modified=datetime.fromtimestamp(_stat.st_mtime, tz=UTC).isoformat(),
                 size=_stat.st_size,
@@ -450,35 +468,86 @@ class LogseqFile:
             )
         return self._bullet_info
 
+    def yield_linkedrefs(self) -> Iterator[str]:
+        """Yield linked references from the file."""
+        yield from chain(
+            self.get_data(Crit.Content.ALIASES),
+            self.get_data(Crit.Content.DRAW),
+            self.get_data(Crit.Content.PAGE_REF),
+            self.get_data(Crit.Content.TAG),
+            self.get_data(Crit.Content.TAGGED_BACKLINK),
+            self.get_data(Crit.Prop.PAGE_BUILTIN),
+            self.get_data(Crit.Prop.PAGE_USER),
+            self.get_data(Crit.Prop.BLOCK_BUILTIN),
+            self.get_data(Crit.Prop.BLOCK_USER),
+        )
+
+    def yield_asset_mentions(self) -> Iterator[str]:
+        """Yield asset mentions from the file."""
+        yield from chain(
+            self.get_data(Crit.Content.ASSETS),
+            self.get_data(Crit.Emb.ASSET),
+        )
+
+    def yield_hls_bullet(self) -> Iterator[str]:
+        """Yield HLS bullets from the file."""
+        for bullet in self.all_bullets:
+            if not bullet.strip().startswith("[:span]"):
+                continue
+            hl_page, id_, hl_stamp = "", "", ""
+            for propvalue in ContentPatterns.PROPERTY_VALUE.finditer(bullet):
+                key = propvalue.group(1)
+                val = propvalue.group(2).strip()
+                match key:
+                    case "hl-page":
+                        hl_page = val
+                    case "id":
+                        id_ = val
+                    case "hl-stamp":
+                        hl_stamp = val
+            if all((hl_page, id_, hl_stamp)):
+                yield f"{hl_page}_{id_}_{hl_stamp}"
+
+    def get_data(self, key: str) -> Iterable[str]:
+        """Get data by key."""
+        return self.data.get(key, ())
+
+    def set_filetype(self, filetype: str) -> None:
+        """Set the file type of the file."""
+        self.filetype = filetype
+
+    def set_nodetype(self) -> None:
+        """Determine the node type of the file."""
+        if self.filetype in (FileType.JOURNAL, FileType.PAGE):
+            self.node.determine()
+
     def _get_name(self) -> str:
         """Process the filename to create a page title."""
-        name = self.path.stem.strip(self.context.ns_file_sep)
-        if self.path.parent.name == self.context.journal_dir:
+        name = self.path.stem.strip(self.ctx.ns_file_sep)
+        if self.path.parent.name == self.ctx.target[TargetDir.JOURNAL][0]:
             try:
-                date_obj = datetime.strptime(name, self.context.journal_format.file).replace(tzinfo=UTC)
-                page_title = date_obj.strftime(self.context.journal_format.page)
-                if Core.DATE_ORDINAL_SUFFIX in self.context.journal_format.page_title:
+                date_obj = datetime.strptime(name, self.ctx.journal_format.file).replace(tzinfo=UTC)
+                page_title = date_obj.strftime(self.ctx.journal_format.page)
+                if Core.DATE_ORDINAL_SUFFIX in self.ctx.journal_format.page_title:
                     day_number = str(date_obj.day)
                     day_with_ordinal = _append_ordinal_to_day(day_number)
                     page_title = page_title.replace(day_number, day_with_ordinal, 1)
                 return page_title.replace("'", "")
             except ValueError as e:
-                logger.warning(
-                    "Failed to parse date, key '%s', fmt `%s`: %s", name, self.context.journal_format.page, e
-                )
+                logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, self.ctx.journal_format.page, e)
                 return name
-        return unquote(name).replace(self.context.ns_file_sep, Core.NS_SEP)
+        return unquote(name).replace(self.ctx.ns_file_sep, Core.NS_SEP)
 
     def _get_filetype(self) -> str:
         """Determine the file type based on the directory structure."""
-        if (_result := self.context.filetype_map.get(self.path.parent.name)) and _result[0] != FileType.OTHER:
-            return _result[0]
-        for key, _result in self.context.filetype_map.items():
-            if key in self.path.parts:
-                return _result[1]
+        if _result := self.ctx.target.get(self.path.parent.name):
+            return _result[1]
+        for k, v in self.ctx.target.items():
+            if k in self.path.parts:
+                return v[2]
         return FileType.OTHER
 
-    def extract_primary_data(self) -> Iterator[tuple[str, list[str]]]:
+    def _extract_primary_data(self) -> Iterator[tuple[str, Iterable[str]]]:
         """Extract primary data from the content."""
         masked = self.content
         for prefix, regex in MASK_MAP.items():
@@ -490,13 +559,13 @@ class LogseqFile:
             if result := regex.findall(self.content):
                 yield prefix, result
 
-    def extract_properties(self) -> Iterator[tuple[str, set[str]]]:
+    def _extract_properties(self) -> Iterator[tuple[str, Iterable[str]]]:
         """Extract page and block properties from the content."""
         page_props = set()
         block_props = set()
         if self.primary_bullet and not self.primary_bullet.startswith("#"):
             page_props.update(ContentPatterns.PROPERTY.findall(self.primary_bullet))
-            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.all_bullets)))
+            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.all_bullets[1:])))
         else:
             block_props.update(ContentPatterns.PROPERTY.findall(self.content))
         if block_builtin := block_props.intersection(BUILT_IN_PROPERTIES):
@@ -508,16 +577,16 @@ class LogseqFile:
         if page_user := page_props.difference(BUILT_IN_PROPERTIES):
             yield Crit.Prop.PAGE_USER, page_user
 
-    def extract_aliases_and_propvalues(self) -> Iterator[tuple[str, list[str] | dict[str, str]]]:
+    def _extract_aliases_and_propvalues(self) -> Iterator[tuple[str, Iterable[str]]]:
         """Extract aliases and properties from the content."""
-        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
-        if propvalues:
+        if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(self.content)):
             yield Crit.Prop.VALUES, propvalues
-            aliases = list(_process_aliases(raw)) if (raw := propvalues.get("alias")) else []
-            if aliases:
-                yield Crit.Content.ALIASES, aliases
+            alias_raw = propvalues.get("alias", "")
+            alias = list(_process_aliases(alias_raw)) if alias_raw else []
+            if alias:
+                yield Crit.Content.ALIASES, alias
 
-    def extract_patterns(self) -> Iterator[tuple[str, list[str]]]:
+    def _extract_patterns(self) -> Iterator[tuple[str, Iterable[str]]]:
         """Process patterns in the content."""
         _temp_map = defaultdict(list)
         for ptn_cls in PATTERNS:

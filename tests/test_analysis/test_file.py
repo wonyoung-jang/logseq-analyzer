@@ -57,16 +57,15 @@ def logseq_file_context() -> LogseqFileContext:
             page_title="{{name}}",
         ),
         ns_file_sep="__",
-        journal_dir="journals",
         graph_path=Path("test_graph"),
-        filetype_map={},
+        target={},
     )
 
 
 @pytest.fixture
 def logseq_file(temp_file: str, logseq_file_context: LogseqFileContext) -> LogseqFile:
     """Fixture to create a LogseqFile object using a temporary file."""
-    return LogseqFile(Path(temp_file), context=logseq_file_context)
+    return LogseqFile(Path(temp_file), ctx=logseq_file_context)
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,6 @@
 import logging
 import shutil
 from dataclasses import dataclass, field
-from enum import StrEnum
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -16,15 +15,6 @@ if TYPE_CHECKING:
     from logseq_analyzer.domain.model import LogseqFile
 
 logger = logging.getLogger(__name__)
-
-
-class Moved(StrEnum):
-    """Moved files and directories in the Logseq Analyzer."""
-
-    ASSETS = "assets"
-    BAK = "bak"
-    RECYCLE = "recycle"
-    SIMULATED_PREFIX = "======== Simulated only ========"
 
 
 @dataclass(slots=True)
@@ -58,9 +48,9 @@ class LogseqFileMover:
         return {
             Output.Dir.MOVED_FILES: {
                 Output.File.MOVED_FILES: {
-                    Moved.ASSETS: self.moved_unlinked_assets,
-                    Moved.BAK: self.moved_bak,
-                    Moved.RECYCLE: self.moved_recycle,
+                    "assets": self.moved_unlinked_assets,
+                    "bak": self.moved_bak,
+                    "recycle": self.moved_recycle,
                 }
             }
         }
@@ -83,7 +73,7 @@ def _move(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
     if not names:
         return names
     if not move:
-        return [Moved.SIMULATED_PREFIX, *names]
+        return ["======== Simulated only ========", *names]
     for src in _paths:
         dest = target_dir / src.name
         try:

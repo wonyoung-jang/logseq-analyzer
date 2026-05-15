@@ -15,6 +15,39 @@ class Core(StrEnum):
     NS_SEP = "/"
 
 
+class Format(StrEnum):
+    """File formats used in the Logseq Analyzer."""
+
+    MD = "md"
+    TXT = "txt"
+
+
+class TargetDir(StrEnum):
+    """Target directories for the Logseq Analyzer."""
+
+    ASSET = "assets"
+    DRAW = "draws"
+    JOURNAL = "journals"
+    PAGE = "pages"
+    WHITEBOARD = "whiteboards"
+
+
+class FileType(StrEnum):
+    """File types for the Logseq Analyzer."""
+
+    ASSET = "asset"
+    DRAW = "draw"
+    JOURNAL = "journal"
+    OTHER = "other"
+    PAGE = "page"
+    SUB_ASSET = "sub_asset"
+    SUB_DRAW = "sub_draw"
+    SUB_JOURNAL = "sub_journal"
+    SUB_PAGE = "sub_page"
+    SUB_WHITEBOARD = "sub_whiteboard"
+    WHITEBOARD = "whiteboard"
+
+
 class Crit:
     """Criteria for Logseq Analyzer."""
 
@@ -105,39 +138,6 @@ class Crit:
         ALIAS = "external_link_alias"
         INTERNET = "external_link_internet"
         OTHER = "external_link_other"
-
-
-class FileType(StrEnum):
-    """File types for the Logseq Analyzer."""
-
-    ASSET = "asset"
-    DRAW = "draw"
-    JOURNAL = "journal"
-    OTHER = "other"
-    PAGE = "page"
-    SUB_ASSET = "sub_asset"
-    SUB_DRAW = "sub_draw"
-    SUB_JOURNAL = "sub_journal"
-    SUB_PAGE = "sub_page"
-    SUB_WHITEBOARD = "sub_whiteboard"
-    WHITEBOARD = "whiteboard"
-
-
-class Format(StrEnum):
-    """File formats used in the Logseq Analyzer."""
-
-    MD = "md"
-    TXT = "txt"
-
-
-class TargetDir(StrEnum):
-    """Target directories for the Logseq Analyzer."""
-
-    ASSET = "assets"
-    DRAW = "draws"
-    JOURNAL = "journals"
-    PAGE = "pages"
-    WHITEBOARD = "whiteboards"
 
 
 class Output:

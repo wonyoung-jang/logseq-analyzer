@@ -1,13 +1,9 @@
 """Argument parsing and CLI entry point for Logseq Analyzer."""
 
 import argparse
-from typing import TYPE_CHECKING, cast
-
-if TYPE_CHECKING:
-    from logseq_analyzer.app import ArgumentDict
 
 
-def get_cli_args() -> ArgumentDict:
+def get_cli_args() -> dict:
     """Parse command line arguments and set them as attributes."""
     parser = argparse.ArgumentParser(description="Logseq Analyzer")
     parser.add_argument(
@@ -60,4 +56,4 @@ def get_cli_args() -> ArgumentDict:
         help="write all graph content to output folder (warning: may result in large file)",
         default=False,
     )
-    return cast("ArgumentDict", vars(parser.parse_args()))
+    return vars(parser.parse_args())

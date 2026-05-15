@@ -1,16 +1,11 @@
 """Tests for LogseqGraph."""
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from logseq_analyzer.service.analysis import LogseqGraph
 
-if TYPE_CHECKING:
-    from logseq_analyzer.domain.model import FileIndex
-
 
 @pytest.fixture
-def logseq_graph(file_index: FileIndex) -> LogseqGraph:
+def logseq_graph() -> LogseqGraph:
     """Fixture for LogseqGraph."""
-    return LogseqGraph(file_index)
+    return LogseqGraph()

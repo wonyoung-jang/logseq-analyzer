@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Core, Output, TargetDir
+from logseq_analyzer.utils.enums import Core, FileType, Output, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -45,37 +45,49 @@ class ConfigEdns:
     user_edn: dict = field(default_factory=dict)
     global_edn: dict = field(default_factory=dict)
 
-    def get_target_dirs(self) -> dict[str, str]:
+    def get_target_dirs(self) -> dict[str, tuple[str, str, str]]:
         """Get the target directories for Logseq.
 
         Returns:
-            dict[str, str]: A dictionary containing the target directories.
+            dict[str, tuple[str, str, str]]: A dictionary containing the target directories.
 
         """
         return {
-            TargetDir.ASSET: TargetDir.ASSET,
-            TargetDir.DRAW: TargetDir.DRAW,
-            TargetDir.PAGE: str(self.config.get(Edn.PAGES_DIR, TargetDir.PAGE)),
-            TargetDir.JOURNAL: str(self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL)),
-            TargetDir.WHITEBOARD: str(self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD)),
+            TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
+            TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
+            TargetDir.PAGE: (str(self.config.get(Edn.PAGES_DIR, TargetDir.PAGE)), FileType.PAGE, FileType.SUB_PAGE),
+            TargetDir.JOURNAL: (
+                str(self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL)),
+                FileType.JOURNAL,
+                FileType.SUB_JOURNAL,
+            ),
+            TargetDir.WHITEBOARD: (
+                str(self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD)),
+                FileType.WHITEBOARD,
+                FileType.SUB_WHITEBOARD,
+            ),
         }
 
-    def get_page_title_format(self) -> str:
+    @property
+    def pagetitle_fmt(self) -> str:
         """Get the page title format from the configuration."""
         return str(self.config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT))
 
-    def get_file_name_format(self) -> str:
+    @property
+    def filename_fmt(self) -> str:
         """Get the file name format from the configuration."""
         return str(self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT))
 
     def get_ns_sep(self) -> str:
         """Get the namespace separator based on the configuration."""
         ns_format = self.config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR)
-        if ns_format == Core.NS_CONFIG_LEGACY:
-            return Core.NS_FILE_SEP_LEGACY
-        if ns_format == Core.NS_CONFIG_TRIPLE_LOWBAR:
-            return Core.NS_FILE_SEP_TRIPLE_LOWBAR
-        return Core.NS_FILE_SEP_TRIPLE_LOWBAR
+        match ns_format:
+            case Core.NS_CONFIG_LEGACY:
+                return Core.NS_FILE_SEP_LEGACY
+            case Core.NS_CONFIG_TRIPLE_LOWBAR:
+                return Core.NS_FILE_SEP_TRIPLE_LOWBAR
+            case _:
+                return Core.NS_FILE_SEP_TRIPLE_LOWBAR
 
     def get_prop_pages_enabled(self) -> bool:
         """Check if property pages are enabled in the configuration."""
