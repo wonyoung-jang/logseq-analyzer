@@ -2,122 +2,74 @@
 
 import logging
 import shutil
-from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Output
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
-class File:
-    """A class to represent a file in the Logseq Analyzer."""
+def check_must_exist(path: Path, *, is_dir: bool = False) -> None:
+    """Validate the file path."""
+    if not path.exists():
+        logger.error("File does not exist: %s", path)
+        msg = f"File does not exist: {path}"
+        raise FileNotFoundError(msg)
+    if is_dir and not path.is_dir():
+        logger.error("Path is not a directory: %s", path)
+        msg = f"Path is not a directory: {path}"
+        raise NotADirectoryError(msg)
+    if not is_dir and not path.is_file():
+        logger.error("Path is not a file: %s", path)
+        msg = f"Path is not a file: {path}"
+        raise FileNotFoundError(msg)
+    logger.info("%s exists", path)
 
-    path: Path
-    clean_on_init: bool = False
-    must_exist: bool = False
-    is_dir: bool = False
-    create: bool = True
 
-    def __post_init__(self) -> None:
-        """Initialize the File class with a path."""
-        if not isinstance(self.path, Path):
-            self.path = Path(self.path)
-        if self.must_exist:
-            self.validate()
-        if self.clean_on_init and self.path.exists():
-            self.clean()
-        if self.create:
-            self.make_if_missing()
-        logger.info("File initialized: %s", self.path)
+def clean(path: Path, *, is_dir: bool = False) -> None:
+    """Clean up the file or directory."""
+    try:
+        if is_dir:
+            shutil.rmtree(path)
+            logger.info("Deleted directory: %s", path)
+        else:
+            path.unlink()
+            logger.info("Deleted file: %s", path)
+    except OSError:
+        logger.exception("Error deleting path")
+        raise
 
-    def validate(self) -> None:
-        """Validate the file path."""
-        if not self.path.exists():
-            logger.error("File does not exist: %s", self.path)
-            msg = f"File does not exist: {self.path}"
-            raise FileNotFoundError(msg)
-        if self.is_dir and not self.path.is_dir():
-            logger.error("Path is not a directory: %s", self.path)
-            msg = f"Path is not a directory: {self.path}"
-            raise NotADirectoryError(msg)
-        if not self.is_dir and not self.path.is_file():
-            logger.error("Path is not a file: %s", self.path)
-            msg = f"Path is not a file: {self.path}"
-            raise FileNotFoundError(msg)
-        logger.info("%s exists", self.path)
 
-    def clean(self) -> None:
-        """Clean up the file or directory."""
-        try:
-            if self.is_dir:
-                shutil.rmtree(self.path)
-                logger.info("Deleted directory: %s", self.path)
+def make_if_missing(path: Path, *, is_dir: bool = False) -> None:
+    """Create the file or directory if it does not exist."""
+    try:
+        if not path.exists():
+            if is_dir:
+                path.mkdir(parents=True, exist_ok=True)
+                logger.info("Created directory: %s", path)
             else:
-                self.path.unlink()
-                logger.info("Deleted file: %s", self.path)
-        except PermissionError:
-            logger.exception("Permission denied to delete path: %s", self.path)
-        except OSError:
-            logger.exception("Error deleting path")
-
-    def make_if_missing(self) -> None:
-        """Create the file or directory if it does not exist."""
-        try:
-            if not self.path.exists():
-                if self.is_dir:
-                    self.path.mkdir(parents=True, exist_ok=True)
-                    logger.info("Created directory: %s", self.path)
-                else:
-                    self.path.parent.mkdir(parents=True, exist_ok=True)
-                    self.path.touch(exist_ok=True)
-                    logger.info("Created file: %s", self.path)
-        except PermissionError:
-            logger.exception("Permission denied to create path: %s", self.path)
-        except OSError:
-            logger.exception("Error creating path")
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch(exist_ok=True)
+                logger.info("Created file: %s", path)
+    except OSError:
+        logger.exception("Error creating path")
+        raise
 
 
-@dataclass(slots=True)
-class LogseqAnalyzerDirs:
-    """Directories used by the Logseq analyzer."""
-
-    graph: File
-    logseq: File
-    bak: File
-    recycle: File
-    config_user: File
-    del_directory: File
-    del_bak: File
-    del_recycle: File
-    del_assets: File
-    target: dict[str, tuple[str, str, str]]
-    output: File
-    config_global: File | None = None
-
-    @property
-    def report(self) -> dict:
-        """Generate a report of the Logseq analyzer directories."""
-        return {
-            Output.Dir.META: {
-                "logseq_analyzer_dirs": {
-                    "graph_dirs": {
-                        "graph": self.graph,
-                        "graph/logseq": self.logseq,
-                        "graph/logseq/bak": self.bak,
-                        "graph/logseq/.recycle": self.recycle,
-                        "graph/logseq/config.edn": self.config_user,
-                        "global-config.edn": self.config_global,
-                    },
-                    "delete_dirs": {
-                        "to-delete": self.del_directory,
-                        "to-delete/bak": self.del_bak,
-                        "to-delete/.recycle": self.del_recycle,
-                        "to-delete/assets": self.del_assets,
-                    },
-                    "target_dirs": self.target,
-                    "output_dir": self.output,
-                }
-            }
-        }
+def check_path(
+    path: Path,
+    *,
+    is_dir: bool = False,
+    must_exist: bool = False,
+    clean_on_init: bool = False,
+    create: bool = True,
+) -> None:
+    """Check and prepare the file or directory path."""
+    if must_exist:
+        check_must_exist(path, is_dir=is_dir)
+    if clean_on_init and path.exists():
+        clean(path, is_dir=is_dir)
+    if create:
+        make_if_missing(path, is_dir=is_dir)
+    logger.info("Checked path: %s", path)

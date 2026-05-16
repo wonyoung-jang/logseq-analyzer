@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def cache() -> Iterator[Cache]:
     """Fixture to create a Cache object."""
-    cache = Cache(Path(Constant.CACHE_FILE))
+    cache = Cache(Path(Constant.App.CACHE_FILE))
     yield cache
     cache.save(FileIndex())
 

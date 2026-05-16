@@ -25,11 +25,7 @@ class LogseqFileMover:
     should_move_recycle: bool
     should_move_unlinked_assets: bool
     unlinked_assets: set[LogseqFile]
-    del_assets: Path
-    del_bak: Path
-    del_recycle: Path
-    bak_dir: Path
-    recycle_dir: Path
+    paths: dict[str, Path]
     moved_unlinked_assets: list[str] = field(default_factory=list)
     moved_bak: list[str] = field(default_factory=list)
     moved_recycle: list[str] = field(default_factory=list)
@@ -37,10 +33,12 @@ class LogseqFileMover:
     def __post_init__(self) -> None:
         """Set up LogseqFileMover for moving files and directories."""
         self.moved_unlinked_assets = _move(
-            self.del_assets, _yield_asset(self.unlinked_assets), move=self.should_move_unlinked_assets
+            self.paths["del_assets"], _yield_asset(self.unlinked_assets), move=self.should_move_unlinked_assets
         )
-        self.moved_bak = _move(self.del_bak, _yield_dir(self.bak_dir), move=self.should_move_bak)
-        self.moved_recycle = _move(self.del_recycle, _yield_dir(self.recycle_dir), move=self.should_move_recycle)
+        self.moved_bak = _move(self.paths["del_bak"], _yield_dir(self.paths["bak"]), move=self.should_move_bak)
+        self.moved_recycle = _move(
+            self.paths["del_recycle"], _yield_dir(self.paths["recycle"]), move=self.should_move_recycle
+        )
 
     @property
     def report(self) -> dict:

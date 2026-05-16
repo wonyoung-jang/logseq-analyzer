@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Core, FileType, Output, TargetDir
+from logseq_analyzer.utils.enums import Core, FileType, TargetDir
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -32,7 +32,6 @@ class Edn(StrEnum):
     PAGE_TITLE_FORMAT = ":journal/page-title-format"
     PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
     PAGES_DIR = ":pages-directory"
-    PROP_PAGES = ":property-pages/enabled?"
     WHITEBOARDS_DIR = ":whiteboards-directory"
 
 
@@ -40,33 +39,31 @@ class Edn(StrEnum):
 class ConfigEdns:
     """Configuration EDN files for the Logseq analyzer."""
 
-    config: dict = field(default_factory=dict)
-    default_edn: dict = field(default_factory=dict)
-    user_edn: dict = field(default_factory=dict)
-    global_edn: dict = field(default_factory=dict)
+    user_edn: dict
+    global_edn: dict
+    _config: dict = field(default_factory=dict)
 
-    def get_target_dirs(self) -> dict[str, tuple[str, str, str]]:
-        """Get the target directories for Logseq.
+    @property
+    def config(self) -> dict:
+        """Get the merged configuration EDN."""
+        if not self._config:
+            self._config = DEFAULT_LOGSEQ_CONFIG | self.user_edn | self.global_edn
+        return self._config
 
-        Returns:
-            dict[str, tuple[str, str, str]]: A dictionary containing the target directories.
+    @property
+    def dir_page(self) -> str:
+        """Get the target page directory from the configuration."""
+        return str(self.config.get(Edn.PAGES_DIR, TargetDir.PAGE))
 
-        """
-        return {
-            TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
-            TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
-            TargetDir.PAGE: (str(self.config.get(Edn.PAGES_DIR, TargetDir.PAGE)), FileType.PAGE, FileType.SUB_PAGE),
-            TargetDir.JOURNAL: (
-                str(self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL)),
-                FileType.JOURNAL,
-                FileType.SUB_JOURNAL,
-            ),
-            TargetDir.WHITEBOARD: (
-                str(self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD)),
-                FileType.WHITEBOARD,
-                FileType.SUB_WHITEBOARD,
-            ),
-        }
+    @property
+    def dir_journal(self) -> str:
+        """Get the target journal directory from the configuration."""
+        return str(self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL))
+
+    @property
+    def dir_whiteboard(self) -> str:
+        """Get the target whiteboard directory from the configuration."""
+        return str(self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD))
 
     @property
     def pagetitle_fmt(self) -> str:
@@ -78,10 +75,10 @@ class ConfigEdns:
         """Get the file name format from the configuration."""
         return str(self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT))
 
-    def get_ns_sep(self) -> str:
+    @property
+    def ns_sep(self) -> str:
         """Get the namespace separator based on the configuration."""
-        ns_format = self.config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR)
-        match ns_format:
+        match self.config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR):
             case Core.NS_CONFIG_LEGACY:
                 return Core.NS_FILE_SEP_LEGACY
             case Core.NS_CONFIG_TRIPLE_LOWBAR:
@@ -89,22 +86,19 @@ class ConfigEdns:
             case _:
                 return Core.NS_FILE_SEP_TRIPLE_LOWBAR
 
-    def get_prop_pages_enabled(self) -> bool:
-        """Check if property pages are enabled in the configuration."""
-        return bool(self.config.get(Edn.PROP_PAGES, True))
+    def get_target_dirs(self) -> dict[str, tuple[str, str, str]]:
+        """Get the target directories for Logseq.
 
-    @property
-    def report(self) -> dict:
-        """Generate a report of the configuration EDN files."""
+        Returns:
+            dict[str, tuple[str, str, str]]: A dictionary containing the target directories.
+
+        """
         return {
-            Output.Dir.META: {
-                "config_edns": {
-                    "edn_default": self.default_edn,
-                    "edn_user": self.user_edn,
-                    "edn_global": self.global_edn,
-                    "edn_config": self.config,
-                }
-            }
+            TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
+            TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
+            TargetDir.PAGE: (self.dir_page, FileType.PAGE, FileType.SUB_PAGE),
+            TargetDir.JOURNAL: (self.dir_journal, FileType.JOURNAL, FileType.SUB_JOURNAL),
+            TargetDir.WHITEBOARD: (self.dir_whiteboard, FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
         }
 
 
@@ -134,24 +128,24 @@ class LogseqConfigEDN:
     def parse(self) -> EDNValue:
         """Parse the entire EDN input and return the resulting Python object."""
         value = self.parse_value()
-        if self.peek() is not None:
-            msg = f"Unexpected extra EDN data: {self.peek()}"
+        if self._peek() is not None:
+            msg = f"Unexpected extra EDN data: {self._peek()}"
             raise ValueError(msg)
         return value
 
-    def peek(self) -> str | None:
+    def _peek(self) -> str | None:
         """Return the next token without advancing the position."""
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def next(self) -> str | None:
+    def _next(self) -> str | None:
         """Return the next token and advance the position."""
-        tok = self.peek()
+        tok = self._peek()
         self.pos += 1
         return tok
 
     def parse_value(self) -> EDNValue:
         """Parse a single EDN value."""
-        tok = self.peek()
+        tok = self._peek()
         if tok is None:
             msg = "Unexpected end of EDN input"
             raise ValueError(msg)
@@ -160,20 +154,20 @@ class LogseqConfigEDN:
         if tok.startswith('"'):
             return self.parse_string()
         if tok in self._literal_map:
-            return self._literal_map.get(str(self.next()))
+            return self._literal_map.get(str(self._next()))
         if tok.startswith(":"):
-            return self.next()
+            return self._next()
         if self.is_number(tok):
             return self.parse_number()
-        return self.next()
+        return self._next()
 
     def parse_map(self) -> dict[EDNValue, EDNValue]:
         """Parse a map (dictionary) from EDN."""
-        self.next()
+        self._next()
         result = {}
         while True:
-            if self.peek() == "}":
-                self.next()
+            if self._peek() == "}":
+                self._next()
                 break
             key = self.parse_value()
             if isinstance(key, dict):
@@ -187,40 +181,40 @@ class LogseqConfigEDN:
 
     def parse_vector(self) -> list[EDNValue]:
         """Parse a vector (list) from EDN."""
-        self.next()
+        self._next()
         result = []
         while True:
-            if self.peek() == "]":
-                self.next()
+            if self._peek() == "]":
+                self._next()
                 break
             result.append(self.parse_value())
         return result
 
     def parse_list(self) -> list[EDNValue]:
         """Parse a list from EDN."""
-        self.next()
+        self._next()
         result = []
         while True:
-            if self.peek() == ")":
-                self.next()
+            if self._peek() == ")":
+                self._next()
                 break
             result.append(self.parse_value())
         return result
 
     def parse_set(self) -> set[EDNValue]:
         """Parse a set from EDN."""
-        self.next()
+        self._next()
         result = set()
         while True:
-            if self.peek() == "}":
-                self.next()
+            if self._peek() == "}":
+                self._next()
                 break
             result.add(self.parse_value())
         return result
 
     def parse_string(self) -> EDNValue:
         """Parse a string from EDN."""
-        return ast.literal_eval(str(self.next()))
+        return ast.literal_eval(str(self._next()))
 
     def is_number(self, tok: str) -> bool:
         """Check if the token is a valid number (integer or float)."""
@@ -228,7 +222,7 @@ class LogseqConfigEDN:
 
     def parse_number(self) -> float | int:
         """Parse a number (integer or float) from EDN."""
-        tok = self.next()
+        tok = self._next()
         if tok is None:
             msg = "Unexpected end of EDN input while parsing number"
             raise ValueError(msg)

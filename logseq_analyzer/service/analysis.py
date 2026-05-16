@@ -149,8 +149,8 @@ class LogseqGraph:
 
     def process_dangling(self, names: set[str]) -> None:
         """Get the set of dangling links from a given set of names."""
-        self.dangling = (self.linkedref | self.linkedref_ns) - names - self.aliases - BUILT_IN_PROPERTIES
-        self.dangling_count = {k: v for k, v in self.linkedref_count.items() if k in self.dangling}
+        self.dangling.update((self.linkedref | self.linkedref_ns) - names - self.aliases - BUILT_IN_PROPERTIES)
+        self.dangling_count.update({k: v for k, v in self.linkedref_count.items() if k in self.dangling})
 
     @property
     def report(self) -> dict:
@@ -210,114 +210,97 @@ class LogseqAssets:
 class LogseqNamespaces:
     """Class for analyzing namespace data in Logseq."""
 
-    _part_levels: defaultdict[str, set[int]] = field(default_factory=lambda: defaultdict(set))
-    _part_entries: defaultdict[str, list[tuple[str, int]]] = field(default_factory=lambda: defaultdict(list))
-    conflicts_dangling: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    conflicts_non_namespace: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    conflicts_parent_depth: dict[tuple[str, int], list[str]] = field(default_factory=lambda: defaultdict(list))
-    conflicts_parent_unique: dict[tuple[str, int], set[str]] = field(default_factory=lambda: defaultdict(set))
-    details: dict[str, Counter[int]] = field(default_factory=dict)
-    parts: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    part_to_namelvl_list: defaultdict[str, list[tuple[str, int]]] = field(default_factory=lambda: defaultdict(list))
+    conflict_dangling_part_to_name: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflict_nonnamespace_part_to_name: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflict_part_to_lvl_to_parentname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
+    conflict_part_to_lvl_to_fullname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
+    lvl_to_partlist: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
     tree: _NsTree = field(default_factory=dict)
-    unique_ns_per_level: dict[int, set[str]] = field(default_factory=lambda: defaultdict(set))
-    unique_parts: set[str] = field(default_factory=set)
     queries: dict[str, _QueryInfo] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        """Initialize the LogseqNamespaces instance."""
-        self.details["level_distribution"] = Counter()
 
     def process(self, f: LogseqFile) -> None:
         """Initialize namespace parts for a given file."""
-        if not f.ns_info.is_namespace:
-            return
-        if not (parts := f.ns_info.parts):
+        if not f.ns_info.is_namespace or not (parts := f.ns_info.parts):
             return
         cur = self.tree
         for part, level in parts:
-            self.parts[f.name].append(part)
-            self.unique_parts.add(part)
-            self.unique_ns_per_level[level].add(part)
-            self.details["level_distribution"][level] += 1
-            self._part_levels[part].add(level)
-            self._part_entries[part].append((f.name, level))
+            self.part_to_namelvl_list[part].append((f.name, level))
+            self.lvl_to_partlist[level].append(part)
             cur = cur.setdefault(part, {})
         for query in f.get_data(Crit.DblCurly.NAMESPACE_QUERY):
-            page_refs: list[str] = ContentPatterns.PAGE_REFERENCE.findall(query)
+            page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
             if len(page_refs) != 1:
                 logger.warning("Invalid query: %s", query)
                 continue
-            if query in self.queries:
-                self.queries[query]["found_in"].append(f.name)
-            else:
+            if query not in self.queries:
                 self.queries[query] = {
                     "found_in": [f.name],
                     "namespace": page_refs[0],
                     "size": f.ns_info.size,
                 }
+            else:
+                self.queries[query]["found_in"].append(f.name)
 
     def process_conflicts(self, non_ns_names: Iterable[str], dangling: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""
-        potential_non_ns = self.unique_parts.intersection(non_ns_names)
-        potential_dangling = self.unique_parts.intersection(dangling)
-        for entry, parts in self.parts.items():
-            for part in potential_non_ns.intersection(parts):
-                self.conflicts_non_namespace[part].append(entry)
-            for part in potential_dangling.intersection(parts):
-                self.conflicts_dangling[part].append(entry)
-        for part, levels in self._part_levels.items():
-            if len(levels) <= 1:
+        unique = set(self.part_to_namelvl_list)
+        in_non_ns = unique.intersection(non_ns_names)
+        in_dangling = unique.intersection(dangling)
+        for part, name_lvl_list in self.part_to_namelvl_list.items():
+            names = {name for name, _ in name_lvl_list}
+            if part in in_non_ns:
+                self.conflict_nonnamespace_part_to_name[part].extend(names)
+            if part in in_dangling:
+                self.conflict_dangling_part_to_name[part].extend(names)
+            if len(name_lvl_list) <= 1 or len({lvl for _, lvl in name_lvl_list}) <= 1:
                 continue
-            for name, level in self._part_entries[part]:
-                key = (part, level)
-                self.conflicts_parent_unique[key].add(Core.NS_SEP.join(name.split(Core.NS_SEP)[:level]))
-                self.conflicts_parent_depth[key].append(name)
+            for name, lvl in name_lvl_list:
+                self.conflict_part_to_lvl_to_parentname[part][lvl].add(Core.NS_SEP.join(name.split(Core.NS_SEP)[:lvl]))
+                self.conflict_part_to_lvl_to_fullname[part][lvl].add(name)
 
     @property
     def report(self) -> dict:
         """Generate a report of the namespace analysis."""
-        return {Output.Dir.NAMESPACES: {k: getattr(self, k) for k in self.__slots__ if not k.startswith("_")}}
+        return {Output.Dir.NAMESPACES: {k: getattr(self, k) for k in self.__slots__}}
 
 
 @dataclass(slots=True)
 class LogseqJournals:
     """LogseqJournals class to handle journal files and their processing."""
 
-    all_: list[datetime] = field(default_factory=list)
+    total: list[datetime] = field(default_factory=list)
     existing: list[datetime] = field(default_factory=list)
-    missing: list[datetime] = field(default_factory=list)
-    timeline: list[datetime] = field(default_factory=list)
+    existing_timeline: list[datetime] = field(default_factory=list)
+    not_existing_or_referenced: list[datetime] = field(default_factory=list)
     dangling: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
     stat: dict[str, JournalStat] = field(default_factory=dict)
 
     def __len__(self) -> int:
         """Return the number of processed keys."""
-        return len(self.timeline)
+        return len(self.existing_timeline)
 
     def process(self, journals: Iterable[str], dangling: set[str], journal_page_fmt: str) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
         dangling_dt = sorted(_journals_to_datetime(dangling, journal_page_fmt))
         self.existing.extend(sorted(_journals_to_datetime(journals, journal_page_fmt)))
         for i, date in enumerate(self.existing):
-            self.timeline.append(date)
+            self.existing_timeline.append(date)
             _expected = date + timedelta(days=1)
             _existing = self.existing[i + 1] if i + 1 < len(self.existing) else None
             while _existing and _expected < _existing:
-                self.timeline.append(_expected)
+                self.existing_timeline.append(_expected)
                 if _expected not in dangling_dt:
-                    self.missing.append(_expected)
+                    self.not_existing_or_referenced.append(_expected)
+                else:
+                    self.dangling["within_existing"].append(_expected)
                 _expected = _expected + timedelta(days=1)
-        self.all_.extend(sorted(chain(self.timeline, dangling_dt)))
-        self.stat["timeline"] = _get_journal_stats(self.timeline)
+        self.total.extend(sorted(set(chain(self.existing_timeline, dangling_dt))))
+        self.stat["existing"] = _get_journal_stats(self.existing)
         self.stat["dangling"] = _get_journal_stats(dangling_dt)
-        self.stat["total"] = _get_journal_stats(self.all_)
-        for link in dangling_dt:
-            if link < self.stat["timeline"]["first"]:
-                self.dangling["past"].append(link)
-            elif link > self.stat["timeline"]["last"]:
-                self.dangling["future"].append(link)
-            else:
-                self.dangling["inside"].append(link)
+        self.stat["total"] = _get_journal_stats(self.total)
+        self.dangling["before_existing"].extend(d for d in dangling_dt if d < self.stat["existing"]["first"])
+        self.dangling["after_existing"].extend(d for d in dangling_dt if d > self.stat["existing"]["last"])
 
     @property
     def report(self) -> dict[str, dict[str, object]]:

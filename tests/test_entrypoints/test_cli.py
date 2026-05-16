@@ -6,7 +6,6 @@ import pytest
 
 from logseq_analyzer.app import Args
 from logseq_analyzer.entrypoints.cli.cli import get_cli_args
-from logseq_analyzer.utils.enums import Output
 
 
 @pytest.fixture
@@ -137,9 +136,3 @@ def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch) -> None:
     # argparse.parse_args() calls sys.exit() upon error
     with pytest.raises(SystemExit):
         Args(**get_cli_args())
-
-
-def test_report(args_instance: Args) -> None:
-    """Test the report generation."""
-    report = args_instance.report[Output.Dir.META]
-    assert isinstance(report, dict)
