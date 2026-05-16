@@ -7,7 +7,7 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Output
+from logseq_analyzer.domain.enums import Output
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

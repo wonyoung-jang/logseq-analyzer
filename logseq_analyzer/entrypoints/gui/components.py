@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from logseq_analyzer.utils.enums import Format
+from logseq_analyzer.domain.enums import Format
 
 
 class Checkboxes(QWidget):

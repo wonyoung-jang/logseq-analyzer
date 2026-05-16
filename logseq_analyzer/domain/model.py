@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from logseq_analyzer.utils.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output, TargetDir
-from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
+from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output, TargetDir
+from logseq_analyzer.domain.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator

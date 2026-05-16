@@ -5,9 +5,9 @@ from enum import StrEnum
 from PySide6.QtCore import QSettings, Slot
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
+from logseq_analyzer.domain.enums import Format
 from logseq_analyzer.entrypoints.gui.components import Buttons, Checkboxes, Inputs, Progress
 from logseq_analyzer.entrypoints.gui.worker import AnalysisWorker
-from logseq_analyzer.utils.enums import Format
 
 
 class Argument(StrEnum):

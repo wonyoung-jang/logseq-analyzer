@@ -19,9 +19,9 @@ from datetime import UTC, datetime, timedelta
 from itertools import chain
 from typing import TYPE_CHECKING, TypedDict
 
+from logseq_analyzer.domain.enums import Core, Crit, FileType, Output
 from logseq_analyzer.domain.model import BUILT_IN_PROPERTIES
-from logseq_analyzer.utils.enums import Core, Crit, FileType, Output
-from logseq_analyzer.utils.patterns import ContentPatterns
+from logseq_analyzer.domain.patterns import ContentPatterns
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator

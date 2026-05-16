@@ -12,9 +12,9 @@ from logseq_analyzer.adapter.ednconfig import ConfigEdns, get_edn_from_file
 from logseq_analyzer.adapter.filemover import LogseqFileMover
 from logseq_analyzer.adapter.filesystem import check_path
 from logseq_analyzer.adapter.reporter import ReportWriter
+from logseq_analyzer.domain.enums import Output
 from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext
 from logseq_analyzer.service.analysis import LogseqAnalyzer
-from logseq_analyzer.utils.enums import Output
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator

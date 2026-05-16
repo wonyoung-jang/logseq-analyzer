@@ -1,9 +1,9 @@
 """Hierarchical patterns for elements."""
 
 import re
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
-from logseq_analyzer.utils.enums import Crit
+from logseq_analyzer.domain.enums import Crit
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -14,6 +14,7 @@ _URL = (
     r"(?:\S+(?::\S*)?@)?"
     r"(?:\d{1,3}(?:\.\d{1,3}){3}|\[[0-9A-F:]+\]|(?:[A-Z0-9-]+\.)+[A-Z]{2,})"
     r"(?::\d{2,5})?(?:/[^\s]*)?"
+    r'(?:\s+["\'][^)]*["\'])?'
 )
 
 
@@ -37,34 +38,45 @@ class ContentPatterns:
 
 def _advcmd(key: str, variant: str = "") -> re.Pattern:
     """Create regex patterns for advanced commands."""
-    suffix = rf"{key}\s{1}{variant}" if variant else key
-    return re.compile(
-        rf"#\+BEGIN_{suffix}.*?#\+END_{suffix}.*?(?:\n|$)",
-        re.DOTALL | re.IGNORECASE,
-    )
+    _key = rf"{key}\s{1}{variant}" if variant else key
+    return re.compile(rf"#\+BEGIN_{_key}.*?#\+END_{_key}.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
 
 
-def _dblcurly(key: str) -> re.Pattern:
+def _mlcode(key: str) -> re.Pattern:
+    """Create regex patterns for multiline code blocks."""
+    return re.compile(rf"```{key}.*?```", re.DOTALL | re.IGNORECASE)
+
+
+def _dblcurly(key: str, variant: str = "") -> re.Pattern:
     """Create regex patterns for double curly braces."""
-    return re.compile(
-        rf"\{{\{{{key} .*?\}}\}}",
-        re.IGNORECASE,
-    )
+    _key = rf"{key} " if key else ""
+    suffix = variant or r".*?"
+    return re.compile(rf"\{{\{{{_key}{suffix}\}}\}}", re.IGNORECASE)
 
 
-def _internet_link(*, embedded: bool) -> re.Pattern:
-    prefix = r"\!\[.*?\]" if embedded else r"(?<!\!)\[.*?\]"
-    return re.compile(
-        rf'{prefix}\({_URL}(?:\s+["\'][^)]*["\'])?\)',
-        re.IGNORECASE,
-    )
+def _dblparen(key: str) -> re.Pattern:
+    """Create regex patterns for double parentheses."""
+    _key = key or r".*?"
+    return re.compile(rf"(?<!\{{\{{embed )\(\({_key}\)\)", re.IGNORECASE)
+
+
+def _emblink(key: str) -> re.Pattern:
+    """Create regex patterns for embedded links."""
+    _key = key or r".*?"
+    return re.compile(rf"\!\[.*?\]\({_key}\)", re.IGNORECASE)
+
+
+def _extlink(key: str) -> re.Pattern:
+    """Create regex patterns for external links."""
+    _key = key or r".*?"
+    return re.compile(rf"(?<!\!)\[.*?\]\({_key}\)", re.IGNORECASE)
 
 
 class IPattern:
     """Base pattern class."""
 
     ALL: re.Pattern
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]]
+    PATTERN: Sequence[tuple[str, re.Pattern]]
     FALLBACK: str
 
     @classmethod
@@ -80,7 +92,7 @@ class IPattern:
         """
         for match in cls.ALL.finditer(content):
             text = match.group(0)
-            for criteria, pattern in cls.PATTERN_MAP.items():
+            for criteria, pattern in cls.PATTERN:
                 if pattern.search(text):
                     yield criteria, text
                     break
@@ -91,88 +103,86 @@ class IPattern:
 class AdvCmdPatterns(IPattern):
     """Patterns for advanced commands in Logseq."""
 
-    ALL = re.compile(r"#\+BEGIN_.*?#\+END_.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.AdvCmd.EXPORT: _advcmd("EXPORT"),
-        Crit.AdvCmd.EXPORT_ASCII: _advcmd("EXPORT", "ascii"),
-        Crit.AdvCmd.EXPORT_LATEX: _advcmd("EXPORT", "latex"),
-        Crit.AdvCmd.CAUTION: _advcmd("CAUTION"),
-        Crit.AdvCmd.CENTER: _advcmd("CENTER"),
-        Crit.AdvCmd.COMMENT: _advcmd("COMMENT"),
-        Crit.AdvCmd.EXAMPLE: _advcmd("EXAMPLE"),
-        Crit.AdvCmd.IMPORTANT: _advcmd("IMPORTANT"),
-        Crit.AdvCmd.NOTE: _advcmd("NOTE"),
-        Crit.AdvCmd.PINNED: _advcmd("PINNED"),
-        Crit.AdvCmd.QUERY: _advcmd("QUERY"),
-        Crit.AdvCmd.QUOTE: _advcmd("QUOTE"),
-        Crit.AdvCmd.TIP: _advcmd("TIP"),
-        Crit.AdvCmd.VERSE: _advcmd("VERSE"),
-        Crit.AdvCmd.WARNING: _advcmd("WARNING"),
-    }
+    ALL = _advcmd("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = (
+        (Crit.AdvCmd.EXPORT, _advcmd("EXPORT")),
+        (Crit.AdvCmd.EXPORT_ASCII, _advcmd("EXPORT", "ascii")),
+        (Crit.AdvCmd.EXPORT_LATEX, _advcmd("EXPORT", "latex")),
+        (Crit.AdvCmd.CAUTION, _advcmd("CAUTION")),
+        (Crit.AdvCmd.CENTER, _advcmd("CENTER")),
+        (Crit.AdvCmd.COMMENT, _advcmd("COMMENT")),
+        (Crit.AdvCmd.EXAMPLE, _advcmd("EXAMPLE")),
+        (Crit.AdvCmd.IMPORTANT, _advcmd("IMPORTANT")),
+        (Crit.AdvCmd.NOTE, _advcmd("NOTE")),
+        (Crit.AdvCmd.PINNED, _advcmd("PINNED")),
+        (Crit.AdvCmd.QUERY, _advcmd("QUERY")),
+        (Crit.AdvCmd.QUOTE, _advcmd("QUOTE")),
+        (Crit.AdvCmd.TIP, _advcmd("TIP")),
+        (Crit.AdvCmd.VERSE, _advcmd("VERSE")),
+        (Crit.AdvCmd.WARNING, _advcmd("WARNING")),
+    )
     FALLBACK = Crit.AdvCmd.ALL
 
 
 class CodePatterns(IPattern):
     """Patterns for code blocks in Logseq."""
 
-    ALL = re.compile(r"```.*?```", re.DOTALL | re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.Code.ML_CALC: re.compile(r"```calc.*?```", re.DOTALL | re.IGNORECASE),
-        Crit.Code.ML_LANG: re.compile(r"```\w+.*?```", re.DOTALL | re.IGNORECASE),
-    }
+    ALL = _mlcode("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = (
+        (Crit.Code.ML_CALC, _mlcode("calc")),
+        (Crit.Code.ML_LANG, _mlcode(r"\w+")),
+    )
     FALLBACK = Crit.Code.ML_ALL
 
 
 class DoubleCurlyPatterns(IPattern):
     """Patterns for double curly braces in Logseq."""
 
-    ALL = re.compile(r"\{\{.*?\}\}", re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.DblCurly.EMBED: _dblcurly("embed"),
-        Crit.DblCurly.PAGE_EMBED: re.compile(r"\{\{embed \[\[.*?\]\]\}\}", re.IGNORECASE),
-        Crit.DblCurly.BLOCK_EMBED: re.compile(rf"\{{\{{embed \(\({_UUID}\)\)\}}\}}", re.IGNORECASE),
-        Crit.DblCurly.NAMESPACE_QUERY: _dblcurly("namespace"),
-        Crit.DblCurly.CARD: _dblcurly("cards"),
-        Crit.DblCurly.CLOZE: _dblcurly("cloze"),
-        Crit.DblCurly.SIMPLE_QUERY: _dblcurly("query"),
-        Crit.DblCurly.QUERY_FUNCTION: _dblcurly("function"),
-        Crit.DblCurly.EMBED_VIDEO_URL: _dblcurly("video"),
-        Crit.DblCurly.EMBED_TWITTER_TWEET: _dblcurly("tweet"),
-        Crit.DblCurly.YOUTUBE_TIMESTAMP: _dblcurly("youtube-timestamp"),
-        Crit.DblCurly.RENDERER: _dblcurly("renderer"),
-    }
+    ALL = _dblcurly("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = (
+        (Crit.DblCurly.EMBED, _dblcurly("embed")),
+        (Crit.DblCurly.PAGE_EMBED, _dblcurly("embed", r"\[\[.*?\]\]")),
+        (Crit.DblCurly.BLOCK_EMBED, _dblcurly("embed", rf"\(\({_UUID}\)\)")),
+        (Crit.DblCurly.NAMESPACE_QUERY, _dblcurly("namespace")),
+        (Crit.DblCurly.CARD, _dblcurly("cards")),
+        (Crit.DblCurly.CLOZE, _dblcurly("cloze")),
+        (Crit.DblCurly.SIMPLE_QUERY, _dblcurly("query")),
+        (Crit.DblCurly.QUERY_FUNCTION, _dblcurly("function")),
+        (Crit.DblCurly.EMBED_VIDEO_URL, _dblcurly("video")),
+        (Crit.DblCurly.EMBED_TWITTER_TWEET, _dblcurly("tweet")),
+        (Crit.DblCurly.YOUTUBE_TIMESTAMP, _dblcurly("youtube-timestamp")),
+        (Crit.DblCurly.RENDERER, _dblcurly("renderer")),
+    )
     FALLBACK = Crit.DblCurly.ALL
 
 
 class DoubleParenthesesPatterns(IPattern):
     """Patterns for double parentheses in Logseq."""
 
-    ALL = re.compile(r"(?<!\{\{embed )\(\(.*?\)\)", re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.DblParen.BLOCK_REFS: re.compile(rf"(?<!\{{\{{embed )\(\({_UUID}\)\)", re.IGNORECASE),
-    }
+    ALL = _dblparen("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = ((Crit.DblParen.BLOCK_REFS, _dblparen(_UUID)),)
     FALLBACK = Crit.DblParen.ALL_REFS
 
 
 class EmbeddedLinkPatterns(IPattern):
     """Patterns for embedded links in Logseq."""
 
-    ALL = re.compile(r"\!\[.*?\]\(.*?\)", re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.Emb.INTERNET: _internet_link(embedded=True),
-        Crit.Emb.ASSET: re.compile(r"\!\[.*?\]\(.*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)\)", re.IGNORECASE),
-    }
+    ALL = _emblink("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = (
+        (Crit.Emb.INTERNET, _emblink(_URL)),
+        (Crit.Emb.ASSET, _emblink(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)")),
+    )
     FALLBACK = Crit.Emb.OTHER
 
 
 class ExternalLinkPatterns(IPattern):
     """Patterns for external links in Logseq."""
 
-    ALL = re.compile(r"(?<!\!)\[.*?\]\(.*?\)", re.IGNORECASE)
-    PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
-        Crit.Ext.INTERNET: _internet_link(embedded=False),
-        Crit.Ext.ALIAS: re.compile(r"(?<!\!)\[.*?\]\([\[\[|\(\(].*?[\]\]|\)\)].*?\)", re.IGNORECASE),
-    }
+    ALL = _extlink("")
+    PATTERN: Sequence[tuple[str, re.Pattern]] = (
+        (Crit.Ext.INTERNET, _extlink(_URL)),
+        (Crit.Ext.ALIAS, _extlink(r"[\[\[|\(\(].*?[\]\]|\)\)].*?")),
+    )
     FALLBACK = Crit.Ext.OTHER
 
 
