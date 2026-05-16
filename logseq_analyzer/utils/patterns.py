@@ -26,7 +26,7 @@ class ContentPatterns:
     TAG = re.compile(r"#(?!\[\[)([^\]#\s]+?)(?=\s|$)", re.IGNORECASE)
     PROPERTY = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)(?=::)", re.MULTILINE | re.IGNORECASE)
     PROPERTY_VALUE = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)::(.*)$", re.MULTILINE | re.IGNORECASE)
-    ASSET = re.compile(r"assets/(.+)", re.IGNORECASE)
+    ASSET = re.compile(r"assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)", re.IGNORECASE)
     DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
     BLOCKQUOTE = re.compile(r"(?:^|\s)-\ >.*", re.MULTILINE | re.IGNORECASE)
     FLASHCARD = re.compile(r"(?:^|\s)-\ .*#card|\[\[card\]\].*", re.MULTILINE | re.IGNORECASE)
@@ -160,7 +160,7 @@ class EmbeddedLinkPatterns(IPattern):
     ALL = re.compile(r"\!\[.*?\]\(.*?\)", re.IGNORECASE)
     PATTERN_MAP: ClassVar[dict[str, re.Pattern]] = {
         Crit.Emb.INTERNET: _internet_link(embedded=True),
-        Crit.Emb.ASSET: re.compile(r"\!\[.*?\]\(.*?assets/.*?\)", re.IGNORECASE),
+        Crit.Emb.ASSET: re.compile(r"\!\[.*?\]\(.*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)\)", re.IGNORECASE),
     }
     FALLBACK = Crit.Emb.OTHER
 

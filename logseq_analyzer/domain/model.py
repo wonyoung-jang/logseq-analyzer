@@ -315,7 +315,7 @@ class LogseqFile:
     data: dict[str, Iterable[str]] = field(default_factory=dict, repr=False)
     filetype: str = field(init=False)
     primary_bullet: str = field(init=False, repr=False, default="")
-    all_bullets: list[str] = field(default_factory=list, repr=False)
+    bullets: list[str] = field(default_factory=list, repr=False)
     node: NodeType = field(default_factory=NodeType, repr=False)
     _ns_info: NamespaceInfo | None = field(default=None, repr=False)
     _file_info: FileInfo | None = field(default=None, repr=False)
@@ -329,26 +329,26 @@ class LogseqFile:
         self.name = self._get_name()
         self.filetype = self._get_filetype()
         if self.content:
-            for i, bullet in self._iter_pattern_split():
-                self.all_bullets.append(bullet)
-                if bullet and i == 0:
-                    self.primary_bullet = bullet
+            parts = [p.strip("\t \n") for p in ContentPatterns.BULLET.split(self.content)]
+            self.primary_bullet = parts[0] if parts else ""
+            self.bullets.extend(parts)
         if self.file_info.has_content:
             self.data.update(self._extract_primary_data())
-            self.data.update(self._extract_aliases_and_propvalues())
-            self.data.update(self._extract_properties())
+            propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
+            self.data.update(self._extract_aliases_and_propvalues(propvalues))
+            self.data.update(self._extract_properties(propvalues))
             self.data.update(self._extract_patterns())
             self.node.has_content = bool(self.content)
             self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
-        return hash(self.path.parts)
+        return hash(self.path)
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on the file path."""
         if isinstance(other, LogseqFile):
-            return self.path.parts == other.path.parts
+            return self.path == other.path
         return NotImplemented
 
     def __lt__(self, other: object) -> bool:
@@ -410,7 +410,6 @@ class LogseqFile:
             )
         return self._ns_info
 
-
     def yield_linkedrefs(self) -> Iterator[str]:
         """Yield linked references from the file."""
         yield from chain(
@@ -434,7 +433,7 @@ class LogseqFile:
 
     def yield_hls_bullet(self) -> Iterator[str]:
         """Yield HLS bullets from the file."""
-        for bullet in self.all_bullets:
+        for bullet in self.bullets:
             if not bullet.strip().startswith("[:span]"):
                 continue
             hl_page, id_, hl_stamp = "", "", ""
@@ -494,7 +493,8 @@ class LogseqFile:
         """Extract primary data from the content."""
         masked = self.content
         for prefix, regex in MASK_MAP.items():
-            masked = regex.sub(f"__{prefix}__{uuid.uuid4()}__", masked)
+            if regex.search(masked):
+                masked = regex.sub(f"__{prefix}__{uuid.uuid4()}__", masked)
         for prefix, regex in PRIMARY_DATA_MAP.items():
             if result := regex.findall(masked):
                 yield prefix, result
@@ -502,15 +502,22 @@ class LogseqFile:
             if result := regex.findall(self.content):
                 yield prefix, result
 
-    def _extract_properties(self) -> Iterator[tuple[str, Iterable[str]]]:
+    def _extract_aliases_and_propvalues(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
+        """Extract aliases and properties from the content."""
+        if propvalues:
+            yield Crit.Prop.VALUES, propvalues
+            if alias := list(_process_aliases(propvalues.get("alias", ""))):
+                yield Crit.Content.ALIASES, alias
+
+    def _extract_properties(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
         """Extract page and block properties from the content."""
         page_props = set()
         block_props = set()
         if self.primary_bullet and not self.primary_bullet.startswith("#"):
             page_props.update(ContentPatterns.PROPERTY.findall(self.primary_bullet))
-            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.all_bullets[1:])))
+            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.bullets[1:])))
         else:
-            block_props.update(ContentPatterns.PROPERTY.findall(self.content))
+            block_props.update(propvalues.keys())
         if block_builtin := block_props.intersection(BUILT_IN_PROPERTIES):
             yield Crit.Prop.BLOCK_BUILTIN, block_builtin
         if block_user := block_props.difference(BUILT_IN_PROPERTIES):
@@ -520,15 +527,6 @@ class LogseqFile:
         if page_user := page_props.difference(BUILT_IN_PROPERTIES):
             yield Crit.Prop.PAGE_USER, page_user
 
-    def _extract_aliases_and_propvalues(self) -> Iterator[tuple[str, Iterable[str]]]:
-        """Extract aliases and properties from the content."""
-        if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(self.content)):
-            yield Crit.Prop.VALUES, propvalues
-            alias_raw = propvalues.get("alias", "")
-            alias = list(_process_aliases(alias_raw)) if alias_raw else []
-            if alias:
-                yield Crit.Content.ALIASES, alias
-
     def _extract_patterns(self) -> Iterator[tuple[str, Iterable[str]]]:
         """Process patterns in the content."""
         _temp_map = defaultdict(list)
@@ -536,27 +534,3 @@ class LogseqFile:
             for k, v in ptn_cls.process_hierarchy(self.content):
                 _temp_map[k].append(v)
         yield from _temp_map.items()
-
-    def _iter_pattern_split(self) -> Iterator[tuple[int, str]]:
-        """Emulate re.Pattern.split() but yields sections of text instead of returning a list.
-
-        Iterate over sections of text separated by bullet markers.
-
-        Yields:
-            Iterator[tuple[int, str]]: Sections of text with their respective indices.
-
-        """
-        count = 0
-        iterator = ContentPatterns.BULLET.finditer(self.content)
-        try:
-            current = next(iterator)
-        except StopIteration:
-            yield count, self.content.strip("\t \n")
-            return
-        yield count, self.content[: current.start()].strip("\t \n")
-        count += 1
-        for nxt in iterator:
-            yield count, self.content[current.end() : nxt.start()].strip("\t \n")
-            count += 1
-            current = nxt
-        yield count, self.content[current.end() :].strip("\t \n")

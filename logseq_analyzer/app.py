@@ -203,7 +203,7 @@ def analyze(args: Args, index: FileIndex, paths: dict[str, Path], journal_page_f
     idx_report[Output.Dir.INDEX][Output.File.GRAPH_DATA] = {f.name: f.data for f in index}
     if args.write_graph:
         idx_report[Output.Dir.INDEX][Output.File.GRAPH_CONTENT] = {f.name: f.content for f in index}
-        idx_report[Output.Dir.INDEX][Output.File.GRAPH_BULLETS] = {f.name: f.all_bullets for f in index}
+        idx_report[Output.Dir.INDEX][Output.File.GRAPH_BULLETS] = {f.name: f.bullets for f in index}
     yield idx_report
 
 
