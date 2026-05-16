@@ -1,25 +1,30 @@
 """Logseq Graph Class."""
 
-import ast
+import json
 import logging
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.domain.enums import Core, FileType, TargetDir
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Iterator, Sequence
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-type EDNValue = str | int | float | bool | None | list["EDNValue"] | set["EDNValue"] | dict[object, "EDNValue"]
+type EDNValue = Any
 
-TOKEN_REGEX = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
-COMMENT_REGEX = re.compile(r";.*")
-NUMBER_REGEX = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+TOKEN_PATTERN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
+COMMENT_PATTERN = re.compile(r";.*")
+NUM_PATTERN = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+LITERAL_MAP = {
+    "true": True,
+    "false": False,
+    "nil": None,
+}
 
 
 class Edn(StrEnum):
@@ -53,27 +58,27 @@ class ConfigEdns:
     @property
     def dir_page(self) -> str:
         """Get the target page directory from the configuration."""
-        return str(self.config.get(Edn.PAGES_DIR, TargetDir.PAGE))
+        return self.config.get(Edn.PAGES_DIR, TargetDir.PAGE)
 
     @property
     def dir_journal(self) -> str:
         """Get the target journal directory from the configuration."""
-        return str(self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL))
+        return self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL)
 
     @property
     def dir_whiteboard(self) -> str:
         """Get the target whiteboard directory from the configuration."""
-        return str(self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD))
+        return self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD)
 
     @property
     def pagetitle_fmt(self) -> str:
         """Get the page title format from the configuration."""
-        return str(self.config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT))
+        return self.config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT)
 
     @property
     def filename_fmt(self) -> str:
         """Get the file name format from the configuration."""
-        return str(self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT))
+        return self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT)
 
     @property
     def ns_sep(self) -> str:
@@ -103,29 +108,23 @@ class ConfigEdns:
 
 
 @dataclass(slots=True)
-class LogseqConfigEDN:
+class EDNParser:
     """A simple EDN parser that converts EDN data into Python data structures."""
 
-    tokens: list[str]
-    _fn_map: dict[str, Callable[[], list | set | dict]] = field(init=False)
-    _literal_map: dict[str, bool | None] = field(init=False)
+    tokens: Sequence[str]
     pos: int = 0
+    _fn_map: dict[str, Callable[[], list | set | dict]] = field(init=False)
 
     def __post_init__(self) -> None:
         """Initialize the token map for parsing EDN structures."""
         self._fn_map = {
             "{": self.parse_map,
-            "[": self.parse_vector,
-            "(": self.parse_list,
+            "[": lambda: self.parse_sequence(closing="]"),
+            "(": lambda: self.parse_sequence(closing=")"),
             "#{": self.parse_set,
         }
-        self._literal_map = {
-            "true": True,
-            "false": False,
-            "nil": None,
-        }
 
-    def parse(self) -> EDNValue:
+    def parse(self) -> Any:
         """Parse the entire EDN input and return the resulting Python object."""
         value = self.parse_value()
         if self._peek() is not None:
@@ -137,13 +136,16 @@ class LogseqConfigEDN:
         """Return the next token without advancing the position."""
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def _next(self) -> str | None:
+    def _next(self) -> str:
         """Return the next token and advance the position."""
         tok = self._peek()
+        if tok is None:
+            msg = "Unexpected end of EDN input"
+            raise ValueError(msg)
         self.pos += 1
         return tok
 
-    def parse_value(self) -> EDNValue:
+    def parse_value(self) -> Any:
         """Parse a single EDN value."""
         tok = self._peek()
         if tok is None:
@@ -153,123 +155,81 @@ class LogseqConfigEDN:
             return self._fn_map[tok]()
         if tok.startswith('"'):
             return self.parse_string()
-        if tok in self._literal_map:
-            return self._literal_map.get(str(self._next()))
         if tok.startswith(":"):
             return self._next()
-        if self.is_number(tok):
+        if tok in LITERAL_MAP:
+            return LITERAL_MAP.get(self._next())
+        if NUM_PATTERN.fullmatch(tok) is not None:
             return self.parse_number()
         return self._next()
 
-    def parse_map(self) -> dict[EDNValue, EDNValue]:
+    def parse_map(self) -> dict[Any, Any]:
         """Parse a map (dictionary) from EDN."""
         self._next()
         result = {}
-        while True:
-            if self._peek() == "}":
-                self._next()
-                break
+        while self._peek() != "}":
             key = self.parse_value()
-            if isinstance(key, dict):
-                key = frozenset(key.items())
-            elif isinstance(key, list):
-                key = tuple(key)
-            elif isinstance(key, set):
-                key = frozenset(key)
-            result[key] = self.parse_value()
+            key_hashed = self.make_hashable(key)
+            result[key_hashed] = self.parse_value()
+        self._next()
         return result
 
-    def parse_vector(self) -> list[EDNValue]:
+    def make_hashable(self, val: Any) -> Any:
+        """Convert an EDN value to a hashable Python object."""
+        if isinstance(val, dict):
+            return frozenset((k, self.make_hashable(v)) for k, v in val.items())
+        if isinstance(val, list):
+            return tuple(val)
+        if isinstance(val, set):
+            return frozenset(val)
+        return val
+
+    def parse_sequence(self, closing: str) -> list[Any]:
         """Parse a vector (list) from EDN."""
         self._next()
         result = []
-        while True:
-            if self._peek() == "]":
-                self._next()
-                break
+        while self._peek() != closing:
             result.append(self.parse_value())
-        return result
-
-    def parse_list(self) -> list[EDNValue]:
-        """Parse a list from EDN."""
         self._next()
-        result = []
-        while True:
-            if self._peek() == ")":
-                self._next()
-                break
-            result.append(self.parse_value())
         return result
 
-    def parse_set(self) -> set[EDNValue]:
+    def parse_set(self) -> set[Any]:
         """Parse a set from EDN."""
         self._next()
         result = set()
-        while True:
-            if self._peek() == "}":
-                self._next()
-                break
+        while self._peek() != "}":
             result.add(self.parse_value())
+        self._next()
         return result
 
-    def parse_string(self) -> EDNValue:
+    def parse_string(self) -> Any:
         """Parse a string from EDN."""
-        return ast.literal_eval(str(self._next()))
+        return json.loads(self._next())
 
-    def is_number(self, tok: str) -> bool:
-        """Check if the token is a valid number (integer or float)."""
-        return NUMBER_REGEX.fullmatch(tok) is not None
-
-    def parse_number(self) -> float | int:
+    def parse_number(self) -> int | float:
         """Parse a number (integer or float) from EDN."""
         tok = self._next()
-        if tok is None:
-            msg = "Unexpected end of EDN input while parsing number"
-            raise ValueError(msg)
-        if any(c in tok for c in ".eE"):
+        if "." in tok or "e" in tok.lower():
             return float(tok)
         return int(tok)
 
 
-def loads(edn_str: str) -> EDNValue:
-    """Parse an EDN-formatted string and return the corresponding Python data structure.
-
-    Args:
-        edn_str (str): The EDN string to parse.
-
-    Returns:
-        EDNValue: The parsed Python data structure.
-
-    """
-    return LogseqConfigEDN(list(tokenize(edn_str))).parse()
-
-
 def tokenize(edn_str: str) -> Iterator[str]:
-    """Yield EDN tokens, skipping comments, whitespace, and commas.
-
-    Comments start with ';' and run to end-of-line.
-    Commas are treated as whitespace per EDN spec.
-
-    Args:
-        edn_str (str): The EDN string to tokenize.
-
-    Yields:
-        str: The next token in the EDN string.
-
-    """
-    edn = COMMENT_REGEX.sub("", edn_str)
-    for match in TOKEN_REGEX.finditer(edn):
+    """Yield EDN tokens, skipping comments, whitespace, and commas."""
+    edn = COMMENT_PATTERN.sub("", edn_str)
+    for match in TOKEN_PATTERN.finditer(edn):
         yield match.group().strip()
 
 
-def get_edn_from_file(path: Path) -> EDNValue:
-    """Initialize the LogseqGraphConfig from a file.
+def loads(edn_str: str) -> Any:
+    """Parse an EDN-formatted string and return the corresponding Python data structure."""
+    tokens = tuple(tokenize(edn_str))
+    return EDNParser(tokens).parse()
 
-    Args:
-        path (Path): The path to the config file.
 
-    """
-    logger.debug("Initializing config from file: %s", path)
+def get_edn_from_file(path: Path) -> Any:
+    """Initialize the LogseqGraphConfig from a file."""
+    logger.debug("Loading EDN from file: %s", path)
     with path.open("r", encoding="utf-8") as f:
         return loads(f.read())
 

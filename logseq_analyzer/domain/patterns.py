@@ -129,10 +129,10 @@ class CodePatterns(IPattern):
 
     ALL = _mlcode("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
-        (Crit.Code.ML_CALC, _mlcode("calc")),
-        (Crit.Code.ML_LANG, _mlcode(r"\w+")),
+        (Crit.MultLineCode.CALC, _mlcode("calc")),
+        (Crit.MultLineCode.LANGUAGE, _mlcode(r"\w+")),
     )
-    FALLBACK = Crit.Code.ML_ALL
+    FALLBACK = Crit.MultLineCode.ALL
 
 
 class DoubleCurlyPatterns(IPattern):
@@ -160,8 +160,8 @@ class DoubleParenthesesPatterns(IPattern):
     """Patterns for double parentheses in Logseq."""
 
     ALL = _dblparen("")
-    PATTERN: Sequence[tuple[str, re.Pattern]] = ((Crit.DblParen.BLOCK_REFS, _dblparen(_UUID)),)
-    FALLBACK = Crit.DblParen.ALL_REFS
+    PATTERN: Sequence[tuple[str, re.Pattern]] = ((Crit.DblParen.BLOCK_REF, _dblparen(_UUID)),)
+    FALLBACK = Crit.DblParen.ALL
 
 
 class EmbeddedLinkPatterns(IPattern):
@@ -169,10 +169,10 @@ class EmbeddedLinkPatterns(IPattern):
 
     ALL = _emblink("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
-        (Crit.Emb.INTERNET, _emblink(_URL)),
-        (Crit.Emb.ASSET, _emblink(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)")),
+        (Crit.EmbLink.INTERNET, _emblink(_URL)),
+        (Crit.EmbLink.ASSET, _emblink(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)")),
     )
-    FALLBACK = Crit.Emb.OTHER
+    FALLBACK = Crit.EmbLink.ALL
 
 
 class ExternalLinkPatterns(IPattern):
@@ -180,10 +180,10 @@ class ExternalLinkPatterns(IPattern):
 
     ALL = _extlink("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
-        (Crit.Ext.INTERNET, _extlink(_URL)),
-        (Crit.Ext.ALIAS, _extlink(r"[\[\[|\(\(].*?[\]\]|\)\)].*?")),
+        (Crit.ExtLink.INTERNET, _extlink(_URL)),
+        (Crit.ExtLink.ALIAS, _extlink(r"[\[\[|\(\(].*?[\]\]|\)\)].*?")),
     )
-    FALLBACK = Crit.Ext.OTHER
+    FALLBACK = Crit.ExtLink.ALL
 
 
 PATTERNS: Sequence[type[IPattern]] = (
@@ -195,13 +195,13 @@ PATTERNS: Sequence[type[IPattern]] = (
     ExternalLinkPatterns,
 )
 MASK_MAP: dict[str, re.Pattern[str]] = {
-    Crit.Code.ML_ALL: CodePatterns.ALL,
-    Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
+    Crit.MultLineCode.ALL: CodePatterns.ALL,
+    Crit.Content.INLINE_CODE: ContentPatterns.INLINE_CODE_BLOCK,
     Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,
-    Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
+    Crit.Content.ANY_LINK: ContentPatterns.ANY_LINK,
 }
 PRIMARY_DATA_MAP: dict[str, re.Pattern[str]] = {
-    Crit.Content.BLOCKQUOTES: ContentPatterns.BLOCKQUOTE,
+    Crit.Content.BLOCKQUOTE: ContentPatterns.BLOCKQUOTE,
     Crit.Content.DRAW: ContentPatterns.DRAW,
     Crit.Content.FLASHCARD: ContentPatterns.FLASHCARD,
     Crit.Content.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
@@ -210,7 +210,7 @@ PRIMARY_DATA_MAP: dict[str, re.Pattern[str]] = {
     Crit.Content.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
 }
 RAW_DATA_MAP: dict[str, re.Pattern[str]] = {
-    Crit.Code.INLINE: ContentPatterns.INLINE_CODE_BLOCK,
-    Crit.Content.ANY_LINKS: ContentPatterns.ANY_LINK,
-    Crit.Content.ASSETS: ContentPatterns.ASSET,
+    Crit.Content.INLINE_CODE: ContentPatterns.INLINE_CODE_BLOCK,
+    Crit.Content.ANY_LINK: ContentPatterns.ANY_LINK,
+    Crit.Content.ASSET: ContentPatterns.ASSET,
 }

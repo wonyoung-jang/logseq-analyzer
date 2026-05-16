@@ -38,14 +38,14 @@ class FileType(StrEnum):
     ASSET = "asset"
     DRAW = "draw"
     JOURNAL = "journal"
-    OTHER = "other"
     PAGE = "page"
+    WHITEBOARD = "whiteboard"
     SUB_ASSET = "sub_asset"
     SUB_DRAW = "sub_draw"
     SUB_JOURNAL = "sub_journal"
     SUB_PAGE = "sub_page"
     SUB_WHITEBOARD = "sub_whiteboard"
-    WHITEBOARD = "whiteboard"
+    OTHER = "other"
 
 
 class Crit:
@@ -54,90 +54,90 @@ class Crit:
     class Content(StrEnum):
         """Content criteria."""
 
-        ALIASES = "content_aliases"
-        ANY_LINKS = "content_any_link"
-        ASSETS = "content_asset"
-        BLOCKQUOTES = "content_blockquote"
-        DRAW = "content_draw"
-        DYNAMIC_VAR = "content_dynamic_variable"
-        FLASHCARD = "content_flashcard"
-        PAGE_REF = "content_page_reference"
-        TAG = "content_tag"
-        TAGGED_BACKLINK = "content_tagged_backlink"
+        ALIAS = "Content_alias"
+        ANY_LINK = "Content_any_link"
+        ASSET = "Content_asset"
+        BLOCKQUOTE = "Content_blockquote"
+        DRAW = "Content_draw"
+        DYNAMIC_VAR = "Content_dynamic_variable"
+        FLASHCARD = "Content_flashcard"
+        PAGE_REF = "Content_page_reference"
+        TAG = "Content_tag"
+        TAGGED_BACKLINK = "Content_tagged_backlink"
+        INLINE_CODE = "Content_inline_code"
 
     class Prop(StrEnum):
         """Criteria for properties in Logseq."""
 
-        BLOCK_BUILTIN = "property_block_builtin"
-        BLOCK_USER = "property_block_user"
-        PAGE_BUILTIN = "property_page_builtin"
-        PAGE_USER = "property_page_user"
-        VALUES = "property_values"
+        BLOCK_BUILTIN = "PropBlock_builtin"
+        BLOCK_USER = "PropBlock_user"
+        PAGE_BUILTIN = "PropPage_builtin"
+        PAGE_USER = "PropPage_user"
+        VALUES = "PropValues"
 
-    class Code(StrEnum):
+    class MultLineCode(StrEnum):
         """Criteria for code blocks in Logseq."""
 
-        INLINE = "code_inline"
-        ML_ALL = "code_multiline"
-        ML_CALC = "code_multiline_calc"
-        ML_LANG = "code_multiline_lang"
+        ALL = "MultLineCode_"
+        CALC = "MultLineCode_calc"
+        LANGUAGE = "MultLineCode_lang"
 
     class AdvCmd(StrEnum):
         """Criteria for advanced commands in Logseq."""
 
-        ALL = "adv_cmd"
-        CAUTION = "adv_cmd_caution"
-        CENTER = "adv_cmd_center"
-        COMMENT = "adv_cmd_comment"
-        EXAMPLE = "adv_cmd_example"
-        EXPORT = "adv_cmd_export"
-        EXPORT_ASCII = "adv_cmd_export_ascii"
-        EXPORT_LATEX = "adv_cmd_export_latex"
-        IMPORTANT = "adv_cmd_important"
-        NOTE = "adv_cmd_note"
-        PINNED = "adv_cmd_pinned"
-        QUERY = "adv_cmd_query"
-        QUOTE = "adv_cmd_quote"
-        TIP = "adv_cmd_tip"
-        VERSE = "adv_cmd_verse"
-        WARNING = "adv_cmd_warning"
+        ALL = "AdvCmd_"
+        CAUTION = "AdvCmd_caution"
+        CENTER = "AdvCmd_center"
+        COMMENT = "AdvCmd_comment"
+        EXAMPLE = "AdvCmd_example"
+        EXPORT = "AdvCmd_export"
+        EXPORT_ASCII = "AdvCmd_export_ascii"
+        EXPORT_LATEX = "AdvCmd_export_latex"
+        IMPORTANT = "AdvCmd_important"
+        NOTE = "AdvCmd_note"
+        PINNED = "AdvCmd_pinned"
+        QUERY = "AdvCmd_query"
+        QUOTE = "AdvCmd_quote"
+        TIP = "AdvCmd_tip"
+        VERSE = "AdvCmd_verse"
+        WARNING = "AdvCmd_warning"
 
     class DblCurly(StrEnum):
         """Criteria for double curly brackets in Logseq."""
 
-        ALL = "double_curly_all_or_macros"
-        BLOCK_EMBED = "double_curly_block_embeds"
-        CARD = "double_curly_cards"
-        CLOZE = "double_curly_clozes"
-        EMBED = "double_curly_embeds"
-        NAMESPACE_QUERY = "double_curly_namespace_queries"
-        PAGE_EMBED = "double_curly_page_embeds"
-        QUERY_FUNCTION = "double_curly_query_functions"
-        RENDERER = "double_curly_renderers"
-        SIMPLE_QUERY = "double_curly_simple_queries"
-        EMBED_TWITTER_TWEET = "double_curly_twitter_tweets"
-        EMBED_VIDEO_URL = "double_curly_video_urls"
-        YOUTUBE_TIMESTAMP = "double_curly_youtube_timesteps"
+        ALL = "DblCurly_"
+        BLOCK_EMBED = "DblCurly_block_embed"
+        CARD = "DblCurly_card"
+        CLOZE = "DblCurly_cloze"
+        EMBED = "DblCurly_embed"
+        NAMESPACE_QUERY = "DblCurly_namespace_query"
+        PAGE_EMBED = "DblCurly_page_embed"
+        QUERY_FUNCTION = "DblCurly_query_function"
+        RENDERER = "DblCurly_renderer"
+        SIMPLE_QUERY = "DblCurly_simple_query"
+        EMBED_TWITTER_TWEET = "DblCurly_twitter_tweet"
+        EMBED_VIDEO_URL = "DblCurly_video_url"
+        YOUTUBE_TIMESTAMP = "DblCurly_youtube_timestep"
 
     class DblParen(StrEnum):
         """Criteria for double parentheses in Logseq."""
 
-        ALL_REFS = "double_parentheses_all_refs"
-        BLOCK_REFS = "double_parentheses_block_refs"
+        ALL = "DblParen_"
+        BLOCK_REF = "DblParen_block_ref"
 
-    class Emb(StrEnum):
+    class EmbLink(StrEnum):
         """Criteria for embedded links in Logseq."""
 
-        ASSET = "embedded_link_asset"
-        INTERNET = "embedded_link_internet"
-        OTHER = "embedded_link_other"
+        ALL = "EmbLink_"
+        ASSET = "EmbLink_asset"
+        INTERNET = "EmbLink_internet"
 
-    class Ext(StrEnum):
+    class ExtLink(StrEnum):
         """Criteria for file extensions in Logseq."""
 
-        ALIAS = "external_link_alias"
-        INTERNET = "external_link_internet"
-        OTHER = "external_link_other"
+        ALL = "ExtLink_"
+        ALIAS = "ExtLink_alias"
+        INTERNET = "ExtLink_internet"
 
 
 class Output:

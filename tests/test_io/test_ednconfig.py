@@ -1,8 +1,10 @@
 """Tests for LogseqConfigEDN."""
 
+from typing import Any
+
 import pytest
 
-from logseq_analyzer.adapter.ednconfig import EDNValue, LogseqConfigEDN, loads, tokenize
+from logseq_analyzer.adapter.ednconfig import EDNParser, loads, tokenize
 
 
 def test_tokenize_skips_comments_and_commas() -> None:
@@ -28,7 +30,7 @@ def test_tokenize_skips_comments_and_commas() -> None:
         ("foo", "foo"),
     ],
 )
-def test_simple_values(edn: str, expected: EDNValue) -> None:
+def test_simple_values(edn: str, expected: Any) -> None:
     """Test that simple values are parsed correctly."""
     assert loads(edn) == expected
 
@@ -42,7 +44,7 @@ def test_simple_values(edn: str, expected: EDNValue) -> None:
         ("{:a 1 :b 2}", {":a": 1, ":b": 2}),
     ],
 )
-def test_collections(edn: str, expected: EDNValue) -> None:
+def test_collections(edn: str, expected: Any) -> None:
     """Test that collections are parsed correctly."""
     assert loads(edn) == expected
 
@@ -118,5 +120,5 @@ def test_tokenize() -> None:
     """Test that the tokenize function works correctly."""
     edn = "1, 2 ; comment\n 3"
     tokens = tokenize(edn)
-    edn_class = LogseqConfigEDN(list(tokens))
+    edn_class = EDNParser(list(tokens))
     assert edn_class.tokens == ["1", "2", "3"]

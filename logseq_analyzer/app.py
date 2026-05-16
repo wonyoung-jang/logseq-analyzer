@@ -183,7 +183,7 @@ def _iter_files(graph: Path, target: set[str]) -> Iterator[Path]:
             dirs.clear()
 
 
-def analyze(args: Args, index: FileIndex, paths: dict[str, Path], journal_page_fmt: str) -> Iterator[dict]:
+def analyze(args: Args, index: FileIndex, journal_page_fmt: str) -> Iterator[dict]:
     """Perform core analysis on the Logseq graph."""
     analyzer = LogseqAnalyzer(index, journal_page_fmt)
     analyzer.process()
@@ -192,19 +192,24 @@ def analyze(args: Args, index: FileIndex, paths: dict[str, Path], journal_page_f
     yield analyzer.namespace.report
     yield analyzer.journal.report
     yield analyzer.summary.report
-    yield LogseqFileMover(
-        should_move_bak=args.move_bak,
-        should_move_recycle=args.move_recycle,
-        should_move_unlinked_assets=args.move_unlinked_assets,
-        unlinked_assets=analyzer.asset.not_backlinked,
-        paths=paths,
-    ).report
     idx_report = index.report
     idx_report[Output.Dir.INDEX][Output.File.GRAPH_DATA] = {f.name: f.data for f in index}
     if args.write_graph:
         idx_report[Output.Dir.INDEX][Output.File.GRAPH_CONTENT] = {f.name: f.content for f in index}
         idx_report[Output.Dir.INDEX][Output.File.GRAPH_BULLETS] = {f.name: f.bullets for f in index}
     yield idx_report
+
+
+def move(args: Args, index: FileIndex, paths: dict[str, Path]) -> Iterator[dict]:
+    """Handle moving of files based on analysis results."""
+    mover = LogseqFileMover(
+        should_move_bak=args.move_bak,
+        should_move_recycle=args.move_recycle,
+        should_move_unlinked_assets=args.move_unlinked_assets,
+        unlinked_assets=set(index.yield_backlinked_assets(backlinked=False)),
+        paths=paths,
+    )
+    yield mover.report
 
 
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
@@ -242,8 +247,10 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     _prog(70, "Setup writer...")
     _writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
     _prog(80, "Running core analysis on Logseq graph...")
-    _analysis = analyze(args, index, paths, journal_formats.page)
+    _analysis = analyze(args, index, journal_formats.page)
     _writer.write_reports(_analysis)
+    _move = move(args, index, paths)
+    _writer.write_reports(_move)
     _prog(90, "Saving index to cache...")
     cache.save(index)
     _prog(100, "Logseq Analyzer completed successfully.")

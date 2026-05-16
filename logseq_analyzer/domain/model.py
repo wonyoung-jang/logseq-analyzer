@@ -413,7 +413,7 @@ class LogseqFile:
     def yield_linkedrefs(self) -> Iterator[str]:
         """Yield linked references from the file."""
         yield from chain(
-            self.get_data(Crit.Content.ALIASES),
+            self.get_data(Crit.Content.ALIAS),
             self.get_data(Crit.Content.DRAW),
             self.get_data(Crit.Content.PAGE_REF),
             self.get_data(Crit.Content.TAG),
@@ -427,8 +427,8 @@ class LogseqFile:
     def yield_asset_mentions(self) -> Iterator[str]:
         """Yield asset mentions from the file."""
         yield from chain(
-            self.get_data(Crit.Content.ASSETS),
-            self.get_data(Crit.Emb.ASSET),
+            self.get_data(Crit.Content.ASSET),
+            self.get_data(Crit.EmbLink.ASSET),
         )
 
     def yield_hls_bullet(self) -> Iterator[str]:
@@ -507,7 +507,7 @@ class LogseqFile:
         if propvalues:
             yield Crit.Prop.VALUES, propvalues
             if alias := list(_process_aliases(propvalues.get("alias", ""))):
-                yield Crit.Content.ALIASES, alias
+                yield Crit.Content.ALIAS, alias
 
     def _extract_properties(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
         """Extract page and block properties from the content."""

@@ -112,7 +112,7 @@ class LogseqGraph:
             self.linkedref_ns.add(f.name)
             self.linkedref_ns.add(f.ns_info.root)
             _process_namespaces(f, from_name)
-        self.aliases.update(f.get_data(Crit.Content.ALIASES))
+        self.aliases.update(f.get_data(Crit.Content.ALIAS))
         self.linkedref.update(f.yield_linkedrefs())
         _update_counts(self.linkedref_count, f.yield_linkedrefs(), f.name)
         if f.ns_info.parent_full:
