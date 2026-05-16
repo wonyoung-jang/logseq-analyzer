@@ -149,7 +149,6 @@ class Output:
         GRAPH = "graph"
         INDEX = "index"
         JOURNALS = "journals"
-        META = "_meta"
         MOVED_FILES = "moved_files"
         ASSETS = "assets"
         NAMESPACES = "namespaces"
@@ -160,8 +159,6 @@ class Output:
     class File(StrEnum):
         """Output types for the Logseq Analyzer."""
 
-        ARGUMENTS = "arguments"
-        CONFIG_EDN = "config_edn"
         GRAPH_BULLETS = "graph_content_bullets"
         GRAPH_CONTENT = "graph_content"
         GRAPH_DATA = "graph_content_data"

@@ -10,31 +10,11 @@ from logseq_analyzer.domain.model import (
     JournalFormats,
     LogseqFile,
     LogseqFileContext,
-    _format_bytes,
     _process_aliases,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (0, "0 B"),
-        (1, "1 B"),
-        (1023, "1023 B"),
-        (1024, "1.00 KB"),
-        (2048, "2.00 KB"),
-        (1048576, "1.00 MB"),
-        (1073741824, "1.00 GB"),
-        (1099511627776, "1.00 TB"),
-        (1125899906842624, "1.00 PB"),
-    ],
-)
-def test_format_bytes_iec(value: int, expected: str) -> None:
-    """Test the format_bytes function with IEC units."""
-    assert _format_bytes(value) == expected
 
 
 @pytest.fixture
@@ -50,7 +30,6 @@ def temp_file() -> Iterator[str]:
 def logseq_file_context() -> LogseqFileContext:
     """Fixture to create a LogseqFileContext object for testing."""
     return LogseqFileContext(
-        now_ts=0.0,
         journal_format=JournalFormats(
             file="{{year}}/{{month}}/{{day}}.md",
             page="{{name}}.md",

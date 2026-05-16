@@ -1,7 +1,6 @@
 """Domain model classes for Logseq graph and files."""
 
 import logging
-import math
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -16,7 +15,7 @@ from logseq_analyzer.utils.enums import BACKLINK_CRITERIA, Core, Crit, FileType,
 from logseq_analyzer.utils.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Sequence
+    from collections.abc import Iterable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +74,6 @@ BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
         "updated-at",
     )
 )
-_SIZE_UNITS: Sequence[str] = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
 _ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
 
 
@@ -124,25 +122,6 @@ def _append_ordinal_to_day(day: str) -> str:
     if 11 <= day_int <= 13:
         return day + "th"
     return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
-
-
-def _format_bytes(size: int) -> str:
-    """Convert a byte value into a human-readable string using IEC units.
-
-    Args:
-        size (int): Number of bytes.
-
-    Returns:
-        str: Human-readable string, e.g. '1.23 MB'.
-
-    """
-    if size < 0:
-        msg = "size must be non-negative"
-        raise ValueError(msg)
-    if size < 1024:
-        return f"{size} {_SIZE_UNITS[0]}"
-    idx = min(int(math.log(size, 1024)), len(_SIZE_UNITS) - 1)
-    return f"{size / 1024**idx:.2f} {_SIZE_UNITS[idx]}"
 
 
 @dataclass(slots=True)
@@ -277,7 +256,6 @@ class NodeType:
 class LogseqFileContext:
     """Class to hold context data for a Logseq file."""
 
-    now_ts: float
     journal_format: JournalFormats
     ns_file_sep: str
     graph_path: Path
@@ -297,12 +275,7 @@ class JournalFormats:
 class FileInfo:
     """File timestamp information class."""
 
-    time_existed: float
-    time_unmodified: float
-    date_created: str
-    date_modified: str
     size: int
-    human_readable_size: str
     has_content: bool
 
 
@@ -332,20 +305,6 @@ class NamespaceInfo:
 
 
 @dataclass(slots=True)
-class BulletInfo:
-    """Bullet statistics class."""
-
-    chars: int
-    bullets: int
-    empty_bullets: int
-    char_per_bullet: float | None = field(init=False)
-
-    def __post_init__(self) -> None:
-        """Calculate characters per bullet."""
-        self.char_per_bullet = round(self.chars / self.bullets, 2) if self.bullets else None
-
-
-@dataclass(slots=True)
 class LogseqFile:
     """A class to represent a Logseq file."""
 
@@ -359,7 +318,6 @@ class LogseqFile:
     all_bullets: list[str] = field(default_factory=list, repr=False)
     node: NodeType = field(default_factory=NodeType, repr=False)
     _ns_info: NamespaceInfo | None = field(default=None, repr=False)
-    _bullet_info: BulletInfo | None = field(default=None, repr=False)
     _file_info: FileInfo | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -433,12 +391,7 @@ class LogseqFile:
         if self._file_info is None:
             _stat = self.path.stat()
             self._file_info = FileInfo(
-                time_existed=self.ctx.now_ts - _stat.st_birthtime,
-                time_unmodified=self.ctx.now_ts - _stat.st_mtime,
-                date_created=datetime.fromtimestamp(_stat.st_birthtime, tz=UTC).isoformat(),
-                date_modified=datetime.fromtimestamp(_stat.st_mtime, tz=UTC).isoformat(),
                 size=_stat.st_size,
-                human_readable_size=_format_bytes(_stat.st_size),
                 has_content=bool(_stat.st_size),
             )
         return self._file_info
@@ -457,16 +410,6 @@ class LogseqFile:
             )
         return self._ns_info
 
-    @property
-    def bullet_info(self) -> BulletInfo:
-        """Return the bullet information of the file."""
-        if self._bullet_info is None:
-            self._bullet_info = BulletInfo(
-                chars=len(self.content),
-                bullets=len(self.all_bullets),
-                empty_bullets=self.all_bullets.count(""),
-            )
-        return self._bullet_info
 
     def yield_linkedrefs(self) -> Iterator[str]:
         """Yield linked references from the file."""

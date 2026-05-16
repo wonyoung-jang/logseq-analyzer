@@ -3,7 +3,6 @@
 import logging
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -228,7 +227,6 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     logger.info("JournalFormats: %s", journal_formats)
     _prog(40, "Configure Logseq Analyzer settings...")
     _context = LogseqFileContext(
-        now_ts=datetime.now(tz=UTC).timestamp(),
         journal_format=journal_formats,
         ns_file_sep=config_edns.ns_sep,
         graph_path=paths["graph"],

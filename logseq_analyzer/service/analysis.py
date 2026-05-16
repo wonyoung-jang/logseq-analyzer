@@ -16,7 +16,6 @@ import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from enum import IntEnum
 from itertools import chain
 from typing import TYPE_CHECKING, TypedDict
 
@@ -36,14 +35,6 @@ _DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset(("st", "nd", "rd", "th"))
 type _NsTree = dict[str, "_NsTree"]
 
 
-class Day(IntEnum):
-    """Enum for days of the week."""
-
-    IN_WEEK = 7
-    IN_MONTH = 30
-    IN_YEAR = 365
-
-
 class _QueryInfo(TypedDict, total=False):
     found_in: list[str]
     namespace: str
@@ -56,9 +47,6 @@ class JournalStat(TypedDict):
     first: datetime
     last: datetime
     days: int
-    weeks: float
-    months: float
-    years: float
 
 
 def _get_journal_stats(dates: list[datetime]) -> JournalStat:
@@ -67,14 +55,7 @@ def _get_journal_stats(dates: list[datetime]) -> JournalStat:
     last = max(dates) if dates else datetime.min.replace(tzinfo=UTC)
     delta = last - first
     days = delta.days + 1
-    return JournalStat(
-        first=first,
-        last=last,
-        days=days,
-        weeks=round(days / Day.IN_WEEK, 2),
-        months=round(days / Day.IN_MONTH, 2),
-        years=round(days / Day.IN_YEAR, 2),
-    )
+    return JournalStat(first=first, last=last, days=days)
 
 
 def _update_counts(result: dict, collection: Iterable[str], filename: str) -> None:
@@ -342,7 +323,6 @@ class LogseqSummarizer:
             self.file[Output.File.SUMMARY_BACKLINKED_NS_ONLY].append(f.name)
         self.info[f.name] = {}
         self.info[f.name]["file"] = f.file_info
-        self.info[f.name]["bullet"] = f.bullet_info
         self.info[f.name]["namespace"] = f.ns_info
 
     @property
