@@ -246,14 +246,14 @@ class NodeType:
 class LogseqFileContext:
     """Class to hold context data for a Logseq file."""
 
-    journal_format: JournalFormats
+    journal_format: JournalFormat
     ns_file_sep: str
     graph_path: Path
     target: dict
 
 
 @dataclass(slots=True)
-class JournalFormats:
+class JournalFormat:
     """Formats for Logseq journal files and pages."""
 
     file: str
@@ -265,14 +265,13 @@ class JournalFormats:
 class NamespaceInfo:
     """NamespaceInfo class."""
 
-    parent_full: str
+    is_namespace: bool  # TODO: "mutable"
+    root: str
     parent: str
     parts: tuple[tuple[str, int], ...]
-    root: str
-    is_namespace: bool  # TODO: "mutable"
     children: set[str] = field(default_factory=set)  # TODO: "mutable"
 
-    def mark_as_namespace_root(self) -> None:
+    def mark_as_namespace(self) -> None:
         """Mark this page as a namespace root (does not contain NS_SEP itself)."""
         self.is_namespace = True
 
@@ -371,11 +370,10 @@ class LogseqFile:
         if self._ns_info is None:
             _ns_parts = self.name.split(Core.NS_SEP)
             self._ns_info = NamespaceInfo(
-                parent_full=Core.NS_SEP.join(_ns_parts[:-1]),
-                parent=_ns_parts[-2] if len(_ns_parts) > 2 else _ns_parts[0],
-                parts=tuple((part, level) for level, part in enumerate(_ns_parts, start=1)),
-                root=_ns_parts[0],
                 is_namespace=Core.NS_SEP in self.name,
+                root=_ns_parts[0],
+                parent=Core.NS_SEP.join(_ns_parts[:-1]),
+                parts=tuple((part, level) for level, part in enumerate(_ns_parts, start=1)),
             )
         return self._ns_info
 
@@ -422,10 +420,6 @@ class LogseqFile:
     def get_data(self, key: str) -> Iterable[str]:
         """Get data by key."""
         return self.data.get(key, ())
-
-    def set_filetype(self, filetype: str) -> None:
-        """Set the file type of the file."""
-        self.filetype = filetype
 
     def set_nodetype(self) -> None:
         """Determine the node type of the file."""

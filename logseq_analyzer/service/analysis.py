@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING, TypedDict
 
 from logseq_analyzer.domain.enums import Core, Crit, FileType, Output
 from logseq_analyzer.domain.model import BUILT_IN_PROPERTIES
-from logseq_analyzer.domain.patterns import ContentPatterns
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
@@ -33,12 +32,6 @@ logger = logging.getLogger(__name__)
 _DATE_ORDINAL_SUFFIXES: frozenset[str] = frozenset(("st", "nd", "rd", "th"))
 
 type _NsTree = dict[str, "_NsTree"]
-
-
-class _QueryInfo(TypedDict, total=False):
-    found_in: list[str]
-    namespace: str
-    size: int
 
 
 class JournalStat(TypedDict):
@@ -75,10 +68,8 @@ def _update_counts(result: dict, collection: Iterable[str], filename: str) -> No
 
 def _process_namespaces(f: LogseqFile, from_name: Callable[[str], list[LogseqFile]]) -> None:
     """Post-process namespaces in the content data."""
-    for root in from_name(f.ns_info.root):
-        root.ns_info.mark_as_namespace_root()  # TODO: Refactor
-        root.ns_info.add_child(f.name)  # TODO: Refactor
-    for parent in from_name(f.ns_info.parent_full):
+    for parent in chain(from_name(f.ns_info.root), from_name(f.ns_info.parent)):
+        parent.ns_info.mark_as_namespace()  # TODO: Refactor
         parent.ns_info.add_child(f.name)  # TODO: Refactor
 
 
@@ -115,8 +106,8 @@ class LogseqGraph:
         self.aliases.update(f.get_data(Crit.Content.ALIAS))
         self.linkedref.update(f.yield_linkedrefs())
         _update_counts(self.linkedref_count, f.yield_linkedrefs(), f.name)
-        if f.ns_info.parent_full:
-            _update_counts(self.linkedref_count, [f.ns_info.parent_full], f.name)
+        if f.ns_info.parent:
+            _update_counts(self.linkedref_count, [f.ns_info.parent], f.name)
 
     def process_node(self, f: LogseqFile) -> None:
         """Process summary data for a single file based on metadata and content analysis."""
@@ -156,23 +147,19 @@ class LogseqAssets:
 
     def process_hls_backlinks(self) -> None:
         """Check for backlinks in the HLS assets."""
-        if not self.hls_asset_map:
-            return
-        for name in self.hls_bullets:
-            if not (hls_file := self.hls_asset_map.get(name)):
-                self.hls_not_backlinked.add(name)
-                continue
-            hls_file.set_filetype(FileType.ASSET)  # TODO: Refactor
-            hls_file.node.mark_backlinked()  # TODO: Refactor
-            self.hls_backlinked.add(name)
+        self.hls_not_backlinked.update(self.hls_asset_map.keys() - self.hls_bullets)
+        self.hls_backlinked.update(self.hls_asset_map.keys() & self.hls_bullets)
+        to_backlink = (f for n, f in self.hls_asset_map.items() if n in self.hls_backlinked)
+        for f in to_backlink:
+            f.node.mark_backlinked()  # TODO: Refactor
 
     def process_asset_backlinks(self, index: FileIndex) -> None:
         """Process a file to find mentions of assets and determine if they are backlinked."""
-        if not self.asset_mentions:
-            return
-        for unlinked in index.yield_backlinked_assets(backlinked=False):
-            if any(unlinked.name in m for m in self.asset_mentions):
-                unlinked.node.mark_backlinked()  # TODO: Refactor
+        to_backlink = (
+            f for f in index.yield_backlinked_assets(backlinked=False) if any(f.name in m for m in self.asset_mentions)
+        )
+        for f in to_backlink:
+            f.node.mark_backlinked()  # TODO: Refactor
         self.backlinked.update(index.yield_backlinked_assets(backlinked=True))
         self.not_backlinked.update(index.yield_backlinked_assets(backlinked=False))
 
@@ -188,7 +175,6 @@ class LogseqNamespaces:
     conflict_part_to_lvl_to_fullname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
     lvl_to_partlist: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
     tree: _NsTree = field(default_factory=dict)
-    queries: dict[str, _QueryInfo] = field(default_factory=dict)
 
     def process(self, f: LogseqFile) -> None:
         """Initialize namespace parts for a given file."""
@@ -199,19 +185,6 @@ class LogseqNamespaces:
             self.part_to_namelvl_list[part].append((f.name, level))
             self.lvl_to_partlist[level].append(part)
             cur = cur.setdefault(part, {})
-        for query in f.get_data(Crit.DblCurly.NAMESPACE_QUERY):
-            page_refs = ContentPatterns.PAGE_REFERENCE.findall(query)
-            if len(page_refs) != 1:
-                logger.warning("Invalid query: %s", query)
-                continue
-            if query not in self.queries:
-                self.queries[query] = {
-                    "found_in": [f.name],
-                    "namespace": page_refs[0],
-                    "size": f.ns_info.size,
-                }
-            else:
-                self.queries[query]["found_in"].append(f.name)
 
     def process_conflicts(self, non_ns_names: Iterable[str], dangling: set[str]) -> None:
         """Check for conflicts between split namespace parts and existing non-namespace page names."""

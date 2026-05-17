@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from logseq_analyzer.domain.model import (
-    JournalFormats,
+    JournalFormat,
     LogseqFile,
     LogseqFileContext,
     _process_aliases,
@@ -30,7 +30,7 @@ def temp_file() -> Iterator[str]:
 def logseq_file_context() -> LogseqFileContext:
     """Fixture to create a LogseqFileContext object for testing."""
     return LogseqFileContext(
-        journal_format=JournalFormats(
+        journal_format=JournalFormat(
             file="{{year}}/{{month}}/{{day}}.md",
             page="{{name}}.md",
             page_title="{{name}}",

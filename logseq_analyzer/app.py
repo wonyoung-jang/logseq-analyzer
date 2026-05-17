@@ -13,7 +13,7 @@ from logseq_analyzer.adapter.filemover import LogseqFileMover
 from logseq_analyzer.adapter.filesystem import check_path
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import Output
-from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileContext
+from logseq_analyzer.domain.model import JournalFormat, LogseqFile, LogseqFileContext
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -203,44 +203,55 @@ def move(args: Args, index: FileIndex, paths: dict[str, Path]) -> tuple[str, lis
     ).report
 
 
+def progress(callback: Callable[[int, str], None] | None = None) -> Callable[[int, str], None]:
+    """Update progress through a callback or logging."""
+    return callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
+
+
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
     _init_logging()
-    _prog = progress_callback or (lambda p, msg: logger.info("Progress: %d%% - %s", p, msg))
-    _prog(10, "Starting Logseq Analyzer...")
+    prog = progress(progress_callback)
+    prog(5, "Starting Logseq Analyzer...")
     args = Args(**arguments)
-    _prog(30, "Setting up Logseq Analyzer configurations...")
+    prog(10, "Setting up Logseq Analyzer configurations...")
     paths = _get_paths(args)
-    config_edns = _get_logseq_config(paths["config_user"], paths.get("config_global"))
-    target_dirs = config_edns.get_target_dirs()
+    lsconfig = _get_logseq_config(paths["config_user"], paths.get("config_global"))
+    target_dirs = lsconfig.get_target_dirs()
     for dirname, _, _ in target_dirs.values():
         check_path(paths["graph"] / dirname, is_dir=True)
-    journal_formats = JournalFormats(
-        file=_cljs_date_to_py(config_edns.filename_fmt),
-        page=_cljs_date_to_py(config_edns.pagetitle_fmt),
-        page_title=config_edns.pagetitle_fmt,
-    )
-    logger.info("JournalFormats: %s", journal_formats)
-    _prog(40, "Configure Logseq Analyzer settings...")
-    _context = LogseqFileContext(
-        journal_format=journal_formats,
-        ns_file_sep=config_edns.ns_sep,
+    prog(15, "Configure Logseq Analyzer settings...")
+    ctx = LogseqFileContext(
+        journal_format=JournalFormat(
+            file=_cljs_date_to_py(lsconfig.filename_fmt),
+            page=_cljs_date_to_py(lsconfig.pagetitle_fmt),
+            page_title=lsconfig.pagetitle_fmt,
+        ),
+        ns_file_sep=lsconfig.ns_sep,
         graph_path=paths["graph"],
         target=target_dirs,
     )
-    _prog(50, "Setup cache...")
+    logger.info("LogseqFileContext: %s", ctx)
+    prog(20, "Setup cache...")
     cache = Cache(path=paths["cache"])
     index = cache.reset() if args.graph_cache else cache.load()
-    _prog(60, "Process Logseq graph...")
-    _files = _iter_files(paths["graph"], {dir_name for dir_name, _, _ in target_dirs.values()})
-    for path in cache.get_modified(_files):
-        index.add(LogseqFile(path, _context))
-    _prog(70, "Setup writer...")
-    _writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
-    _prog(80, "Running core analysis on Logseq graph...")
-    for report in analyze(index, journal_formats.page):
-        _writer.write_report(report)
-    _writer.write_report(move(args, index, paths))
-    _prog(90, "Saving index to cache...")
+    prog(25, "Process Logseq graph...")
+    files = _iter_files(paths["graph"], {dir_name for dir_name, _, _ in target_dirs.values()})
+    modified_files = list(cache.get_modified(files))
+    n_modified = len(modified_files)
+    increment = 55 / n_modified if n_modified else 0
+    for i, path in enumerate(modified_files, 1):
+        index.add(LogseqFile(path, ctx))
+        prog(int(25 + i * increment), f"Processing file {i}/{n_modified}: {path.name}")
+    prog(80, "Running core analysis on Logseq graph...")
+    writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
+    analyses = list(analyze(index, ctx.journal_format.page))
+    n_analyses = len(analyses)
+    increment = 15 / n_analyses if n_analyses else 0
+    for i, report in enumerate(analyses, 1):
+        writer.write_report(report)
+        prog(int(80 + i * increment), f"Writing report {i}/{n_analyses}: {report[0]}")
+    writer.write_report(move(args, index, paths))
+    prog(95, "Saving index to cache...")
     cache.save(index)
-    _prog(100, "Logseq Analyzer completed successfully.")
+    prog(100, "Logseq Analyzer completed successfully.")
