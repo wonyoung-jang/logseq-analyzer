@@ -148,32 +148,22 @@ class Output:
 
         GRAPH = "graph"
         INDEX = "index"
-        JOURNALS = "journals"
-        MOVED_FILES = "moved_files"
-        ASSETS = "assets"
-        NAMESPACES = "namespaces"
+        JOURNAL = "journal"
+        MOVED = "moved"
+        ASSET = "asset"
+        NAMESPACE = "namespace"
         SUMMARY = "summary"
-        SUMMARY_CONTENT = "summary/content"
-        SUMMARY_FILE_GENERAL = "summary/file_general"
 
     class File(StrEnum):
         """Output types for the Logseq Analyzer."""
 
-        GRAPH_BULLETS = "graph_content_bullets"
-        GRAPH_CONTENT = "graph_content"
-        GRAPH_DATA = "graph_content_data"
-        IDX_FILES = "index_files"
-        IDX_NAME_TO_FILES = "index_name_to_files"
-        MOVED_FILES = "moved_files"
+        GRAPH_DATA = "graph_data"
+        MOVED = "moved"
         SUMMARY_BACKLINKED = "backlinked"
         SUMMARY_BACKLINKED_NS_ONLY = "backlinked_ns_only"
-        SUMMARY_HAS_BACKLINKS = "has_backlinks"
+        SUMMARY_HAS_BACKLINK = "has_backlink"
         SUMMARY_HAS_CONTENT = "has_content"
         SUMMARY_IS_HLS = "is_hls"
-        SUMMARY_FILE_FILETYPE = "file_filetype"
-        SUMMARY_FILE_NODETYPE = "file_nodetype"
-        SUMMARY_FILE_EXTENSION = "file_extension"
-        SUMMARY_CONTENT_INFO = "content_info"
 
 
 BACKLINK_CRITERIA: frozenset[str] = frozenset(

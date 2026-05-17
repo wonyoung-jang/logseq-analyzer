@@ -5,13 +5,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, TextIO
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Sized
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
-def _write(path: Path, data: dict) -> None:
+def _write(path: Path, data: Sized) -> None:
     """Write the data to a plain text file with the given prefix and count."""
     with path.open("w", encoding="utf-8") as f:
         f.write(f"{path.name}\n")
@@ -65,15 +65,14 @@ class ReportWriter:
     ext: str
     output_dir: Path
 
-    def write_reports(self, data_reports: Iterator[dict[str, dict]]) -> None:
+    def write_report(self, data_report: tuple[str, list[tuple[str, Sized]]]) -> None:
         """Write reports to the specified output directories."""
-        for data_report in data_reports:
-            for subdir, reports in data_report.items():
-                logger.info("Processing reports for subdir: %s", subdir)
-                for prefix, data in reports.items():
-                    filename = f"{prefix}.{self.ext}" if len(data) else f"(EMPTY) {prefix}.{self.ext}"
-                    output_dir = self.output_dir / subdir if subdir else self.output_dir
-                    output_dir.mkdir(parents=True, exist_ok=True)
-                    path = output_dir / filename
-                    logger.info("\tWriting %s as %s", prefix, self.ext)
-                    _write(path, data)
+        subdir, reports = data_report
+        logger.info("Processing reports for subdir: %s", subdir)
+        for prefix, data in reports:
+            filename = f"{prefix}.{self.ext}" if len(data) else f"(EMPTY) {prefix}.{self.ext}"
+            output_dir = self.output_dir / subdir if subdir else self.output_dir
+            output_dir.mkdir(parents=True, exist_ok=True)
+            path = output_dir / filename
+            logger.info("\tWriting %s as %s", prefix, self.ext)
+            _write(path, data)

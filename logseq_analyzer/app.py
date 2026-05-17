@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import ConfigEdns, get_edn_from_file
@@ -17,7 +17,7 @@ from logseq_analyzer.domain.model import JournalFormats, LogseqFile, LogseqFileC
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Iterator, Sized
 
     from logseq_analyzer.domain.model import FileIndex
 
@@ -93,7 +93,6 @@ class Args:
     move_recycle: bool = False
     move_unlinked_assets: bool = False
     report_format: str = ".txt"
-    write_graph: bool = False
 
 
 def _init_logging() -> None:
@@ -169,47 +168,39 @@ def _cljs_date_to_py(cljs_format: str) -> str:
 
 def _iter_files(graph: Path, target: set[str]) -> Iterator[Path]:
     """Recursively iterate over files in the root directory."""
-    for root, dirs, files in graph.walk():
-        if root == graph:
-            continue
-        if any(name in target for name in (root.name, root.parent.name)):
-            for file in files:
-                if Path(file).suffix == ".org":
-                    logger.info("Skipping org-mode file %s in %s", file, root)
-                    continue
-                yield root / file
-        else:
-            logger.info("Skipping directory %s outside target directories", root)
-            dirs.clear()
+    for root, _, files in graph.walk():
+        if root != graph and not target.isdisjoint(root.parts):
+            yield from (root / f for f in files if not f.endswith(".org"))
 
 
-def analyze(args: Args, index: FileIndex, journal_page_fmt: str) -> Iterator[dict]:
+def get_report(subdir: str, obj: Any) -> tuple[str, list[tuple[str, Sized]]]:
+    """Generate a report for the given object."""
+    return (subdir, [(k, getattr(obj, k)) for k in obj.__slots__])
+
+
+def analyze(index: FileIndex, journal_page_fmt: str) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
     """Perform core analysis on the Logseq graph."""
     analyzer = LogseqAnalyzer(index, journal_page_fmt)
     analyzer.process()
-    yield analyzer.graph.report
-    yield analyzer.asset.report
-    yield analyzer.namespace.report
-    yield analyzer.journal.report
-    yield analyzer.summary.report
-    idx_report = index.report
-    idx_report[Output.Dir.INDEX][Output.File.GRAPH_DATA] = {f.name: f.data for f in index}
-    if args.write_graph:
-        idx_report[Output.Dir.INDEX][Output.File.GRAPH_CONTENT] = {f.name: f.content for f in index}
-        idx_report[Output.Dir.INDEX][Output.File.GRAPH_BULLETS] = {f.name: f.bullets for f in index}
-    yield idx_report
+    yield get_report(Output.Dir.GRAPH, analyzer.graph)
+    yield get_report(Output.Dir.ASSET, analyzer.asset)
+    yield get_report(Output.Dir.NAMESPACE, analyzer.namespace)
+    yield get_report(Output.Dir.JOURNAL, analyzer.journal)
+    yield get_report(Output.Dir.SUMMARY, analyzer.summary)
+    subdir, report = get_report(Output.Dir.INDEX, index)
+    report.append((Output.File.GRAPH_DATA, {f.name: f.data for f in index}))
+    yield (subdir, report)
 
 
-def move(args: Args, index: FileIndex, paths: dict[str, Path]) -> Iterator[dict]:
+def move(args: Args, index: FileIndex, paths: dict[str, Path]) -> tuple[str, list[tuple[str, Sized]]]:
     """Handle moving of files based on analysis results."""
-    mover = LogseqFileMover(
+    return LogseqFileMover(
         should_move_bak=args.move_bak,
         should_move_recycle=args.move_recycle,
         should_move_unlinked_assets=args.move_unlinked_assets,
         unlinked_assets=set(index.yield_backlinked_assets(backlinked=False)),
         paths=paths,
-    )
-    yield mover.report
+    ).report
 
 
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
@@ -243,14 +234,13 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     _prog(60, "Process Logseq graph...")
     _files = _iter_files(paths["graph"], {dir_name for dir_name, _, _ in target_dirs.values()})
     for path in cache.get_modified(_files):
-        index.add(LogseqFile(path, ctx=_context))
+        index.add(LogseqFile(path, _context))
     _prog(70, "Setup writer...")
     _writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
     _prog(80, "Running core analysis on Logseq graph...")
-    _analysis = analyze(args, index, journal_formats.page)
-    _writer.write_reports(_analysis)
-    _move = move(args, index, paths)
-    _writer.write_reports(_move)
+    for report in analyze(index, journal_formats.page):
+        _writer.write_report(report)
+    _writer.write_report(move(args, index, paths))
     _prog(90, "Saving index to cache...")
     cache.save(index)
     _prog(100, "Logseq Analyzer completed successfully.")

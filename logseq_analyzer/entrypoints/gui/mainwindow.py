@@ -21,7 +21,6 @@ class Argument(StrEnum):
     MOVE_RECYCLE = "move_recycle"
     MOVE_UNLINKED_ASSETS = "move_unlinked_assets"
     REPORT_FORMAT = "report_format"
-    WRITE_GRAPH = "write_graph"
 
 
 class LogseqAnalyzerGUI(QWidget):
@@ -60,7 +59,6 @@ class LogseqAnalyzerGUI(QWidget):
             Argument.MOVE_UNLINKED_ASSETS: self.checkboxes.move_assets.isChecked(),
             Argument.MOVE_BAK: self.checkboxes.move_bak.isChecked(),
             Argument.MOVE_RECYCLE: self.checkboxes.move_recycle.isChecked(),
-            Argument.WRITE_GRAPH: self.checkboxes.write_graph.isChecked(),
             Argument.GRAPH_CACHE: self.checkboxes.graph_cache.isChecked(),
             Argument.GRAPH_FOLDER: self.inputs.graph_folder.text(),
             Argument.GLOBAL_CONFIG: self.inputs.global_config.text(),
@@ -150,7 +148,6 @@ class LogseqAnalyzerGUI(QWidget):
         self.settings.setValue(Argument.MOVE_UNLINKED_ASSETS, self.checkboxes.move_assets.isChecked())
         self.settings.setValue(Argument.MOVE_BAK, self.checkboxes.move_bak.isChecked())
         self.settings.setValue(Argument.MOVE_RECYCLE, self.checkboxes.move_recycle.isChecked())
-        self.settings.setValue(Argument.WRITE_GRAPH, self.checkboxes.write_graph.isChecked())
         self.settings.setValue(Argument.GRAPH_CACHE, self.checkboxes.graph_cache.isChecked())
         self.settings.setValue(Argument.GRAPH_FOLDER, self.inputs.graph_folder.text())
         self.settings.setValue(Argument.GLOBAL_CONFIG, self.inputs.global_config.text())
@@ -165,9 +162,6 @@ class LogseqAnalyzerGUI(QWidget):
         self.checkboxes.move_bak.setChecked(bool(self.settings.value(Argument.MOVE_BAK, defaultValue=False, type=bool)))
         self.checkboxes.move_recycle.setChecked(
             bool(self.settings.value(Argument.MOVE_RECYCLE, defaultValue=False, type=bool))
-        )
-        self.checkboxes.write_graph.setChecked(
-            bool(self.settings.value(Argument.WRITE_GRAPH, defaultValue=False, type=bool))
         )
         self.checkboxes.graph_cache.setChecked(
             bool(self.settings.value(Argument.GRAPH_CACHE, defaultValue=False, type=bool))

@@ -49,11 +49,4 @@ def get_cli_args() -> dict:
         help="report format (.txt, .json, .md, .html)",
         default=".txt",
     )
-    parser.add_argument(
-        "-wg",
-        "--write-graph",
-        action="store_true",
-        help="write all graph content to output folder (warning: may result in large file)",
-        default=False,
-    )
     return vars(parser.parse_args())

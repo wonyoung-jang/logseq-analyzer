@@ -66,7 +66,6 @@ def test_main_window_controls(main_window: LogseqAnalyzerGUI) -> None:
     assert main_window.checkboxes.move_assets is not None
     assert main_window.checkboxes.move_bak is not None
     assert main_window.checkboxes.move_recycle is not None
-    assert main_window.checkboxes.write_graph is not None
     assert main_window.checkboxes.graph_cache is not None
     assert main_window.progress.progress_bar is not None
     assert main_window.buttons.run is not None

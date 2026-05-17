@@ -15,16 +15,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-type EDNValue = Any
-
 TOKEN_PATTERN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
 COMMENT_PATTERN = re.compile(r";.*")
 NUM_PATTERN = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
-LITERAL_MAP = {
-    "true": True,
-    "false": False,
-    "nil": None,
-}
+LITERAL_MAP = {"true": True, "false": False, "nil": None}
 
 
 class Edn(StrEnum):

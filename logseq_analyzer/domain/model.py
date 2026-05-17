@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, Core, Crit, FileType, Output, TargetDir
+from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, Core, Crit, FileType, TargetDir
 from logseq_analyzer.domain.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
 
 if TYPE_CHECKING:
@@ -128,34 +128,34 @@ def _append_ordinal_to_day(day: str) -> str:
 class FileIndex:
     """Class to index files in the Logseq graph."""
 
-    _files: set[LogseqFile] = field(default_factory=set)
-    _name_to_files: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
+    file: set[LogseqFile] = field(default_factory=set)
+    name_to_file: dict[str, list[LogseqFile]] = field(default_factory=lambda: defaultdict(list))
 
     def __len__(self) -> int:
         """Return the number of files in the index."""
-        return len(self._files)
+        return len(self.file)
 
     def __iter__(self) -> Iterator[LogseqFile]:
         """Iterate over the files in the index."""
-        return iter(self._files)
+        return iter(self.file)
 
     def __contains__(self, f: LogseqFile | str | object) -> bool:
         """Check if a file is in the index."""
         if isinstance(f, LogseqFile):
-            return f in self._files
+            return f in self.file
         if isinstance(f, str):
-            return f in self._name_to_files
+            return f in self.name_to_file
         msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile | str"
         raise TypeError(msg)
 
     def get_from_name(self, name: str) -> list[LogseqFile]:
         """Get files by their name."""
-        return self._name_to_files.get(name, [])
+        return self.name_to_file.get(name, [])
 
     def add(self, f: LogseqFile) -> None:
         """Add a file to the index."""
-        self._files.add(f)
-        self._name_to_files[f.name].append(f)
+        self.file.add(f)
+        self.name_to_file[f.name].append(f)
 
     def remove(self, f: LogseqFile | str | object) -> None:
         """Strategy to remove a file from the index."""
@@ -165,7 +165,7 @@ class FileIndex:
             logger.debug("Key %s removed from index.", f)
             return
         if isinstance(f, str):
-            for target in self._name_to_files.pop(f, []):
+            for target in self.name_to_file.pop(f, []):
                 self._remove_file(target)
             return
         msg = f"Invalid key type: {type(f).__name__}. Expected LogseqFile | str"
@@ -173,14 +173,14 @@ class FileIndex:
 
     def _remove_file(self, f: LogseqFile) -> None:
         """Remove a file from the index."""
-        self._files.discard(f)
-        if files := self._name_to_files.get(f.name):
+        self.file.discard(f)
+        if files := self.name_to_file.get(f.name):
             try:
                 files.remove(f)
             except ValueError:
                 logger.warning("File %s not found in name_to_files list for name %s.", f, f.name)
         else:
-            del self._name_to_files[f.name]
+            del self.name_to_file[f.name]
 
     def remove_deleted_files(self) -> None:
         """Remove deleted files from the cache."""
@@ -205,16 +205,6 @@ class FileIndex:
         for f in self:
             if f.node.backlinked == backlinked and f.filetype == FileType.ASSET:
                 yield f
-
-    @property
-    def report(self) -> dict:
-        """Generate a report of the indexed files."""
-        return {
-            Output.Dir.INDEX: {
-                Output.File.IDX_FILES: self._files,
-                Output.File.IDX_NAME_TO_FILES: self._name_to_files,
-            }
-        }
 
 
 @dataclass(slots=True)
@@ -272,14 +262,6 @@ class JournalFormats:
 
 
 @dataclass(slots=True)
-class FileInfo:
-    """File timestamp information class."""
-
-    size: int
-    has_content: bool
-
-
-@dataclass(slots=True)
 class NamespaceInfo:
     """NamespaceInfo class."""
 
@@ -318,7 +300,6 @@ class LogseqFile:
     bullets: list[str] = field(default_factory=list, repr=False)
     node: NodeType = field(default_factory=NodeType, repr=False)
     _ns_info: NamespaceInfo | None = field(default=None, repr=False)
-    _file_info: FileInfo | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFile object."""
@@ -332,13 +313,12 @@ class LogseqFile:
             parts = [p.strip("\t \n") for p in ContentPatterns.BULLET.split(self.content)]
             self.primary_bullet = parts[0] if parts else ""
             self.bullets.extend(parts)
-        if self.file_info.has_content:
+        if has_content := bool(self.content):
             self.data.update(self._extract_primary_data())
             propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
-            self.data.update(self._extract_aliases_and_propvalues(propvalues))
             self.data.update(self._extract_properties(propvalues))
             self.data.update(self._extract_patterns())
-            self.node.has_content = bool(self.content)
+            self.node.has_content = has_content
             self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
 
     def __hash__(self) -> int:
@@ -384,17 +364,6 @@ class LogseqFile:
             return ""
         encoded_path = self.uri[len(prefix) : -(len(uri_path.suffix))].replace("___", "%2F").replace("%253A", "%3A")
         return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"
-
-    @property
-    def file_info(self) -> FileInfo:
-        """Return the information of the file."""
-        if self._file_info is None:
-            _stat = self.path.stat()
-            self._file_info = FileInfo(
-                size=_stat.st_size,
-                has_content=bool(_stat.st_size),
-            )
-        return self._file_info
 
     @property
     def ns_info(self) -> NamespaceInfo:
@@ -502,22 +471,18 @@ class LogseqFile:
             if result := regex.findall(self.content):
                 yield prefix, result
 
-    def _extract_aliases_and_propvalues(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
-        """Extract aliases and properties from the content."""
+    def _extract_properties(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
+        """Extract aliases, and page and block properties from the content."""
         if propvalues:
             yield Crit.Prop.VALUES, propvalues
             if alias := list(_process_aliases(propvalues.get("alias", ""))):
                 yield Crit.Content.ALIAS, alias
-
-    def _extract_properties(self, propvalues: dict[str, str]) -> Iterator[tuple[str, Iterable[str]]]:
-        """Extract page and block properties from the content."""
-        page_props = set()
-        block_props = set()
         if self.primary_bullet and not self.primary_bullet.startswith("#"):
-            page_props.update(ContentPatterns.PROPERTY.findall(self.primary_bullet))
-            block_props.update(ContentPatterns.PROPERTY.findall("\n".join(self.bullets[1:])))
+            page_props = set(ContentPatterns.PROPERTY.findall(self.primary_bullet))
+            block_props = set(ContentPatterns.PROPERTY.findall("\n".join(self.bullets[1:])))
         else:
-            block_props.update(propvalues.keys())
+            page_props = set()
+            block_props = set(propvalues.keys())
         if block_builtin := block_props.intersection(BUILT_IN_PROPERTIES):
             yield Crit.Prop.BLOCK_BUILTIN, block_builtin
         if block_user := block_props.difference(BUILT_IN_PROPERTIES):

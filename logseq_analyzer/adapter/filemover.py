@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from logseq_analyzer.domain.enums import Output
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sized
 
     from logseq_analyzer.domain.model import LogseqFile
 
@@ -41,17 +41,21 @@ class LogseqFileMover:
         )
 
     @property
-    def report(self) -> dict:
+    def report(self) -> tuple[str, list[tuple[str, Sized]]]:
         """Generate a report of the moved files."""
-        return {
-            Output.Dir.MOVED_FILES: {
-                Output.File.MOVED_FILES: {
-                    "assets": self.moved_unlinked_assets,
-                    "bak": self.moved_bak,
-                    "recycle": self.moved_recycle,
-                }
-            }
-        }
+        return (
+            Output.Dir.MOVED,
+            [
+                (
+                    Output.File.MOVED,
+                    {
+                        "assets": self.moved_unlinked_assets,
+                        "bak": self.moved_bak,
+                        "recycle": self.moved_recycle,
+                    },
+                )
+            ],
+        )
 
 
 def _move(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:

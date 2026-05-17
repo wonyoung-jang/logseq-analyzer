@@ -133,11 +133,6 @@ class LogseqGraph:
         self.dangling.update((self.linkedref | self.linkedref_ns) - names - self.aliases - BUILT_IN_PROPERTIES)
         self.dangling_count.update({k: v for k, v in self.linkedref_count.items() if k in self.dangling})
 
-    @property
-    def report(self) -> dict:
-        """Generate a report of the graph analysis."""
-        return {Output.Dir.GRAPH: {k: getattr(self, k) for k in self.__slots__}}
-
 
 @dataclass(slots=True)
 class LogseqAssets:
@@ -180,11 +175,6 @@ class LogseqAssets:
                 unlinked.node.mark_backlinked()  # TODO: Refactor
         self.backlinked.update(index.yield_backlinked_assets(backlinked=True))
         self.not_backlinked.update(index.yield_backlinked_assets(backlinked=False))
-
-    @property
-    def report(self) -> dict:
-        """Generate a report of the asset analysis."""
-        return {Output.Dir.ASSETS: {k: getattr(self, k) for k in self.__slots__}}
 
 
 @dataclass(slots=True)
@@ -240,11 +230,6 @@ class LogseqNamespaces:
                 self.conflict_part_to_lvl_to_parentname[part][lvl].add(Core.NS_SEP.join(name.split(Core.NS_SEP)[:lvl]))
                 self.conflict_part_to_lvl_to_fullname[part][lvl].add(name)
 
-    @property
-    def report(self) -> dict:
-        """Generate a report of the namespace analysis."""
-        return {Output.Dir.NAMESPACES: {k: getattr(self, k) for k in self.__slots__}}
-
 
 @dataclass(slots=True)
 class LogseqJournals:
@@ -283,11 +268,6 @@ class LogseqJournals:
         self.dangling["before_existing"].extend(d for d in dangling_dt if d < self.stat["existing"]["first"])
         self.dangling["after_existing"].extend(d for d in dangling_dt if d > self.stat["existing"]["last"])
 
-    @property
-    def report(self) -> dict[str, dict[str, object]]:
-        """Get a report of the journal processing results."""
-        return {Output.Dir.JOURNALS: {k: getattr(self, k) for k in self.__slots__}}
-
 
 @dataclass(slots=True)
 class LogseqSummarizer:
@@ -308,7 +288,7 @@ class LogseqSummarizer:
         if f.node.has_content:
             self.file[Output.File.SUMMARY_HAS_CONTENT].append(f.name)
         if f.node.has_backlinks:
-            self.file[Output.File.SUMMARY_HAS_BACKLINKS].append(f.name)
+            self.file[Output.File.SUMMARY_HAS_BACKLINK].append(f.name)
         for k, v in f.data.items():
             data_item = self.content.setdefault(k, {})
             _update_counts(data_item, v, f.name)
@@ -321,23 +301,7 @@ class LogseqSummarizer:
             self.file[Output.File.SUMMARY_BACKLINKED].append(f.name)
         if f.node.backlinked_ns_only:
             self.file[Output.File.SUMMARY_BACKLINKED_NS_ONLY].append(f.name)
-        self.info[f.name] = {}
-        self.info[f.name]["file"] = f.file_info
-        self.info[f.name]["namespace"] = f.ns_info
-
-    @property
-    def report(self) -> dict:
-        """Generate a report of the summarization."""
-        return {
-            Output.Dir.SUMMARY: {
-                Output.File.SUMMARY_FILE_FILETYPE: self.filetype,
-                Output.File.SUMMARY_FILE_NODETYPE: self.nodetype,
-                Output.File.SUMMARY_FILE_EXTENSION: self.extension,
-                Output.File.SUMMARY_CONTENT_INFO: self.info,
-            },
-            Output.Dir.SUMMARY_FILE_GENERAL: self.file,
-            Output.Dir.SUMMARY_CONTENT: self.content,
-        }
+        self.info[f.name] = {"namespace": f.ns_info}
 
 
 @dataclass(slots=True)
