@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.model import FileIndex
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
     from pathlib import Path
+
+    from logseq_analyzer.domain.model import LogseqFile
 
 
 logger = logging.getLogger(__name__)
@@ -29,26 +29,23 @@ class Cache:
 
     path: Path
 
-    def save(self, index: FileIndex) -> None:
+    def save(self, index: set[LogseqFile]) -> None:
         """Close the cache file."""
         with shelve.open(self.path) as db:
             db[CacheKey.INDEX] = index
 
-    def reset(self) -> FileIndex:
+    def reset(self) -> set[LogseqFile]:
         """Reset the cache by clearing it and returning a new FileIndex."""
         with shelve.open(self.path) as db:
-            index = FileIndex()
-            db[CacheKey.INDEX] = index
+            db[CacheKey.INDEX] = set()
             db[CacheKey.MODTIMES] = {}
-            return index
+            return db.get(CacheKey.INDEX, set())
 
-    def load(self) -> FileIndex:
+    def load(self) -> set[LogseqFile]:
         """Load the index from the cache, removing any deleted files from the index."""
         with shelve.open(self.path) as db:
-            index: FileIndex = db.get(CacheKey.INDEX, FileIndex())
-            index.remove_deleted_files()
-            db[CacheKey.INDEX] = index
-            return index
+            index: set[LogseqFile] = db.get(CacheKey.INDEX, set())
+            return {file for file in index if file.path.exists()}
 
     def get_modified(self, files: Iterator[Path]) -> Iterable[Path]:
         """Get the modified files from the cache."""

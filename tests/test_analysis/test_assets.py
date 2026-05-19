@@ -15,7 +15,7 @@ def test_logseq_assets_initialization(logseq_assets: LogseqAssets) -> None:
     """Test the initialization of LogseqAssets."""
     assert logseq_assets.backlinked == set()
     assert logseq_assets.not_backlinked == set()
-    assert logseq_assets.hls_asset_map == {}
+    assert logseq_assets.hls_map == {}
     assert logseq_assets.hls_backlinked == set()
     assert logseq_assets.hls_not_backlinked == set()
-    assert logseq_assets.hls_bullets == set()
+    assert logseq_assets.hls_bullet == set()

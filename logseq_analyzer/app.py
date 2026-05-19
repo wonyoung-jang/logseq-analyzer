@@ -3,23 +3,24 @@
 import logging
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import unquote
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import ConfigEdns, get_edn_from_file
 from logseq_analyzer.adapter.filemover import LogseqFileMover
-from logseq_analyzer.adapter.filesystem import check_path
+from logseq_analyzer.adapter.filesystem import check_path, read_content
 from logseq_analyzer.adapter.reporter import ReportWriter
-from logseq_analyzer.domain.enums import Output
-from logseq_analyzer.domain.model import JournalFormat, LogseqFile, LogseqFileContext
+from logseq_analyzer.domain.enums import Core, FileType, Output, TargetDir
+from logseq_analyzer.domain.model import FileIndex, LogseqFile
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Sized
 
-    from logseq_analyzer.domain.model import FileIndex
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,16 @@ _DATETIME_TOKEN_MAP: dict[str, str] = {
 _DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
     "|".join(re.escape(str(k)) for k in sorted(_DATETIME_TOKEN_MAP.keys(), key=len, reverse=True))
 )
+
+
+@dataclass(slots=True)
+class LogseqFileContext:
+    """Class to hold context data for a Logseq file."""
+
+    jrnlfmt_file: str
+    jrnlfmt_page: str
+    jrnlfmt_page_title: str
+    nsfilesep: str
 
 
 class Constant:
@@ -203,6 +214,45 @@ def move(args: Args, index: FileIndex, paths: dict[str, Path]) -> tuple[str, lis
     ).report
 
 
+_ORDINAL_SUFFIX: dict[int, str] = {1: "st", 2: "nd", 3: "rd"}
+
+
+def _append_ordinal_to_day(day: str) -> str:
+    """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
+    day_int = int(day)
+    if 11 <= day_int <= 13:
+        return day + "th"
+    return day + _ORDINAL_SUFFIX.get(day_int % 10, "th")
+
+
+def _get_name(path: Path, ctx: LogseqFileContext, journal_dir: str) -> str:
+    """Process the filename to create a page title."""
+    name = path.stem.strip(ctx.nsfilesep)
+    if path.parent.name == journal_dir:
+        try:
+            date_obj = datetime.strptime(name, ctx.jrnlfmt_file).replace(tzinfo=UTC)
+            page_title = date_obj.strftime(ctx.jrnlfmt_page)
+            if Core.DATE_ORDINAL_SUFFIX in ctx.jrnlfmt_page_title:
+                day_number = str(date_obj.day)
+                day_with_ordinal = _append_ordinal_to_day(day_number)
+                page_title = page_title.replace(day_number, day_with_ordinal, 1)
+            return page_title.replace("'", "")
+        except ValueError as e:
+            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, ctx.jrnlfmt_page, e)
+            return name
+    return unquote(name).replace(ctx.nsfilesep, Core.NS_SEP)
+
+
+def _get_filetype(path: Path, target: dict[str, tuple[str, str, str]]) -> str:
+    """Determine the file type based on the directory structure."""
+    if _result := target.get(path.parent.name):
+        return _result[1]
+    for k, v in target.items():
+        if k in path.parts:
+            return v[2]
+    return FileType.OTHER
+
+
 def progress(callback: Callable[[int, str], None] | None = None) -> Callable[[int, str], None]:
     """Update progress through a callback or logging."""
     return callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
@@ -222,36 +272,41 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
         check_path(paths["graph"] / dirname, is_dir=True)
     prog(15, "Configure Logseq Analyzer settings...")
     ctx = LogseqFileContext(
-        journal_format=JournalFormat(
-            file=_cljs_date_to_py(lsconfig.filename_fmt),
-            page=_cljs_date_to_py(lsconfig.pagetitle_fmt),
-            page_title=lsconfig.pagetitle_fmt,
-        ),
-        ns_file_sep=lsconfig.ns_sep,
-        graph_path=paths["graph"],
-        target=target_dirs,
+        jrnlfmt_file=_cljs_date_to_py(lsconfig.filename_fmt),
+        jrnlfmt_page=_cljs_date_to_py(lsconfig.pagetitle_fmt),
+        jrnlfmt_page_title=lsconfig.pagetitle_fmt,
+        nsfilesep=lsconfig.ns_sep,
     )
     logger.info("LogseqFileContext: %s", ctx)
     prog(20, "Setup cache...")
     cache = Cache(path=paths["cache"])
-    index = cache.reset() if args.graph_cache else cache.load()
+    index = FileIndex()
+    index.update(cache.reset() if args.graph_cache else cache.load())
     prog(25, "Process Logseq graph...")
-    files = _iter_files(paths["graph"], {dir_name for dir_name, _, _ in target_dirs.values()})
-    modified_files = list(cache.get_modified(files))
+    modified_files = list(
+        cache.get_modified(
+            _iter_files(
+                paths["graph"],
+                {dir_name for dir_name, _, _ in target_dirs.values()},
+            )
+        )
+    )
     n_modified = len(modified_files)
-    increment = 55 / n_modified if n_modified else 0
     for i, path in enumerate(modified_files, 1):
-        index.add(LogseqFile(path, ctx))
-        prog(int(25 + i * increment), f"Processing file {i}/{n_modified}: {path.name}")
+        content = read_content(path)
+        name = _get_name(path, ctx, target_dirs[TargetDir.JOURNAL][0])
+        filetype = _get_filetype(path, target_dirs)
+        index.add(LogseqFile(path, content, name, filetype))
+        if i % 50 == 0 or i == n_modified:
+            prog(int(25 + i * 55 / n_modified), f"Processing file {i}/{n_modified}: {path.name}")
     prog(80, "Running core analysis on Logseq graph...")
     writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
-    analyses = list(analyze(index, ctx.journal_format.page))
+    analyses = list(analyze(index, ctx.jrnlfmt_page))
     n_analyses = len(analyses)
-    increment = 15 / n_analyses if n_analyses else 0
     for i, report in enumerate(analyses, 1):
         writer.write_report(report)
-        prog(int(80 + i * increment), f"Writing report {i}/{n_analyses}: {report[0]}")
+        prog(int(80 + i * 15 / n_analyses), f"Writing report {i}/{n_analyses}: {report[0]}")
     writer.write_report(move(args, index, paths))
     prog(95, "Saving index to cache...")
-    cache.save(index)
+    cache.save(index.file)
     prog(100, "Logseq Analyzer completed successfully.")

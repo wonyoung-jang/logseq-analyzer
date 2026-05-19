@@ -10,6 +10,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def read_content(path: Path) -> str:
+    """Read the content of a file."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError, ValueError:
+        return ""
+
+
 def check_must_exist(path: Path, *, is_dir: bool = False) -> None:
     """Validate the file path."""
     if not path.exists():

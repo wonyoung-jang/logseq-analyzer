@@ -7,7 +7,6 @@ import pytest
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.app import Constant
-from logseq_analyzer.domain.model import FileIndex
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -18,7 +17,7 @@ def cache() -> Iterator[Cache]:
     """Fixture to create a Cache object."""
     cache = Cache(Path(Constant.App.CACHE_FILE))
     yield cache
-    cache.save(FileIndex())
+    cache.save(set())
 
 
 def test_cache_initialization(cache: Cache) -> None:

@@ -8,6 +8,7 @@ from logseq_analyzer.domain.enums import Crit
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+_ASSET = r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)"
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _URL = (
     r"(?:(?:https?|ftp)://)"
@@ -27,7 +28,7 @@ class ContentPatterns:
     TAG = re.compile(r"#(?!\[\[)([^\]#\s]+?)(?=\s|$)", re.IGNORECASE)
     PROPERTY = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)(?=::)", re.MULTILINE | re.IGNORECASE)
     PROPERTY_VALUE = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)::(.*)$", re.MULTILINE | re.IGNORECASE)
-    ASSET = re.compile(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)", re.IGNORECASE)
+    ASSET = re.compile(_ASSET, re.IGNORECASE)
     DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
     BLOCKQUOTE = re.compile(r"(?:^|\s)-\ >.*", re.MULTILINE | re.IGNORECASE)
     FLASHCARD = re.compile(r"(?:^|\s)-\ .*#card|\[\[card\]\].*", re.MULTILINE | re.IGNORECASE)
@@ -91,13 +92,13 @@ class IPattern:
 
         """
         for match in cls.ALL.finditer(content):
-            text = match.group(0)
-            for criteria, pattern in cls.PATTERN:
-                if pattern.search(text):
-                    yield criteria, text
+            value = match.group(0)
+            for prefix, pattern in cls.PATTERN:
+                if pattern.search(value):
+                    yield prefix, value
                     break
             else:
-                yield cls.FALLBACK, text
+                yield cls.FALLBACK, value
 
 
 class AdvCmdPatterns(IPattern):
@@ -170,7 +171,7 @@ class EmbeddedLinkPatterns(IPattern):
     ALL = _emblink("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
         (Crit.EmbLink.INTERNET, _emblink(_URL)),
-        (Crit.EmbLink.ASSET, _emblink(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)")),
+        (Crit.EmbLink.ASSET, _emblink(_ASSET)),
     )
     FALLBACK = Crit.EmbLink.ALL
 

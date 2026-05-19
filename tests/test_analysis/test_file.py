@@ -6,12 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from logseq_analyzer.domain.model import (
-    JournalFormat,
-    LogseqFile,
-    LogseqFileContext,
-    _process_aliases,
-)
+from logseq_analyzer.domain.model import LogseqFile, _process_aliases
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -27,24 +22,9 @@ def temp_file() -> Iterator[str]:
 
 
 @pytest.fixture
-def logseq_file_context() -> LogseqFileContext:
-    """Fixture to create a LogseqFileContext object for testing."""
-    return LogseqFileContext(
-        journal_format=JournalFormat(
-            file="{{year}}/{{month}}/{{day}}.md",
-            page="{{name}}.md",
-            page_title="{{name}}",
-        ),
-        ns_file_sep="__",
-        graph_path=Path("test_graph"),
-        target={},
-    )
-
-
-@pytest.fixture
-def logseq_file(temp_file: str, logseq_file_context: LogseqFileContext) -> LogseqFile:
+def logseq_file(temp_file: str) -> LogseqFile:
     """Fixture to create a LogseqFile object using a temporary file."""
-    return LogseqFile(Path(temp_file), ctx=logseq_file_context)
+    return LogseqFile(Path(temp_file), "", "test_file", "page")
 
 
 @pytest.mark.parametrize(
