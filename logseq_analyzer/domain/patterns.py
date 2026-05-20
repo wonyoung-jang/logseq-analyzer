@@ -8,7 +8,6 @@ from logseq_analyzer.domain.enums import Crit
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
-_ASSET = r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)"
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _URL = (
     r"(?:(?:https?|ftp)://)"
@@ -28,7 +27,7 @@ class ContentPatterns:
     TAG = re.compile(r"#(?!\[\[)([^\]#\s]+?)(?=\s|$)", re.IGNORECASE)
     PROPERTY = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)(?=::)", re.MULTILINE | re.IGNORECASE)
     PROPERTY_VALUE = re.compile(r"^(?!\s*-\s)\s*?([A-Za-z0-9_-]+?)::(.*)$", re.MULTILINE | re.IGNORECASE)
-    ASSET = re.compile(_ASSET, re.IGNORECASE)
+    ASSET = re.compile(r"assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)", re.IGNORECASE)
     DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
     BLOCKQUOTE = re.compile(r"(?:^|\s)-\ >.*", re.MULTILINE | re.IGNORECASE)
     FLASHCARD = re.compile(r"(?:^|\s)-\ .*#card|\[\[card\]\].*", re.MULTILINE | re.IGNORECASE)
@@ -171,7 +170,7 @@ class EmbeddedLinkPatterns(IPattern):
     ALL = _emblink("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
         (Crit.EmbLink.INTERNET, _emblink(_URL)),
-        (Crit.EmbLink.ASSET, _emblink(_ASSET)),
+        (Crit.EmbLink.ASSET, _emblink(r".*?assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)")),
     )
     FALLBACK = Crit.EmbLink.ALL
 
@@ -187,7 +186,7 @@ class ExternalLinkPatterns(IPattern):
     FALLBACK = Crit.ExtLink.ALL
 
 
-PATTERNS: Sequence[type[IPattern]] = (
+HIERARCHICAL_PATTERN: Sequence[type[IPattern]] = (
     AdvCmdPatterns,
     CodePatterns,
     DoubleCurlyPatterns,
@@ -195,23 +194,23 @@ PATTERNS: Sequence[type[IPattern]] = (
     EmbeddedLinkPatterns,
     ExternalLinkPatterns,
 )
-MASK_MAP: dict[str, re.Pattern[str]] = {
-    Crit.MultLineCode.ALL: CodePatterns.ALL,
-    Crit.Content.INLINE_CODE: ContentPatterns.INLINE_CODE_BLOCK,
-    Crit.AdvCmd.ALL: AdvCmdPatterns.ALL,
-    Crit.Content.ANY_LINK: ContentPatterns.ANY_LINK,
-}
-PRIMARY_DATA_MAP: dict[str, re.Pattern[str]] = {
-    Crit.Content.BLOCKQUOTE: ContentPatterns.BLOCKQUOTE,
-    Crit.Content.DRAW: ContentPatterns.DRAW,
-    Crit.Content.FLASHCARD: ContentPatterns.FLASHCARD,
-    Crit.Content.PAGE_REF: ContentPatterns.PAGE_REFERENCE,
-    Crit.Content.TAGGED_BACKLINK: ContentPatterns.TAGGED_BACKLINK,
-    Crit.Content.TAG: ContentPatterns.TAG,
-    Crit.Content.DYNAMIC_VAR: ContentPatterns.DYNAMIC_VARIABLE,
-}
-RAW_DATA_MAP: dict[str, re.Pattern[str]] = {
-    Crit.Content.INLINE_CODE: ContentPatterns.INLINE_CODE_BLOCK,
-    Crit.Content.ANY_LINK: ContentPatterns.ANY_LINK,
-    Crit.Content.ASSET: ContentPatterns.ASSET,
-}
+MASK_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.MultLineCode.ALL, CodePatterns.ALL),
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE_BLOCK),
+    (Crit.AdvCmd.ALL, AdvCmdPatterns.ALL),
+    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
+)
+CORE_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.Content.BLOCKQUOTE, ContentPatterns.BLOCKQUOTE),
+    (Crit.Content.DRAW, ContentPatterns.DRAW),
+    (Crit.Content.FLASHCARD, ContentPatterns.FLASHCARD),
+    (Crit.Content.PAGE_REF, ContentPatterns.PAGE_REFERENCE),
+    (Crit.Content.TAGGED_BACKLINK, ContentPatterns.TAGGED_BACKLINK),
+    (Crit.Content.TAG, ContentPatterns.TAG),
+    (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
+)
+RAW_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE_BLOCK),
+    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
+    (Crit.Content.ASSET, ContentPatterns.ASSET),
+)
