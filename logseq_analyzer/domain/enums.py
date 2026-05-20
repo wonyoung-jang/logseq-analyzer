@@ -61,6 +61,7 @@ class Crit:
         DRAW = "Content_draw"
         DYNAMIC_VAR = "Content_dynamic_variable"
         FLASHCARD = "Content_flashcard"
+        HLS_BULLET = "Content_hls_bullet"
         PAGE_REF = "Content_page_reference"
         TAG = "Content_tag"
         TAGGED_BACKLINK = "Content_tagged_backlink"

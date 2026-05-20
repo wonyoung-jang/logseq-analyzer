@@ -1,7 +1,6 @@
 """Domain model classes for Logseq graph and files."""
 
 import logging
-import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -9,7 +8,13 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, Core, Crit, FileType
-from logseq_analyzer.domain.patterns import MASK_MAP, PATTERNS, PRIMARY_DATA_MAP, RAW_DATA_MAP, ContentPatterns
+from logseq_analyzer.domain.patterns import (
+    CORE_PATTERN,
+    HIERARCHICAL_PATTERN,
+    MASK_PATTERN,
+    RAW_PATTERN,
+    ContentPatterns,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -87,113 +92,48 @@ class Node(StrEnum):
     ROOT = "root"
 
 
-_ALIAS_TOKEN = re.compile(r"\[\[([^\]]+?)]]|([^,\[\]]+)")
-
-
 def _process_aliases(aliases: str) -> Iterator[str]:
     """Process aliases to extract individual aliases."""
-    for m in _ALIAS_TOKEN.finditer(aliases):
-        token = (m.group(1) or m.group(2)).strip().lower()
-        if token:
-            yield token
+    if not (aliases := aliases.strip()):
+        return
+    current = []
+    is_inside_brackets = False
+    pos = 0
+    while pos < len(aliases):
+        if aliases[pos : pos + 2] == "[[":
+            is_inside_brackets = True
+            pos += 2
+        elif aliases[pos : pos + 2] == "]]":
+            is_inside_brackets = False
+            pos += 2
+        elif aliases[pos] == "," and not is_inside_brackets:
+            if part := "".join(current).strip().lower():
+                yield part
+            current.clear()
+            pos += 1
+        else:
+            current.append(aliases[pos])
+            pos += 1
+    if part := "".join(current).strip().lower():
+        yield part
 
 
-@dataclass(slots=True)
-class FileIndex:
-    """Class to index files in the Logseq graph."""
-
-    file: set[LogseqFile] = field(default_factory=set)
-
-    def __len__(self) -> int:
-        """Return the number of files in the index."""
-        return len(self.file)
-
-    def __iter__(self) -> Iterator[LogseqFile]:
-        """Iterate over the files in the index."""
-        return iter(self.file)
-
-    def add(self, f: LogseqFile) -> None:
-        """Add a file to the index."""
-        self.file.add(f)
-
-    def update(self, files: Iterable[LogseqFile]) -> None:
-        """Update the index with a set of files."""
-        self.file.update(files)
-
-    def yield_backlinked_assets(self, *, backlinked: bool) -> Iterator[LogseqFile]:
-        """Yield asset files with or without backlinks."""
-        yield from (f for f in self if f.node.backlinked == backlinked and f.filetype == FileType.ASSET)
+def _parse_hls_bullet(bullet: str) -> str | None:
+    """Parse the first bullet of an HLS file to extract the page name."""
+    if not bullet.strip().startswith("[:span]"):
+        return None
+    props = {m.group(1): m.group(2).strip() for m in ContentPatterns.PROPERTY_VALUE.finditer(bullet)}
+    hl_page = props.get("hl-page", "")
+    id_ = props.get("id", "")
+    hl_stamp = props.get("hl-stamp", "")
+    if hl_page and id_ and hl_stamp:
+        return f"{hl_page}_{id_}_{hl_stamp}"
+    return None
 
 
-@dataclass(slots=True)
-class NodeType:
-    """Class to hold node type data."""
-
-    has_content: bool = False  # TODO: "mutable"
-    has_backlinks: bool = False  # TODO: "mutable"
-    backlinked: bool = False  # TODO: "mutable"
-    backlinked_ns_only: bool = False  # TODO: "mutable"
-    nodetype: str = Node.OTHER  # TODO: "mutable"
-
-    def mark_backlinked(self) -> None:
-        """Mark this node as backlinked."""
-        self.backlinked = True
-        self.backlinked_ns_only = False
-
-    def mark_backlinked_ns(self) -> None:
-        """Mark this node as backlinked via namespace only."""
-        self.backlinked = False
-        self.backlinked_ns_only = True
-
-    def determine(self) -> None:
-        """Determine node type based on summary data."""
-        match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
-            case (True, True, True) | (True, True, False) | (True, False, True):
-                self.nodetype = Node.BRANCH
-            case (True, False, False):
-                self.nodetype = Node.ROOT
-            case (False, True, True) | (False, True, False):
-                self.nodetype = Node.LEAF
-            case (False, False, True):
-                self.nodetype = Node.ORPHAN_NAMESPACE if self.has_content else Node.ORPHAN_NAMESPACE_TRUE
-            case (False, False, False):
-                self.nodetype = Node.ORPHAN_GRAPH if self.has_content else Node.ORPHAN_TRUE
-
-
-@dataclass(slots=True)
-class NamespaceInfo:
-    """NamespaceInfo class.
-
-    Some facts:
-        If not is_namespace, then parent is ""
-    """
-
-    is_namespace: bool  # TODO: "mutable"
-    root: str
-    parent: str
-    part: list[str]
-
-    def __repr__(self) -> str:
-        """Return a string representation of the NamespaceInfo."""
-        return f"""
-        NamespaceInfo(
-            is_namespace={self.is_namespace},
-            root='{self.root}',
-            parent='{self.parent}',
-            part={self.part},
-        )
-        """
-
-    @classmethod
-    def from_name(cls, name: str, sep: str = Core.NS_SEP) -> NamespaceInfo:
-        is_namespace = sep in name
-        part = name.split(sep)
-        root = part[0] if is_namespace else ""
-        parent = name.rsplit(sep, 1)[0] if is_namespace else ""
-        return cls(is_namespace=is_namespace, root=root, parent=parent, part=part)
-
-    def mark_as_namespace(self) -> None:
-        self.is_namespace = True
+def yield_asset(index: set[LogseqFile], *, link: bool) -> Iterator[LogseqFile]:
+    """Yield asset files with or without backlinks."""
+    yield from (f for f in index if f.backlinked == link and f.filetype == FileType.ASSET)
 
 
 @dataclass(slots=True)
@@ -201,26 +141,27 @@ class LogseqFile:
     """A class to represent a Logseq file."""
 
     path: Path
-    content: str = field(repr=False)
     name: str
     filetype: str
-    data: dict[str, Iterable[str]] = field(default_factory=dict, repr=False)
-    node: NodeType = field(default_factory=NodeType, repr=False)
-    is_hls: bool = field(init=False, repr=False)
-    ns_info: NamespaceInfo = field(init=False, repr=False)
-    _first_bullet: str = field(init=False, repr=False, default="")
-    _bullet: list[str] = field(default_factory=list, repr=False)
+    data: dict[str, Iterable[str]] = field(repr=False)
+    has_content: bool = field(default=False)
+    has_backlinks: bool = field(default=False)
+
+    is_hls: bool = field(init=False)
+    is_ns: bool = field(init=False, default=False)
+    ns_root: str = field(init=False)
+    ns_parent: str = field(init=False)
+    ns_part: list[str] = field(init=False)
+    backlinked: bool = field(init=False, default=False)
+    backlinked_ns_only: bool = field(init=False, default=False)
 
     def __post_init__(self) -> None:
         """Initialize the LogseqFile object."""
         self.is_hls = self.name.startswith(Core.HLS_PREFIX)
-        self.ns_info = NamespaceInfo.from_name(self.name)
-        if self.content:
-            self._bullet.extend(b.strip("\t \n") for b in ContentPatterns.BULLET.split(self.content))
-            self._first_bullet = self._bullet[0] if self._bullet else ""
-            self.data.update(self._extract_data())
-            self.node.has_content = True
-            self.node.has_backlinks = not BACKLINK_CRITERIA.isdisjoint(self.data.keys())
+        self.is_ns = Core.NS_SEP in self.name
+        self.ns_part = self.name.split(Core.NS_SEP)
+        self.ns_root = self.ns_part[0] if self.is_ns else ""
+        self.ns_parent = self.name.rsplit(Core.NS_SEP, 1)[0] if self.is_ns else ""
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -237,6 +178,26 @@ class LogseqFile:
         if isinstance(other, LogseqFile):
             return self.name < other.name
         return NotImplemented
+
+    @property
+    def nodetype(self) -> str:
+        """Determine node type based on summary data."""
+        if self.filetype not in (FileType.JOURNAL, FileType.PAGE):
+            return Node.OTHER
+        match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+            case (True, True, True) | (True, True, False) | (True, False, True):
+                nodetype = Node.BRANCH
+            case (True, False, False):
+                nodetype = Node.ROOT
+            case (False, True, True) | (False, True, False):
+                nodetype = Node.LEAF
+            case (False, False, True):
+                nodetype = Node.ORPHAN_NAMESPACE if self.has_content else Node.ORPHAN_NAMESPACE_TRUE
+            case (False, False, False):
+                nodetype = Node.ORPHAN_GRAPH if self.has_content else Node.ORPHAN_TRUE
+            case _:
+                nodetype = Node.OTHER
+        return nodetype
 
     def yield_linkedrefs(self) -> Iterator[str]:
         """Yield linked references from the file."""
@@ -259,55 +220,71 @@ class LogseqFile:
             self.get_data(Crit.EmbLink.ASSET),
         )
 
-    def parse_hls_bullet(self, bullet: str) -> str | None:
-        """Parse the first bullet of an HLS file to extract the page name."""
-        if not bullet.strip().startswith("[:span]"):
-            return None
-        props = {m.group(1): m.group(2).strip() for m in ContentPatterns.PROPERTY_VALUE.finditer(bullet)}
-        hl_page = props.get("hl-page", "")
-        id_ = props.get("id", "")
-        hl_stamp = props.get("hl-stamp", "")
-        if hl_page and id_ and hl_stamp:
-            return f"{hl_page}_{id_}_{hl_stamp}"
-        return None
-
-    def yield_hls_bullet(self) -> Iterator[str]:
-        """Yield HLS bullets from the file."""
-        yield from filter(None, (self.parse_hls_bullet(b) for b in self._bullet))
-
     def get_data(self, key: str) -> Iterable[str]:
         """Get data by key."""
         return self.data.get(key, ())
 
-    def _extract_data(self) -> Iterator[tuple[str, Iterable[str]]]:
-        """Extract primary data and properties from the content."""
-        yield from ((p, d) for p, d in self._extract() if d)
 
-    def _extract(self) -> Iterator[tuple[str, Iterable[str]]]:
-        """Extract aliases, and page and block properties from the content."""
-        masked = self.content
-        for prefix, regex in MASK_MAP.items():
-            masked = regex.sub(f"__{prefix}__", masked)
-        yield from ((p, r.findall(masked)) for p, r in PRIMARY_DATA_MAP.items())
-        yield from ((p, r.findall(self.content)) for p, r in RAW_DATA_MAP.items())
-        propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(self.content))
+def get_content_data(content: str) -> tuple[dict[str, Iterable[str]], bool]:
+    """Extract primary data and properties from the content."""
+    data = {}
+    data.update(_extract_primary_patterns(content))
+    data.update(_extract_properties(content))
+    data.update(_extract_hierarchy_patterns(content))
+    # data = dict(
+    #     *_extract_primary_patterns(content),
+    #     *_extract_properties(content),
+    #     *_extract_hierarchy_patterns(content),
+    # )
+    has_backlinks = not BACKLINK_CRITERIA.isdisjoint(data.keys())
+    return data, has_backlinks
+
+
+def _extract_primary_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    masked = content
+    for p, r in MASK_PATTERN:
+        if r.search(masked):
+            masked = r.sub(f"__{p}__", masked)
+    for p, r in CORE_PATTERN:
+        if r.search(masked):
+            yield p, r.findall(masked)
+    for p, r in RAW_PATTERN:
+        if r.search(content):
+            yield p, r.findall(content)
+
+
+def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(content)):
         yield Crit.Prop.VALUES, propvalues
-        yield Crit.Content.ALIAS, list(_process_aliases(propvalues.get("alias", "")))
-        if self._first_bullet and not self._first_bullet.startswith("#"):
-            page_props = set(ContentPatterns.PROPERTY.findall(self._first_bullet))
-            block_props = set(ContentPatterns.PROPERTY.findall("\n".join(self._bullet[1:])))
-        else:
-            page_props = set()
-            block_props = set(propvalues.keys())
-        yield Crit.Prop.BLOCK_BUILTIN, block_props.intersection(BUILT_IN_PROPERTIES)
-        yield Crit.Prop.BLOCK_USER, block_props.difference(BUILT_IN_PROPERTIES)
-        yield Crit.Prop.PAGE_BUILTIN, page_props.intersection(BUILT_IN_PROPERTIES)
-        yield Crit.Prop.PAGE_USER, page_props.difference(BUILT_IN_PROPERTIES)
-        data = defaultdict(list)
-        for ptn in PATTERNS:
-            for p, v in ptn.process_hierarchy(self.content):
-                data[p].append(v)
-        yield from data.items()
+        if aliases := list(_process_aliases(propvalues.get("alias", ""))):
+            yield Crit.Content.ALIAS, aliases
+    bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
+    first_bullet = bullet[0] if bullet else ""
+    if first_bullet and not first_bullet.startswith("#"):
+        page_props = set(ContentPatterns.PROPERTY.findall(first_bullet))
+        block_props = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
+    else:
+        page_props = set()
+        block_props = set(propvalues.keys())
+    for k, v in (
+        (Crit.Prop.BLOCK_BUILTIN, block_props.intersection),
+        (Crit.Prop.BLOCK_USER, block_props.difference),
+        (Crit.Prop.PAGE_BUILTIN, page_props.intersection),
+        (Crit.Prop.PAGE_USER, page_props.difference),
+    ):
+        if items := v(BUILT_IN_PROPERTIES):
+            yield k, items
+    if hls_bullet := list(filter(None, (_parse_hls_bullet(b) for b in bullet))):
+        yield Crit.Content.HLS_BULLET, hls_bullet
+
+
+def _extract_hierarchy_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract patterns from the content based on the defined hierarchy."""
+    data = defaultdict(list)
+    for ptn in HIERARCHICAL_PATTERN:
+        for p, v in ptn.process_hierarchy(content):
+            data[p].append(v)
+    yield from data.items()
 
 
 # def _ls_url(uri: str, graphpath: Path) -> str:  # TODO: Unused

@@ -290,11 +290,7 @@ DEFAULT_LOGSEQ_CONFIG = {
                 ":result-transform": [
                     "fn",
                     ["result"],
-                    [
-                        "sort-by",
-                        ["fn", ["h"], ["get", "h", ":block/priority", "Z"]],
-                        "result",
-                    ],
+                    ["sort-by", ["fn", ["h"], ["get", "h", ":block/priority", "Z"]], "result"],
                 ],
                 ":group-by-page?": False,
                 ":collapsed?": False,
@@ -334,20 +330,12 @@ DEFAULT_LOGSEQ_CONFIG = {
         ":excluded-pages?": False,
         ":journal?": False,
     },
-    ":graph/forcesettings": {
-        ":link-dist": 180,
-        ":charge-strength": -600,
-        ":charge-range": 600,
-    },
+    ":graph/forcesettings": {":link-dist": 180, ":charge-strength": -600, ":charge-range": 600},
     ":favorites": [],
     ":srs/learning-fraction": 0.5,
     ":srs/initial-interval": 4,
     ":property-pages/enabled?": True,
-    ":editor/extra-codemirror-options": {
-        ":lineWrapping": False,
-        ":lineNumbers": True,
-        ":readOnly": False,
-    },
+    ":editor/extra-codemirror-options": {":lineWrapping": False, ":lineNumbers": True, ":readOnly": False},
     ":editor/logical-outdenting?": False,
     ":editor/preferred-pasting-file?": False,
     ":dwim/settings": {
