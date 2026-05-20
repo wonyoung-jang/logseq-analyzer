@@ -136,6 +136,63 @@ def yield_asset(index: set[LogseqFile], *, link: bool) -> Iterator[LogseqFile]:
     yield from (f for f in index if f.backlinked == link and f.filetype == FileType.ASSET)
 
 
+def get_content_data(content: str) -> tuple[dict[str, Iterable[str]], bool]:
+    """Extract primary data and properties from the content."""
+    data = {}
+    data.update(_extract_primary_patterns(content))
+    data.update(_extract_properties(content))
+    data.update(_extract_hierarchy_patterns(content))
+    has_backlinks = not BACKLINK_CRITERIA.isdisjoint(data.keys())
+    return data, has_backlinks
+
+
+def _extract_primary_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    masked = content
+    for p, r in MASK_PATTERN:
+        if r.search(masked):
+            masked = r.sub(f"__{p}__", masked)
+    for p, r in CORE_PATTERN:
+        if r.search(masked):
+            yield p, r.findall(masked)
+    for p, r in RAW_PATTERN:
+        if r.search(content):
+            yield p, r.findall(content)
+
+
+def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(content)):
+        yield Crit.Prop.VALUES, propvalues
+        if aliases := list(_process_aliases(propvalues.get("alias", ""))):
+            yield Crit.Content.ALIAS, aliases
+    bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
+    first_bullet = bullet[0] if bullet else ""
+    if first_bullet and not first_bullet.startswith("#"):
+        page_props = set(ContentPatterns.PROPERTY.findall(first_bullet))
+        block_props = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
+    else:
+        page_props = set()
+        block_props = set(propvalues.keys())
+    for k, v in (
+        (Crit.Prop.BLOCK_BUILTIN, block_props.intersection),
+        (Crit.Prop.BLOCK_USER, block_props.difference),
+        (Crit.Prop.PAGE_BUILTIN, page_props.intersection),
+        (Crit.Prop.PAGE_USER, page_props.difference),
+    ):
+        if items := v(BUILT_IN_PROPERTIES):
+            yield k, items
+    if hls_bullet := list(filter(None, (_parse_hls_bullet(b) for b in bullet))):
+        yield Crit.Content.HLS_BULLET, hls_bullet
+
+
+def _extract_hierarchy_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract patterns from the content based on the defined hierarchy."""
+    data = defaultdict(list)
+    for ptn in HIERARCHICAL_PATTERN:
+        for p, v in ptn.process_hierarchy(content):
+            data[p].append(v)
+    yield from data.items()
+
+
 @dataclass(slots=True)
 class LogseqFile:
     """A class to represent a Logseq file."""
@@ -223,68 +280,6 @@ class LogseqFile:
     def get_data(self, key: str) -> Iterable[str]:
         """Get data by key."""
         return self.data.get(key, ())
-
-
-def get_content_data(content: str) -> tuple[dict[str, Iterable[str]], bool]:
-    """Extract primary data and properties from the content."""
-    data = {}
-    data.update(_extract_primary_patterns(content))
-    data.update(_extract_properties(content))
-    data.update(_extract_hierarchy_patterns(content))
-    # data = dict(
-    #     *_extract_primary_patterns(content),
-    #     *_extract_properties(content),
-    #     *_extract_hierarchy_patterns(content),
-    # )
-    has_backlinks = not BACKLINK_CRITERIA.isdisjoint(data.keys())
-    return data, has_backlinks
-
-
-def _extract_primary_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
-    masked = content
-    for p, r in MASK_PATTERN:
-        if r.search(masked):
-            masked = r.sub(f"__{p}__", masked)
-    for p, r in CORE_PATTERN:
-        if r.search(masked):
-            yield p, r.findall(masked)
-    for p, r in RAW_PATTERN:
-        if r.search(content):
-            yield p, r.findall(content)
-
-
-def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
-    if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(content)):
-        yield Crit.Prop.VALUES, propvalues
-        if aliases := list(_process_aliases(propvalues.get("alias", ""))):
-            yield Crit.Content.ALIAS, aliases
-    bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
-    first_bullet = bullet[0] if bullet else ""
-    if first_bullet and not first_bullet.startswith("#"):
-        page_props = set(ContentPatterns.PROPERTY.findall(first_bullet))
-        block_props = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
-    else:
-        page_props = set()
-        block_props = set(propvalues.keys())
-    for k, v in (
-        (Crit.Prop.BLOCK_BUILTIN, block_props.intersection),
-        (Crit.Prop.BLOCK_USER, block_props.difference),
-        (Crit.Prop.PAGE_BUILTIN, page_props.intersection),
-        (Crit.Prop.PAGE_USER, page_props.difference),
-    ):
-        if items := v(BUILT_IN_PROPERTIES):
-            yield k, items
-    if hls_bullet := list(filter(None, (_parse_hls_bullet(b) for b in bullet))):
-        yield Crit.Content.HLS_BULLET, hls_bullet
-
-
-def _extract_hierarchy_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
-    """Extract patterns from the content based on the defined hierarchy."""
-    data = defaultdict(list)
-    for ptn in HIERARCHICAL_PATTERN:
-        for p, v in ptn.process_hierarchy(content):
-            data[p].append(v)
-    yield from data.items()
 
 
 # def _ls_url(uri: str, graphpath: Path) -> str:  # TODO: Unused
