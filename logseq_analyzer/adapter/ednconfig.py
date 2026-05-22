@@ -2,12 +2,12 @@
 
 import json
 import logging
-import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.domain.enums import Core, FileType, TargetDir
+from logseq_analyzer.domain.patterns import COMMENT_PATTERN, NUM_PATTERN, TOKEN_PATTERN
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Sequence
@@ -15,9 +15,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-TOKEN_PATTERN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
-COMMENT_PATTERN = re.compile(r";.*")
-NUM_PATTERN = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 LITERAL_MAP = {"true": True, "false": False, "nil": None}
 
 

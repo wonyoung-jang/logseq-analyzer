@@ -8,6 +8,55 @@ from logseq_analyzer.domain.enums import Crit
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+DATETIME_TOKEN_MAP: dict[str, str] = {
+    "yyyy": "%Y",
+    "xxxx": "%Y",
+    "yy": "%y",
+    "xx": "%y",
+    "MMMM": "%B",
+    "MMM": "%b",
+    "MM": "%m",
+    "M": "%#m",
+    "dd": "%d",
+    "d": "%#d",
+    "D": "%j",
+    "EEEE": "%A",
+    "EEE": "%a",
+    "EE": "%a",
+    "E": "%a",
+    "e": "%u",
+    "HH": "%H",
+    "H": "%H",
+    "hh": "%I",
+    "h": "%I",
+    "mm": "%M",
+    "m": "%#M",
+    "ss": "%S",
+    "s": "%#S",
+    "SSS": "%f",
+    "a": "%p",
+    "A": "%p",
+    "Z": "%z",
+    "ZZ": "%z",
+}
+DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
+    "|".join(re.escape(str(k)) for k in sorted(DATETIME_TOKEN_MAP, key=len, reverse=True))
+)
+
+def cljs_date_to_py(cljs_format: str) -> str:
+    """Convert a Clojure-style date format to a Python-style date format."""
+
+    def _repl(match: re.Match) -> str:
+        """Replace a date token with its corresponding Python format."""
+        token = match.group(0)
+        return DATETIME_TOKEN_MAP.get(token, token)
+
+    return DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
+
+TOKEN_PATTERN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
+COMMENT_PATTERN = re.compile(r";.*")
+NUM_PATTERN = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _URL = (
     r"(?:(?:https?|ftp)://)"
@@ -33,41 +82,35 @@ class ContentPatterns:
     FLASHCARD = re.compile(r"(?!^[^\S\n])(- [^\n]*#card|\[\[card\]\].*)", re.MULTILINE | re.IGNORECASE)
     DYNAMIC_VARIABLE = re.compile(r"<%\s*.*?\s*%>", re.IGNORECASE)
     ANY_LINK = re.compile(rf"\b(?:{_URL})\b", re.IGNORECASE)
-    INLINE_CODE_BLOCK = re.compile(r"`[^`].+?`", re.IGNORECASE)
+    INLINE_CODE = re.compile(r"`[^`\n]+`", re.IGNORECASE)
 
 
 def _advcmd(key: str, variant: str = "") -> re.Pattern:
-    """Create regex patterns for advanced commands."""
     _key = rf"{key}\s{1}{variant}" if variant else key
     return re.compile(rf"#\+BEGIN_{_key}.*?#\+END_{_key}.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
 
 
 def _mlcode(key: str) -> re.Pattern:
-    """Create regex patterns for multiline code blocks."""
     return re.compile(rf"```{key}.*?```", re.DOTALL | re.IGNORECASE)
 
 
-def _dblcurly(key: str, variant: str = "") -> re.Pattern:
-    """Create regex patterns for double curly braces."""
+def _dblcurly(key: str, suffix: str = "") -> re.Pattern:
     _key = rf"{key} " if key else ""
-    suffix = variant or r".*?"
-    return re.compile(rf"\{{\{{{_key}{suffix}\}}\}}", re.IGNORECASE)
+    _suffix = suffix or r".*?"
+    return re.compile(rf"\{{\{{{_key}{_suffix}\}}\}}", re.IGNORECASE)
 
 
 def _dblparen(key: str) -> re.Pattern:
-    """Create regex patterns for double parentheses."""
     _key = key or r".*?"
     return re.compile(rf"(?<!\{{\{{embed )\(\({_key}\)\)", re.IGNORECASE)
 
 
 def _emblink(key: str) -> re.Pattern:
-    """Create regex patterns for embedded links."""
     _key = key or r".*?"
     return re.compile(rf"\!\[.*?\]\({_key}\)", re.IGNORECASE)
 
 
 def _extlink(key: str) -> re.Pattern:
-    """Create regex patterns for external links."""
     _key = key or r".*?"
     return re.compile(rf"(?<!\!)\[.*?\]\({_key}\)", re.IGNORECASE)
 
@@ -78,24 +121,34 @@ class IPattern:
     ALL: re.Pattern
     PATTERN: Sequence[tuple[str, re.Pattern]]
     FALLBACK: str
+    _GROUP_MAP: dict[str, str]
+    _DISPATCHER: re.Pattern
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Build a combined dispatcher pattern for the subclass based on its PATTERN attribute."""
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, "PATTERN"):
+            return
+        parts: list[str] = []
+        group_map: dict[str, str] = {}
+        for idx, (prefix, pat) in enumerate(cls.PATTERN):
+            gname = f"g{idx}"
+            parts.append(f"(?P<{gname}>{pat.pattern})")
+            group_map[gname] = prefix
+        cls._GROUP_MAP = group_map
+        cls._DISPATCHER = re.compile("|".join(parts), re.DOTALL | re.IGNORECASE)
 
     @classmethod
     def process_hierarchy(cls, content: str) -> Iterator[tuple[str, str]]:
-        """Process a pattern hierarchy to create a mapping of patterns to their respective values.
+        """Yield (prefix, matched_value) pairs for all ALL-matches in content.
 
-        Args:
-            content (str): The content to process.
-
-        Yields:
-            Iterator[tuple[str, str]]: A generator yielding key-value pairs of patterns and their values.
-
+        Uses a single combined dispatcher pattern for O(1) sub-type dispatch
+        per match instead of iterating every sub-pattern sequentially.
         """
         for match in cls.ALL.finditer(content):
             value = match.group(0)
-            for prefix, pattern in cls.PATTERN:
-                if pattern.search(value):
-                    yield prefix, value
-                    break
+            if sub := cls._DISPATCHER.search(value):
+                yield cls._GROUP_MAP[sub.lastgroup], value
             else:
                 yield cls.FALLBACK, value
 
@@ -196,7 +249,7 @@ HIERARCHICAL_PATTERN: Sequence[type[IPattern]] = (
 )
 MASK_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
     (Crit.MultLineCode.ALL, CodePatterns.ALL),
-    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE_BLOCK),
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
     (Crit.AdvCmd.ALL, AdvCmdPatterns.ALL),
     (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
 )
@@ -210,7 +263,7 @@ CORE_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
     (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
 )
 RAW_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
-    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE_BLOCK),
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
     (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
     (Crit.Content.ASSET, ContentPatterns.ASSET),
 )

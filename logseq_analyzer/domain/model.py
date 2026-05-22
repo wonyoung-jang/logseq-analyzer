@@ -138,32 +138,21 @@ def yield_asset(index: set[LogseqFile], *, link: bool) -> Iterator[LogseqFile]:
 
 def get_content_data(content: str) -> tuple[dict[str, Iterable[str]], bool]:
     """Extract primary data and properties from the content."""
-    data = {}
-    data.update(_extract_primary_patterns(content))
-    data.update(_extract_properties(content))
-    data.update(_extract_hierarchy_patterns(content))
+    data = {k: v for k, v in _extract(content) if v}
     has_backlinks = not BACKLINK_CRITERIA.isdisjoint(data.keys())
     return data, has_backlinks
 
 
-def _extract_primary_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+def _extract(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract all relevant data from the content."""
     masked = content
     for p, r in MASK_PATTERN:
-        if r.search(masked):
-            masked = r.sub(f"__{p}__", masked)
-    for p, r in CORE_PATTERN:
-        if r.search(masked):
-            yield p, r.findall(masked)
-    for p, r in RAW_PATTERN:
-        if r.search(content):
-            yield p, r.findall(content)
-
-
-def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
-    if propvalues := dict(ContentPatterns.PROPERTY_VALUE.findall(content)):
-        yield Crit.Prop.VALUES, propvalues
-        if aliases := list(_process_aliases(propvalues.get("alias", ""))):
-            yield Crit.Content.ALIAS, aliases
+        masked = r.sub(f"__{p}__", masked)
+    yield from ((p, r.findall(masked)) for p, r in CORE_PATTERN)
+    yield from ((p, r.findall(content)) for p, r in RAW_PATTERN)
+    propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
+    yield Crit.Prop.VALUES, propvalues
+    yield Crit.Content.ALIAS, list(_process_aliases(propvalues.get("alias", "")))
     bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
     first_bullet = bullet[0] if bullet else ""
     if first_bullet and not first_bullet.startswith("#"):
@@ -172,20 +161,11 @@ def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     else:
         page_props = set()
         block_props = set(propvalues.keys())
-    for k, v in (
-        (Crit.Prop.BLOCK_BUILTIN, block_props.intersection),
-        (Crit.Prop.BLOCK_USER, block_props.difference),
-        (Crit.Prop.PAGE_BUILTIN, page_props.intersection),
-        (Crit.Prop.PAGE_USER, page_props.difference),
-    ):
-        if items := v(BUILT_IN_PROPERTIES):
-            yield k, items
-    if hls_bullet := list(filter(None, (_parse_hls_bullet(b) for b in bullet))):
-        yield Crit.Content.HLS_BULLET, hls_bullet
-
-
-def _extract_hierarchy_patterns(content: str) -> Iterator[tuple[str, Iterable[str]]]:
-    """Extract patterns from the content based on the defined hierarchy."""
+    yield Crit.Prop.BLOCK_BUILTIN, block_props.intersection(BUILT_IN_PROPERTIES)
+    yield Crit.Prop.BLOCK_USER, block_props.difference(BUILT_IN_PROPERTIES)
+    yield Crit.Prop.PAGE_BUILTIN, page_props.intersection(BUILT_IN_PROPERTIES)
+    yield Crit.Prop.PAGE_USER, page_props.difference(BUILT_IN_PROPERTIES)
+    yield Crit.Content.HLS_BULLET, list(filter(None, (_parse_hls_bullet(b) for b in bullet)))
     data = defaultdict(list)
     for ptn in HIERARCHICAL_PATTERN:
         for p, v in ptn.process_hierarchy(content):
@@ -280,19 +260,3 @@ class LogseqFile:
     def get_data(self, key: str) -> Iterable[str]:
         """Get data by key."""
         return self.data.get(key, ())
-
-
-# def _ls_url(uri: str, graphpath: Path) -> str:  # TODO: Unused
-#     """Return the Logseq URL."""
-#     uri_path = Path(uri)
-#     target_segment = uri_path.parts[len(uri_path.parts) - len(graphpath.parts)]
-#     target_segments_to_final = target_segment[:-1]
-#     if target_segments_to_final not in ("page", "block-id"):
-#         return ""
-#     graph_path = str(graphpath).replace("\\", "/")
-#     prefix = f"file:///{graph_path}/{target_segment}/"
-#     if not uri.startswith(prefix):
-#         logger.warning("URI does not start with the expected prefix: %s", prefix)
-#         return ""
-#     encoded_path = uri[len(prefix) : -(len(uri_path.suffix))].replace("___", "%2F").replace("%253A", "%3A")
-#     return f"logseq://graph/Logseq?{target_segments_to_final}={encoded_path}"

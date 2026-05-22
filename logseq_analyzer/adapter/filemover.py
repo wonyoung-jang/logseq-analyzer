@@ -4,13 +4,13 @@ import logging
 import shutil
 from dataclasses import dataclass, field
 from itertools import chain
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import Output
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sized
+    from pathlib import Path
 
     from logseq_analyzer.domain.model import LogseqFile
 
@@ -88,9 +88,8 @@ def _move(target_dir: Path, paths: Iterator[Path], *, move: bool) -> list[str]:
 
 def _yield_dir(path: Path) -> Iterator[Path]:
     """Yield the file paths of bak and recycle directories."""
-    for root, dirs, files in Path.walk(path):
+    for root, dirs, files in path.walk():
         for name in chain(dirs, files):
-            print(root / name)
             yield root / name
 
 

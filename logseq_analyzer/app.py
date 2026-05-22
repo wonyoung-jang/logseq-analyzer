@@ -1,7 +1,6 @@
 """Module for main application logic for the Logseq analyzer."""
 
 import logging
-import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -16,6 +15,7 @@ from logseq_analyzer.adapter.filesystem import check_path, read_content
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import Core, FileType, Output, TargetDir
 from logseq_analyzer.domain.model import LogseqFile, get_content_data, yield_asset
+from logseq_analyzer.domain.patterns import cljs_date_to_py
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -23,41 +23,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-_DATETIME_TOKEN_MAP: dict[str, str] = {
-    "yyyy": "%Y",
-    "xxxx": "%Y",
-    "yy": "%y",
-    "xx": "%y",
-    "MMMM": "%B",
-    "MMM": "%b",
-    "MM": "%m",
-    "M": "%#m",
-    "dd": "%d",
-    "d": "%#d",
-    "D": "%j",
-    "EEEE": "%A",
-    "EEE": "%a",
-    "EE": "%a",
-    "E": "%a",
-    "e": "%u",
-    "HH": "%H",
-    "H": "%H",
-    "hh": "%I",
-    "h": "%I",
-    "mm": "%M",
-    "m": "%#M",
-    "ss": "%S",
-    "s": "%#S",
-    "SSS": "%f",
-    "a": "%p",
-    "A": "%p",
-    "Z": "%z",
-    "ZZ": "%z",
-}
-_DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
-    "|".join(re.escape(str(k)) for k in sorted(_DATETIME_TOKEN_MAP.keys(), key=len, reverse=True))
-)
 
 
 @dataclass(slots=True)
@@ -166,17 +131,6 @@ def _get_paths(args: Args) -> dict[str, Path]:
     return paths
 
 
-def _cljs_date_to_py(cljs_format: str) -> str:
-    """Convert a Clojure-style date format to a Python-style date format."""
-
-    def _repl(match: re.Match) -> str:
-        """Replace a date token with its corresponding Python format."""
-        token = match.group(0)
-        return _DATETIME_TOKEN_MAP.get(token, token)
-
-    return _DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
-
-
 def _iter_files(graph: Path, target: set[str]) -> Iterator[Path]:
     """Recursively iterate over files in the root directory."""
     for root, dirs, files in graph.walk():
@@ -269,8 +223,8 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
 
     prog(15, "Configure Logseq Analyzer settings...")
     ctx = LogseqFileContext(
-        jrnlfmt_file=_cljs_date_to_py(lsconfig.filename_fmt),
-        jrnlfmt_page=_cljs_date_to_py(lsconfig.pagetitle_fmt),
+        jrnlfmt_file=cljs_date_to_py(lsconfig.filename_fmt),
+        jrnlfmt_page=cljs_date_to_py(lsconfig.pagetitle_fmt),
         jrnlfmt_page_title=lsconfig.pagetitle_fmt,
         nsfilesep=lsconfig.ns_sep,
     )
