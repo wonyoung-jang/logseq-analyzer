@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 
 def _write(path: Path, data: Sized) -> None:
     """Write the data to a plain text file with the given prefix and count."""
-    with path.open("w", encoding="utf-8") as f:
-        f.write(f"{path.name}\n")
-        f.write(f"COUNT: {len(data)}\n")
-        f.writelines(_write_recursive(data, level=0))
+    lines = [
+        f"{path.name}\n",
+        f"COUNT: {len(data)}\n",
+        *(_write_recursive(data, level=0)),
+    ]
+    path.write_text("".join(lines), encoding="utf-8")
 
 
 def _write_recursive(data: object, level: int = 0) -> Iterator[str]:

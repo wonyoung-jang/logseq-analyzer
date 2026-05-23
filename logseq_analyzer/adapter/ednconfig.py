@@ -3,11 +3,11 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from logseq_analyzer.domain.enums import Core, FileType, TargetDir
-from logseq_analyzer.domain.patterns import COMMENT_PATTERN, NUM_PATTERN, TOKEN_PATTERN
+from logseq_analyzer.adapter.filesystem import read_content
+from logseq_analyzer.domain.enums import FileType, TargetDir
+from logseq_analyzer.domain.patterns import EDNPattern, cljs_date_to_py
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Sequence
@@ -18,84 +18,60 @@ logger = logging.getLogger(__name__)
 LITERAL_MAP = {"true": True, "false": False, "nil": None}
 
 
-class Edn(StrEnum):
-    """Enum for EDN data types."""
-
-    FILE_NAME_FORMAT = ":journal/file-name-format"
-    FILE_NAME_FORMAT_DEFAULT = "yyyy_MM_dd"
-    JOURNALS_DIR = ":journals-directory"
-    NS_FILE = ":file/name-format"
-    PAGE_TITLE_FORMAT = ":journal/page-title-format"
-    PAGE_TITLE_FORMAT_DEFAULT = "MMM do, yyyy"
-    PAGES_DIR = ":pages-directory"
-    WHITEBOARDS_DIR = ":whiteboards-directory"
-
-
 @dataclass(slots=True)
-class ConfigEdns:
-    """Configuration EDN files for the Logseq analyzer."""
+class LogseqConfig:
+    """Class to represent the Logseq configuration."""
 
-    user_edn: dict
-    global_edn: dict
-    _config: dict = field(default_factory=dict)
+    dir_page: str
+    dir_journal: str
+    dir_whiteboard: str
+    pagetitle_fmt: str
+    filename_fmt: str
+    jrnlfmt_page: str
+    jrnlfmt_file: str
+    ns_sep: str
+    target_dirs: dict[str, tuple[str, str, str]]
 
-    @property
-    def config(self) -> dict:
-        """Get the merged configuration EDN."""
-        if not self._config:
-            self._config = DEFAULT_LOGSEQ_CONFIG | self.user_edn | self.global_edn
-        return self._config
+    @classmethod
+    def from_config(cls, config: dict) -> LogseqConfig:
+        """Create a LogseqConfig instance from a configuration dictionary."""
+        dir_page = config.get(":pages-directory", TargetDir.PAGE)
+        dir_journal = config.get(":journals-directory", TargetDir.JOURNAL)
+        dir_whiteboard = config.get(":whiteboards-directory", TargetDir.WHITEBOARD)
+        pagetitle_fmt = config.get(":journal/page-title-format", "MMM do, yyyy")
+        filename_fmt = config.get(":journal/file-name-format", "yyyy_MM_dd")
+        ns_sep = "%2F" if config.get(":file/name-format", ":triple-lowbar") == ":legacy" else "___"
+        return cls(
+            dir_page=dir_page,
+            dir_journal=dir_journal,
+            dir_whiteboard=dir_whiteboard,
+            pagetitle_fmt=pagetitle_fmt,
+            filename_fmt=filename_fmt,
+            jrnlfmt_page=cljs_date_to_py(pagetitle_fmt),
+            jrnlfmt_file=cljs_date_to_py(filename_fmt),
+            ns_sep=ns_sep,
+            target_dirs={
+                TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
+                TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
+                TargetDir.PAGE: (dir_page, FileType.PAGE, FileType.SUB_PAGE),
+                TargetDir.JOURNAL: (dir_journal, FileType.JOURNAL, FileType.SUB_JOURNAL),
+                TargetDir.WHITEBOARD: (dir_whiteboard, FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
+            },
+        )
 
-    @property
-    def dir_page(self) -> str:
-        """Get the target page directory from the configuration."""
-        return self.config.get(Edn.PAGES_DIR, TargetDir.PAGE)
 
-    @property
-    def dir_journal(self) -> str:
-        """Get the target journal directory from the configuration."""
-        return self.config.get(Edn.JOURNALS_DIR, TargetDir.JOURNAL)
-
-    @property
-    def dir_whiteboard(self) -> str:
-        """Get the target whiteboard directory from the configuration."""
-        return self.config.get(Edn.WHITEBOARDS_DIR, TargetDir.WHITEBOARD)
-
-    @property
-    def pagetitle_fmt(self) -> str:
-        """Get the page title format from the configuration."""
-        return self.config.get(Edn.PAGE_TITLE_FORMAT, Edn.PAGE_TITLE_FORMAT_DEFAULT)
-
-    @property
-    def filename_fmt(self) -> str:
-        """Get the file name format from the configuration."""
-        return self.config.get(Edn.FILE_NAME_FORMAT, Edn.FILE_NAME_FORMAT_DEFAULT)
-
-    @property
-    def ns_sep(self) -> str:
-        """Get the namespace separator based on the configuration."""
-        match self.config.get(Edn.NS_FILE, Core.NS_CONFIG_TRIPLE_LOWBAR):
-            case Core.NS_CONFIG_LEGACY:
-                return Core.NS_FILE_SEP_LEGACY
-            case Core.NS_CONFIG_TRIPLE_LOWBAR:
-                return Core.NS_FILE_SEP_TRIPLE_LOWBAR
-            case _:
-                return Core.NS_FILE_SEP_TRIPLE_LOWBAR
-
-    def get_target_dirs(self) -> dict[str, tuple[str, str, str]]:
-        """Get the target directories for Logseq.
-
-        Returns:
-            dict[str, tuple[str, str, str]]: A dictionary containing the target directories.
-
-        """
-        return {
-            TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
-            TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
-            TargetDir.PAGE: (self.dir_page, FileType.PAGE, FileType.SUB_PAGE),
-            TargetDir.JOURNAL: (self.dir_journal, FileType.JOURNAL, FileType.SUB_JOURNAL),
-            TargetDir.WHITEBOARD: (self.dir_whiteboard, FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
-        }
+def config_from_path(config_user: Path, config_global: Path | None) -> dict:
+    """Create a ConfigEdns instance from user and global EDN files."""
+    logger.debug("Loading user config from file: %s", config_user)
+    user_edn_parsed = parse_edn(read_content(config_user))
+    user_edn = user_edn_parsed if isinstance(user_edn_parsed, dict) else {}
+    global_edn = {}
+    if config_global:
+        logger.debug("Loading global config from file: %s", config_global)
+        global_edn_parsed = parse_edn(read_content(config_global))
+        if isinstance(global_edn_parsed, dict):
+            global_edn = global_edn_parsed
+    return DEFAULT_LOGSEQ_CONFIG | user_edn | global_edn
 
 
 @dataclass(slots=True)
@@ -150,7 +126,7 @@ class EDNParser:
             return self._next()
         if tok in LITERAL_MAP:
             return LITERAL_MAP.get(self._next())
-        if NUM_PATTERN.fullmatch(tok) is not None:
+        if EDNPattern.NUMBER.fullmatch(tok) is not None:
             return self.parse_number()
         return self._next()
 
@@ -207,22 +183,15 @@ class EDNParser:
 
 def tokenize(edn_str: str) -> Iterator[str]:
     """Yield EDN tokens, skipping comments, whitespace, and commas."""
-    edn = COMMENT_PATTERN.sub("", edn_str)
-    for match in TOKEN_PATTERN.finditer(edn):
+    edn = EDNPattern.COMMENT.sub("", edn_str)
+    for match in EDNPattern.TOKEN.finditer(edn):
         yield match.group().strip()
 
 
-def loads(edn_str: str) -> Any:
+def parse_edn(edn_str: str) -> Any:
     """Parse an EDN-formatted string and return the corresponding Python data structure."""
     tokens = tuple(tokenize(edn_str))
     return EDNParser(tokens).parse()
-
-
-def get_edn_from_file(path: Path) -> Any:
-    """Initialize the LogseqGraphConfig from a file."""
-    logger.debug("Loading EDN from file: %s", path)
-    with path.open("r", encoding="utf-8") as f:
-        return loads(f.read())
 
 
 DEFAULT_LOGSEQ_CONFIG = {

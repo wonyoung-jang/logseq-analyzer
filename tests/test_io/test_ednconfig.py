@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from logseq_analyzer.adapter.ednconfig import EDNParser, loads, tokenize
+from logseq_analyzer.adapter.ednconfig import EDNParser, parse_edn, tokenize
 
 
 def test_tokenize_skips_comments_and_commas() -> None:
@@ -32,7 +32,7 @@ def test_tokenize_skips_comments_and_commas() -> None:
 )
 def test_simple_values(edn: str, expected: Any) -> None:
     """Test that simple values are parsed correctly."""
-    assert loads(edn) == expected
+    assert parse_edn(edn) == expected
 
 
 @pytest.mark.parametrize(
@@ -46,13 +46,13 @@ def test_simple_values(edn: str, expected: Any) -> None:
 )
 def test_collections(edn: str, expected: Any) -> None:
     """Test that collections are parsed correctly."""
-    assert loads(edn) == expected
+    assert parse_edn(edn) == expected
 
 
 def test_nested_structures() -> None:
     """Test that nested structures are parsed correctly."""
     edn = "{:a [1 (2 3) #{4}] :b {:c 5}}"
-    result = loads(edn)
+    result = parse_edn(edn)
     assert type(result) is dict
     assert result[":a"] == [1, [2, 3], {4}]
     assert result[":b"] == {":c": 5}
@@ -61,7 +61,7 @@ def test_nested_structures() -> None:
 def test_unhashable_keys_in_map() -> None:
     """Test that unhashable keys in a map raise an error."""
     edn = '{[1 2] "value"}'
-    result = loads(edn)
+    result = parse_edn(edn)
     # The list [1,2] should be converted to tuple (1,2) for hashing
     assert type(result) is dict
     assert list(result.keys()) == [(1, 2)]
@@ -71,7 +71,7 @@ def test_unhashable_keys_in_map() -> None:
 def test_parse_map_key_set() -> None:
     """Test that a map with a set as a key is parsed correctly."""
     edn = "{#{1 2} :val}"
-    result = loads(edn)
+    result = parse_edn(edn)
     # The set {1, 2} should become a frozenset of its items as the key
     key = frozenset({1, 2})
     assert type(result) is dict
@@ -82,7 +82,7 @@ def test_parse_map_key_set() -> None:
 def test_map_key_map() -> None:
     """Test that a map with a map as a key is parsed correctly."""
     edn = "{{:x 10} :val}"
-    result = loads(edn)
+    result = parse_edn(edn)
     # The map {:x 10} should become a frozenset of its items as the key
     key = frozenset({(":x", 10)})
     assert type(result) is dict
@@ -93,19 +93,19 @@ def test_map_key_map() -> None:
 def test_unexpected_end() -> None:
     """Test that an unexpected end of input raises an error."""
     with pytest.raises(ValueError, match="Unexpected end of EDN input"):
-        loads("")
+        parse_edn("")
 
 
 def test_extra_data() -> None:
     """Test that extra data after a valid EDN structure raises an error."""
     with pytest.raises(ValueError, match="Unexpected extra EDN data: 2"):
-        loads("1 2")
+        parse_edn("1 2")
 
 
 def test_invalid_number_as_symbol() -> None:
     """Test that invalid numbers are parsed as symbols."""
     # Tokens that look like invalid numbers should be parsed as symbols
-    assert loads("1.2.3") == "1.2.3"
+    assert parse_edn("1.2.3") == "1.2.3"
 
 
 def test_string_with_spaces_and_commas() -> None:
@@ -113,7 +113,7 @@ def test_string_with_spaces_and_commas() -> None:
     edn = '"a, b, c"'
     tokens = list(tokenize(edn))
     assert tokens == ['"a, b, c"']
-    assert loads(edn) == "a, b, c"
+    assert parse_edn(edn) == "a, b, c"
 
 
 def test_tokenize() -> None:

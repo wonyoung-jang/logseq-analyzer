@@ -4,10 +4,9 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, Core, Crit, FileType
+from logseq_analyzer.domain.enums import Crit, FileType
 from logseq_analyzer.domain.patterns import (
     CORE_PATTERN,
     HIERARCHICAL_PATTERN,
@@ -136,14 +135,7 @@ def yield_asset(index: set[LogseqFile], *, link: bool) -> Iterator[LogseqFile]:
     yield from (f for f in index if f.backlinked == link and f.filetype == FileType.ASSET)
 
 
-def get_content_data(content: str) -> tuple[dict[str, Iterable[str]], bool]:
-    """Extract primary data and properties from the content."""
-    data = {k: v for k, v in _extract(content) if v}
-    has_backlinks = not BACKLINK_CRITERIA.isdisjoint(data.keys())
-    return data, has_backlinks
-
-
-def _extract(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     """Extract all relevant data from the content."""
     masked = content
     for p, r in MASK_PATTERN:
@@ -180,25 +172,17 @@ class LogseqFile:
     path: Path
     name: str
     filetype: str
+    has_content: bool
+    has_backlinks: bool
+    is_hls: bool
+    is_ns: bool
+    ns_root: str
+    ns_parent: str
+    ns_part: list[str]
     data: dict[str, Iterable[str]] = field(repr=False)
-    has_content: bool = field(default=False)
-    has_backlinks: bool = field(default=False)
 
-    is_hls: bool = field(init=False)
-    is_ns: bool = field(init=False, default=False)
-    ns_root: str = field(init=False)
-    ns_parent: str = field(init=False)
-    ns_part: list[str] = field(init=False)
     backlinked: bool = field(init=False, default=False)
     backlinked_ns_only: bool = field(init=False, default=False)
-
-    def __post_init__(self) -> None:
-        """Initialize the LogseqFile object."""
-        self.is_hls = self.name.startswith(Core.HLS_PREFIX)
-        self.is_ns = Core.NS_SEP in self.name
-        self.ns_part = self.name.split(Core.NS_SEP)
-        self.ns_root = self.ns_part[0] if self.is_ns else ""
-        self.ns_parent = self.name.rsplit(Core.NS_SEP, 1)[0] if self.is_ns else ""
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
@@ -235,27 +219,6 @@ class LogseqFile:
             case _:
                 nodetype = Node.OTHER
         return nodetype
-
-    def yield_linkedrefs(self) -> Iterator[str]:
-        """Yield linked references from the file."""
-        yield from chain(
-            self.get_data(Crit.Content.ALIAS),
-            self.get_data(Crit.Content.DRAW),
-            self.get_data(Crit.Content.PAGE_REF),
-            self.get_data(Crit.Content.TAG),
-            self.get_data(Crit.Content.TAGGED_BACKLINK),
-            self.get_data(Crit.Prop.PAGE_BUILTIN),
-            self.get_data(Crit.Prop.PAGE_USER),
-            self.get_data(Crit.Prop.BLOCK_BUILTIN),
-            self.get_data(Crit.Prop.BLOCK_USER),
-        )
-
-    def yield_asset_mentions(self) -> Iterator[str]:
-        """Yield asset mentions from the file."""
-        yield from chain(
-            self.get_data(Crit.Content.ASSET),
-            self.get_data(Crit.EmbLink.ASSET),
-        )
 
     def get_data(self, key: str) -> Iterable[str]:
         """Get data by key."""

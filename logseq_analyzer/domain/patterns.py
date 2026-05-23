@@ -43,6 +43,7 @@ DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
     "|".join(re.escape(str(k)) for k in sorted(DATETIME_TOKEN_MAP, key=len, reverse=True))
 )
 
+
 def cljs_date_to_py(cljs_format: str) -> str:
     """Convert a Clojure-style date format to a Python-style date format."""
 
@@ -53,9 +54,14 @@ def cljs_date_to_py(cljs_format: str) -> str:
 
     return DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
 
-TOKEN_PATTERN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
-COMMENT_PATTERN = re.compile(r";.*")
-NUM_PATTERN = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
+class EDNPattern:
+    """Class to hold compiled regex patterns for EDN content."""
+
+    TOKEN = re.compile(r'"(?:\\.|[^"\\])*"|#\{|\{|\}|\[|\]|\(|\)|[^"\s\{\}\[\]\(\),]+')
+    COMMENT = re.compile(r";.*")
+    NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
 
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _URL = (

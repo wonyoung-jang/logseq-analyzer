@@ -16,9 +16,10 @@ import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.enums import Core, Crit, FileType, Output
+from logseq_analyzer.domain.enums import ASSETMENTION_CRITERIA, LINKEDREF_CRITERIA, Crit, FileType, Output
 from logseq_analyzer.domain.model import BUILT_IN_PROPERTIES, yield_asset
 
 if TYPE_CHECKING:
@@ -40,9 +41,9 @@ def _update_counts(result: dict, collection: Iterable[str], filename: str) -> No
         entry["found_in"][filename] += 1
 
 
-def _journal_to_dt(keys: Iterable[str], journal_page_fmt: str) -> Iterator[datetime]:
+def _journal_to_dt(keys: Iterable[str], jrnlfmt_page: str) -> Iterator[datetime]:
     """Convert journal keys from strings to datetime objects."""
-    fmt = journal_page_fmt.replace("#", "")
+    fmt = jrnlfmt_page.replace("#", "")
     for key in keys:
         k = key
         for ordinal in ("st", "nd", "rd", "th"):
@@ -68,7 +69,7 @@ class LogseqGraph:
     def process_graph(self, f: LogseqFile) -> None:
         """Process a file to find linked references and aliases."""
         self.aliases.update(f.get_data(Crit.Content.ALIAS))
-        linkedrefs = set(f.yield_linkedrefs())
+        linkedrefs = set(chain.from_iterable(f.get_data(key) for key in LINKEDREF_CRITERIA))
         self.linkedref.update(linkedrefs)
         _update_counts(self.linkedref_count, linkedrefs, f.name)
         if f.is_ns:
@@ -110,7 +111,7 @@ class LogseqAssets:
             self.hls_map[f.name] = f
         if f.is_hls:
             self.hls_bullet.update(f.get_data(Crit.Content.HLS_BULLET))
-        self.asset_mention.update(f.yield_asset_mentions())
+        self.asset_mention.update(chain.from_iterable(f.get_data(key) for key in ASSETMENTION_CRITERIA))
 
     def get_asset_to_backlink(self, unlinked_asset: set[LogseqFile]) -> Iterator[LogseqFile]:
         """Get the assets that need to be backlinked based on the index."""
@@ -159,7 +160,7 @@ class LogseqNamespaces:
             if len(name_lvl_list) <= 1 or len({lvl for _, lvl in name_lvl_list}) <= 1:
                 continue
             for name, lvl in name_lvl_list:
-                self.conflict_part_to_lvl_to_parentname[part][lvl].add(Core.NS_SEP.join(name.split(Core.NS_SEP)[:lvl]))
+                self.conflict_part_to_lvl_to_parentname[part][lvl].add("/".join(name.split("/")[:lvl]))
                 self.conflict_part_to_lvl_to_fullname[part][lvl].add(name)
 
 
@@ -171,10 +172,10 @@ class LogseqJournals:
     dangling: list[datetime] = field(default_factory=list)
     missing: list[datetime] = field(default_factory=list)
 
-    def process(self, journals: Iterable[str], dangling: set[str], journal_page_fmt: str) -> None:
+    def process(self, journals: Iterable[str], dangling: set[str], jrnlfmt_page: str) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
-        self.existing.extend(sorted(_journal_to_dt(journals, journal_page_fmt)))
-        self.dangling.extend(sorted(_journal_to_dt(dangling, journal_page_fmt)))
+        self.existing.extend(sorted(_journal_to_dt(journals, jrnlfmt_page)))
+        self.dangling.extend(sorted(_journal_to_dt(dangling, jrnlfmt_page)))
         for i, date in enumerate(self.existing, start=1):
             _expected = date + timedelta(days=1)
             while i < len(self.existing) and _expected < self.existing[i]:
@@ -217,7 +218,7 @@ class LogseqAnalyzer:
     """Class for post-processing Logseq graph data after initial analysis."""
 
     index: set[LogseqFile]
-    journal_page_fmt: str
+    jrnlfmt_page: str
     graph: LogseqGraph = field(default_factory=LogseqGraph)
     asset: LogseqAssets = field(default_factory=LogseqAssets)
     namespace: LogseqNamespaces = field(default_factory=LogseqNamespaces)
@@ -254,7 +255,7 @@ class LogseqAnalyzer:
         self.graph.process_dangling({f.name for f in self.index})
         self.namespace.process_conflicts({f.name for f in self.index if not f.is_ns}, self.graph.dangling)
         self.journal.process(
-            (f.name for f in self.index if f.filetype == FileType.JOURNAL), self.graph.dangling, self.journal_page_fmt
+            (f.name for f in self.index if f.filetype == FileType.JOURNAL), self.graph.dangling, self.jrnlfmt_page
         )
 
     def _summarize(self) -> None:

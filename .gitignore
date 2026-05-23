@@ -9,6 +9,7 @@ __pycache__
 *.txt
 *.lock
 *.prof
+*.db
 
 # Pyinstaller
 build/
@@ -18,8 +19,8 @@ dist/
 ~notes/
 docs/build
 logseq_analyzer/data.py
-logseq-analyzer-cache*
-logseq-analyzer-output/
+logseq_analyzer_analysis/
+logseq_analyzer_to_delete/
 setup.cfg
 setup.py
 to_delete

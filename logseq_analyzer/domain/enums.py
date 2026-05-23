@@ -3,18 +3,6 @@
 from enum import StrEnum
 
 
-class Core(StrEnum):
-    """Core components of the Logseq Analyzer."""
-
-    DATE_ORDINAL_SUFFIX = "o"
-    HLS_PREFIX = "hls__"
-    NS_CONFIG_LEGACY = ":legacy"
-    NS_CONFIG_TRIPLE_LOWBAR = ":triple-lowbar"
-    NS_FILE_SEP_LEGACY = "%2F"
-    NS_FILE_SEP_TRIPLE_LOWBAR = "___"
-    NS_SEP = "/"
-
-
 class Format(StrEnum):
     """File formats used in the Logseq Analyzer."""
 
@@ -170,3 +158,17 @@ class Output:
 BACKLINK_CRITERIA: frozenset[str] = frozenset(
     (*Crit.Prop, Crit.Content.PAGE_REF, Crit.Content.TAGGED_BACKLINK, Crit.Content.TAG)
 )
+LINKEDREF_CRITERIA: frozenset[str] = frozenset(
+    (
+        Crit.Content.ALIAS,
+        Crit.Content.DRAW,
+        Crit.Content.PAGE_REF,
+        Crit.Content.TAG,
+        Crit.Content.TAGGED_BACKLINK,
+        Crit.Prop.PAGE_BUILTIN,
+        Crit.Prop.PAGE_USER,
+        Crit.Prop.BLOCK_BUILTIN,
+        Crit.Prop.BLOCK_USER,
+    )
+)
+ASSETMENTION_CRITERIA: frozenset[str] = frozenset((Crit.Content.ASSET, Crit.EmbLink.ASSET))
