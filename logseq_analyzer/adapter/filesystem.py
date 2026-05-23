@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,6 @@ class File:
         """Application-level constants."""
 
         CACHE_FILE = "logseq_analyzer_cache.db"
-        LOG_FILE = "logseq_analyzer.log"
         OUTPUT_DIR = "logseq_analyzer_analysis"
         TO_DELETE_ASSETS_DIR = "assets"
         TO_DELETE_DIR = "logseq_analyzer_to_delete"
@@ -68,6 +67,12 @@ def get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
     return paths
 
 
+def walk_file(path: Path) -> Iterator[Path]:
+    """Yield the file paths of directories."""
+    for root, _, files in path.walk():
+        yield from (root / f for f in files)
+
+
 def walk_filter(graph: Path, target: set[str], exclude_suffix: str = ".org") -> Iterator[Path]:
     """Recursively iterate over files in the root directory."""
     for root, dirs, files in graph.walk():
@@ -84,6 +89,25 @@ def read_content(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except OSError, ValueError:
         return ""
+
+def determine_move(paths: Iterable[Path], target_dir: Path) -> Iterator[tuple[Path, Path]]:
+    """Get the names of files that would be moved to a target directory."""
+    yield from ((p, target_dir / p.name) for p in paths)
+
+def move_files(paths: Iterable[tuple[Path, Path]]) -> Iterator[str]:
+    """Move files from source to destination paths."""
+    for src, dest in paths:
+        move_file(src, dest)
+        yield src.name
+
+
+def move_file(src: Path, dest: Path) -> None:
+    """Move a file from src to dest."""
+    try:
+        shutil.move(src, dest)
+        logger.info("Moved file: %s to %s", src, dest)
+    except shutil.Error, OSError:
+        logger.exception("Failed to move file: %s to %s", src, dest)
 
 
 def check_must_exist(path: Path, *, is_dir: bool = False) -> None:

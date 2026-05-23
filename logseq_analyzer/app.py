@@ -10,10 +10,17 @@ from urllib.parse import unquote
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import LogseqConfig, config_from_path
-from logseq_analyzer.adapter.filemover import LogseqFileMover
-from logseq_analyzer.adapter.filesystem import check_path, get_paths, read_content, walk_filter
+from logseq_analyzer.adapter.filesystem import (
+    check_path,
+    determine_move,
+    get_paths,
+    move_files,
+    read_content,
+    walk_file,
+    walk_filter,
+)
 from logseq_analyzer.adapter.reporter import ReportWriter
-from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, FileType, Output, TargetDir
+from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, FileType, Output
 from logseq_analyzer.domain.model import LogseqFile, get_data, yield_asset
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
@@ -65,10 +72,10 @@ def _get_day_ordinal(day: int) -> str:
     return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
 
 
-def _get_name(path: Path, lsconfig: LogseqConfig, journal_dir: str) -> str:
+def _get_name(path: Path, lsconfig: LogseqConfig) -> str:
     """Process the filename to create a page title."""
     name = path.stem.strip(lsconfig.ns_sep)
-    if path.parent.name == journal_dir:
+    if path.parent.name == lsconfig.dir_journal:
         try:
             date_obj: datetime = datetime.strptime(name, lsconfig.jrnlfmt_file).replace(tzinfo=UTC)
             page_title: str = date_obj.strftime(lsconfig.jrnlfmt_page)
@@ -126,7 +133,7 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     path_content = ((p, read_content(p)) for p in graph_cache.get_modified(walk_filter(paths["graph"], target_dir)))
     for path, content in path_content:
         data = {k: v for k, v in get_data(content) if v} if (has_content := bool(content)) else {}
-        name = _get_name(path, lsconfig, target[TargetDir.JOURNAL][0])
+        name = _get_name(path, lsconfig)
         is_ns = "/" in name
         ns_part = name.split("/")
         index.add(
@@ -145,18 +152,29 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
             )
         )
 
-    prog(80, "Running core analysis on Logseq graph...")
+    prog(70, "Running core analysis on Logseq graph...")
     writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
     for report in analyze(index, lsconfig.jrnlfmt_page):
         writer.write_report(report)
-    mover = LogseqFileMover(
-        should_move_bak=args.move_bak,
-        should_move_recycle=args.move_recycle,
-        should_move_unlinked_assets=args.move_unlinked_assets,
-        unlinked_assets=set(yield_asset(index, link=False)),
-        paths=paths,
-    )
-    writer.write_report(mover.report)
+
+    prog(80, "Moving files...")
+    mover_config = {
+        "unlinked_asset": (
+            {a.path for a in yield_asset(index, link=False)},
+            paths["del_assets"],
+            args.move_unlinked_assets,
+        ),
+        "bak": (set(walk_file(paths["bak"])), paths["del_bak"], args.move_bak),
+        "recycle": (set(walk_file(paths["recycle"])), paths["del_recycle"], args.move_recycle),
+    }
+    moved = {}
+    for k, v in mover_config.items():
+        files, dest, should_move = v
+        if should_move:
+            moved[k] = list(move_files(determine_move(files, dest)))
+        else:
+            moved[f"{k} (simulated)"] = [f.name for f in files]
+    writer.write_report((Output.Dir.MOVED, [(Output.File.MOVED, moved)]))
 
     prog(90, "Saving index to cache...")
     graph_cache.save(index)
