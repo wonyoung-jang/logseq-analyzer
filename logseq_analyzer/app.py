@@ -3,7 +3,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import StrEnum
 from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -12,7 +11,7 @@ from urllib.parse import unquote
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import LogseqConfig, config_from_path
 from logseq_analyzer.adapter.filemover import LogseqFileMover
-from logseq_analyzer.adapter.filesystem import check_path, read_content
+from logseq_analyzer.adapter.filesystem import check_path, get_paths, read_content, walk_filter
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, FileType, Output, TargetDir
 from logseq_analyzer.domain.model import LogseqFile, get_data, yield_asset
@@ -23,29 +22,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-
-class Constant:
-    """Constants used in the Logseq Analyzer."""
-
-    class App(StrEnum):
-        """Application-level constants."""
-
-        CACHE_FILE = "logseq_analyzer_cache.db"
-        LOG_FILE = "logseq_analyzer.log"
-        OUTPUT_DIR = "logseq_analyzer_analysis"
-        TO_DELETE_DIR = "logseq_analyzer_to_delete"
-        TO_DELETE_ASSETS_DIR = "assets"
-        TO_DELETE_BAK_DIR = "bak"
-        TO_DELETE_RECYCLE_DIR = ".recycle"
-
-    class Logseq(StrEnum):
-        """Logseq graph structure components."""
-
-        BAK = "bak"
-        CONFIG_EDN = "config.edn"
-        LOGSEQ = "logseq"
-        RECYCLE = ".recycle"
 
 
 @dataclass(slots=True)
@@ -59,65 +35,6 @@ class Args:
     move_recycle: bool = False
     move_unlinked_assets: bool = False
     report_format: str = ".txt"
-
-
-def _init_logging() -> None:
-    """Initialize logging for the Logseq Analyzer."""
-    logging.basicConfig(
-        datefmt="%Y-%m-%d %H:%M:%S",
-        encoding="utf-8",
-        filemode="w",
-        filename=Path(Constant.App.LOG_FILE),
-        force=True,
-        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
-        level=logging.DEBUG,
-    )
-    logger.info("Logseq Analyzer started.")
-
-
-def _get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
-    """Set up Logseq analyzer configuration based on arguments."""
-    graph = Path(graph_folder)
-    logseq = graph / Constant.Logseq.LOGSEQ
-    del_dir = Path(Constant.App.TO_DELETE_DIR)
-    paths = {
-        "cache": Path(Constant.App.CACHE_FILE),
-        "output": Path(Constant.App.OUTPUT_DIR),
-        "graph": graph,
-        "logseq": logseq,
-        "bak": logseq / Constant.Logseq.BAK,
-        "recycle": logseq / Constant.Logseq.RECYCLE,
-        "config_user": logseq / Constant.Logseq.CONFIG_EDN,
-        "del_dir": del_dir,
-        "del_bak": del_dir / Constant.App.TO_DELETE_BAK_DIR,
-        "del_recycle": del_dir / Constant.App.TO_DELETE_RECYCLE_DIR,
-        "del_assets": del_dir / Constant.App.TO_DELETE_ASSETS_DIR,
-    }
-    if config_global:
-        paths["config_global"] = Path(config_global)
-        check_path(paths["config_global"], must_exist=True)
-    check_path(paths["cache"], create=False)
-    check_path(paths["output"], is_dir=True, clean_on_init=True)
-    check_path(paths["graph"], is_dir=True, must_exist=True)
-    check_path(paths["logseq"], is_dir=True, must_exist=True)
-    check_path(paths["bak"], is_dir=True)
-    check_path(paths["recycle"], is_dir=True)
-    check_path(paths["config_user"], must_exist=True)
-    check_path(paths["del_dir"], is_dir=True)
-    check_path(paths["del_bak"], is_dir=True)
-    check_path(paths["del_recycle"], is_dir=True)
-    check_path(paths["del_assets"], is_dir=True)
-    return paths
-
-
-def _iter_files(graph: Path, target: set[str]) -> Iterator[Path]:
-    """Recursively iterate over files in the root directory."""
-    for root, dirs, files in graph.walk():
-        if root == graph:
-            dirs[:] = [d for d in dirs if d in target]
-            continue
-        logger.info("Processing directory: %s", root)
-        yield from (root / f for f in files if not f.endswith(".org"))
 
 
 def get_report(obj: Any) -> list[tuple[str, Sized]]:
@@ -178,14 +95,23 @@ def _get_filetype(path: Path, target: dict[str, tuple[str, str, str]]) -> str:
 
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
-    _init_logging()
+    logging.basicConfig(
+        datefmt="%Y-%m-%d %H:%M:%S",
+        encoding="utf-8",
+        filemode="w",
+        filename=Path("logseq_analyzer.log"),
+        force=True,
+        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
+        level=logging.DEBUG,
+    )
     prog = progress_callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
+    prog(0, "Logseq Analyzer started...")
 
-    prog(10, "Starting Logseq Analyzer...")
+    prog(10, "Building arguments...")
     args = Args(**arguments)
 
     prog(20, "Setting up Logseq Analyzer configurations...")
-    paths = _get_paths(args.graph_folder, args.global_config)
+    paths = get_paths(args.graph_folder, args.global_config)
     lsconfig = LogseqConfig.from_config(config_from_path(paths["config_user"], paths.get("config_global")))
     target = lsconfig.target_dirs
     target_dir = {d[0] for d in target.values()}
@@ -193,11 +119,11 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
         check_path(paths["graph"] / dirname, is_dir=True)
 
     prog(30, "Setup cache...")
-    cache = Cache(path=paths["cache"])
-    index = cache.reset() if args.graph_cache else cache.load()
+    graph_cache = Cache(path=paths["cache"])
+    index = graph_cache.reset() if args.graph_cache else graph_cache.load()
 
     prog(40, "Process Logseq graph...")
-    path_content = ((p, read_content(p)) for p in cache.get_modified(_iter_files(paths["graph"], target_dir)))
+    path_content = ((p, read_content(p)) for p in graph_cache.get_modified(walk_filter(paths["graph"], target_dir)))
     for path, content in path_content:
         data = {k: v for k, v in get_data(content) if v} if (has_content := bool(content)) else {}
         name = _get_name(path, lsconfig, target[TargetDir.JOURNAL][0])
@@ -233,6 +159,6 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     writer.write_report(mover.report)
 
     prog(90, "Saving index to cache...")
-    cache.save(index)
+    graph_cache.save(index)
 
     prog(100, "Logseq Analyzer completed successfully.")

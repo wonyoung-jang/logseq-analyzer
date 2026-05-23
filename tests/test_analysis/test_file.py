@@ -1,30 +1,8 @@
 """Test the LogseqFile class."""
 
-from pathlib import Path
-from tempfile import TemporaryFile
-from typing import TYPE_CHECKING
-
 import pytest
 
-from logseq_analyzer.domain.model import LogseqFile, _process_aliases
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-
-@pytest.fixture
-def temp_file() -> Iterator[str]:
-    """Fixture to create a temporary file for testing."""
-    with TemporaryFile() as tmp_file:
-        tmp_file.write(b"")
-        tmp_file.seek(0)
-        yield tmp_file.name
-
-
-@pytest.fixture
-def logseq_file(temp_file: str) -> LogseqFile:
-    """Fixture to create a LogseqFile object using a temporary file."""
-    return LogseqFile(Path(temp_file), "test_file", "page", {})
+from logseq_analyzer.domain.model import _process_aliases
 
 
 @pytest.mark.parametrize(

@@ -8,40 +8,41 @@ from logseq_analyzer.domain.enums import Crit
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
-DATETIME_TOKEN_MAP: dict[str, str] = {
-    "yyyy": "%Y",
-    "xxxx": "%Y",
-    "yy": "%y",
-    "xx": "%y",
-    "MMMM": "%B",
-    "MMM": "%b",
-    "MM": "%m",
-    "M": "%#m",
-    "dd": "%d",
-    "d": "%#d",
-    "D": "%j",
-    "EEEE": "%A",
-    "EEE": "%a",
-    "EE": "%a",
-    "E": "%a",
-    "e": "%u",
-    "HH": "%H",
-    "H": "%H",
-    "hh": "%I",
-    "h": "%I",
-    "mm": "%M",
-    "m": "%#M",
-    "ss": "%S",
-    "s": "%#S",
-    "SSS": "%f",
+DT_TOKEN_MAP: dict[str, str] = {
     "a": "%p",
     "A": "%p",
+    "d": "%#d",
+    "D": "%j",
+    "dd": "%d",
+    "E": "%a",
+    "e": "%u",
+    "EE": "%a",
+    "EEE": "%a",
+    "EEEE": "%A",
+    "H": "%H",
+    "h": "%I",
+    "HH": "%H",
+    "hh": "%I",
+    "m": "%#M",
+    "M": "%#m",
+    "mm": "%M",
+    "MM": "%m",
+    "MMM": "%b",
+    "MMMM": "%B",
+    "s": "%#S",
+    "ss": "%S",
+    "SSS": "%f",
+    "xx": "%y",
+    "xxxx": "%Y",
+    "yy": "%y",
+    "yyyy": "%Y",
     "Z": "%z",
     "ZZ": "%z",
 }
-DATETIME_TOKEN_PATTERN: re.Pattern = re.compile(
-    "|".join(re.escape(str(k)) for k in sorted(DATETIME_TOKEN_MAP, key=len, reverse=True))
-)
+_SORTED_DT_TOKEN = list(DT_TOKEN_MAP.keys())
+_SORTED_DT_TOKEN.sort(key=len, reverse=True)
+DT_TOKEN_PATTERN: re.Pattern = re.compile("|".join(_SORTED_DT_TOKEN))
+DT_ORDINAL_PATTERN = re.compile(r"(?<=\d)(st|nd|rd|th)\b")
 
 
 def cljs_date_to_py(cljs_format: str) -> str:
@@ -50,9 +51,9 @@ def cljs_date_to_py(cljs_format: str) -> str:
     def _repl(match: re.Match) -> str:
         """Replace a date token with its corresponding Python format."""
         token = match.group(0)
-        return DATETIME_TOKEN_MAP.get(token, token)
+        return DT_TOKEN_MAP.get(token, token)
 
-    return DATETIME_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
+    return DT_TOKEN_PATTERN.sub(_repl, cljs_format.replace("o", ""))
 
 
 class EDNPattern:

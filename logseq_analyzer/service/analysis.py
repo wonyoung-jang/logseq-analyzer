@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import ASSETMENTION_CRITERIA, LINKEDREF_CRITERIA, Crit, FileType, Output
 from logseq_analyzer.domain.model import BUILT_IN_PROPERTIES, yield_asset
+from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -43,15 +44,12 @@ def _update_counts(result: dict, collection: Iterable[str], filename: str) -> No
 
 def _journal_to_dt(keys: Iterable[str], jrnlfmt_page: str) -> Iterator[datetime]:
     """Convert journal keys from strings to datetime objects."""
-    fmt = jrnlfmt_page.replace("#", "")
     for key in keys:
-        k = key
-        for ordinal in ("st", "nd", "rd", "th"):
-            k = k.replace(ordinal, "")
+        k = DT_ORDINAL_PATTERN.sub("", key)
         try:
-            yield datetime.strptime(k, fmt).replace(tzinfo=UTC)
+            yield datetime.strptime(k, jrnlfmt_page).replace(tzinfo=UTC)
         except ValueError:
-            logger.warning("Failed to parse journal key '%s' with format '%s'", key, fmt)
+            continue
 
 
 @dataclass(slots=True)
@@ -97,8 +95,8 @@ class LogseqGraph:
 class LogseqAssets:
     """Analyze assets in Logseq."""
 
-    backlinked: set[LogseqFile] = field(default_factory=set)
-    not_backlinked: set[LogseqFile] = field(default_factory=set)
+    backlinked: set[str] = field(default_factory=set)
+    not_backlinked: set[str] = field(default_factory=set)
     hls_map: dict[str, LogseqFile] = field(default_factory=dict)
     hls_bullet: set[str] = field(default_factory=set)
     hls_backlinked: set[str] = field(default_factory=set)
@@ -122,8 +120,8 @@ class LogseqAssets:
         """Update the sets of backlinked and not backlinked assets based on the index."""
         self.hls_not_backlinked.update(self.hls_map.keys() - self.hls_bullet)
         self.hls_backlinked.update(self.hls_map.keys() & self.hls_bullet)
-        self.backlinked.update(linked_asset)
-        self.not_backlinked.update(unlinked_asset)
+        self.backlinked.update(a.name for a in linked_asset)
+        self.not_backlinked.update(a.name for a in unlinked_asset)
 
 
 @dataclass(slots=True)

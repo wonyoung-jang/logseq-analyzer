@@ -2,12 +2,80 @@
 
 import logging
 import shutil
+from enum import StrEnum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
+
+
+class File:
+    """Constants used in the Logseq Analyzer."""
+
+    class App(StrEnum):
+        """Application-level constants."""
+
+        CACHE_FILE = "logseq_analyzer_cache.db"
+        LOG_FILE = "logseq_analyzer.log"
+        OUTPUT_DIR = "logseq_analyzer_analysis"
+        TO_DELETE_ASSETS_DIR = "assets"
+        TO_DELETE_DIR = "logseq_analyzer_to_delete"
+
+    class Logseq(StrEnum):
+        """Logseq graph structure components."""
+
+        BAK = "bak"
+        CONFIG_EDN = "config.edn"
+        LOGSEQ = "logseq"
+        RECYCLE = ".recycle"
+
+
+def get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
+    """Set up Logseq analyzer configuration based on arguments."""
+    graph = Path(graph_folder)
+    logseq = graph / File.Logseq.LOGSEQ
+    del_dir = Path(File.App.TO_DELETE_DIR)
+    paths = {
+        "cache": Path(File.App.CACHE_FILE),
+        "output": Path(File.App.OUTPUT_DIR),
+        "graph": graph,
+        "logseq": logseq,
+        "bak": logseq / File.Logseq.BAK,
+        "recycle": logseq / File.Logseq.RECYCLE,
+        "config_user": logseq / File.Logseq.CONFIG_EDN,
+        "del_dir": del_dir,
+        "del_bak": del_dir / File.Logseq.BAK,
+        "del_recycle": del_dir / File.Logseq.RECYCLE,
+        "del_assets": del_dir / File.App.TO_DELETE_ASSETS_DIR,
+    }
+    if config_global:
+        paths["config_global"] = Path(config_global)
+        check_path(paths["config_global"], must_exist=True)
+    check_path(paths["cache"], create=False)
+    check_path(paths["output"], is_dir=True, clean_on_init=True)
+    check_path(paths["graph"], is_dir=True, must_exist=True)
+    check_path(paths["logseq"], is_dir=True, must_exist=True)
+    check_path(paths["bak"], is_dir=True)
+    check_path(paths["recycle"], is_dir=True)
+    check_path(paths["config_user"], must_exist=True)
+    check_path(paths["del_dir"], is_dir=True)
+    check_path(paths["del_bak"], is_dir=True)
+    check_path(paths["del_recycle"], is_dir=True)
+    check_path(paths["del_assets"], is_dir=True)
+    return paths
+
+
+def walk_filter(graph: Path, target: set[str], exclude_suffix: str = ".org") -> Iterator[Path]:
+    """Recursively iterate over files in the root directory."""
+    for root, dirs, files in graph.walk():
+        if root == graph:
+            dirs[:] = [d for d in dirs if d in target]
+            continue
+        logger.debug("Processing directory: %s", root)
+        yield from (root / f for f in files if not f.endswith(exclude_suffix))
 
 
 def read_content(path: Path) -> str:
@@ -32,7 +100,7 @@ def check_must_exist(path: Path, *, is_dir: bool = False) -> None:
         logger.error("Path is not a file: %s", path)
         msg = f"Path is not a file: {path}"
         raise FileNotFoundError(msg)
-    logger.info("%s exists", path)
+    logger.debug("%s exists", path)
 
 
 def clean(path: Path, *, is_dir: bool = False) -> None:
@@ -40,10 +108,10 @@ def clean(path: Path, *, is_dir: bool = False) -> None:
     try:
         if is_dir:
             shutil.rmtree(path)
-            logger.info("Deleted directory: %s", path)
+            logger.debug("Deleted directory: %s", path)
         else:
             path.unlink()
-            logger.info("Deleted file: %s", path)
+            logger.debug("Deleted file: %s", path)
     except OSError:
         logger.exception("Error deleting path")
         raise
@@ -52,14 +120,13 @@ def clean(path: Path, *, is_dir: bool = False) -> None:
 def make_if_missing(path: Path, *, is_dir: bool = False) -> None:
     """Create the file or directory if it does not exist."""
     try:
-        if not path.exists():
-            if is_dir:
-                path.mkdir(parents=True, exist_ok=True)
-                logger.info("Created directory: %s", path)
-            else:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.touch(exist_ok=True)
-                logger.info("Created file: %s", path)
+        if is_dir:
+            path.mkdir(parents=True, exist_ok=True)
+            logger.debug("Created directory: %s", path)
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch(exist_ok=True)
+            logger.debug("Created file: %s", path)
     except OSError:
         logger.exception("Error creating path")
         raise
@@ -78,6 +145,6 @@ def check_path(
         check_must_exist(path, is_dir=is_dir)
     if clean_on_init and path.exists():
         clean(path, is_dir=is_dir)
-    if create:
+    if create and not path.exists():
         make_if_missing(path, is_dir=is_dir)
-    logger.info("Checked path: %s", path)
+    logger.debug("Checked path: %s", path)
