@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.domain.enums import Crit, FileType
 from logseq_analyzer.domain.patterns import (
@@ -130,11 +130,6 @@ def _parse_hls_bullet(bullet: str) -> str | None:
     return None
 
 
-def yield_asset(index: set[LogseqNode], *, link: bool) -> Iterator[LogseqNode]:
-    """Yield asset files with or without backlinks."""
-    yield from (f for f in index if f.backlinked == link and f.filetype == FileType.ASSET)
-
-
 def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     """Extract all relevant data from the content."""
     masked = content
@@ -199,6 +194,11 @@ class LogseqNode:
     backlinked_ns_only: bool = False
     is_ns: bool = False
 
+    def __post_init__(self) -> None:
+        """Post-initialization."""
+        if not self.is_ns:
+            self.is_ns = self.file.has_ns
+
     def __hash__(self) -> int:
         """Return the hash of the LogseqNode based on its file path."""
         return hash(self.file.path)
@@ -207,7 +207,7 @@ class LogseqNode:
         """Check equality based on file path."""
         return isinstance(other, LogseqNode) and self.file.path == other.file.path
 
-    def __getattr__(self, name: str) -> object:
+    def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to the underlying LogseqFile."""
         return getattr(self.file, name)
 

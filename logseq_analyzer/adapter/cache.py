@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
     from pathlib import Path
 
-    from logseq_analyzer.domain.model import LogseqNode
+    from logseq_analyzer.domain.model import LogseqFile
 
 
 logger = logging.getLogger(__name__)
@@ -29,23 +29,23 @@ class Cache:
 
     path: Path
 
-    def save(self, index: set[LogseqNode]) -> None:
+    def save(self, index: set[LogseqFile]) -> None:
         """Close the cache file."""
         with shelve.open(self.path) as db:
             db[CacheKey.INDEX] = index
 
-    def reset(self) -> set[LogseqNode]:
+    def reset(self) -> set:
         """Reset the cache by clearing it and returning a new FileIndex."""
         with shelve.open(self.path) as db:
             db[CacheKey.INDEX] = set()
             db[CacheKey.MODTIMES] = {}
             return db.get(CacheKey.INDEX, set())
 
-    def load(self) -> set[LogseqNode]:
+    def load(self) -> set[LogseqFile]:
         """Load the index from the cache, removing any deleted files from the index."""
         with shelve.open(self.path) as db:
-            index: set[LogseqNode] = db.get(CacheKey.INDEX, set())
-            return {node for node in index if node.file.path.exists()}
+            index: set[LogseqFile] = db.get(CacheKey.INDEX, set())
+            return {file for file in index if file.path.exists()}
 
     def get_modified(self, files: Iterator[Path]) -> Iterable[Path]:
         """Get the modified files from the cache."""

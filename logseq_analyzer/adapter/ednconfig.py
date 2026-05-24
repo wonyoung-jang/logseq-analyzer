@@ -30,7 +30,7 @@ class LogseqConfig:
     jrnlfmt_page: str
     jrnlfmt_file: str
     ns_sep: str
-    target_dirs: dict[str, tuple[str, str, str]]
+    target_dirs: dict[str, tuple[str, str]]
 
     @classmethod
     def from_config(cls, config: dict) -> LogseqConfig:
@@ -51,26 +51,28 @@ class LogseqConfig:
             jrnlfmt_file=cljs_date_to_py(filename_fmt),
             ns_sep=ns_sep,
             target_dirs={
-                TargetDir.ASSET: (TargetDir.ASSET, FileType.ASSET, FileType.SUB_ASSET),
-                TargetDir.DRAW: (TargetDir.DRAW, FileType.DRAW, FileType.SUB_DRAW),
-                TargetDir.PAGE: (dir_page, FileType.PAGE, FileType.SUB_PAGE),
-                TargetDir.JOURNAL: (dir_journal, FileType.JOURNAL, FileType.SUB_JOURNAL),
-                TargetDir.WHITEBOARD: (dir_whiteboard, FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
+                TargetDir.ASSET: (FileType.ASSET, FileType.SUB_ASSET),
+                TargetDir.DRAW: (FileType.DRAW, FileType.SUB_DRAW),
+                dir_page: (FileType.PAGE, FileType.SUB_PAGE),
+                dir_journal: (FileType.JOURNAL, FileType.SUB_JOURNAL),
+                dir_whiteboard: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
             },
         )
 
 
+def _config_from_path(path: Path | None) -> dict:
+    """Load and parse the EDN configuration file from the given path."""
+    if not path:
+        return {}
+    logger.debug("Loading config from file: %s", path)
+    parsed_edn = parse_edn(read_content(path))
+    return parsed_edn if isinstance(parsed_edn, dict) else {}
+
+
 def config_from_path(config_user: Path, config_global: Path | None) -> dict:
     """Create a ConfigEdns instance from user and global EDN files."""
-    logger.debug("Loading user config from file: %s", config_user)
-    user_edn_parsed = parse_edn(read_content(config_user))
-    user_edn = user_edn_parsed if isinstance(user_edn_parsed, dict) else {}
-    global_edn = {}
-    if config_global:
-        logger.debug("Loading global config from file: %s", config_global)
-        global_edn_parsed = parse_edn(read_content(config_global))
-        if isinstance(global_edn_parsed, dict):
-            global_edn = global_edn_parsed
+    user_edn = _config_from_path(config_user)
+    global_edn = _config_from_path(config_global)
     return DEFAULT_LOGSEQ_CONFIG | user_edn | global_edn
 
 

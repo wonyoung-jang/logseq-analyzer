@@ -128,7 +128,6 @@ class Output:
     class Dir(StrEnum):
         """Output directories for the Logseq Analyzer."""
 
-        GRAPH = "graph"
         INDEX = "index"
         JOURNAL = "journal"
         MOVED = "moved"
