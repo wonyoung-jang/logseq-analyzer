@@ -90,9 +90,11 @@ def read_content(path: Path) -> str:
     except OSError, ValueError:
         return ""
 
+
 def determine_move(paths: Iterable[Path], target_dir: Path) -> Iterator[tuple[Path, Path]]:
     """Get the names of files that would be moved to a target directory."""
     yield from ((p, target_dir / p.name) for p in paths)
+
 
 def move_files(paths: Iterable[tuple[Path, Path]]) -> Iterator[str]:
     """Move files from source to destination paths."""

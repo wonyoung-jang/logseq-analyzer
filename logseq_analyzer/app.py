@@ -1,10 +1,10 @@
 """Module for main application logic for the Logseq analyzer."""
 
 import logging
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import cache
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote
 
@@ -25,6 +25,7 @@ from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Sized
+    from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
@@ -42,13 +43,26 @@ class Args:
     move_unlinked_assets: bool = False
 
 
-def get_report(obj: Any) -> list[tuple[str, Sized]]:
-    """Generate a report for the given object."""
-    return [(k, getattr(obj, k)) for k in obj.__slots__]
+def init_logging() -> None:
+    """Initialize logging for the application."""
+    logging.basicConfig(
+        datefmt="%Y-%m-%d %H:%M:%S",
+        encoding="utf-8",
+        filemode="w",
+        filename="logseq_analyzer.log",
+        force=True,
+        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
+        level=logging.DEBUG,
+    )
 
 
 def analyze(index: set[LogseqNode], journal_page_fmt: str) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
     """Perform core analysis on the Logseq graph."""
+
+    def get_report(obj: Any) -> list[tuple[str, Sized]]:
+        """Generate a report for the given object."""
+        return [(k, getattr(obj, k)) for k in obj.__slots__]
+
     analyzer = LogseqAnalyzer(index, journal_page_fmt)
     analyzer.process()
     yield "input", get_report(analyzer.inputs)
@@ -146,17 +160,21 @@ def execute_move(args: Args, paths: dict[str, Path], index: set[LogseqNode]) -> 
     return moved
 
 
+_builder: LogseqFileBuilder | None = None
+
+
+def _init_worker(lsconfig: LogseqConfig) -> None:
+    global _builder  # noqa: PLW0603
+    _builder = LogseqFileBuilder(lsconfig=lsconfig)
+
+
+def _process_path(path: Path) -> LogseqFile:
+    return _builder(path, read_content(path))  # ty:ignore[call-non-callable]
+
+
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
-    logging.basicConfig(
-        datefmt="%Y-%m-%d %H:%M:%S",
-        encoding="utf-8",
-        filemode="w",
-        filename=Path("logseq_analyzer.log"),
-        force=True,
-        format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
-        level=logging.DEBUG,
-    )
+    init_logging()
     prog = progress_callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
     prog(0, "Logseq Analyzer started...")
 
@@ -175,11 +193,10 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     prog(40, "Process Logseq graph...")
     walk_graph = walk_filter(paths["graph"], set(lsconfig.target_dirs))
     modified_files = graph_cache.get_modified(walk_graph)
-    path_content = ((p, read_content(p)) for p in modified_files)
-    ls_file_builder = LogseqFileBuilder(lsconfig=lsconfig)
-    for path, content in path_content:
-        f = ls_file_builder(path, content)
-        index.add(LogseqNode(file=f))
+    with ProcessPoolExecutor(initializer=_init_worker, initargs=(lsconfig,)) as executor:
+        futures = {executor.submit(_process_path, path): path for path in modified_files}
+        for future in as_completed(futures):
+            index.add(LogseqNode(file=future.result()))
 
     prog(70, "Running core analysis on Logseq graph...")
     writer = ReportWriter(output_dir=paths["output"])
