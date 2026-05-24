@@ -130,7 +130,7 @@ def _parse_hls_bullet(bullet: str) -> str | None:
     return None
 
 
-def yield_asset(index: set[LogseqFile], *, link: bool) -> Iterator[LogseqFile]:
+def yield_asset(index: set[LogseqNode], *, link: bool) -> Iterator[LogseqNode]:
     """Yield asset files with or without backlinks."""
     yield from (f for f in index if f.backlinked == link and f.filetype == FileType.ASSET)
 
@@ -146,17 +146,17 @@ def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     yield Crit.Prop.VALUES, propvalues
     yield Crit.Content.ALIAS, list(_process_aliases(propvalues.get("alias", "")))
     bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
-    first_bullet = bullet[0] if bullet else ""
-    if first_bullet and not first_bullet.startswith("#"):
-        page_props = set(ContentPatterns.PROPERTY.findall(first_bullet))
-        block_props = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
+    firstbullet = bullet[0] if bullet else ""
+    if firstbullet and not firstbullet.startswith("#"):
+        prop_page = set(ContentPatterns.PROPERTY.findall(firstbullet))
+        prop_block = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
     else:
-        page_props = set()
-        block_props = set(propvalues.keys())
-    yield Crit.Prop.BLOCK_BUILTIN, block_props.intersection(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.BLOCK_USER, block_props.difference(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.PAGE_BUILTIN, page_props.intersection(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.PAGE_USER, page_props.difference(LOGSEQ_BUILTIN_PROPERTY)
+        prop_page = set()
+        prop_block = set(propvalues.keys())
+    yield Crit.Prop.BLOCK_BUILTIN, prop_block.intersection(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.BLOCK_USER, prop_block.difference(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_BUILTIN, prop_page.intersection(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_USER, prop_page.difference(LOGSEQ_BUILTIN_PROPERTY)
     yield Crit.Content.HLS_BULLET, list(filter(None, (_parse_hls_bullet(b) for b in bullet)))
     data = defaultdict(list)
     for ptn in HIERARCHICAL_PATTERN:
@@ -165,7 +165,7 @@ def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     yield from data.items()
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class LogseqFile:
     """A class to represent a Logseq file."""
 
@@ -175,37 +175,48 @@ class LogseqFile:
     has_content: bool
     has_backlinks: bool
     is_hls: bool
-    is_ns: bool
+    has_ns: bool
     ns_root: str
     ns_parent: str
     ns_part: list[str]
     data: dict[str, Iterable[str]] = field(repr=False)
 
-    backlinked: bool = field(init=False, default=False)
-    backlinked_ns_only: bool = field(init=False, default=False)
-
     def __hash__(self) -> int:
         """Return the hash of the LogseqFile based on its path."""
         return hash(self.path)
 
-    def __eq__(self, other: object) -> bool:
-        """Check equality based on the file path."""
-        if isinstance(other, LogseqFile):
-            return self.path == other.path
-        return NotImplemented
+    def get_data(self, key: str) -> Iterable[str]:
+        """Get data by key."""
+        return self.data.get(key, ())
 
-    def __lt__(self, other: object) -> bool:
-        """Compare LogseqFile objects based on their file names."""
-        if isinstance(other, LogseqFile):
-            return self.name < other.name
-        return NotImplemented
+
+@dataclass(slots=True)
+class LogseqNode:
+    """A class to represent a Logseq file with additional analysis attributes."""
+
+    file: LogseqFile
+    backlinked: bool = False
+    backlinked_ns_only: bool = False
+    is_ns: bool = False
+
+    def __hash__(self) -> int:
+        """Return the hash of the LogseqNode based on its file path."""
+        return hash(self.file.path)
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality based on file path."""
+        return isinstance(other, LogseqNode) and self.file.path == other.file.path
+
+    def __getattr__(self, name: str) -> object:
+        """Delegate attribute access to the underlying LogseqFile."""
+        return getattr(self.file, name)
 
     @property
     def nodetype(self) -> str:
         """Determine node type based on summary data."""
-        if self.filetype not in (FileType.JOURNAL, FileType.PAGE):
+        if self.file.filetype not in (FileType.JOURNAL, FileType.PAGE):
             return Node.OTHER
-        match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+        match (self.file.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True) | (True, True, False) | (True, False, True):
                 nodetype = Node.BRANCH
             case (True, False, False):
@@ -213,13 +224,9 @@ class LogseqFile:
             case (False, True, True) | (False, True, False):
                 nodetype = Node.LEAF
             case (False, False, True):
-                nodetype = Node.ORPHAN_NAMESPACE if self.has_content else Node.ORPHAN_NAMESPACE_TRUE
+                nodetype = Node.ORPHAN_NAMESPACE if self.file.has_content else Node.ORPHAN_NAMESPACE_TRUE
             case (False, False, False):
-                nodetype = Node.ORPHAN_GRAPH if self.has_content else Node.ORPHAN_TRUE
+                nodetype = Node.ORPHAN_GRAPH if self.file.has_content else Node.ORPHAN_TRUE
             case _:
                 nodetype = Node.OTHER
         return nodetype
-
-    def get_data(self, key: str) -> Iterable[str]:
-        """Get data by key."""
-        return self.data.get(key, ())

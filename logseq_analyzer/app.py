@@ -21,7 +21,7 @@ from logseq_analyzer.adapter.filesystem import (
 )
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, FileType, Output
-from logseq_analyzer.domain.model import LogseqFile, get_data, yield_asset
+from logseq_analyzer.domain.model import LogseqFile, LogseqNode, get_data, yield_asset
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ def get_report(obj: Any) -> list[tuple[str, Sized]]:
     return [(k, getattr(obj, k)) for k in obj.__slots__]
 
 
-def analyze(index: set[LogseqFile], journal_page_fmt: str) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
+def analyze(index: set[LogseqNode], journal_page_fmt: str) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
     """Perform core analysis on the Logseq graph."""
     analyzer = LogseqAnalyzer(index, journal_page_fmt)
     analyzer.process()
@@ -91,11 +91,12 @@ def _get_name(path: Path, lsconfig: LogseqConfig) -> str:
 
 def _get_filetype(path: Path, target: dict[str, tuple[str, str, str]]) -> str:
     """Determine the file type based on the directory structure."""
-    if _result := target.get(path.parent.name):
-        return _result[1]
-    for k, v in target.items():
-        if k in path.parts:
-            return v[2]
+    if result := target.get(path.parent.name):
+        _, filetype, _ = result
+        return filetype
+    for dirname, _, filetype_fallback in target.values():
+        if dirname in path.parts:
+            return filetype_fallback
     return FileType.OTHER
 
 
@@ -119,8 +120,7 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     prog(20, "Setting up Logseq Analyzer configurations...")
     paths = get_paths(args.graph_folder, args.global_config)
     lsconfig = LogseqConfig.from_config(config_from_path(paths["config_user"], paths.get("config_global")))
-    target = lsconfig.target_dirs
-    target_dir = {d[0] for d in target.values()}
+    target_dir = {d[0] for d in lsconfig.target_dirs.values()}
     for dirname in target_dir:
         check_path(paths["graph"] / dirname, is_dir=True)
 
@@ -133,21 +133,24 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     for path, content in path_content:
         data = {k: v for k, v in get_data(content) if v} if (has_content := bool(content)) else {}
         name = _get_name(path, lsconfig)
-        is_ns = "/" in name
+        has_ns = "/" in name
         ns_part = name.split("/")
         index.add(
-            LogseqFile(
-                path=path,
-                name=name,
-                filetype=_get_filetype(path, target),
-                has_content=has_content,
-                has_backlinks=not BACKLINK_CRITERIA.isdisjoint(data.keys()),
-                is_hls=name.startswith("hls__"),
-                is_ns=is_ns,
-                ns_root=ns_part[0] if is_ns else "",
-                ns_parent=name.rsplit("/", 1)[0] if is_ns else "",
-                ns_part=ns_part,
-                data=data,
+            LogseqNode(
+                file=LogseqFile(
+                    path=path,
+                    name=name,
+                    filetype=_get_filetype(path, lsconfig.target_dirs),
+                    has_content=has_content,
+                    has_backlinks=not BACKLINK_CRITERIA.isdisjoint(data.keys()),
+                    is_hls=name.startswith("hls__"),
+                    has_ns=has_ns,
+                    ns_root=ns_part[0] if has_ns else "",
+                    ns_parent=name.rsplit("/", 1)[0] if has_ns else "",
+                    ns_part=ns_part,
+                    data=data,
+                ),
+                is_ns=has_ns,
             )
         )
 

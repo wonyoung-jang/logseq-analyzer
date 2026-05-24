@@ -20,13 +20,12 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import ASSETMENTION_CRITERIA, LINKEDREF_CRITERIA, Crit, FileType, Output
-from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, yield_asset
+from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, LogseqNode
 from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from logseq_analyzer.domain.model import LogseqFile
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class LogseqGraph:
     linkedref_ns: set[str] = field(default_factory=set)
     to_mark_ns: set[str] = field(default_factory=set)
 
-    def process_graph(self, f: LogseqFile) -> None:
+    def process_graph(self, f: LogseqNode) -> None:
         """Process a file to find linked references and aliases."""
         self.aliases.update(f.get_data(Crit.Content.ALIAS))
         linkedrefs = set(chain.from_iterable(f.get_data(key) for key in LINKEDREF_CRITERIA))
@@ -74,7 +73,7 @@ class LogseqGraph:
             self.linkedref_ns.update({f.name, f.ns_root, f.ns_parent})
             self.to_mark_ns.add(f.ns_root)
 
-    def process_node(self, f: LogseqFile) -> str:
+    def process_node(self, f: LogseqNode) -> str:
         """Process summary data for a single file based on metadata and content analysis."""
         if f.name in self.linkedref:
             self.linkedref.remove(f.name)
@@ -95,33 +94,33 @@ class LogseqAssets:
 
     backlinked: set[str] = field(default_factory=set)
     not_backlinked: set[str] = field(default_factory=set)
-    hls_map: dict[str, LogseqFile] = field(default_factory=dict)
+    hls_name: set[str] = field(default_factory=set)
     hls_bullet: set[str] = field(default_factory=set)
     hls_backlinked: set[str] = field(default_factory=set)
     hls_not_backlinked: set[str] = field(default_factory=set)
     asset_mention: set[str] = field(default_factory=set)
 
-    def process(self, f: LogseqFile) -> None:
+    def process(self, f: LogseqNode) -> None:
         """Process a file to find mentions of assets and determine if they are backlinked."""
         if f.filetype == FileType.SUB_ASSET:
-            self.hls_map[f.name] = f
+            self.hls_name.add(f.name)
         if f.is_hls:
             self.hls_bullet.update(f.get_data(Crit.Content.HLS_BULLET))
         self.asset_mention.update(chain.from_iterable(f.get_data(key) for key in ASSETMENTION_CRITERIA))
 
     def get_asset_to_backlink(
-        self, hls_asset: Iterable[LogseqFile], unlinked_asset: Iterable[LogseqFile]
-    ) -> Iterator[LogseqFile]:
+        self, hls_asset: set[LogseqNode], unlinked_asset: set[LogseqNode]
+    ) -> Iterator[LogseqNode]:
         """Get the assets that need to be backlinked based on the index."""
         yield from (f for f in hls_asset if f.name in self.hls_bullet)
         yield from (f for f in unlinked_asset if any(f.name in m for m in self.asset_mention))
 
-    def update_asset_backlinks(self, linked_asset: Iterable[LogseqFile], unlinked_asset: Iterable[LogseqFile]) -> None:
+    def update_asset_backlinks(self, linked_asset: set[str], unlinked_asset: set[str]) -> None:
         """Update the sets of backlinked and not backlinked assets based on the index."""
-        self.hls_not_backlinked.update(self.hls_map.keys() - self.hls_bullet)
-        self.hls_backlinked.update(self.hls_map.keys() & self.hls_bullet)
-        self.backlinked.update(a.name for a in linked_asset)
-        self.not_backlinked.update(a.name for a in unlinked_asset)
+        self.hls_not_backlinked.update(self.hls_name - self.hls_bullet)
+        self.hls_backlinked.update(self.hls_name & self.hls_bullet)
+        self.backlinked.update(linked_asset)
+        self.not_backlinked.update(unlinked_asset)
 
 
 @dataclass(slots=True)
@@ -136,7 +135,7 @@ class LogseqNamespaces:
     lvl_to_partlist: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
     tree: _NsTree = field(default_factory=dict)
 
-    def process(self, f: LogseqFile) -> None:
+    def process(self, f: LogseqNode) -> None:
         """Initialize namespace parts for a given file."""
         if f.is_ns:
             cur = self.tree
@@ -168,14 +167,17 @@ class LogseqJournals:
 
     data: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
 
-    def process(self, journals: Iterable[str], dangling: set[str], jrnlfmt_page: str) -> None:
+    def process(self, journals: set[str], dangling: set[str], jrnlfmt_page: str) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
         self.data["existing"].extend(sorted(_journal_to_dt(journals, jrnlfmt_page)))
         self.data["dangling"].extend(sorted(_journal_to_dt(dangling, jrnlfmt_page)))
-        for i, date in enumerate(self.data["existing"], start=1):
+        dangling_set = set(self.data["dangling"])
+        existing = self.data["existing"]
+        n_existing = len(existing)
+        for i, date in enumerate(existing, start=1):
             _expected = date + timedelta(days=1)
-            while i < len(self.data["existing"]) and _expected < self.data["existing"][i]:
-                if _expected not in self.data["dangling"]:
+            while i < n_existing and _expected < existing[i]:
+                if _expected not in dangling_set:
                     self.data["missing"].append(_expected)
                 _expected = _expected + timedelta(days=1)
 
@@ -190,7 +192,7 @@ class LogseqSummarizer:
     extension: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     content: dict[str, dict] = field(default_factory=dict)
 
-    def process(self, f: LogseqFile) -> None:
+    def process(self, f: LogseqNode) -> None:
         """Post process a file for summarization. Depends on certain properties being set in the file."""
         self.filetype[f.filetype].append(f.name)
         self.extension[f.path.suffix].append(f.name)
@@ -213,7 +215,7 @@ class LogseqSummarizer:
 class LogseqAnalyzer:
     """Class for post-processing Logseq graph data after initial analysis."""
 
-    index: set[LogseqFile]
+    index: set[LogseqNode]
     jrnlfmt_page: str
     graph: LogseqGraph = field(default_factory=LogseqGraph)
     asset: LogseqAssets = field(default_factory=LogseqAssets)
@@ -226,34 +228,60 @@ class LogseqAnalyzer:
         for f in self.index:
             self.graph.process_graph(f)
             self.asset.process(f)
+        self.graph.linkedref_ns.difference_update(self.graph.linkedref)
         self._processnode()
         self._postprocess()
         self._summarize()
 
     def _processnode(self) -> None:
         """Process node data."""
+        d = defaultdict(set)
         for f in self.index:
             if f.name in self.graph.to_mark_ns and not f.is_ns:
                 f.is_ns = True  # TODO: Refactor
             self.namespace.process(f)
-            action = self.graph.process_node(f)
-            match action:
+            match self.graph.process_node(f):
                 case "backlinked":
                     f.backlinked = True  # TODO: Refactor
                 case "backlinked_ns":
                     f.backlinked_ns_only = True  # TODO: Refactor
+            if f.filetype == FileType.SUB_ASSET:
+                d["hls_asset"].add(f)
+            if f.filetype == FileType.ASSET and not f.backlinked:
+                d["unlinked_asset"].add(f)
         for f in self.asset.get_asset_to_backlink(
-            (a for a in self.index if a.filetype == FileType.SUB_ASSET), yield_asset(self.index, link=False)
+            hls_asset=d["hls_asset"],
+            unlinked_asset=d["unlinked_asset"],
         ):
             f.backlinked = True  # TODO: Refactor
 
     def _postprocess(self) -> None:
         """Post process the Logseq graph data for summarization."""
-        self.asset.update_asset_backlinks(yield_asset(self.index, link=True), yield_asset(self.index, link=False))
-        self.graph.process_dangling({f.name for f in self.index})
-        self.namespace.process_conflicts({f.name for f in self.index if not f.is_ns}, self.graph.dangling)
+        d = defaultdict(set)
+        for f in self.index:
+            d["names"].add(f.name)
+            if not f.is_ns:
+                d["non_ns_names"].add(f.name)
+            if f.filetype == FileType.JOURNAL:
+                d["journal_names"].add(f.name)
+            if f.filetype == FileType.ASSET:
+                if f.backlinked:
+                    d["linked_asset"].add(f.name)
+                else:
+                    d["unlinked_asset"].add(f.name)
+        self.graph.process_dangling(d["names"])
+        self.namespace.process_conflicts(
+            non_ns_names=d["non_ns_names"],
+            dangling=self.graph.dangling,
+        )
         self.journal.process(
-            (f.name for f in self.index if f.filetype == FileType.JOURNAL), self.graph.dangling, self.jrnlfmt_page
+            journals=d["journal_names"],
+            dangling=self.graph.dangling,
+            jrnlfmt_page=self.jrnlfmt_page,
+        )
+        self.asset.update_asset_backlinks(
+            linked_asset=d["linked_asset"],
+            unlinked_asset=d["unlinked_asset"],
         )
 
     def _summarize(self) -> None:
