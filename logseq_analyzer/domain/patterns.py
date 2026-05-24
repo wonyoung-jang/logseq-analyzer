@@ -103,23 +103,19 @@ def _mlcode(key: str) -> re.Pattern:
 
 def _dblcurly(key: str, suffix: str = "") -> re.Pattern:
     _key = rf"{key} " if key else ""
-    _suffix = suffix or r".*?"
-    return re.compile(rf"\{{\{{{_key}{_suffix}\}}\}}", re.IGNORECASE)
+    return re.compile(rf"\{{\{{{_key}{suffix or r'.*?'}\}}\}}", re.IGNORECASE)
 
 
 def _dblparen(key: str) -> re.Pattern:
-    _key = key or r".*?"
-    return re.compile(rf"(?<!\{{\{{embed )\(\({_key}\)\)", re.IGNORECASE)
+    return re.compile(rf"(?<!\{{\{{embed )\(\({key or r'.*?'}\)\)", re.IGNORECASE)
 
 
 def _emblink(key: str) -> re.Pattern:
-    _key = key or r".*?"
-    return re.compile(rf"\!\[.*?\]\({_key}\)", re.IGNORECASE)
+    return re.compile(rf"\!\[.*?\]\({key or r'.*?'}\)", re.IGNORECASE)
 
 
 def _extlink(key: str) -> re.Pattern:
-    _key = key or r".*?"
-    return re.compile(rf"(?<!\!)\[.*?\]\({_key}\)", re.IGNORECASE)
+    return re.compile(rf"(?<!\!)\[.*?\]\({key or r'.*?'}\)", re.IGNORECASE)
 
 
 class IPattern:

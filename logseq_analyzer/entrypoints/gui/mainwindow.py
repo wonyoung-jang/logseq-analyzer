@@ -5,7 +5,6 @@ from enum import StrEnum
 from PySide6.QtCore import QSettings, Slot
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
-from logseq_analyzer.domain.enums import Format
 from logseq_analyzer.entrypoints.gui.components import Buttons, Checkboxes, Inputs, Progress
 from logseq_analyzer.entrypoints.gui.worker import AnalysisWorker
 
@@ -20,7 +19,6 @@ class Argument(StrEnum):
     MOVE_BAK = "move_bak"
     MOVE_RECYCLE = "move_recycle"
     MOVE_UNLINKED_ASSETS = "move_unlinked_assets"
-    REPORT_FORMAT = "report_format"
 
 
 class LogseqAnalyzerGUI(QWidget):
@@ -62,7 +60,6 @@ class LogseqAnalyzerGUI(QWidget):
             Argument.GRAPH_CACHE: self.checkboxes.graph_cache.isChecked(),
             Argument.GRAPH_FOLDER: self.inputs.graph_folder.text(),
             Argument.GLOBAL_CONFIG: self.inputs.global_config.text(),
-            Argument.REPORT_FORMAT: self.inputs.report_format.currentText(),
         }
         if not gui_args.get(Argument.GRAPH_FOLDER):
             self.show_error("Graph folder is required.")
@@ -151,7 +148,6 @@ class LogseqAnalyzerGUI(QWidget):
         self.settings.setValue(Argument.GRAPH_CACHE, self.checkboxes.graph_cache.isChecked())
         self.settings.setValue(Argument.GRAPH_FOLDER, self.inputs.graph_folder.text())
         self.settings.setValue(Argument.GLOBAL_CONFIG, self.inputs.global_config.text())
-        self.settings.setValue(Argument.REPORT_FORMAT, self.inputs.report_format.currentText())
         self.settings.setValue(Argument.GEOMETRY, self.saveGeometry())
 
     def load_settings(self) -> None:
@@ -168,5 +164,4 @@ class LogseqAnalyzerGUI(QWidget):
         )
         self.inputs.graph_folder.setText(str(self.settings.value(Argument.GRAPH_FOLDER, "", type=str)))
         self.inputs.global_config.setText(str(self.settings.value(Argument.GLOBAL_CONFIG, "", type=str)))
-        self.inputs.report_format.setCurrentText(str(self.settings.value(Argument.REPORT_FORMAT, Format.MD, type=str)))
         self.restoreGeometry(self.settings.value(Argument.GEOMETRY))

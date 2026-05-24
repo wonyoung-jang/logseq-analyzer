@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-BUILT_IN_PROPERTIES: frozenset[str] = frozenset(
+LOGSEQ_BUILTIN_PROPERTY: frozenset[str] = frozenset(
     (
         "alias",
         "aliases",
@@ -153,10 +153,10 @@ def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     else:
         page_props = set()
         block_props = set(propvalues.keys())
-    yield Crit.Prop.BLOCK_BUILTIN, block_props.intersection(BUILT_IN_PROPERTIES)
-    yield Crit.Prop.BLOCK_USER, block_props.difference(BUILT_IN_PROPERTIES)
-    yield Crit.Prop.PAGE_BUILTIN, page_props.intersection(BUILT_IN_PROPERTIES)
-    yield Crit.Prop.PAGE_USER, page_props.difference(BUILT_IN_PROPERTIES)
+    yield Crit.Prop.BLOCK_BUILTIN, block_props.intersection(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.BLOCK_USER, block_props.difference(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_BUILTIN, page_props.intersection(LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_USER, page_props.difference(LOGSEQ_BUILTIN_PROPERTY)
     yield Crit.Content.HLS_BULLET, list(filter(None, (_parse_hls_bullet(b) for b in bullet)))
     data = defaultdict(list)
     for ptn in HIERARCHICAL_PATTERN:

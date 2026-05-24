@@ -64,17 +64,15 @@ def _write_toplevel(vals: object) -> Iterator[str]:
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    ext: str
     output_dir: Path
 
-    def write_report(self, data_report: tuple[str, list[tuple[str, Sized]]]) -> None:
+    def write_report(self, subdir: str, reports: list[tuple[str, Sized]]) -> None:
         """Write reports to the specified output directories."""
-        subdir, reports = data_report
         logger.info("Processing reports for subdir: %s", subdir)
         for name, data in reports:
-            filename = f"{name}.{self.ext}"
+            filename = f"{name}.txt"
             output_dir = self.output_dir / subdir if subdir else self.output_dir
             output_dir.mkdir(parents=True, exist_ok=True)
             path = output_dir / filename
-            logger.info("\tWriting %s as %s", name, self.ext)
+            logger.info("\tWriting %s", filename)
             _write(path, data)

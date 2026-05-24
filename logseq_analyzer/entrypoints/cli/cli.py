@@ -43,10 +43,4 @@ def get_cli_args() -> dict:
         help='move unlinked assets to "to-delete/assets" folder',
         default=False,
     )
-    parser.add_argument(
-        "--report-format",
-        action="store",
-        help="report format (.txt, .json, .md, .html)",
-        default=".txt",
-    )
     return vars(parser.parse_args())

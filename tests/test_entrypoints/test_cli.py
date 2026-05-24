@@ -22,7 +22,6 @@ def test_initialization(args_instance: Args) -> None:
     assert args_instance.move_bak is False
     assert args_instance.move_recycle is False
     assert args_instance.graph_cache is False
-    assert args_instance.report_format == ".txt"
 
 
 def test_set_gui_args() -> None:
@@ -34,7 +33,6 @@ def test_set_gui_args() -> None:
         "move_bak": False,
         "move_recycle": True,
         "graph_cache": True,
-        "report_format": ".json",
     }
     args_instance = Args(**gui_args)
     assert args_instance.graph_folder == "/path/to/graph"
@@ -43,7 +41,6 @@ def test_set_gui_args() -> None:
     assert args_instance.move_bak is False
     assert args_instance.move_recycle is True
     assert args_instance.graph_cache is True
-    assert args_instance.report_format == ".json"
     assert not hasattr(args_instance, "non_existent_arg")
 
 
@@ -55,8 +52,6 @@ def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch) -> None:
         "--graph-folder",
         test_graph_path,
         "--move-unlinked-assets",
-        "--report-format",
-        ".md",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
     args_instance = Args(**get_cli_args())
@@ -66,7 +61,6 @@ def test_set_cli_args_basic(monkeypatch: pytest.MonkeyPatch) -> None:
     assert args_instance.move_bak is False  # Default argparse value
     assert args_instance.move_recycle is False  # Default argparse value
     assert args_instance.graph_cache is True  # Default argparse value
-    assert args_instance.report_format == ".md"
 
 
 def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -83,8 +77,6 @@ def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch) -> None:
         "--move-recycle",
         "--global-config",
         test_config_path,
-        "--report-format",
-        ".json",
     ]
     monkeypatch.setattr(sys, "argv", mock_argv)
     args_instance = Args(**get_cli_args())
@@ -94,7 +86,6 @@ def test_set_cli_args_all_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     assert args_instance.move_bak is True
     assert args_instance.move_recycle is True
     assert args_instance.graph_cache is True
-    assert args_instance.report_format == ".json"
 
 
 def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -114,7 +105,6 @@ def test_set_cli_args_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert args_instance.move_bak is False
     assert args_instance.move_recycle is False
     assert args_instance.graph_cache is True
-    assert args_instance.report_format == ".txt"  # Default value specified in add_argument
 
 
 def test_set_cli_args_missing_required(monkeypatch: pytest.MonkeyPatch) -> None:

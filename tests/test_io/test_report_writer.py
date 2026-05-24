@@ -10,12 +10,9 @@ from logseq_analyzer.adapter.reporter import ReportWriter
 @pytest.fixture
 def report_writer() -> ReportWriter:
     """Fixture to create a ReportWriter object."""
-    ext = ".md"
-    output_dir = "test"
-    return ReportWriter(ext, Path(output_dir))
+    return ReportWriter(Path("test"))
 
 
 def test_report_writer_init(report_writer: ReportWriter) -> None:
     """Test the initialization of ReportWriter."""
-    assert report_writer.ext == ".md"
     assert report_writer.output_dir == Path("test")

@@ -62,7 +62,6 @@ def test_main_window_controls(main_window: LogseqAnalyzerGUI) -> None:
     """Test if the main window controls are present."""
     assert main_window.inputs.graph_folder is not None
     assert main_window.inputs.global_config is not None
-    assert main_window.inputs.report_format is not None
     assert main_window.checkboxes.move_assets is not None
     assert main_window.checkboxes.move_bak is not None
     assert main_window.checkboxes.move_recycle is not None

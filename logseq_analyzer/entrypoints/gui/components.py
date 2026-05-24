@@ -3,7 +3,6 @@
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -13,8 +12,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from logseq_analyzer.domain.enums import Format
 
 
 class Checkboxes(QWidget):
@@ -66,10 +63,6 @@ class Inputs(QWidget):
         super().__init__()
         self.graph_folder = QLineEdit(readOnly=True, clearButtonEnabled=True)
         self.global_config = QLineEdit(readOnly=True, clearButtonEnabled=True)
-        self.report_format = QComboBox()
-        self.report_format.addItems((Format.TXT, Format.MD))
-        layout = QFormLayout(self)
-        layout.addRow(QLabel("Report Format:"), self.report_format)
 
 
 class Progress(QWidget):

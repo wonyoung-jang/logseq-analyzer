@@ -41,7 +41,6 @@ class Args:
     move_bak: bool = False
     move_recycle: bool = False
     move_unlinked_assets: bool = False
-    report_format: str = ".txt"
 
 
 def get_report(obj: Any) -> list[tuple[str, Sized]]:
@@ -153,9 +152,9 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
         )
 
     prog(70, "Running core analysis on Logseq graph...")
-    writer = ReportWriter(ext=args.report_format, output_dir=paths["output"])
-    for report in analyze(index, lsconfig.jrnlfmt_page):
-        writer.write_report(report)
+    writer = ReportWriter(output_dir=paths["output"])
+    for subdir, reports in analyze(index, lsconfig.jrnlfmt_page):
+        writer.write_report(subdir, reports)
 
     prog(80, "Moving files...")
     mover_config = {
@@ -174,7 +173,7 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
             moved[k] = list(move_files(determine_move(files, dest)))
         else:
             moved[f"{k} (simulated)"] = [f.name for f in files]
-    writer.write_report((Output.Dir.MOVED, [(Output.File.MOVED, moved)]))
+    writer.write_report(Output.Dir.MOVED, [(Output.File.MOVED, moved)])
 
     prog(90, "Saving index to cache...")
     graph_cache.save(index)

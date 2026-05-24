@@ -20,7 +20,7 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import ASSETMENTION_CRITERIA, LINKEDREF_CRITERIA, Crit, FileType, Output
-from logseq_analyzer.domain.model import BUILT_IN_PROPERTIES, yield_asset
+from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, yield_asset
 from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN
 
 if TYPE_CHECKING:
@@ -58,7 +58,6 @@ class LogseqGraph:
 
     aliases: set[str] = field(default_factory=set)
     dangling: set[str] = field(default_factory=set)
-    dangling_count: dict = field(default_factory=dict)
     linkedref_count: dict = field(default_factory=dict)
     linkedref: set[str] = field(default_factory=set)
     linkedref_ns: set[str] = field(default_factory=set)
@@ -87,8 +86,7 @@ class LogseqGraph:
 
     def process_dangling(self, names: set[str]) -> None:
         """Get the set of dangling links from a given set of names."""
-        self.dangling.update((self.linkedref | self.linkedref_ns) - names - self.aliases - BUILT_IN_PROPERTIES)
-        self.dangling_count.update({k: v for k, v in self.linkedref_count.items() if k in self.dangling})
+        self.dangling.update((self.linkedref | self.linkedref_ns) - names - self.aliases - LOGSEQ_BUILTIN_PROPERTY)
 
 
 @dataclass(slots=True)
@@ -111,9 +109,11 @@ class LogseqAssets:
             self.hls_bullet.update(f.get_data(Crit.Content.HLS_BULLET))
         self.asset_mention.update(chain.from_iterable(f.get_data(key) for key in ASSETMENTION_CRITERIA))
 
-    def get_asset_to_backlink(self, unlinked_asset: set[LogseqFile]) -> Iterator[LogseqFile]:
+    def get_asset_to_backlink(
+        self, hls_asset: Iterable[LogseqFile], unlinked_asset: Iterable[LogseqFile]
+    ) -> Iterator[LogseqFile]:
         """Get the assets that need to be backlinked based on the index."""
-        yield from (f for n, f in self.hls_map.items() if n in self.hls_bullet)
+        yield from (f for f in hls_asset if f.name in self.hls_bullet)
         yield from (f for f in unlinked_asset if any(f.name in m for m in self.asset_mention))
 
     def update_asset_backlinks(self, linked_asset: Iterable[LogseqFile], unlinked_asset: Iterable[LogseqFile]) -> None:
@@ -129,8 +129,8 @@ class LogseqNamespaces:
     """Class for analyzing namespace data in Logseq."""
 
     part_to_namelvl_list: defaultdict[str, list[tuple[str, int]]] = field(default_factory=lambda: defaultdict(list))
-    conflict_dangling_part_to_name: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    conflict_nonnamespace_part_to_name: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    conflict_dangling_part_to_name: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    conflict_nonnamespace_part_to_name: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
     conflict_part_to_lvl_to_parentname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
     conflict_part_to_lvl_to_fullname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
     lvl_to_partlist: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
@@ -152,9 +152,9 @@ class LogseqNamespaces:
         for part, name_lvl_list in self.part_to_namelvl_list.items():
             names = {name for name, _ in name_lvl_list}
             if part in in_non_ns:
-                self.conflict_nonnamespace_part_to_name[part].extend(names)
+                self.conflict_nonnamespace_part_to_name[part].update(names)
             if part in in_dangling:
-                self.conflict_dangling_part_to_name[part].extend(names)
+                self.conflict_dangling_part_to_name[part].update(names)
             if len(name_lvl_list) <= 1 or len({lvl for _, lvl in name_lvl_list}) <= 1:
                 continue
             for name, lvl in name_lvl_list:
@@ -166,19 +166,17 @@ class LogseqNamespaces:
 class LogseqJournals:
     """LogseqJournals class to handle journal files and their processing."""
 
-    existing: list[datetime] = field(default_factory=list)
-    dangling: list[datetime] = field(default_factory=list)
-    missing: list[datetime] = field(default_factory=list)
+    data: dict[str, list[datetime]] = field(default_factory=lambda: defaultdict(list))
 
     def process(self, journals: Iterable[str], dangling: set[str], jrnlfmt_page: str) -> None:
         """Build a complete timeline of journal entries, filling in any missing dates."""
-        self.existing.extend(sorted(_journal_to_dt(journals, jrnlfmt_page)))
-        self.dangling.extend(sorted(_journal_to_dt(dangling, jrnlfmt_page)))
-        for i, date in enumerate(self.existing, start=1):
+        self.data["existing"].extend(sorted(_journal_to_dt(journals, jrnlfmt_page)))
+        self.data["dangling"].extend(sorted(_journal_to_dt(dangling, jrnlfmt_page)))
+        for i, date in enumerate(self.data["existing"], start=1):
             _expected = date + timedelta(days=1)
-            while i < len(self.existing) and _expected < self.existing[i]:
-                if _expected not in self.dangling:
-                    self.missing.append(_expected)
+            while i < len(self.data["existing"]) and _expected < self.data["existing"][i]:
+                if _expected not in self.data["dangling"]:
+                    self.data["missing"].append(_expected)
                 _expected = _expected + timedelta(days=1)
 
 
@@ -244,7 +242,9 @@ class LogseqAnalyzer:
                     f.backlinked = True  # TODO: Refactor
                 case "backlinked_ns":
                     f.backlinked_ns_only = True  # TODO: Refactor
-        for f in self.asset.get_asset_to_backlink(set(yield_asset(self.index, link=False))):
+        for f in self.asset.get_asset_to_backlink(
+            (a for a in self.index if a.filetype == FileType.SUB_ASSET), yield_asset(self.index, link=False)
+        ):
             f.backlinked = True  # TODO: Refactor
 
     def _postprocess(self) -> None:

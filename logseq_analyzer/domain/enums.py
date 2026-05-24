@@ -3,13 +3,6 @@
 from enum import StrEnum
 
 
-class Format(StrEnum):
-    """File formats used in the Logseq Analyzer."""
-
-    MD = "md"
-    TXT = "txt"
-
-
 class TargetDir(StrEnum):
     """Target directories for the Logseq Analyzer."""
 
