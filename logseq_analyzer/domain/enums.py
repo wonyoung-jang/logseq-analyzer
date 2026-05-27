@@ -1,6 +1,6 @@
 """Enums for the Logseq Analyzer."""
 
-from enum import StrEnum
+from enum import Enum, StrEnum
 
 
 class TargetDir(StrEnum):
@@ -144,23 +144,27 @@ class Output:
         SUMMARY_BACKLINKED_NS_ONLY = "backlinked_ns_only"
         SUMMARY_HAS_BACKLINK = "has_backlink"
         SUMMARY_HAS_CONTENT = "has_content"
-        SUMMARY_IS_HLS = "is_hls"
 
 
-BACKLINK_CRITERIA: frozenset[str] = frozenset(
-    (*Crit.Prop, Crit.Content.PAGE_REF, Crit.Content.TAGGED_BACKLINK, Crit.Content.TAG)
-)
-LINKEDREF_CRITERIA: frozenset[str] = frozenset(
-    (
-        Crit.Content.ALIAS,
-        Crit.Content.DRAW,
-        Crit.Content.PAGE_REF,
-        Crit.Content.TAG,
-        Crit.Content.TAGGED_BACKLINK,
-        Crit.Prop.PAGE_BUILTIN,
-        Crit.Prop.PAGE_USER,
-        Crit.Prop.BLOCK_BUILTIN,
-        Crit.Prop.BLOCK_USER,
+class CriteriaGroup(Enum):
+    """Groups of criteria for the Logseq Analyzer."""
+
+    BACKLINK = frozenset(
+        (
+            Crit.Content.ALIAS,
+            Crit.Content.DRAW,
+            Crit.Content.PAGE_REF,
+            Crit.Content.TAGGED_BACKLINK,
+            Crit.Content.TAG,
+            Crit.Prop.PAGE_BUILTIN,
+            Crit.Prop.PAGE_USER,
+            Crit.Prop.BLOCK_BUILTIN,
+            Crit.Prop.BLOCK_USER,
+        )
     )
-)
-ASSETMENTION_CRITERIA: frozenset[str] = frozenset((Crit.Content.ASSET, Crit.EmbLink.ASSET))
+    ASSETMENTION = frozenset(
+        (
+            Crit.Content.ASSET,
+            Crit.EmbLink.ASSET,
+        )
+    )

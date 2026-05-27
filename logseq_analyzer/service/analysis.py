@@ -19,7 +19,7 @@ from datetime import UTC, datetime, timedelta
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.enums import ASSETMENTION_CRITERIA, LINKEDREF_CRITERIA, Crit, FileType, Output
+from logseq_analyzer.domain.enums import Crit, CriteriaGroup, FileType, Output
 from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, LogseqNode
 from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN
 
@@ -31,6 +31,14 @@ logger = logging.getLogger(__name__)
 
 
 type _NsTree = dict[str, _NsTree]
+
+
+def _defdict_list() -> defaultdict:
+    return defaultdict(list)
+
+
+def _defdict_set() -> defaultdict:
+    return defaultdict(set)
 
 
 def _update_counts(result: dict, collection: Iterable[str], filename: str) -> None:
@@ -46,21 +54,20 @@ def get_dangling(linkedrefs: set[str], names: set[str], aliases: set[str]) -> se
     return linkedrefs - names - aliases - LOGSEQ_BUILTIN_PROPERTY
 
 
-def _journal_to_dt(keys: Iterable[str], jrnlfmt_page: str) -> Iterator[datetime]:
-    """Convert journal keys from strings to datetime objects."""
-    for key in keys:
-        k = DT_ORDINAL_PATTERN.sub("", key)
-        try:
-            yield datetime.strptime(k, jrnlfmt_page).replace(tzinfo=UTC)
-        except ValueError:
-            continue
-
-
 def process_journal(journals: set[str], dangling: set[str], jrnlfmt_page: str) -> dict[str, list[datetime]]:
     """Build a complete timeline of journal entries, filling in any missing dates."""
+
+    def _name_to_dt(names: Iterable[str], jrnlfmt_page: str) -> Iterator[datetime]:
+        for name in names:
+            n = DT_ORDINAL_PATTERN.sub("", name)
+            try:
+                yield datetime.strptime(n, jrnlfmt_page).replace(tzinfo=UTC)
+            except ValueError:
+                continue
+
     d = defaultdict(list)
-    d["existing"].extend(sorted(_journal_to_dt(journals, jrnlfmt_page)))
-    d["dangling"].extend(sorted(_journal_to_dt(dangling, jrnlfmt_page)))
+    d["existing"].extend(sorted(_name_to_dt(journals, jrnlfmt_page)))
+    d["dangling"].extend(sorted(_name_to_dt(dangling, jrnlfmt_page)))
     dangling_set = set(d["dangling"])
     existing = d["existing"]
     n_existing = len(existing)
@@ -96,26 +103,25 @@ class LogseqAnalysisInput:
     def collect(self, n: LogseqNode) -> None:
         """Process a file to find linked references and aliases."""
         self.aliases.update(n.get_data(Crit.Content.ALIAS))
-        self.linkedref.update(chain.from_iterable(n.get_data(key) for key in LINKEDREF_CRITERIA))
-        self.asset_mention.update(chain.from_iterable(n.get_data(key) for key in ASSETMENTION_CRITERIA))
-        if n.has_ns:
+        self.hls_bullet.update(n.get_data(Crit.Content.HLS_BULLET))
+        self.linkedref.update(chain.from_iterable(n.get_data(key) for key in CriteriaGroup.BACKLINK.value))
+        self.asset_mention.update(chain.from_iterable(n.get_data(key) for key in CriteriaGroup.ASSETMENTION.value))
+        if n.is_ns:
             self.to_mark_ns.add(n.ns_root)
             self.linkedref_ns.update({n.name, n.ns_root, n.ns_parent})
         if n.filetype == FileType.SUB_ASSET:
             self.hls_name.add(n.name)
-        if n.is_hls:
-            self.hls_bullet.update(n.get_data(Crit.Content.HLS_BULLET))
 
 
 @dataclass(slots=True)
 class LogseqNamespaces:
     """Class for analyzing namespace data in Logseq."""
 
-    part_to_namelvl_list: dict[str, list[tuple[str, int]]] = field(default_factory=lambda: defaultdict(list))
-    conflict_dangling_part_to_name: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
-    conflict_nonnamespace_part_to_name: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
-    conflict_part_to_lvl_to_parentname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
-    conflict_part_to_lvl_to_fullname: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
+    part_to_namelvl_list: dict[str, list[tuple[str, int]]] = field(default_factory=_defdict_list)
+    conflict_dangling_part_to_name: dict[str, set[str]] = field(default_factory=_defdict_set)
+    conflict_nonnamespace_part_to_name: dict[str, set[str]] = field(default_factory=_defdict_set)
+    conflict_part_to_lvl_to_parentname: dict = field(default_factory=lambda: defaultdict(_defdict_set))
+    conflict_part_to_lvl_to_fullname: dict = field(default_factory=lambda: defaultdict(_defdict_set))
     tree: _NsTree = field(default_factory=dict)
 
     def process(self, ns_nodes: set[LogseqNode]) -> None:
@@ -131,12 +137,14 @@ class LogseqNamespaces:
         in_non_ns = self.part_to_namelvl_list.keys() & non_ns_names
         in_dangling = self.part_to_namelvl_list.keys() & dangling
         for part, name_lvl_list in self.part_to_namelvl_list.items():
-            names = {name for name, _ in name_lvl_list}
+            names = {n for n, _ in name_lvl_list}
             if part in in_non_ns:
                 self.conflict_nonnamespace_part_to_name[part].update(names)
             if part in in_dangling:
                 self.conflict_dangling_part_to_name[part].update(names)
-            if len(name_lvl_list) <= 1 or len({lvl for _, lvl in name_lvl_list}) <= 1:
+            if len(name_lvl_list) <= 1:
+                continue
+            if len({lv for _, lv in name_lvl_list}) <= 1:
                 continue
             for name, lvl in name_lvl_list:
                 self.conflict_part_to_lvl_to_parentname[part][lvl].add("/".join(name.split("/")[:lvl]))
@@ -147,13 +155,13 @@ class LogseqNamespaces:
 class LogseqSummarizer:
     """Summarize Logseq analysis."""
 
-    file: defaultdict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    filetype: defaultdict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    nodetype: defaultdict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    extension: defaultdict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    file: defaultdict[str, list[str]] = field(default_factory=_defdict_list)
+    filetype: defaultdict[str, list[str]] = field(default_factory=_defdict_list)
+    nodetype: defaultdict[str, list[str]] = field(default_factory=_defdict_list)
+    extension: defaultdict[str, list[str]] = field(default_factory=_defdict_list)
     content: dict[str, dict] = field(default_factory=dict)
 
-    def process(self, f: LogseqNode) -> None:
+    def summarize(self, f: LogseqNode) -> None:
         """Post process a file for summarization. Depends on certain properties being set in the file."""
         self.filetype[f.filetype].append(f.name)
         self.extension[f.path.suffix].append(f.name)
@@ -163,7 +171,6 @@ class LogseqSummarizer:
             Output.File.SUMMARY_HAS_BACKLINK: f.has_backlinks,
             Output.File.SUMMARY_BACKLINKED: f.backlinked,
             Output.File.SUMMARY_BACKLINKED_NS_ONLY: f.backlinked_ns_only,
-            Output.File.SUMMARY_IS_HLS: f.is_hls,
         }.items():
             if v:
                 self.file[k].append(f.name)
@@ -181,7 +188,7 @@ class LogseqAnalyzer:
     inputs: LogseqAnalysisInput = field(default_factory=LogseqAnalysisInput)
     namespace: LogseqNamespaces = field(default_factory=LogseqNamespaces)
     summary: LogseqSummarizer = field(default_factory=LogseqSummarizer)
-    asset: defaultdict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    asset: defaultdict[str, set[str]] = field(default_factory=_defdict_set)
     journal: dict[str, list[datetime]] = field(default_factory=dict)
     dangling: set[str] = field(default_factory=set)
 
@@ -225,4 +232,4 @@ class LogseqAnalyzer:
         self.asset["hls_asset_not_backlinked"].update(self.inputs.hls_name - self.inputs.hls_bullet)
         self.asset["hls_asset_backlinked"].update(self.inputs.hls_name & self.inputs.hls_bullet)
         for n in self.index:
-            self.summary.process(n)
+            self.summary.summarize(n)

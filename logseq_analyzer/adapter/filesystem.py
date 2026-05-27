@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+DATADIR = Path(__file__).parent.parent / "_data"
+
+
 class File:
     """Constants used in the Logseq Analyzer."""
 
@@ -22,6 +25,7 @@ class File:
         OUTPUT_DIR = "logseq_analyzer_analysis"
         TO_DELETE_ASSETS_DIR = "assets"
         TO_DELETE_DIR = "logseq_analyzer_to_delete"
+        DEFAULT_EDN = "logseq_default_config.edn"
 
     class Logseq(StrEnum):
         """Logseq graph structure components."""
@@ -37,33 +41,25 @@ def get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
     graph = Path(graph_folder)
     logseq = graph / File.Logseq.LOGSEQ
     del_dir = Path(File.App.TO_DELETE_DIR)
-    paths = {
-        "cache": Path(File.App.CACHE_FILE),
-        "output": Path(File.App.OUTPUT_DIR),
-        "graph": graph,
-        "logseq": logseq,
-        "bak": logseq / File.Logseq.BAK,
-        "recycle": logseq / File.Logseq.RECYCLE,
-        "config_user": logseq / File.Logseq.CONFIG_EDN,
-        "del_dir": del_dir,
-        "del_bak": del_dir / File.Logseq.BAK,
-        "del_recycle": del_dir / File.Logseq.RECYCLE,
-        "del_assets": del_dir / File.App.TO_DELETE_ASSETS_DIR,
-    }
+    paths_config = [
+        ("cache", Path(File.App.CACHE_FILE), {"create": False}),
+        ("output", Path(File.App.OUTPUT_DIR), {"is_dir": True, "clean_on_init": True}),
+        ("graph", graph, {"is_dir": True, "must_exist": True}),
+        ("logseq", logseq, {"is_dir": True, "must_exist": True}),
+        ("bak", logseq / File.Logseq.BAK, {"is_dir": True}),
+        ("recycle", logseq / File.Logseq.RECYCLE, {"is_dir": True}),
+        ("config_user", logseq / File.Logseq.CONFIG_EDN, {"must_exist": True}),
+        ("del_dir", del_dir, {"is_dir": True}),
+        ("del_bak", del_dir / File.Logseq.BAK, {"is_dir": True}),
+        ("del_recycle", del_dir / File.Logseq.RECYCLE, {"is_dir": True}),
+        ("del_assets", del_dir / File.App.TO_DELETE_ASSETS_DIR, {"is_dir": True}),
+    ]
     if config_global:
-        paths["config_global"] = Path(config_global)
-        check_path(paths["config_global"], must_exist=True)
-    check_path(paths["cache"], create=False)
-    check_path(paths["output"], is_dir=True, clean_on_init=True)
-    check_path(paths["graph"], is_dir=True, must_exist=True)
-    check_path(paths["logseq"], is_dir=True, must_exist=True)
-    check_path(paths["bak"], is_dir=True)
-    check_path(paths["recycle"], is_dir=True)
-    check_path(paths["config_user"], must_exist=True)
-    check_path(paths["del_dir"], is_dir=True)
-    check_path(paths["del_bak"], is_dir=True)
-    check_path(paths["del_recycle"], is_dir=True)
-    check_path(paths["del_assets"], is_dir=True)
+        paths_config.append(("config_global", Path(config_global), {"must_exist": True}))
+    paths = {}
+    for name, path, kwargs in paths_config:
+        paths[name] = path
+        check_path(path, **kwargs)
     return paths
 
 

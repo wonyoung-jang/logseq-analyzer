@@ -16,7 +16,7 @@ def _write(path: Path, data: Sized) -> None:
     lines = [
         f"{path.name}\n",
         f"COUNT: {len(data)}\n",
-        *(_write_recursive(data, level=0)),
+        *tuple(_write_recursive(data, level=0)),
     ]
     path.write_text("".join(lines), encoding="utf-8")
 
@@ -70,9 +70,8 @@ class ReportWriter:
         """Write reports to the specified output directories."""
         logger.info("Processing reports for subdir: %s", subdir)
         for name, data in reports:
-            filename = f"{name}.txt"
             output_dir = self.output_dir / subdir if subdir else self.output_dir
             output_dir.mkdir(parents=True, exist_ok=True)
-            path = output_dir / filename
-            logger.info("\tWriting %s", filename)
+            path = output_dir / f"{name}.txt"
+            logger.info("\tWriting %s", path)
             _write(path, data)

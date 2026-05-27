@@ -19,8 +19,8 @@ from logseq_analyzer.adapter.filesystem import (
     walk_filter,
 )
 from logseq_analyzer.adapter.reporter import ReportWriter
-from logseq_analyzer.domain.enums import BACKLINK_CRITERIA, FileType, Output
-from logseq_analyzer.domain.model import LogseqFile, LogseqNode, get_data
+from logseq_analyzer.domain.enums import CriteriaGroup, FileType, Output
+from logseq_analyzer.domain.model import LogseqFile, LogseqNode, extract_data_from_content
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -93,7 +93,7 @@ class LogseqFileBuilder:
 
     def __call__(self, path: Path, content: str) -> LogseqFile:
         """Build a LogseqFile instance from the given path and content."""
-        data = {k: v for k, v in get_data(content) if v} if content else {}
+        data = {k: v for k, v in extract_data_from_content(content) if v} if content else {}
         name = self.get_name(path)
         has_ns = "/" in name
         ns_part = name.split("/")
@@ -102,9 +102,7 @@ class LogseqFileBuilder:
             name=name,
             filetype=self.get_filetype(path),
             has_content=bool(content),
-            has_backlinks=not BACKLINK_CRITERIA.isdisjoint(data.keys()),
-            is_hls=name.startswith("hls__"),
-            has_ns=has_ns,
+            has_backlinks=not CriteriaGroup.BACKLINK.value.isdisjoint(data.keys()),
             ns_root=ns_part[0] if has_ns else "",
             ns_parent=name.rsplit("/", 1)[0] if has_ns else "",
             ns_part=ns_part,
@@ -200,8 +198,8 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
 
     prog(70, "Running core analysis on Logseq graph...")
     writer = ReportWriter(output_dir=paths["output"])
-    for subdir, reports in analyze(index, lsconfig.jrnlfmt_page):
-        writer.write_report(subdir, reports)
+    for dir_name, data in analyze(index, lsconfig.jrnlfmt_page):
+        writer.write_report(dir_name, data)
 
     prog(80, "Moving files...")
     moved = execute_move(args, paths, index)

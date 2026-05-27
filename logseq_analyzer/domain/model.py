@@ -78,7 +78,7 @@ LOGSEQ_BUILTIN_PROPERTY: frozenset[str] = frozenset(
 )
 
 
-class Node(StrEnum):
+class NodeType(StrEnum):
     """Node types for the Logseq Analyzer."""
 
     BRANCH = "branch"
@@ -119,7 +119,7 @@ def _process_aliases(aliases: str) -> Iterator[str]:
 
 def _parse_hls_bullet(bullet: str) -> str | None:
     """Parse the first bullet of an HLS file to extract the page name."""
-    if not bullet.strip().startswith("[:span]"):
+    if not bullet.startswith("[:span]"):
         return None
     props = {m.group(1): m.group(2).strip() for m in ContentPatterns.PROPERTY_VALUE.finditer(bullet)}
     hl_page = props.get("hl-page", "")
@@ -130,16 +130,32 @@ def _parse_hls_bullet(bullet: str) -> str | None:
     return None
 
 
-def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+def extract_data_from_content(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     """Extract all relevant data from the content."""
+    yield from _extract_masked(content)
+    yield from _extract_raw(content)
+    yield from _extract_properties(content)
+    yield from _extract_hierarchical(content)
+
+
+def _extract_masked(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract masked content for all patterns."""
     masked = content
     for p, r in MASK_PATTERN:
         masked = r.sub(f"__{p}__", masked)
     yield from ((p, r.findall(masked)) for p, r in CORE_PATTERN)
+
+
+def _extract_raw(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract raw content for all patterns."""
     yield from ((p, r.findall(content)) for p, r in RAW_PATTERN)
+
+
+def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+    """Extract properties from content."""
     propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
     yield Crit.Prop.VALUES, propvalues
-    yield Crit.Content.ALIAS, list(_process_aliases(propvalues.get("alias", "")))
+    yield Crit.Content.ALIAS, tuple(_process_aliases(propvalues.get("alias", "")))
     bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
     firstbullet = bullet[0] if bullet else ""
     if firstbullet and not firstbullet.startswith("#"):
@@ -148,11 +164,15 @@ def get_data(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     else:
         prop_page = set()
         prop_block = set(propvalues.keys())
-    yield Crit.Prop.BLOCK_BUILTIN, prop_block.intersection(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.BLOCK_USER, prop_block.difference(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.PAGE_BUILTIN, prop_page.intersection(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Prop.PAGE_USER, prop_page.difference(LOGSEQ_BUILTIN_PROPERTY)
-    yield Crit.Content.HLS_BULLET, list(filter(None, (_parse_hls_bullet(b) for b in bullet)))
+    yield Crit.Prop.BLOCK_BUILTIN, tuple(prop_block.intersection(LOGSEQ_BUILTIN_PROPERTY))
+    yield Crit.Prop.BLOCK_USER, tuple(prop_block.difference(LOGSEQ_BUILTIN_PROPERTY))
+    yield Crit.Prop.PAGE_BUILTIN, tuple(prop_page.intersection(LOGSEQ_BUILTIN_PROPERTY))
+    yield Crit.Prop.PAGE_USER, tuple(prop_page.difference(LOGSEQ_BUILTIN_PROPERTY))
+    yield Crit.Content.HLS_BULLET, tuple(filter(None, (_parse_hls_bullet(b) for b in bullet)))
+
+
+def _extract_hierarchical(content: str) -> Iterator[tuple[str, str]]:
+    """Extract hierarchical patterns from content."""
     data = defaultdict(list)
     for ptn in HIERARCHICAL_PATTERN:
         for p, v in ptn.process_hierarchy(content):
@@ -169,8 +189,6 @@ class LogseqFile:
     filetype: str
     has_content: bool
     has_backlinks: bool
-    is_hls: bool
-    has_ns: bool
     ns_root: str
     ns_parent: str
     ns_part: list[str]
@@ -197,7 +215,7 @@ class LogseqNode:
     def __post_init__(self) -> None:
         """Post-initialization."""
         if not self.is_ns:
-            self.is_ns = self.file.has_ns
+            self.is_ns = bool(self.file.ns_root) and bool(self.file.ns_parent)
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqNode based on its file path."""
@@ -215,18 +233,18 @@ class LogseqNode:
     def nodetype(self) -> str:
         """Determine node type based on summary data."""
         if self.file.filetype not in (FileType.JOURNAL, FileType.PAGE):
-            return Node.OTHER
+            return NodeType.OTHER
         match (self.file.has_backlinks, self.backlinked, self.backlinked_ns_only):
             case (True, True, True) | (True, True, False) | (True, False, True):
-                nodetype = Node.BRANCH
+                nodetype = NodeType.BRANCH
             case (True, False, False):
-                nodetype = Node.ROOT
+                nodetype = NodeType.ROOT
             case (False, True, True) | (False, True, False):
-                nodetype = Node.LEAF
+                nodetype = NodeType.LEAF
             case (False, False, True):
-                nodetype = Node.ORPHAN_NAMESPACE if self.file.has_content else Node.ORPHAN_NAMESPACE_TRUE
+                nodetype = NodeType.ORPHAN_NAMESPACE if self.file.has_content else NodeType.ORPHAN_NAMESPACE_TRUE
             case (False, False, False):
-                nodetype = Node.ORPHAN_GRAPH if self.file.has_content else Node.ORPHAN_TRUE
+                nodetype = NodeType.ORPHAN_GRAPH if self.file.has_content else NodeType.ORPHAN_TRUE
             case _:
-                nodetype = Node.OTHER
+                nodetype = NodeType.OTHER
         return nodetype
