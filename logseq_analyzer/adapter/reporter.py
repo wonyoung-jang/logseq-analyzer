@@ -13,12 +13,10 @@ logger = logging.getLogger(__name__)
 
 def _write(path: Path, data: Sized) -> None:
     """Write the data to a plain text file with the given prefix and count."""
-    lines = [
-        f"{path.name}\n",
-        f"COUNT: {len(data)}\n",
-        *tuple(_write_recursive(data, level=0)),
-    ]
-    path.write_text("".join(lines), encoding="utf-8")
+    with path.open("w", encoding="utf-8") as p:
+        p.write(f"{path.name}\n")
+        p.write(f"COUNT: {len(data)}\n")
+        p.writelines(_write_recursive(data))
 
 
 def _write_recursive(data: object, level: int = 0) -> Iterator[str]:
@@ -64,14 +62,15 @@ def _write_toplevel(vals: object) -> Iterator[str]:
 class ReportWriter:
     """A class to handle reporting and writing output to files, including text, JSON, and HTML formats."""
 
-    output_dir: Path
+    root_dirname: Path
 
-    def write_report(self, subdir: str, reports: list[tuple[str, Sized]]) -> None:
+    def generate(self, dirname: str, reports: list[tuple[str, Sized]], subdir: str = "") -> None:
         """Write reports to the specified output directories."""
-        logger.info("Processing reports for subdir: %s", subdir)
         for name, data in reports:
-            output_dir = self.output_dir / subdir if subdir else self.output_dir
+            output_dir = self.root_dirname / dirname if dirname else self.root_dirname
+            if subdir:
+                output_dir /= subdir
             output_dir.mkdir(parents=True, exist_ok=True)
             path = output_dir / f"{name}.txt"
-            logger.info("\tWriting %s", path)
+            logger.info("Writing %s", path)
             _write(path, data)

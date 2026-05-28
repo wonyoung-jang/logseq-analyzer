@@ -20,7 +20,7 @@ from logseq_analyzer.adapter.filesystem import (
 )
 from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import CriteriaGroup, FileType, Output
-from logseq_analyzer.domain.model import LogseqFile, LogseqNode, extract_data_from_content
+from logseq_analyzer.domain.model import LogseqNode, extract_data_from_content
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -56,25 +56,24 @@ def init_logging() -> None:
     )
 
 
-def analyze(index: set[LogseqNode], journal_page_fmt: str) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
+def analyze(analyzer: LogseqAnalyzer) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
     """Perform core analysis on the Logseq graph."""
 
     def get_report(obj: Any) -> list[tuple[str, Sized]]:
         """Generate a report for the given object."""
         return [(k, getattr(obj, k)) for k in obj.__slots__]
 
-    analyzer = LogseqAnalyzer(index, journal_page_fmt)
-    analyzer.process()
-    yield "input", get_report(analyzer.inputs)
+    yield "_input", get_report(analyzer.inputs)
+    yield "_prewrite", get_report(analyzer.prewrite)
+    yield "_postwrite", get_report(analyzer.postwrite)
     yield "", [("dangling", analyzer.dangling)]
-    yield Output.Dir.ASSET, list(analyzer.asset.items())
+    yield "", list(analyzer.asset.items())
+    yield "", [("journal", analyzer.journal)]
     yield Output.Dir.NAMESPACE, get_report(analyzer.namespace)
-    yield Output.Dir.JOURNAL, [("data", analyzer.journal)]
-    yield Output.Dir.SUMMARY, get_report(analyzer.summary)
     report = []
-    report.append(("file", index))
-    report.append((Output.File.GRAPH_DATA, {f.name: f.data for f in index}))
-    yield Output.Dir.INDEX, report
+    report.append(("_all_files", analyzer.index))
+    report.append(("_all_graph_data", {(f.name, f.filetype): f.data for f in analyzer.index}))
+    yield "", report
 
 
 @cache
@@ -91,32 +90,28 @@ class LogseqFileBuilder:
 
     lsconfig: LogseqConfig
 
-    def __call__(self, path: Path, content: str) -> LogseqFile:
+    def __call__(self, path: Path) -> LogseqNode:
         """Build a LogseqFile instance from the given path and content."""
+        content = read_content(path)
         data = {k: v for k, v in extract_data_from_content(content) if v} if content else {}
         name = self.get_name(path)
         has_ns = "/" in name
-        ns_part = name.split("/")
-        return LogseqFile(
+        return LogseqNode(
             path=path,
             name=name,
             filetype=self.get_filetype(path),
+            ns_root=name.split("/", 1)[0] if has_ns else "",
+            ns_parent=name.rsplit("/", 1)[0] if has_ns else "",
             has_content=bool(content),
             has_backlinks=not CriteriaGroup.BACKLINK.value.isdisjoint(data.keys()),
-            ns_root=ns_part[0] if has_ns else "",
-            ns_parent=name.rsplit("/", 1)[0] if has_ns else "",
-            ns_part=ns_part,
             data=data,
         )
 
     def get_filetype(self, path: Path) -> str:
         """Determine the file type based on the directory structure."""
-        if result := self.lsconfig.target_dirs.get(path.parent.name):
-            filetype, _ = result
-            return filetype
-        for dirname, (_, fallback) in self.lsconfig.target_dirs.items():
-            if dirname in path.parts:
-                return fallback
+        for p in path.parents:
+            if filetype := self.lsconfig.target_dirs.get(p.name):
+                return filetype
         return FileType.OTHER
 
     def get_name(self, path: Path) -> str:
@@ -158,54 +153,54 @@ def execute_move(args: Args, paths: dict[str, Path], index: set[LogseqNode]) -> 
     return moved
 
 
-_builder: LogseqFileBuilder | None = None
-
-
-def _init_worker(lsconfig: LogseqConfig) -> None:
-    global _builder  # noqa: PLW0603
-    _builder = LogseqFileBuilder(lsconfig=lsconfig)
-
-
-def _process_path(path: Path) -> LogseqFile:
-    return _builder(path, read_content(path))  # ty:ignore[call-non-callable]
+def summarize(graph_cache: Cache) -> Iterator[tuple[str, list[tuple[str, Sized]], str]]:
+    """Summarize the graph cache for debugging purposes."""
+    has_content = graph_cache.get("name", "has_content", True)
+    has_backlinks = graph_cache.get("name", "has_backlinks", True)
+    is_backlinked = graph_cache.get("name", "backlinked", True)
+    is_backlinked_ns_only = graph_cache.get("name", "backlinked_ns_only", True)
+    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_HAS_CONTENT, has_content)], "file"
+    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_HAS_BACKLINK, has_backlinks)], "file"
+    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_BACKLINKED, is_backlinked)], "file"
+    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_BACKLINKED_NS_ONLY, is_backlinked_ns_only)], "file"
 
 
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
     init_logging()
     prog = progress_callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
-    prog(0, "Logseq Analyzer started...")
-
-    prog(10, "Building arguments...")
     args = Args(**arguments)
+    prog(0, "Analyzer started...")
 
-    prog(20, "Setting up Logseq Analyzer configurations...")
+    prog(20, "Setup...")
     paths = get_paths(args.graph_folder, args.global_config)
     lsconfig = LogseqConfig.from_config(config_from_path(paths["config_user"], paths.get("config_global")))
-
-    prog(30, "Setup cache...")
     graph_cache = Cache(path=paths["cache"])
-    cached_files = graph_cache.reset() if args.graph_cache else graph_cache.load()
-    index = {LogseqNode(file=f) for f in cached_files}
+    index: set[LogseqNode] = graph_cache.reset() if args.graph_cache else graph_cache.load()
 
-    prog(40, "Process Logseq graph...")
+    prog(40, "Process graph...")
     walk_graph = walk_filter(paths["graph"], set(lsconfig.target_dirs))
-    modified_files = graph_cache.get_modified(walk_graph)
-    with ProcessPoolExecutor(initializer=_init_worker, initargs=(lsconfig,)) as executor:
-        futures = {executor.submit(_process_path, path): path for path in modified_files}
+    modified_files = graph_cache.get_modified_path(walk_graph)
+    builder = LogseqFileBuilder(lsconfig=lsconfig)
+    with ProcessPoolExecutor() as executor:
+        futures = {executor.submit(builder, path): path for path in modified_files}
         for future in as_completed(futures):
-            index.add(LogseqNode(file=future.result()))
+            index.add(future.result())
 
-    prog(70, "Running core analysis on Logseq graph...")
-    writer = ReportWriter(output_dir=paths["output"])
-    for dir_name, data in analyze(index, lsconfig.jrnlfmt_page):
-        writer.write_report(dir_name, data)
+    prog(70, "Analyzing...")
+    analyzer = LogseqAnalyzer(index, lsconfig.jrnlfmt_page)
+    analyzer()
+    graph_cache.save(index)
 
-    prog(80, "Moving files...")
+    prog(80, "Writing...")
+    writer = ReportWriter(root_dirname=paths["output"])
+    for dirname, data in analyze(analyzer):
+        writer.generate(dirname, data)
+    for dirname, data, subdir in summarize(graph_cache):
+        writer.generate(dirname, data, subdir=subdir)
+
+    prog(90, "Moving...")
     moved = execute_move(args, paths, index)
-    writer.write_report(Output.Dir.MOVED, [(Output.File.MOVED, moved)])
+    writer.generate("", [(Output.File.MOVED, moved)])
 
-    prog(90, "Saving index to cache...")
-    graph_cache.save({n.file for n in index})
-
-    prog(100, "Logseq Analyzer completed successfully.")
+    prog(100, "Analyzer completed successfully.")

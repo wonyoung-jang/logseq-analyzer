@@ -20,12 +20,12 @@ class Checkboxes(QWidget):
     def __init__(self) -> None:
         """Post-initialization to set default values for checkboxes."""
         super().__init__()
-        self.move_assets = QCheckBox("Move unlinked assets to 'to_delete/'")
-        self.move_bak = QCheckBox("Move bak to 'to_delete/'")
-        self.move_recycle = QCheckBox("Move recycle to 'to_delete/'")
+        self.move_assets = QCheckBox("assets (unlinked)")
+        self.move_bak = QCheckBox("/logseq/bak/")
+        self.move_recycle = QCheckBox("/logseq/recycle/")
         self.graph_cache = QCheckBox("Reindex graph cache (slower)")
-        self.graph_cache.setEnabled(True)
         layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("Move to 'to_delete/'"))
         layout.addWidget(self.move_assets)
         layout.addWidget(self.move_bak)
         layout.addWidget(self.move_recycle)

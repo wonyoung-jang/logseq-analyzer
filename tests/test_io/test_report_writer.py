@@ -15,4 +15,4 @@ def report_writer() -> ReportWriter:
 
 def test_report_writer_init(report_writer: ReportWriter) -> None:
     """Test the initialization of ReportWriter."""
-    assert report_writer.output_dir == Path("test")
+    assert report_writer.root_dirname == Path("test")

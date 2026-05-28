@@ -2,10 +2,10 @@
 
 import pytest
 
-from logseq_analyzer.service.analysis import LogseqNamespaces
+from logseq_analyzer.service.analysis import LogseqNamespaceConflicts
 
 
 @pytest.fixture
-def logseq_namespaces() -> LogseqNamespaces:
+def logseq_namespaces() -> LogseqNamespaceConflicts:
     """Fixture for LogseqNamespaces."""
-    return LogseqNamespaces()
+    return LogseqNamespaceConflicts()

@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logseq_analyzer.domain.enums import Crit, FileType
 from logseq_analyzer.domain.patterns import (
@@ -95,26 +95,25 @@ def _process_aliases(aliases: str) -> Iterator[str]:
     """Process aliases to extract individual aliases."""
     if not (aliases := aliases.strip()):
         return
-    current = []
-    is_inside_brackets = False
-    pos = 0
-    while pos < len(aliases):
-        if aliases[pos : pos + 2] == "[[":
-            is_inside_brackets = True
-            pos += 2
-        elif aliases[pos : pos + 2] == "]]":
-            is_inside_brackets = False
-            pos += 2
-        elif aliases[pos] == "," and not is_inside_brackets:
-            if part := "".join(current).strip().lower():
-                yield part
-            current.clear()
-            pos += 1
+    bracket_level = 0
+    curr = []
+    iterator = iter(enumerate(aliases))
+    for i, char in iterator:
+        if char == "[" and aliases[i : i + 2] == "[[":
+            bracket_level += 1
+            next(iterator, None)  # skip second '['
+        elif char == "]" and aliases[i : i + 2] == "]]":
+            if bracket_level > 0:
+                bracket_level -= 1
+            next(iterator, None)  # skip second ']'
+        elif char == "," and bracket_level == 0:
+            if val := "".join(curr).strip().lower():
+                yield val
+            curr.clear()
         else:
-            current.append(aliases[pos])
-            pos += 1
-    if part := "".join(current).strip().lower():
-        yield part
+            curr.append(char)
+    if val := "".join(curr).strip().lower():
+        yield val
 
 
 def _parse_hls_bullet(bullet: str) -> str | None:
@@ -180,34 +179,19 @@ def _extract_hierarchical(content: str) -> Iterator[tuple[str, str]]:
     yield from data.items()
 
 
-@dataclass(slots=True, frozen=True)
-class LogseqFile:
-    """A class to represent a Logseq file."""
-
-    path: Path
-    name: str
-    filetype: str
-    has_content: bool
-    has_backlinks: bool
-    ns_root: str
-    ns_parent: str
-    ns_part: list[str]
-    data: dict[str, Iterable[str]] = field(repr=False)
-
-    def __hash__(self) -> int:
-        """Return the hash of the LogseqFile based on its path."""
-        return hash(self.path)
-
-    def get_data(self, key: str) -> Iterable[str]:
-        """Get data by key."""
-        return self.data.get(key, ())
-
-
 @dataclass(slots=True)
 class LogseqNode:
     """A class to represent a Logseq file with additional analysis attributes."""
 
-    file: LogseqFile
+    path: Path
+    name: str
+    filetype: str
+    ns_root: str
+    ns_parent: str
+    has_content: bool
+    has_backlinks: bool
+    data: dict[str, Iterable[str]] = field(repr=False)
+    nodetype: str = NodeType.OTHER
     backlinked: bool = False
     backlinked_ns_only: bool = False
     is_ns: bool = False
@@ -215,36 +199,33 @@ class LogseqNode:
     def __post_init__(self) -> None:
         """Post-initialization."""
         if not self.is_ns:
-            self.is_ns = bool(self.file.ns_root) and bool(self.file.ns_parent)
+            self.is_ns = bool(self.ns_root)
 
     def __hash__(self) -> int:
         """Return the hash of the LogseqNode based on its file path."""
-        return hash(self.file.path)
+        return hash(self.path)
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on file path."""
-        return isinstance(other, LogseqNode) and self.file.path == other.file.path
+        return isinstance(other, LogseqNode) and self.path == other.path
 
-    def __getattr__(self, name: str) -> Any:
-        """Delegate attribute access to the underlying LogseqFile."""
-        return getattr(self.file, name)
-
-    @property
-    def nodetype(self) -> str:
+    def get_nodetype(self) -> str:
         """Determine node type based on summary data."""
-        if self.file.filetype not in (FileType.JOURNAL, FileType.PAGE):
-            return NodeType.OTHER
-        match (self.file.has_backlinks, self.backlinked, self.backlinked_ns_only):
-            case (True, True, True) | (True, True, False) | (True, False, True):
-                nodetype = NodeType.BRANCH
-            case (True, False, False):
-                nodetype = NodeType.ROOT
-            case (False, True, True) | (False, True, False):
-                nodetype = NodeType.LEAF
-            case (False, False, True):
-                nodetype = NodeType.ORPHAN_NAMESPACE if self.file.has_content else NodeType.ORPHAN_NAMESPACE_TRUE
-            case (False, False, False):
-                nodetype = NodeType.ORPHAN_GRAPH if self.file.has_content else NodeType.ORPHAN_TRUE
-            case _:
-                nodetype = NodeType.OTHER
+        nodetype = NodeType.OTHER
+        if self.filetype in (FileType.JOURNAL, FileType.PAGE):
+            match (self.has_backlinks, self.backlinked, self.backlinked_ns_only):
+                case (True, True, True) | (True, True, False) | (True, False, True):
+                    nodetype = NodeType.BRANCH
+                case (True, False, False):
+                    nodetype = NodeType.ROOT
+                case (False, True, True) | (False, True, False):
+                    nodetype = NodeType.LEAF
+                case (False, False, True):
+                    nodetype = NodeType.ORPHAN_NAMESPACE if self.has_content else NodeType.ORPHAN_NAMESPACE_TRUE
+                case (False, False, False):
+                    nodetype = NodeType.ORPHAN_GRAPH if self.has_content else NodeType.ORPHAN_TRUE
         return nodetype
+
+    def get_data(self, key: str) -> Iterable[str]:
+        """Get data by key."""
+        return self.data.get(key, ())

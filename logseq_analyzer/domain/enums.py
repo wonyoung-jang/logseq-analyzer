@@ -3,16 +3,6 @@
 from enum import Enum, StrEnum
 
 
-class TargetDir(StrEnum):
-    """Target directories for the Logseq Analyzer."""
-
-    ASSET = "assets"
-    DRAW = "draws"
-    JOURNAL = "journals"
-    PAGE = "pages"
-    WHITEBOARD = "whiteboards"
-
-
 class FileType(StrEnum):
     """File types for the Logseq Analyzer."""
 
@@ -21,11 +11,6 @@ class FileType(StrEnum):
     JOURNAL = "journal"
     PAGE = "page"
     WHITEBOARD = "whiteboard"
-    SUB_ASSET = "sub_asset"
-    SUB_DRAW = "sub_draw"
-    SUB_JOURNAL = "sub_journal"
-    SUB_PAGE = "sub_page"
-    SUB_WHITEBOARD = "sub_whiteboard"
     OTHER = "other"
 
 
@@ -128,17 +113,12 @@ class Output:
     class Dir(StrEnum):
         """Output directories for the Logseq Analyzer."""
 
-        INDEX = "index"
-        JOURNAL = "journal"
-        MOVED = "moved"
-        ASSET = "asset"
         NAMESPACE = "namespace"
         SUMMARY = "summary"
 
     class File(StrEnum):
         """Output types for the Logseq Analyzer."""
 
-        GRAPH_DATA = "graph_data"
         MOVED = "moved"
         SUMMARY_BACKLINKED = "backlinked"
         SUMMARY_BACKLINKED_NS_ONLY = "backlinked_ns_only"
@@ -165,6 +145,7 @@ class CriteriaGroup(Enum):
     ASSETMENTION = frozenset(
         (
             Crit.Content.ASSET,
+            Crit.Content.HLS_BULLET,
             Crit.EmbLink.ASSET,
         )
     )

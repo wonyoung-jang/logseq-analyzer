@@ -3,10 +3,11 @@
 import json
 import logging
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.adapter.filesystem import DATADIR, File, read_content
-from logseq_analyzer.domain.enums import FileType, TargetDir
+from logseq_analyzer.domain.enums import FileType
 from logseq_analyzer.domain.patterns import EDNPattern, cljs_date_to_py
 
 if TYPE_CHECKING:
@@ -16,6 +17,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 LITERAL_MAP = {"true": True, "false": False, "nil": None}
+
+
+class LogseqTargetDir(StrEnum):
+    """Target directories for Logseq."""
+
+    ASSET = "assets"
+    DRAW = "draws"
+    JOURNAL = "journals"
+    PAGE = "pages"
+    WHITEBOARD = "whiteboards"
 
 
 @dataclass(slots=True)
@@ -30,14 +41,16 @@ class LogseqConfig:
     jrnlfmt_page: str
     jrnlfmt_file: str
     ns_sep: str
-    target_dirs: dict[str, tuple[str, str]]
+    target_dirs: dict[str, str]
 
     @classmethod
     def from_config(cls, config: dict) -> LogseqConfig:
         """Create a LogseqConfig instance from a configuration dictionary."""
-        dir_page = config.get(":pages-directory", TargetDir.PAGE)
-        dir_journal = config.get(":journals-directory", TargetDir.JOURNAL)
-        dir_whiteboard = config.get(":whiteboards-directory", TargetDir.WHITEBOARD)
+        dir_asset = config.get(":assets-directory", LogseqTargetDir.ASSET)
+        dir_draw = config.get(":draws-directory", LogseqTargetDir.DRAW)
+        dir_page = config.get(":pages-directory", LogseqTargetDir.PAGE)
+        dir_journal = config.get(":journals-directory", LogseqTargetDir.JOURNAL)
+        dir_whiteboard = config.get(":whiteboards-directory", LogseqTargetDir.WHITEBOARD)
         pagetitle_fmt = config.get(":journal/page-title-format", "MMM do, yyyy")
         filename_fmt = config.get(":journal/file-name-format", "yyyy_MM_dd")
         ns_sep = "%2F" if config.get(":file/name-format", ":triple-lowbar") == ":legacy" else "___"
@@ -51,11 +64,11 @@ class LogseqConfig:
             jrnlfmt_file=cljs_date_to_py(filename_fmt),
             ns_sep=ns_sep,
             target_dirs={
-                TargetDir.ASSET: (FileType.ASSET, FileType.SUB_ASSET),
-                TargetDir.DRAW: (FileType.DRAW, FileType.SUB_DRAW),
-                dir_page: (FileType.PAGE, FileType.SUB_PAGE),
-                dir_journal: (FileType.JOURNAL, FileType.SUB_JOURNAL),
-                dir_whiteboard: (FileType.WHITEBOARD, FileType.SUB_WHITEBOARD),
+                dir_asset: FileType.ASSET,
+                dir_draw: FileType.DRAW,
+                dir_page: FileType.PAGE,
+                dir_journal: FileType.JOURNAL,
+                dir_whiteboard: FileType.WHITEBOARD,
             },
         )
 
