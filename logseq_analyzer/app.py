@@ -4,13 +4,13 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from functools import cache
 from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote
 
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import LogseqConfig, config_from_path
 from logseq_analyzer.adapter.filesystem import (
+    Paths,
     determine_move,
     get_paths,
     move_files,
@@ -19,7 +19,7 @@ from logseq_analyzer.adapter.filesystem import (
     walk_filter,
 )
 from logseq_analyzer.adapter.reporter import ReportWriter
-from logseq_analyzer.domain.enums import CriteriaGroup, FileType, Output
+from logseq_analyzer.domain.enums import CriteriaGroup, FileType
 from logseq_analyzer.domain.model import LogseqNode, extract_data_from_content
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
@@ -59,29 +59,32 @@ def init_logging() -> None:
 def analyze(analyzer: LogseqAnalyzer) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
     """Perform core analysis on the Logseq graph."""
 
-    def get_report(obj: Any) -> list[tuple[str, Sized]]:
+    def _data(obj: Any) -> list[tuple[str, Sized]]:
         """Generate a report for the given object."""
         return [(k, getattr(obj, k)) for k in obj.__slots__]
 
-    yield "_input", get_report(analyzer.inputs)
-    yield "_prewrite", get_report(analyzer.prewrite)
-    yield "_postwrite", get_report(analyzer.postwrite)
+    yield "_input", _data(analyzer.inputs)
+    yield "_prewrite", _data(analyzer.prewrite)
+    yield "_postwrite", _data(analyzer.postwrite)
     yield "", [("dangling", analyzer.dangling)]
-    yield "", list(analyzer.asset.items())
     yield "", [("journal", analyzer.journal)]
-    yield Output.Dir.NAMESPACE, get_report(analyzer.namespace)
+    yield "", list(analyzer.asset.items())
+    yield "namespace", _data(analyzer.namespace)
     report = []
     report.append(("_all_files", analyzer.index))
     report.append(("_all_graph_data", {(f.name, f.filetype): f.data for f in analyzer.index}))
     yield "", report
 
 
-@cache
-def _get_day_ordinal(day: int) -> str:
+def _get_day_ordinal(d: int) -> str:
     """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-    if 11 <= day <= 13:
+    if 11 <= d <= 13:
         return "th"
-    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+
+
+DAY_RANGE = range(1, 32)
+DATE_ORDINALS = dict(zip(DAY_RANGE, (f"{d}{_get_day_ordinal(d)}" for d in DAY_RANGE), strict=True))
 
 
 @dataclass(slots=True)
@@ -118,38 +121,51 @@ class LogseqFileBuilder:
         """Process the filename to create a page title."""
         name = path.stem.strip(self.lsconfig.ns_sep)
         if path.parent.name == self.lsconfig.dir_journal:
-            try:
-                date_obj: datetime = datetime.strptime(name, self.lsconfig.jrnlfmt_file).replace(tzinfo=UTC)
-                page_title: str = date_obj.strftime(self.lsconfig.jrnlfmt_page)
-                if "o" in self.lsconfig.pagetitle_fmt:
-                    day = str(date_obj.day)
-                    day_with_ordinal = f"{day}{_get_day_ordinal(date_obj.day)}"
-                    page_title = page_title.replace(day, day_with_ordinal, 1)
-                return page_title.replace("'", "")
-            except ValueError as e:
-                logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, self.lsconfig.jrnlfmt_page, e)
-                return name
+            return self.get_journal_name(name)
         return unquote(name).replace(self.lsconfig.ns_sep, "/")
 
+    def get_journal_name(self, name: str) -> str:
+        """Convert a journal page title back to a filename."""
+        try:
+            date_obj: datetime = datetime.strptime(name, self.lsconfig.jrnlfmt_file).replace(tzinfo=UTC)
+            page_title: str = date_obj.strftime(self.lsconfig.jrnlfmt_page)
+            if "o" in self.lsconfig.pagetitle_fmt:
+                d = date_obj.day
+                page_title = page_title.replace(str(d), DATE_ORDINALS[d], 1)
+            return page_title.replace("'", "")
+        except ValueError as e:
+            logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, self.lsconfig.jrnlfmt_page, e)
+            return name
 
-def execute_move(args: Args, paths: dict[str, Path], index: set[LogseqNode]) -> dict[str, list[Path]]:
+
+def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, list[Path]]:
     """Determine and execute file moves based on the provided arguments and index."""
     mover_config: dict[str, tuple[set[Path], Path, bool]] = {
         "unlinked_asset": (
             {a.path for a in index if a.filetype == FileType.ASSET and not a.backlinked},
-            paths["del_assets"],
+            paths.del_assets,
             args.move_unlinked_assets,
         ),
-        "bak": (set(walk_file(paths["bak"])), paths["del_bak"], args.move_bak),
-        "recycle": (set(walk_file(paths["recycle"])), paths["del_recycle"], args.move_recycle),
+        "bak": (
+            set(walk_file(paths.bak)),
+            paths.del_bak,
+            args.move_bak,
+        ),
+        "recycle": (
+            set(walk_file(paths.recycle)),
+            paths.del_recycle,
+            args.move_recycle,
+        ),
     }
     moved = {}
-    for k, v in mover_config.items():
-        files, dest, should_move = v
+    for k, (files, dest, should_move) in mover_config.items():
         if should_move:
-            moved[k] = list(move_files(determine_move(files, dest)))
+            key = k
+            values = list(move_files(determine_move(files, dest)))
         else:
-            moved[f"{k} (simulated)"] = [f.name for f in files]
+            key = f"{k} (simulated)"
+            values = [f.name for f in files]
+        moved[key] = values
     return moved
 
 
@@ -159,27 +175,28 @@ def summarize(graph_cache: Cache) -> Iterator[tuple[str, list[tuple[str, Sized]]
     has_backlinks = graph_cache.get("name", "has_backlinks", True)
     is_backlinked = graph_cache.get("name", "backlinked", True)
     is_backlinked_ns_only = graph_cache.get("name", "backlinked_ns_only", True)
-    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_HAS_CONTENT, has_content)], "file"
-    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_HAS_BACKLINK, has_backlinks)], "file"
-    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_BACKLINKED, is_backlinked)], "file"
-    yield Output.Dir.SUMMARY, [(Output.File.SUMMARY_BACKLINKED_NS_ONLY, is_backlinked_ns_only)], "file"
+    yield "summary", [("has_content", has_content)], "file"
+    yield "summary", [("has_backlinks", has_backlinks)], "file"
+    yield "summary", [("backlinked", is_backlinked)], "file"
+    yield "summary", [("backlinked_ns_only", is_backlinked_ns_only)], "file"
 
 
 def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
     init_logging()
     prog = progress_callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
+
+    prog(0, "Start...")
     args = Args(**arguments)
-    prog(0, "Analyzer started...")
 
     prog(20, "Setup...")
     paths = get_paths(args.graph_folder, args.global_config)
-    lsconfig = LogseqConfig.from_config(config_from_path(paths["config_user"], paths.get("config_global")))
-    graph_cache = Cache(path=paths["cache"])
+    lsconfig = LogseqConfig.from_config(config_from_path(paths.config_user, paths.config_global))
+    graph_cache = Cache(path=paths.cache)
     index: set[LogseqNode] = graph_cache.reset() if args.graph_cache else graph_cache.load()
 
-    prog(40, "Process graph...")
-    walk_graph = walk_filter(paths["graph"], set(lsconfig.target_dirs))
+    prog(40, "Process...")
+    walk_graph = walk_filter(paths.graph, lsconfig.target_dirs)
     modified_files = graph_cache.get_modified_path(walk_graph)
     builder = LogseqFileBuilder(lsconfig=lsconfig)
     with ProcessPoolExecutor() as executor:
@@ -193,7 +210,7 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
     graph_cache.save(index)
 
     prog(80, "Writing...")
-    writer = ReportWriter(root_dirname=paths["output"])
+    writer = ReportWriter(root_dirname=paths.output)
     for dirname, data in analyze(analyzer):
         writer.generate(dirname, data)
     for dirname, data, subdir in summarize(graph_cache):
@@ -201,6 +218,6 @@ def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | Non
 
     prog(90, "Moving...")
     moved = execute_move(args, paths, index)
-    writer.generate("", [(Output.File.MOVED, moved)])
+    writer.generate("", [("moved", moved)])
 
     prog(100, "Analyzer completed successfully.")

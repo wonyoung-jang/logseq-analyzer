@@ -11,14 +11,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _write(path: Path, data: Sized) -> None:
-    """Write the data to a plain text file with the given prefix and count."""
-    with path.open("w", encoding="utf-8") as p:
-        p.write(f"{path.name}\n")
-        p.write(f"COUNT: {len(data)}\n")
-        p.writelines(_write_recursive(data))
-
-
 def _write_recursive(data: object, level: int = 0) -> Iterator[str]:
     indent = "\t" * level
     if isinstance(data, dict):
@@ -66,11 +58,14 @@ class ReportWriter:
 
     def generate(self, dirname: str, reports: list[tuple[str, Sized]], subdir: str = "") -> None:
         """Write reports to the specified output directories."""
+        output_dir = self.root_dirname / dirname if dirname else self.root_dirname
+        output_dir = output_dir / subdir if subdir else output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+
         for name, data in reports:
-            output_dir = self.root_dirname / dirname if dirname else self.root_dirname
-            if subdir:
-                output_dir /= subdir
-            output_dir.mkdir(parents=True, exist_ok=True)
             path = output_dir / f"{name}.txt"
             logger.info("Writing %s", path)
-            _write(path, data)
+            with path.open("w", encoding="utf-8") as f:
+                f.write(f"{name}\n")
+                f.write(f"COUNT: {len(data)}\n")
+                f.writelines(_write_recursive(data))

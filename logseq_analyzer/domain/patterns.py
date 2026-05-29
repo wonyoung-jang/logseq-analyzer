@@ -77,28 +77,36 @@ _URL = (
 class ContentPatterns:
     """Class to hold compiled regex patterns for Logseq content."""
 
+    ANY_LINK = re.compile(rf"\b(?:{_URL})\b", re.IGNORECASE)
+    ASSET = re.compile(r"assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)", re.IGNORECASE)
+    BLOCKQUOTE = re.compile(r"(?!^[^\S\n])(- >.*)", re.MULTILINE | re.IGNORECASE)
     BULLET = re.compile(r"^\s*-\s*", re.MULTILINE | re.IGNORECASE)
+    DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
+    DYNAMIC_VARIABLE = re.compile(r"<%\s*.*?\s*%>", re.IGNORECASE)
+    FLASHCARD = re.compile(r"(?!^[^\S\n])(- [^\n]*#card|\[\[card\]\].*)", re.MULTILINE | re.IGNORECASE)
+    INLINE_CODE = re.compile(r"`[^`\n]+`", re.IGNORECASE)
     PAGE_REFERENCE = re.compile(r"(?<!#)\[\[(.+?)\]\]", re.IGNORECASE)
-    TAGGED_BACKLINK = re.compile(r"#\[\[([^\]#]+?)\]\]", re.IGNORECASE)
-    TAG = re.compile(r"#(?!\[\[)([^\]#\s]+)", re.IGNORECASE)
     PROPERTY = re.compile(r"^(?!\s*-\s)\s*([A-Za-z0-9_-]+)(?=::)", re.MULTILINE | re.IGNORECASE)
     PROPERTY_VALUE = re.compile(r"^(?!\s*-\s)\s*([A-Za-z0-9_-]+)::(.*)$", re.MULTILINE | re.IGNORECASE)
-    ASSET = re.compile(r"assets/(?:.*/)?([^\s/]+\.\w{2,5})(?=\W|$)", re.IGNORECASE)
-    DRAW = re.compile(r"(?<!#)\[\[draws/(.+?)\.excalidraw\]\]", re.IGNORECASE)
-    BLOCKQUOTE = re.compile(r"(?!^[^\S\n])(- >.*)", re.MULTILINE | re.IGNORECASE)
-    FLASHCARD = re.compile(r"(?!^[^\S\n])(- [^\n]*#card|\[\[card\]\].*)", re.MULTILINE | re.IGNORECASE)
-    DYNAMIC_VARIABLE = re.compile(r"<%\s*.*?\s*%>", re.IGNORECASE)
-    ANY_LINK = re.compile(rf"\b(?:{_URL})\b", re.IGNORECASE)
-    INLINE_CODE = re.compile(r"`[^`\n]+`", re.IGNORECASE)
+    TAG = re.compile(r"#(?!\[\[)([^\]#\s]+)", re.IGNORECASE)
+    TAGGED_BACKLINK = re.compile(r"#\[\[([^\]#]+?)\]\]", re.IGNORECASE)
 
 
-def _advcmd(key: str, variant: str = "") -> re.Pattern:
-    _key = rf"{key}\s{1}{variant}" if variant else key
-    return re.compile(rf"#\+BEGIN_{_key}.*?#\+END_{_key}.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
+def _advcmd() -> re.Pattern:
+    return re.compile(r"#\+BEGIN_.*?#\+END_.*?(?:\n|$)", re.DOTALL | re.IGNORECASE)
 
 
-def _mlcode(key: str) -> re.Pattern:
-    return re.compile(rf"```{key}.*?```", re.DOTALL | re.IGNORECASE)
+def _advcmd_child(key: str, variant: str = "") -> re.Pattern:
+    _key = rf"{key}\s{variant}" if variant else key
+    return re.compile(rf"#\+BEGIN_{_key}", re.IGNORECASE)
+
+
+def _mlcode() -> re.Pattern:
+    return re.compile(r"```.*?```", re.DOTALL | re.IGNORECASE)
+
+
+def _mlcode_child(key: str) -> re.Pattern:
+    return re.compile(rf"```{key}", re.IGNORECASE)
 
 
 def _dblcurly(key: str, suffix: str = "") -> re.Pattern:
@@ -159,23 +167,23 @@ class IPattern:
 class AdvCmdPatterns(IPattern):
     """Patterns for advanced commands in Logseq."""
 
-    ALL = _advcmd("")
+    ALL = _advcmd()
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
-        (Crit.AdvCmd.EXPORT, _advcmd("EXPORT")),
-        (Crit.AdvCmd.EXPORT_ASCII, _advcmd("EXPORT", "ascii")),
-        (Crit.AdvCmd.EXPORT_LATEX, _advcmd("EXPORT", "latex")),
-        (Crit.AdvCmd.CAUTION, _advcmd("CAUTION")),
-        (Crit.AdvCmd.CENTER, _advcmd("CENTER")),
-        (Crit.AdvCmd.COMMENT, _advcmd("COMMENT")),
-        (Crit.AdvCmd.EXAMPLE, _advcmd("EXAMPLE")),
-        (Crit.AdvCmd.IMPORTANT, _advcmd("IMPORTANT")),
-        (Crit.AdvCmd.NOTE, _advcmd("NOTE")),
-        (Crit.AdvCmd.PINNED, _advcmd("PINNED")),
-        (Crit.AdvCmd.QUERY, _advcmd("QUERY")),
-        (Crit.AdvCmd.QUOTE, _advcmd("QUOTE")),
-        (Crit.AdvCmd.TIP, _advcmd("TIP")),
-        (Crit.AdvCmd.VERSE, _advcmd("VERSE")),
-        (Crit.AdvCmd.WARNING, _advcmd("WARNING")),
+        (Crit.AdvCmd.EXPORT, _advcmd_child("EXPORT")),
+        (Crit.AdvCmd.EXPORT_ASCII, _advcmd_child("EXPORT", "ascii")),
+        (Crit.AdvCmd.EXPORT_LATEX, _advcmd_child("EXPORT", "latex")),
+        (Crit.AdvCmd.CAUTION, _advcmd_child("CAUTION")),
+        (Crit.AdvCmd.CENTER, _advcmd_child("CENTER")),
+        (Crit.AdvCmd.COMMENT, _advcmd_child("COMMENT")),
+        (Crit.AdvCmd.EXAMPLE, _advcmd_child("EXAMPLE")),
+        (Crit.AdvCmd.IMPORTANT, _advcmd_child("IMPORTANT")),
+        (Crit.AdvCmd.NOTE, _advcmd_child("NOTE")),
+        (Crit.AdvCmd.PINNED, _advcmd_child("PINNED")),
+        (Crit.AdvCmd.QUERY, _advcmd_child("QUERY")),
+        (Crit.AdvCmd.QUOTE, _advcmd_child("QUOTE")),
+        (Crit.AdvCmd.TIP, _advcmd_child("TIP")),
+        (Crit.AdvCmd.VERSE, _advcmd_child("VERSE")),
+        (Crit.AdvCmd.WARNING, _advcmd_child("WARNING")),
     )
     FALLBACK = Crit.AdvCmd.ALL
 
@@ -183,10 +191,10 @@ class AdvCmdPatterns(IPattern):
 class CodePatterns(IPattern):
     """Patterns for code blocks in Logseq."""
 
-    ALL = _mlcode("")
+    ALL = _mlcode()
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
-        (Crit.MultLineCode.CALC, _mlcode("calc")),
-        (Crit.MultLineCode.LANGUAGE, _mlcode(r"\w+")),
+        (Crit.MultLineCode.CALC, _mlcode_child("calc")),
+        (Crit.MultLineCode.LANGUAGE, _mlcode_child(r"\w+")),
     )
     FALLBACK = Crit.MultLineCode.ALL
 
@@ -237,7 +245,7 @@ class ExternalLinkPatterns(IPattern):
     ALL = _extlink("")
     PATTERN: Sequence[tuple[str, re.Pattern]] = (
         (Crit.ExtLink.INTERNET, _extlink(_URL)),
-        (Crit.ExtLink.ALIAS, _extlink(r"[\[\[|\(\(].*?[\]\]|\)\)].*?")),
+        (Crit.ExtLink.ALIAS, _extlink(r"[\[{2}|\({2}].*?[\]{2}|\){2}].*?")),
     )
     FALLBACK = Crit.ExtLink.ALL
 
@@ -259,11 +267,11 @@ MASK_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
 CORE_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
     (Crit.Content.BLOCKQUOTE, ContentPatterns.BLOCKQUOTE),
     (Crit.Content.DRAW, ContentPatterns.DRAW),
+    (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
     (Crit.Content.FLASHCARD, ContentPatterns.FLASHCARD),
     (Crit.Content.PAGE_REF, ContentPatterns.PAGE_REFERENCE),
-    (Crit.Content.TAGGED_BACKLINK, ContentPatterns.TAGGED_BACKLINK),
     (Crit.Content.TAG, ContentPatterns.TAG),
-    (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
+    (Crit.Content.TAGGED_BACKLINK, ContentPatterns.TAGGED_BACKLINK),
 )
 RAW_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
     (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),

@@ -2,6 +2,7 @@
 
 import logging
 import shutil
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -36,7 +37,7 @@ class File:
         RECYCLE = ".recycle"
 
 
-def get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
+def get_paths(graph_folder: str, config_global: str | None) -> Paths:
     """Set up Logseq analyzer configuration based on arguments."""
     graph = Path(graph_folder)
     logseq = graph / File.Logseq.LOGSEQ
@@ -60,7 +61,25 @@ def get_paths(graph_folder: str, config_global: str | None) -> dict[str, Path]:
     for name, path, kwargs in paths_config:
         paths[name] = path
         check_path(path, **kwargs)
-    return paths
+    return Paths(**paths)
+
+
+@dataclass(slots=True)
+class Paths:
+    """Class to hold file paths for the Logseq Analyzer."""
+
+    cache: Path
+    output: Path
+    graph: Path
+    logseq: Path
+    bak: Path
+    recycle: Path
+    config_user: Path
+    del_dir: Path
+    del_bak: Path
+    del_recycle: Path
+    del_assets: Path
+    config_global: Path | None = None
 
 
 def walk_file(path: Path) -> Iterator[Path]:
@@ -69,7 +88,7 @@ def walk_file(path: Path) -> Iterator[Path]:
         yield from (root / f for f in files)
 
 
-def walk_filter(graph: Path, target: set[str], exclude_suffix: str = ".org") -> Iterator[Path]:
+def walk_filter(graph: Path, target: Iterable[str], exclude_suffix: str = ".org") -> Iterator[Path]:
     """Recursively iterate over files in the root directory."""
     for root, dirs, files in graph.walk():
         if root == graph:

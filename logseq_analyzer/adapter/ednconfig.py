@@ -29,6 +29,36 @@ class LogseqTargetDir(StrEnum):
     WHITEBOARD = "whiteboards"
 
 
+def _config_from_path(path: Path | None) -> dict:
+    """Load and parse the EDN configuration file from the given path."""
+    if not path:
+        return {}
+    logger.debug("Loading config from file: %s", path)
+    parsed_edn = parse_edn(read_content(path))
+    return parsed_edn if isinstance(parsed_edn, dict) else {}
+
+
+def config_from_path(config_user: Path, config_global: Path | None) -> dict:
+    """Create a ConfigEdns instance from user and global EDN files."""
+    default_edn = _config_from_path(DATADIR / File.App.DEFAULT_EDN)
+    user_edn = _config_from_path(config_user)
+    global_edn = _config_from_path(config_global)
+    return default_edn | user_edn | global_edn
+
+
+def tokenize(edn_str: str) -> Iterator[str]:
+    """Yield EDN tokens, skipping comments, whitespace, and commas."""
+    edn = EDNPattern.COMMENT.sub("", edn_str)
+    for match in EDNPattern.TOKEN.finditer(edn):
+        yield match.group().strip()
+
+
+def parse_edn(edn_str: str) -> Any:
+    """Parse an EDN-formatted string and return the corresponding Python data structure."""
+    tokens = tuple(tokenize(edn_str))
+    return EDNParser(tokens).parse()
+
+
 @dataclass(slots=True)
 class LogseqConfig:
     """Class to represent the Logseq configuration."""
@@ -71,23 +101,6 @@ class LogseqConfig:
                 dir_whiteboard: FileType.WHITEBOARD,
             },
         )
-
-
-def _config_from_path(path: Path | None) -> dict:
-    """Load and parse the EDN configuration file from the given path."""
-    if not path:
-        return {}
-    logger.debug("Loading config from file: %s", path)
-    parsed_edn = parse_edn(read_content(path))
-    return parsed_edn if isinstance(parsed_edn, dict) else {}
-
-
-def config_from_path(config_user: Path, config_global: Path | None) -> dict:
-    """Create a ConfigEdns instance from user and global EDN files."""
-    default_edn = _config_from_path(DATADIR / File.App.DEFAULT_EDN)
-    user_edn = _config_from_path(config_user)
-    global_edn = _config_from_path(config_global)
-    return default_edn | user_edn | global_edn
 
 
 @dataclass(slots=True)
@@ -195,16 +208,3 @@ class EDNParser:
         if "." in tok or "e" in tok.lower():
             return float(tok)
         return int(tok)
-
-
-def tokenize(edn_str: str) -> Iterator[str]:
-    """Yield EDN tokens, skipping comments, whitespace, and commas."""
-    edn = EDNPattern.COMMENT.sub("", edn_str)
-    for match in EDNPattern.TOKEN.finditer(edn):
-        yield match.group().strip()
-
-
-def parse_edn(edn_str: str) -> Any:
-    """Parse an EDN-formatted string and return the corresponding Python data structure."""
-    tokens = tuple(tokenize(edn_str))
-    return EDNParser(tokens).parse()

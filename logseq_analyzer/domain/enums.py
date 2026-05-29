@@ -107,25 +107,6 @@ class Crit:
         INTERNET = "ExtLink_internet"
 
 
-class Output:
-    """Output types for the Logseq Analyzer."""
-
-    class Dir(StrEnum):
-        """Output directories for the Logseq Analyzer."""
-
-        NAMESPACE = "namespace"
-        SUMMARY = "summary"
-
-    class File(StrEnum):
-        """Output types for the Logseq Analyzer."""
-
-        MOVED = "moved"
-        SUMMARY_BACKLINKED = "backlinked"
-        SUMMARY_BACKLINKED_NS_ONLY = "backlinked_ns_only"
-        SUMMARY_HAS_BACKLINK = "has_backlink"
-        SUMMARY_HAS_CONTENT = "has_content"
-
-
 class CriteriaGroup(Enum):
     """Groups of criteria for the Logseq Analyzer."""
 
@@ -134,12 +115,12 @@ class CriteriaGroup(Enum):
             Crit.Content.ALIAS,
             Crit.Content.DRAW,
             Crit.Content.PAGE_REF,
-            Crit.Content.TAGGED_BACKLINK,
             Crit.Content.TAG,
-            Crit.Prop.PAGE_BUILTIN,
-            Crit.Prop.PAGE_USER,
+            Crit.Content.TAGGED_BACKLINK,
             Crit.Prop.BLOCK_BUILTIN,
             Crit.Prop.BLOCK_USER,
+            Crit.Prop.PAGE_BUILTIN,
+            Crit.Prop.PAGE_USER,
         )
     )
     ASSETMENTION = frozenset(

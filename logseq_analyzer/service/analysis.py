@@ -51,7 +51,7 @@ def _update_counts(result: dict, collection: Iterable[str], filename: str) -> No
 
 def get_dangling(linkedrefs: set[str], names: set[str], aliases: set[str]) -> set[str]:
     """Get the set of dangling links from a given set of names."""
-    return linkedrefs - names - aliases - LOGSEQ_BUILTIN_PROPERTY
+    return ((linkedrefs - names) - aliases) - LOGSEQ_BUILTIN_PROPERTY
 
 
 def process_journal(journals: set[str], dangling: set[str], jrnlfmt_page: str) -> dict[str, list[datetime]]:

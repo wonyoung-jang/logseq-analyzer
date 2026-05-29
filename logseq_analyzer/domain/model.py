@@ -167,7 +167,8 @@ def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     yield Crit.Prop.BLOCK_USER, tuple(prop_block.difference(LOGSEQ_BUILTIN_PROPERTY))
     yield Crit.Prop.PAGE_BUILTIN, tuple(prop_page.intersection(LOGSEQ_BUILTIN_PROPERTY))
     yield Crit.Prop.PAGE_USER, tuple(prop_page.difference(LOGSEQ_BUILTIN_PROPERTY))
-    yield Crit.Content.HLS_BULLET, tuple(filter(None, (_parse_hls_bullet(b) for b in bullet)))
+    hls_bullets = (_parse_hls_bullet(b) for b in bullet)
+    yield Crit.Content.HLS_BULLET, tuple(b for b in hls_bullets if b is not None)
 
 
 def _extract_hierarchical(content: str) -> Iterator[tuple[str, str]]:

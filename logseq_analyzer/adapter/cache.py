@@ -16,20 +16,25 @@ if TYPE_CHECKING:
 
 _SCHEMA = """\
 PRAGMA journal_mode=WAL;
+PRAGMA synchronous=NORMAL;
+PRAGMA mmap_size=268435456;
+PRAGMA cache_size=-64000;
+PRAGMA temp_store=MEMORY;
+PRAGMA locking_mode=EXCLUSIVE;
 CREATE TABLE IF NOT EXISTS files (
-    path            TEXT    PRIMARY KEY,
-    name            TEXT    NOT NULL,
-    filetype        TEXT    NOT NULL,
-    nodetype        TEXT    NOT NULL,
-    ns_root         TEXT    NOT NULL,
-    ns_parent       TEXT    NOT NULL,
-    has_content     INTEGER NOT NULL,
-    has_backlinks   INTEGER NOT NULL,
-    backlinked      INTEGER NOT NULL,
+    path                TEXT    PRIMARY KEY,
+    name                TEXT    NOT NULL,
+    filetype            TEXT    NOT NULL,
+    nodetype            TEXT    NOT NULL,
+    ns_root             TEXT    NOT NULL,
+    ns_parent           TEXT    NOT NULL,
+    has_content         INTEGER NOT NULL,
+    has_backlinks       INTEGER NOT NULL,
+    backlinked          INTEGER NOT NULL,
     backlinked_ns_only  INTEGER NOT NULL,
-    is_ns           INTEGER NOT NULL,
-    mtime           REAL    NOT NULL,
-    data            BLOB    NOT NULL
+    is_ns               INTEGER NOT NULL,
+    mtime               REAL    NOT NULL,
+    data                BLOB    NOT NULL
 );
 """
 _INSERT_FILE = """\
@@ -71,20 +76,20 @@ def _serialize(node: LogseqNode) -> tuple:
     )
 
 
-def _deserialize(row: sqlite3.Row) -> LogseqNode:
+def _deserialize(row: tuple) -> LogseqNode:
     return LogseqNode(
-        path=Path(row["path"]),
-        name=row["name"],
-        filetype=row["filetype"],
-        nodetype=row["nodetype"],
-        ns_root=row["ns_root"],
-        ns_parent=row["ns_parent"],
-        has_content=bool(row["has_content"]),
-        has_backlinks=bool(row["has_backlinks"]),
-        backlinked=bool(row["backlinked"]),
-        backlinked_ns_only=bool(row["backlinked_ns_only"]),
-        is_ns=bool(row["is_ns"]),
-        data=json.loads(zlib.decompress(row["data"])),
+        path=Path(row[0]),
+        name=row[1],
+        filetype=row[2],
+        nodetype=row[3],
+        ns_root=row[4],
+        ns_parent=row[5],
+        has_content=bool(row[6]),
+        has_backlinks=bool(row[7]),
+        backlinked=bool(row[8]),
+        backlinked_ns_only=bool(row[9]),
+        is_ns=bool(row[10]),
+        data=json.loads(zlib.decompress(row[12])),
     )
 
 
@@ -98,7 +103,6 @@ class Cache:
     def _connect(self) -> Iterator[sqlite3.Connection]:
         con = sqlite3.connect(self.path)
         con.executescript(_SCHEMA)
-        con.row_factory = sqlite3.Row
         try:
             yield con
             con.commit()
@@ -121,16 +125,14 @@ class Cache:
     def load(self) -> set[LogseqNode]:
         with self._connect() as con:
             rows = con.execute("SELECT * FROM files").fetchall()
-        return {_deserialize(r) for r in rows if Path(r["path"]).exists()}
+        return {_deserialize(r) for r in rows if Path(r[0]).exists()}
 
     def get(self, attr: str, cond_attr: str, value: object) -> list[object]:
         with self._connect() as con:
             rows = con.execute(f"SELECT {attr} FROM files WHERE {cond_attr} = ?", (value,)).fetchall()
-        return [r[attr] for r in rows]
+        return [r[0] for r in rows]
 
     def get_modified_path(self, files: Iterator[Path]) -> Iterator[Path]:
         with self._connect() as con:
-            existing: dict[str, float] = {
-                r["path"]: r["mtime"] for r in con.execute("SELECT path, mtime FROM files").fetchall()
-            }
+            existing: dict[str, float] = {r[0]: r[1] for r in con.execute("SELECT path, mtime FROM files").fetchall()}
         yield from (p for p in files if p.exists() and p.stat().st_mtime != existing.get(str(p)))
