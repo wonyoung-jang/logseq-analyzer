@@ -16,7 +16,7 @@ def get_cli_args() -> dict:
         "--graph-cache",
         action="store_true",
         help="reindex graph cache on run",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "-g",

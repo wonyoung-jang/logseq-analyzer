@@ -10,6 +10,7 @@ from urllib.parse import unquote
 from logseq_analyzer.adapter.cache import Cache
 from logseq_analyzer.adapter.ednconfig import LogseqConfig, config_from_path
 from logseq_analyzer.adapter.filesystem import (
+    OutputDirHandler,
     Paths,
     determine_move,
     get_paths,
@@ -17,14 +18,14 @@ from logseq_analyzer.adapter.filesystem import (
     read_content,
     walk_file,
     walk_filter,
+    write_report,
 )
-from logseq_analyzer.adapter.reporter import ReportWriter
 from logseq_analyzer.domain.enums import CriteriaGroup, FileType
 from logseq_analyzer.domain.model import LogseqNode, extract_data_from_content
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Sized
+    from collections.abc import Callable, Iterable, Iterator, Sized
     from pathlib import Path
 
 
@@ -56,24 +57,73 @@ def init_logging() -> None:
     )
 
 
-def analyze(analyzer: LogseqAnalyzer) -> Iterator[tuple[str, list[tuple[str, Sized]]]]:
+def gen_report_from_data(data: Sized, level: int = 0) -> Iterator[str]:
+    """Recursively format data into a string representation for reporting."""
+    if level == 0:
+        yield f"COUNT: {len(data)}\n"
+    indent = "\t" * level
+    if isinstance(data, dict):
+        for key, vals in data.items():
+            if level == 0:
+                yield "-" * 180 + "\n"
+                yield f"KEY: {key}\n"
+                yield from write_toplevel(vals)
+            elif isinstance(vals, (dict, list, set, tuple)):
+                yield f"{indent}{key}:\n"
+                yield from gen_report_from_data(vals, level + 1)
+            else:
+                yield f"{indent}{key:<60}: {vals}\n"
+    elif isinstance(data, (list, set, tuple)):
+        for i, item in enumerate(data, 1):
+            if isinstance(item, (dict, list, set, tuple)):
+                yield f"{indent}{i}:\n"
+                yield from gen_report_from_data(item, level + 1)
+            else:
+                yield f"{indent}{i}\t|\t{item}\n"
+    else:
+        yield f"{indent}{data}\n"
+
+
+def write_toplevel(vals: object) -> Iterator[str]:
+    """Format top-level values with special handling for dictionaries."""
+    if isinstance(vals, dict):
+        for k, v in vals.items():
+            if isinstance(v, (dict, list, set, tuple)):
+                yield f"\t{k:<60}:\n"
+                yield from gen_report_from_data(v, level=2)
+            else:
+                yield f"\t{k:<60}: {v}\n"
+    elif isinstance(vals, (list, set, tuple)):
+        yield f"\tVALUES ({len(vals)}):\n"
+        yield from (f"\t{i}\t|\t{v}\n" for i, v in enumerate(vals, 1))
+    else:
+        yield f"VAL: {vals}\n"
+
+
+def _data(outdir: Path, obj: Any) -> Iterator[tuple[Path, Iterator[str]]]:
+    """Generate a report for the given object."""
+    for k in obj.__slots__:
+        yield outdir / f"{k}.txt", gen_report_from_data(getattr(obj, k))
+
+
+def analyze(analyzer: LogseqAnalyzer, outdir_handler: OutputDirHandler) -> Iterator[tuple[Path, Iterator[str]]]:
     """Perform core analysis on the Logseq graph."""
-
-    def _data(obj: Any) -> list[tuple[str, Sized]]:
-        """Generate a report for the given object."""
-        return [(k, getattr(obj, k)) for k in obj.__slots__]
-
-    yield "_input", _data(analyzer.inputs)
-    yield "_prewrite", _data(analyzer.prewrite)
-    yield "_postwrite", _data(analyzer.postwrite)
-    yield "", [("dangling", analyzer.dangling)]
-    yield "", [("journal", analyzer.journal)]
-    yield "", list(analyzer.asset.items())
-    yield "namespace", _data(analyzer.namespace)
-    report = []
-    report.append(("_all_files", analyzer.index))
-    report.append(("_all_graph_data", {(f.name, f.filetype): f.data for f in analyzer.index}))
-    yield "", report
+    outdir = outdir_handler.make_subdir("")
+    inputdir = outdir_handler.make_subdir("_input")
+    prewritedir = outdir_handler.make_subdir("_prewrite")
+    postwritedir = outdir_handler.make_subdir("_postwrite")
+    namespacedir = outdir_handler.make_subdir("namespace")
+    summarydir = outdir_handler.make_subdir("summary")
+    yield from _data(inputdir, analyzer.inputs)
+    yield from _data(prewritedir, analyzer.prewrite)
+    yield from _data(postwritedir, analyzer.postwrite)
+    yield from _data(namespacedir, analyzer.namespace)
+    yield from _data(summarydir, analyzer.summarizer)
+    yield outdir / "dangling.txt", gen_report_from_data(analyzer.dangling)
+    yield outdir / "journal.txt", gen_report_from_data(analyzer.journal)
+    yield outdir / "asset.txt", gen_report_from_data(analyzer.asset)
+    yield outdir / "all_files.txt", gen_report_from_data(analyzer.index)
+    yield outdir / "all_graph_data.txt", gen_report_from_data({(f.name, f.filetype): f.data for f in analyzer.index})
 
 
 def _get_day_ordinal(d: int) -> str:
@@ -84,7 +134,7 @@ def _get_day_ordinal(d: int) -> str:
 
 
 DAY_RANGE = range(1, 32)
-DATE_ORDINALS = dict(zip(DAY_RANGE, (f"{d}{_get_day_ordinal(d)}" for d in DAY_RANGE), strict=True))
+DAY_ORDINAL_MAP = dict(zip(DAY_RANGE, (f"{d}{_get_day_ordinal(d)}" for d in DAY_RANGE), strict=True))
 
 
 @dataclass(slots=True)
@@ -131,7 +181,7 @@ class LogseqFileBuilder:
             page_title: str = date_obj.strftime(self.lsconfig.jrnlfmt_page)
             if "o" in self.lsconfig.pagetitle_fmt:
                 d = date_obj.day
-                page_title = page_title.replace(str(d), DATE_ORDINALS[d], 1)
+                page_title = page_title.replace(str(d), DAY_ORDINAL_MAP[d], 1)
             return page_title.replace("'", "")
         except ValueError as e:
             logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, self.lsconfig.jrnlfmt_page, e)
@@ -140,25 +190,18 @@ class LogseqFileBuilder:
 
 def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, list[Path]]:
     """Determine and execute file moves based on the provided arguments and index."""
-    mover_config: dict[str, tuple[set[Path], Path, bool]] = {
-        "unlinked_asset": (
-            {a.path for a in index if a.filetype == FileType.ASSET and not a.backlinked},
+    mover_config: tuple[tuple[str, Iterable[Path], Path, bool], ...] = (
+        (
+            "unlinked_asset",
+            (a.path for a in index if a.filetype == FileType.ASSET and not a.backlinked),
             paths.del_assets,
             args.move_unlinked_assets,
         ),
-        "bak": (
-            set(walk_file(paths.bak)),
-            paths.del_bak,
-            args.move_bak,
-        ),
-        "recycle": (
-            set(walk_file(paths.recycle)),
-            paths.del_recycle,
-            args.move_recycle,
-        ),
-    }
+        ("bak", walk_file(paths.bak), paths.del_bak, args.move_bak),
+        ("recycle", walk_file(paths.recycle), paths.del_recycle, args.move_recycle),
+    )
     moved = {}
-    for k, (files, dest, should_move) in mover_config.items():
+    for k, files, dest, should_move in mover_config:
         if should_move:
             key = k
             values = list(move_files(determine_move(files, dest)))
@@ -169,55 +212,53 @@ def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, 
     return moved
 
 
-def summarize(graph_cache: Cache) -> Iterator[tuple[str, list[tuple[str, Sized]], str]]:
+def summarize(cache: Cache, outdir_handler: OutputDirHandler) -> Iterator[tuple[Path, Iterator[str]]]:
     """Summarize the graph cache for debugging purposes."""
-    has_content = graph_cache.get("name", "has_content", True)
-    has_backlinks = graph_cache.get("name", "has_backlinks", True)
-    is_backlinked = graph_cache.get("name", "backlinked", True)
-    is_backlinked_ns_only = graph_cache.get("name", "backlinked_ns_only", True)
-    yield "summary", [("has_content", has_content)], "file"
-    yield "summary", [("has_backlinks", has_backlinks)], "file"
-    yield "summary", [("backlinked", is_backlinked)], "file"
-    yield "summary", [("backlinked_ns_only", is_backlinked_ns_only)], "file"
+    outdir = outdir_handler.make_subdir("summary/file")
+    names = ("has_content", "has_backlinks", "backlinked", "backlinked_ns_only")
+    for name in names:
+        data = cache.get("name", name, True)
+        yield outdir / f"{name}.txt", gen_report_from_data(data)
 
 
-def run_app(arguments: dict, progress_callback: Callable[[int, str], None] | None = None) -> None:
+def run_app(args: Args, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Run the Logseq analyzer."""
     init_logging()
     prog = progress_callback or (lambda p, msg: logger.debug("Progress: %d%% - %s", p, msg))
-
     prog(0, "Start...")
-    args = Args(**arguments)
 
-    prog(20, "Setup...")
+    prog(10, "Setup...")
     paths = get_paths(args.graph_folder, args.global_config)
     lsconfig = LogseqConfig.from_config(config_from_path(paths.config_user, paths.config_global))
-    graph_cache = Cache(path=paths.cache)
-    index: set[LogseqNode] = graph_cache.reset() if args.graph_cache else graph_cache.load()
+    cache = Cache(path=paths.cache)
+    index: set[LogseqNode] = cache.reset() if args.graph_cache else cache.load()
 
-    prog(40, "Process...")
+    prog(20, "Process...")
     walk_graph = walk_filter(paths.graph, lsconfig.target_dirs)
-    modified_files = graph_cache.get_modified_path(walk_graph)
+    modified_files = cache.get_modified_path(walk_graph)
     builder = LogseqFileBuilder(lsconfig=lsconfig)
     with ProcessPoolExecutor() as executor:
         futures = {executor.submit(builder, path): path for path in modified_files}
         for future in as_completed(futures):
             index.add(future.result())
 
-    prog(70, "Analyzing...")
+    prog(60, "Analyzing...")
     analyzer = LogseqAnalyzer(index, lsconfig.jrnlfmt_page)
     analyzer()
-    graph_cache.save(index)
+
+    prog(70, "Saving...")
+    cache.save(index)
 
     prog(80, "Writing...")
-    writer = ReportWriter(root_dirname=paths.output)
-    for dirname, data in analyze(analyzer):
-        writer.generate(dirname, data)
-    for dirname, data, subdir in summarize(graph_cache):
-        writer.generate(dirname, data, subdir=subdir)
+    outdir_handler = OutputDirHandler(rootdir=paths.output)
+    for path, data in analyze(analyzer, outdir_handler):
+        write_report(path, data)
+    for path, data in summarize(cache, outdir_handler):
+        write_report(path, data)
 
     prog(90, "Moving...")
     moved = execute_move(args, paths, index)
-    writer.generate("", [("moved", moved)])
+    outdir = outdir_handler.make_subdir("")
+    write_report(outdir / "moved.txt", gen_report_from_data(moved))
 
     prog(100, "Analyzer completed successfully.")

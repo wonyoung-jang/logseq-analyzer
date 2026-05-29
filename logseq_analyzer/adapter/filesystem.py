@@ -37,6 +37,37 @@ class File:
         RECYCLE = ".recycle"
 
 
+@dataclass(slots=True)
+class OutputDirHandler:
+    """A class to handle output directory operations for the Logseq Analyzer."""
+
+    rootdir: Path
+
+    def make_subdir(self, subdir: str) -> Path:
+        """Create a subdirectory under the root output directory."""
+        outdir = self.rootdir / subdir if subdir else self.rootdir
+        outdir.mkdir(parents=True, exist_ok=True)
+        return outdir
+
+
+@dataclass(slots=True)
+class Paths:
+    """Class to hold file paths for the Logseq Analyzer."""
+
+    cache: Path
+    output: Path
+    graph: Path
+    logseq: Path
+    bak: Path
+    recycle: Path
+    config_user: Path
+    del_dir: Path
+    del_bak: Path
+    del_recycle: Path
+    del_assets: Path
+    config_global: Path | None = None
+
+
 def get_paths(graph_folder: str, config_global: str | None) -> Paths:
     """Set up Logseq analyzer configuration based on arguments."""
     graph = Path(graph_folder)
@@ -64,22 +95,12 @@ def get_paths(graph_folder: str, config_global: str | None) -> Paths:
     return Paths(**paths)
 
 
-@dataclass(slots=True)
-class Paths:
-    """Class to hold file paths for the Logseq Analyzer."""
-
-    cache: Path
-    output: Path
-    graph: Path
-    logseq: Path
-    bak: Path
-    recycle: Path
-    config_user: Path
-    del_dir: Path
-    del_bak: Path
-    del_recycle: Path
-    del_assets: Path
-    config_global: Path | None = None
+def write_report(path: Path, data: Iterator[str]) -> None:
+    """Write a report to the specified path."""
+    logger.info("Writing %s", path)
+    with path.open("w", encoding="utf-8") as f:
+        f.write(f"{path.stem}\n")
+        f.writelines(data)
 
 
 def walk_file(path: Path) -> Iterator[Path]:

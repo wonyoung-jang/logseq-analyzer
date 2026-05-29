@@ -220,6 +220,7 @@ class LogseqAnalyzer:
     asset: defaultdict[str, set[str]] = field(default_factory=_defdict_set)
     journal: dict[str, list[datetime]] = field(default_factory=dict)
     dangling: set[str] = field(default_factory=set)
+    summarizer: LogseqSummarizer = field(default_factory=LogseqSummarizer)
 
     def __call__(self) -> None:
         """Process the Logseq graph data for namespaces, linked references, and assets."""
@@ -251,6 +252,7 @@ class LogseqAnalyzer:
 
         for n in self.index:
             self.postwrite.collect_postwrite_data(n)
+            self.summarizer.summarize(n)
 
         self.dangling.update(get_dangling(linkedref | linkedref_ns, self.postwrite.names, self.inputs.aliases))
         self.namespace.process_ns_conflicts(
