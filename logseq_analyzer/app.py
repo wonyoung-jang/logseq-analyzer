@@ -147,12 +147,13 @@ class LogseqFileBuilder:
         """Build a LogseqFile instance from the given path and content."""
         content = read_content(path)
         data = {k: v for k, v in extract_data_from_content(content) if v} if content else {}
-        name = self.get_name(path)
+        filetype = self.get_filetype(path)
+        name = self.get_name(path, filetype)
         has_ns = "/" in name
         return LogseqNode(
             path=path,
             name=name,
-            filetype=self.get_filetype(path),
+            filetype=filetype,
             ns_root=name.split("/", 1)[0] if has_ns else "",
             ns_parent=name.rsplit("/", 1)[0] if has_ns else "",
             has_content=bool(content),
@@ -167,12 +168,12 @@ class LogseqFileBuilder:
                 return filetype
         return FileType.OTHER
 
-    def get_name(self, path: Path) -> str:
+    def get_name(self, path: Path, filetype: str) -> str:
         """Process the filename to create a page title."""
-        name = path.stem.strip(self.lsconfig.ns_sep)
-        if path.parent.name == self.lsconfig.dir_journal:
+        name = path.stem.strip(self.lsconfig.filename_ns_sep)
+        if filetype == FileType.JOURNAL:
             return self.get_journal_name(name)
-        return unquote(name).replace(self.lsconfig.ns_sep, "/")
+        return unquote(name).replace(self.lsconfig.filename_ns_sep, "/")
 
     def get_journal_name(self, name: str) -> str:
         """Convert a journal page title back to a filename."""

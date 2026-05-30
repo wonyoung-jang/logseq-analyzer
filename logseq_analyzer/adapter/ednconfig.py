@@ -3,7 +3,6 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.adapter.filesystem import DATADIR, File, read_content
@@ -17,16 +16,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 LITERAL_MAP = {"true": True, "false": False, "nil": None}
-
-
-class LogseqTargetDir(StrEnum):
-    """Target directories for Logseq."""
-
-    ASSET = "assets"
-    DRAW = "draws"
-    JOURNAL = "journals"
-    PAGE = "pages"
-    WHITEBOARD = "whiteboards"
 
 
 def _config_from_path(path: Path | None) -> dict:
@@ -63,36 +52,30 @@ def parse_edn(edn_str: str) -> Any:
 class LogseqConfig:
     """Class to represent the Logseq configuration."""
 
-    dir_page: str
-    dir_journal: str
-    dir_whiteboard: str
     pagetitle_fmt: str
     filename_fmt: str
     jrnlfmt_page: str
     jrnlfmt_file: str
-    ns_sep: str
+    filename_ns_sep: str
     target_dirs: dict[str, str]
 
     @classmethod
     def from_config(cls, config: dict) -> LogseqConfig:
         """Create a LogseqConfig instance from a configuration dictionary."""
-        dir_asset = config.get(":assets-directory", LogseqTargetDir.ASSET)
-        dir_draw = config.get(":draws-directory", LogseqTargetDir.DRAW)
-        dir_page = config.get(":pages-directory", LogseqTargetDir.PAGE)
-        dir_journal = config.get(":journals-directory", LogseqTargetDir.JOURNAL)
-        dir_whiteboard = config.get(":whiteboards-directory", LogseqTargetDir.WHITEBOARD)
+        dir_asset = config.get(":assets-directory", "assets")
+        dir_draw = config.get(":draws-directory", "draws")
+        dir_page = config.get(":pages-directory", "pages")
+        dir_journal = config.get(":journals-directory", "journals")
+        dir_whiteboard = config.get(":whiteboards-directory", "whiteboards")
         pagetitle_fmt = config.get(":journal/page-title-format", "MMM do, yyyy")
         filename_fmt = config.get(":journal/file-name-format", "yyyy_MM_dd")
-        ns_sep = "%2F" if config.get(":file/name-format", ":triple-lowbar") == ":legacy" else "___"
+        filename_ns_sep = "%2F" if config.get(":file/name-format", ":triple-lowbar") == ":legacy" else "___"
         return cls(
-            dir_page=dir_page,
-            dir_journal=dir_journal,
-            dir_whiteboard=dir_whiteboard,
             pagetitle_fmt=pagetitle_fmt,
             filename_fmt=filename_fmt,
             jrnlfmt_page=cljs_date_to_py(pagetitle_fmt),
             jrnlfmt_file=cljs_date_to_py(filename_fmt),
-            ns_sep=ns_sep,
+            filename_ns_sep=filename_ns_sep,
             target_dirs={
                 dir_asset: FileType.ASSET,
                 dir_draw: FileType.DRAW,
