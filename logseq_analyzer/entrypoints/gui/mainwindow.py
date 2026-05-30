@@ -47,7 +47,7 @@ class LogseqAnalyzerGUI(QWidget):
     def connect_signals(self) -> None:
         """Connect signals to their respective slots."""
         self.buttons.run.clicked.connect(self.run_analysis)
-        self.buttons.exit.clicked.connect(self.close_analyzer)
+        self.buttons.exit.clicked.connect(self.close)
         self.inputs.graph_folder.textChanged.connect(self.checkboxes.force_enable_graph_cache)
 
     @Slot()
@@ -105,10 +105,10 @@ class LogseqAnalyzerGUI(QWidget):
         return widget
 
     @Slot()
-    def close_analyzer(self) -> None:
+    def close(self) -> None:
         """Close the application."""
         self.save_settings()
-        self.close()
+        super().close()
 
     def show_success(self, time_elapsed: str) -> None:
         """Show a success message in a dialog."""

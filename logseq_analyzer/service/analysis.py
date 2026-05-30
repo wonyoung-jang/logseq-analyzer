@@ -19,9 +19,8 @@ from datetime import UTC, datetime, timedelta
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.enums import Crit, CriteriaGroup, FileType
-from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, LogseqNode
-from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN
+from logseq_analyzer.domain.model import LOGSEQ_BUILTIN_PROPERTY, FileType, LogseqNode
+from logseq_analyzer.domain.patterns import DT_ORDINAL_PATTERN, Crit, CriteriaGroup
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -57,7 +56,7 @@ def get_dangling(linkedrefs: set[str], names: set[str], aliases: set[str]) -> se
 def process_journal(journals: set[str], dangling: set[str], jrnlfmt_page: str) -> dict[str, list[datetime]]:
     """Build a complete timeline of journal entries, filling in any missing dates."""
 
-    def _name_to_dt(names: Iterable[str], jrnlfmt_page: str) -> Iterator[datetime]:
+    def _name_to_dt(names: Iterable[str]) -> Iterator[datetime]:
         for name in names:
             n = DT_ORDINAL_PATTERN.sub("", name)
             try:
@@ -66,8 +65,8 @@ def process_journal(journals: set[str], dangling: set[str], jrnlfmt_page: str) -
                 continue
 
     d = defaultdict(list)
-    d["existing"].extend(sorted(_name_to_dt(journals, jrnlfmt_page)))
-    d["dangling"].extend(sorted(_name_to_dt(dangling, jrnlfmt_page)))
+    d["existing"].extend(sorted(_name_to_dt(journals)))
+    d["dangling"].extend(sorted(_name_to_dt(dangling)))
     dangling_set = set(d["dangling"])
     existing = d["existing"]
     n_existing = len(existing)

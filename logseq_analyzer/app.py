@@ -20,8 +20,8 @@ from logseq_analyzer.adapter.filesystem import (
     walk_filter,
     write_report,
 )
-from logseq_analyzer.domain.enums import CriteriaGroup, FileType
-from logseq_analyzer.domain.model import LogseqNode, extract_data_from_content
+from logseq_analyzer.domain.model import FileType, LogseqNode, extract_data_from_content
+from logseq_analyzer.domain.patterns import CriteriaGroup
 from logseq_analyzer.service.analysis import LogseqAnalyzer
 
 if TYPE_CHECKING:
@@ -109,16 +109,11 @@ def _data(outdir: Path, obj: Any) -> Iterator[tuple[Path, Iterator[str]]]:
 def analyze(analyzer: LogseqAnalyzer, outdir_handler: OutputDirHandler) -> Iterator[tuple[Path, Iterator[str]]]:
     """Perform core analysis on the Logseq graph."""
     outdir = outdir_handler.make_subdir("")
-    inputdir = outdir_handler.make_subdir("_input")
-    prewritedir = outdir_handler.make_subdir("_prewrite")
-    postwritedir = outdir_handler.make_subdir("_postwrite")
-    namespacedir = outdir_handler.make_subdir("namespace")
-    summarydir = outdir_handler.make_subdir("summary")
-    yield from _data(inputdir, analyzer.inputs)
-    yield from _data(prewritedir, analyzer.prewrite)
-    yield from _data(postwritedir, analyzer.postwrite)
-    yield from _data(namespacedir, analyzer.namespace)
-    yield from _data(summarydir, analyzer.summarizer)
+    yield from _data(outdir_handler.make_subdir("_input"), analyzer.inputs)
+    yield from _data(outdir_handler.make_subdir("_prewrite"), analyzer.prewrite)
+    yield from _data(outdir_handler.make_subdir("_postwrite"), analyzer.postwrite)
+    yield from _data(outdir_handler.make_subdir("namespace"), analyzer.namespace)
+    yield from _data(outdir_handler.make_subdir("summary"), analyzer.summarizer)
     yield outdir / "dangling.txt", gen_report_from_data(analyzer.dangling)
     yield outdir / "journal.txt", gen_report_from_data(analyzer.journal)
     yield outdir / "asset.txt", gen_report_from_data(analyzer.asset)
@@ -128,9 +123,7 @@ def analyze(analyzer: LogseqAnalyzer, outdir_handler: OutputDirHandler) -> Itera
 
 def _get_day_ordinal(d: int) -> str:
     """Get day of month with ordinal suffix (1st, 2nd, 3rd, 4th, etc.)."""
-    if 11 <= d <= 13:
-        return "th"
-    return {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+    return "th" if 11 <= d <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
 
 
 DAY_RANGE = range(1, 32)
@@ -163,10 +156,7 @@ class LogseqFileBuilder:
 
     def get_filetype(self, path: Path) -> str:
         """Determine the file type based on the directory structure."""
-        for p in path.parents:
-            if filetype := self.lsconfig.target_dirs.get(p.name):
-                return filetype
-        return FileType.OTHER
+        return next((self.lsconfig.target_dirs.get(p.name) for p in path.parents), None) or FileType.OTHER
 
     def get_name(self, path: Path, filetype: str) -> str:
         """Process the filename to create a page title."""
@@ -178,18 +168,19 @@ class LogseqFileBuilder:
     def get_journal_name(self, name: str) -> str:
         """Convert a journal page title back to a filename."""
         try:
-            date_obj: datetime = datetime.strptime(name, self.lsconfig.jrnlfmt_file).replace(tzinfo=UTC)
-            page_title: str = date_obj.strftime(self.lsconfig.jrnlfmt_page)
+            dateobj: datetime = datetime.strptime(name, self.lsconfig.jrnlfmt_file).replace(tzinfo=UTC)
+            title: str = dateobj.strftime(self.lsconfig.jrnlfmt_page)
             if "o" in self.lsconfig.pagetitle_fmt:
-                d = date_obj.day
-                page_title = page_title.replace(str(d), DAY_ORDINAL_MAP[d], 1)
-            return page_title.replace("'", "")
+                title = title.replace(str(dateobj.day), DAY_ORDINAL_MAP[dateobj.day], 1)
+            return title.replace("'", "")
         except ValueError as e:
             logger.warning("Failed to parse date, key '%s', fmt `%s`: %s", name, self.lsconfig.jrnlfmt_page, e)
             return name
 
 
-def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, list[Path]]:
+def execute_move(
+    args: Args, paths: Paths, index: set[LogseqNode], outdir_handler: OutputDirHandler
+) -> Iterator[tuple[Path, Iterator[str]]]:
     """Determine and execute file moves based on the provided arguments and index."""
     mover_config: tuple[tuple[str, Iterable[Path], Path, bool], ...] = (
         (
@@ -201,7 +192,7 @@ def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, 
         ("bak", walk_file(paths.bak), paths.del_bak, args.move_bak),
         ("recycle", walk_file(paths.recycle), paths.del_recycle, args.move_recycle),
     )
-    moved = {}
+    outdir = outdir_handler.make_subdir("moved")
     for k, files, dest, should_move in mover_config:
         if should_move:
             key = k
@@ -209,8 +200,7 @@ def execute_move(args: Args, paths: Paths, index: set[LogseqNode]) -> dict[str, 
         else:
             key = f"{k} (simulated)"
             values = [f.name for f in files]
-        moved[key] = values
-    return moved
+        yield outdir / f"{key}.txt", gen_report_from_data(values)
 
 
 def summarize(cache: Cache, outdir_handler: OutputDirHandler) -> Iterator[tuple[Path, Iterator[str]]]:
@@ -229,9 +219,9 @@ def run_app(args: Args, progress_callback: Callable[[int, str], None] | None = N
     prog(0, "Start...")
 
     prog(10, "Setup...")
-    paths = get_paths(args.graph_folder, args.global_config)
-    lsconfig = LogseqConfig.from_config(config_from_path(paths.config_user, paths.config_global))
-    cache = Cache(path=paths.cache)
+    paths: Paths = get_paths(args.graph_folder, args.global_config)
+    lsconfig: LogseqConfig = LogseqConfig.from_config(config_from_path(paths.config_user, paths.config_global))
+    cache: Cache = Cache(path=paths.cache)
     index: set[LogseqNode] = cache.reset() if args.graph_cache else cache.load()
 
     prog(20, "Process...")
@@ -250,16 +240,13 @@ def run_app(args: Args, progress_callback: Callable[[int, str], None] | None = N
     prog(70, "Saving...")
     cache.save(index)
 
-    prog(80, "Writing...")
+    prog(90, "Writing...")
     outdir_handler = OutputDirHandler(rootdir=paths.output)
     for path, data in analyze(analyzer, outdir_handler):
         write_report(path, data)
     for path, data in summarize(cache, outdir_handler):
         write_report(path, data)
-
-    prog(90, "Moving...")
-    moved = execute_move(args, paths, index)
-    outdir = outdir_handler.make_subdir("")
-    write_report(outdir / "moved.txt", gen_report_from_data(moved))
+    for path, data in execute_move(args, paths, index, outdir_handler):
+        write_report(path, data)
 
     prog(100, "Analyzer completed successfully.")

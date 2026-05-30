@@ -195,12 +195,7 @@ def make_if_missing(path: Path, *, is_dir: bool = False) -> None:
 
 
 def check_path(
-    path: Path,
-    *,
-    is_dir: bool = False,
-    must_exist: bool = False,
-    clean_on_init: bool = False,
-    create: bool = True,
+    path: Path, *, is_dir: bool = False, must_exist: bool = False, clean_on_init: bool = False, create: bool = True
 ) -> None:
     """Check and prepare the file or directory path."""
     if must_exist:

@@ -1,9 +1,8 @@
 """Hierarchical patterns for elements."""
 
 import re
+from enum import Enum, StrEnum
 from typing import TYPE_CHECKING
-
-from logseq_analyzer.domain.enums import Crit
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -74,6 +73,124 @@ _URL = (
 )
 
 
+class Crit:
+    """Criteria for Logseq Analyzer."""
+
+    class Content(StrEnum):
+        """Content criteria."""
+
+        ALIAS = "Content_alias"
+        ANY_LINK = "Content_any_link"
+        ASSET = "Content_asset"
+        BLOCKQUOTE = "Content_blockquote"
+        DRAW = "Content_draw"
+        DYNAMIC_VAR = "Content_dynamic_variable"
+        FLASHCARD = "Content_flashcard"
+        HLS_BULLET = "Content_hls_bullet"
+        PAGE_REF = "Content_page_reference"
+        TAG = "Content_tag"
+        TAGGED_BACKLINK = "Content_tagged_backlink"
+        INLINE_CODE = "Content_inline_code"
+
+    class Prop(StrEnum):
+        """Criteria for properties in Logseq."""
+
+        BLOCK_BUILTIN = "PropBlock_builtin"
+        BLOCK_USER = "PropBlock_user"
+        PAGE_BUILTIN = "PropPage_builtin"
+        PAGE_USER = "PropPage_user"
+        VALUES = "PropValues"
+
+    class MultLineCode(StrEnum):
+        """Criteria for code blocks in Logseq."""
+
+        ALL = "MultLineCode_"
+        CALC = "MultLineCode_calc"
+        LANGUAGE = "MultLineCode_lang"
+
+    class AdvCmd(StrEnum):
+        """Criteria for advanced commands in Logseq."""
+
+        ALL = "AdvCmd_"
+        CAUTION = "AdvCmd_caution"
+        CENTER = "AdvCmd_center"
+        COMMENT = "AdvCmd_comment"
+        EXAMPLE = "AdvCmd_example"
+        EXPORT = "AdvCmd_export"
+        EXPORT_ASCII = "AdvCmd_export_ascii"
+        EXPORT_LATEX = "AdvCmd_export_latex"
+        IMPORTANT = "AdvCmd_important"
+        NOTE = "AdvCmd_note"
+        PINNED = "AdvCmd_pinned"
+        QUERY = "AdvCmd_query"
+        QUOTE = "AdvCmd_quote"
+        TIP = "AdvCmd_tip"
+        VERSE = "AdvCmd_verse"
+        WARNING = "AdvCmd_warning"
+
+    class DblCurly(StrEnum):
+        """Criteria for double curly brackets in Logseq."""
+
+        ALL = "DblCurly_"
+        BLOCK_EMBED = "DblCurly_block_embed"
+        CARD = "DblCurly_card"
+        CLOZE = "DblCurly_cloze"
+        EMBED = "DblCurly_embed"
+        NAMESPACE_QUERY = "DblCurly_namespace_query"
+        PAGE_EMBED = "DblCurly_page_embed"
+        QUERY_FUNCTION = "DblCurly_query_function"
+        RENDERER = "DblCurly_renderer"
+        SIMPLE_QUERY = "DblCurly_simple_query"
+        EMBED_TWITTER_TWEET = "DblCurly_twitter_tweet"
+        EMBED_VIDEO_URL = "DblCurly_video_url"
+        YOUTUBE_TIMESTAMP = "DblCurly_youtube_timestep"
+
+    class DblParen(StrEnum):
+        """Criteria for double parentheses in Logseq."""
+
+        ALL = "DblParen_"
+        BLOCK_REF = "DblParen_block_ref"
+
+    class EmbLink(StrEnum):
+        """Criteria for embedded links in Logseq."""
+
+        ALL = "EmbLink_"
+        ASSET = "EmbLink_asset"
+        INTERNET = "EmbLink_internet"
+
+    class ExtLink(StrEnum):
+        """Criteria for file extensions in Logseq."""
+
+        ALL = "ExtLink_"
+        ALIAS = "ExtLink_alias"
+        INTERNET = "ExtLink_internet"
+
+
+class CriteriaGroup(Enum):
+    """Groups of criteria for the Logseq Analyzer."""
+
+    BACKLINK = frozenset(
+        (
+            Crit.Content.ALIAS,
+            Crit.Content.DRAW,
+            Crit.Content.PAGE_REF,
+            Crit.Content.TAG,
+            Crit.Content.TAGGED_BACKLINK,
+            Crit.Prop.BLOCK_BUILTIN,
+            Crit.Prop.BLOCK_USER,
+            Crit.Prop.PAGE_BUILTIN,
+            Crit.Prop.PAGE_USER,
+        )
+    )
+    ASSETMENTION = frozenset(
+        (
+            Crit.Content.ASSET,
+            Crit.Content.HLS_BULLET,
+            Crit.EmbLink.ASSET,
+        )
+    )
+
+
 class ContentPatterns:
     """Class to hold compiled regex patterns for Logseq content."""
 
@@ -138,8 +255,6 @@ class IPattern:
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Build a combined dispatcher pattern for the subclass based on its PATTERN attribute."""
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "PATTERN"):
-            return
         parts: list[str] = []
         group_map: dict[str, str] = {}
         for idx, (prefix, pat) in enumerate(cls.PATTERN):
@@ -248,33 +363,3 @@ class ExternalLinkPatterns(IPattern):
         (Crit.ExtLink.ALIAS, _extlink(r"[\[{2}|\({2}].*?[\]{2}|\){2}].*?")),
     )
     FALLBACK = Crit.ExtLink.ALL
-
-
-HIERARCHICAL_PATTERN: Sequence[type[IPattern]] = (
-    AdvCmdPatterns,
-    CodePatterns,
-    DoubleCurlyPatterns,
-    DoubleParenthesesPatterns,
-    EmbeddedLinkPatterns,
-    ExternalLinkPatterns,
-)
-MASK_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
-    (Crit.MultLineCode.ALL, CodePatterns.ALL),
-    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
-    (Crit.AdvCmd.ALL, AdvCmdPatterns.ALL),
-    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
-)
-CORE_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
-    (Crit.Content.BLOCKQUOTE, ContentPatterns.BLOCKQUOTE),
-    (Crit.Content.DRAW, ContentPatterns.DRAW),
-    (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
-    (Crit.Content.FLASHCARD, ContentPatterns.FLASHCARD),
-    (Crit.Content.PAGE_REF, ContentPatterns.PAGE_REFERENCE),
-    (Crit.Content.TAG, ContentPatterns.TAG),
-    (Crit.Content.TAGGED_BACKLINK, ContentPatterns.TAGGED_BACKLINK),
-)
-RAW_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
-    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
-    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
-    (Crit.Content.ASSET, ContentPatterns.ASSET),
-)

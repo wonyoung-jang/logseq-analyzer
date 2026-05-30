@@ -6,17 +6,21 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from logseq_analyzer.domain.enums import Crit, FileType
 from logseq_analyzer.domain.patterns import (
-    CORE_PATTERN,
-    HIERARCHICAL_PATTERN,
-    MASK_PATTERN,
-    RAW_PATTERN,
+    AdvCmdPatterns,
+    CodePatterns,
     ContentPatterns,
+    Crit,
+    DoubleCurlyPatterns,
+    DoubleParenthesesPatterns,
+    EmbeddedLinkPatterns,
+    ExternalLinkPatterns,
+    IPattern,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    import re
+    from collections.abc import Iterable, Iterator, Sequence
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -91,6 +95,17 @@ class NodeType(StrEnum):
     ROOT = "root"
 
 
+class FileType(StrEnum):
+    """File types for the Logseq Analyzer."""
+
+    ASSET = "asset"
+    DRAW = "draw"
+    JOURNAL = "journal"
+    PAGE = "page"
+    WHITEBOARD = "whiteboard"
+    OTHER = "other"
+
+
 def _process_aliases(aliases: str) -> Iterator[str]:
     """Process aliases to extract individual aliases."""
     if not (aliases := aliases.strip()):
@@ -137,6 +152,23 @@ def extract_data_from_content(content: str) -> Iterator[tuple[str, Iterable[str]
     yield from _extract_hierarchical(content)
 
 
+MASK_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.MultLineCode.ALL, CodePatterns.ALL),
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
+    (Crit.AdvCmd.ALL, AdvCmdPatterns.ALL),
+    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
+)
+CORE_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.Content.BLOCKQUOTE, ContentPatterns.BLOCKQUOTE),
+    (Crit.Content.DRAW, ContentPatterns.DRAW),
+    (Crit.Content.DYNAMIC_VAR, ContentPatterns.DYNAMIC_VARIABLE),
+    (Crit.Content.FLASHCARD, ContentPatterns.FLASHCARD),
+    (Crit.Content.PAGE_REF, ContentPatterns.PAGE_REFERENCE),
+    (Crit.Content.TAG, ContentPatterns.TAG),
+    (Crit.Content.TAGGED_BACKLINK, ContentPatterns.TAGGED_BACKLINK),
+)
+
+
 def _extract_masked(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     """Extract masked content for all patterns."""
     masked = content
@@ -145,30 +177,48 @@ def _extract_masked(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     yield from ((p, r.findall(masked)) for p, r in CORE_PATTERN)
 
 
+RAW_PATTERN: Sequence[tuple[str, re.Pattern[str]]] = (
+    (Crit.Content.INLINE_CODE, ContentPatterns.INLINE_CODE),
+    (Crit.Content.ANY_LINK, ContentPatterns.ANY_LINK),
+    (Crit.Content.ASSET, ContentPatterns.ASSET),
+)
+
+
 def _extract_raw(content: str) -> Iterator[tuple[str, Iterable[str]]]:
     """Extract raw content for all patterns."""
     yield from ((p, r.findall(content)) for p, r in RAW_PATTERN)
 
 
-def _extract_properties(content: str) -> Iterator[tuple[str, Iterable[str]]]:
+def _extract_properties(content: str) -> Iterator[tuple[str, Iterable]]:
     """Extract properties from content."""
-    propvalues = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
+    propvalues = tuple(f"{m.group(1)}: {m.group(2).strip()}" for m in ContentPatterns.PROPERTY_VALUE.finditer(content))
+    propvalues_dict = dict(ContentPatterns.PROPERTY_VALUE.findall(content))
     yield Crit.Prop.VALUES, propvalues
-    yield Crit.Content.ALIAS, tuple(_process_aliases(propvalues.get("alias", "")))
-    bullet = [b.strip("\t \n") for b in ContentPatterns.BULLET.split(content)]
+    yield Crit.Content.ALIAS, tuple(_process_aliases(propvalues_dict.get("alias", "")))
+    bullet = [b.strip(" \t\n") for b in ContentPatterns.BULLET.split(content)]
     firstbullet = bullet[0] if bullet else ""
     if firstbullet and not firstbullet.startswith("#"):
         prop_page = set(ContentPatterns.PROPERTY.findall(firstbullet))
         prop_block = set(ContentPatterns.PROPERTY.findall("\n".join(bullet[1:])))
     else:
         prop_page = set()
-        prop_block = set(propvalues.keys())
-    yield Crit.Prop.BLOCK_BUILTIN, tuple(prop_block.intersection(LOGSEQ_BUILTIN_PROPERTY))
-    yield Crit.Prop.BLOCK_USER, tuple(prop_block.difference(LOGSEQ_BUILTIN_PROPERTY))
-    yield Crit.Prop.PAGE_BUILTIN, tuple(prop_page.intersection(LOGSEQ_BUILTIN_PROPERTY))
-    yield Crit.Prop.PAGE_USER, tuple(prop_page.difference(LOGSEQ_BUILTIN_PROPERTY))
+        prop_block = set(propvalues_dict.keys())
+    yield Crit.Prop.BLOCK_BUILTIN, tuple(prop_block & LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.BLOCK_USER, tuple(prop_block - LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_BUILTIN, tuple(prop_page & LOGSEQ_BUILTIN_PROPERTY)
+    yield Crit.Prop.PAGE_USER, tuple(prop_page - LOGSEQ_BUILTIN_PROPERTY)
     hls_bullets = (_parse_hls_bullet(b) for b in bullet)
     yield Crit.Content.HLS_BULLET, tuple(b for b in hls_bullets if b is not None)
+
+
+HIERARCHICAL_PATTERN: Sequence[type[IPattern]] = (
+    AdvCmdPatterns,
+    CodePatterns,
+    DoubleCurlyPatterns,
+    DoubleParenthesesPatterns,
+    EmbeddedLinkPatterns,
+    ExternalLinkPatterns,
+)
 
 
 def _extract_hierarchical(content: str) -> Iterator[tuple[str, str]]:

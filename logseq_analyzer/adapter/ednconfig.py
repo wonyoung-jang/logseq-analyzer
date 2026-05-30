@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from logseq_analyzer.adapter.filesystem import DATADIR, File, read_content
-from logseq_analyzer.domain.enums import FileType
+from logseq_analyzer.domain.model import FileType
 from logseq_analyzer.domain.patterns import EDNPattern, cljs_date_to_py
 
 if TYPE_CHECKING:
